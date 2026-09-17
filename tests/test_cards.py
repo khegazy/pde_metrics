@@ -918,6 +918,9 @@ def test_the_catalog_supports_the_query_it_exists_for():
     assert set(answer) == {
         "mae", "mse", "rmse", "nrmse", "enstrophy", "kinetic_energy",
         "crps", "ensemble_mean_rmse",
+        # h_minus_one is one FFT, increment_w1 one sort, increment_flatness one pass, and
+        # all three are smooth enough in their inputs to serve as losses.
+        "h_minus_one", "increment_flatness", "increment_w1",
     }
 
 

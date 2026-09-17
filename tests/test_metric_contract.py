@@ -11,6 +11,8 @@ import numpy as np
 import pytest
 from scipy.stats import spearmanr
 
+from fmeval.context import FieldContext
+from fmeval.data.base import GridSpec
 from metrics import registry
 from tests.conftest import GRID, synthetic_field
 
@@ -72,8 +74,53 @@ def _args_for(
     return (a, synthetic_field(shape, c, seed=seed_b))
 
 
+def _ctx(shape: tuple[int, ...]) -> FieldContext:
+    """A context for a metric that asks for one, on a unit-spaced periodic grid.
+
+    Unit spacing keeps the generic checks below reading the same as they did before any
+    metric took a ctx: a metric whose value carries a length then returns the same number
+    it would have on a grid it had to assume. What the ctx must *not* be is absent -- the
+    pipeline always supplies one, so a contract test that omitted it would be testing a
+    call the harness never makes.
+    """
+    return FieldContext(
+        field="density",
+        grid=GridSpec(
+            shape=tuple(shape),
+            spacing=(1.0,) * len(shape),
+            periodic=(True,) * len(shape),
+        ),
+        frame_index=0,
+        time=0.0,
+        fluctuation_rms=1.0,
+        rng=np.random.default_rng(0),
+    )
+
+
+def _kwargs_for(spec: registry.MetricSpec, first: np.ndarray) -> dict[str, object]:
+    """``{"ctx": ...}`` for a metric that declares one, empty otherwise.
+
+    Mirrors ``fmeval.pipeline``, which builds the context from the *reference* field's
+    grid. ``first`` is that reference, so its trailing axes give the spatial shape for
+    every arity -- ``(C, *spatial)`` pairwise and single, and the reference rather than
+    the stack for ensemble.
+    """
+    if not spec.takes_ctx:
+        return {}
+    return {"ctx": _ctx(first.shape[1:])}
+
+
 def _call(spec: registry.MetricSpec, *arrays: np.ndarray):
-    return spec.fn(*arrays)
+    return spec.fn(*arrays, **_kwargs_for(spec, arrays[0]))
+
+
+def _call_map(spec: registry.MetricSpec, *arrays: np.ndarray) -> np.ndarray:
+    """The pointwise map, called the way the pipeline calls it.
+
+    The pipeline passes the metric's kwargs straight through to the map as well, so a map
+    that declares a ctx receives the same one its metric did.
+    """
+    return spec.pointwise(*arrays, **_kwargs_for(spec, arrays[0]))
 
 
 def test_no_import_errors():
@@ -186,6 +233,15 @@ def test_monotone_on_synthetic_blur_ladder(spec):
         pytest.skip("vector-valued metric")
     rho = spearmanr(range(len(sigmas)), values).statistic
     expected = 1.0 if not spec.higher_is_better else -1.0
+    # A metric may declare that it is *not* monotone under smoothing. That is checked
+    # here rather than skipped: the declaration has to be true, so it cannot be used to
+    # slip a metric past a gate it would otherwise have failed silently.
+    if not spec.monotone_under_smoothing:
+        assert abs(rho) < 1.0, (
+            f"{spec.name} declares monotone_under_smoothing=False but ranked the blur "
+            f"ladder perfectly (rho={rho:.3f}); values={values}. Remove the declaration"
+        )
+        return
     # Single-field metrics measure the field, not the error, so blurring makes them fall.
     if spec.arity == "single":
         assert abs(rho) == pytest.approx(1.0), (
@@ -264,7 +320,7 @@ def test_pointwise_map_shape(spec):
         pytest.skip("no pointwise decomposition declared")
     c = _channels_for(spec)
     a, b = synthetic_field(GRID, c, seed=0), synthetic_field(GRID, c, seed=1)
-    m = spec.pointwise(a, b) if spec.arity == "pairwise" else spec.pointwise(a)
+    m = _call_map(spec, a, b) if spec.arity == "pairwise" else _call_map(spec, a)
     assert m.shape == GRID, f"{spec.name}: map is {m.shape}, expected {GRID}"
     assert np.isfinite(m).all()
 
@@ -281,9 +337,9 @@ def test_pointwise_map_reduces_to_metric(spec):
     c = _channels_for(spec)
     a, b = synthetic_field(GRID, c, seed=0), synthetic_field(GRID, c, seed=1)
     if spec.arity == "pairwise":
-        m, want = spec.pointwise(a, b), spec.fn(a, b)
+        m, want = _call_map(spec, a, b), _call(spec, a, b)
     else:
-        m, want = spec.pointwise(a), spec.fn(a)
+        m, want = _call_map(spec, a), _call(spec, a)
     assert spec.reduce(m, c) == pytest.approx(want, rel=1e-12), (
         f"{spec.name}: reduction {spec.reduction!r} of the map gives "
         f"{spec.reduce(m, c)}, but the metric gives {want}"
@@ -295,9 +351,9 @@ def test_pointwise_map_is_multichannel_aware():
     spec = registry.get("mse")
     a = synthetic_field(GRID, 2, seed=0)
     b = synthetic_field(GRID, 2, seed=1)
-    m = spec.pointwise(a, b)
-    assert m.mean() == pytest.approx(2 * spec.fn(a, b), rel=1e-12)
-    assert spec.reduce(m, 2) == pytest.approx(spec.fn(a, b), rel=1e-12)
+    m = _call_map(spec, a, b)
+    assert m.mean() == pytest.approx(2 * _call(spec, a, b), rel=1e-12)
+    assert spec.reduce(m, 2) == pytest.approx(_call(spec, a, b), rel=1e-12)
 
 
 # --- registry mechanics ------------------------------------------------------------

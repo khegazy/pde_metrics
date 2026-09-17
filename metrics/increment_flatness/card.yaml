@@ -1,0 +1,41 @@
+schema_version: 1
+
+name: increment_flatness
+kind: metric
+
+# "Compares distributions or moments of the field: increment PDFs, flatness, structure
+# functions" is this category's own wording in fmeval/cards/schema.py.
+category: statistical
+
+summary: >-
+  Flatness of one-cell increments, a dimensionless measure of how much of a field's
+  variation is carried by rare sharp events rather than spread evenly over the domain.
+
+# A tripwire rather than a candidate, in the same sense as enstrophy: it characterises one
+# field, so it cannot rank two predictions on its own, but a drift away from the
+# reference's value is a specific and early sign of over-smoothing.
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    Fourth moment of the one-cell increments divided by the square of their second moment,
+    averaged over spatial axes and channels. Exactly 3 for a Gaussian field. Reported per
+    variant; the drift from the reference's value is what is read.
+  bounds:
+    # Jensen's inequality on the squared increment gives <d^4> >= <d^2>^2, with equality
+    # only when |d| is constant, so 1 is attained and is a genuine floor rather than a
+    # convention.
+    lower: 1.0
+    upper: null
+
+math:
+  triangle_inequality: false   # not a distance at all: it takes one field, not two
+  # Scaling the field by c scales <d^4> by c^4 and <d^2>^2 by c^4 as well, so the ratio is
+  # untouched. This is the one baseline quantity here that is genuinely scale-free, which
+  # is what lets its value be compared across fields of wildly different magnitude.
+  scale_dependent: false
+  resolution_dependent: true   # the separation is one cell, so it is set by the grid
+  complexity: "O(N)"
+references: [granero2024]
+review: null

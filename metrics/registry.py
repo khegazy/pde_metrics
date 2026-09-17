@@ -72,6 +72,13 @@ class MetricSpec:
     cost: Cost
     higher_is_better: bool
     symmetric: bool
+    #: Whether this quantity is expected to move monotonically as a field is
+    #: smoothed. True for an error metric and for an energy-like single-field
+    #: quantity. False for a statistic of distribution *shape*, which has no such
+    #: guarantee -- see ``increment_flatness``. Declared, never inferred, and the
+    #: contract test verifies the declaration in both directions rather than
+    #: letting False be an escape from the check.
+    monotone_under_smoothing: bool
     units: str
     doc: str
     module: str
@@ -131,6 +138,7 @@ def metric(
     cost: Cost = "cheap",
     higher_is_better: bool = False,
     symmetric: bool = True,
+    monotone_under_smoothing: bool = True,
     units: str = "field",
     reduction: str = "mean",
     defaults: dict[str, Any] | None = None,
@@ -152,6 +160,14 @@ def metric(
         cost: Advisory tier; the pipeline warns on expensive metrics over many frames.
         higher_is_better: Whether larger values mean a better match.
         symmetric: Pairwise only. Enables the symmetry contract test.
+        monotone_under_smoothing: Whether the value is expected to change monotonically
+            as the field is smoothed. True for error metrics and for energy-like
+            single-field quantities such as enstrophy. Set it False only for a statistic
+            of distribution shape, which carries no such guarantee: measured on the real
+            trajectory, increment flatness rises and falls under increasing blur on all
+            three fields. The contract test checks the declaration both ways, so False
+            asserts non-monotonicity rather than skipping the check, and a metric cannot
+            use it to slip past a gate it would otherwise have passed.
         units: Free text, e.g. ``"field"``, ``"field^2"``, ``"dimensionless"``.
         reduction: How a pointwise map reduces to the scalar. Key of :data:`REDUCTIONS`.
         defaults: Default keyword arguments, overridable from config.
@@ -217,6 +233,7 @@ def metric(
             cost=cost,
             higher_is_better=higher_is_better,
             symmetric=symmetric,
+            monotone_under_smoothing=monotone_under_smoothing,
             units=units,
             doc=(fn.__doc__ or "").strip(),
             module=fn.__module__,

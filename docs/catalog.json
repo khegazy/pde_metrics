@@ -1,9 +1,9 @@
 {
   "counts": {
     "degradations": 23,
-    "metrics": 10,
+    "metrics": 13,
     "reviewed": 0,
-    "with_measurements": 10
+    "with_measurements": 13
   },
   "entries": [
     {
@@ -1317,6 +1317,1503 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Mean squared vorticity of a single field, a reference-free diagnostic of how much small-scale rotational activity a flow carries."
+    },
+    {
+      "card": "metrics/h_minus_one/card.md",
+      "category": "functional",
+      "declared": {
+        "arity": "pairwise",
+        "cost": "cheap",
+        "differentiable": true,
+        "fields": [
+          "*"
+        ],
+        "has_pointwise_map": true,
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "sqrt_mean",
+        "returns": "scalar",
+        "symmetric": true,
+        "target": null,
+        "units": "field*length"
+      },
+      "evidence": {
+        "axes": [
+          {
+            "axis": "additive_noise",
+            "family": "stochastic",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "box_blur",
+            "family": "smoothing",
+            "field": "density",
+            "first_detected_level": 4.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9630029706
+          },
+          {
+            "axis": "coarsen",
+            "family": "resolution",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9999228425
+          },
+          {
+            "axis": "gaussian_blur",
+            "family": "smoothing",
+            "field": "density",
+            "first_detected_level": 3.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9742293893
+          },
+          {
+            "axis": "gaussian_impostor",
+            "family": "stochastic",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 1,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "highpass_butterworth",
+            "family": "spectral",
+            "field": "density",
+            "first_detected_level": 1.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.575325026
+          },
+          {
+            "axis": "highpass_ideal",
+            "family": "spectral",
+            "field": "density",
+            "first_detected_level": 3.0,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.5463523784
+          },
+          {
+            "axis": "lowpass_butterworth",
+            "family": "spectral",
+            "field": "density",
+            "first_detected_level": 2.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8479996914
+          },
+          {
+            "axis": "lowpass_ideal",
+            "family": "spectral",
+            "field": "density",
+            "first_detected_level": 2.0,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9682496817
+          },
+          {
+            "axis": "median_blur",
+            "family": "smoothing",
+            "field": "density",
+            "first_detected_level": 3.0,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9710273523
+          },
+          {
+            "axis": "translate_subpixel",
+            "family": "geometric",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 6,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.96053393
+          },
+          {
+            "axis": "translate_x",
+            "family": "geometric",
+            "field": "density",
+            "first_detected_level": 4.0,
+            "is_probe": false,
+            "levels": 5,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9593765673
+          },
+          {
+            "axis": "uncorrelated",
+            "family": "geometric",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 6,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "additive_noise",
+            "family": "stochastic",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "box_blur",
+            "family": "smoothing",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "coarsen",
+            "family": "resolution",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "gaussian_blur",
+            "family": "smoothing",
+            "field": "velocity",
+            "first_detected_level": 4.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "gaussian_impostor",
+            "family": "stochastic",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 1,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "highpass_butterworth",
+            "family": "spectral",
+            "field": "velocity",
+            "first_detected_level": 1.0,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8089965665
+          },
+          {
+            "axis": "highpass_ideal",
+            "family": "spectral",
+            "field": "velocity",
+            "first_detected_level": 3.0,
+            "is_probe": false,
+            "levels": 2,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8138574901
+          },
+          {
+            "axis": "lowpass_butterworth",
+            "family": "spectral",
+            "field": "velocity",
+            "first_detected_level": 2.0,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "lowpass_ideal",
+            "family": "spectral",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 2,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "median_blur",
+            "family": "smoothing",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.992014197
+          },
+          {
+            "axis": "translate_subpixel",
+            "family": "geometric",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 6,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9343775317
+          },
+          {
+            "axis": "translate_x",
+            "family": "geometric",
+            "field": "velocity",
+            "first_detected_level": 5.0,
+            "is_probe": false,
+            "levels": 5,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9302881833
+          },
+          {
+            "axis": "uncorrelated",
+            "family": "geometric",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 6,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "additive_noise",
+            "family": "stochastic",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "box_blur",
+            "family": "smoothing",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8436017129
+          },
+          {
+            "axis": "coarsen",
+            "family": "resolution",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "gaussian_blur",
+            "family": "smoothing",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "gaussian_impostor",
+            "family": "stochastic",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 1,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "highpass_butterworth",
+            "family": "spectral",
+            "field": "vorticity",
+            "first_detected_level": 1.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.5446163342
+          },
+          {
+            "axis": "highpass_ideal",
+            "family": "spectral",
+            "field": "vorticity",
+            "first_detected_level": 1.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.5292619883
+          },
+          {
+            "axis": "lowpass_butterworth",
+            "family": "spectral",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9817522472
+          },
+          {
+            "axis": "lowpass_ideal",
+            "family": "spectral",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9937888199
+          },
+          {
+            "axis": "median_blur",
+            "family": "smoothing",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9296323444
+          },
+          {
+            "axis": "translate_subpixel",
+            "family": "geometric",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 6,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9839898152
+          },
+          {
+            "axis": "translate_x",
+            "family": "geometric",
+            "field": "vorticity",
+            "first_detected_level": 4.0,
+            "is_probe": false,
+            "levels": 5,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.984182709
+          },
+          {
+            "axis": "uncorrelated",
+            "family": "geometric",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 6,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          }
+        ],
+        "dataset": "kinet_re5e4",
+        "frames": 161,
+        "measured": true,
+        "probes": [
+          {
+            "field": "density",
+            "impostor_damage": 1.2055535091,
+            "impostor_nearest_level": "lowpass_ideal=1.4029",
+            "unrelated_field_value": 0.1898331436
+          },
+          {
+            "field": "velocity",
+            "impostor_damage": 0.7929774351,
+            "impostor_nearest_level": "highpass_ideal=4.02293",
+            "unrelated_field_value": 2.7070315826
+          },
+          {
+            "field": "vorticity",
+            "impostor_damage": 0.8178458497,
+            "impostor_nearest_level": "highpass_ideal=41.6842",
+            "unrelated_field_value": 0.0981953996
+          }
+        ],
+        "run": "comparison_1789629226"
+      },
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N log N)",
+        "resolution_dependent": true,
+        "scale_dependent": true,
+        "triangle_inequality": true
+      },
+      "name": "h_minus_one",
+      "output": {
+        "description": "Root-mean-square of the error after applying the inverse half-Laplacian, in the field's units times a length. Normalised so that at Sobolev order zero it would return exactly rmse, which makes the two directly comparable.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/h_minus_one",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Homogeneous negative Sobolev norm of the error, which divides each Fourier mode by its wavenumber and so charges less for error carried on small scales than a pointwise norm."
+    },
+    {
+      "card": "metrics/increment_flatness/card.md",
+      "category": "statistical",
+      "declared": {
+        "arity": "single",
+        "cost": "cheap",
+        "differentiable": true,
+        "fields": [
+          "*"
+        ],
+        "has_pointwise_map": false,
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "mean",
+        "returns": "scalar",
+        "symmetric": false,
+        "target": null,
+        "units": "dimensionless"
+      },
+      "evidence": {
+        "axes": [
+          {
+            "axis": "additive_noise",
+            "family": "stochastic",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -1.0,
+            "weakest_separation": 0.0
+          },
+          {
+            "axis": "box_blur",
+            "family": "smoothing",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -1.0,
+            "weakest_separation": 0.0226071525
+          },
+          {
+            "axis": "coarsen",
+            "family": "resolution",
+            "field": "density",
+            "first_detected_level": 1.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9595308823
+          },
+          {
+            "axis": "gaussian_blur",
+            "family": "smoothing",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -1.0,
+            "weakest_separation": 0.0
+          },
+          {
+            "axis": "gaussian_impostor",
+            "family": "stochastic",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 1,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "highpass_butterworth",
+            "family": "spectral",
+            "field": "density",
+            "first_detected_level": 1.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.7871609892
+          },
+          {
+            "axis": "highpass_ideal",
+            "family": "spectral",
+            "field": "density",
+            "first_detected_level": 1.0,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 0.950310559,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.7019019328
+          },
+          {
+            "axis": "lowpass_butterworth",
+            "family": "spectral",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -1.0,
+            "weakest_separation": 0.0
+          },
+          {
+            "axis": "lowpass_ideal",
+            "family": "spectral",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -1.0,
+            "weakest_separation": 0.0
+          },
+          {
+            "axis": "median_blur",
+            "family": "smoothing",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -1.0,
+            "weakest_separation": 0.1131900775
+          },
+          {
+            "axis": "translate_subpixel",
+            "family": "geometric",
+            "field": "density",
+            "first_detected_level": 1.0,
+            "is_probe": false,
+            "levels": 6,
+            "monotone_fraction": 0.0,
+            "rank_correlation": 0.4928053803,
+            "weakest_separation": 0.4989390841
+          },
+          {
+            "axis": "translate_x",
+            "family": "geometric",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 5,
+            "monotone_fraction": 0.0,
+            "rank_correlation": null,
+            "weakest_separation": 0.4998263956
+          },
+          {
+            "axis": "uncorrelated",
+            "family": "geometric",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 6,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "additive_noise",
+            "family": "stochastic",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -1.0,
+            "weakest_separation": 0.0
+          },
+          {
+            "axis": "box_blur",
+            "family": "smoothing",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -1.0,
+            "weakest_separation": 0.0
+          },
+          {
+            "axis": "coarsen",
+            "family": "resolution",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9306739709
+          },
+          {
+            "axis": "gaussian_blur",
+            "family": "smoothing",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -1.0,
+            "weakest_separation": 0.0
+          },
+          {
+            "axis": "gaussian_impostor",
+            "family": "stochastic",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 1,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "highpass_butterworth",
+            "family": "spectral",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 0.4658385093,
+            "rank_correlation": 0.5,
+            "weakest_separation": 0.5614752517
+          },
+          {
+            "axis": "highpass_ideal",
+            "family": "spectral",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 2,
+            "monotone_fraction": 0.6459627329,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.6406388642
+          },
+          {
+            "axis": "lowpass_butterworth",
+            "family": "spectral",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -0.5,
+            "weakest_separation": 0.0
+          },
+          {
+            "axis": "lowpass_ideal",
+            "family": "spectral",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 2,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -1.0,
+            "weakest_separation": 0.0
+          },
+          {
+            "axis": "median_blur",
+            "family": "smoothing",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 0.0372670807,
+            "rank_correlation": -1.0,
+            "weakest_separation": 0.2321669689
+          },
+          {
+            "axis": "translate_subpixel",
+            "family": "geometric",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 6,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -0.030358837,
+            "weakest_separation": 0.499286293
+          },
+          {
+            "axis": "translate_x",
+            "family": "geometric",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 5,
+            "monotone_fraction": 0.0,
+            "rank_correlation": null,
+            "weakest_separation": 0.4997492381
+          },
+          {
+            "axis": "uncorrelated",
+            "family": "geometric",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 6,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "additive_noise",
+            "family": "stochastic",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -1.0,
+            "weakest_separation": 0.0
+          },
+          {
+            "axis": "box_blur",
+            "family": "smoothing",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.4347826087,
+            "rank_correlation": 0.8,
+            "weakest_separation": 0.5556112804
+          },
+          {
+            "axis": "coarsen",
+            "family": "resolution",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.9937888199,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8166351607
+          },
+          {
+            "axis": "gaussian_blur",
+            "family": "smoothing",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.3043478261,
+            "rank_correlation": 0.8,
+            "weakest_separation": 0.5494001003
+          },
+          {
+            "axis": "gaussian_impostor",
+            "family": "stochastic",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 1,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "highpass_butterworth",
+            "family": "spectral",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0559006211,
+            "rank_correlation": -0.2,
+            "weakest_separation": 0.4652984067
+          },
+          {
+            "axis": "highpass_ideal",
+            "family": "spectral",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -0.8,
+            "weakest_separation": 0.4484394892
+          },
+          {
+            "axis": "lowpass_butterworth",
+            "family": "spectral",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0,
+            "rank_correlation": 0.4,
+            "weakest_separation": 0.0082944331
+          },
+          {
+            "axis": "lowpass_ideal",
+            "family": "spectral",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -0.2,
+            "weakest_separation": 0.0077157517
+          },
+          {
+            "axis": "median_blur",
+            "family": "smoothing",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 0.9689440994,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.6914470892
+          },
+          {
+            "axis": "translate_subpixel",
+            "family": "geometric",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 6,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -0.0857142857,
+            "weakest_separation": 0.4994791868
+          },
+          {
+            "axis": "translate_x",
+            "family": "geometric",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 5,
+            "monotone_fraction": 0.0,
+            "rank_correlation": null,
+            "weakest_separation": 0.4997492381
+          },
+          {
+            "axis": "uncorrelated",
+            "family": "geometric",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 6,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          }
+        ],
+        "dataset": "kinet_re5e4",
+        "frames": 161,
+        "measured": true,
+        "probes": [
+          {
+            "field": "density",
+            "impostor_damage": null,
+            "impostor_nearest_level": "",
+            "unrelated_field_value": 15.226150859
+          },
+          {
+            "field": "velocity",
+            "impostor_damage": null,
+            "impostor_nearest_level": "",
+            "unrelated_field_value": 9.2316841236
+          },
+          {
+            "field": "vorticity",
+            "impostor_damage": null,
+            "impostor_nearest_level": "",
+            "unrelated_field_value": 9.3398743212
+          }
+        ],
+        "run": "comparison_1789629226"
+      },
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N)",
+        "resolution_dependent": true,
+        "scale_dependent": false,
+        "triangle_inequality": false
+      },
+      "name": "increment_flatness",
+      "output": {
+        "description": "Fourth moment of the one-cell increments divided by the square of their second moment, averaged over spatial axes and channels. Exactly 3 for a Gaussian field. Reported per variant; the drift from the reference's value is what is read.",
+        "lower_bound": 1.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/increment_flatness",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Flatness of one-cell increments, a dimensionless measure of how much of a field's variation is carried by rare sharp events rather than spread evenly over the domain."
+    },
+    {
+      "card": "metrics/increment_w1/card.md",
+      "category": "statistical",
+      "declared": {
+        "arity": "pairwise",
+        "cost": "cheap",
+        "differentiable": true,
+        "fields": [
+          "*"
+        ],
+        "has_pointwise_map": false,
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "mean",
+        "returns": "scalar",
+        "symmetric": true,
+        "target": null,
+        "units": "field"
+      },
+      "evidence": {
+        "axes": [
+          {
+            "axis": "additive_noise",
+            "family": "stochastic",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "box_blur",
+            "family": "smoothing",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9598395124
+          },
+          {
+            "axis": "coarsen",
+            "family": "resolution",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8279387369
+          },
+          {
+            "axis": "gaussian_blur",
+            "family": "smoothing",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9666293739
+          },
+          {
+            "axis": "gaussian_impostor",
+            "family": "stochastic",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 1,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "highpass_butterworth",
+            "family": "spectral",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8324524517
+          },
+          {
+            "axis": "highpass_ideal",
+            "family": "spectral",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8292504147
+          },
+          {
+            "axis": "lowpass_butterworth",
+            "family": "spectral",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8602291578
+          },
+          {
+            "axis": "lowpass_ideal",
+            "family": "spectral",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9575247869
+          },
+          {
+            "axis": "median_blur",
+            "family": "smoothing",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9783958952
+          },
+          {
+            "axis": "translate_subpixel",
+            "family": "geometric",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 6,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -0.7142857143,
+            "weakest_separation": 0.0
+          },
+          {
+            "axis": "translate_x",
+            "family": "geometric",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 5,
+            "monotone_fraction": 0.0,
+            "rank_correlation": null,
+            "weakest_separation": 0.5
+          },
+          {
+            "axis": "uncorrelated",
+            "family": "geometric",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 6,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "additive_noise",
+            "family": "stochastic",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "box_blur",
+            "family": "smoothing",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.809228039
+          },
+          {
+            "axis": "coarsen",
+            "family": "resolution",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8637012461
+          },
+          {
+            "axis": "gaussian_blur",
+            "family": "smoothing",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.889433278
+          },
+          {
+            "axis": "gaussian_impostor",
+            "family": "stochastic",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 1,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "highpass_butterworth",
+            "family": "spectral",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8850738783
+          },
+          {
+            "axis": "highpass_ideal",
+            "family": "spectral",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 2,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9947532888
+          },
+          {
+            "axis": "lowpass_butterworth",
+            "family": "spectral",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 0.9192546584,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9388912465
+          },
+          {
+            "axis": "lowpass_ideal",
+            "family": "spectral",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 2,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.88129316
+          },
+          {
+            "axis": "median_blur",
+            "family": "smoothing",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.7710736469
+          },
+          {
+            "axis": "translate_subpixel",
+            "family": "geometric",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 6,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -0.7142857143,
+            "weakest_separation": 0.0
+          },
+          {
+            "axis": "translate_x",
+            "family": "geometric",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 5,
+            "monotone_fraction": 0.0,
+            "rank_correlation": null,
+            "weakest_separation": 0.5
+          },
+          {
+            "axis": "uncorrelated",
+            "family": "geometric",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 6,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "additive_noise",
+            "family": "stochastic",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "box_blur",
+            "family": "smoothing",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.6383627175
+          },
+          {
+            "axis": "coarsen",
+            "family": "resolution",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.9192546584,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.6851587516
+          },
+          {
+            "axis": "gaussian_blur",
+            "family": "smoothing",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.6775587362
+          },
+          {
+            "axis": "gaussian_impostor",
+            "family": "stochastic",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 1,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "highpass_butterworth",
+            "family": "spectral",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8882759153
+          },
+          {
+            "axis": "highpass_ideal",
+            "family": "spectral",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.800933606
+          },
+          {
+            "axis": "lowpass_butterworth",
+            "family": "spectral",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.5949616141
+          },
+          {
+            "axis": "lowpass_ideal",
+            "family": "spectral",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.9254658385,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.5948458779
+          },
+          {
+            "axis": "median_blur",
+            "family": "smoothing",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 3,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.7616604298
+          },
+          {
+            "axis": "translate_subpixel",
+            "family": "geometric",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 6,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -0.6,
+            "weakest_separation": 0.0
+          },
+          {
+            "axis": "translate_x",
+            "family": "geometric",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 5,
+            "monotone_fraction": 0.0,
+            "rank_correlation": null,
+            "weakest_separation": 0.5
+          },
+          {
+            "axis": "uncorrelated",
+            "family": "geometric",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": true,
+            "levels": 6,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "weakest_separation": null
+          }
+        ],
+        "dataset": "kinet_re5e4",
+        "frames": 161,
+        "measured": true,
+        "probes": [
+          {
+            "field": "density",
+            "impostor_damage": null,
+            "impostor_nearest_level": "",
+            "unrelated_field_value": 0.0
+          },
+          {
+            "field": "velocity",
+            "impostor_damage": null,
+            "impostor_nearest_level": "",
+            "unrelated_field_value": 0.0
+          },
+          {
+            "field": "vorticity",
+            "impostor_damage": null,
+            "impostor_nearest_level": "",
+            "unrelated_field_value": 0.0
+          }
+        ],
+        "run": "comparison_1789629226"
+      },
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N log N)",
+        "resolution_dependent": true,
+        "scale_dependent": true,
+        "triangle_inequality": true
+      },
+      "name": "increment_w1",
+      "output": {
+        "description": "Mean over channels and spatial axes of the 1-Wasserstein distance between the reference's and the candidate's increment distributions along that axis, in the field's units. Zero when every increment distribution matches.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/increment_w1",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Transport distance between the one-cell increment distributions of two fields, comparing the whole shape of those distributions while ignoring where in the domain they arose."
     },
     {
       "card": "metrics/kinetic_energy/card.md",
