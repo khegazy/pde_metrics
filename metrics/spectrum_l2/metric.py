@@ -11,7 +11,7 @@ impostor -- a field with the reference's exact amplitude spectrum and randomised
 "does not catch the L^p family ... The check is aimed at quantities that are functions of
 |F(f)| alone -- an energy spectrum, a two-point correlation -- which score it *perfectly*. A
 report where everything passes is not reassuring; it means nothing in the panel can be
-caught by it yet." This metric is exactly such a quantity: on ``comparison_1789632054`` it
+caught by it yet." This metric is exactly such a quantity: on ``comparison_1790633480`` it
 scored the impostor at about 1e-15, the same as the undegraded reference.
 
 What the canary cannot yet do is *report* that. Its damage column is normalised by the
@@ -36,19 +36,25 @@ from metrics.registry import metric
 def radial_energy_spectrum(
     field: NDArray[np.floating], ctx: MetricContext
 ) -> NDArray[np.floating]:
-    """Fluctuation energy of ``field`` summed into shells of constant ``|k|``.
+    """Fluctuation energy of ``field`` summed into unit-width shells, ``rint(|k|)``.
 
-    Delegates to the binning already used by the severity calibration rather than repeating
-    it. That is not tidiness: ``fmeval/wavenumbers.py`` exists because there were once two
-    definitions of ``|k|`` in this repository and they disagreed about the diagonal modes,
-    turning a low-pass asked to remove 30% of the energy into one that removed 99.997%. A
-    second shell definition here would reintroduce exactly that hazard, so this uses the
-    one that is already there.
+    The magnitude ``|k|`` is the repository's one definition, from ``fmeval/wavenumbers.py``;
+    only the grouping is local. That module exists because the filters and the calibration
+    once disagreed about which side of a cutoff the diagonal modes fell on, and a filter
+    that was asked to remove 30% of density's energy removed 99.997%. The hazard is two
+    operators disagreeing about the *same* cutoff. A metric that groups the shared
+    magnitudes into shells does not create it, so the shells here can follow the
+    turbulence literature without reintroducing it.
 
-    Those two helpers are private to :mod:`fmeval.calibration`. Promoting them to a public
-    home -- ``fmeval/wavenumbers.py`` is the obvious one -- is a refactor of shared code
-    and is left for a person to approve; importing them is the option that cannot change
-    the behaviour of anything that already works.
+    Shells were first taken as the calibration's exact distinct magnitudes. That gives 5924
+    shells of a median 8 modes on 256 x 256, against 182 here, which makes the comparison
+    close to a mode-by-mode one: two realisations of the same flow would differ through
+    the scatter of individual mode amplitudes rather than through their spectra.
+    ``issues/038`` records the measurement and the decision to switch.
+
+    Every mode is kept, including the corners beyond ``|k| = N/2``, whose shells are only
+    partly populated by the square grid. Nothing is dropped, so the total energy in the
+    spectrum is the field's fluctuation energy exactly.
 
     The spatial mean is removed before transforming, so the k = 0 shell carries no energy.
     On this data that is not a detail: density is 1.0 +/- 1.8e-4, so its mean is four orders
@@ -62,10 +68,13 @@ def radial_energy_spectrum(
     Returns:
         1-D array of energy per shell, summed over channels, ascending in ``|k|``.
     """
-    from fmeval.calibration import _binned_energy, _magnitude_bins
+    from fmeval.wavenumbers import wavenumber_magnitude
 
-    shells, inverse = _magnitude_bins(ctx.grid)
-    return _binned_energy(field, inverse, len(shells))
+    shell = np.rint(wavenumber_magnitude(tuple(ctx.grid.shape))).astype(np.int64)
+    spatial = tuple(range(1, field.ndim))
+    fluct = field - field.mean(axis=spatial, keepdims=True)
+    power = sum(np.abs(np.fft.fftn(channel)) ** 2 for channel in fluct)
+    return np.bincount(shell.ravel(), power.ravel(), minlength=int(shell.max()) + 1)
 
 
 @metric(

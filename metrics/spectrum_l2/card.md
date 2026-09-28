@@ -5,20 +5,21 @@ kind: metric
 
 ## Definition
 
-Remove the spatial mean of each channel, transform, and sum the squared moduli into shells
-of constant wavevector magnitude. Writing $\hat{f}^{(c)}_{\mathbf{m}}$ for the transform of
-the mean-removed channel $c$ and $|\mathbf{m}|$ for the integer wavenumber magnitude of mode
-$\mathbf{m}$, the shell energies are
+Remove the spatial mean of each channel, transform, and sum the squared moduli into
+unit-width shells of wavevector magnitude. Writing $\hat{f}^{(c)}_{\mathbf{m}}$ for the
+transform of the mean-removed channel $c$ and $|\mathbf{m}|$ for the magnitude of mode
+$\mathbf{m}$ in integer wavenumber units (cycles across the domain), the shell energies are
 
 $$
-E_f(\kappa) = \sum_{c=1}^{C} \; \sum_{|\mathbf{m}| = \kappa}
+E_f(\kappa) = \sum_{c=1}^{C} \; \sum_{\mathrm{rint}(|\mathbf{m}|) = \kappa}
 \bigl| \hat{f}^{(c)}_{\mathbf{m}} \bigr|^2 \tag{1}
 $$
 
-where $\kappa$ runs over the distinct magnitudes the grid supports. Equation (1) is the
-discrete counterpart of the shell-averaged energy spectrum of turbulence (Equation 3 of
-[@boffetta2012]; see also [@pope2000]), with one difference that Limitations spells out: its
-shells are exact magnitudes rather than unit-width bands. The metric is the L2
+where $\kappa = 0, 1, 2, \ldots$ and shell $\kappa$ collects every mode with
+$\kappa - \tfrac12 \le |\mathbf{m}| < \kappa + \tfrac12$. Equation (1) is the discrete
+counterpart of the shell-averaged energy spectrum of turbulence (Equation 3 of
+[@boffetta2012]; see also [@pope2000]). On the 256 by 256 analysis grid there are 182 shells,
+running to the corner mode at $|\mathbf{m}| = 181.02$. The metric is the L2
 distance between the reference's and the candidate's shell energies, normalised by the
 reference's:
 
@@ -37,11 +38,16 @@ is load-bearing rather than cosmetic: density is $1.0 \pm 1.8 \times 10^{-4}$, s
 four orders of magnitude larger than any fluctuation, and a spectrum retaining it would
 compare two means and ignore the flow entirely.
 
-The shells are the *exact* distinct magnitudes of the grid, not rounded bins, and both the
-magnitudes and the binning are taken from the code the severity calibration already uses.
-There were once two definitions of $|\mathbf{k}|$ in this repository and they disagreed about
-the diagonal modes; on density that turned a low-pass asked to remove 30% of the energy into
-one that removed 99.997%. A second definition here would reintroduce that hazard.
+The shells are unit-width bands. The magnitude $|\mathbf{m}|$ is the repository's one
+definition, from `fmeval/wavenumbers.py`, and only the grouping is chosen here. That module
+exists because the filters and the calibration once disagreed about which side of a cutoff the
+diagonal modes fell on, and on density a low-pass asked to remove 30% of the energy removed
+99.997%; grouping a shared magnitude into shells cannot recreate that disagreement. The first
+version of this metric grouped modes by their exact magnitude instead, which gives 5924 shells
+of a median 8 modes on this grid and made Equation (2) nearly a mode-by-mode comparison.
+`issues/038` records why it was changed. Every mode is kept, including the corners beyond
+$|\mathbf{m}| = 128$, whose shells the square grid only partly fills, so the shell energies sum
+to the field's fluctuation energy exactly.
 
 The normalisation in Equation (2) is taken from the reference, which makes the metric
 dimensionless and scale-free — multiplying both fields by a constant scales both spectra by
@@ -54,13 +60,16 @@ discarded, and that is the metric's defining property rather than an approximati
 ### Boundary handling
 
 Periodic on every axis, inherited from the discrete Fourier transform in Equation (1). The
+shells are in cycles across the domain, so they are circles in physical wavenumber only when
+the domain is square; the analysis grid here is 256 by 256 with equal spacing, and on a
+rectangular domain Equation (1) would group modes of different physical wavelength. The
 shells depend only on the grid's shape and not on its spacing, so unlike
 [h_minus_one](../../metrics/h_minus_one/card.md) this metric reads no length from the analysis grid and
 its value is unchanged by a rescaling of the cell size.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
 
 | test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
 |---|---|---|---|---|---|
@@ -69,14 +78,14 @@ its value is unchanged by a rescaling of the cell size.
 | Displacement | vorticity | 2 | — to — | — | level — |
 | Resolution loss | density | 1 | 1 to 1 | 1 | level — |
 | Resolution loss | velocity | 1 | 1 to 1 | 1 | level — |
-| Resolution loss | vorticity | 1 | 1 to 1 | 0.895 | level — |
+| Resolution loss | vorticity | 1 | 1 to 1 | 0.813 | level — |
 | Smoothing | density | 3 | 1 to 1 | 1 | level — |
-| Smoothing | velocity | 3 | 1 to 1 | 0.971 | level — |
-| Smoothing | vorticity | 3 | 1 to 1 | 0.74 | level — |
-| Spectral filtering | density | 4 | 1 to 1 | 0.989 | level — |
+| Smoothing | velocity | 3 | 1 to 1 | 0.976 | level — |
+| Smoothing | vorticity | 3 | 1 to 1 | 0.685 | level — |
+| Spectral filtering | density | 4 | 1 to 1 | 0.981 | level — |
 | Spectral filtering | velocity | 4 | 1 to 1 | 0.999 | level — |
-| Spectral filtering | vorticity | 4 | 1 to 1 | 0.842 | level — |
-| Noise | density | 1 | 1 to 1 | 0.999 | level — |
+| Spectral filtering | vorticity | 4 | 1 to 1 | 0.777 | level — |
+| Noise | density | 1 | 1 to 1 | 1 | level — |
 | Noise | velocity | 1 | 1 to 1 | 1 | level — |
 | Noise | vorticity | 1 | 1 to 1 | 1 | level — |
 | trap test: fake prediction, right spectrum | density | 1 | — | — | damage — |
@@ -177,7 +186,7 @@ not two independent checks.
 
 A second, quieter failure comes from the linear normalisation in Equation (2). The sum is
 dominated by whichever shells hold the most energy, and on this data that is a handful of very
-low wavenumbers: the calibration recorded with `comparison_1789632054` puts half of density's
+low wavenumbers: the calibration recorded with `comparison_1790633480` puts half of density's
 fluctuation energy below $|\mathbf{m}| = 1.29$ and 90% below 3.03, and for velocity half at
 $|\mathbf{m}| = 1$. It follows from Equation (2) that a prediction that destroys the entire
 inertial range while preserving the largest scales scores close to zero, because the shells
@@ -185,16 +194,13 @@ it ruined contributed little to the norm in the first place. A logarithmic or
 per-shell-relative comparison would weight the scales more evenly and is not what this
 computes.
 
-Third, the shells are very fine. Grouping by exact magnitude gives 5924 distinct shells on the
-256 by 256 analysis grid, holding a median of 8 modes each, where rounding to integer
-magnitudes would give 182. Equation (1) is therefore close to a comparison of individual mode
-energies, pooled only over the grid's reflection and rotation symmetries, rather than the
-shell-averaged spectrum of the turbulence literature. On the degradation ladder, where every
-candidate is an operator applied to the reference, that makes no difference. Against a
-prediction that is a different realisation of the flow, each shell's energy would be an
-average over about eight modes rather than over hundreds, and the realisation-to-realisation
-scatter would enter the value; that is a consequence of the binning, not yet measured, and
-`issues/038` asks whether to keep it.
+Third, a shell is blind to where inside it the energy sits. That is the purpose of shell
+averaging, and it matters most at the lowest shells, which are the widest relative to their
+wavenumber and hold the fewest modes. On this data it is not a corner case: shell 1 holds
+both the axis modes at $|\mathbf{m}| = 1$ and the diagonal modes at $\sqrt 2$, and 69% of
+density's fluctuation energy sits in the diagonal ones against 3e-5 in the axis ones
+(`CLAUDE.md`, finding 5). A prediction that moved that energy from the diagonal modes to the
+axis modes would score zero here; `test_metric.py` checks exactly that case.
 
 Finally, the normalised damage scale is not available. It is anchored on an unrelated field
 built from large translations, which this metric cannot see: the anchor scores the same
@@ -205,11 +211,11 @@ position-blind family and what would settle it.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `0104b46cf8d9` (working tree dirty). Run `comparison_1789632054`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `ebdd822e5f27` (working tree dirty). Run `comparison_1790633480`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1789632054`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1790633480`.
 
 <!-- END GENERATED run -->
 
@@ -218,71 +224,72 @@ Every number in this section comes from that one run. Regenerate with `python -m
 [gaussian_blur](../../degradations/gaussian_blur/card.md) ·
 [box_blur](../../degradations/box_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `box_blur` | density | 4 | 1 | 1 | 1 |
 | `box_blur` | velocity | 4 | 1 | 1 | 1 |
-| `box_blur` | vorticity | 4 | 1 | 1 | 0.74 |
+| `box_blur` | vorticity | 4 | 1 | 1 | 0.685 |
 | `gaussian_blur` | density | 4 | 1 | 1 | 1 |
 | `gaussian_blur` | velocity | 4 | 1 | 1 | 1 |
-| `gaussian_blur` | vorticity | 4 | 1 | 1 | 0.88 |
+| `gaussian_blur` | vorticity | 4 | 1 | 1 | 0.813 |
 | `median_blur` | density | 3 | 1 | 1 | 1 |
-| `median_blur` | velocity | 3 | 1 | 1 | 0.971 |
-| `median_blur` | vorticity | 3 | 1 | 1 | 0.928 |
+| `median_blur` | velocity | 3 | 1 | 1 | 0.976 |
+| `median_blur` | vorticity | 3 | 1 | 1 | 0.908 |
 
 <!-- END GENERATED results_smoothing -->
 
 Every smoothing axis is ordered correctly in every frame on all three fields, which is what
 Equation (2) implies for any operator that only removes energy. The size of the response is
-set by where each field keeps its energy. At the strongest `gaussian_blur` the metric reads
-0.62 on density and 0.58 on velocity, where the blur removes 70% and 64% of the fluctuation
-energy, but only 0.15 on vorticity, where it removes 47%. The vorticity figure is lower than
-its energy loss alone would suggest. Our reading, not a separate measurement, is that the
-square in Equation (2) weights the few most energetic shells, and on vorticity the blur takes
-its energy from many weak high-wavenumber shells that contribute little to that norm. The
-weakest separation in the family, 0.74 on `box_blur` applied to vorticity, is on the same
-field.
+set by where the removed energy sat. Writing $r(\kappa) = 1 - E_g(\kappa)/E_f(\kappa)$ for
+the fraction a candidate removes from shell $\kappa$, Equation (2) is exactly
+$S = \bigl(\sum_\kappa r(\kappa)^2 E_f(\kappa)^2 / \sum_\kappa E_f(\kappa)^2\bigr)^{1/2}$,
+an average of the per-shell losses weighted by the *square* of each shell's energy. A blur
+takes its energy from high shells, which that weight discounts. At the strongest
+`gaussian_blur` the metric reads 0.63 on density and 0.58 on velocity, where the blur removes
+70% and 64% of the fluctuation energy, and 0.24 on vorticity, where it removes 47%: vorticity's
+energy reaches much higher shells (half of it lies above wavenumber 4, a tenth above 23, in
+this run's calibration), so more of what the blur removes is discounted. The weakest
+separation in the family, 0.685 on `box_blur` applied to vorticity, is on the same field.
 
 ### Spectral filtering
 
 [lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
 [highpass_ideal](../../degradations/highpass_ideal/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `highpass_butterworth` | density | 4 | 1 | 1 | 0.989 |
+| `highpass_butterworth` | density | 4 | 1 | 1 | 0.985 |
 | `highpass_butterworth` | velocity | 3 | 1 | 1 | 1 |
-| `highpass_butterworth` | vorticity | 4 | 1 | 1 | 0.926 |
+| `highpass_butterworth` | vorticity | 4 | 1 | 1 | 0.906 |
 | `highpass_ideal` | density | 3 | 1 | 1 | 0.994 |
 | `highpass_ideal` | velocity | 2 | 1 | 1 | 1 |
-| `highpass_ideal` | vorticity | 4 | 1 | 1 | 0.935 |
-| `lowpass_butterworth` | density | 4 | 1 | 1 | 0.989 |
+| `highpass_ideal` | vorticity | 4 | 1 | 1 | 0.912 |
+| `lowpass_butterworth` | density | 4 | 1 | 1 | 0.981 |
 | `lowpass_butterworth` | velocity | 3 | 1 | 1 | 1 |
-| `lowpass_butterworth` | vorticity | 4 | 1 | 1 | 0.842 |
-| `lowpass_ideal` | density | 3 | 1 | 1 | 0.997 |
+| `lowpass_butterworth` | vorticity | 4 | 1 | 1 | 0.78 |
+| `lowpass_ideal` | density | 3 | 1 | 1 | 0.991 |
 | `lowpass_ideal` | velocity | 2 | 1 | 1 | 0.999 |
-| `lowpass_ideal` | vorticity | 4 | 1 | 1 | 0.847 |
+| `lowpass_ideal` | vorticity | 4 | 1 | 1 | 0.777 |
 
 <!-- END GENERATED results_spectral -->
 
-Ordered correctly everywhere, and this is the family where the linear normalisation of
-Equation (2) is most visible. `highpass_ideal` at its mildest strength removes 45% of
-vorticity's energy, all of it from the lowest, most energetic shells, and the metric already
-reads 0.97 — almost the value of a flat prediction. `lowpass_ideal`, removing a comparable 6%
-to 47% from the other end of the spectrum, reads 0.01 to 0.20 on the same field. Energy lost
-at large scales costs far more here than the same energy lost at small scales, which is the
-Limitations point measured.
+Ordered correctly everywhere, and this is the family where the energy-squared weighting is
+most visible. `highpass_ideal` at its mildest strength removes 45% of vorticity's energy, all
+of it from the lowest, most energetic shells, and the metric already reads 0.92, close to the
+value of a flat prediction. `lowpass_ideal`, removing between 6% and 47% from the other end of
+the spectrum, reads 0.03 to 0.31 on the same field. Energy lost at large scales costs far more
+here than the same energy lost at small scales, which is the Limitations point measured.
 
 ### Displacement
 
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -296,95 +303,99 @@ Limitations point measured.
 <!-- END GENERATED results_geometric -->
 
 Blind, as the definition requires. A whole-cell translation leaves every Fourier amplitude
-unchanged, and the values on `translate_x` are round-off, between 2e-17 and 2e-16. The
-Fourier-shift interpolation in `translate_subpixel` moves them only to about 1e-12. Every
-ordering statistic in the table is withheld on both axes, because a ranking of those values is
-a ranking of the last bits of floating-point arithmetic.
+unchanged, and the medians on `translate_x` are round-off, 2e-17 to 1.8e-16. The Fourier-shift
+interpolation in `translate_subpixel` moves individual values to at most 8e-11. Every ordering
+statistic in the table is withheld on both axes, because a ranking of those values is a
+ranking of the last bits of floating-point arithmetic.
 
 ### Resolution loss
 
 [coarsen](../../degradations/coarsen/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `coarsen` | density | 4 | 1 | 1 | 1 |
 | `coarsen` | velocity | 4 | 1 | 1 | 1 |
-| `coarsen` | vorticity | 4 | 1 | 1 | 0.895 |
+| `coarsen` | vorticity | 4 | 1 | 1 | 0.813 |
 
 <!-- END GENERATED results_resolution -->
 
 Ordered correctly on all three fields in every frame. The response is small on the smooth
-fields — 0.06 on density and 0.03 on velocity at a factor of 16 — because block averaging
-there removes little of the energy that dominates Equation (2); on vorticity it reaches 0.15.
+fields, 0.068 on density and 0.031 on velocity at a factor of 16, where block averaging removes
+6% and 3% of their energy. On vorticity it removes 41% and the metric reaches 0.23; the weakest
+separation, 0.813, is on the same field.
 
 ### Noise
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `additive_noise` | density | 4 | 1 | 1 | 0.999 |
+| `additive_noise` | density | 4 | 1 | 1 | 1 |
 | `additive_noise` | velocity | 4 | 1 | 1 | 1 |
 | `additive_noise` | vorticity | 4 | 1 | 1 | 1 |
 
 <!-- END GENERATED results_stochastic -->
 
-Ordered correctly, with neighbouring strengths separated almost perfectly, but the values
-are the smallest of any family: 0.007 on density and 0.018 on vorticity at the strongest
-noise. White noise spreads its energy thinly over every shell, and Equation (2) weights each
-shell by its energy, so noise that is plain to the eye barely registers.
+Ordered correctly with complete separation between neighbouring strengths, but the values
+are small beside the energy involved. The strongest noise *adds* 25% to the fluctuation energy
+of every field, and the metric reads 0.031 on density, 0.026 on velocity and 0.069 on
+vorticity. White noise adds energy to each shell in proportion to the number of modes in it,
+so most of it lands in the high shells, where the energy-squared weight described under
+Smoothing is smallest.
 
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | value on an unrelated field |
 |---|---|---|---|
-| density | — | `` | 1.64e-16 |
-| velocity | — | `` | 1.62e-16 |
-| vorticity | — | `` | 1.65e-16 |
+| density | — | `` | 1.81e-16 |
+| velocity | — | `` | 1.61e-16 |
+| vorticity | — | `` | 1.59e-16 |
 
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage of 1 is what a field with no relation to the truth scores, so the damage column says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture.
 
 <!-- END GENERATED results_canaries -->
 
 The fake prediction was caught in the sense that matters: it has the reference's exact
-Fourier amplitudes, and the metric scored it at 2.8e-15, 1.6e-16 and 2.2e-16 on density,
-velocity and vorticity, indistinguishable from the undegraded reference. The damage column
-cannot say so, because the unrelated-field anchor is built from translations, which this
-metric also cannot see, and the table shows that anchor at 1.6e-16. Every damage score is
-therefore withheld. `issues/037` records this for the whole position-blind family.
+Fourier amplitudes, and the metric scored it at medians of 2.8e-15, 1.6e-16 and 2.0e-16 on
+density, velocity and vorticity, indistinguishable from the undegraded reference. The damage
+column cannot say so, because the unrelated-field anchor is built from translations, which
+this metric also cannot see, and the table shows that anchor at 1.6e-16 to 1.8e-16. Every
+damage score and every "first strength detected" level is therefore withheld.
+`issues/037` records this for the whole position-blind family and what would settle it.
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
 
 | compared with | rank correlation over every degradation |
 |---|---|
-| `increment_w1` | 0.727 |
-| `nrmse` | 0.199 |
+| `increment_w1` | 0.732 |
+| `nrmse` | 0.202 |
 | `h_minus_one` | 0.136 |
-| `rmse` | 0.125 |
-| `mse` | 0.125 |
-| `mae` | 0.115 |
-| `h1_seminorm` | -0.19 |
-| `increment_flatness` | -0.201 |
-| `palinstrophy` | -0.741 |
-| `enstrophy` | -0.839 |
+| `rmse` | 0.131 |
+| `mse` | 0.13 |
+| `mae` | 0.123 |
+| `h1_seminorm` | -0.186 |
+| `increment_flatness` | -0.214 |
+| `palinstrophy` | -0.731 |
+| `enstrophy` | -0.831 |
 
 Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
 The ranking this metric produces is close to independent of the pointwise family, correlating
-0.115 to 0.199 with `mae`, `mse`, `rmse` and `nrmse`, and closest to `increment_w1` at 0.73,
+0.123 to 0.202 with `mae`, `mse`, `rmse` and `nrmse`, and closest to `increment_w1` at 0.73,
 the other metric here that reads only a distribution rather than an arrangement. The strong
 negative correlations with `enstrophy` and `palinstrophy` are orientation rather than
 disagreement: those two are single-field quantities that fall as the damage rises.

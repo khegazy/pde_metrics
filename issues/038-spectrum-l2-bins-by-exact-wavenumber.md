@@ -1,8 +1,25 @@
 # `spectrum_l2` bins by exact wavevector magnitude, so it is nearly a per-mode comparison
 
 **Category:** metric definition
-**Priority:** low — needs a decision, not a fix; no effect on the current ladder
-**Status:** open
+**Priority:** —
+**Status:** RESOLVED (2026-09-28) — option 2, integer shells
+
+## Decision
+
+Option 2 below, chosen by the maintainer on 2026-09-28: `spectrum_l2` now bins by
+`rint(|k|)`, 182 shells on 256 x 256. The magnitude is still the one in
+`fmeval/wavenumbers.py`; only the grouping is local to the metric, which is why this does not
+reintroduce the filter/calibration disagreement that module was written to end. Every mode is
+kept, including the partly filled corner shells. The card's evidence was regenerated from a
+fresh run with the new binning, and the tests pin both the shell count and the case the change
+exists for: an axis mode and a diagonal mode of equal amplitude now share shell 1 and score 0,
+where the exact binning scored sqrt 2.
+
+What the decision gives up is stated in the card's Limitations: a unit-width shell cannot see
+energy move within it, which matters most at shell 1, where density keeps 69% of its
+fluctuation energy in the sqrt 2 diagonal modes.
+
+The rest of this file is the record as it stood when the decision was asked for.
 
 ## Context
 

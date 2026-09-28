@@ -126,13 +126,48 @@ def test_energy_lands_in_the_shell_the_mode_belongs_to():
     """A single mode puts all of its energy in exactly one shell.
 
     A mode-2 wave along x has |k| = 2 in integer wavenumber units, so every other shell
-    must be empty. This pins the binning, which is imported from the calibration rather
-    than defined here, and would catch that import silently changing meaning.
+    must be empty, and the populated one must be shell 2.
     """
     ctx = _ctx((8, 8))
     spectrum = radial_energy_spectrum(_wave((8, 8), mode=2), ctx)
     nonzero = np.flatnonzero(spectrum > 1e-9 * spectrum.max())
-    assert len(nonzero) == 1, f"expected one populated shell, got {nonzero}"
+    assert nonzero.tolist() == [2], f"expected shell 2 alone, got {nonzero}"
+
+
+def test_a_diagonal_mode_shares_a_shell_with_the_axis_mode_nearest_it():
+    """Shells are unit-width bands of ``rint(|k|)``, so |k| = 1 and |k| = sqrt 2 share one.
+
+    A cosine along x has its energy at the modes (+-1, 0); the same cosine along the
+    diagonal x + y has it at (+-1, +-1), with |k| = sqrt 2 = 1.414, which rounds to 1.
+    Equal amplitude means equal energy in shell 1, so the distance is zero. Under the
+    exact-magnitude shells this bundle used first, the two sat in different shells and
+    scored sqrt 2. On this data that is not a corner case: 69% of density's fluctuation
+    energy is in the diagonal modes at |k| = sqrt 2 (CLAUDE.md, finding 5).
+    """
+    shape = (16, 16)
+    ctx = _ctx(shape)
+    x, y = np.meshgrid(np.arange(16), np.arange(16), indexing="ij")
+    axis = np.cos(2.0 * np.pi * x / 16)[np.newaxis]
+    diagonal = np.cos(2.0 * np.pi * (x + y) / 16)[np.newaxis]
+
+    assert spectrum_l2(axis, diagonal, ctx=ctx) == pytest.approx(0.0, abs=1e-12)
+
+
+def test_the_analysis_grid_has_182_shells():
+    """The shell count the card quotes: ``rint(|k|)`` on 256 x 256 runs from 0 to 181.
+
+    The largest magnitude is the corner mode (128, 128), |k| = 181.02. Nothing beyond
+    |k| = 128 is dropped, so the corner shells are partly populated and the total energy of
+    the spectrum equals the field's fluctuation energy exactly.
+    """
+    ctx = _ctx((256, 256))
+    field = np.random.default_rng(0).standard_normal((1, 256, 256))
+    spectrum = radial_energy_spectrum(field, ctx)
+    fluct = field - field.mean()
+
+    assert len(spectrum) == 182
+    # Parseval: sum |F|^2 = N * sum f^2 for numpy's unnormalised forward transform.
+    assert spectrum.sum() == pytest.approx(field.size * (fluct**2).sum())
 
 
 def test_a_uniform_reference_is_nan_rather_than_a_number():

@@ -5826,7 +5826,7 @@
             "levels": 4,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 0.9993827399
+            "weakest_separation": 0.9998842637
           },
           {
             "axis": "box_blur",
@@ -5881,7 +5881,7 @@
             "levels": 4,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 0.9887735813
+            "weakest_separation": 0.9846456541
           },
           {
             "axis": "highpass_ideal",
@@ -5892,7 +5892,7 @@
             "levels": 3,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 0.9937116624
+            "weakest_separation": 0.9938659774
           },
           {
             "axis": "lowpass_butterworth",
@@ -5903,7 +5903,7 @@
             "levels": 4,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 0.9891593689
+            "weakest_separation": 0.9809035145
           },
           {
             "axis": "lowpass_ideal",
@@ -5914,7 +5914,7 @@
             "levels": 3,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 0.9972223294
+            "weakest_separation": 0.9914355156
           },
           {
             "axis": "median_blur",
@@ -5969,7 +5969,7 @@
             "levels": 4,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 1.0
+            "weakest_separation": 0.9999228425
           },
           {
             "axis": "box_blur",
@@ -6057,7 +6057,7 @@
             "levels": 2,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 0.9994213186
+            "weakest_separation": 0.9988040585
           },
           {
             "axis": "median_blur",
@@ -6068,7 +6068,7 @@
             "levels": 3,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 0.9712202461
+            "weakest_separation": 0.9764283785
           },
           {
             "axis": "translate_subpixel",
@@ -6123,7 +6123,7 @@
             "levels": 4,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 0.7395933799
+            "weakest_separation": 0.684772964
           },
           {
             "axis": "coarsen",
@@ -6134,7 +6134,7 @@
             "levels": 4,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 0.8945256742
+            "weakest_separation": 0.8128158636
           },
           {
             "axis": "gaussian_blur",
@@ -6145,7 +6145,7 @@
             "levels": 4,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 0.8804444273
+            "weakest_separation": 0.8131630724
           },
           {
             "axis": "gaussian_impostor",
@@ -6167,7 +6167,7 @@
             "levels": 4,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 0.9260830986
+            "weakest_separation": 0.9058292504
           },
           {
             "axis": "highpass_ideal",
@@ -6178,7 +6178,7 @@
             "levels": 4,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 0.935457737
+            "weakest_separation": 0.9120018518
           },
           {
             "axis": "lowpass_butterworth",
@@ -6189,7 +6189,7 @@
             "levels": 4,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 0.8417499325
+            "weakest_separation": 0.7801396551
           },
           {
             "axis": "lowpass_ideal",
@@ -6200,7 +6200,7 @@
             "levels": 4,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 0.8469194861
+            "weakest_separation": 0.7766289881
           },
           {
             "axis": "median_blur",
@@ -6211,7 +6211,7 @@
             "levels": 3,
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
-            "weakest_separation": 0.9283592454
+            "weakest_separation": 0.9075652945
           },
           {
             "axis": "translate_subpixel",
@@ -6255,22 +6255,22 @@
             "field": "density",
             "impostor_damage": null,
             "impostor_nearest_level": "",
-            "unrelated_field_value": 1.644588557e-16
+            "unrelated_field_value": 1.814604915e-16
           },
           {
             "field": "velocity",
             "impostor_damage": null,
             "impostor_nearest_level": "",
-            "unrelated_field_value": 1.620466421e-16
+            "unrelated_field_value": 1.611334924e-16
           },
           {
             "field": "vorticity",
             "impostor_damage": null,
             "impostor_nearest_level": "",
-            "unrelated_field_value": 1.653307793e-16
+            "unrelated_field_value": 1.586065837e-16
           }
         ],
-        "run": "comparison_1789632054"
+        "run": "comparison_1790633480"
       },
       "kind": "metric",
       "math": {
