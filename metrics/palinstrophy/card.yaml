@@ -1,0 +1,35 @@
+schema_version: 1
+
+name: palinstrophy
+kind: metric
+
+# "A conserved or derived physical quantity of the flow, characterising one field rather
+# than comparing two. Enstrophy and kinetic energy" -- the schema's own wording.
+category: physical
+
+summary: >-
+  Mean squared vorticity gradient of a single field, a reference-free diagnostic of how
+  sharp the rotational structure is rather than how much of it there is.
+
+# A tripwire, like enstrophy: one scalar cannot separate a good prediction from a bad one,
+# but it is the more sensitive of the pair to smoothing.
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    Half the mean squared gradient of the vorticity, summed over components and gradient
+    directions, in the square of the vorticity units per square length. Reported per
+    variant; the drift from the reference is what is read.
+  bounds:
+    lower: 0.0
+    upper: null
+
+math:
+  triangle_inequality: false   # not a distance at all: it takes one field, not two
+  scale_dependent: true        # scaling the field by c scales the value by c squared
+  resolution_dependent: true   # a k^2 moment, so it is dominated by the smallest resolved
+                               # scales and falls sharply as the grid coarsens
+  complexity: "O(N log N)"     # one spectral derivative per channel and direction
+references: [boffetta2012, pope2000]
+review: null

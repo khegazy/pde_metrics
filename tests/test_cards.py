@@ -921,6 +921,10 @@ def test_the_catalog_supports_the_query_it_exists_for():
         # h_minus_one is one FFT, increment_w1 one sort, increment_flatness one pass, and
         # all three are smooth enough in their inputs to serve as losses.
         "h_minus_one", "increment_flatness", "increment_w1",
+        # h1_seminorm and palinstrophy are one spectral derivative per direction and
+        # quadratic in the field; spectrum_l2 is one FFT and a bincount, smooth away from
+        # identical spectra exactly as rmse is away from identical fields.
+        "h1_seminorm", "palinstrophy", "spectrum_l2",
     }
 
 

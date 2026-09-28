@@ -55,6 +55,38 @@ single-field quantity, which `AGENTS.md` already documents as "no dynamic range"
 unrelated-field values are 15.2 / 9.23 / 9.34 against reference values of the same order.
 The two causes are different but the missing scale is the same.
 
+### The canary's own target: `spectrum_l2`
+
+`metrics/spectrum_l2` was added as the kind of quantity the Gaussian impostor exists to
+catch — a function of the Fourier amplitudes alone. Measured on `comparison_1789632054`
+(`kinet_re5e4`, start 2000, reduction 50, 161 frames, grid 256), median values:
+
+| degradation | density | velocity | vorticity |
+|---|---|---|---|
+| `identity` | 0 | 0 | 0 |
+| `translate_x`, every level | 1.5e-16 to 1.9e-16 | 2.1e-17 to 2.2e-17 | 1.3e-16 |
+| `uncorrelated` (the anchor) | 1.3e-16 to 1.9e-16 | 1.6e-16 | 1.6e-16 to 1.7e-16 |
+| `gaussian_impostor` | 2.8e-15 | 1.6e-16 | 2.2e-16 |
+| `gaussian_blur`, strongest | 0.62 | 0.58 | 0.15 |
+
+So the canary does catch it: the impostor scores as the reference does, fifteen orders of
+magnitude below the metric's response to a blur. But the trap-test row reports
+`damage —`, because the damage score divides by the anchor's round-off. The one metric that
+makes the IN-4 check discriminate is exactly the one whose IN-4 result cannot be printed on the
+normalised scale. The same holds for `palinstrophy`, as for every single-field quantity.
+
+A second consequence was a defect rather than a protocol gap, and is fixed: with every value
+on `translate_x` at round-off, the rank-correlation guard compared the axis's spread against
+the axis's own largest value — also round-off — and reported `rho` of 0.0 / 0.10 / −0.1, and
+−0.6 to −0.71 on `translate_subpixel`. `analysis.summarise_axes` now judges round-off against
+the metric's largest value in the same frame across every axis, and those correlations are
+withheld (`tests/test_robustness.py::test_rank_correlation_is_withheld_when_every_value_on_the_axis_is_round_off`).
+
+An interim option, not implemented because it is a reporting decision: the probe summary could
+report the impostor's raw value as a fraction of the metric's largest ladder response when the
+anchor is degenerate. For `spectrum_l2` that fraction is about 1e-15, which says "phase-blind"
+without needing the anchor.
+
 ## Why the obvious fixes do not work
 
 **Use a different translation.** No translation helps; the invariance is exact.

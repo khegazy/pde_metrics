@@ -1,0 +1,39 @@
+schema_version: 1
+
+name: h1_seminorm
+kind: metric
+
+# Same family as h_minus_one: "Norms that weight the scales differently from a plain
+# average -- Sobolev, the negative-order norms", here at positive order.
+category: functional
+
+summary: >-
+  Root-mean-square gradient of the error, a Sobolev norm at order plus one that charges
+  more for small-scale error than a pointwise norm does rather than less.
+
+# Implemented to record a claim as measured rather than recalled. The tracker rates the H^1
+# penalty Low on the grounds that the answer is already known -- an H^1 penalty helps slightly and
+# still fails at true discontinuities -- and asks for it to be recorded as tested and
+# insufficient. This bundle is that record, and the mirror image h_minus_one is read
+# against.
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    Root mean square of the spectral gradient of the error, summed over channels and
+    gradient directions, in the field's units per length. Normalised to match h_minus_one,
+    so for an error carried by one mode the two multiply to the mean squared error.
+  bounds:
+    lower: 0.0
+    upper: null
+
+math:
+  # A genuine seminorm of the difference, so the triangle inequality holds. It vanishes on
+  # constants, making it a pseudometric rather than a metric.
+  triangle_inequality: true
+  scale_dependent: true        # scaling both fields by c scales the value by c
+  resolution_dependent: true   # the gradient is dominated by the smallest resolved scales
+  complexity: "O(N log N)"     # one spectral derivative per channel and direction
+references: [pope2000]
+review: null

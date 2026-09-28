@@ -52,6 +52,8 @@ Designed, hooks in place, not built.
 | [033](033-link-rewriting-is-only-checked-for-deadness.md) | Site link rewriting is checked for dead links, not correct destinations | medium |
 | [035](035-no-generated-block-for-cross-metric-damage.md) | No generated block carries per-level damage beside the other metrics, which is the whole claim of a displacement-tolerant metric | medium |
 | [036](036-increment-flatness-is-not-monotone-under-smoothing.md) | Increment flatness is not monotone under smoothing on any field, so it fails the stated acceptance rule; needs a decision, not a fix | medium |
+| [038](038-spectrum-l2-bins-by-exact-wavenumber.md) | `spectrum_l2` bins by exact `\|k\|`: 5924 shells of about 8 modes on 256², so it is nearly a per-mode comparison; harmless on the ladder, needs a decision before comparing realisations | low |
+| [039](039-h1-seminorm-is-not-monotone-under-coarsening.md) | `h1_seminorm` is not monotone under coarsening on vorticity (rho 0.2): it measures the staircase's jumps, not the lost detail | low |
 | [022](022-sim-config-parsing.md) | Solver configs carry executable YAML tags | low |
 | [023](023-vendored-kinet-drift.md) | Vendored kinet code is pinned and may drift | low |
 
