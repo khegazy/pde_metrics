@@ -262,8 +262,19 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
     rng = np.random.default_rng(seed)
     reference = df[df["level"] == 0]
     directions = response_direction(df, norm)
+    # A degenerate span is carried as NaN rather than dropped. Dropping it would make the
+    # threshold levels fall back to each axis's own range, and passing it through would make
+    # them meaningless in the other direction: a tenth of a 1.6e-16 span is cleared by any
+    # real response, so spectrum_l2 on comparison_1789632054 read "first strength detected:
+    # level 1" on every family, against an anchor it cannot see.
     spans = (
-        norm.set_index(["dataset", "metric", "field"])["span"].to_dict()
+        {
+            key: (float("nan") if bool(degenerate) else float(span))
+            for key, span, degenerate in zip(
+                norm.set_index(["dataset", "metric", "field"]).index,
+                norm["span"], norm["degenerate"], strict=True,
+            )
+        }
         if norm is not None else {}
     )
     rows = []
@@ -285,9 +296,25 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                 n_dropped,
             )
 
+    # What "round-off" means for a metric is set by the largest value it reaches anywhere,
+    # not by the axis being ranked. An axis the metric is invariant to returns values that
+    # are *all* near zero, so its own largest value is round-off too and a guard scaled to
+    # it compares noise against noise. Measured on comparison_1789632054: spectrum_l2 sat
+    # at 1e-16 on every translate_x severity level while reaching 0.62 under blur in the
+    # same frames, and was reported at rho = -0.1 to 0.1 (translate_subpixel: -0.6 to
+    # -0.71). The scale is taken per frame for the per-frame statistics because a metric's
+    # magnitude drifts along a trajectory by many orders -- density's perturbation grows
+    # six -- and a whole-trajectory maximum would call early frames round-off.
+    keys = ["dataset", "metric", "field"]
+    magnitude = df.assign(_abs=df["value"].abs())
+    frame_scales = magnitude.groupby([*keys, "frame_index"], observed=True)["_abs"].max()
+    group_scales = magnitude.groupby(keys, observed=True)["_abs"].max()
+
     for (dataset, metric, field, axis), g in ladder.groupby(
         ["dataset", "metric", "field", "degradation"], observed=True
     ):
+        frame_scale = frame_scales.loc[(dataset, metric, field)].to_dict()
+        group_scale = float(group_scales.loc[(dataset, metric, field)])
         levels = g["level"].to_numpy()
         values = g["value"].to_numpy()
         is_probe = axis in PROBE_LABELS
@@ -346,8 +373,9 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                 sensitivity_level=np.nan, saturation_level=np.nan,
             )
         else:
-            per_frame = _per_frame_rho(oriented)
-            lo, hi = _block_bootstrap_rho(oriented, rng, block_length, n_bootstrap)
+            per_frame = _per_frame_rho(oriented, frame_scale)
+            lo, hi = _block_bootstrap_rho(oriented, rng, block_length, n_bootstrap,
+                                          frame_scale)
             # An all-NaN per-frame correlation is a documented outcome, not a surprise: it is
             # what a metric invariant to this axis produces once the round-off guard has done
             # its job. Suppressed here so it does not read as a numerical accident.
@@ -355,11 +383,17 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                 warnings.simplefilter("ignore", RuntimeWarning)
                 rho_median = float(np.nanmedian(per_frame)) if len(per_frame) else np.nan
                 rho_worst = float(np.nanmin(per_frame)) if len(per_frame) else np.nan
+            # When every frame is round-off the axis carries no ordering at all, and the
+            # other ordering statistics are withheld with rho. They were not: spectrum_l2 on
+            # translate_subpixel, whose values are 1e-12 against a blur response of 0.62,
+            # reported a weakest gap of 0.026 -- "reliably ordered backwards" -- from the
+            # last bits of a Fourier shift.
+            axis_round_off = bool(len(per_frame)) and bool(np.isnan(per_frame).all())
             record.update(
                 rho=rho_median,
                 rho_frame_min=rho_worst,
                 rho_pooled=(
-                    np.nan if _is_round_off(values)
+                    np.nan if _is_round_off(values, group_scale)
                     else float(
                         spearmanr(levels, oriented["value"].to_numpy()).statistic
                         if target is not None
@@ -368,17 +402,19 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                 ),
                 rho_ci_lo=lo,
                 rho_ci_hi=hi,
-                monotone_fraction=_monotone_fraction(oriented),
-                separability_auc_min=_min_adjacent_auc(oriented),
+                monotone_fraction=(
+                    np.nan if axis_round_off else _monotone_fraction(oriented)),
+                separability_auc_min=(
+                    np.nan if axis_round_off else _min_adjacent_auc(oriented)),
                 # Thresholds compare against the clean severity level on whatever scale the
                 # ordering statistics run on, so a target-valued metric measures its
                 # departure from *calibration* rather than from a raw ratio.
-                sensitivity_level=_threshold_level(
+                sensitivity_level=np.nan if axis_round_off else _threshold_level(
                     oriented, oriented_clean, SENSITIVITY_FRACTION,
-                    _signed(spans.get((dataset, metric, field)), sign)),
-                saturation_level=_threshold_level(
+                    _signed(spans.get((dataset, metric, field)), sign), group_scale),
+                saturation_level=np.nan if axis_round_off else _threshold_level(
                     oriented, oriented_clean, SATURATION_FRACTION,
-                    _signed(spans.get((dataset, metric, field)), sign)),
+                    _signed(spans.get((dataset, metric, field)), sign), group_scale),
             )
         if "damage" in g.columns:
             damage = g["damage"].to_numpy()
@@ -397,7 +433,8 @@ def _signed(span: float | None, sign: int) -> float | None:
     return None if span is None else sign * span
 
 
-def _per_frame_rho(g: pd.DataFrame) -> np.ndarray:
+def _per_frame_rho(g: pd.DataFrame,
+                   frame_scale: Mapping[int, float] | None = None) -> np.ndarray:
     """Spearman correlation between severity level and value, computed separately in each frame.
 
     **This is the primary statistic, not the pooled one.** Pooling every (level, value)
@@ -408,19 +445,23 @@ def _per_frame_rho(g: pd.DataFrame) -> np.ndarray:
     inside every frame, yet the pooled correlation reads between 0.10 and 0.91 depending on
     the axis. The pooled value is retained as ``rho_pooled`` for comparison, since a wide
     gap between the two is itself a signal that the field is non-stationary.
+
+    ``frame_scale`` maps each frame to the metric's largest value in that frame across every
+    axis; see :func:`_is_round_off` for why the axis alone cannot supply it.
     """
+    frame_scale = frame_scale or {}
     out = []
-    for _, sub in g.groupby("frame_index", observed=True):
+    for frame, sub in g.groupby("frame_index", observed=True):
         if sub["level"].nunique() < 2:
             continue
-        if _is_round_off(sub["value"].to_numpy()):
+        if _is_round_off(sub["value"].to_numpy(), frame_scale.get(frame)):
             out.append(np.nan)
             continue
         out.append(spearmanr(sub["level"], sub["value"]).statistic)
     return np.asarray(out, dtype=float)
 
 
-def _is_round_off(values: np.ndarray) -> bool:
+def _is_round_off(values: np.ndarray, scale: float | None = None) -> bool:
     """Whether a set of values differs by no more than floating-point noise.
 
     A rank correlation is defined for any values that are not exactly tied, and float64
@@ -432,11 +473,18 @@ def _is_round_off(values: np.ndarray) -> bool:
     reported ``rho_min = 0.707`` on ``translate_x`` from values spanning a relative 1.6e-16,
     printed in the monotonicity heatmap beside genuine correlations and indistinguishable from
     them.
+
+    ``scale`` is the metric's own magnitude -- its largest value anywhere in the same frame
+    or group -- and the test uses whichever of it and the values' largest is bigger.
+    Without it an axis the metric is invariant to *and* on which it is zero cannot be
+    caught: every value is ~1e-16, so the largest is ~1e-16 and the spread is a large
+    fraction of it. Measured: spectrum_l2 on ``translate_x`` in comparison_1789632054,
+    reported at rho = -0.1 to 0.1 over values twelve orders below its blur response.
     """
     finite = values[np.isfinite(values)]
     if len(finite) < 2:
         return True
-    scale = float(np.max(np.abs(finite)))
+    scale = max(float(np.max(np.abs(finite))), float(scale or 0.0))
     if scale == 0.0:
         return True          # every value is exactly zero: no ordering to measure
     return bool(float(np.ptp(finite)) < DEGENERATE_SPAN * scale)
@@ -480,7 +528,8 @@ def _min_adjacent_auc(g: pd.DataFrame) -> float:
 
 
 def _threshold_level(g: pd.DataFrame, clean: float, fraction: float,
-                     shared_span: float | None = None) -> float:
+                     shared_span: float | None = None,
+                     scale: float | None = None) -> float:
     """First level whose median reaches ``fraction`` of the way to the unrelated limit.
 
     Measured against the shared span when one is available, so "fires at severity level 2" means the
@@ -490,7 +539,7 @@ def _threshold_level(g: pd.DataFrame, clean: float, fraction: float,
     medians = g.groupby("level", observed=True)["value"].median().sort_index()
     if medians.empty:
         return float("nan")
-    if _is_round_off(medians.to_numpy()):
+    if _is_round_off(medians.to_numpy(), scale):
         # The level at which a metric "first departs from clean" is not defined when it never
         # departs. Without this the answer is always severity level 1, because any target built from
         # a round-off span is cleared by round-off: measured on enstrophy against a translation-only
@@ -506,13 +555,19 @@ def _threshold_level(g: pd.DataFrame, clean: float, fraction: float,
 
 
 def _block_bootstrap_rho(
-    g: pd.DataFrame, rng: np.random.Generator, block_length: int, n: int
+    g: pd.DataFrame, rng: np.random.Generator, block_length: int, n: int,
+    frame_scale: Mapping[int, float] | None = None,
 ) -> tuple[float, float]:
     """Percentile interval for the per-frame Spearman median, over blocks of frames.
 
     Blocks rather than individual frames because the metric trace is autocorrelated;
     resampling frames independently would understate the interval by a large factor.
+
+    The per-frame values are guarded exactly as :func:`_per_frame_rho` guards them. They
+    once were not, so an axis whose ``rho`` was correctly withheld as round-off could still
+    carry a finite interval around it.
     """
+    frame_scale = frame_scale or {}
     frames = np.sort(g["frame_index"].unique())
     if len(frames) < 2 * block_length or n <= 0:
         return (float("nan"), float("nan"))
@@ -523,21 +578,30 @@ def _block_bootstrap_rho(
 
     # Resample the PER-FRAME statistic, matching what `rho` reports.
     per_frame = {
-        f: spearmanr(sub["level"], sub["value"]).statistic
+        f: (np.nan if _is_round_off(sub["value"].to_numpy(), frame_scale.get(f))
+            else spearmanr(sub["level"], sub["value"]).statistic)
         for f, sub in ((f, by_frame[f]) for f in frames)
         if sub["level"].nunique() >= 2
     }
     if not per_frame:
         return (float("nan"), float("nan"))
+    # An all-round-off axis still runs the resampling loop below rather than returning here.
+    # The generator is shared across every group in `summarise_axes`, so skipping this
+    # group's draws would shift every later group's interval -- measured: returning early
+    # moved the intervals of mae, h1_seminorm and increment_flatness on axes this guard
+    # never touches.
+    all_round_off = not np.isfinite(list(per_frame.values())).any()
 
     draws = []
     for _ in range(n):
         chosen = rng.choice(starts, size=n_blocks)
         picked = np.concatenate([frames[s: s + block_length] for s in chosen])
         values = [per_frame[f] for f in picked if f in per_frame]
-        if values:
-            draws.append(float(np.nanmedian(values)))
-    if not draws:
+        if values and not all_round_off:
+            # A resample can still land only on withheld frames when some are round-off.
+            finite = [v for v in values if np.isfinite(v)]
+            draws.append(float(np.median(finite)) if finite else np.nan)
+    if not draws or not np.isfinite(draws).any():
         return (float("nan"), float("nan"))
     return (float(np.nanpercentile(draws, 5)), float(np.nanpercentile(draws, 95)))
 

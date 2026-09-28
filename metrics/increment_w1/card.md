@@ -242,9 +242,9 @@ low modes changes the increment distribution as readily as removing high ones do
 | `translate_subpixel` | density | 6 | -0.714 | 0 | 0 |
 | `translate_subpixel` | velocity | 6 | -0.714 | 0 | 0 |
 | `translate_subpixel` | vorticity | 6 | -0.6 | 0 | 0 |
-| `translate_x` | density | 5 | — | 0 | 0.5 |
-| `translate_x` | velocity | 5 | — | 0 | 0.5 |
-| `translate_x` | vorticity | 5 | — | 0 | 0.5 |
+| `translate_x` | density | 5 | — | — | — |
+| `translate_x` | velocity | 5 | — | — | — |
+| `translate_x` | vorticity | 5 | — | — | — |
 
 <!-- END GENERATED results_geometric -->
 

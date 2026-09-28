@@ -76,16 +76,16 @@ claims the data does not support.
 
 | test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
 |---|---|---|---|---|---|
-| Displacement | density | 2 | 0.493 to 0.493 | 0.499 | level 1 |
+| Displacement | density | 2 | 0.516 to 0.516 | 0.499 | level — |
 | Displacement | velocity | 2 | -0.0304 to -0.0304 | 0.499 | level — |
-| Displacement | vorticity | 2 | -0.0857 to -0.0857 | 0.499 | level — |
-| Resolution loss | density | 1 | 1 to 1 | 0.96 | level 1 |
+| Displacement | vorticity | 2 | -0.058 to -0.058 | 0.499 | level — |
+| Resolution loss | density | 1 | 1 to 1 | 0.96 | level — |
 | Resolution loss | velocity | 1 | 1 to 1 | 0.931 | level — |
 | Resolution loss | vorticity | 1 | 1 to 1 | 0.817 | level — |
 | Smoothing | density | 3 | -1 to -1 | 0 | level — |
 | Smoothing | velocity | 3 | -1 to -1 | 0 | level — |
 | Smoothing | vorticity | 3 | 0.8 to 1 | 0.549 | level — |
-| Spectral filtering | density | 4 | -1 to 1 | 0 | level 1 |
+| Spectral filtering | density | 4 | -1 to 1 | 0 | level — |
 | Spectral filtering | velocity | 4 | -1 to 1 | 0 | level — |
 | Spectral filtering | vorticity | 4 | -0.8 to 0.4 | 0.00772 | level — |
 | Noise | density | 1 | -1 to -1 | 0 | level — |
@@ -280,19 +280,19 @@ both alike. Nothing here should be read as this metric ranking spectral damage.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `translate_subpixel` | density | 6 | 0.493 | 0 | 0.499 |
+| `translate_subpixel` | density | 6 | 0.516 | 0 | 0.499 |
 | `translate_subpixel` | velocity | 6 | -0.0304 | 0 | 0.499 |
-| `translate_subpixel` | vorticity | 6 | -0.0857 | 0 | 0.499 |
-| `translate_x` | density | 5 | — | 0 | 0.5 |
-| `translate_x` | velocity | 5 | — | 0 | 0.5 |
-| `translate_x` | vorticity | 5 | — | 0 | 0.5 |
+| `translate_subpixel` | vorticity | 6 | -0.058 | 0 | 0.499 |
+| `translate_x` | density | 5 | — | — | — |
+| `translate_x` | velocity | 5 | — | — | — |
+| `translate_x` | vorticity | 5 | — | — | — |
 
 <!-- END GENERATED results_geometric -->
 
 Invariant, as it must be. An integer translation permutes the increments without changing
 the multiset, so `translate_x` gives an identical value at every strength and its correlation
 is withheld as round-off. `translate_subpixel` interpolates and so perturbs the field
-slightly, producing correlations between -0.09 and +0.49 and a separability of 0.499, which
+slightly, producing correlations between -0.06 and +0.52 and a separability of 0.499, which
 is the chance floor.
 
 For this metric the invariance is incidental rather than the point — it is a consequence of

@@ -31,18 +31,18 @@ construction — the domain is doubly periodic and the derivative wraps accordin
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
 
-| test | field | axes | rank correlation | weakest separation | first detected |
+| test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
 |---|---|---|---|---|---|
-| geometric | vorticity | 2 | — to — | 0.497 | level — |
-| resolution | vorticity | 1 | -1 to -1 | 0.147 | level — |
-| smoothing | vorticity | 3 | -1 to -1 | 0.0745 | level — |
-| spectral | vorticity | 4 | -1 to -1 | 0 | level — |
-| stochastic | vorticity | 1 | 1 to 1 | 0.503 | level — |
-| canary: phase-randomised impostor | vorticity | 1 | — | — | damage — |
+| Displacement | vorticity | 2 | — to — | — | level — |
+| Resolution loss | vorticity | 1 | -1 to -1 | 0.147 | level — |
+| Smoothing | vorticity | 3 | -1 to -1 | 0.0745 | level — |
+| Spectral filtering | vorticity | 4 | -1 to -1 | 0 | level — |
+| Noise | vorticity | 1 | 1 to 1 | 0.503 | level — |
+| trap test: fake prediction, right spectrum | vorticity | 1 | — | — | damage — |
 
-Rank correlation is the per-frame Spearman correlation of the metric with severity, reported as the range over the axes in that family; 1 means every severity ordered correctly in every frame. Weakest separation is the smallest Mann-Whitney overlap between neighbouring severities. First detected is the lowest severity level at which the metric departs from clean by a tenth of the distance to an unrelated field. Damage is on that same scale: 0 is the reference and 1 is an unrelated field.
+One row per family of degradation and physical field. **Rank correlation** asks whether the metric put the strengths of one degradation in the right order: it is the Spearman correlation between the metric and the applied strength, computed inside a single frame, and the column gives the range over the degradations in that family. A value of 1 means every strength was ordered correctly in every frame. **Weakest gap between neighbouring strengths** asks whether the metric can tell one strength from the next: it is the smallest Mann-Whitney overlap between any two neighbouring strengths, where 1 means the two never overlap and 0.5 means the metric cannot separate them at all. **First strength detected** is the mildest strength at which the metric has moved a tenth of the way from the undegraded reference toward a field with no relation to the truth; a dash means the metric never reached that tenth. **Damage** is that same 0-to-1 scale read as a number: 0 is the undegraded reference and 1 is an unrelated field.
 
-This table reports what was measured and grades none of it. What the numbers mean for this metric is in the subsections below, beside the test that produced each.
+This table reports what was measured and grades none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
 
 <!-- END GENERATED performance -->
 
@@ -130,7 +130,7 @@ read here is the drift away from the reference value rather than an error.
 
 <!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
 
-| axis | field | levels | rank correlation | monotone frames | weakest separation |
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `box_blur` | vorticity | 4 | -1 | 0 | 0.269 |
 | `gaussian_blur` | vorticity | 4 | -1 | 0 | 0.0745 |
@@ -147,7 +147,7 @@ read here is the drift away from the reference value rather than an error.
 
 <!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
 
-| axis | field | levels | rank correlation | monotone frames | weakest separation |
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `highpass_butterworth` | vorticity | 4 | -1 | 0 | 0.0784 |
 | `highpass_ideal` | vorticity | 4 | -1 | 0 | 0.0958 |
@@ -163,10 +163,10 @@ read here is the drift away from the reference value rather than an error.
 
 <!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
 
-| axis | field | levels | rank correlation | monotone frames | weakest separation |
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `translate_subpixel` | vorticity | 6 | — | 0 | 0.497 |
-| `translate_x` | vorticity | 5 | — | 0 | 0.5 |
+| `translate_subpixel` | vorticity | 6 | — | — | — |
+| `translate_x` | vorticity | 5 | — | — | — |
 
 <!-- END GENERATED results_geometric -->
 
@@ -181,7 +181,7 @@ should — which is one of the things a reference-free diagnostic is useful for.
 
 <!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
 
-| axis | field | levels | rank correlation | monotone frames | weakest separation |
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `coarsen` | vorticity | 4 | -1 | 0 | 0.147 |
 
@@ -193,7 +193,7 @@ should — which is one of the things a reference-free diagnostic is useful for.
 
 <!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
 
-| axis | field | levels | rank correlation | monotone frames | weakest separation |
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `additive_noise` | vorticity | 4 | 1 | 0.919 | 0.503 |
 
@@ -206,11 +206,11 @@ should — which is one of the things a reference-free diagnostic is useful for.
 
 <!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
 
-| field | impostor damage | nearest severity level | unrelated-field value |
+| field | damage assigned to the fake prediction | closest real degradation | value on an unrelated field |
 |---|---|---|---|
 | vorticity | — | `` | 3.08e-06 |
 
-Damage of 1 is what an unrelated field scores, so the impostor column says how close to useless this metric considers a field with the reference's spectrum and random phases. The nearest severity level names the ordinary degradation whose damage the impostor most resembles, which is the more legible statement of the same thing.
+The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage of 1 is what a field with no relation to the truth scores, so the damage column says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture.
 
 <!-- END GENERATED results_canaries -->
 
@@ -218,7 +218,7 @@ Damage of 1 is what an unrelated field scores, so the impostor column says how c
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
 
-| against | rank correlation across the ladder |
+| compared with | rank correlation over every degradation |
 |---|---|
 | `kinetic_energy` | 0.862 |
 | `mae` | -0.0874 |
@@ -226,7 +226,7 @@ Damage of 1 is what an unrelated field scores, so the impostor column says how c
 | `mse` | -0.108 |
 | `nrmse` | -0.162 |
 
-Computed on the median value at each (axis, severity level), over every axis and field in the run, with the reference excluded. Two metrics correlating near 1 order the degradations alike; they may still weight them very differently, so this says they are redundant for ranking models rather than interchangeable as training losses.
+Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 

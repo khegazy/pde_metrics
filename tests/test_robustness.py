@@ -236,6 +236,80 @@ def test_rank_correlation_is_withheld_when_the_variation_is_round_off():
     )
 
 
+def test_rank_correlation_is_withheld_when_every_value_on_the_axis_is_round_off():
+    """Round-off must be judged against the metric's scale, not the axis's own.
+
+    Measured on ``results/comparison_1789632054`` (kinet_re5e4, 161 frames, grid 256):
+    ``spectrum_l2`` cannot see a whole-cell translation, and on ``translate_x`` it returned
+    medians of 1.3e-16 to 1.9e-16 at every severity level on every field -- while the same
+    metric, in the same frames, reached 0.62 under ``gaussian_blur``. The guard compared
+    each axis's spread against that axis's own largest value, which is itself round-off, so
+    noise was measured against noise and ranked: ``rho`` came out 0.0 / 0.10 / -0.1 on
+    density / velocity / vorticity, and -0.6 to -0.71 on ``translate_subpixel``, whose
+    values are 1e-12. A correlation of -0.6 over values twelve orders below the metric's
+    response reads as "gets better as the field is displaced".
+
+    The earlier guard test above is the relative case -- every value near 3.7, differing
+    in the last bits. This one is the absolute case, where every value on the axis is near
+    zero, and it needs the rest of the frame to tell it what zero means.
+    """
+    rng = np.random.default_rng(0)
+    df = make_frame(
+        n_frames=8,
+        axes={
+            "gaussian_blur": [1e-2, 1e-1, 6e-1],
+            "translate_x": [1.5e-16, 1.5e-16, 1.5e-16, 1.5e-16],
+        },
+    )
+    on_axis = df["degradation"] == "translate_x"
+    df.loc[on_axis, "value"] *= 1.0 + rng.uniform(-0.5, 0.5, on_axis.sum())
+
+    axes = an.summarise_axes(df, n_bootstrap=20)
+    row = axes.loc[axes["degradation"] == "translate_x"].iloc[0]
+
+    for column in ("rho", "rho_frame_min", "rho_pooled", "rho_ci_lo", "rho_ci_hi",
+                   "monotone_fraction", "separability_auc_min",
+                   "sensitivity_level", "saturation_level"):
+        assert not np.isfinite(float(row[column])), (
+            f"{column}={float(row[column]):.3f} reported for an axis whose values are "
+            "all ~1.5e-16 while the same metric reaches 0.6 on another axis of the same "
+            "frames. That is an ordering statistic computed over round-off."
+        )
+    blur = axes.loc[axes["degradation"] == "gaussian_blur"].iloc[0]
+    assert float(blur["rho"]) == pytest.approx(1.0), "the genuine axis must be untouched"
+    assert float(blur["monotone_fraction"]) == pytest.approx(1.0)
+
+
+def test_threshold_levels_are_withheld_when_the_anchor_span_is_round_off():
+    """A tenth of a round-off span is not a detection threshold.
+
+    Measured on ``comparison_1789632054``: ``spectrum_l2``'s unrelated-field anchor is
+    1.6e-16, because the anchor is built from translations and the metric cannot see them.
+    ``normalisation`` correctly marks that span degenerate and withholds damage, but the
+    span was still handed to the threshold levels, and any genuine response clears a tenth
+    of 1.6e-16 -- so the card read "first strength detected: level 1" on every family and
+    every field, a detection claim measured against nothing.
+    """
+    df = make_frame(
+        n_frames=6,
+        axes={
+            "gaussian_blur": [1e-2, 1e-1, 6e-1],
+            "uncorrelated": [1.5e-16, 1.6e-16, 1.4e-16],
+        },
+    )
+    norm = an.normalisation(df)
+    assert bool(norm["degenerate"].iloc[0])
+    axes = an.summarise_axes(df, norm=norm, n_bootstrap=0)
+    blur = axes.loc[axes["degradation"] == "gaussian_blur"].iloc[0]
+
+    assert float(blur["rho"]) == pytest.approx(1.0), "ordering does not need the anchor"
+    for column in ("sensitivity_level", "saturation_level"):
+        assert not np.isfinite(float(blur[column])), (
+            f"{column}={float(blur[column])} reported against an anchor span of "
+            f"{float(norm['span'].iloc[0]):.1e}, which is round-off"
+        )
+
+
 def test_report_card_survives_an_all_nan_rank_correlation():
     """A metric constant on every ordinal axis must produce a card, not an exception.
 

@@ -1255,9 +1255,9 @@
             "first_detected_level": null,
             "is_probe": false,
             "levels": 6,
-            "monotone_fraction": 0.0,
+            "monotone_fraction": null,
             "rank_correlation": null,
-            "weakest_separation": 0.4970101462
+            "weakest_separation": null
           },
           {
             "axis": "translate_x",
@@ -1266,9 +1266,9 @@
             "first_detected_level": null,
             "is_probe": false,
             "levels": 5,
-            "monotone_fraction": 0.0,
+            "monotone_fraction": null,
             "rank_correlation": null,
-            "weakest_separation": 0.4998071062
+            "weakest_separation": null
           },
           {
             "axis": "uncorrelated",
@@ -1864,7 +1864,7 @@
             "axis": "coarsen",
             "family": "resolution",
             "field": "density",
-            "first_detected_level": 1.0,
+            "first_detected_level": null,
             "is_probe": false,
             "levels": 4,
             "monotone_fraction": 1.0,
@@ -1897,7 +1897,7 @@
             "axis": "highpass_butterworth",
             "family": "spectral",
             "field": "density",
-            "first_detected_level": 1.0,
+            "first_detected_level": null,
             "is_probe": false,
             "levels": 4,
             "monotone_fraction": 1.0,
@@ -1908,7 +1908,7 @@
             "axis": "highpass_ideal",
             "family": "spectral",
             "field": "density",
-            "first_detected_level": 1.0,
+            "first_detected_level": null,
             "is_probe": false,
             "levels": 3,
             "monotone_fraction": 0.950310559,
@@ -1952,11 +1952,11 @@
             "axis": "translate_subpixel",
             "family": "geometric",
             "field": "density",
-            "first_detected_level": 1.0,
+            "first_detected_level": null,
             "is_probe": false,
             "levels": 6,
             "monotone_fraction": 0.0,
-            "rank_correlation": 0.4928053803,
+            "rank_correlation": 0.5161002296,
             "weakest_separation": 0.4989390841
           },
           {
@@ -1966,9 +1966,9 @@
             "first_detected_level": null,
             "is_probe": false,
             "levels": 5,
-            "monotone_fraction": 0.0,
+            "monotone_fraction": null,
             "rank_correlation": null,
-            "weakest_separation": 0.4998263956
+            "weakest_separation": null
           },
           {
             "axis": "uncorrelated",
@@ -2109,9 +2109,9 @@
             "first_detected_level": null,
             "is_probe": false,
             "levels": 5,
-            "monotone_fraction": 0.0,
+            "monotone_fraction": null,
             "rank_correlation": null,
-            "weakest_separation": 0.4997492381
+            "weakest_separation": null
           },
           {
             "axis": "uncorrelated",
@@ -2242,7 +2242,7 @@
             "is_probe": false,
             "levels": 6,
             "monotone_fraction": 0.0,
-            "rank_correlation": -0.0857142857,
+            "rank_correlation": -0.0580365614,
             "weakest_separation": 0.4994791868
           },
           {
@@ -2252,9 +2252,9 @@
             "first_detected_level": null,
             "is_probe": false,
             "levels": 5,
-            "monotone_fraction": 0.0,
+            "monotone_fraction": null,
             "rank_correlation": null,
-            "weakest_separation": 0.4997492381
+            "weakest_separation": null
           },
           {
             "axis": "uncorrelated",
@@ -2465,9 +2465,9 @@
             "first_detected_level": null,
             "is_probe": false,
             "levels": 5,
-            "monotone_fraction": 0.0,
+            "monotone_fraction": null,
             "rank_correlation": null,
-            "weakest_separation": 0.5
+            "weakest_separation": null
           },
           {
             "axis": "uncorrelated",
@@ -2608,9 +2608,9 @@
             "first_detected_level": null,
             "is_probe": false,
             "levels": 5,
-            "monotone_fraction": 0.0,
+            "monotone_fraction": null,
             "rank_correlation": null,
-            "weakest_separation": 0.5
+            "weakest_separation": null
           },
           {
             "axis": "uncorrelated",
@@ -2751,9 +2751,9 @@
             "first_detected_level": null,
             "is_probe": false,
             "levels": 5,
-            "monotone_fraction": 0.0,
+            "monotone_fraction": null,
             "rank_correlation": null,
-            "weakest_separation": 0.5
+            "weakest_separation": null
           },
           {
             "axis": "uncorrelated",
@@ -2953,9 +2953,9 @@
             "first_detected_level": null,
             "is_probe": false,
             "levels": 6,
-            "monotone_fraction": 0.0,
+            "monotone_fraction": null,
             "rank_correlation": null,
-            "weakest_separation": 0.4971065931
+            "weakest_separation": null
           },
           {
             "axis": "translate_x",
@@ -2964,9 +2964,9 @@
             "first_detected_level": null,
             "is_probe": false,
             "levels": 5,
-            "monotone_fraction": 0.0,
+            "monotone_fraction": null,
             "rank_correlation": null,
-            "weakest_separation": 0.5
+            "weakest_separation": null
           },
           {
             "axis": "uncorrelated",
