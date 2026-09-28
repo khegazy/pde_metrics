@@ -2,7 +2,8 @@
 
 **Category:** protocol
 **Priority:** high — it blocks the normalised reading of a whole family of candidate metrics
-**Status:** open
+**Status:** open — kept open until more data exists; the maintainer plans to generate further
+realisations (2026-09-28). The interim reporting option below is undecided.
 
 ## Context
 
