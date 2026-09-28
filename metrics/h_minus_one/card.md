@@ -35,7 +35,7 @@ $$
 
 Two things about Equation (3) are choices rather than consequences. The $1/C$ and the
 mean-square normalisation inherited from Equation (1) are picked so that replacing the
-exponent $-1$ by $0$ returns exactly [rmse](../rmse/card.md) — the two numbers are then on
+exponent $-1$ by $0$ returns exactly [rmse](../../metrics/rmse/card.md) — the two numbers are then on
 one scale and their ratio is the factor this metric applies and a pointwise norm does not.
 And the mode $\mathbf{m} = \mathbf{0}$ is omitted because $|\mathbf{k}|^{-2}$ is undefined
 there. That omission is what makes this a *homogeneous* seminorm, and it has a consequence
@@ -192,7 +192,7 @@ differ by four orders of magnitude in fluctuation size. Comparing across analysi
 resolutions is also invalid: the sum in Equation (3) runs to the grid's Nyquist mode, so a
 finer grid admits modes a coarser one does not have, and the change in value mixes the
 metric's response with the change in how many modes exist. The one comparison that is
-always safe is against [rmse](../rmse/card.md) on the same pair of fields, because
+always safe is against [rmse](../../metrics/rmse/card.md) on the same pair of fields, because
 Equation (3) is normalised to make that ratio the metric's own weighting factor.
 
 ## Limitations
