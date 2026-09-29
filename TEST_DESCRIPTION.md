@@ -695,7 +695,7 @@ and re-flagging needs no recomputation, so changing your mind is a config edit.
 
 ## The degradations
 
-Twenty-three operators in eight families. `python -m degradations` lists them with their
+Twenty-four operators in eight families. `python -m degradations` lists them with their
 severity units. Which failure modes you test for determines what the measurements mean, so
 this list is as important as the list of metrics.
 
@@ -763,6 +763,7 @@ only position changes.
 | operator | severity | notes |
 |---|---|---|
 | `coarsen` | factor | Conservative block average, then back to the fine grid |
+| `coarsen_bandlimited` | factor | The same block average, then the band-limited field with exactly those block means instead of a staircase. Run beside `coarsen`: a metric that differentiates the field measures the staircase's block edges as well as the lost resolution, and this operator adds no edges |
 | `subsample` | factor | Point-sampling instead, as the non-conservative control. At factor 8 this retains 102% of the variance where averaging retains 73%, because it folds small scales back in rather than removing them |
 
 **Stochastic.**

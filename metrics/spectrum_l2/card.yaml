@@ -1,0 +1,40 @@
+schema_version: 1
+
+name: spectrum_l2
+kind: metric
+
+# "Compares scale by scale, in wavenumber. Reserved for metrics that actually resolve
+# scales -- an energy-spectrum comparison, a band-limited error" -- the schema's own
+# wording, which names this metric directly.
+category: spectral
+
+summary: >-
+  Relative distance between the radial energy spectra of two fields, comparing how energy
+  is distributed across scales while discarding all information about phase.
+
+# A baseline, in the same sense as the pointwise family: it is here to be compared against
+# and to give the Gaussian-impostor canary something it can catch, not as a candidate for
+# the panel.
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    L2 distance between the two shell-summed fluctuation energy spectra, divided by the L2
+    norm of the reference's. Dimensionless; 0 when the spectra coincide and 1 when the
+    candidate has no fluctuation energy at all.
+  bounds:
+    lower: 0.0
+    upper: null
+
+math:
+  # Not a distance: the normalisation is taken from the reference, so it is neither
+  # symmetric nor subadditive.
+  triangle_inequality: false
+  # Scaling both fields by c scales both spectra by c^2, which cancels in the ratio. One of
+  # the two scale-free quantities in the repository, alongside increment_flatness.
+  scale_dependent: false
+  resolution_dependent: true   # the number of shells is set by the analysis grid
+  complexity: "O(N log N)"     # one FFT per channel, then a bincount
+references: [pope2000, boffetta2012]
+review: null

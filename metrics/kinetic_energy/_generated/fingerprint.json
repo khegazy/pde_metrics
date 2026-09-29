@@ -2,7 +2,7 @@
   "analysis_grid": 256,
   "axes": [
     {
-      "cost_s": 0.0001330833,
+      "cost_s": 9.27896e-05,
       "dataset": "kinet_re5e4",
       "degradation": "additive_noise",
       "degradation_family": "stochastic",
@@ -27,7 +27,7 @@
       "value_min": 0.0015593397
     },
     {
-      "cost_s": 0.0001346467,
+      "cost_s": 9.24174e-05,
       "dataset": "kinet_re5e4",
       "degradation": "box_blur",
       "degradation_family": "smoothing",
@@ -52,7 +52,7 @@
       "value_min": 0.0009667258
     },
     {
-      "cost_s": 0.0001337801,
+      "cost_s": 9.17974e-05,
       "dataset": "kinet_re5e4",
       "degradation": "coarsen",
       "degradation_family": "resolution",
@@ -77,7 +77,32 @@
       "value_min": 0.0014893162
     },
     {
-      "cost_s": 0.0001374179,
+      "cost_s": 0.0001265636,
+      "dataset": "kinet_re5e4",
+      "degradation": "coarsen_bandlimited",
+      "degradation_family": "resolution",
+      "field": "velocity",
+      "higher_is_better": false,
+      "is_probe": false,
+      "metric": "kinetic_energy",
+      "monotone_fraction": 0.0,
+      "n_frames": 161,
+      "n_levels": 4,
+      "n_levels_configured": 4,
+      "rho": -1.0,
+      "rho_ci_hi": -1.0,
+      "rho_ci_lo": -1.0,
+      "rho_frame_min": -1.0,
+      "rho_pooled": -0.3281080218,
+      "saturation_level": null,
+      "sensitivity_level": null,
+      "separability_auc_min": 0.2720188264,
+      "value_clean": 0.0015656018,
+      "value_max": 0.0015814627,
+      "value_min": 0.0015447565
+    },
+    {
+      "cost_s": 9.30512e-05,
       "dataset": "kinet_re5e4",
       "degradation": "gaussian_blur",
       "degradation_family": "smoothing",
@@ -102,7 +127,7 @@
       "value_min": 0.0005416298
     },
     {
-      "cost_s": 0.0001332392,
+      "cost_s": 9.33688e-05,
       "dataset": "kinet_re5e4",
       "degradation": "gaussian_impostor",
       "degradation_family": "stochastic",
@@ -127,7 +152,7 @@
       "value_min": 0.0015593324
     },
     {
-      "cost_s": 0.0001816539,
+      "cost_s": 0.0001267555,
       "dataset": "kinet_re5e4",
       "degradation": "highpass_butterworth",
       "degradation_family": "spectral",
@@ -152,7 +177,7 @@
       "value_min": 2.24494e-05
     },
     {
-      "cost_s": 0.0001794027,
+      "cost_s": 0.0001264456,
       "dataset": "kinet_re5e4",
       "degradation": "highpass_ideal",
       "degradation_family": "spectral",
@@ -177,7 +202,7 @@
       "value_min": 3.03155e-05
     },
     {
-      "cost_s": 0.0001793641,
+      "cost_s": 0.0001268512,
       "dataset": "kinet_re5e4",
       "degradation": "lowpass_butterworth",
       "degradation_family": "spectral",
@@ -202,7 +227,7 @@
       "value_min": 0.0003131043
     },
     {
-      "cost_s": 0.0001811965,
+      "cost_s": 0.000125602,
       "dataset": "kinet_re5e4",
       "degradation": "lowpass_ideal",
       "degradation_family": "spectral",
@@ -227,7 +252,7 @@
       "value_min": 0.0012515659
     },
     {
-      "cost_s": 0.0001311713,
+      "cost_s": 9.26595e-05,
       "dataset": "kinet_re5e4",
       "degradation": "median_blur",
       "degradation_family": "smoothing",
@@ -252,7 +277,7 @@
       "value_min": 0.0013752278
     },
     {
-      "cost_s": 0.0001796397,
+      "cost_s": 0.0001263483,
       "dataset": "kinet_re5e4",
       "degradation": "translate_subpixel",
       "degradation_family": "geometric",
@@ -260,24 +285,24 @@
       "higher_is_better": false,
       "is_probe": false,
       "metric": "kinetic_energy",
-      "monotone_fraction": 0.0,
+      "monotone_fraction": null,
       "n_frames": 161,
       "n_levels": 6,
       "n_levels_configured": 6,
       "rho": null,
-      "rho_ci_hi": 0.6982532518,
-      "rho_ci_lo": 0.6982532518,
+      "rho_ci_hi": null,
+      "rho_ci_lo": null,
       "rho_frame_min": null,
       "rho_pooled": 0.0037365475,
       "saturation_level": null,
       "sensitivity_level": null,
-      "separability_auc_min": 0.4971065931,
+      "separability_auc_min": null,
       "value_clean": 0.0015656018,
       "value_max": 0.0015785473,
       "value_min": 0.0015593324
     },
     {
-      "cost_s": 0.0001353817,
+      "cost_s": 9.16926e-05,
       "dataset": "kinet_re5e4",
       "degradation": "translate_x",
       "degradation_family": "geometric",
@@ -285,7 +310,7 @@
       "higher_is_better": false,
       "is_probe": false,
       "metric": "kinetic_energy",
-      "monotone_fraction": 0.0,
+      "monotone_fraction": null,
       "n_frames": 161,
       "n_levels": 5,
       "n_levels_configured": 5,
@@ -296,13 +321,13 @@
       "rho_pooled": 0.0,
       "saturation_level": null,
       "sensitivity_level": null,
-      "separability_auc_min": 0.5,
+      "separability_auc_min": null,
       "value_clean": 0.0015656018,
       "value_max": 0.0015785473,
       "value_min": 0.0015593324
     },
     {
-      "cost_s": 0.0001316162,
+      "cost_s": 9.28898e-05,
       "dataset": "kinet_re5e4",
       "degradation": "uncorrelated",
       "degradation_family": "geometric",
@@ -492,9 +517,9 @@
     10000
   ],
   "git": {
-    "branch": "standardize_information",
+    "branch": "metrics/next-wave",
     "dirty": true,
-    "sha": "85ddd3788061541487d92af58dc8bc9bd12dabbb"
+    "sha": "ce78cb2d30d83aab019c7eb093e1297fd8dfac70"
   },
   "metric": "kinetic_energy",
   "probes": [
@@ -509,6 +534,6 @@
       "uncorrelated_value": 0.0015656018
     }
   ],
-  "run": "comparison_1787115827",
+  "run": "comparison_1790639359",
   "seed": 20260807
 }

@@ -204,6 +204,14 @@ from metrics.registry import metric, pointwise_map
     cost="cheap",                # cheap | moderate | expensive (advisory; warns on long runs)
     higher_is_better=False,
     symmetric=True,              # enables an automatic symmetry check
+    monotone_under_smoothing=True,  # declared, never inferred: does the value move one way
+                                 # as the field is smoothed? True for an error metric and
+                                 # for an energy-like single-field quantity. False only for
+                                 # a statistic of distribution *shape* -- increment flatness
+                                 # rises and falls under increasing blur on all three fields
+                                 # of the real trajectory. The contract test verifies the
+                                 # declaration BOTH ways, so False must really be
+                                 # non-monotone and cannot be used to dodge the check
     units="field",               # free text: "field", "field^2", "dimensionless"
     reduction="mean",            # how a pointwise map reduces; see below
     target=None,                 # the value a calibrated prediction attains, if not zero

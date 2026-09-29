@@ -1,0 +1,38 @@
+schema_version: 1
+
+name: coarsen_bandlimited
+kind: degradation
+category: resolution
+
+summary: >-
+  Block-averages the field exactly as coarsen does, then fills each block back in with the
+  one band-limited field that has those block means, so no edges are added.
+
+status: candidate
+owners: [khegazy]
+
+failure_mode: >-
+  A surrogate whose effective resolution is coarser than its output grid, with the lost
+  resolution isolated from the block edges that coarsen's staircase adds.
+
+output:
+  description: >-
+    Coarsening factor, a whole number of cells per block, on the same absolute scale as
+    coarsen: a factor of four means four on every field.
+  bounds:
+    lower: 0.0
+    upper: null
+
+exemplars:
+  mode: severity
+  levels: [2, 4, 16]
+  field_name: vorticity
+  diagnostics: [difference, radial_spectrum]
+  rationale: >-
+    The same three factors as the coarsen panel, so the two can be read side by side. The
+    difference row shows the error without coarsen's block pattern, and the radial spectrum
+    row shows the clean cut at the coarse grid's resolution with nothing above it, where
+    coarsen's staircase leaves energy at every higher wavenumber.
+
+references: []
+review: null

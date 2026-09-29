@@ -1,0 +1,35 @@
+schema_version: 1
+
+name: h_minus_one
+kind: metric
+
+# "Norms that weight the scales differently from a plain average -- Sobolev, the
+# negative-order norms" is this category's own wording in fmeval/cards/schema.py.
+category: functional
+
+summary: >-
+  Homogeneous negative Sobolev norm of the error, which divides each Fourier mode by its
+  wavenumber and so charges less for error carried on small scales than a pointwise norm.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    Root-mean-square of the error after applying the inverse half-Laplacian, in the
+    field's units times a length. Normalised so that at Sobolev order zero it would return
+    exactly rmse, which makes the two directly comparable.
+  bounds:
+    lower: 0.0
+    upper: null
+
+math:
+  # A genuine norm of the difference, so the triangle inequality holds. It is only a
+  # semi-norm: it vanishes on constants, so two fields differing by a constant are at
+  # distance zero and this is a pseudometric rather than a metric.
+  triangle_inequality: true
+  scale_dependent: true        # scaling both fields by c scales the value by c
+  resolution_dependent: true   # the mode sum runs to the grid Nyquist
+  complexity: "O(N log N)"     # one FFT and one inverse FFT per channel
+references: [peyre2018, pope2000]
+review: null

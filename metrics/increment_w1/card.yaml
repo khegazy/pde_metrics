@@ -1,0 +1,37 @@
+schema_version: 1
+
+name: increment_w1
+kind: metric
+
+# "Compares distributions or moments of the field: increment PDFs, flatness, structure
+# functions" -- the schema's own wording, and it names increment PDFs explicitly. Not
+# `transport`, which is for the cost of moving one *field* onto the other; what is
+# transported here is a one-dimensional distribution derived from the field.
+category: statistical
+
+summary: >-
+  Transport distance between the one-cell increment distributions of two fields, comparing
+  the whole shape of those distributions while ignoring where in the domain they arose.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    Mean over channels and spatial axes of the 1-Wasserstein distance between the
+    reference's and the candidate's increment distributions along that axis, in the
+    field's units. Zero when every increment distribution matches.
+  bounds:
+    lower: 0.0
+    upper: null
+
+math:
+  # A metric on distributions composed with a fixed map from field to distribution, so the
+  # triangle inequality survives. It is a pseudometric on fields rather than a metric:
+  # distinct fields sharing an increment distribution are at distance zero.
+  triangle_inequality: true
+  scale_dependent: true        # scaling both fields by c scales the distance by c
+  resolution_dependent: true   # the separation is one cell, so it is set by the grid
+  complexity: "O(N log N)"     # dominated by the sort
+references: [peyrecuturi2019, granero2024]
+review: null
