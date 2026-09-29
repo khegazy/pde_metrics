@@ -695,7 +695,7 @@ and re-flagging needs no recomputation, so changing your mind is a config edit.
 
 ## The degradations
 
-Twenty-three operators in eight families. `python -m degradations` lists them with their
+Twenty-four operators in eight families. `python -m degradations` lists them with their
 severity units. Which failure modes you test for determines what the measurements mean, so
 this list is as important as the list of metrics.
 

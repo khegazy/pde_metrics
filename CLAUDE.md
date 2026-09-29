@@ -110,7 +110,7 @@ First-wave priorities (in order of value per effort): IN-4, NM-2 (Ḣ⁻¹ norm)
 ## What exists, and what building it corrected
 
 Three plugin registries, all discovered by name from config, all extended by one decorated
-function: **metrics** (`metrics/`), **degradations** (`degradations/`, 20 operators in 7
+function: **metrics** (`metrics/`), **degradations** (`degradations/`, 24 operators in 8
 families), and **report renderers** (`fmeval/report/`). Readers live in `fmeval/data/` and are
 a closed set with explicit imports, deliberately unlike the other two.
 

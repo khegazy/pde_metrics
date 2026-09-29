@@ -71,7 +71,7 @@ A decision on one of these, which only a person should make:
    and say so in the protocol. Flatness returning to the reference value under heavy blur is
    not noise; it is a real and nameable failure mode of the statistic, and a panel that
    reports it alongside a monotone metric loses nothing.
-3. **Replace the single-cell separation with a curve over separations** (OT-5's
+3. **Replace the single-cell separation with a curve over separations** (`increment_w1`'s
    increment-PDF comparison is the neighbouring item) and judge the curve rather than one
    point. This is more work and changes what the metric returns from a scalar to a vector,
    which the registry already supports via `returns="vector"`.
