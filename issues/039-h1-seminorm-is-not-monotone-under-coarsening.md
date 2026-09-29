@@ -1,8 +1,71 @@
 # Under `coarsen`, derivative-based metrics measure the staircase, not the lost resolution
 
 **Category:** acceptance criteria / degradation design
-**Priority:** low now; medium once derivative-based metrics such as PDE residuals are added
-**Status:** open — two decisions needed, listed at the end
+**Priority:** —
+**Status:** RESOLVED (2026-09-28) — both decisions made and acted on; one observation left
+unexplained, recorded under "Outcome"
+
+## Decisions (2026-09-28, by the maintainer)
+
+1. **Keep `h1_seminorm`**, as the recorded negative result it was added to be.
+2. **Option (b): a second coarsening degradation, evaluated beside `coarsen`, not instead of
+   it.** It is `degradations/coarsen_bandlimited`: the same block average, reconstructed as
+   the one band-limited field with exactly those block means, so it discards the same
+   information and adds no edges. Both run on the default ladder
+   (`configs/degradation/default.yaml`), and every kinet metric card is now measured on both.
+
+## Outcome
+
+Measured on `comparison_1790639359` (`kinet_re5e4`, start 2000, reduction 50, 161 frames,
+grid 256): all twelve kinet metrics on the ladder with both coarsenings. On every axis the
+two runs share, it reproduces each card's previously pinned run bit for bit, so the only new
+evidence is the `coarsen_bandlimited` row.
+
+| metric, field | under `coarsen` | under `coarsen_bandlimited` |
+|---|---|---|
+| `h1_seminorm`, vorticity | rho 0.2, 0 of 161 frames in order | rho 1, every frame in order |
+| `h1_seminorm`, density, damage at factor 2 | 1.11 (worse than an unrelated field) | 0.053 |
+| `palinstrophy`, change at factors 2 / 4 / 8 / 16 | +89% / +39% / −28% / −59% | −2% / −39% / −84% / −96% |
+| `increment_flatness`, density, factor 2 → 16 | 30 → 177 (reference 15.2) | 15.3 → 13.0 |
+| `increment_w1`, density, factor 2 | 5.2e-5 | 7.2e-7 |
+| `mse`, density, damage at factor 16 | 0.039 | 0.001 |
+
+Three things this settled or showed:
+
+- **The staircase explanation holds on the real data.** Remove the edges and `h1_seminorm`
+  orders vorticity in every frame and `palinstrophy` never rises. Before, that was an
+  inference from the synthetic test below; now it is measured.
+- **The reach was wider than the two metrics this issue was opened for.** A one-cell increment
+  is a finite difference, so the increment metrics measure the staircase as well:
+  `increment_flatness`'s clean, monotone `coarsen` row was the block edges making the increment
+  distribution a spike at zero with rare jumps, and under `coarsen_bandlimited` it is not
+  ordered (rho −0.8 / 0.8 / 0.4). Its card previously read that row as the one family it
+  handles cleanly, and has been corrected.
+- **Even pointwise metrics were charged mostly for the staircase on the smooth fields.** At a
+  factor of 16 `mse` on density is 0.039 under `coarsen` and 0.001 under the band-limited
+  operator; on vorticity, whose structure the coarse grid cannot hold, 0.17 against 0.14.
+  The same factor therefore does not mean the same damage under the two operators, which the
+  new degradation's card states.
+
+**Left unexplained.** Under `coarsen_bandlimited`, density is not in order in every frame for
+the pointwise metrics (in order in 59% to 71% of frames), `spectrum_l2` (52%) and
+`h1_seminorm` (32%), although the median ordering is correct. `h_minus_one` and `increment_w1`
+are in order in every frame. The disorder is between factors 2 and 4, where the damage is
+0.002 or less of the unrelated-field value for the pointwise metrics and about 0.05 for
+`h1_seminorm`; in 46 of 161 frames `mse` at factor 4 is 1% to
+3% *below* `mse` at factor 2 (for example 3.87e-10 against 3.93e-10). Ruled out so far:
+
+- floating-point round-off: the values are about 1e-10, far above it;
+- aliasing through the box inversion: on synthetic power-law fields with spectral slopes of
+  −4, −6 and −8 the error rises with the factor in every trial, the out-of-band energy making
+  up about two thirds of it;
+- a white noise floor under a steep spectrum: in order in 40 of 40 synthetic trials.
+
+It is small, 0.002 or less of the unrelated-field value for the pointwise metrics, and it is
+recorded here rather than treated as reopening the issue. What would settle it is decomposing one real density frame's error into its
+out-of-band part and its in-band alias part at factors 2 and 4.
+
+The rest of this file is the record as it stood when the decisions were asked for.
 
 ## Summary
 
@@ -95,6 +158,20 @@ throughout, as the mechanism predicts. That the same mechanism operates on the r
 an inference from this test and from the density/velocity contrast above, not a separate
 measurement.
 
+The same fields through `coarsen_bandlimited`, which keeps the same block means but adds no
+edges (entries are `h1_seminorm` / `mse`):
+
+| L (cells) | factor 2 | 4 | 8 | 16 | 32 |
+|---|---|---|---|---|---|
+| 8 | 0.024 / 0.000 | 0.339 / 0.130 | 0.523 / 0.615 | 0.546 / 0.886 | 0.548 / 0.973 |
+| 32 | 0.000 / 0.000 | 0.000 / 0.000 | 0.006 / 0.000 | 0.081 / 0.117 | 0.133 / 0.613 |
+| 128 | 0.000 / 0.000 | 0.000 / 0.000 | 0.000 / 0.000 | 0.000 / 0.000 | 0.002 / 0.000 |
+
+`h1_seminorm` is monotone at every correlation length once the edges are gone. The second
+table also shows how much of `coarsen`'s damage was the staircase even for `mse`: on the
+smoothest field, which the coarse grid can almost fully represent, `mse` at a factor of 32 is
+0.085 under `coarsen` and 0.000 here.
+
 ## What this is not
 
 - **Not a defect in `h1_seminorm`.** Its card already records the structural objection this
@@ -104,9 +181,10 @@ measurement.
   correct control for pointwise metrics, and changing it would change every metric's committed
   coarsening evidence.
 
-## The two decisions
+## The two decisions, as they were posed
 
-These are independent. The issue closes when both are made and acted on.
+These are independent. The issue closes when both are made and acted on; both now are, see
+"Decisions" at the top.
 
 ### Decision 1: keep or remove `h1_seminorm`
 

@@ -50,16 +50,16 @@ factor.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1790639359`, do not edit -->
 
 | test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
 |---|---|---|---|---|---|
 | Displacement | density | 2 | 1 to 1 | 0.896 | level 2 |
 | Displacement | velocity | 2 | 1 to 1 | 0.754 | level 1 |
 | Displacement | vorticity | 2 | 0.7 to 1 | 0.501 | level 1 |
-| Resolution loss | density | 1 | 1 to 1 | 0.924 | level 1 |
-| Resolution loss | velocity | 1 | 1 to 1 | 0.991 | level 1 |
-| Resolution loss | vorticity | 1 | 0.2 to 0.2 | 0.41 | level 1 |
+| Resolution loss | density | 2 | 0.8 to 1 | 0.483 | level 1 |
+| Resolution loss | velocity | 2 | 1 to 1 | 0.693 | level 1 |
+| Resolution loss | vorticity | 2 | 0.2 to 1 | 0.41 | level 1 |
 | Smoothing | density | 3 | 1 to 1 | 0.945 | level 1 |
 | Smoothing | velocity | 3 | 1 to 1 | 0.648 | level 1 |
 | Smoothing | vorticity | 3 | 1 to 1 | 0.56 | level 1 |
@@ -188,11 +188,11 @@ large value here.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1790639359`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `0104b46cf8d9` (working tree dirty). Run `comparison_1789632054`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `ce78cb2d30d8` (working tree dirty). Run `comparison_1790639359`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1789632054`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1790639359`.
 
 <!-- END GENERATED run -->
 
@@ -201,7 +201,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 [gaussian_blur](../../degradations/gaussian_blur/card.md) ·
 [box_blur](../../degradations/box_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -228,7 +228,7 @@ that the gradient weights most.
 [lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
 [highpass_ideal](../../degradations/highpass_ideal/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -259,7 +259,7 @@ on exactly the errors this metric charges most.
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -282,15 +282,19 @@ scatter. This is the double penalty made worse, measured.
 
 ### Resolution loss
 
-[coarsen](../../degradations/coarsen/card.md)
+[coarsen](../../degradations/coarsen/card.md) ·
+[coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `coarsen` | density | 4 | 1 | 1 | 0.924 |
 | `coarsen` | velocity | 4 | 1 | 1 | 0.991 |
 | `coarsen` | vorticity | 4 | 0.2 | 0 | 0.41 |
+| `coarsen_bandlimited` | density | 4 | 0.8 | 0.317 | 0.483 |
+| `coarsen_bandlimited` | velocity | 4 | 1 | 1 | 0.693 |
+| `coarsen_bandlimited` | vorticity | 4 | 1 | 1 | 0.546 |
 
 <!-- END GENERATED results_resolution -->
 
@@ -302,11 +306,22 @@ vorticity the metric ends up measuring the jumps between blocks rather than the 
 coarsening removed. A test on synthetic fields, recorded in `issues/039`, shows the peak
 moving to larger factors as the field gets smoother, which matches that account.
 
+`coarsen_bandlimited` settles it. It keeps the same block means without adding edges, and under
+it vorticity is in the right order in every frame, with a rank correlation of 1. The size of
+the staircase's contribution is plain at the mildest factor: coarsening by 2 costs 1.11, 0.94
+and 0.81 of the unrelated-field value on density, velocity and vorticity under `coarsen` — on
+density, more than an unrelated field does — against 0.053, 0.041 and 0.23 under the
+band-limited operator. Density is the exception under the band-limited operator, in the right
+order in only 32% of frames with a rank correlation of 0.8: its values at factors 2 and 4 are
+2.6e-5 and 2.7e-5, nearly equal and ordered differently from frame to frame. The pointwise
+metrics and `spectrum_l2` show the same density pattern, and its cause is not established
+(`issues/039`).
+
 ### Noise
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -326,7 +341,7 @@ cell-to-cell noise is almost pure gradient.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1790639359`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | value on an unrelated field |
 |---|---|---|---|
@@ -344,27 +359,28 @@ error metric and says nothing about the displacement problem.
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1790639359`, do not edit -->
 
 | compared with | rank correlation over every degradation |
 |---|---|
-| `rmse` | 0.682 |
-| `mse` | 0.682 |
-| `mae` | 0.658 |
-| `nrmse` | 0.628 |
-| `h_minus_one` | 0.477 |
-| `enstrophy` | 0.288 |
-| `increment_w1` | 0.196 |
-| `palinstrophy` | 0.119 |
-| `increment_flatness` | -0.146 |
-| `spectrum_l2` | -0.19 |
+| `rmse` | 0.708 |
+| `mse` | 0.708 |
+| `mae` | 0.677 |
+| `nrmse` | 0.661 |
+| `h_minus_one` | 0.515 |
+| `enstrophy` | 0.25 |
+| `increment_w1` | 0.225 |
+| `kinetic_energy` | 0.147 |
+| `palinstrophy` | 0.0929 |
+| `spectrum_l2` | -0.132 |
+| `increment_flatness` | -0.139 |
 
 Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
-This metric ranks the ladder most like the pointwise family, at 0.63 to 0.68 with `nrmse`,
-`mae`, `mse` and `rmse`, and less like `h_minus_one`, at 0.48. The two Sobolev orders agree on
+This metric ranks the ladder most like the pointwise family, at 0.66 to 0.71 with `nrmse`,
+`mae`, `mse` and `rmse`, and less like `h_minus_one`, at 0.52. The two Sobolev orders agree on
 direction for most degradations and disagree on which ones are severe, which is the whole
 content of Equation (2).
 

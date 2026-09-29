@@ -72,16 +72,16 @@ claims the data does not support.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
 
 | test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
 |---|---|---|---|---|---|
 | Displacement | density | 2 | 0.516 to 0.516 | 0.499 | level — |
 | Displacement | velocity | 2 | -0.0304 to -0.0304 | 0.499 | level — |
 | Displacement | vorticity | 2 | -0.058 to -0.058 | 0.499 | level — |
-| Resolution loss | density | 1 | 1 to 1 | 0.96 | level — |
-| Resolution loss | velocity | 1 | 1 to 1 | 0.931 | level — |
-| Resolution loss | vorticity | 1 | 1 to 1 | 0.817 | level — |
+| Resolution loss | density | 2 | -0.8 to 1 | 0.182 | level — |
+| Resolution loss | velocity | 2 | 0.8 to 1 | 0.469 | level — |
+| Resolution loss | vorticity | 2 | 0.4 to 1 | 0.25 | level — |
 | Smoothing | density | 3 | -1 to -1 | 0 | level — |
 | Smoothing | velocity | 3 | -1 to -1 | 0 | level — |
 | Smoothing | vorticity | 3 | 0.8 to 1 | 0.549 | level — |
@@ -196,11 +196,11 @@ tripwire that says intermittency has changed, never as an ordering of how much.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `769f56820d4c` (working tree dirty). Run `comparison_1789629226`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `ce78cb2d30d8` (working tree dirty). Run `comparison_1790639359`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1789629226`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1790639359`.
 
 <!-- END GENERATED run -->
 
@@ -209,7 +209,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 [gaussian_blur](../../degradations/gaussian_blur/card.md) ·
 [box_blur](../../degradations/box_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -242,7 +242,7 @@ separate them.
 [lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
 [highpass_ideal](../../degradations/highpass_ideal/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -276,7 +276,7 @@ both alike. Nothing here should be read as this metric ranking spectral damage.
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -301,28 +301,40 @@ described in `issues/037-position-blind-metrics-have-no-damage-anchor.md`.
 
 ### Resolution loss
 
-[coarsen](../../degradations/coarsen/card.md)
+[coarsen](../../degradations/coarsen/card.md) ·
+[coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `coarsen` | density | 4 | 1 | 1 | 0.96 |
 | `coarsen` | velocity | 4 | 1 | 1 | 0.931 |
 | `coarsen` | vorticity | 4 | 1 | 0.994 | 0.817 |
+| `coarsen_bandlimited` | density | 4 | -0.8 | 0 | 0.182 |
+| `coarsen_bandlimited` | velocity | 4 | 0.8 | 0.46 | 0.469 |
+| `coarsen_bandlimited` | vorticity | 4 | 0.4 | 0.087 | 0.25 |
 
 <!-- END GENERATED results_resolution -->
 
-The one family this metric handles cleanly: correlation 1 on all three fields with good
-separation, best on density and weakest on vorticity. Coarsening removes small-scale content
-and rebuilds the field on a coarser grid, and the flatness rises monotonically with the
-factor.
+Under `coarsen` the flatness rises steeply and monotonically with the factor, from 15.2 to 177
+on density, 9.2 to 131 on velocity and 9.3 to 284 on vorticity at a factor of 16. That rise is
+the staircase, not the lost resolution. Inside each block every one-cell increment is exactly
+zero and at its edge there is a jump, so the increment distribution becomes a spike at zero
+with rare large values, which is precisely what flatness measures.
+
+`coarsen_bandlimited` keeps the same block means without adding edges, and under it the
+flatness barely moves on density and velocity (15.3, 15.3, 14.9, 13.0 and 9.2, 9.3, 9.8, 10.2
+at factors 2 to 16) and on vorticity falls and then rises (8.8, 6.5, 9.7, 14.3), with rank
+correlations of −0.8, 0.8 and 0.4. An earlier version of this card read the `coarsen` row as
+the one family this metric handles cleanly. It was a response to the operator's block edges;
+`issues/039` records the mechanism.
 
 ### Noise
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -344,7 +356,7 @@ in the direction the definition predicts.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | value on an unrelated field |
 |---|---|---|---|
@@ -369,31 +381,39 @@ doing its job.
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
 
 | compared with | rank correlation over every degradation |
 |---|---|
-| `mae` | -0.12 |
-| `h_minus_one` | -0.141 |
-| `nrmse` | -0.161 |
-| `rmse` | -0.168 |
-| `mse` | -0.169 |
-| `increment_w1` | -0.463 |
+| `palinstrophy` | 0.468 |
+| `kinetic_energy` | 0.161 |
+| `enstrophy` | 0.0202 |
+| `h_minus_one` | -0.0907 |
+| `mae` | -0.101 |
+| `nrmse` | -0.121 |
+| `rmse` | -0.135 |
+| `mse` | -0.135 |
+| `h1_seminorm` | -0.139 |
+| `spectrum_l2` | -0.234 |
+| `increment_w1` | -0.489 |
 
 Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
-Read as a ranker, this metric works on exactly one axis of the five. It orders coarsening
-and noise cleanly, changes sign between fields under smoothing, orders spectral filtering
-inconsistently and is invariant to displacement. `CLAUDE.md`'s acceptance rule is that a
+Read as a ranker, this metric works on exactly one family of the five. It orders noise
+cleanly, changes sign between fields under smoothing, orders spectral filtering
+inconsistently and is invariant to displacement. Its clean ordering under `coarsen` turned
+out to be a response to that operator's block edges rather than to lost resolution: under
+`coarsen_bandlimited`, which discards the same information without adding edges, it is not
+ordered (see Resolution loss). `CLAUDE.md`'s acceptance rule is that a
 metric joins the panel only if it is monotone with high rank correlation, and on that rule
 this does not qualify; `issues/036` sets out what should be done about it.
 
-Read as a tripwire, the picture is different and more favourable. It correlates -0.12 to
--0.17 with the four pointwise baselines and -0.14 with `h_minus_one`, so it is close to
+Read as a tripwire, the picture is different and more favourable. It correlates -0.10 to
+-0.14 with the four pointwise baselines and -0.09 with `h_minus_one`, so it is close to
 independent of everything else in the panel and is carrying information none of them carry.
-Its correlation with `increment_w1` is -0.46, which is the only substantial relationship it
+Its correlation with `increment_w1` is -0.49, which is the only substantial relationship it
 has with another metric here and is expected, since both read the same increment
 distribution. The case for keeping it is that a drift in this number means something specific
 that no other metric reports; the case against using it to choose between models is the sign

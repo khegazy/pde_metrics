@@ -29,12 +29,12 @@ construction — the domain is doubly periodic and the derivative wraps accordin
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1790639359`, do not edit -->
 
 | test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
 |---|---|---|---|---|---|
 | Displacement | vorticity | 2 | — to — | — | level — |
-| Resolution loss | vorticity | 1 | -1 to -1 | 0.147 | level — |
+| Resolution loss | vorticity | 2 | -1 to -1 | 0.147 | level — |
 | Smoothing | vorticity | 3 | -1 to -1 | 0.0745 | level — |
 | Spectral filtering | vorticity | 4 | -1 to -1 | 0 | level — |
 | Noise | vorticity | 1 | 1 to 1 | 0.503 | level — |
@@ -109,11 +109,11 @@ analysis grid before drawing any conclusion.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1790639359`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `85ddd3788061` (working tree dirty). Run `comparison_1787115827`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `ce78cb2d30d8` (working tree dirty). Run `comparison_1790639359`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1787115827`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1790639359`.
 
 <!-- END GENERATED run -->
 
@@ -128,7 +128,7 @@ read here is the drift away from the reference value rather than an error.
 [box_blur](../../degradations/box_blur/card.md) ·
 [median_blur](../../degradations/median_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -145,7 +145,7 @@ read here is the drift away from the reference value rather than an error.
 [highpass_ideal](../../degradations/highpass_ideal/card.md) ·
 [highpass_butterworth](../../degradations/highpass_butterworth/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -161,7 +161,7 @@ read here is the drift away from the reference value rather than an error.
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -177,21 +177,30 @@ should — which is one of the things a reference-free diagnostic is useful for.
 
 ### Resolution loss
 
-[coarsen](../../degradations/coarsen/card.md)
+[coarsen](../../degradations/coarsen/card.md) ·
+[coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `coarsen` | vorticity | 4 | -1 | 0 | 0.147 |
+| `coarsen_bandlimited` | vorticity | 4 | -1 | 0 | 0.232 |
 
 <!-- END GENERATED results_resolution -->
+
+The rank correlation of −1 under both coarsenings is the correct result for a quantity that
+falls as detail is removed. `coarsen` removes more at every factor: 4%, 14%, 26% and 40% of the
+enstrophy at factors 2 to 16, against 0.1%, 5%, 17% and 31% under `coarsen_bandlimited`. The
+two keep the same block means; the staircase additionally flattens each block, discarding the
+variance inside it that the band-limited reconstruction keeps wherever the coarse grid can
+represent it.
 
 ### Noise
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -204,7 +213,7 @@ should — which is one of the things a reference-free diagnostic is useful for.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1790639359`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | value on an unrelated field |
 |---|---|---|---|
@@ -216,15 +225,21 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1790639359`, do not edit -->
 
 | compared with | rank correlation over every degradation |
 |---|---|
-| `kinetic_energy` | 0.862 |
-| `mae` | -0.0874 |
-| `rmse` | -0.108 |
-| `mse` | -0.108 |
-| `nrmse` | -0.162 |
+| `kinetic_energy` | 0.86 |
+| `palinstrophy` | 0.757 |
+| `h1_seminorm` | 0.25 |
+| `increment_flatness` | 0.0202 |
+| `mae` | -0.103 |
+| `rmse` | -0.116 |
+| `mse` | -0.116 |
+| `nrmse` | -0.154 |
+| `h_minus_one` | -0.183 |
+| `increment_w1` | -0.495 |
+| `spectrum_l2` | -0.828 |
 
 Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 

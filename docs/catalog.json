@@ -1,6 +1,6 @@
 {
   "counts": {
-    "degradations": 23,
+    "degradations": 24,
     "metrics": 16,
     "reviewed": 0,
     "with_measurements": 16
@@ -210,6 +210,47 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Block-averages the field onto a coarser grid and expands it back, discarding everything below the block size."
+    },
+    {
+      "card": "degradations/coarsen_bandlimited/card.md",
+      "category": "resolution",
+      "declared": {
+        "calibration": null,
+        "ensemble": false,
+        "family": "resolution",
+        "fields": [
+          "*"
+        ],
+        "ordinal": true,
+        "severity_direction": "increasing",
+        "severity_name": "factor",
+        "severity_units": "",
+        "stochastic": false
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "measured": false,
+        "probes": [],
+        "run": null
+      },
+      "kind": "degradation",
+      "math": null,
+      "name": "coarsen_bandlimited",
+      "output": {
+        "description": "Coarsening factor, a whole number of cells per block, on the same absolute scale as coarsen: a factor of four means four on every field.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "degradations/coarsen_bandlimited",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Block-averages the field exactly as coarsen does, then fills each block back in with the one band-limited field that has those block means, so no edges are added."
     },
     {
       "card": "degradations/disk_blur/card.md",
@@ -1172,6 +1213,17 @@
             "weakest_separation": 0.1471779638
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -1.0,
+            "weakest_separation": 0.2319354963
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "vorticity",
@@ -1293,7 +1345,7 @@
             "unrelated_field_value": 3.0785e-06
           }
         ],
-        "run": "comparison_1787115827"
+        "run": "comparison_1790639359"
       },
       "kind": "metric",
       "math": {
@@ -1371,6 +1423,17 @@
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
             "weakest_separation": 0.9243084758
+          },
+          {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "density",
+            "first_detected_level": 4.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.3167701863,
+            "rank_correlation": 0.8,
+            "weakest_separation": 0.4832761082
           },
           {
             "axis": "gaussian_blur",
@@ -1516,6 +1579,17 @@
             "weakest_separation": 0.9906253617
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "velocity",
+            "first_detected_level": 2.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.692604452
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "velocity",
@@ -1659,6 +1733,17 @@
             "weakest_separation": 0.4098221519
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "vorticity",
+            "first_detected_level": 1.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.5463137996
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "vorticity",
@@ -1792,7 +1877,7 @@
             "unrelated_field_value": 0.0013559029
           }
         ],
-        "run": "comparison_1789632054"
+        "run": "comparison_1790639359"
       },
       "kind": "metric",
       "math": {
@@ -1870,6 +1955,17 @@
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
             "weakest_separation": 0.9999228425
+          },
+          {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8641641912
           },
           {
             "axis": "gaussian_blur",
@@ -2005,6 +2101,17 @@
           },
           {
             "axis": "coarsen",
+            "family": "resolution",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "coarsen_bandlimited",
             "family": "resolution",
             "field": "velocity",
             "first_detected_level": null,
@@ -2158,6 +2265,17 @@
             "weakest_separation": 1.0
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9314069673
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "vorticity",
@@ -2291,7 +2409,7 @@
             "unrelated_field_value": 0.0981953996
           }
         ],
-        "run": "comparison_1789629226"
+        "run": "comparison_1790639359"
       },
       "kind": "metric",
       "math": {
@@ -2369,6 +2487,17 @@
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
             "weakest_separation": 0.9595308823
+          },
+          {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -0.8,
+            "weakest_separation": 0.1815130589
           },
           {
             "axis": "gaussian_blur",
@@ -2514,6 +2643,17 @@
             "weakest_separation": 0.9306739709
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.4596273292,
+            "rank_correlation": 0.8,
+            "weakest_separation": 0.4693491763
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "velocity",
@@ -2657,6 +2797,17 @@
             "weakest_separation": 0.8166351607
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0869565217,
+            "rank_correlation": 0.4,
+            "weakest_separation": 0.2496431465
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "vorticity",
@@ -2790,7 +2941,7 @@
             "unrelated_field_value": 9.3398743212
           }
         ],
-        "run": "comparison_1789629226"
+        "run": "comparison_1790639359"
       },
       "kind": "metric",
       "math": {
@@ -2868,6 +3019,17 @@
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
             "weakest_separation": 0.8279387369
+          },
+          {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.7194938467
           },
           {
             "axis": "gaussian_blur",
@@ -3013,6 +3175,17 @@
             "weakest_separation": 0.8637012461
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.773928475
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "velocity",
@@ -3156,6 +3329,17 @@
             "weakest_separation": 0.6851587516
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.9875776398,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8052544269
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "vorticity",
@@ -3289,7 +3473,7 @@
             "unrelated_field_value": 0.0
           }
         ],
-        "run": "comparison_1789629226"
+        "run": "comparison_1790639359"
       },
       "kind": "metric",
       "math": {
@@ -3367,6 +3551,17 @@
             "monotone_fraction": 0.0,
             "rank_correlation": -1.0,
             "weakest_separation": 0.0
+          },
+          {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -1.0,
+            "weakest_separation": 0.2720188264
           },
           {
             "axis": "gaussian_blur",
@@ -3490,7 +3685,7 @@
             "unrelated_field_value": 0.0015656018
           }
         ],
-        "run": "comparison_1787115827"
+        "run": "comparison_1790639359"
       },
       "kind": "metric",
       "math": {
@@ -3568,6 +3763,17 @@
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
             "weakest_separation": 0.9619999228
+          },
+          {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.5900621118,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.5418000849
           },
           {
             "axis": "gaussian_blur",
@@ -3713,6 +3919,17 @@
             "weakest_separation": 1.0
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9575633656
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "velocity",
@@ -3856,6 +4073,17 @@
             "weakest_separation": 0.9424404923
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "vorticity",
+            "first_detected_level": 2.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.7378573358
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "vorticity",
@@ -3989,7 +4217,7 @@
             "unrelated_field_value": 0.0018614191
           }
         ],
-        "run": "comparison_1787115827"
+        "run": "comparison_1790639359"
       },
       "kind": "metric",
       "math": {
@@ -4067,6 +4295,17 @@
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
             "weakest_separation": 0.9596466186
+          },
+          {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.7142857143,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.6253616759
           },
           {
             "axis": "gaussian_blur",
@@ -4212,6 +4451,17 @@
             "weakest_separation": 1.0
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8889703329
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "velocity",
@@ -4355,6 +4605,17 @@
             "weakest_separation": 0.741020794
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "vorticity",
+            "first_detected_level": 4.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.6951506501
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "vorticity",
@@ -4488,7 +4749,7 @@
             "unrelated_field_value": 1.45161e-05
           }
         ],
-        "run": "comparison_1787115827"
+        "run": "comparison_1790639359"
       },
       "kind": "metric",
       "math": {
@@ -4566,6 +4827,17 @@
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
             "weakest_separation": 1.0
+          },
+          {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.7142857143,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.6517881255
           },
           {
             "axis": "gaussian_blur",
@@ -4711,6 +4983,17 @@
             "weakest_separation": 1.0
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8901276957
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "velocity",
@@ -4854,6 +5137,17 @@
             "weakest_separation": 0.8864241349
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "vorticity",
+            "first_detected_level": 2.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.7863508352
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "vorticity",
@@ -4987,7 +5281,7 @@
             "unrelated_field_value": 1.499053454
           }
         ],
-        "run": "comparison_1787115827"
+        "run": "comparison_1790639359"
       },
       "kind": "metric",
       "math": {
@@ -5065,6 +5359,17 @@
             "monotone_fraction": 0.0,
             "rank_correlation": -1.0,
             "weakest_separation": 0.1748775124
+          },
+          {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.0,
+            "rank_correlation": -1.0,
+            "weakest_separation": 0.0328305235
           },
           {
             "axis": "gaussian_blur",
@@ -5188,7 +5493,7 @@
             "unrelated_field_value": 4.623e-07
           }
         ],
-        "run": "comparison_1789632054"
+        "run": "comparison_1790639359"
       },
       "kind": "metric",
       "math": {
@@ -5352,6 +5657,17 @@
             "weakest_separation": 0.9596466186
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.7142857143,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.6253616759
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "density",
@@ -5493,6 +5809,17 @@
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
             "weakest_separation": 1.0
+          },
+          {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.8889703329
           },
           {
             "axis": "gaussian_blur",
@@ -5638,6 +5965,17 @@
             "weakest_separation": 0.741020794
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "vorticity",
+            "first_detected_level": 2.0,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.6951506501
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "vorticity",
@@ -5771,7 +6109,7 @@
             "unrelated_field_value": 0.0038099982
           }
         ],
-        "run": "comparison_1787115827"
+        "run": "comparison_1790639359"
       },
       "kind": "metric",
       "math": {
@@ -5849,6 +6187,17 @@
             "monotone_fraction": 1.0,
             "rank_correlation": 1.0,
             "weakest_separation": 1.0
+          },
+          {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "density",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 0.5217391304,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.6620500752
           },
           {
             "axis": "gaussian_blur",
@@ -5994,6 +6343,17 @@
             "weakest_separation": 1.0
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "velocity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.9980710621
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "velocity",
@@ -6137,6 +6497,17 @@
             "weakest_separation": 0.8128158636
           },
           {
+            "axis": "coarsen_bandlimited",
+            "family": "resolution",
+            "field": "vorticity",
+            "first_detected_level": null,
+            "is_probe": false,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "weakest_separation": 0.7525944215
+          },
+          {
             "axis": "gaussian_blur",
             "family": "smoothing",
             "field": "vorticity",
@@ -6270,7 +6641,7 @@
             "unrelated_field_value": 1.586065837e-16
           }
         ],
-        "run": "comparison_1790633480"
+        "run": "comparison_1790639359"
       },
       "kind": "metric",
       "math": {

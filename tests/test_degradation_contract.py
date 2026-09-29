@@ -150,6 +150,7 @@ LADDERS: dict[str, list[float]] = {
     "translate": [1, 2, 4],
     "translate_subpixel": [0.25, 0.5, 1.0],
     "coarsen": [2, 4, 8],
+    "coarsen_bandlimited": [2, 4, 8],
     "subsample": [2, 4, 8],
     "additive_noise": [0.01, 0.1, 0.5],
     "multiplicative_noise": [0.01, 0.1, 0.5],

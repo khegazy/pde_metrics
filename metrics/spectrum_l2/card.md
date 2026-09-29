@@ -69,16 +69,16 @@ its value is unchanged by a rescaling of the cell size.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790639359`, do not edit -->
 
 | test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
 |---|---|---|---|---|---|
 | Displacement | density | 2 | — to — | — | level — |
 | Displacement | velocity | 2 | — to — | — | level — |
 | Displacement | vorticity | 2 | — to — | — | level — |
-| Resolution loss | density | 1 | 1 to 1 | 1 | level — |
-| Resolution loss | velocity | 1 | 1 to 1 | 1 | level — |
-| Resolution loss | vorticity | 1 | 1 to 1 | 0.813 | level — |
+| Resolution loss | density | 2 | 1 to 1 | 0.662 | level — |
+| Resolution loss | velocity | 2 | 1 to 1 | 0.998 | level — |
+| Resolution loss | vorticity | 2 | 1 to 1 | 0.753 | level — |
 | Smoothing | density | 3 | 1 to 1 | 1 | level — |
 | Smoothing | velocity | 3 | 1 to 1 | 0.976 | level — |
 | Smoothing | vorticity | 3 | 1 to 1 | 0.685 | level — |
@@ -211,11 +211,11 @@ position-blind family and what would settle it.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790639359`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `ebdd822e5f27` (working tree dirty). Run `comparison_1790633480`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `ce78cb2d30d8` (working tree dirty). Run `comparison_1790639359`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1790633480`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1790639359`.
 
 <!-- END GENERATED run -->
 
@@ -224,7 +224,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 [gaussian_blur](../../degradations/gaussian_blur/card.md) ·
 [box_blur](../../degradations/box_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -258,7 +258,7 @@ separation in the family, 0.685 on `box_blur` applied to vorticity, is on the sa
 [lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
 [highpass_ideal](../../degradations/highpass_ideal/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -289,7 +289,7 @@ here than the same energy lost at small scales, which is the Limitations point m
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -310,15 +310,19 @@ ranking of the last bits of floating-point arithmetic.
 
 ### Resolution loss
 
-[coarsen](../../degradations/coarsen/card.md)
+[coarsen](../../degradations/coarsen/card.md) ·
+[coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `coarsen` | density | 4 | 1 | 1 | 1 |
 | `coarsen` | velocity | 4 | 1 | 1 | 1 |
 | `coarsen` | vorticity | 4 | 1 | 1 | 0.813 |
+| `coarsen_bandlimited` | density | 4 | 1 | 0.522 | 0.662 |
+| `coarsen_bandlimited` | velocity | 4 | 1 | 1 | 0.998 |
+| `coarsen_bandlimited` | vorticity | 4 | 1 | 1 | 0.753 |
 
 <!-- END GENERATED results_resolution -->
 
@@ -327,11 +331,19 @@ fields, 0.068 on density and 0.031 on velocity at a factor of 16, where block av
 6% and 3% of their energy. On vorticity it removes 41% and the metric reaches 0.23; the weakest
 separation, 0.813, is on the same field.
 
+Under `coarsen_bandlimited` it is ordered correctly too, but much smaller on the smooth
+fields: at a factor of 16, 0.0025 on density and 0.0014 on velocity, against 0.068 and 0.031
+under `coarsen`. The staircase's block edges put energy into high shells that the band-limited
+reconstruction leaves empty. On vorticity the two are closer, 0.16 against 0.23. Density is in
+the right order in only 52% of frames under the band-limited operator, where factors 2 and 4
+read 1e-6 and 2e-6; `issues/039` records this density pattern, which the pointwise metrics
+and `h1_seminorm` show as well.
+
 ### Noise
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -353,7 +365,7 @@ Smoothing is smallest.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790639359`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | value on an unrelated field |
 |---|---|---|---|
@@ -375,30 +387,31 @@ damage score and every "first strength detected" level is therefore withheld.
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790633480`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790639359`, do not edit -->
 
 | compared with | rank correlation over every degradation |
 |---|---|
-| `increment_w1` | 0.732 |
-| `nrmse` | 0.202 |
-| `h_minus_one` | 0.136 |
-| `rmse` | 0.131 |
-| `mse` | 0.13 |
-| `mae` | 0.123 |
-| `h1_seminorm` | -0.186 |
-| `increment_flatness` | -0.214 |
-| `palinstrophy` | -0.731 |
-| `enstrophy` | -0.831 |
+| `increment_w1` | 0.749 |
+| `nrmse` | 0.217 |
+| `h_minus_one` | 0.147 |
+| `rmse` | 0.147 |
+| `mse` | 0.147 |
+| `mae` | 0.136 |
+| `h1_seminorm` | -0.132 |
+| `increment_flatness` | -0.234 |
+| `palinstrophy` | -0.702 |
+| `enstrophy` | -0.828 |
+| `kinetic_energy` | -0.883 |
 
 Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
 The ranking this metric produces is close to independent of the pointwise family, correlating
-0.123 to 0.202 with `mae`, `mse`, `rmse` and `nrmse`, and closest to `increment_w1` at 0.73,
+0.136 to 0.217 with `mae`, `mse`, `rmse` and `nrmse`, and closest to `increment_w1` at 0.75,
 the other metric here that reads only a distribution rather than an arrangement. The strong
-negative correlations with `enstrophy` and `palinstrophy` are orientation rather than
-disagreement: those two are single-field quantities that fall as the damage rises.
+negative correlations with `enstrophy`, `palinstrophy` and `kinetic_energy` are orientation
+rather than disagreement: those are single-field quantities that fall as the damage rises.
 
 ## References
 

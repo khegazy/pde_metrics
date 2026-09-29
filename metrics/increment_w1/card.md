@@ -58,16 +58,16 @@ Equation (2) are guaranteed the same size, which is what the closed form require
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1790639359`, do not edit -->
 
 | test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
 |---|---|---|---|---|---|
 | Displacement | density | 2 | -0.714 to -0.714 | 0 | level — |
 | Displacement | velocity | 2 | -0.714 to -0.714 | 0 | level — |
 | Displacement | vorticity | 2 | -0.6 to -0.6 | 0 | level — |
-| Resolution loss | density | 1 | 1 to 1 | 0.828 | level — |
-| Resolution loss | velocity | 1 | 1 to 1 | 0.864 | level — |
-| Resolution loss | vorticity | 1 | 1 to 1 | 0.685 | level — |
+| Resolution loss | density | 2 | 1 to 1 | 0.719 | level — |
+| Resolution loss | velocity | 2 | 1 to 1 | 0.774 | level — |
+| Resolution loss | vorticity | 2 | 1 to 1 | 0.685 | level — |
 | Smoothing | density | 3 | 1 to 1 | 0.96 | level — |
 | Smoothing | velocity | 3 | 1 to 1 | 0.771 | level — |
 | Smoothing | vorticity | 3 | 1 to 1 | 0.638 | level — |
@@ -168,11 +168,11 @@ damage columns in the evaluation are comparable between fields.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1790639359`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `769f56820d4c` (working tree dirty). Run `comparison_1789629226`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `ce78cb2d30d8` (working tree dirty). Run `comparison_1790639359`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1789629226`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1790639359`.
 
 <!-- END GENERATED run -->
 
@@ -181,7 +181,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 [gaussian_blur](../../degradations/gaussian_blur/card.md) ·
 [box_blur](../../degradations/box_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -206,7 +206,7 @@ than of position, so it is the kind of damage this metric is built to see.
 [lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
 [highpass_ideal](../../degradations/highpass_ideal/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -235,7 +235,7 @@ low modes changes the increment distribution as readily as removing high ones do
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -264,27 +264,35 @@ meeting a position-blind metric, not a defect in either; it is written up with i
 
 ### Resolution loss
 
-[coarsen](../../degradations/coarsen/card.md)
+[coarsen](../../degradations/coarsen/card.md) ·
+[coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `coarsen` | density | 4 | 1 | 1 | 0.828 |
 | `coarsen` | velocity | 4 | 1 | 1 | 0.864 |
 | `coarsen` | vorticity | 4 | 1 | 0.919 | 0.685 |
+| `coarsen_bandlimited` | density | 4 | 1 | 1 | 0.719 |
+| `coarsen_bandlimited` | velocity | 4 | 1 | 1 | 0.774 |
+| `coarsen_bandlimited` | vorticity | 4 | 1 | 0.988 | 0.805 |
 
 <!-- END GENERATED results_resolution -->
 
-Ordered perfectly on all three fields. Remapping to a coarser grid removes small-scale
-content, which narrows the increment distribution, and the transport cost of that narrowing
-rises with the coarsening factor.
+Ordered perfectly on all three fields under both coarsenings, but the values differ by one to
+two orders of magnitude at small factors: at a factor of 2, 5.2e-5, 3.8e-4 and 1.3e-4 under
+`coarsen` against 7.2e-7, 3.3e-6 and 1.3e-5 under `coarsen_bandlimited`, on density, velocity
+and vorticity. The staircase turns most one-cell increments into exact zeros and the rest into
+jumps, which moves the increment distribution far more than the lost resolution does. By a
+factor of 16 the gap has closed on vorticity, 2.8e-4 against 2.4e-4, because the coarse grid
+genuinely cannot hold vorticity's structure at that size.
 
 ### Noise
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -304,7 +312,7 @@ metric measures.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1790639359`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | value on an unrelated field |
 |---|---|---|---|
@@ -329,16 +337,21 @@ or failing them.
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1789629226`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1790639359`, do not edit -->
 
 | compared with | rank correlation over every degradation |
 |---|---|
-| `nrmse` | 0.0524 |
-| `rmse` | 0.0496 |
-| `mse` | 0.0493 |
-| `mae` | 0.0157 |
-| `h_minus_one` | -0.092 |
-| `increment_flatness` | -0.463 |
+| `spectrum_l2` | 0.749 |
+| `h1_seminorm` | 0.225 |
+| `nrmse` | 0.0858 |
+| `rmse` | 0.0846 |
+| `mse` | 0.0844 |
+| `mae` | 0.0547 |
+| `h_minus_one` | -0.0552 |
+| `increment_flatness` | -0.489 |
+| `enstrophy` | -0.495 |
+| `kinetic_energy` | -0.552 |
+| `palinstrophy` | -0.583 |
 
 Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
@@ -347,13 +360,13 @@ Computed on the median value at each combination of degradation and strength, ov
 Every axis except displacement is ranked perfectly on every field. Displacement is ranked
 not at all, by construction.
 
-The number worth the most here is the cross-metric correlation: 0.05, 0.05, 0.05 and 0.02
+The number worth the most here is the cross-metric correlation: 0.09, 0.08, 0.08 and 0.05
 against `nrmse`, `rmse`, `mse` and `mae`. This metric is close to uncorrelated with the
 entire pointwise family across the whole ladder, which is the strongest such result in the
-repository — `h_minus_one`, by contrast, correlates with them above 0.92. That is the
-property OT-5 was proposed for, and it is now measured rather than argued: a panel containing
+repository — `h_minus_one`, by contrast, correlates with them above 0.91. That is the
+property this metric was proposed for, and it is now measured rather than argued: a panel containing
 this metric and a pointwise control is measuring two nearly independent things. It correlates
--0.46 with `increment_flatness`, which reads the same increment distribution through a single
+-0.49 with `increment_flatness`, which reads the same increment distribution through a single
 moment, so the two are related but far from redundant.
 
 ## References

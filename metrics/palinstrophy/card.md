@@ -65,12 +65,12 @@ using the native spacing would inflate the result by the square of that factor.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1790639359`, do not edit -->
 
 | test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
 |---|---|---|---|---|---|
 | Displacement | vorticity | 2 | — to — | — | level — |
-| Resolution loss | vorticity | 1 | -1 to -1 | 0.175 | level — |
+| Resolution loss | vorticity | 2 | -1 to -1 | 0.0328 | level — |
 | Smoothing | vorticity | 3 | -1 to -1 | 0.0232 | level — |
 | Spectral filtering | vorticity | 4 | -1 to -1 | 0 | level — |
 | Noise | vorticity | 1 | 1 to 1 | 0.505 | level — |
@@ -155,11 +155,11 @@ evaluated as about the prediction.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1790639359`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `0104b46cf8d9` (working tree dirty). Run `comparison_1789632054`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `ce78cb2d30d8` (working tree dirty). Run `comparison_1790639359`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1789632054`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1790639359`.
 
 <!-- END GENERATED run -->
 
@@ -168,7 +168,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 [gaussian_blur](../../degradations/gaussian_blur/card.md) ·
 [box_blur](../../degradations/box_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -191,7 +191,7 @@ ordering on this data.
 [lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
 [highpass_ideal](../../degradations/highpass_ideal/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -213,7 +213,7 @@ which end of the spectrum a prediction has lost, which neither says alone.
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -228,13 +228,15 @@ statistic is withheld.
 
 ### Resolution loss
 
-[coarsen](../../degradations/coarsen/card.md)
+[coarsen](../../degradations/coarsen/card.md) ·
+[coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `coarsen` | vorticity | 4 | -1 | 0 | 0.175 |
+| `coarsen_bandlimited` | vorticity | 4 | -1 | 0 | 0.0328 |
 
 <!-- END GENERATED results_resolution -->
 
@@ -247,11 +249,18 @@ Enstrophy falls throughout, by 4% to 40%. The rank correlation of −1 in the ta
 across the four coarsening strengths only and does not show that the mildest of them moved the
 value the wrong way. `issues/039` records the same mechanism for `h1_seminorm`.
 
+`coarsen_bandlimited` keeps the same block means as `coarsen` without adding edges, and under
+it palinstrophy only falls: by 2%, 39%, 84% and 96% at factors 2 to 16, while enstrophy falls
+by 0.1% to 31%. The rise under `coarsen` was therefore the staircase and nothing else. It also
+falls by a larger fraction than enstrophy at every factor, the ordering Equation (3) guarantees
+for smooth radial filters, although this operator is not one of them: its band is square, and
+it boosts the modes nearest the cut.
+
 ### Noise
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -270,7 +279,7 @@ barely separable across frames, with a weakest gap of 0.505: they move the value
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1790639359`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | value on an unrelated field |
 |---|---|---|---|
@@ -288,27 +297,29 @@ single-field quantity.
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1789632054`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1790639359`, do not edit -->
 
 | compared with | rank correlation over every degradation |
 |---|---|
-| `enstrophy` | 0.756 |
-| `increment_flatness` | 0.433 |
-| `h1_seminorm` | 0.119 |
-| `mae` | -0.11 |
-| `mse` | -0.177 |
-| `rmse` | -0.177 |
-| `nrmse` | -0.219 |
-| `h_minus_one` | -0.276 |
-| `increment_w1` | -0.566 |
-| `spectrum_l2` | -0.741 |
+| `kinetic_energy` | 0.807 |
+| `enstrophy` | 0.757 |
+| `increment_flatness` | 0.468 |
+| `h1_seminorm` | 0.0929 |
+| `mae` | -0.114 |
+| `mse` | -0.158 |
+| `rmse` | -0.158 |
+| `nrmse` | -0.169 |
+| `h_minus_one` | -0.222 |
+| `increment_w1` | -0.583 |
+| `spectrum_l2` | -0.702 |
 
 Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
-The closest ranking is `enstrophy`'s, at 0.76, which is expected of two moments of one
-spectrum and is also the measure of how much palinstrophy adds: the two disagree most on
+The closest rankings are those of the other two single-field quantities, `kinetic_energy` at
+0.81 and `enstrophy` at 0.76. The second is expected of two moments of one spectrum, and it is
+also the measure of how much palinstrophy adds: the two disagree most on
 high-pass filtering and on coarsening, both described above. The negative correlations with
 the pairwise metrics are orientation rather than disagreement, since this quantity falls
 under most damage while theirs rises.

@@ -73,6 +73,11 @@ ladder:
 
   # --- resolution / stochastic / pointwise ------------------------------------------
   coarsen:             {enabled: true, severities: [2, 4, 8, 16]}
+  # The same block means as coarsen, reconstructed band-limited instead of as a staircase.
+  # Run beside coarsen, not instead of it: a metric that differentiates the field measures
+  # coarsen's block edges as well as the lost resolution (issues/039); this isolates the
+  # latter.
+  coarsen_bandlimited: {enabled: true, severities: [2, 4, 8, 16]}
   subsample:           {severities: [2, 4, 8, 16], enabled: false}
   additive_noise:      {enabled: true, severities: [0.001, 0.01, 0.1, 0.5]}
   gain:                {severities: [0.01, 0.05, 0.2, 0.5], enabled: false}

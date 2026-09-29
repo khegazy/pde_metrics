@@ -26,12 +26,12 @@ boundary condition can enter.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
 
 | test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
 |---|---|---|---|---|---|
 | Displacement | velocity | 2 | — to — | — | level — |
-| Resolution loss | velocity | 1 | -1 to -1 | 0 | level — |
+| Resolution loss | velocity | 2 | -1 to -1 | 0 | level — |
 | Smoothing | velocity | 3 | -1 to -1 | 0 | level — |
 | Spectral filtering | velocity | 4 | -1 to -1 | 0 | level — |
 | Noise | velocity | 1 | 1 to 1 | 0.511 | level — |
@@ -107,11 +107,11 @@ form is the one to reach for.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `85ddd3788061` (working tree dirty). Run `comparison_1787115827`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `ce78cb2d30d8` (working tree dirty). Run `comparison_1790639359`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1787115827`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1790639359`.
 
 <!-- END GENERATED run -->
 
@@ -126,7 +126,7 @@ read here is the drift away from the reference value rather than an error.
 [box_blur](../../degradations/box_blur/card.md) ·
 [median_blur](../../degradations/median_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -143,7 +143,7 @@ read here is the drift away from the reference value rather than an error.
 [highpass_ideal](../../degradations/highpass_ideal/card.md) ·
 [highpass_butterworth](../../degradations/highpass_butterworth/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -159,7 +159,7 @@ read here is the drift away from the reference value rather than an error.
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -175,21 +175,29 @@ should — which is one of the things a reference-free diagnostic is useful for.
 
 ### Resolution loss
 
-[coarsen](../../degradations/coarsen/card.md)
+[coarsen](../../degradations/coarsen/card.md) ·
+[coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `coarsen` | velocity | 4 | -1 | 0 | 0 |
+| `coarsen_bandlimited` | velocity | 4 | -1 | 0 | 0.272 |
 
 <!-- END GENERATED results_resolution -->
+
+The rank correlation of −1 under both coarsenings is the correct result for a quantity that
+falls as detail is removed. The losses are small because velocity keeps its energy at large
+scales: 0.05%, 0.2%, 0.9% and 3.0% at factors 2 to 16 under `coarsen`, and 0.00%, 0.01%, 0.07%
+and 0.25% under `coarsen_bandlimited`. Most of what `coarsen` removes is the variance inside
+each block, which its staircase flattens.
 
 ### Noise
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -202,7 +210,7 @@ should — which is one of the things a reference-free diagnostic is useful for.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | value on an unrelated field |
 |---|---|---|---|
@@ -214,15 +222,21 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1787115827`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
 
 | compared with | rank correlation over every degradation |
 |---|---|
-| `enstrophy` | 0.862 |
+| `enstrophy` | 0.86 |
+| `palinstrophy` | 0.807 |
+| `increment_flatness` | 0.161 |
+| `h1_seminorm` | 0.147 |
 | `mae` | -0.208 |
 | `mse` | -0.23 |
 | `rmse` | -0.23 |
-| `nrmse` | -0.29 |
+| `nrmse` | -0.284 |
+| `h_minus_one` | -0.292 |
+| `increment_w1` | -0.552 |
+| `spectrum_l2` | -0.883 |
 
 Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
