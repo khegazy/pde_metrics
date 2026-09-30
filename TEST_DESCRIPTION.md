@@ -390,7 +390,11 @@ smooth field a degradation may simply not have been pushed far: on the pinned ru
 on density is listed as provably small on `translate_subpixel`, where its rank correlation is 1 and
 its elasticity 2, because density varies on about 160 cells and the harshest shift is 4, which
 costs a median damage of 0.015. Where the anchor is degenerate the scale is the metric's own
-largest ladder response, so a single very strong degradation makes the others look small. Not a
+largest ladder response, so a single very strong degradation makes the others look small. On this
+data `blindness_q` is close to a yes-or-no statement rather than graded evidence: on the pinned run
+355 of the 360 rows have a q of exactly 0 or exactly 1, because in almost every resample the largest
+damage falls wholly on one side of the margin, and with 200 resamples the fraction behind q moves
+in steps of 0.005. `damage_max_ucb` carries the graded information. Not a
 verdict: being unresponsive to a harmless displacement is the property a position-tolerant metric
 is built for. The resampling runs along one trajectory, so the bound
 reflects variation along it, not between independent realisations. Both are empty for a metric
