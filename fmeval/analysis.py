@@ -373,7 +373,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
     magnitude = df.assign(_abs=df["value"].abs())
     frame_scales = magnitude.groupby([*keys, "frame_index"], observed=True)["_abs"].max()
     group_scales = magnitude.groupby(keys, observed=True)["_abs"].max()
-    largest = _largest_responses(ladder, reference, directions, keys, probe_labels)
+    largest = _largest_responses(pd.concat([reference, ladder]), keys, probe_labels)
 
     for (dataset, metric, field, axis), g in ladder.groupby(
         ["dataset", "metric", "field", "degradation"], observed=True
@@ -396,13 +396,12 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
             # from the target is what makes the one-sided statistics mean what they say.
             oriented = g.assign(value=_target_distance(g["value"], target))
             sign = 1
-        clean = float(
-            reference[
-                (reference["dataset"] == dataset)
-                & (reference["metric"] == metric)
-                & (reference["field"] == field)
-            ]["value"].median()
-        )
+        clean_rows = reference[
+            (reference["dataset"] == dataset)
+            & (reference["metric"] == metric)
+            & (reference["field"] == field)
+        ]
+        clean = float(clean_rows["value"].median())
         # The clean value on the same scale the ordering statistics run on. For an
         # ordinary metric that is just the sign applied; for a target-valued one it is
         # the distance from the target, which is near zero for a calibrated prediction.
@@ -497,6 +496,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                 frame_scale, axis_round_off, record["separability_auc_min"],
                 largest.get(key, np.nan), n_bootstrap,
                 derive_rng(seed, f"blindness/{dataset}/{metric}/{axis}", 0, str(field)),
+                clean_rows.assign(value=sign * clean_rows["value"]),
             ))
         if "damage" in g.columns:
             damage = g["damage"].to_numpy()
@@ -521,23 +521,32 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
     return axes
 
 
-def _largest_responses(ladder: pd.DataFrame, reference: pd.DataFrame,
-                       directions: Mapping[tuple, int], keys: list[str],
-                       probe_labels: frozenset[str] = PROBE_LABELS) -> dict[tuple, float]:
-    """The largest median departure from clean any ordinal level produces, per metric and field.
+def _paired_medians(g: pd.DataFrame) -> pd.Series:
+    """Median over frames of each degradation level's value minus the clean value in the same frame.
 
-    Oriented by the metric's direction. It is the scale the blindness bound falls back to when the
-    unrelated-field anchor is degenerate (issues/037), so that a metric which cannot see the anchor
-    can still be shown not to respond to that anchor's operator.
+    Paired within the frame because a single-field quantity drifts along the trajectory --
+    enstrophy decays -- and against the trajectory's median clean value the drift itself would
+    read as a response, the same trap as pooling frames for a rank correlation.
     """
-    clean = reference.groupby(keys, observed=True)["value"].median()
-    ordinal = ladder[~ladder["degradation"].isin(probe_labels)]
+    clean = g[g["level"] == 0].groupby("frame_index", observed=True)["value"].median()
+    rest = g[g["level"] > 0]
+    difference = rest["value"] - rest["frame_index"].map(clean)
+    return difference.groupby([rest["degradation"], rest["level"]], observed=True).median()
+
+
+def _largest_responses(rows: pd.DataFrame, keys: list[str],
+                       probe_labels: frozenset[str] = PROBE_LABELS) -> dict[tuple, float]:
+    """The largest absolute paired departure from clean any ordinal level produces, per group.
+
+    The scale the blindness bound falls back to when the unrelated-field anchor is degenerate
+    (issues/037), so that a metric which cannot see the anchor can still be shown not to respond
+    to that anchor's operator.
+    """
     out: dict[tuple, float] = {}
-    for key, g in ordinal.groupby(keys, observed=True):
-        if key not in clean.index:
-            continue
-        medians = g.groupby(["degradation", "level"], observed=True)["value"].median()
-        out[key] = float((directions.get(key, 1) * (medians - clean.loc[key])).max())
+    for key, g in rows.groupby(keys, observed=True):
+        medians = _paired_medians(g[~g["degradation"].isin(probe_labels) | (g["level"] == 0)])
+        if len(medians):
+            out[key] = float(np.nanmax(np.abs(medians.to_numpy(float))))
     return out
 
 
@@ -575,7 +584,8 @@ def _response_x(g: pd.DataFrame, levels: list) -> tuple[np.ndarray, str]:
 def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean: float,
                          target: float | None, span: float, frame_scale: Mapping[int, float],
                          axis_round_off: bool, auc: float, largest_response: float,
-                         n_bootstrap: int, rng: np.random.Generator) -> dict[str, object]:
+                         n_bootstrap: int, rng: np.random.Generator,
+                         clean_rows: pd.DataFrame) -> dict[str, object]:
     """How strongly, how early and how precisely one axis moves the metric: the RESPONSE_COLUMNS.
 
     Everything is read on the oriented scale the ordering statistics use, so a metric where larger
@@ -628,9 +638,14 @@ def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean
         ),
     )
     if target is None and n_bootstrap > 0 and "damage" in g.columns:
-        D = by_frame_and_level(g, "damage")
+        # Paired within each frame: the response is the change from the clean field in the same
+        # frame, so a drift of the flow along the trajectory is not counted as one.
+        clean = clean_rows.groupby("frame_index", observed=True)[["value", "damage"]].median() \
+            .reindex(frames)
+        D = by_frame_and_level(g, "damage") - clean["damage"].to_numpy(float)[:, None]
         if not np.isfinite(D).any() and np.isfinite(largest_response) and largest_response > 0:
-            D = (Y - oriented_clean) / largest_response          # the anchor is degenerate
+            # The anchor is degenerate: read the response against the largest one on the ladder.
+            D = (Y - clean["value"].to_numpy(float)[:, None]) / largest_response
         if np.isfinite(D).any():
             out.update(_blindness_bound(D, Z, n_bootstrap, rng))
     if axis_round_off:
@@ -666,8 +681,10 @@ def _blindness_bound(D: np.ndarray, Z: np.ndarray, n_bootstrap: int,
     1987, J. Pharmacokinet. Biopharm. 15(6):657-680; Lakens 2017): the claim is made only when the
     upper confidence bound of the response lies below a margin fixed in advance.
 
-    Frames are resampled in moving blocks, and in each resample the largest per-level median damage
-    is taken. ``damage_max_ucb`` is the :data:`BLINDNESS_CONFIDENCE` quantile of those, and
+    Two-sided, as the two one-sided tests of an equivalence test are: a large fall is a response
+    as much as a large rise. Frames are resampled in moving blocks, and in each resample the largest
+    absolute per-level median damage is taken. ``damage_max_ucb`` is the
+    :data:`BLINDNESS_CONFIDENCE` quantile of those, and
     ``blindness_p`` the fraction of resamples in which it reached :data:`BLINDNESS_MARGIN` -- a
     bootstrap tail fraction, not a test p-value -- which :func:`summarise_axes` adjusts across
     the run and drops. On one trajectory the resampling measures variation along it, not between
@@ -687,7 +704,7 @@ def _blindness_bound(D: np.ndarray, Z: np.ndarray, n_bootstrap: int,
         if len(D) < 2 * block:
             return out
         draws = np.array([
-            np.nanmax(np.nanmedian(D[idx], axis=0))
+            np.nanmax(np.abs(np.nanmedian(D[idx], axis=0)))
             for idx in stats.block_bootstrap(len(D), block, n_bootstrap, rng)
         ])
     draws = draws[np.isfinite(draws)]
@@ -932,18 +949,18 @@ def probe_summary(df: pd.DataFrame, norm: pd.DataFrame, *,
 
 def _relative_response(g: pd.DataFrame, label: str, sign: int,
                        probe_labels: frozenset[str]) -> float:
-    """A probe's departure from clean as a fraction of the largest ordinary-level departure."""
-    clean = float(g.loc[g["level"] == 0, "value"].median())
+    """A probe's paired departure from clean as a fraction of the largest ordinary-level one."""
     scale = float(np.nanmax(np.abs(g["value"].to_numpy()))) or 1.0
-    ordinal = g[(~g["degradation"].isin(probe_labels)) & (g["level"] > 0)]
-    if ordinal.empty:
+    medians = _paired_medians(g)
+    if medians.empty:
         return float("nan")
-    medians = ordinal.groupby(["degradation", "level"], observed=True)["value"].median()
-    largest = float((sign * (medians - clean)).max())
+    degradations = medians.index.get_level_values(0)
+    ordinary = medians[~np.isin(degradations.astype(str), list(probe_labels))]
+    largest = float(np.nanmax(np.abs(ordinary.to_numpy(float)))) if len(ordinary) else np.nan
     if not np.isfinite(largest) or largest < DEGENERATE_SPAN * scale:
         return float("nan")                    # the ladder itself is round-off: no scale at all
-    probe = sign * (float(g.loc[g["degradation"] == label, "value"].median()) - clean)
-    return probe / largest
+    probe = medians[degradations.astype(str) == label]
+    return float(sign * probe.iloc[0] / largest) if len(probe) else float("nan")
 
 
 def _nearest_level(g: pd.DataFrame, damage: float, exclude: str,

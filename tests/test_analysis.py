@@ -754,3 +754,51 @@ def test_impostor_relative_response_is_a_fraction_of_the_largest_ladder_response
                                       "uncorrelated": [1.5e-16] * 3})
     row = an.probe_summary(df, an.normalisation(df)).iloc[0]
     assert row["gaussian_impostor_relative"] == pytest.approx(0.5)
+
+
+# --- the bound is two-sided and paired within each frame -------------------------------------
+
+
+def _single_field(axes: dict, clean: float = 5.0, drift: float = 1.0, n_frames: int = 40,
+                  noise: float = 1e-3) -> pd.DataFrame:
+    """A single-field quantity: nonzero clean value, anchor equal to clean (no damage scale),
+    optionally drifting along the trajectory by a factor ``drift`` per frame."""
+    df = make_frame(axes={**axes, "uncorrelated": [0.0, 0.0]}, n_frames=n_frames, noise=noise)
+    df["value"] = (df["value"] + clean) * drift ** df["frame_index"]
+    # A translated copy has exactly the clean value of a single-field quantity in every frame.
+    clean_by_frame = df[df["level"] == 0].set_index("frame_index")["value"]
+    anchor = df["degradation"] == "uncorrelated"
+    df.loc[anchor, "value"] = df.loc[anchor, "frame_index"].map(clean_by_frame).to_numpy()
+    return df
+
+
+def test_a_response_that_falls_is_not_reported_as_blindness():
+    """Equivalence is two-sided: a large fall is a response. Measured before the fix on the pinned
+    run, enstrophy's high-pass bound was -1.13 and was listed as provably below 0.05."""
+    axes = _bounded(_single_field({"falls": [-1.0, -2.0, -3.0, -4.0], "flat": [0.0] * 4}))
+    assert _axis(axes, "falls")["blindness_q"] == pytest.approx(1.0)
+    assert _axis(axes, "falls")["damage_max_ucb"] > an.BLINDNESS_MARGIN
+    assert _axis(axes, "flat")["blindness_q"] < an.FDR_LEVEL
+
+
+def test_the_relative_bound_is_paired_within_each_frame():
+    """A quantity that drifts along the trajectory (enstrophy decays) must be compared with its own
+    clean value in the same frame. Against the trajectory's median clean value, the drift itself
+    reads as a response and an axis that changes nothing is not found blind."""
+    axes = _bounded(_single_field({"responds": [-1.0, -2.0, -3.0, -4.0], "nothing": [0.0] * 4},
+                                  drift=1.05))
+    assert _axis(axes, "nothing")["blindness_q"] < an.FDR_LEVEL, "the drift is not a response"
+    assert _axis(axes, "responds")["blindness_q"] == pytest.approx(1.0)
+
+
+def test_negative_damage_on_an_error_metric_is_a_response():
+    df = make_frame(axes={"below": [-3.0] * 4, "uncorrelated": [10.0, 10.0]}, noise=1e-3,
+                    n_frames=40)
+    assert _axis(_bounded(df), "below")["blindness_q"] == pytest.approx(1.0)
+
+
+def test_impostor_relative_response_is_paired_within_each_frame():
+    df = _single_field({"blur": [-1.0, -2.0], "gaussian_impostor": [0.0]}, drift=1.05)
+    row = an.probe_summary(df, an.normalisation(df)).iloc[0]
+    assert abs(row["gaussian_impostor_relative"]) < 1e-2, (
+        "an impostor that changes nothing in any frame has no relative response, drift or not")

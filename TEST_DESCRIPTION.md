@@ -339,13 +339,16 @@ of `selectivity`, which reads each degradation's damage per unit of field change
 **What they are.** A metric that does not respond *significantly* to a degradation has not thereby
 been shown not to respond; that would be accepting the null. These two turn the question round,
 as equivalence testing does (Schuirmann 1987; Lakens 2017). `damage_max_ucb` is the 90% upper
-confidence bound on the largest median damage the degradation produces. `blindness_q` is the
+confidence bound on the largest absolute median damage the degradation produces: two-sided, as an
+equivalence test is, so a large fall counts as a response as much as a large rise. `blindness_q` is the
 false-discovery-adjusted evidence that this largest damage stays below 0.05. A degradation is
 listed in `blind_axes` when `blindness_q` is below 0.10, which reads: **the response is provably
 below 0.05 at 90% confidence.**
 
-**How they are computed.** Frames are resampled in moving blocks, and in each resample the largest
-per-strength median damage is taken. The bound is the 90th percentile of those; the fraction of
+**How they are computed.** The damage at each strength is taken relative to the clean value in the
+same frame, so a quantity that drifts along the trajectory is not read as responding. Frames are
+resampled in moving blocks, and in each resample the largest absolute per-strength median damage
+is taken. The bound is the 90th percentile of those; the fraction of
 resamples that reached 0.05 is then adjusted across every row of the run with the
 Benjamini–Yekutieli procedure (Benjamini and Yekutieli 2001), which stays valid when the rows
 depend on one another, as these do: they share frames and fields, and metrics correlate. The
