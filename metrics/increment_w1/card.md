@@ -87,7 +87,7 @@ This table reports what was measured and grades none of the measurements. What t
 
 **Profile.**
 
-| field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift (against severity (distance)) | compute cost (x cheapest in this run) |
+| field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift, against severity (distance) | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
 | density | — | — | — | `box_blur` `coarsen` `coarsen_bandlimited` `gaussian_blur` `highpass_butterworth` `highpass_ideal` `lowpass_butterworth` `lowpass_ideal` `median_blur` `translate_subpixel` `translate_x` | 0.327 | 40.5 |
 | velocity | — | — | — | `box_blur` `coarsen` `coarsen_bandlimited` `gaussian_blur` `highpass_butterworth` `highpass_ideal` `lowpass_butterworth` `lowpass_ideal` `median_blur` `translate_subpixel` `translate_x` | 0.3 | 80.2 |

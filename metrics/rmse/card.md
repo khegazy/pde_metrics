@@ -61,7 +61,7 @@ This table reports what was measured and grades none of the measurements. What t
 
 **Profile.**
 
-| field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift (against severity (distance)) | compute cost (x cheapest in this run) |
+| field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift, against severity (distance) | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
 | density | 0.636 | `coarsen_bandlimited` | `lowpass_ideal` | `coarsen_bandlimited` | 1 | 1 |
 | velocity | 0.478 | `coarsen_bandlimited` | `highpass_ideal` | `coarsen_bandlimited` | 0.999 | 1.92 |

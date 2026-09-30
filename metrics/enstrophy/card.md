@@ -46,7 +46,7 @@ This table reports what was measured and grades none of the measurements. What t
 
 **Profile.**
 
-| field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift (against severity (distance)) | compute cost (x cheapest in this run) |
+| field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift, against severity (distance) | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
 | vorticity | — | — | — | `translate_subpixel` `translate_x` | — | 1.06 |
 
