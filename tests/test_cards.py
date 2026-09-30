@@ -1000,6 +1000,7 @@ def _synthetic_run(tmp_path, with_mae: bool = True):
     ladder = {
         "gaussian_blur": [1.0, 2.0, 3.0, 4.0],
         "translate_x": [0.5, 1.0, 2.0, 4.0],
+        "translate_subpixel": [0.25, 1.0, 4.0],
         "uncorrelated": [10.0, 10.0, 10.0],
         "gaussian_impostor": [8.0],
     }
@@ -1336,3 +1337,17 @@ def test_a_second_cross_cutting_subsection_needs_no_degradation_link():
         "\n\n" + "What the per-strength damage shows beside the other metrics. " * 4
     ))
     assert not [p for p in problems_for(text) if "link" in p.message]
+
+
+
+def test_profile_header_nests_no_parentheses(tmp_path):
+    """The strength an elasticity is taken against already carries its name in parentheses."""
+    from fmeval.cards import evidence
+
+    block = evidence.performance_block(evidence.load_run(_synthetic_run(tmp_path)), "mse")
+    header = next(line for line in block.splitlines() if line.startswith("| field | selectivity"))
+    depth = deepest = 0
+    for character in header:
+        depth += {"(": 1, ")": -1}.get(character, 0)
+        deepest = max(deepest, depth)
+    assert "against" in header and deepest <= 1, header

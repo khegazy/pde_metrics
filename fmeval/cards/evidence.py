@@ -201,7 +201,7 @@ def _profile_lines(run: Run, metric: str, axes: pd.DataFrame) -> list[str]:
         "", "**Profile.**", "",
         "| field | selectivity | charges most for | charges least for | response provably below "
         f"{margin:g} at {confidence:.0%} on | elasticity to a sub-pixel shift"
-        f"{f' (against {against})' if against else ''} | compute cost (x cheapest in this run) |",
+        f"{f', against {against}' if against else ''} | compute cost (x cheapest in this run) |",
         "|---|---|---|---|---|---|---|",
     ]
     for _, row in card.iterrows():
