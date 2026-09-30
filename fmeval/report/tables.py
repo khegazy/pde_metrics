@@ -185,6 +185,38 @@ def deception_table(ctx, df, opts) -> TableResult:
 
 
 @table(
+    section=7, order=40, scope="global",
+    title="What each metric responds to",
+    requires_columns=("degradation", "level", "value"),
+)
+def profile_table(ctx, df, opts) -> TableResult:
+    """Selectivity, the two ends of the response profile, and the displacement exponent.
+
+    The machine-readable source of the numbers the headline prose quotes about each metric's
+    profile.
+    """
+    columns = ["metric", "field", "selectivity", "most_sensitive_axis", "least_sensitive_axis",
+               "blind_axes", "elasticity_displacement"]
+    ctx.require(set(columns) <= set(ctx.card.columns), "this run's analysis has no profile")
+    frame = ctx.card[ctx.card["metric"].isin(df["metric"].unique())][columns]
+    ctx.require(not frame.empty, "no summary rows")
+    return TableResult(
+        frame=frame,
+        caption="What each metric responds to, per unit of field change: its selectivity, the "
+                "degradations it charges most and least for, those its largest response is "
+                "provably small on over the strengths tested, and its elasticity to a sub-pixel "
+                "displacement.",
+        headers={"most_sensitive_axis": "charges most for",
+                 "least_sensitive_axis": "charges least for",
+                 "blind_axes": "response provably small on",
+                 "elasticity_displacement": "elasticity to a sub-pixel shift"},
+        formats={"metric": "code", "field": "code", "most_sensitive_axis": "code",
+                 "least_sensitive_axis": "code", "blind_axes": "code"},
+        long=True,
+    )
+
+
+@table(
     section=9, order=20, scope="per_field", min_metrics=2,
     title="Damage at every strength, beside the other metrics",
     requires_columns=("damage",),

@@ -802,3 +802,46 @@ def test_impostor_relative_response_is_paired_within_each_frame():
     row = an.probe_summary(df, an.normalisation(df)).iloc[0]
     assert abs(row["gaussian_impostor_relative"]) < 1e-2, (
         "an impostor that changes nothing in any frame has no relative response, drift or not")
+
+
+# --- final-review regressions ------------------------------------------------------------------
+
+
+def test_one_outlier_frame_does_not_move_selectivity():
+    """The profile is median damage over field change at the harshest level. The single worst frame
+    once stood in for the median in the numerator: measured on the pinned run, MSE on velocity read
+    selectivity 0.285 from one early frame on coarsen_bandlimited, against 6e-7 from the medians."""
+    df = _profile_frame({"a": 1.0, "b": 1.0, "c": 1.0})
+    spike = (df["degradation"] == "b") & (df["level"] == 4) & (df["frame_index"] == 0)
+    df.loc[spike, "value"] *= 3.0
+    card = _card_of(df)
+    assert card["selectivity"] == pytest.approx(0.0, abs=1e-3), (
+        f"one frame of twelve moved selectivity to {card['selectivity']:.3f}")
+
+
+def test_onset_is_never_below_the_mildest_strength_tested():
+    """A coarsening factor's identity is 1, not 0: interpolating from a clean point at strength 0
+    printed factors of 0.18 to 0.88 on the pinned run. The crossing is read between measured
+    levels."""
+    ladder = {"coarsen": [0.5, 0.6, 0.7, 0.8], "uncorrelated": [1.0, 1.0]}
+    df = _with_severity(make_frame(axes=ladder), "coarsen", {1: 2.0, 2: 4.0, 3: 8.0, 4: 16.0})
+    scored, norm = _scored(df)
+    row = _axis(an.summarise_axes(scored, norm=norm, n_bootstrap=0), "coarsen")
+    assert row["severity_10"] == 2.0
+
+
+def test_damage_profile_is_withheld_for_a_target_valued_metric():
+    df = _profile_frame({"a": 1.0, "b": 10.0})
+    df["target_value"] = 1.0
+    card = _card_of(df)
+    assert np.isnan(card["selectivity"]) and pd.isna(card["most_sensitive_axis"])
+
+
+def test_a_falling_response_has_an_elasticity():
+    """A single-field quantity falls under smoothing; the exponent of the size of that fall is as
+    meaningful as that of a rise, and rho already gives its direction."""
+    axes = an.summarise_axes(_single_field({"falls": [-1.0, -2.0, -3.0, -4.0]}, drift=1.05),
+                             n_bootstrap=0)
+    row = _axis(axes, "falls")
+    assert row["elasticity"] == pytest.approx(1.0, abs=0.02)
+    assert row["response_shape"] == "linear"

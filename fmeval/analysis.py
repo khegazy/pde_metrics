@@ -76,7 +76,7 @@ FDR_LEVEL: float = 0.10
 RESPONSE_COLUMNS: tuple[str, ...] = (
     "cliffs_delta_min", "elasticity", "elasticity_x", "response_shape",
     "severity_10", "severity_50", "severity_resolution", "field_change_max",
-    "blindness_block_length", "damage_max_ucb", "blindness_q",
+    "damage_per_change", "blindness_block_length", "damage_max_ucb", "blindness_q",
 )
 _TEXT_COLUMNS = frozenset({"elasticity_x", "response_shape"})
 
@@ -496,7 +496,8 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                 frame_scale, axis_round_off, record["separability_auc_min"],
                 largest.get(key, np.nan), n_bootstrap,
                 derive_rng(seed, f"blindness/{dataset}/{metric}/{axis}", 0, str(field)),
-                clean_rows.assign(value=sign * clean_rows["value"]),
+                clean_rows.assign(value=(sign * clean_rows["value"] if target is None
+                                         else _target_distance(clean_rows["value"], target))),
             ))
         if "damage" in g.columns:
             damage = g["damage"].to_numpy()
@@ -595,16 +596,18 @@ def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean
     * ``cliffs_delta_min`` -- ``2 A - 1`` of the weakest adjacent pair, so 0 is no separation
       (Cliff 1993, *Psychol. Bull.* 114(3):494-509; Vargha & Delaney 2000, *J. Educ. Behav. Stat.*
       25(2):101-132).
-    * ``elasticity`` -- the log-log slope of the median response against the severity named by
-      ``elasticity_x``, over the mildest :data:`ELASTICITY_LEVELS` levels.
+    * ``elasticity`` -- the log-log slope of the size of the median response against the severity
+      named by ``elasticity_x``, over the mildest :data:`ELASTICITY_LEVELS` levels.
     * ``response_shape`` -- see :func:`fmeval.stats.fit_response_shape`.
     * ``severity_10`` / ``severity_50`` -- the severity at which the median crosses 10% / 50% of
-      the span, interpolated; the clean field is the point at severity zero.
+      the span, interpolated between measured levels; the mildest level when it already has.
     * ``severity_resolution`` -- the median over adjacent pairs of the paired-step Fisher bound,
       on values divided by the metric's largest value in the same frame, which removes the drift of
       the flow along the trajectory (six orders on density) from what would otherwise be counted as
       scatter. A target-valued metric is already on a drift-free scale and is not divided.
     * ``field_change_max`` -- the median ``energy_changed`` at the harshest usable level.
+    * ``damage_per_change`` -- the median damage at that level over ``field_change_max``: the
+      per-degradation response behind ``selectivity``. Both are medians at the same level.
     * ``blindness_block_length``, ``damage_max_ucb``, ``blindness_q`` -- see
       :func:`_blindness_bound`.
       Computed on round-off axes too: a response that is round-off against a finite span is
@@ -622,6 +625,12 @@ def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean
                 .reindex(index=frames, columns=levels).to_numpy(float))
 
     Y = by_frame_and_level(oriented, "value")
+    # The response is read within each frame, against the clean field of the same frame: a
+    # single-field quantity drifts along the trajectory (enstrophy decays), and against the
+    # trajectory's median clean value that drift would read as a response.
+    clean = clean_rows.groupby("frame_index", observed=True)[
+        [c for c in ("value", "damage") if c in clean_rows.columns]].median().reindex(frames)
+    paired = Y - clean["value"].to_numpy(float)[:, None]
     Z = Y
     if target is None:
         scale = np.array([frame_scale.get(f, np.nan) for f in frames], dtype=float)
@@ -637,37 +646,45 @@ def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean
             if "energy_changed" in g.columns else np.nan
         ),
     )
-    if target is None and n_bootstrap > 0 and "damage" in g.columns:
-        # Paired within each frame: the response is the change from the clean field in the same
-        # frame, so a drift of the flow along the trajectory is not counted as one.
-        clean = clean_rows.groupby("frame_index", observed=True)[["value", "damage"]].median() \
-            .reindex(frames)
-        D = by_frame_and_level(g, "damage") - clean["damage"].to_numpy(float)[:, None]
+    # Damage relative to the clean field of the same frame, where a damage scale exists. Not for a
+    # target-valued metric: its damage is on the raw ratio and is not oriented.
+    damage = None
+    if target is None and "damage" in g.columns and "damage" in clean.columns:
+        damage = by_frame_and_level(g, "damage") - clean["damage"].to_numpy(float)[:, None]
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            harshest = float(np.nanmedian(damage[:, -1]))
+        change = out["field_change_max"]
+        if np.isfinite(harshest) and np.isfinite(change) and change > 0:
+            out["damage_per_change"] = harshest / change
+    if damage is not None and n_bootstrap > 0:
+        D = damage
         if not np.isfinite(D).any() and np.isfinite(largest_response) and largest_response > 0:
-            # The anchor is degenerate: read the response against the largest one on the ladder.
-            D = (Y - clean["value"].to_numpy(float)[:, None]) / largest_response
+            D = paired / largest_response      # the anchor is degenerate: read against the ladder
         if np.isfinite(D).any():
             out.update(_blindness_bound(D, Z, n_bootstrap, rng))
     if axis_round_off:
         return out
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
-        y = np.nanmedian(Y, axis=0)
+        response = np.nanmedian(paired, axis=0)
         resolution = stats.fisher_severity_resolution(x, Z)
         out["severity_resolution"] = (
             float(np.nanmedian(resolution)) if np.isfinite(resolution).any()
             or np.isinf(resolution).any() else np.nan
         )
-    response = y - oriented_clean
+    # A fall is read by its size, as the two-sided bound is; rho already gives the direction.
+    magnitude = -response if np.isfinite(response[-1]) and response[-1] < 0 else response
     out.update(
-        elasticity=stats.elasticity(x[:ELASTICITY_LEVELS], response[:ELASTICITY_LEVELS]),
-        response_shape=stats.fit_response_shape(x, response)[0],
+        elasticity=stats.elasticity(x[:ELASTICITY_LEVELS], magnitude[:ELASTICITY_LEVELS]),
+        response_shape=stats.fit_response_shape(x, magnitude)[0],
     )
     if np.isfinite(span):
-        xs, ys = np.r_[0.0, x], np.r_[oriented_clean, y]
+        # Between measured levels only: a knob's identity is not always 0 (a coarsening factor's
+        # is 1), so a crossing before the mildest level is reported as that level.
         out.update(
-            severity_10=stats.severity_at(xs, ys, oriented_clean + SENSITIVITY_FRACTION * span),
-            severity_50=stats.severity_at(xs, ys, oriented_clean + HALF_DAMAGE_FRACTION * span),
+            severity_10=stats.severity_at(x, response, SENSITIVITY_FRACTION * span),
+            severity_50=stats.severity_at(x, response, HALF_DAMAGE_FRACTION * span),
         )
     return out
 
@@ -1040,9 +1057,9 @@ def report_card(axes: pd.DataFrame, probes: pd.DataFrame,
 def _profile(axes: pd.DataFrame) -> dict[str, object]:
     """What one metric responds to, across the ordinal degradations of one field.
 
-    The response on each degradation is its largest damage per unit of field change,
-    ``damage_max / field_change_max``. Raw ``damage_max`` would describe the ladder rather than
-    the metric -- how far the config pushed each degradation -- and every metric would name the
+    The response on each degradation is ``damage_per_change``: the median damage at its harshest
+    usable level over the median field change there. Raw damage would describe the ladder rather
+    than the metric -- how far the config pushed each degradation -- and every metric would name the
     harshest translation as its most sensitive axis. Per unit of ``energy_changed``, the mean
     squared difference over the reference variance, mean squared error costs the same on every
     degradation and the profile of any other metric is what it charges relative to that one.
@@ -1057,9 +1074,8 @@ def _profile(axes: pd.DataFrame) -> dict[str, object]:
       exponent, when the ladder ran it.
     """
     per_unit = pd.Series(dtype=float)
-    if {"damage_max", "field_change_max"} <= set(axes.columns):
-        with np.errstate(divide="ignore", invalid="ignore"):
-            per_unit = (axes["damage_max"] / axes["field_change_max"]).set_axis(axes["degradation"])
+    if "damage_per_change" in axes.columns:
+        per_unit = axes["damage_per_change"].set_axis(axes["degradation"])
         per_unit = per_unit[np.isfinite(per_unit)]
     blind = (sorted(axes.loc[axes["blindness_q"] < FDR_LEVEL, "degradation"].astype(str))
              if "blindness_q" in axes.columns else [])

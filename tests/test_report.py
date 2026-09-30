@@ -623,3 +623,11 @@ def test_headline_prose_states_the_blindness_margin_from_the_analysis(run_folder
     text = (run_folder.sections / "02_headline.tex").read_text()
     assert f"below {analysis.BLINDNESS_MARGIN:g}" in text
     assert "selectivity" in text and "elasticity" in text
+
+
+def test_profile_table_is_the_source_of_the_headline_profile(run_folder):
+    outcome = _rendered(run_folder, "profile_table")
+    assert outcome.status == "ok", outcome.reason
+    header = (run_folder.data / "profile_table.csv").read_text().splitlines()[0]
+    for column in ("most_sensitive_axis", "least_sensitive_axis", "elasticity_displacement"):
+        assert column in header

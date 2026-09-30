@@ -257,7 +257,9 @@ it barely notices. For a small displacement of a smooth field mean squared error
 absolute error 1 — the double penalty as a number. `elasticity_x` names the strength the slope is
 taken against, because the exponent depends on it.
 
-**How it is computed.** Ordinary least squares of ln(median value − clean value) on ln(strength).
+**How it is computed.** Ordinary least squares of the logarithm of the size of the median response
+— the change from the clean value in the same frame — on ln(strength). A response that falls, as a
+single-field quantity does under smoothing, is read by its size; `rho` gives its direction.
 On a degradation whose strength is calibrated per field the recorded absolute value can fall as
 the damage rises — a low-pass records its cutoff wavenumber, 33, 17, 8 and 4.7 on vorticity — so
 the slope is taken against the configured fraction instead (`severity_nominal`), which rises and
@@ -268,7 +270,11 @@ vorticity has a slope of 1.76, over the first three 1.99.
 
 **Range.** Any real number. Needs three strengths with a positive response.
 
-**Caveats.** It depends on the field, not only on the metric. The closed-form tests show it: mean
+**Caveats.** On a calibrated degradation the slope is against the configured fraction, not the
+fraction the filter realised; where a sharp filter lands on a wall between a no-op and near-total
+damage — the high-pass on density — the two differ widely and slopes of 7 to 15 appear. Read those
+beside `energy_removed` in the resolved-severity table. It also depends on the field, not only on
+the metric. The closed-form tests show it: mean
 squared error has slope 2 for a displaced smooth bump and exactly 1 for a displaced step, because
 at a sharp edge the error grows with the displaced area, not its square. Read it per field. On the
 pinned run `comparison_1790639359`, over the three smallest sub-pixel shifts, mean squared error
@@ -299,9 +305,11 @@ rather than a default.
 value crosses 10% (and 50%) of the shared clean-to-unrelated span. "Fires at 0.37 cells" instead of
 "fires at level 2".
 
-**How it is computed.** Interpolation between the two strengths that bracket the crossing, linear in
-the logarithm of the strength so a ladder of doublings is treated evenly, and linear on the segment
-that starts from the undamaged reference at strength zero.
+**How it is computed.** Interpolation between the two measured strengths that bracket the crossing,
+linear in the logarithm of the strength so a ladder of doublings is treated evenly. When the
+mildest strength already reaches it, that strength is reported: the crossing lies at or below the
+mildest strength tested, and no strength below it is inferred — a coarsening factor, whose
+identity is 1, cannot be extrapolated towards 0.
 
 **Range.** Strength units, or `--` when the crossing is not reached within the ladder or the span is
 degenerate. `severity_50` is often `--`: few degradations reach half of an unrelated field — on
@@ -330,6 +338,15 @@ over pairs is reported. A target-valued metric is already on a drift-free scale 
 
 **Where it appears.** `axis_response__field-*.csv`.
 
+### `damage_per_change` — damage per unit of field change at the harshest strength
+
+**What it is.** The median damage at the harshest usable strength divided by `field_change_max`, the
+median field change there: the response on one degradation that `selectivity` compares across
+degradations. Both are medians at the same strength, so one extreme frame cannot dominate it.
+Empty for a metric with no damage scale and for a metric with a target value.
+
+**Where it appears.** `axis_response__field-*.csv`.
+
 ### `field_change_max` — how much the harshest strength changed the field
 
 **What it is.** The median `energy_changed` at the harshest usable strength of the degradation: the
@@ -338,7 +355,7 @@ of `selectivity`, which reads each degradation's damage per unit of field change
 
 **Where it appears.** `axis_response__field-*.csv`.
 
-### `damage_max_ucb`, `blindness_q` — is the metric provably unresponsive to this degradation?
+### `damage_max_ucb`, `blindness_q` — is the metric's response provably small over the strengths tested?
 
 **What they are.** A metric that does not respond *significantly* to a degradation has not thereby
 been shown not to respond; that would be accepting the null. These two turn the question round,
@@ -357,7 +374,7 @@ resamples that reached 0.05 is then adjusted across every row of the run with th
 Benjamini–Yekutieli procedure (Benjamini and Yekutieli 2001), which stays valid when the rows
 depend on one another, as these do: they share frames and fields, and metrics correlate. The
 margin 0.05 is half the detection fraction behind `sensitivity_level`, so a degradation can never
-be both "detected" and "provably unresponsive"; it is a convention fixed once in the code.
+be both "detected" and "provably small"; it is a convention fixed once in the code.
 
 **When the anchor is degenerate** — a metric that cannot see the unrelated field — the damage does
 not exist, yet not responding to the anchor's operator is exactly the finding. The bound is then
@@ -367,8 +384,14 @@ column says a row used that scale.
 **Range.** `damage_max_ucb` on the damage scale; `blindness_q` from 0 to 1, small meaning the
 response is provably small.
 
-**Caveats.** Not a verdict: being unresponsive to a harmless displacement is the property a
-position-tolerant metric is built for. The resampling runs along one trajectory, so the bound
+**Caveats.** The bound covers the strengths the ladder ran, not the degradation in general. On a
+smooth field a degradation may simply not have been pushed far: on the pinned run mean squared error
+on density is listed as provably small on `translate_subpixel`, where its rank correlation is 1 and
+its elasticity 2, because density varies on about 160 cells and the harshest shift is 4, which
+costs a median damage of 0.015. Where the anchor is degenerate the scale is the metric's own
+largest ladder response, so a single very strong degradation makes the others look small. Not a
+verdict: being unresponsive to a harmless displacement is the property a position-tolerant metric
+is built for. The resampling runs along one trajectory, so the bound
 reflects variation along it, not between independent realisations. Both are empty for a metric
 with a target value, whose damage is on the raw ratio and is not oriented.
 
@@ -683,14 +706,15 @@ the "how strongly" of the damage columns.
 
 **How it is computed.** One minus the Treves–Rolls sparseness (Treves and Rolls 1991) of the
 metric's response profile across the degradations of one field, where the response on each
-degradation is its largest damage divided by `field_change_max`, the field change that degradation
-made. Dividing by the field change is what keeps this a property of the metric rather than of the
+degradation is `damage_per_change`, its median damage at the harshest strength divided by the median
+field change there. Dividing by the field change is what keeps this a property of the metric rather than of the
 ladder: raw damage would mostly measure how hard the config pushed each degradation. Because the
 field change is itself mean squared error on a fixed scale, mean squared error costs the same on
 every degradation and reads 0 here; every other metric's profile is what it charges relative to
 that reference.
 
-**Caveats.** It depends on which degradations were run. Empty for a metric with no damage scale.
+**Caveats.** It depends on which degradations were run. Empty for a metric with no damage scale and
+for a metric with a target value, whose damage is not oriented.
 
 ### `most_sensitive_axis`, `least_sensitive_axis` — the two ends of that profile
 
