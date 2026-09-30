@@ -1068,6 +1068,14 @@ translates the ensemble rather than perturbing it, and would leave the spread un
 | `displacement_response` | 9 | Damage against displacement distance, log x. Shape and amplitude are exactly correct at every point on this curve; only position changes. The project's central figure. The companion panel plots the same points against `energy_changed`, which is normalised MSE, so every curve there reads as that metric relative to MSE, drawn dashed black as the reference in both panels. Metrics with no damage scale are left out |
 | `cost_frontier` | 10 | Worst-degradation correlation against cost. Upper left is useful; upper right is right-but-unaffordable, so a diagnostic rather than a loss |
 
+The tables follow the same sections. Besides the summary and the per-degradation tracking table
+(`axis_detail`), `axis_response` gives the response columns of Group A, continued — the strength
+each elasticity is taken against, the shape, onset and half-damage strengths, the resolution and
+the blindness bound — one row per metric and degradation. `damage_by_level_table`, in the
+displacement section, gives the median damage at every strength of every translation with one
+column per metric: the magnitude comparison the redundancy matrix cannot make. Both CSVs carry every
+column, including those the typeset table leaves out.
+
 Every figure has a CSV of exactly the numbers plotted, in `data/figure_data/`. No number
 appears in the report without a machine-readable source in the same folder.
 
@@ -1097,6 +1105,16 @@ mean(x^4) / mean(x^2)^2. Exactly 3 for a Gaussian.
 
 **Unrelated field.** A field with identical statistics and no positional alignment. Defines
 D = 1.
+
+**Sensitivity, of a metric.** How strongly and how early a metric responds to a degradation, as
+measured here by the onset, the elasticity and Cliff's delta. More sensitive is not better: the
+double penalty is excess sensitivity to a displacement that is physically benign, so every
+sensitivity number is read against what the degradation does. Not to be confused with
+*sensitivity analysis* in the sense of Sobol or Morris, which apportions the variance of a model's
+output among its inputs; that method is not used here.
+
+**Selectivity.** How concentrated a metric's response is on a few degradations rather than spread
+over all of them, per unit of field change. See `selectivity`.
 
 **Primitive and derived fields.** Density and velocity are stored and are remapped directly.
 Vorticity and pressure are computed from them, and are recomputed after any remap rather than

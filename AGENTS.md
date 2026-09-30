@@ -104,7 +104,9 @@ develops — so never draw a physical conclusion from it. Use `dataset=kinet_re5
 `dataset.time.start=2000` for anything you intend to report.
 
 Two size knobs, both recorded with the results: `dataset.time.reduction` (evaluate every Nth
-frame) and `analysis_grid.resolution` (the common analysis grid).
+frame) and `analysis_grid.resolution` (the common analysis grid). One analysis setting,
+`analysis.anchor`, names the ladder entry that defines damage 1; it is recorded as
+`anchor_label` in `run_meta.json`, and changing it changes what every damage number means.
 
 **The linter is not a style opinion.** Its rules are chosen one at a time in
 `pyproject.toml` under `[tool.ruff.lint]`, each on the evidence of what it actually caught
@@ -702,7 +704,9 @@ python make_report.py results/mse_<time> --zip      # Overleaf-ready archive
 ```
 
 Re-rendering never recomputes a metric, so iterating on presentation is instant. `evaluate.py`
-calls the same entry point, so there is exactly one code path that produces a report.
+writes the numbers and never a report; every report comes from `make_report.py`, and every
+statistic in it from `fmeval.analysis.analyse`, which the card evidence loader calls too, so
+there is exactly one code path from a run folder to a number.
 
 **Escape every data-derived string.** Metric and degradation names contain underscores, and an
 unescaped underscore is a *hard compile error*, not a cosmetic one — invisible until compile
