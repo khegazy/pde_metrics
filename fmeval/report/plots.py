@@ -281,6 +281,105 @@ def field_gallery(ctx, df, opts) -> PlotResult:
 
 
 @plot(
+    section=6, order=20, scope="per_field",
+    title="Damage against severity, every metric on every degradation",
+    requires_columns=("damage", "degradation", "level"), min_axes=1,
+    defaults={"clip": 1.25},
+)
+def response_sparklines(ctx, df, opts) -> PlotResult:
+    """Every metric's median-damage curve on every degradation, on one shared 0-1 scale.
+
+    A sparkline table (Tufte 2006, *Beautiful Evidence*): small multiples aligned on a common
+    scale, so onset, slope, saturation and blindness are read by position rather than by colour,
+    the encoding people read most accurately (Cleveland & McGill 1984, *J. Am. Stat. Assoc.*
+    79(387):531-554). A flat line is a result, not a failure to draw.
+    """
+    from fmeval.analysis import damage_by_level
+
+    field = str(df["field"].iloc[0])
+    metrics = sorted(str(m) for m in df["metric"].unique())
+    wide = damage_by_level(df, field=field, probe_labels=ctx.probe_labels)
+    ctx.require(any(m in wide.columns for m in metrics),
+                f"no metric has a damage scale on {field}")
+    present = set(wide["degradation"].astype(str))
+    axes_present = [a for a in ctx.ordinal_axes if a in present]
+    ctx.require(bool(axes_present), f"no ordinal degradation on {field}")
+    info = {
+        (str(r.metric), str(r.degradation)): r
+        for r in ctx.axes[(ctx.axes["field"] == field) & ~ctx.axes["is_probe"]].itertuples()
+    }
+
+    clip = float(opts["clip"])
+    fig, grid = ctx.style.figure(len(metrics), len(axes_present), sharey=True,
+                                 w=0.85 * len(axes_present) + 1.8, h=0.5 * len(metrics) + 1.2)
+    tidy = []
+    for j, axis in enumerate(axes_present):
+        block = wide[wide["degradation"] == axis].sort_values("level")
+        levels = block["level"].to_numpy(int)
+        for i, metric in enumerate(metrics):
+            ax = grid[i, j]
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.grid(False)
+            for spine in ax.spines.values():
+                spine.set_visible(False)
+            ax.set_ylim(-0.08, clip)
+            y = (block[metric].to_numpy(float) if metric in block.columns
+                 else np.full(len(levels), np.nan))
+            row = info.get((metric, axis))
+            onset = float(getattr(row, "sensitivity_level", np.nan)) if row else np.nan
+            elasticity = float(getattr(row, "elasticity", np.nan)) if row else np.nan
+            has_scale = bool(np.isfinite(y).any())
+            if not has_scale:
+                ax.set_facecolor("0.93")
+                ax.text(0.5, 0.5, "no scale", transform=ax.transAxes, ha="center",
+                        va="center", fontsize="xx-small", color="0.45")
+            else:
+                ax.axhline(1.0, color="0.75", lw=0.6, ls=":")
+                shown = np.minimum(y, clip)
+                ax.plot(np.r_[0, levels], np.r_[0.0, shown], color="0.15", marker="o", ms=2.2,
+                        lw=0.9, ls="-" if len(levels) > 3 else "none")
+                clipped = y > clip
+                if clipped.any():
+                    ax.plot(levels[clipped], shown[clipped], "^", color="0.15", ms=3)
+                if np.isfinite(onset) and onset in levels:
+                    ax.plot(onset, shown[list(levels).index(onset)], "o", ms=3.5, zorder=3,
+                            color=okabe("vermillion"))
+                if np.isfinite(elasticity):
+                    ax.text(0.03, 0.97, f"{elasticity:.1f}", transform=ax.transAxes,
+                            ha="left", va="top", fontsize="xx-small", color="0.3")
+            for level, severity, value in zip(levels, block["severity"], y, strict=True):
+                tidy.append({
+                    "field": field, "metric": metric, "degradation": axis,
+                    "level": int(level), "severity": float(severity),
+                    "damage_median": float(value), "n_levels": len(levels),
+                    "has_scale": has_scale, "sensitivity_level": onset,
+                    "elasticity": elasticity,
+                    "elasticity_x": getattr(row, "elasticity_x", "") if row else "",
+                })
+        grid[0, j].set_title(ctx.label(axis), fontsize="xx-small", loc="left", rotation=20)
+        grid[-1, j].set_xlabel(
+            f"{block['severity'].min():.3g} to {block['severity'].max():.3g}",
+            fontsize="xx-small")
+    for i, metric in enumerate(metrics):
+        grid[i, 0].set_ylabel(metric, rotation=0, ha="right", va="center", fontsize="x-small")
+    fig.suptitle(f"Median damage against severity level -- {field}", fontsize="small")
+    caption = (
+        f"Median damage over frames against severity level for every metric (rows) and "
+        f"degradation (columns) on {field}, all on one 0-1 scale, starting from the undamaged "
+        "reference at the left of every curve. The dotted line is damage 1, an unrelated "
+        "field. Degradations with three or fewer usable levels are drawn as dots. The red dot "
+        "is the first level at which the metric has moved a tenth of the way to an unrelated "
+        "field. The number is the elasticity over the mildest levels, against the severity each "
+        "degradation names: near 0 blind, 1 linear, 2 quadratic. Grey cells are metrics with "
+        f"no damage scale on this field. Points above {clip:g} are clipped and drawn as "
+        "triangles. Below each column is the range of the severity actually applied."
+    )
+    return PlotResult([FigureItem(fig, {"field": field}, caption=caption,
+                                  data=pd.DataFrame(tidy))])
+
+
+@plot(
     section=7, order=10, scope="per_field", min_metrics=2,
     title="Selectivity profile",
     requires_columns=("degradation", "level", "value"), min_axes=2,

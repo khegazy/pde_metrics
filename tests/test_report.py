@@ -443,3 +443,35 @@ def test_metric_styles_differ_when_colours_repeat():
     style = Style.build(metrics=names)
     assert style.metric_colour("m0") == style.metric_colour("m8"), "eight colours, nine metrics"
     assert style.metric_style("m0") != style.metric_style("m8")
+
+
+# --- the response figures --------------------------------------------------------------------
+
+
+def _rendered(folder, name, **filters):
+    ctx = build_context(folder, bootstrap=0)
+    for column, value in filters.items():
+        ctx.df = ctx.df[ctx.df[column] == value]
+        ctx.axes = ctx.axes[ctx.axes[column] == value]
+        ctx.card = ctx.card[ctx.card[column] == value]
+    rendered = {r.name: r for r in render(folder, ctx, only=[name], formats=("png",))}
+    return rendered[name]
+
+
+def _figure_data(folder, stem: str) -> pd.DataFrame:
+    return pd.read_csv(folder.figure_data / f"{stem}.csv")
+
+
+def test_response_sparklines_render_and_grey_the_metric_without_a_scale(run_folder):
+    outcome = _rendered(run_folder, "response_sparklines")
+    assert outcome.status == "ok", outcome.reason
+    data = _figure_data(run_folder, "response_sparklines__field-vorticity")
+    assert not data.loc[data["metric"] == "flat", "has_scale"].any()
+    assert data.loc[data["metric"] == "mse", "has_scale"].all()
+    assert set(data.loc[data["degradation"] == "median_blur", "n_levels"]) == {2}
+    assert "uncorrelated" not in set(data["degradation"]), "probes are not ladder axes"
+
+
+def test_response_sparklines_skip_when_no_metric_has_a_scale(tmp_path):
+    outcome = _rendered(_degenerate_folder(tmp_path), "response_sparklines")
+    assert outcome.status == "skipped" and "damage scale" in outcome.reason
