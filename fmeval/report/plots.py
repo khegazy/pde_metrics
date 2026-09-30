@@ -12,8 +12,12 @@ mislead rather than merely disappoint:
 
 from __future__ import annotations
 
+import matplotlib
 import numpy as np
 import pandas as pd
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import Normalize
+from matplotlib.patches import Polygon
 
 from fmeval.analysis import UNCORRELATED_LABEL
 
@@ -278,6 +282,101 @@ def field_gallery(ctx, df, opts) -> PlotResult:
 
 
 # --- section 7: what does it detect? --------------------------------------------------------
+
+
+def _cell_wedges(n: int) -> list[list[tuple[float, float]]]:
+    """Polygons tiling the unit square, one per field, in the layout of Gleckler et al. (2008).
+
+    One field fills the cell; two split it on the diagonal; three take the top triangle and the
+    two lower quadrilaterals; four take the four triangles about the centre.
+    """
+    tl, tr, br, bl, centre, bottom = (0, 1), (1, 1), (1, 0), (0, 0), (0.5, 0.5), (0.5, 0)
+    return {
+        1: [[bl, br, tr, tl]],
+        2: [[bl, br, tr], [bl, tr, tl]],
+        3: [[tl, tr, centre], [tl, centre, bottom, bl], [tr, br, bottom, centre]],
+        4: [[tl, tr, centre], [tr, br, centre], [br, bl, centre], [bl, tl, centre]],
+    }[n]
+
+
+#: Vargha & Delaney's descriptive anchors on |A - 0.5| (small, medium, large), as Cliff's delta.
+#: Colour-bar ticks for scale only; never labels on a cell.
+_DELTA_ANCHORS = (0.12, 0.28, 0.42)
+
+
+@plot(
+    section=7, order=5, scope="global",
+    title="Portrait of adjacent-level discrimination",
+    requires_columns=("degradation", "level", "value"), min_axes=1,
+    defaults={"cmap": "RdBu_r"},
+)
+def response_portrait(ctx, df, opts) -> PlotResult:
+    """Cliff's delta for every metric, degradation and field, in one portrait diagram.
+
+    The climate-model portrait (Gleckler, Taylor & Doutriaux 2008, *J. Geophys. Res.* 113,
+    D06104): a metric-by-degradation grid with each cell split into one wedge per field, so all
+    three fields are read in one view. RdBu rather than a perceptually uniform diverging map: the
+    ones matplotlib ships are dark at their centre, which would make "no discrimination" the
+    darkest cell and hard to tell from the grey used for a missing value.
+    """
+    ctx.require("cliffs_delta_min" in ctx.axes.columns, "this run's analysis has no Cliff's delta")
+    metrics = sorted(str(m) for m in df["metric"].unique())
+    rows = ctx.axes[~ctx.axes["is_probe"] & ctx.axes["metric"].isin(metrics)
+                    & ctx.axes["field"].isin(df["field"].unique())]
+    fields = sorted(str(f) for f in rows["field"].unique())
+    ctx.require(1 <= len(fields) <= 4, f"the portrait holds one to four fields, not {len(fields)}")
+    axes_present = [a for a in ctx.ordinal_axes if a in set(rows["degradation"].astype(str))]
+    ctx.require(bool(axes_present) and rows["cliffs_delta_min"].notna().any(),
+                "no finite Cliff's delta")
+    lookup = {(str(r.metric), str(r.degradation), str(r.field)): float(r.cliffs_delta_min)
+              for r in rows.itertuples()}
+
+    n_m, n_a = len(metrics), len(axes_present)
+    fig, grid = ctx.style.figure(1, 2, w=0.7 * n_a + 3.6, h=0.5 * n_m + 1.8,
+                                 gridspec_kw={"width_ratios": [max(n_a, 3), 1.2]})
+    ax, key = grid[0, 0], grid[0, 1]
+    cmap, norm = matplotlib.colormaps[opts["cmap"]], Normalize(-1.0, 1.0)
+    wedges = _cell_wedges(len(fields))
+    tidy = []
+    for i, metric in enumerate(metrics):
+        for j, axis in enumerate(axes_present):
+            for wedge, field in zip(wedges, fields, strict=True):
+                value = lookup.get((metric, axis, field), np.nan)
+                points = [(j + x, n_m - 1 - i + y) for x, y in wedge]
+                ax.add_patch(Polygon(points, closed=True, lw=0.6, edgecolor="white",
+                                     facecolor=cmap(norm(value)) if np.isfinite(value) else "0.9"))
+                tidy.append({"metric": metric, "degradation": axis, "field": field,
+                             "cliffs_delta_min": value})
+    ax.set_xlim(0, n_a)
+    ax.set_ylim(0, n_m)
+    ax.set_aspect("equal")
+    ax.grid(False)
+    ax.set_xticks(np.arange(n_a) + 0.5, [ctx.label(a) for a in axes_present], rotation=40,
+                  ha="right", fontsize="x-small")
+    ax.set_yticks(np.arange(n_m) + 0.5, list(reversed(metrics)), fontsize="x-small")
+    bar = fig.colorbar(ScalarMappable(norm, cmap), ax=ax, shrink=0.8)
+    bar.set_label("Cliff's delta, weakest adjacent pair", fontsize="x-small")
+    bar.set_ticks([-1, *(-a for a in reversed(_DELTA_ANCHORS)), 0, *_DELTA_ANCHORS, 1])
+    bar.ax.tick_params(labelsize="xx-small")
+    key.set_xlim(-0.1, 1.1)
+    key.set_ylim(-0.1, 1.1)
+    key.set_aspect("equal")
+    key.set_axis_off()
+    for wedge, field in zip(wedges, fields, strict=True):
+        key.add_patch(Polygon(wedge, closed=True, facecolor="0.85", edgecolor="0.3", lw=0.6))
+        cx, cy = np.mean(np.array(wedge), axis=0)
+        key.text(cx, cy, field, ha="center", va="center", fontsize="xx-small")
+    key.set_title("one wedge per field", fontsize="xx-small")
+    caption = (
+        "Cliff's delta between adjacent severity levels, the weakest pair on each degradation, "
+        "for every metric and degradation, with each cell split into one wedge per field (key "
+        "at right). 0 means the metric cannot tell neighbouring levels apart, 1 that a frame at "
+        "the worse level always scores worse, and a negative value that the order is reliably "
+        "reversed. Grey wedges have no defined value. The colour-bar ticks at 0.12, 0.28 and "
+        "0.42 are Vargha and Delaney's small, medium and large anchors, given for scale and "
+        "not as grades."
+    )
+    return PlotResult([FigureItem(fig, {}, caption=caption, data=pd.DataFrame(tidy))])
 
 
 @plot(

@@ -475,3 +475,31 @@ def test_response_sparklines_render_and_grey_the_metric_without_a_scale(run_fold
 def test_response_sparklines_skip_when_no_metric_has_a_scale(tmp_path):
     outcome = _rendered(_degenerate_folder(tmp_path), "response_sparklines")
     assert outcome.status == "skipped" and "damage scale" in outcome.reason
+
+
+@pytest.mark.parametrize("n", [1, 2, 3, 4])
+def test_portrait_wedges_tile_the_unit_square(n):
+    from fmeval.report.plots import _cell_wedges
+
+    def area(polygon):
+        x, y = np.array(polygon).T
+        return 0.5 * abs(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1)))
+
+    wedges = _cell_wedges(n)
+    assert len(wedges) == n
+    assert sum(area(w) for w in wedges) == pytest.approx(1.0, abs=1e-12)
+    assert all(0.0 <= c <= 1.0 for w in wedges for point in w for c in point)
+
+
+def test_response_portrait_holds_every_field_in_one_grid(run_folder):
+    outcome = _rendered(run_folder, "response_portrait")
+    assert outcome.status == "ok", outcome.reason
+    data = _figure_data(run_folder, "response_portrait")
+    assert len(data) == 4 * 4 * 3, "one row per metric, ordinal degradation and field"
+    assert data.loc[data["metric"] == "mse", "cliffs_delta_min"].notna().all()
+
+
+def test_response_portrait_handles_a_single_field(run_folder):
+    outcome = _rendered(run_folder, "response_portrait", field="density")
+    assert outcome.status == "ok", outcome.reason
+    assert set(_figure_data(run_folder, "response_portrait")["field"]) == {"density"}
