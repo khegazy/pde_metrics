@@ -264,7 +264,8 @@ On a degradation whose strength is calibrated per field the recorded absolute va
 the damage rises — a low-pass records its cutoff wavenumber, 33, 17, 8 and 4.7 on vorticity — so
 the slope is taken against the configured fraction instead (`severity_nominal`), which rises and
 means the same on every field. A strength that falls with damage and is not calibrated is read
-through its reciprocal (`1/severity`). Only the mildest levels are used because a ladder that
+through its complement (`1 - severity`) when it is a fraction, such as the fraction of a band
+retained, and through its reciprocal (`1/severity`) otherwise. Only the mildest levels are used because a ladder that
 saturates bends the whole-range slope down: over all six sub-pixel shifts mean squared error on
 vorticity has a slope of 1.76, over the first three 1.99.
 

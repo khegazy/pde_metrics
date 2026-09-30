@@ -568,8 +568,13 @@ def _response_x(g: pd.DataFrame, levels: list) -> tuple[np.ndarray, str]:
     and differs per field: on the pinned run comparison_1790639359 a vorticity low-pass records
     cutoffs 33.3, 17.1, 8.0 and 4.7 under the name "energy removed". A slope against that has the
     wrong sign and the wrong label, so a calibrated axis uses the configured fraction, which rises
-    with level and means the same on every field. An uncalibrated knob that falls with level (a
-    retained fraction) is read through its reciprocal.
+    with level and means the same on every field.
+
+    An uncalibrated knob that falls with level is read through its complement ``1 - x`` when its
+    values are fractions -- a retained fraction, whose identity is 1 and whose harshest level is 0,
+    becomes the fraction removed -- and through its reciprocal otherwise. The reciprocal of a
+    retained fraction is infinite at total attenuation, which dropped that level from the onset
+    and the slope.
     """
     calibration = g["calibration"].iloc[0] if "calibration" in g.columns else ""
     calibrated = isinstance(calibration, str) and calibration != ""
@@ -577,6 +582,8 @@ def _response_x(g: pd.DataFrame, levels: list) -> tuple[np.ndarray, str]:
     x = g.groupby("level", observed=True)[column].median().reindex(levels).to_numpy(float)
     name = f"{column} ({g['severity_name'].iloc[0]})" if "severity_name" in g.columns else column
     if len(x) > 1 and x[-1] < x[0]:
+        if np.all((x >= 0) & (x <= 1)):
+            return 1.0 - x, f"1 - {name}"
         with np.errstate(divide="ignore"):
             return 1.0 / x, f"1/{name}"
     return x, name

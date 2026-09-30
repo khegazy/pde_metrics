@@ -845,3 +845,16 @@ def test_a_falling_response_has_an_elasticity():
     row = _axis(axes, "falls")
     assert row["elasticity"] == pytest.approx(1.0, abs=0.02)
     assert row["response_shape"] == "linear"
+
+
+def test_a_retained_fraction_is_read_as_the_fraction_removed():
+    """band_attenuate's severity is the fraction of a band retained, falling to 0 at its harshest
+    level. Read through its reciprocal, that level was infinite and dropped from the onset and the
+    slope; its complement, the fraction removed, is finite and rises with damage."""
+    df = _with_severity(make_frame(axes={"band": [0.01, 0.02, 0.05, 0.5],
+                                         "uncorrelated": [1.0, 1.0]}),
+                        "band", {1: 0.8, 2: 0.5, 3: 0.2, 4: 0.0})
+    scored, norm = _scored(df)
+    row = _axis(an.summarise_axes(scored, norm=norm, n_bootstrap=0), "band")
+    assert row["elasticity_x"] == "1 - severity (s)"
+    assert 0.8 < row["severity_10"] <= 1.0, "the crossing lies at the harshest level"
