@@ -503,3 +503,28 @@ def test_response_portrait_handles_a_single_field(run_folder):
     outcome = _rendered(run_folder, "response_portrait", field="density")
     assert outcome.status == "ok", outcome.reason
     assert set(_figure_data(run_folder, "response_portrait")["field"]) == {"density"}
+
+
+def test_displacement_companion_panel_reads_damage_against_field_change(run_folder):
+    outcome = _rendered(run_folder, "displacement_response")
+    assert outcome.status == "ok", outcome.reason
+    data = _figure_data(run_folder, "displacement_response__field-vorticity")
+    assert data.loc[data["metric"] == "mse", "energy_changed"].notna().all()
+
+
+def test_displacement_response_still_renders_without_energy_changed(run_folder):
+    ctx = build_context(run_folder, bootstrap=0)
+    ctx.df = ctx.df.drop(columns="energy_changed")
+    rendered = {r.name: r for r in render(run_folder, ctx, only=["displacement_response"],
+                                          formats=("png",))}
+    assert rendered["displacement_response"].status == "ok"
+    data = _figure_data(run_folder, "displacement_response__field-vorticity")
+    assert "energy_changed" not in data.columns or data["energy_changed"].isna().all()
+
+
+def test_deception_panel_says_which_metrics_have_no_damage_scale(run_folder):
+    outcome = _rendered(run_folder, "deception_panel")
+    assert outcome.status == "ok", outcome.reason
+    data = _figure_data(run_folder, "deception_panel__field-vorticity").set_index("metric")
+    assert not bool(data.loc["flat", "has_scale"])
+    assert bool(data.loc["mse", "has_scale"])

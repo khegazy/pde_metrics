@@ -808,6 +808,15 @@ field. Measured, the mildest sharp high-pass severity level on density asks to r
 that. They are also the honest way to compare a severity level across fields, since the same width or cutoff
 does very different amounts of damage on a smooth field than on a broadband one.
 
+**Plotting against it shows a metric relative to mean squared error.** `energy_changed` is the mean
+squared difference divided by the reference variance — mean squared error on a fixed scale — so it
+is not a metric-independent measure of how much the field changed. A curve of any metric against it
+is that metric read relative to mean squared error, and mean squared error itself is proportional
+to it by construction; the displacement figure's companion panel is labelled that way for this
+reason. Normalising every degradation by one fixed reference is standard practice (Hendrycks and
+Dietterich 2019 do the same with a fixed model for image corruptions) and useful, provided the axis
+is named for what it is. It is also why `selectivity` divides damage by it.
+
 **Caveats.** `energy_removed` is only a statement about *how much* energy went, never about
 *which* energy — a low-pass and a high-pass removing the same fraction are entirely different
 experiments. For a nonlinear operator such as a median filter, energy is not partitioned cleanly
@@ -1050,8 +1059,8 @@ translates the ensemble rather than perturbing it, and would leave the spread un
 | `response_sparklines` | 6 | Every metric (rows) against every degradation (columns), each cell a tiny curve of median damage against severity level on one shared 0–1 scale, starting from the undamaged reference. The whole ladder in one view: onset, slope, saturation and a flat, blind response are all read by position. The red dot is the first level at which the metric has moved a tenth of the way to an unrelated field; the small number is the elasticity; degradations with three or fewer usable levels are drawn as dots; grey cells are metrics with no damage scale on that field. Below each column is the range of the severity actually applied |
 | `response_portrait` | 7 | Every metric against every degradation with each cell split into one wedge per field (key beside the grid), coloured by `cliffs_delta_min`. The one figure that holds all three fields at once: read a row for what a metric can tell apart, a column for which metrics see a degradation, a wedge for how that changes with the field. Grey wedges have no defined value, including fields a metric does not apply to. The colour-bar ticks at 0.12, 0.28 and 0.42 are the Vargha–Delaney small, medium and large anchors, for scale and not as grades. A single-field quantity reads negative under smoothing because it falls as structure is removed, as `rho` does |
 | `selectivity_profile` | 7 | Each metric's response across every degradation, as grouped bars. Needs two or more metrics |
-| `deception_panel` | 8 | Damage assigned to the Gaussian field (star) against the ordinary severity levels (open circles). A star near zero means the metric sees only second-order statistics |
-| `displacement_response` | 9 | Damage against displacement distance, log x. Shape and amplitude are exactly correct at every point on this curve; only position changes. The project's central figure |
+| `deception_panel` | 8 | Damage assigned to the Gaussian field (star) against the ordinary severity levels (open circles), one row per metric, so every metric in the run is compared on each field. A star near zero means the metric sees only second-order statistics. Rows marked "no damage scale" are metrics whose clean and unrelated values coincide |
+| `displacement_response` | 9 | Damage against displacement distance, log x. Shape and amplitude are exactly correct at every point on this curve; only position changes. The project's central figure. The companion panel plots the same points against `energy_changed`, which is normalised MSE, so every curve there reads as that metric relative to MSE, drawn dashed black as the reference in both panels. Metrics with no damage scale are left out |
 | `cost_frontier` | 10 | Worst-degradation correlation against cost. Upper left is useful; upper right is right-but-unaffordable, so a diagnostic rather than a loss |
 
 Every figure has a CSV of exactly the numbers plotted, in `data/figure_data/`. No number

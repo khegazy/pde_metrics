@@ -537,9 +537,11 @@ def deception_panel(ctx, df, opts) -> PlotResult:
     metrics = sorted(df["metric"].unique())
     ladder = df[(df["level"] > 0) & (~df["degradation"].isin(ctx.probe_labels))]
 
-    fig, grid = ctx.style.figure(1, 1, h=max(2.0, 0.45 * len(metrics) + 1.2))
+    fig, grid = ctx.style.figure(1, 1, w=1.7 * ctx.style.panel_w,
+                                 h=max(2.0, 0.42 * len(metrics) + 1.4))
     ax = grid[0, 0]
     tidy = []
+    labelled = False
     for row, metric in enumerate(metrics):
         severity_levels = ladder[ladder["metric"] == metric]["damage"].dropna()
         if len(severity_levels):
@@ -547,10 +549,17 @@ def deception_panel(ctx, df, opts) -> PlotResult:
                     mfc="none", mec="0.65", ms=4, zorder=2)
         impostor = df[(df["metric"] == metric)
                       & (df["degradation"] == "gaussian_impostor")]["damage"].median()
-        ax.hlines(row, 0, impostor, color="0.85", lw=1, zorder=1)
-        ax.plot(impostor, row, marker="*", ms=13, zorder=3, color=okabe("vermillion"),
-                label="spectrum-matched Gaussian" if row == 0 else None)
-        tidy.append({"metric": metric, "impostor_damage": float(impostor)})
+        has_scale = bool(len(severity_levels)) or bool(np.isfinite(impostor))
+        if np.isfinite(impostor):
+            ax.hlines(row, 0, impostor, color="0.85", lw=1, zorder=1)
+            ax.plot(impostor, row, marker="*", ms=13, zorder=3, color=okabe("vermillion"),
+                    label=None if labelled else "spectrum-matched Gaussian")
+            labelled = True
+        if not has_scale:
+            ax.text(0.02, row, "no damage scale", fontsize="xx-small", color="0.5",
+                    va="center")
+        tidy.append({"metric": metric, "impostor_damage": float(impostor),
+                     "has_scale": has_scale})
 
     ax.axvline(1.0, color="0.3", lw=1)
     ax.text(1.0, -0.7, " unrelated fields", fontsize="x-small", color="0.3", va="top")
@@ -561,14 +570,18 @@ def deception_panel(ctx, df, opts) -> PlotResult:
     ax.set_yticklabels(metrics)
     ax.set_xlabel("damage (0 = clean, 1 = unrelated fields)")
     ax.set_title(f"Misleading fields — {field}")
-    ax.legend(fontsize="x-small", loc="lower right")
+    ax.set_ylim(-1.0, len(metrics) - 0.4)
+    if labelled:
+        ax.legend(fontsize="x-small", loc="upper right")
 
     return PlotResult(
         [FigureItem(fig, {"field": field},
                     caption="Damage assigned to the spectrum-matched Gaussian field "
-                            "(star) against the ordinary ladder severity levels (open circles). "
-                            "A metric that places the star near zero is responding only "
-                            "to second-order statistics.",
+                            "(star) against the ordinary ladder severity levels (open circles), "
+                            "one row per metric. A metric that places the star near zero is "
+                            "responding only to second-order statistics. Rows marked 'no damage "
+                            "scale' are metrics whose clean and unrelated values coincide, so no "
+                            "damage can be defined for them.",
                     data=pd.DataFrame(tidy))],
         notes=["A metric near the origin here sees only the energy spectrum."],
     )
@@ -595,25 +608,36 @@ def displacement_response(ctx, df, opts) -> PlotResult:
     wanted = [a for a in opts.get("axes", ()) if a in set(df["degradation"])]
     ctx.require(bool(wanted), "no translation axis in the ladder")
 
-    fig, grid = ctx.style.figure(1, 1)
+    # The companion panel puts the same points against energy_changed, the mean squared
+    # difference over the reference variance: mean squared error on a fixed scale. It is itself a
+    # metric, so that axis is not metric-independent and every curve on it reads relative to MSE.
+    translated = df[df["degradation"].isin(wanted) & (df["level"] > 0)]
+    companion = ("energy_changed" in df.columns
+                 and bool(translated["energy_changed"].notna().any()))
+    fig, grid = ctx.style.figure(1, 2 if companion else 1,
+                                 w=(2 if companion else 1) * ctx.style.panel_w + 1.4)
     ax = grid[0, 0]
     tidy = []
     for metric in sorted(df["metric"].unique()):
-        points = []
-        for axis in wanted:
-            sub = df[(df["metric"] == metric) & (df["degradation"] == axis)
-                     & (df["level"] > 0)]
-            stats = sub.groupby("severity", observed=True)["damage"].median()
-            points.extend(zip(stats.index, stats.to_numpy()))
-        if not points:
-            continue
-        points.sort()
-        distance = [p[0] for p in points]
-        damage = [p[1] for p in points]
-        ax.plot(distance, damage, marker="o", ms=3.5,
-                color=ctx.style.metric_colour(metric), label=metric)
-        tidy.extend({"metric": metric, "distance": d, "damage": v}
-                    for d, v in points)
+        sub = translated[translated["metric"] == metric]
+        columns = ["damage", "energy_changed"] if companion else ["damage"]
+        stats = sub.groupby("severity", observed=True)[columns].median().sort_index()
+        if stats.empty or not np.isfinite(stats["damage"]).any():
+            continue                      # no damage scale: nothing to draw, nothing to list
+        # With the companion panel, MSE is its x-axis, so it is drawn as the reference in both.
+        reference = companion and metric == "mse"
+        look = ({"color": "black", "ls": "--", "lw": 1.6} if reference else
+                {"color": ctx.style.metric_colour(metric), "ls": ctx.style.metric_style(metric)})
+        label = f"{metric} (the right panel's x-axis)" if reference else metric
+        ax.plot(stats.index, stats["damage"], marker="o", ms=3.5, label=label, **look)
+        if companion:
+            grid[0, 1].plot(stats["energy_changed"], stats["damage"], marker="o", ms=3.5,
+                            label=label, **look)
+        tidy.extend(
+            {"metric": metric, "distance": float(d), "damage": float(r["damage"]),
+             "energy_changed": float(r["energy_changed"]) if companion else np.nan}
+            for d, r in stats.iterrows()
+        )
 
     # Declared before the log scale is set, not after. A metric with no dynamic range has an
     # all-NaN damage column -- which AGENTS.md section 3 explicitly calls correct for a
@@ -626,21 +650,29 @@ def displacement_response(ctx, df, opts) -> PlotResult:
         "clean and the unrelated-field anchor, so there is nothing to plot against distance",
     )
 
-    ax.axhline(1.0, color="0.3", lw=1)
+    for panel in grid[0]:
+        panel.axhline(1.0, color="0.3", lw=1)
+        panel.set_xscale("log")
+        panel.set_ylabel("damage")
     ax.text(0.01, 1.0, "unrelated fields", fontsize="x-small", color="0.3",
             va="bottom", transform=ax.get_yaxis_transform())
-    ax.set_xscale("log")
     ax.set_xlabel("displacement [cells]")
-    ax.set_ylabel("damage")
     ax.set_title(f"Pure displacement — {field}")
-    ax.legend(fontsize="x-small")
+    fig.legend(*ax.get_legend_handles_labels(), fontsize="xx-small", loc="outside right upper")
+    caption = ("Damage against displacement distance. Shape and amplitude are exactly correct "
+               "at every point on this curve; only position changes.")
+    if companion:
+        right = grid[0, 1]
+        right.set_xlabel("field change (normalised MSE)")
+        right.set_title("The same points against normalised MSE", fontsize="small")
+        caption += (" The right panel plots the same medians against energy_changed, the mean "
+                    "squared difference divided by the reference variance. That is mean squared "
+                    "error on a fixed scale, so this axis is not metric-independent: every curve "
+                    "on it reads as that metric relative to MSE, and MSE itself, dashed black "
+                    "when present, is proportional to it by construction.")
 
     return PlotResult(
-        [FigureItem(fig, {"field": field},
-                    caption="Damage against displacement distance. Shape and amplitude "
-                            "are exactly correct at every point on this curve; only "
-                            "position changes.",
-                    data=pd.DataFrame(tidy))]
+        [FigureItem(fig, {"field": field}, caption=caption, data=pd.DataFrame(tidy))]
     )
 
 
