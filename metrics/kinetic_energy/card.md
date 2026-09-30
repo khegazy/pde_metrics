@@ -242,6 +242,14 @@ Computed on the median value at each combination of degradation and strength, ov
 
 <!-- END GENERATED results_summary -->
 
+### Damage beside the other metrics
+
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence kinetic_energy`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence kinetic_energy`.
+
+<!-- END GENERATED results_damage_by_level -->
+
 ## References
 
 \bibliography

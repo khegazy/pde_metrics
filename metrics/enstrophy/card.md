@@ -245,6 +245,14 @@ Computed on the median value at each combination of degradation and strength, ov
 
 <!-- END GENERATED results_summary -->
 
+### Damage beside the other metrics
+
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence enstrophy`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence enstrophy`.
+
+<!-- END GENERATED results_damage_by_level -->
+
 ## References
 
 \bibliography

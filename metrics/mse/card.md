@@ -317,6 +317,14 @@ eighth of a cell. They order damage alike without weighting it alike, so for ran
 models they are duplicates and as training losses they are not. Reach for MSE when the
 errors that matter are errors of amplitude, not of position.
 
+### Damage beside the other metrics
+
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence mse`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence mse`.
+
+<!-- END GENERATED results_damage_by_level -->
+
 ## References
 
 \bibliography

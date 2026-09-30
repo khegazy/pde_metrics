@@ -34,6 +34,14 @@ FAMILY_BLOCKS = {family: f"results_{family}" for family in FAMILY_HEADINGS}
 
 NOT_MEASURED = "No measurements for this test in the recorded run."
 
+#: The degradation families whose per-strength damage a card sets beside the other metrics: the
+#: ones where magnitude, not order, is the claim (issues/035).
+DAMAGE_BLOCK_FAMILIES: tuple[str, ...] = ("geometric",)
+
+#: The metrics a card's damage table places beside its own: the pointwise controls every
+#: candidate has to be read against.
+DAMAGE_BLOCK_CONTROLS: tuple[str, ...] = ("mae", "mse", "rmse", "nrmse")
+
 
 @dataclass(frozen=True)
 class Run:
@@ -50,6 +58,7 @@ class Run:
     card: pd.DataFrame
     """One row per metric and field, unflagged: cards never carry flags."""
     anchor_label: str = an.UNCORRELATED_LABEL
+    probe_labels: frozenset[str] = an.PROBE_LABELS
 
 
 def load_run(folder: Path) -> Run:
@@ -88,7 +97,7 @@ def load_run(folder: Path) -> Run:
     analysis = an.analyse(rows, meta=meta)
     return Run(folder=folder, rows=rows, meta=meta, norm=analysis.norm, axes=analysis.axes,
                probes=analysis.probes, scored=analysis.scored, card=analysis.card,
-               anchor_label=analysis.anchor_label)
+               anchor_label=analysis.anchor_label, probe_labels=analysis.probe_labels)
 
 
 def _cell(row: Any, column: str) -> Any:
@@ -176,6 +185,90 @@ def performance_block(run: Run, metric: str) -> str:
         "the numbers mean for this metric is written in the subsections below, beside the "
         "test that produced each number.",
     ]
+    lines += _profile_lines(run, metric, axes)
+    return "\n".join(lines)
+
+
+def _profile_lines(run: Run, metric: str, axes: pd.DataFrame) -> list[str]:
+    """The measured profile of one metric, one row per field, read from the analysis frames."""
+    card = run.card[run.card["metric"] == metric].sort_values("field")
+    if card.empty or "selectivity" not in card.columns:
+        return []
+    translation = axes[axes["degradation"] == "translate_subpixel"]
+    against = ", ".join(sorted(str(x) for x in translation["elasticity_x"].dropna().unique()))
+    margin, confidence = an.BLINDNESS_MARGIN, an.BLINDNESS_CONFIDENCE
+    lines = [
+        "", "**Profile.**", "",
+        "| field | selectivity | charges most for | charges least for | response provably below "
+        f"{margin:g} at {confidence:.0%} on | elasticity to a sub-pixel shift"
+        f"{f' (against {against})' if against else ''} | compute cost (x cheapest in this run) |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for _, row in card.iterrows():
+        blind = " ".join(f"`{a}`" for a in str(row.get("blind_axes") or "").split("; ") if a)
+        most, least = row.get("most_sensitive_axis"), row.get("least_sensitive_axis")
+        lines.append(
+            f"| {row['field']} | {_fmt(row.get('selectivity'))} | "
+            f"{f'`{most}`' if isinstance(most, str) else '—'} | "
+            f"{f'`{least}`' if isinstance(least, str) else '—'} | {blind or '—'} | "
+            f"{_fmt(row.get('elasticity_displacement'))} | {_fmt(row.get('cost_relative'))} |"
+        )
+    lines += [
+        "",
+        "One row per physical field. **Selectivity** is how concentrated the metric's response "
+        "is on a few degradations, measured per unit of field change: 0 means it charges every "
+        "degradation the same, as mean squared error does by construction, and values toward 1 "
+        "that one degradation carries most of it. **Charges most and least for** name the two "
+        "ends of that profile. **Response provably below** lists degradations on which the upper "
+        "confidence bound of the largest damage lies below the margin -- an equivalence test, so "
+        "an entry says the response is provably small, not merely not significant; a dash means "
+        "no degradation met the bound. **Elasticity** is the slope of log damage against log "
+        "shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with "
+        "its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and "
+        "field in the same run.",
+    ]
+    return lines
+
+
+def damage_by_level_block(run: Run, metric: str) -> str:
+    """Per-strength damage for this metric beside the pointwise controls (issues/035).
+
+    One table per field and translation degradation, one row per metric -- this one first -- and
+    one column per strength, so the magnitude claims a card makes have a generated source.
+    """
+    present = set(run.rows["metric"].astype(str).unique())
+    others = [m for m in DAMAGE_BLOCK_CONTROLS if m in present and m != metric]
+    if not others:
+        return "Only one metric in the recorded run; there is nothing to place this one beside."
+    lines: list[str] = []
+    for family in DAMAGE_BLOCK_FAMILIES:
+        for field in sorted(run.scored["field"].astype(str).unique()):
+            wide = an.damage_by_level(run.scored, field=field, family=family,
+                                      probe_labels=run.probe_labels)
+            for degradation, block in wide.groupby("degradation", observed=True):
+                block = block.sort_values("level")
+                strengths = [f"{s:g}" for s in block["severity"]]
+                name = str(run.rows.loc[run.rows["degradation"] == degradation,
+                                        "severity_name"].iloc[0])
+                lines += [f"**{FAMILY_HEADINGS.get(family, family)}, {field}, "
+                          f"`{degradation}`** (strength: {name}).", "",
+                          "| metric | " + " | ".join(strengths) + " |",
+                          "|---" * (len(strengths) + 1) + "|"]
+                for m in (metric, *others):
+                    cells = (block[m].to_numpy(float) if m in block.columns
+                             else [float("nan")] * len(strengths))
+                    lines.append(f"| `{m}` | " + " | ".join(_fmt(float(v)) for v in cells) + " |")
+                lines.append("")
+    if not lines:
+        return NOT_MEASURED
+    lines.append(
+        "Median damage over frames at every strength, this metric in the first row and the "
+        "pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded "
+        "reference and 1 an unrelated field; a dash means no damage scale on that field. The "
+        "rank correlations under *Compared with the other metrics* say whether two metrics put "
+        "the strengths in the same order; this table says how much each one charges for the same "
+        "strength, which decides whether two metrics are interchangeable as training losses."
+    )
     return "\n".join(lines)
 
 
@@ -279,6 +372,7 @@ def generate(metric: str, run: Run) -> Path:
         "performance": performance_block(run, metric),
         "results_canaries": canaries_block(run, metric),
         "results_summary": summary_block(run, metric),
+        "results_damage_by_level": damage_by_level_block(run, metric),
     }
     for family, block in FAMILY_BLOCKS.items():
         blocks[block] = family_block(run, metric, family)
@@ -300,6 +394,7 @@ def generate(metric: str, run: Run) -> Path:
         "git": run.meta.get("git", {}),
         "axes": json.loads(axes.to_json(orient="records")),
         "probes": json.loads(probes.to_json(orient="records")),
+        "profile": json.loads(run.card[run.card["metric"] == metric].to_json(orient="records")),
     }
     out = bundle.path / "_generated" / "fingerprint.json"
     from .exemplars import sanitize_json

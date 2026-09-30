@@ -324,6 +324,14 @@ high-pass filtering and on coarsening, both described above. The negative correl
 the pairwise metrics are orientation rather than disagreement, since this quantity falls
 under most damage while theirs rises.
 
+### Damage beside the other metrics
+
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence palinstrophy`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence palinstrophy`.
+
+<!-- END GENERATED results_damage_by_level -->
+
 ## References
 
 \bibliography

@@ -281,6 +281,14 @@ RMSE agrees with MSE on every ordering across every degradation, which is what t
 near-unit rank correlation between the cell-by-cell baselines reflects. Reporting both is
 redundant for ranking; the choice between them is a choice of units.
 
+### Damage beside the other metrics
+
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence rmse`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence rmse`.
+
+<!-- END GENERATED results_damage_by_level -->
+
 ## References
 
 \bibliography

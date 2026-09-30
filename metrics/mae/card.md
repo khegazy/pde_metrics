@@ -301,6 +301,14 @@ prediction a damage of 1.41 on vorticity, above the 1.0 an unrelated field score
 for MAE over MSE when small displacements are what you need to see, and when you do not
 want the score dominated by the worst cell.
 
+### Damage beside the other metrics
+
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence mae`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence mae`.
+
+<!-- END GENERATED results_damage_by_level -->
+
 ## References
 
 \bibliography

@@ -384,6 +384,14 @@ This metric ranks the ladder most like the pointwise family, at 0.66 to 0.71 wit
 direction for most degradations and disagree on which ones are severe, which is the whole
 content of Equation (2).
 
+### Damage beside the other metrics
+
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence h1_seminorm`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence h1_seminorm`.
+
+<!-- END GENERATED results_damage_by_level -->
+
 ## References
 
 \bibliography

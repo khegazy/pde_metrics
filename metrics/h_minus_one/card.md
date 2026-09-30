@@ -324,9 +324,8 @@ vorticity and almost absent on density and velocity. The mechanism is visible in
 calibration this run recorded — vorticity varies on a scale several times shorter than the
 other two fields, so the error a small shift produces sits at high wavenumber where dividing
 by the wavenumber bites, while on the smooth fields the same shift produces error at low
-wavenumber where it does not. The numbers behind that statement, and the fact that no
-generated block on this card can currently carry them, are recorded in
-`issues/035-no-generated-block-for-cross-metric-damage.md`.
+wavenumber where it does not. The numbers behind that statement are in the generated table
+under *Damage beside the other metrics* below.
 
 ### Resolution loss
 
@@ -441,6 +440,14 @@ axes they do not. `AGENTS.md` records the same trap in its sharpest form for MAE
 which correlate at 0.995 and differ by 55x in displacement damage. The case for adding this
 metric to a panel rests on the magnitudes, not on these correlations, and anyone reading the
 correlations alone would conclude the opposite.
+
+### Damage beside the other metrics
+
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence h_minus_one`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence h_minus_one`.
+
+<!-- END GENERATED results_damage_by_level -->
 
 ## References
 

@@ -369,6 +369,14 @@ this metric and a pointwise control is measuring two nearly independent things. 
 -0.49 with `increment_flatness`, which reads the same increment distribution through a single
 moment, so the two are related but far from redundant.
 
+### Damage beside the other metrics
+
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence increment_w1`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence increment_w1`.
+
+<!-- END GENERATED results_damage_by_level -->
+
 ## References
 
 \bibliography

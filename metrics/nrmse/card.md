@@ -291,6 +291,14 @@ the 0.95 redundancy threshold. Its distinct contribution is not a different orde
 comparable scale: it is the one baseline that allows a density result and a vorticity result to
 be read side by side.
 
+### Damage beside the other metrics
+
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence nrmse`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence nrmse`.
+
+<!-- END GENERATED results_damage_by_level -->
+
 ## References
 
 \bibliography

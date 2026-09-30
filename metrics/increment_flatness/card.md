@@ -419,6 +419,14 @@ distribution. The case for keeping it is that a drift in this number means somet
 that no other metric reports; the case against using it to choose between models is the sign
 change above.
 
+### Damage beside the other metrics
+
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence increment_flatness`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence increment_flatness`.
+
+<!-- END GENERATED results_damage_by_level -->
+
 ## References
 
 \bibliography

@@ -221,6 +221,16 @@ with the other metrics, where it merely tracks them, and the situations in which
 should reach for it. Do not write a verdict; nothing in this repository passes or fails a
 metric.
 
+### Damage beside the other metrics
+
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence <name>`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence <name>`.
+
+<!-- END GENERATED results_damage_by_level -->
+
+TODO(fill) What the per-strength damage shows beside the pointwise controls: where this metric charges more or less than they do for the same displacement, and on which field. Magnitude, not order, is the claim here.
+
 ## References
 
 \bibliography

@@ -413,6 +413,14 @@ the other metric here that reads only a distribution rather than an arrangement.
 negative correlations with `enstrophy`, `palinstrophy` and `kinetic_energy` are orientation
 rather than disagreement: those are single-field quantities that fall as the damage rises.
 
+### Damage beside the other metrics
+
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence spectrum_l2`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence spectrum_l2`.
+
+<!-- END GENERATED results_damage_by_level -->
+
 ## References
 
 \bibliography
