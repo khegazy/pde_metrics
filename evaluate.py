@@ -25,6 +25,7 @@ from omegaconf import DictConfig, OmegaConf
 
 from degradations import registry as deg_registry
 from fmeval import io as fio
+from fmeval.analysis import UNCORRELATED_LABEL
 from fmeval.data.base import READERS, TimeSelection, Trajectory
 from fmeval.data.locate import resolve_dataset_path, trajectory_provenance
 from fmeval.derived import recompute_frame
@@ -147,6 +148,16 @@ def main(cfg: DictConfig) -> None:
     )
     n_axes = len({r.label for r in severity_levels if not r.is_reference})
     log.info("ladder: %d severity levels over %d axes", len(severity_levels), n_axes)
+    # The analysis reads both back from run_meta.json: which entry defines D = 1, and which
+    # entries are probes rather than monotone axes (declared ordinal=False by their operator).
+    anchor = str(OmegaConf.select(cfg, "analysis.anchor", default=UNCORRELATED_LABEL))
+    probes = sorted({r.label for r in severity_levels if not r.ordinal})
+    if anchor not in {r.label for r in severity_levels}:
+        log.warning("analysis.anchor=%r is not an entry of this ladder; the analysis will fall "
+                    "back to the largest translation and record that in anchor_source", anchor)
+    elif anchor not in probes:
+        log.warning("analysis.anchor=%r is an ordinal axis: D = 1 would be the median over all "
+                    "its levels. Anchor on an entry whose operator is ordinal=False.", anchor)
 
     trajectory = open_trajectory(cfg)
     try:
@@ -232,6 +243,8 @@ def main(cfg: DictConfig) -> None:
             analysis_grid=resolution or native_resolution,
             ladder_axes=sorted({r.label for r in severity_levels if not r.is_reference}),
             n_severity_levels=len(severity_levels),
+            anchor_label=anchor,
+            probe_labels=probes,
             seed=int(cfg.seed),
             timings={
                 "total_s": elapsed,
@@ -267,6 +280,8 @@ def main(cfg: DictConfig) -> None:
             analysis_grid=resolution or native_resolution,
             ladder_axes=sorted({r.label for r in severity_levels if not r.is_reference}),
             n_severity_levels=len(severity_levels),
+            anchor_label=anchor,
+            probe_labels=probes,
             seed=int(cfg.seed),
             command=" ".join(sys.argv),
             comparison=True,

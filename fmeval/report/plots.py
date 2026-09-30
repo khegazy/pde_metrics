@@ -15,7 +15,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from fmeval.analysis import PROBE_LABELS, UNCORRELATED_LABEL
+from fmeval.analysis import UNCORRELATED_LABEL
 
 from .context import FigureItem, PlotResult
 from .registry import plot
@@ -72,10 +72,12 @@ def ladder_curves(ctx, df, opts) -> PlotResult:
         stats.insert(0, "degradation", name)
         tidy.append(stats)
 
-    anchor = df[df["degradation"] == UNCORRELATED_LABEL]
+    anchor = df[df["degradation"] == ctx.anchor_label]
     if not anchor.empty:
         ax.axhline(float(anchor["value"].median()), color="0.4", ls=":", lw=1)
-        ax.text(0.99, float(anchor["value"].median()), " unrelated fields",
+        text = (" unrelated fields" if ctx.anchor_label == UNCORRELATED_LABEL
+                else f" {ctx.label(ctx.anchor_label)} (damage 1)")
+        ax.text(0.99, float(anchor["value"].median()), text,
                 transform=ax.get_yaxis_transform(), va="bottom", ha="right",
                 fontsize="x-small", color="0.4")
 
@@ -335,7 +337,7 @@ def deception_panel(ctx, df, opts) -> PlotResult:
     """
     field = str(df["field"].iloc[0])
     metrics = sorted(df["metric"].unique())
-    ladder = df[(df["level"] > 0) & (~df["degradation"].isin(PROBE_LABELS))]
+    ladder = df[(df["level"] > 0) & (~df["degradation"].isin(ctx.probe_labels))]
 
     fig, grid = ctx.style.figure(1, 1, h=max(2.0, 0.45 * len(metrics) + 1.2))
     ax = grid[0, 0]

@@ -40,6 +40,13 @@ analysis_grid:
   resolution: null
   method: block_mean      # block_mean (conservative) | subsample (aliasing control)
 
+# The analysis layer. `anchor` is the LADDER ENTRY (a label under degradation.ladder, not an
+# operator) whose median value defines damage D = 1. It must be a non-ordinal entry. Fixed once
+# per run and never per metric; run_meta.json records it as `anchor_label`, and
+# TEST_DESCRIPTION.md `anchor_source` says what D = 1 means for each choice.
+analysis:
+  anchor: uncorrelated
+
 seed: 20260807
 
 hydra:

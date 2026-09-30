@@ -102,8 +102,22 @@ DEGENERATE_SPAN: float = 1e-9
 # --- normalisation --------------------------------------------------------------------
 
 
-def normalisation(df: pd.DataFrame,
-                  *, uncorrelated_label: str = UNCORRELATED_LABEL) -> pd.DataFrame:
+def run_labels(meta: Mapping, config: Mapping | None = None) -> tuple[str, frozenset[str]]:
+    """The anchor label and the probe labels a run declared, with the defaults for older runs.
+
+    ``evaluate.py`` records both in ``run_meta.json``: the anchor is ``analysis.anchor`` from the
+    configuration, the probes every ladder entry whose operator is declared ``ordinal=False``.
+    A folder written before that falls back to the resolved configuration, then to
+    :data:`UNCORRELATED_LABEL` and :data:`PROBE_LABELS`, so it keeps rendering as it did.
+    """
+    configured = ((config or {}).get("analysis") or {}).get("anchor")
+    anchor = meta.get("anchor_label") or configured or UNCORRELATED_LABEL
+    recorded = meta.get("probe_labels")
+    return str(anchor), (frozenset(recorded) if recorded is not None else PROBE_LABELS)
+
+
+def normalisation(df: pd.DataFrame, *, uncorrelated_label: str = UNCORRELATED_LABEL,
+                  probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
     """Anchors that put every metric on one dimensionless scale.
 
     Raw mean squared error and a raw transport distance are not comparable, so a *damage
@@ -135,7 +149,7 @@ def normalisation(df: pd.DataFrame,
     ):
         clean = float(g.loc[g["level"] == 0, "value"].median()) if (g["level"] == 0).any() \
             else float("nan")
-        high, source = _uncorrelated_anchor(g, uncorrelated_label)
+        high, source = _uncorrelated_anchor(g, uncorrelated_label, probe_labels)
         span = high - clean
         # The scale is the LARGEST value anywhere in the group, not the median. The median is
         # defeated in exactly the case this guard exists for: a metric invariant to the
@@ -162,7 +176,8 @@ def normalisation(df: pd.DataFrame,
     return pd.DataFrame(rows)
 
 
-def _uncorrelated_anchor(g: pd.DataFrame, preferred: str) -> tuple[float, str]:
+def _uncorrelated_anchor(g: pd.DataFrame, preferred: str,
+                         probe_labels: frozenset[str] = PROBE_LABELS) -> tuple[float, str]:
     """Estimate the value two statistically identical but unaligned fields would give."""
     if preferred and (g["degradation"] == preferred).any():
         sub = g[g["degradation"] == preferred]
@@ -178,7 +193,7 @@ def _uncorrelated_anchor(g: pd.DataFrame, preferred: str) -> tuple[float, str]:
             return float(top["value"].median()), f"{label}@max"
 
     # Otherwise fall back to the worst severity level of any ordinal axis, and say so.
-    ordinal = g[~g["degradation"].isin(PROBE_LABELS)]
+    ordinal = g[~g["degradation"].isin(probe_labels)]
     if ordinal.empty:
         return float("nan"), "none"
     worst = ordinal.loc[ordinal["value"].abs().idxmax()]
@@ -279,7 +294,7 @@ def response_direction(df: pd.DataFrame,
 
 def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                    block_length: int = 10, n_bootstrap: int = 200,
-                   seed: int = 0) -> pd.DataFrame:
+                   seed: int = 0, probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
     """One row per (dataset, metric, field, ladder axis) with the criteria of group A.
 
     Args:
@@ -293,6 +308,8 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
             intervals.
         n_bootstrap: Bootstrap resamples.
         seed: Bootstrap seed.
+        probe_labels: Ladder labels that are probes or anchors rather than monotone axes; the
+            run's declaration, from :func:`run_labels`.
     """
     rng = np.random.default_rng(seed)
     reference = df[df["level"] == 0]
@@ -356,7 +373,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
     magnitude = df.assign(_abs=df["value"].abs())
     frame_scales = magnitude.groupby([*keys, "frame_index"], observed=True)["_abs"].max()
     group_scales = magnitude.groupby(keys, observed=True)["_abs"].max()
-    largest = _largest_responses(ladder, reference, directions, keys)
+    largest = _largest_responses(ladder, reference, directions, keys, probe_labels)
 
     for (dataset, metric, field, axis), g in ladder.groupby(
         ["dataset", "metric", "field", "degradation"], observed=True
@@ -365,7 +382,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
         group_scale = float(group_scales.loc[(dataset, metric, field)])
         levels = g["level"].to_numpy()
         values = g["value"].to_numpy()
-        is_probe = axis in PROBE_LABELS
+        is_probe = axis in probe_labels
         # Every ordering statistic below is computed on the value multiplied by this sign, so
         # "rises with damage" holds by construction and the four of them need no direction
         # argument. The reported values stay in the metric's own units.
@@ -505,7 +522,8 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
 
 
 def _largest_responses(ladder: pd.DataFrame, reference: pd.DataFrame,
-                       directions: Mapping[tuple, int], keys: list[str]) -> dict[tuple, float]:
+                       directions: Mapping[tuple, int], keys: list[str],
+                       probe_labels: frozenset[str] = PROBE_LABELS) -> dict[tuple, float]:
     """The largest median departure from clean any ordinal level produces, per metric and field.
 
     Oriented by the metric's direction. It is the scale the blindness bound falls back to when the
@@ -513,7 +531,7 @@ def _largest_responses(ladder: pd.DataFrame, reference: pd.DataFrame,
     can still be shown not to respond to that anchor's operator.
     """
     clean = reference.groupby(keys, observed=True)["value"].median()
-    ordinal = ladder[~ladder["degradation"].isin(PROBE_LABELS)]
+    ordinal = ladder[~ladder["degradation"].isin(probe_labels)]
     out: dict[tuple, float] = {}
     for key, g in ordinal.groupby(keys, observed=True):
         if key not in clean.index:
@@ -855,7 +873,9 @@ def _block_bootstrap_rho(
 # --- probes --------------------------------------------------------------------------
 
 
-def probe_summary(df: pd.DataFrame, norm: pd.DataFrame) -> pd.DataFrame:
+def probe_summary(df: pd.DataFrame, norm: pd.DataFrame, *,
+                  uncorrelated_label: str = UNCORRELATED_LABEL,
+                  probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
     """One row per (dataset, metric, field) for the non-monotone probes.
 
     Reports the IN-4 damage score alongside the ladder severity level whose damage is closest, which
@@ -867,14 +887,22 @@ def probe_summary(df: pd.DataFrame, norm: pd.DataFrame) -> pd.DataFrame:
     Emitting a row carrying only the group keys made the card generator write a trap-test
     line with an em dash for its score, which a reader cannot distinguish from a trap test
     that ran and could not be scored.
+
+    When the anchor is degenerate the impostor has no damage, so ``gaussian_impostor_relative``
+    reports its departure from clean as a fraction of the largest departure any ordinary level
+    produced, both in the metric's own direction -- the interim number issues/037 proposes. For a
+    phase-blind metric it reads about 1e-15: the fake prediction moves it no more than round-off
+    while a blur moves it fully. It is NaN whenever a damage exists, so the two never sit together.
     """
     scored = add_damage(df, norm)
+    directions = response_direction(df, norm)
+    degenerate = norm.set_index(["dataset", "metric", "field"])["degenerate"].to_dict()
     rows = []
     for (dataset, metric, field), g in scored.groupby(
         ["dataset", "metric", "field"], observed=True
     ):
         record = {"dataset": dataset, "metric": metric, "field": field}
-        present = sorted(PROBE_LABELS & set(g["degradation"].unique()))
+        present = sorted(probe_labels & set(g["degradation"].unique()))
         if not present:
             continue
         for label in present:
@@ -882,10 +910,17 @@ def probe_summary(df: pd.DataFrame, norm: pd.DataFrame) -> pd.DataFrame:
             damage = float(sub["damage"].median())
             record[f"{label}_value"] = float(sub["value"].median())
             record[f"{label}_damage"] = damage
-            if label != UNCORRELATED_LABEL:
+            if label != uncorrelated_label:
                 # The anchor's nearest severity level is the largest translation by construction,
                 # so reporting it would add a column that carries no information.
-                record[f"{label}_nearest_level"] = _nearest_level(g, damage, exclude=label)
+                record[f"{label}_nearest_level"] = _nearest_level(g, damage, exclude=label,
+                                                                  probe_labels=probe_labels)
+        if "gaussian_impostor" in present:
+            key = (dataset, metric, field)
+            record["gaussian_impostor_relative"] = (
+                _relative_response(g, "gaussian_impostor", directions.get(key, 1), probe_labels)
+                if bool(degenerate.get(key, False)) else np.nan
+            )
         rows.append(record)
     if not rows:
         # Empty, but still carrying the group keys: every consumer filters this frame by
@@ -895,9 +930,26 @@ def probe_summary(df: pd.DataFrame, norm: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def _nearest_level(g: pd.DataFrame, damage: float, exclude: str) -> str:
+def _relative_response(g: pd.DataFrame, label: str, sign: int,
+                       probe_labels: frozenset[str]) -> float:
+    """A probe's departure from clean as a fraction of the largest ordinary-level departure."""
+    clean = float(g.loc[g["level"] == 0, "value"].median())
+    scale = float(np.nanmax(np.abs(g["value"].to_numpy()))) or 1.0
+    ordinal = g[(~g["degradation"].isin(probe_labels)) & (g["level"] > 0)]
+    if ordinal.empty:
+        return float("nan")
+    medians = ordinal.groupby(["degradation", "level"], observed=True)["value"].median()
+    largest = float((sign * (medians - clean)).max())
+    if not np.isfinite(largest) or largest < DEGENERATE_SPAN * scale:
+        return float("nan")                    # the ladder itself is round-off: no scale at all
+    probe = sign * (float(g.loc[g["degradation"] == label, "value"].median()) - clean)
+    return probe / largest
+
+
+def _nearest_level(g: pd.DataFrame, damage: float, exclude: str,
+                   probe_labels: frozenset[str] = PROBE_LABELS) -> str:
     """The ordinal severity level whose damage is closest to ``damage``, for interpretation."""
-    ordinal = g[(~g["degradation"].isin(PROBE_LABELS)) & (g["level"] > 0)]
+    ordinal = g[(~g["degradation"].isin(probe_labels)) & (g["level"] > 0)]
     if ordinal.empty or not np.isfinite(damage):
         return ""
     medians = ordinal.groupby(["degradation", "level", "severity"], observed=True)[
@@ -1017,23 +1069,28 @@ class Analysis:
     probes: pd.DataFrame
     card: pd.DataFrame
     """Unflagged; :func:`flag` is the report's business, and cards never carry flags."""
+    anchor_label: str = UNCORRELATED_LABEL
+    probe_labels: frozenset[str] = PROBE_LABELS
 
 
-def analyse(rows: pd.DataFrame, *, block_length: int = 10, n_bootstrap: int = 200,
-            seed: int = 0) -> Analysis:
+def analyse(rows: pd.DataFrame, *, meta: Mapping | None = None, config: Mapping | None = None,
+            block_length: int = 10, n_bootstrap: int = 200, seed: int = 0) -> Analysis:
     """Every statistic of one run, in one call.
 
     The report driver and the card evidence loader used to repeat this sequence by hand and had
     drifted: the evidence loader skipped :func:`add_damage`, so a card carried none of the damage
-    based columns its report showed.
+    based columns its report showed. ``meta`` and ``config`` are the run's ``run_meta.json`` and
+    resolved configuration, from which the anchor and probe labels are read (:func:`run_labels`).
     """
-    norm = normalisation(rows)
+    anchor, probe_labels = run_labels(meta or {}, config)
+    norm = normalisation(rows, uncorrelated_label=anchor, probe_labels=probe_labels)
     scored = add_damage(rows, norm)
     axes = summarise_axes(scored, norm=norm, block_length=block_length, n_bootstrap=n_bootstrap,
-                          seed=seed)
-    probes = probe_summary(rows, norm)
+                          seed=seed, probe_labels=probe_labels)
+    probes = probe_summary(rows, norm, uncorrelated_label=anchor, probe_labels=probe_labels)
     return Analysis(norm=norm, scored=scored, axes=axes, probes=probes,
-                    card=report_card(axes, probes, norm))
+                    card=report_card(axes, probes, norm), anchor_label=anchor,
+                    probe_labels=probe_labels)
 
 
 def flag(card: pd.DataFrame, thresholds: Mapping[str, float]) -> pd.DataFrame:
@@ -1103,7 +1160,8 @@ LEVEL_KEYS: tuple[str, ...] = ("field", "degradation", "level", "severity")
 
 
 def damage_by_level(scored: pd.DataFrame, *, field: str | None = None,
-                    family: str | None = None) -> pd.DataFrame:
+                    family: str | None = None,
+                    probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
     """Median damage over frames at every strength of every degradation, one column per metric.
 
     The table issues/035 asks for: two metrics can order every degradation identically and still
@@ -1116,7 +1174,7 @@ def damage_by_level(scored: pd.DataFrame, *, field: str | None = None,
     """
     if "damage" not in scored.columns:
         raise KeyError("damage_by_level needs the damage column; pass add_damage(df, norm)")
-    sub = scored[(scored["level"] > 0) & ~scored["degradation"].isin(PROBE_LABELS)]
+    sub = scored[(scored["level"] > 0) & ~scored["degradation"].isin(probe_labels)]
     if "severity_degenerate" in sub.columns:
         sub = sub[~sub["severity_degenerate"].fillna(False).astype(bool)]
     if field is not None:
@@ -1135,7 +1193,8 @@ def _metric_columns(wide: pd.DataFrame) -> list[str]:
     return [c for c in wide.columns if c not in LEVEL_KEYS]
 
 
-def concordance_matrix(scored: pd.DataFrame, *, field: str | None = None) -> pd.DataFrame:
+def concordance_matrix(scored: pd.DataFrame, *, field: str | None = None,
+                       probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
     """Lin's concordance between every pair of metrics' damage, over the rows of damage_by_level.
 
     The redundancy matrix asks whether two metrics order the ladder alike; this asks whether they
@@ -1143,7 +1202,7 @@ def concordance_matrix(scored: pd.DataFrame, *, field: str | None = None) -> pd.
     45(1):255-268). On the pinned run comparison_1790639359, MAE and MSE rank-correlate at 0.986
     and have a concordance of 0.699. Pairwise-complete; empty below two metrics or three rows.
     """
-    wide = damage_by_level(scored, field=field)
+    wide = damage_by_level(scored, field=field, probe_labels=probe_labels)
     metrics = _metric_columns(wide)
     if len(metrics) < 2 or len(wide) < 3:
         return pd.DataFrame()
@@ -1155,7 +1214,8 @@ def concordance_matrix(scored: pd.DataFrame, *, field: str | None = None) -> pd.
     return out
 
 
-def participation_ratio_of_metrics(scored: pd.DataFrame) -> float:
+def participation_ratio_of_metrics(scored: pd.DataFrame,
+                                   probe_labels: frozenset[str] = PROBE_LABELS) -> float:
     """The effective number of independent directions the metrics' damage responses span.
 
     (sum lambda)^2 / sum lambda^2 over the eigenvalues of the metric-by-metric covariance of the
@@ -1166,7 +1226,7 @@ def participation_ratio_of_metrics(scored: pd.DataFrame) -> float:
     Returns:
         A number between 1 and the metric count, or NaN below two metrics or three complete rows.
     """
-    wide = damage_by_level(scored)
+    wide = damage_by_level(scored, probe_labels=probe_labels)
     metrics = _metric_columns(wide)
     complete = wide[metrics].dropna()
     if len(metrics) < 2 or len(complete) < 3:

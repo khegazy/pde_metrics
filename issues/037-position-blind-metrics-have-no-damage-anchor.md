@@ -87,10 +87,13 @@ the axis's own largest value — also round-off — and reported `rho` of 0.0 / 
 the metric's largest value in the same frame across every axis, and those correlations are
 withheld (`tests/test_robustness.py::test_rank_correlation_is_withheld_when_every_value_on_the_axis_is_round_off`).
 
-An interim option, not implemented because it is a reporting decision: the probe summary could
-report the impostor's raw value as a fraction of the metric's largest ladder response when the
-anchor is degenerate. For `spectrum_l2` that fraction is about 1e-15, which says "phase-blind"
-without needing the anchor.
+The interim option is now implemented: when the anchor is degenerate, the probe summary reports
+`gaussian_impostor_relative`, the impostor's departure from clean as a fraction of the metric's
+largest ladder response, and the blindness bound (`damage_max_ucb`, `blindness_q`) is read on the
+same relative scale. The anchor itself is also configurable (`analysis.anchor`, recorded as
+`anchor_label`), which is the hook a second realisation or a `mean_field` anchor (`issues/040`)
+would use. Neither makes these metrics' damage comparable with the others', so the issue stays
+open.
 
 ## Why the obvious fixes do not work
 

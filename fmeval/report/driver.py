@@ -90,19 +90,15 @@ def build_context(
     maps = _read_maps(folder.data / "error_maps.npz")
     spectrum = _read_csv(folder.data / "calibration_spectrum.csv")
 
-    norm = an.normalisation(df)
-    scored = an.add_damage(df, norm)
-    axes = an.summarise_axes(scored, norm=norm, block_length=block_length,
-                             n_bootstrap=bootstrap)
-    probes = an.probe_summary(df, norm)
-    card = an.flag(an.report_card(axes, probes, norm), thresholds or {})
+    analysis = an.analyse(df, meta=meta, config=config, block_length=block_length,
+                          n_bootstrap=bootstrap)
 
     return ReportContext(
-        df=scored,
-        norm=norm,
-        axes=axes,
-        probes=probes,
-        card=card,
+        df=analysis.scored,
+        norm=analysis.norm,
+        axes=analysis.axes,
+        probes=analysis.probes,
+        card=an.flag(analysis.card, thresholds or {}),
         spectrum=spectrum,
         maps=maps,
         meta=meta,
@@ -110,6 +106,8 @@ def build_context(
         style=Style.build(theme, metrics=df["metric"].unique(),
                           axes=df["degradation"].unique()),
         thresholds=thresholds or {},
+        anchor_label=analysis.anchor_label,
+        probe_labels=analysis.probe_labels,
     )
 
 
@@ -285,6 +283,12 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
                     f"{_fmt(row['gaussian_impostor_damage'])}, where 1 is the value two "
                     "unrelated fields receive"
                 )
+            elif np.isfinite(row.get("gaussian_impostor_relative", np.nan)):
+                bits.append(
+                    "this metric has no damage scale here, and the spectrum-matched Gaussian "
+                    f"field moves it by {row['gaussian_impostor_relative']:.1e} of its largest "
+                    "response to any ordinary degradation"
+                )
             flags = str(row.get("flags", ""))
             bits.append(
                 f"flagged: {escape(flags)}" if flags else
@@ -330,7 +334,7 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
         )
 
     if key == "robustness":
-        return (
+        text = (
             "Two constructions are used. The spectrum-matched Gaussian field retains every "
             "Fourier amplitude and replaces every phase, so its energy spectrum and "
             "two-point correlation are identical to the reference to machine precision "
@@ -340,6 +344,14 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
             "random offset, which preserves every statistic exactly while removing "
             "alignment, and therefore defines a damage of one."
         )
+        if ctx.anchor_label != an.UNCORRELATED_LABEL:
+            text += (
+                " In this run the damage scale is anchored instead on the ladder entry "
+                f"\\texttt{{{escape(ctx.anchor_label)}}} (set by \\texttt{{analysis.anchor}}), "
+                "so a damage of one is the value that entry receives rather than the value of "
+                "an unrelated field."
+            )
+        return text
 
     if key == "reproducibility":
         config = _dump_yaml(ctx.config)

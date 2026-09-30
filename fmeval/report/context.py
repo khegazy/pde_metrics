@@ -21,6 +21,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from fmeval.analysis import PROBE_LABELS, UNCORRELATED_LABEL
+
 from .registry import RendererUnavailable
 from .style import Style
 
@@ -79,6 +81,10 @@ class ReportContext:
     config: dict[str, Any] = dc_field(default_factory=dict)
     style: Style = dc_field(default_factory=Style)
     thresholds: Mapping[str, float] = dc_field(default_factory=dict)
+    anchor_label: str = UNCORRELATED_LABEL
+    """The ladder entry that defines damage 1 in this run (``analysis.anchor``)."""
+    probe_labels: frozenset[str] = PROBE_LABELS
+    """Ladder entries that are probes or anchors rather than monotone axes, as the run declared."""
 
     # --- graceful skip ---------------------------------------------------------------
 
@@ -91,11 +97,9 @@ class ReportContext:
 
     @property
     def ordinal_axes(self) -> list[str]:
-        """Ladder axes that carry an ordering, excluding the probes."""
-        from fmeval.analysis import PROBE_LABELS
-
+        """Ladder axes that carry an ordering, excluding the probes the run declared."""
         labels = self.df.loc[self.df["level"] > 0, "degradation"].unique()
-        return sorted(str(a) for a in labels if a not in PROBE_LABELS)
+        return sorted(str(a) for a in labels if a not in self.probe_labels)
 
     @property
     def metrics(self) -> list[str]:

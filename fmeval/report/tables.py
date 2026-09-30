@@ -100,11 +100,12 @@ def deception_table(ctx, df, opts) -> TableResult:
     """
     ctx.require(not ctx.probes.empty, "no probe rows")
     frame = ctx.probes.copy()
+    anchor = ctx.anchor_label
     keep = [c for c in (
         "metric", "field",
         "gaussian_impostor_value", "gaussian_impostor_damage",
-        "gaussian_impostor_nearest_level",
-        "uncorrelated_value", "uncorrelated_damage",
+        "gaussian_impostor_nearest_level", "gaussian_impostor_relative",
+        f"{anchor}_value", f"{anchor}_damage",
     ) if c in frame.columns]
     return TableResult(
         frame=frame[keep],
@@ -115,8 +116,9 @@ def deception_table(ctx, df, opts) -> TableResult:
         headers={"gaussian_impostor_value": "Gaussian value",
                  "gaussian_impostor_damage": "Gaussian damage",
                  "gaussian_impostor_nearest_level": "equivalent severity level",
-                 "uncorrelated_value": "unrelated value",
-                 "uncorrelated_damage": "unrelated damage"},
+                 "gaussian_impostor_relative": "Gaussian, fraction of largest response",
+                 f"{anchor}_value": "anchor value",
+                 f"{anchor}_damage": "anchor damage"},
         formats={"metric": "code", "field": "code",
                  "gaussian_impostor_nearest_level": "code"},
         note="A damage near 1 for the unrelated field is expected by construction: it is "

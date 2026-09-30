@@ -313,3 +313,25 @@ def test_imshow_is_confined_to_the_style_helper():
                     f"{path.name}:{number} calls imshow directly; spatial fields must go "
                     "through style.show_field, which applies the (X, Y) transpose"
                 )
+
+
+def test_context_reads_the_declared_anchor(tmp_path):
+    """A run that declares another anchor is analysed against it, and the plots follow."""
+    df = pd.concat([make_frame(metric=m, field="vorticity", n_frames=8, noise=0.05, seed=1,
+                               axes={"gaussian_blur": [1.0, 2.0, 3.0, 4.0],
+                                     "gaussian_impostor": [8.0], "flat": [10.0, 10.0]})
+                    for m in ("mse", "mae")], ignore_index=True)
+    folder = RunFolder(tmp_path / "mse_2").create()
+    write_results(folder, df)
+    digest = write_config(folder, {"metrics": ["mse"], "analysis": {"anchor": "flat"}}, [])
+    write_run_meta(folder, run_id=2, config_hash=digest, metric="mse", dataset="synthetic_d",
+                   n_frames=8, fields=["vorticity"], analysis_grid=16,
+                   ladder_axes=["gaussian_blur"], n_severity_levels=8, seed=1,
+                   anchor_label="flat", probe_labels=["flat", "gaussian_impostor"])
+    ctx = build_context(folder, bootstrap=0)
+    assert ctx.anchor_label == "flat"
+    assert ctx.norm["anchor_source"].eq("flat").all()
+    assert "flat" not in ctx.ordinal_axes
+    rendered = render(folder, ctx, formats=("png",))
+    assert not [r for r in rendered if r.status == "error"], \
+        [(r.name, r.reason) for r in rendered if r.status == "error"]

@@ -432,6 +432,19 @@ considers the Gaussian field about as bad as displacing the reference by 16 cell
 
 **Where it appears.** `deception_table.csv`.
 
+### `gaussian_impostor_relative` — the fake prediction against the metric's own largest response, when there is no damage scale
+
+**What it is.** Populated only when `degenerate` is true, so it never sits beside a damage score.
+The fake prediction's departure from the reference value, divided by the largest departure any
+ordinary strength produced, both in the metric's own direction. For a metric built only on the
+amplitude spectrum it reads about 1e-15: the fake prediction moves it no more than round-off
+while a blur moves it fully. This is the interim number `issues/037` proposes for metrics whose
+anchor is degenerate.
+
+**Caveats.** Not a damage: it compares the trap with the ladder, not with an unrelated field.
+
+**Where it appears.** `deception_table.csv`; the trap-test table on the metric's page.
+
 ### `uncorrelated_value`, `uncorrelated_damage` — the unrelated field that anchors the damage scale
 
 **What it is.** The value the metric gives two fields with identical statistics and no
@@ -586,7 +599,11 @@ damage score.
 
 ### `anchor_source`
 
-Where the unrelated-field anchor came from. `uncorrelated` means it was measured properly.
+Where the unrelated-field anchor came from. It is the ladder entry named by `analysis.anchor`
+in the run's configuration, `uncorrelated` by default, and `run_meta.json` records it as
+`anchor_label` together with the entries declared not to be monotone axes (`probe_labels`). A run
+may declare another non-ordinal entry, and D = 1 then means whatever that entry measures — not
+comparable with the default scale. `uncorrelated` means it was measured properly.
 Anything ending in `@max` means the run had no anchor entry and the largest configured
 translation was used instead, which **understates** it — a 16-cell displacement reaches
 only about 0.6 of the true value on this data, so damage scores would be inflated by

@@ -694,3 +694,63 @@ def test_participation_ratio_counts_independent_responses():
     assert one < two <= 2.0
     assert np.isnan(an.participation_ratio_of_metrics(_scored(make_frame(
         axes={"p": [1.0, 2.0, 3.0], "uncorrelated": [9.0, 9.0]}))[0]))
+
+
+# --- the declared anchor ---------------------------------------------------------------------
+
+
+def test_a_probe_under_a_new_label_is_not_ranked_as_an_axis():
+    df = make_frame(axes={"a": [1.0, 2.0], "flat": [9.0, 10.0]})
+    default = an.summarise_axes(df, n_bootstrap=0)
+    assert not bool(_axis(default, "flat")["is_probe"]), "undeclared, a new label is an axis"
+    declared = an.summarise_axes(df, n_bootstrap=0, probe_labels=frozenset({"flat"}))
+    row = _axis(declared, "flat")
+    assert bool(row["is_probe"]) and np.isnan(row["rho"]), (
+        "an anchor declared non-ordinal was scored as a monotone axis")
+
+
+def test_probe_summary_follows_the_declared_anchor():
+    df = make_frame(axes={"a": [2.0, 5.0], "gaussian_impostor": [5.0], "flat": [10.0, 10.0]})
+    labels = frozenset({"gaussian_impostor", "flat"})
+    norm = an.normalisation(df, uncorrelated_label="flat", probe_labels=labels)
+    row = an.probe_summary(df, norm, uncorrelated_label="flat", probe_labels=labels).iloc[0]
+    assert row["flat_damage"] == pytest.approx(1.0)
+    assert "flat_nearest_level" not in row.index, "the anchor's nearest level carries nothing"
+    assert row["gaussian_impostor_nearest_level"] == "a=2"
+
+
+def test_run_labels_fall_back_for_folders_that_predate_the_declaration():
+    assert an.run_labels({}) == ("uncorrelated", an.PROBE_LABELS)
+    declared = an.run_labels({"anchor_label": "flat", "probe_labels": ["flat"]})
+    assert declared == ("flat", frozenset({"flat"}))
+    assert an.run_labels({}, {"analysis": {"anchor": "flat"}})[0] == "flat"
+
+
+def test_analyse_follows_the_run_declaration():
+    df = make_frame(axes={"a": [1.0, 2.0], "flat": [10.0, 10.0]})
+    result = an.analyse(df, meta={"anchor_label": "flat", "probe_labels": ["flat"]},
+                        n_bootstrap=0)
+    assert result.anchor_label == "flat" and result.probe_labels == frozenset({"flat"})
+    assert result.norm.iloc[0]["anchor_source"] == "flat"
+    assert bool(_axis(result.axes, "flat")["is_probe"])
+
+
+def test_impostor_relative_response_is_reported_only_when_the_anchor_is_degenerate():
+    """issues/037's interim number: a phase-blind metric prints ~1e-15 without an anchor."""
+    degenerate = make_frame(n_frames=6, axes={"gaussian_blur": [1e-1, 3e-1],
+                                              "gaussian_impostor": [1.8e-16],
+                                              "uncorrelated": [1.5e-16] * 3})
+    row = an.probe_summary(degenerate, an.normalisation(degenerate)).iloc[0]
+    assert np.isnan(row["gaussian_impostor_damage"])
+    assert row["gaussian_impostor_relative"] < 1e-12
+    usable = make_frame(axes={"a": [2.0, 5.0, 8.0], "gaussian_impostor": [5.0],
+                              "uncorrelated": [10.0, 10.0]})
+    row = an.probe_summary(usable, an.normalisation(usable)).iloc[0]
+    assert np.isnan(row["gaussian_impostor_relative"]), "never printed beside a usable damage"
+
+
+def test_impostor_relative_response_is_a_fraction_of_the_largest_ladder_response():
+    df = make_frame(n_frames=6, axes={"gaussian_blur": [0.1, 0.3], "gaussian_impostor": [0.15],
+                                      "uncorrelated": [1.5e-16] * 3})
+    row = an.probe_summary(df, an.normalisation(df)).iloc[0]
+    assert row["gaussian_impostor_relative"] == pytest.approx(0.5)

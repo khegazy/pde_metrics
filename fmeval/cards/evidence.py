@@ -45,6 +45,11 @@ class Run:
     axes: pd.DataFrame
     probes: pd.DataFrame
     norm: pd.DataFrame
+    scored: pd.DataFrame
+    """The rows with ``damage`` attached."""
+    card: pd.DataFrame
+    """One row per metric and field, unflagged: cards never carry flags."""
+    anchor_label: str = an.UNCORRELATED_LABEL
 
 
 def load_run(folder: Path) -> Run:
@@ -80,10 +85,10 @@ def load_run(folder: Path) -> Run:
 
     meta_path = folder / "data" / "run_meta.json"
     meta = json.loads(meta_path.read_text()) if meta_path.is_file() else {}
-    norm = an.normalisation(rows)
-    return Run(folder=folder, rows=rows, meta=meta, norm=norm,
-               axes=an.summarise_axes(rows, norm=norm),
-               probes=an.probe_summary(rows, norm))
+    analysis = an.analyse(rows, meta=meta)
+    return Run(folder=folder, rows=rows, meta=meta, norm=analysis.norm, axes=analysis.axes,
+               probes=analysis.probes, scored=analysis.scored, card=analysis.card,
+               anchor_label=analysis.anchor_label)
 
 
 def _cell(row: Any, column: str) -> Any:
@@ -207,7 +212,7 @@ def canaries_block(run: Run, metric: str) -> str:
         lines.append(
             f"| {row['field']} | {_fmt(_cell(row, 'gaussian_impostor_damage'))} | "
             f"{'`' + str(nearest) + '`' if nearest is not None else '—'} | "
-            f"{_fmt(_cell(row, 'uncorrelated_value'))} |"
+            f"{_fmt(_cell(row, f'{run.anchor_label}_value'))} |"
         )
     lines += [
         "",

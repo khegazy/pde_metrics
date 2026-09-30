@@ -1010,6 +1010,18 @@ def _synthetic_run(tmp_path):
     return folder
 
 
+def test_load_run_goes_through_the_one_analysis_entry_point(tmp_path):
+    """The evidence loader and the report once computed different things from one run."""
+    from fmeval import analysis
+    from fmeval.cards import evidence
+
+    run = evidence.load_run(_synthetic_run(tmp_path))
+    assert set(analysis.RESPONSE_COLUMNS) <= set(run.axes.columns)
+    assert "damage" in run.scored.columns
+    assert "selectivity" in run.card.columns
+    assert run.anchor_label == "uncorrelated"
+
+
 def _bundle_copy(tmp_path, monkeypatch):
     """A throwaway copy of the mse bundle, so generators never touch tracked files."""
     import shutil
