@@ -631,3 +631,29 @@ def test_profile_table_is_the_source_of_the_headline_profile(run_folder):
     header = (run_folder.data / "profile_table.csv").read_text().splitlines()[0]
     for column in ("most_sensitive_axis", "least_sensitive_axis", "elasticity_displacement"):
         assert column in header
+
+
+
+def test_a_folder_from_before_these_columns_still_renders(tmp_path):
+    """Every newer input missing at once: no energy_changed, calibration, severity_nominal or
+    severity_name in the rows, and no anchor_label, probe_labels or preserves in run_meta.json."""
+    import json
+
+    df = synthetic_rows(metrics=("mse", "mae")).drop(columns=["energy_changed", "severity_name"])
+    folder = _write_run(RunFolder(tmp_path / "old_1").create(), df)
+    meta_path = folder.data / "run_meta.json"
+    meta = json.loads(meta_path.read_text())
+    for entry in meta.get("registries", {}).get("degradations", {}).values():
+        for key in ("preserves", "calibration", "ensemble", "defaults", "fields"):
+            entry.pop(key, None)
+    meta.pop("anchor_label", None)
+    meta.pop("probe_labels", None)
+    meta_path.write_text(json.dumps(meta))
+    assert not {"calibration", "severity_nominal"} & set(df.columns)
+
+    ctx = build_context(folder, bootstrap=20)
+    rendered = render(folder, ctx, formats=("png",))
+    write_document(folder, ctx, rendered)
+    assert not [r for r in rendered if r.status == "error"], \
+        [(r.name, r.reason) for r in rendered if r.status == "error"]
+    assert ctx.anchor_label == "uncorrelated"
