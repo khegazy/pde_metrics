@@ -68,9 +68,9 @@ This table reports what was measured and grades none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift (against severity (distance)) | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| density | 0.639 | `coarsen_bandlimited` | `lowpass_ideal` | `coarsen_bandlimited` | 0.999 | 1.21 |
-| velocity | 0.617 | `coarsen_bandlimited` | `highpass_ideal` | `coarsen_bandlimited` | 0.999 | 2.08 |
-| vorticity | 0.144 | `additive_noise` | `highpass_butterworth` | — | 0.992 | 1.03 |
+| density | 0.6 | `coarsen_bandlimited` | `lowpass_ideal` | `coarsen_bandlimited` | 0.999 | 1.21 |
+| velocity | 0.463 | `coarsen_bandlimited` | `highpass_ideal` | `coarsen_bandlimited` | 0.999 | 2.08 |
+| vorticity | 0.13 | `additive_noise` | `highpass_butterworth` | — | 0.992 | 1.03 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
