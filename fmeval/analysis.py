@@ -27,9 +27,10 @@ from itertools import pairwise
 
 import numpy as np
 import pandas as pd
-from scipy.stats import mannwhitneyu, spearmanr
+from scipy.stats import false_discovery_control, mannwhitneyu, spearmanr
 
 from . import stats
+from .context import derive_rng
 
 log = logging.getLogger(__name__)
 
@@ -57,10 +58,24 @@ HALF_DAMAGE_FRACTION: float = 0.5
 #: six levels and 1.99 over the first three, and the second is the double-penalty exponent.
 ELASTICITY_LEVELS: int = 3
 
+#: The negligibility margin on the damage scale. A degradation on which the metric's largest
+#: damage is provably below it is listed as one the metric does not respond to. Half the
+#: detection fraction, so "detected" and "blind" can never both hold. A repository convention,
+#: fixed once and never per metric; the analogue followed is the smallest effect size of interest
+#: of equivalence testing (Lakens 2017, Soc. Psychol. Personal. Sci. 8(4):355-362).
+BLINDNESS_MARGIN: float = SENSITIVITY_FRACTION / 2
+
+#: Confidence of the upper bound on the largest damage (the bootstrap quantile it is read at).
+BLINDNESS_CONFIDENCE: float = 0.90
+
+#: False-discovery level below which an axis is listed as one the metric does not respond to.
+FDR_LEVEL: float = 0.10
+
 #: Per-axis columns added by :func:`_response_statistics`, in output order.
 RESPONSE_COLUMNS: tuple[str, ...] = (
     "cliffs_delta_min", "elasticity", "elasticity_x", "response_shape",
     "severity_10", "severity_50", "severity_resolution", "field_change_max",
+    "blindness_block_length", "damage_max_ucb", "blindness_q",
 )
 _TEXT_COLUMNS = frozenset({"elasticity_x", "response_shape"})
 
@@ -340,6 +355,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
     magnitude = df.assign(_abs=df["value"].abs())
     frame_scales = magnitude.groupby([*keys, "frame_index"], observed=True)["_abs"].max()
     group_scales = magnitude.groupby(keys, observed=True)["_abs"].max()
+    largest = _largest_responses(ladder, reference, directions, keys)
 
     for (dataset, metric, field, axis), g in ladder.groupby(
         ["dataset", "metric", "field", "degradation"], observed=True
@@ -461,6 +477,8 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                 g, oriented, oriented_clean, target,
                 np.nan if response_span is None else response_span,
                 frame_scale, axis_round_off, record["separability_auc_min"],
+                largest.get(key, np.nan), n_bootstrap,
+                derive_rng(seed, f"blindness/{dataset}/{metric}/{axis}", 0, str(field)),
             ))
         if "damage" in g.columns:
             damage = g["damage"].to_numpy()
@@ -471,7 +489,37 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
             )
         rows.append(record)
 
-    return pd.DataFrame(rows)
+    axes = pd.DataFrame(rows)
+    if "blindness_p" in axes.columns:
+        # Benjamini & Yekutieli (2001, Ann. Stat. 29(4):1165-1188): valid under arbitrary
+        # dependence, which the rows have -- they share frames and fields, and metrics correlate.
+        # Adjusted over every row of the run, the several hundred tests the protocol runs at once.
+        tested = axes["blindness_p"].notna()
+        axes["blindness_q"] = np.nan
+        if tested.any():
+            axes.loc[tested, "blindness_q"] = false_discovery_control(
+                axes.loc[tested, "blindness_p"].to_numpy(float), method="by")
+        axes = axes.drop(columns="blindness_p")
+    return axes
+
+
+def _largest_responses(ladder: pd.DataFrame, reference: pd.DataFrame,
+                       directions: Mapping[tuple, int], keys: list[str]) -> dict[tuple, float]:
+    """The largest median departure from clean any ordinal level produces, per metric and field.
+
+    Oriented by the metric's direction. It is the scale the blindness bound falls back to when the
+    unrelated-field anchor is degenerate (issues/037), so that a metric which cannot see the anchor
+    can still be shown not to respond to that anchor's operator.
+    """
+    clean = reference.groupby(keys, observed=True)["value"].median()
+    ordinal = ladder[~ladder["degradation"].isin(PROBE_LABELS)]
+    out: dict[tuple, float] = {}
+    for key, g in ordinal.groupby(keys, observed=True):
+        if key not in clean.index:
+            continue
+        medians = g.groupby(["degradation", "level"], observed=True)["value"].median()
+        out[key] = float((directions.get(key, 1) * (medians - clean.loc[key])).max())
+    return out
 
 
 def _signed(span: float | None, sign: int) -> float | None:
@@ -507,7 +555,8 @@ def _response_x(g: pd.DataFrame, levels: list) -> tuple[np.ndarray, str]:
 
 def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean: float,
                          target: float | None, span: float, frame_scale: Mapping[int, float],
-                         axis_round_off: bool, auc: float) -> dict[str, object]:
+                         axis_round_off: bool, auc: float, largest_response: float,
+                         n_bootstrap: int, rng: np.random.Generator) -> dict[str, object]:
     """How strongly, how early and how precisely one axis moves the metric: the RESPONSE_COLUMNS.
 
     Everything is read on the oriented scale the ordering statistics use, so a metric where larger
@@ -527,12 +576,28 @@ def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean
       the flow along the trajectory (six orders on density) from what would otherwise be counted as
       scatter. A target-valued metric is already on a drift-free scale and is not divided.
     * ``field_change_max`` -- the median ``energy_changed`` at the harshest usable level.
+    * ``blindness_block_length``, ``damage_max_ucb``, ``blindness_q`` -- see
+      :func:`_blindness_bound`.
+      Computed on round-off axes too: a response that is round-off against a finite span is
+      exactly a response provably below the margin.
+
+    ``rng`` is derived from the group's own keys, never the generator the rank-correlation
+    interval shares across groups, so nothing here can move an existing interval.
     """
     frames = np.sort(g["frame_index"].unique())
     levels = sorted(g["level"].unique())
-    Y = (oriented.pivot_table(index="frame_index", columns="level", values="value",
-                              aggfunc="median", observed=True)
-         .reindex(index=frames, columns=levels).to_numpy(float))
+
+    def by_frame_and_level(frame: pd.DataFrame, column: str) -> np.ndarray:
+        return (frame.pivot_table(index="frame_index", columns="level", values=column,
+                                  aggfunc="median", observed=True)
+                .reindex(index=frames, columns=levels).to_numpy(float))
+
+    Y = by_frame_and_level(oriented, "value")
+    Z = Y
+    if target is None:
+        scale = np.array([frame_scale.get(f, np.nan) for f in frames], dtype=float)
+        scale[scale <= 0] = np.nan
+        Z = Y / scale[:, None]
     x, x_name = _response_x(g, levels)
     out = _withheld_response()
     out.update(
@@ -543,16 +608,18 @@ def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean
             if "energy_changed" in g.columns else np.nan
         ),
     )
+    if target is None and n_bootstrap > 0 and "damage" in g.columns:
+        D = by_frame_and_level(g, "damage")
+        if not np.isfinite(D).any() and np.isfinite(largest_response) and largest_response > 0:
+            D = (Y - oriented_clean) / largest_response          # the anchor is degenerate
+        if np.isfinite(D).any():
+            out.update(_blindness_bound(D, Z, n_bootstrap, rng))
     if axis_round_off:
         return out
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
         y = np.nanmedian(Y, axis=0)
-        if target is None:
-            scale = np.array([frame_scale.get(f, np.nan) for f in frames], dtype=float)
-            scale[scale <= 0] = np.nan
-            Y = Y / scale[:, None]
-        resolution = stats.fisher_severity_resolution(x, Y)
+        resolution = stats.fisher_severity_resolution(x, Z)
         out["severity_resolution"] = (
             float(np.nanmedian(resolution)) if np.isfinite(resolution).any()
             or np.isinf(resolution).any() else np.nan
@@ -568,6 +635,46 @@ def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean
             severity_10=stats.severity_at(xs, ys, oriented_clean + SENSITIVITY_FRACTION * span),
             severity_50=stats.severity_at(xs, ys, oriented_clean + HALF_DAMAGE_FRACTION * span),
         )
+    return out
+
+
+def _blindness_bound(D: np.ndarray, Z: np.ndarray, n_bootstrap: int,
+                     rng: np.random.Generator) -> dict[str, float]:
+    """An upper bound on the largest damage one degradation produces, and how surely it is small.
+
+    A metric that does not respond significantly is not thereby shown to be blind to the
+    degradation; that is accepting the null. Equivalence testing reverses the logic (Schuirmann
+    1987, J. Pharmacokinet. Biopharm. 15(6):657-680; Lakens 2017): the claim is made only when the
+    upper confidence bound of the response lies below a margin fixed in advance.
+
+    Frames are resampled in moving blocks, and in each resample the largest per-level median damage
+    is taken. ``damage_max_ucb`` is the :data:`BLINDNESS_CONFIDENCE` quantile of those, and
+    ``blindness_p`` the fraction of resamples in which it reached :data:`BLINDNESS_MARGIN` -- a
+    bootstrap tail fraction, not a test p-value -- which :func:`summarise_axes` adjusts across
+    the run and drops. On one trajectory the resampling measures variation along it, not between
+    realisations (issues/004).
+
+    The block length is estimated on ``Z``, the frame-scaled trace, so the drift of the flow along
+    the trajectory is not read as persistence (Politis & White 2004).
+
+    Args:
+        D: Frames by levels, damage (or the relative response when the anchor is degenerate).
+        Z: Frames by levels, the same values divided by the metric's scale in each frame.
+    """
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        block = stats.politis_white_block_length(np.nanmedian(Z, axis=1))
+        out: dict[str, float] = {"blindness_block_length": block}
+        if len(D) < 2 * block:
+            return out
+        draws = np.array([
+            np.nanmax(np.nanmedian(D[idx], axis=0))
+            for idx in stats.block_bootstrap(len(D), block, n_bootstrap, rng)
+        ])
+    draws = draws[np.isfinite(draws)]
+    if draws.size:
+        out["damage_max_ucb"] = float(np.percentile(draws, 100 * BLINDNESS_CONFIDENCE))
+        out["blindness_p"] = float(np.mean(draws >= BLINDNESS_MARGIN))
     return out
 
 

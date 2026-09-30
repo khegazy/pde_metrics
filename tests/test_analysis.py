@@ -481,3 +481,77 @@ def test_round_off_axis_withholds_every_response_column():
     for column in ("elasticity", "severity_10", "severity_50", "severity_resolution"):
         assert np.isnan(row[column]), f"{column} was reported from round-off: {row[column]}"
     assert row["response_shape"] == ""
+
+
+# --- the blindness bound ---------------------------------------------------------------------
+
+
+def _bounded(df: pd.DataFrame, n_bootstrap: int = 100) -> pd.DataFrame:
+    scored, norm = _scored(df)
+    return an.summarise_axes(scored, norm=norm, n_bootstrap=n_bootstrap)
+
+
+def test_flat_axis_is_provably_blind_and_a_responsive_one_is_not():
+    axes = _bounded(make_frame(axes={"flat": [1e-3] * 4, "steep": [1.0, 2.0, 3.0, 4.0],
+                                     "uncorrelated": [10.0, 10.0]}, noise=1e-4, n_frames=40))
+    flat, steep = _axis(axes, "flat"), _axis(axes, "steep")
+    assert flat["damage_max_ucb"] < an.BLINDNESS_MARGIN
+    assert flat["blindness_q"] < an.FDR_LEVEL, "no resample reached the margin"
+    assert steep["damage_max_ucb"] > an.BLINDNESS_MARGIN
+    assert steep["blindness_q"] == pytest.approx(1.0), "every resample reached the margin"
+
+
+def test_the_margin_sits_below_the_detection_fraction():
+    """'Detected' (a tenth of the span) and 'blind' (below the margin) can never both hold."""
+    assert an.BLINDNESS_MARGIN < an.SENSITIVITY_FRACTION
+
+
+def test_bound_is_relative_to_the_largest_response_when_the_anchor_is_degenerate():
+    """issues/037: a metric that cannot see the anchor has no damage, yet its blindness to the
+    anchor's operator is exactly the finding. The bound is then read against its largest ladder
+    response, and the norm frame's `degenerate` says which scale was used."""
+    df = make_frame(axes={"gaussian_blur": [0.1, 0.3], "translate_x": [1.5e-16] * 3,
+                          "uncorrelated": [1.5e-16] * 3})
+    scored, norm = _scored(df)
+    assert bool(norm.iloc[0]["degenerate"])
+    axes = an.summarise_axes(scored, norm=norm, n_bootstrap=50)
+    assert _axis(axes, "translate_x")["blindness_q"] < an.FDR_LEVEL
+    assert _axis(axes, "gaussian_blur")["blindness_q"] == pytest.approx(1.0)
+
+
+def test_bound_is_withheld_for_a_target_valued_metric():
+    """Damage is on the raw ratio for a two-sided metric, so a bound on it would not be oriented."""
+    df = make_frame(axes={"a": [1.2, 1.5, 2.0, 3.0], "uncorrelated": [3.0, 3.0]}, n_frames=20)
+    df.loc[df["level"] == 0, "value"] = 1.0
+    df["target_value"] = 1.0
+    row = _axis(_bounded(df))
+    assert np.isnan(row["damage_max_ucb"]) and np.isnan(row["blindness_q"])
+
+
+def test_blindness_q_grows_with_the_number_of_rows_it_is_adjusted_over():
+    """Benjamini-Yekutieli across every row of the run: more rows, a larger adjustment."""
+    edge = {"edge": [0.02, 0.03, 0.04, 0.05], "uncorrelated": [1.0, 1.0]}
+    alone = make_frame(axes=edge, noise=0.01, n_frames=40, seed=4)
+    crowded = pd.concat(
+        [alone] + [make_frame(metric=m, axes={"x": [1.0, 2.0], "y": [2.0, 3.0],
+                                              "uncorrelated": [1.0, 1.0]}, n_frames=40)
+                   for m in ("p", "q", "r")],
+        ignore_index=True,
+    )
+    q_alone = _axis(_bounded(alone), "edge")["blindness_q"]
+    axes = _bounded(crowded)
+    mine = axes[(axes["metric"] == "m") & (axes["degradation"] == "edge")]
+    q_crowded = mine.iloc[0]["blindness_q"]
+    assert 0 < q_alone < 1, f"the edge axis should sit near the margin, got q = {q_alone}"
+    assert q_crowded >= q_alone
+
+
+def test_block_length_is_estimated_on_the_frame_scaled_trace():
+    """A metric whose magnitude drifts along the trajectory (density grows six orders) must not
+    have that drift read as persistence: the block length comes from the frame-scaled trace."""
+    df = make_frame(axes={"a": [1.0, 2.0, 3.0, 4.0], "uncorrelated": [10.0, 10.0]}, n_frames=40)
+    df["value"] = df["value"] * 1.2 ** df["frame_index"]
+    row = _axis(_bounded(df))
+    assert row["blindness_block_length"] <= 3, (
+        f"block length {row['blindness_block_length']} reflects the drift, not the dependence"
+    )

@@ -334,6 +334,51 @@ of `selectivity`, which reads each degradation's damage per unit of field change
 
 **Where it appears.** `axis_response__field-*.csv`.
 
+### `damage_max_ucb`, `blindness_q` — is the metric provably unresponsive to this degradation?
+
+**What they are.** A metric that does not respond *significantly* to a degradation has not thereby
+been shown not to respond; that would be accepting the null. These two turn the question round,
+as equivalence testing does (Schuirmann 1987; Lakens 2017). `damage_max_ucb` is the 90% upper
+confidence bound on the largest median damage the degradation produces. `blindness_q` is the
+false-discovery-adjusted evidence that this largest damage stays below 0.05. A degradation is
+listed in `blind_axes` when `blindness_q` is below 0.10, which reads: **the response is provably
+below 0.05 at 90% confidence.**
+
+**How they are computed.** Frames are resampled in moving blocks, and in each resample the largest
+per-strength median damage is taken. The bound is the 90th percentile of those; the fraction of
+resamples that reached 0.05 is then adjusted across every row of the run with the
+Benjamini–Yekutieli procedure (Benjamini and Yekutieli 2001), which stays valid when the rows
+depend on one another, as these do: they share frames and fields, and metrics correlate. The
+margin 0.05 is half the detection fraction behind `sensitivity_level`, so a degradation can never
+be both "detected" and "provably unresponsive"; it is a convention fixed once in the code.
+
+**When the anchor is degenerate** — a metric that cannot see the unrelated field — the damage does
+not exist, yet not responding to the anchor's operator is exactly the finding. The bound is then
+read against the metric's largest response anywhere on the ladder instead, and the `degenerate`
+column says a row used that scale.
+
+**Range.** `damage_max_ucb` on the damage scale; `blindness_q` from 0 to 1, small meaning the
+response is provably small.
+
+**Caveats.** Not a verdict: being unresponsive to a harmless displacement is the property a
+position-tolerant metric is built for. The resampling runs along one trajectory, so the bound
+reflects variation along it, not between independent realisations. Both are empty for a metric
+with a target value, whose damage is on the raw ratio and is not oriented.
+
+**Where they appear.** `axis_response__field-*.csv`; `blind_axes` in the summary.
+
+### `blindness_block_length` — how many consecutive frames each resampling block held
+
+**What it is.** The block length the bound above used. Frames are autocorrelated, so blocks must
+be longer than the flow's decorrelation time or the bound is tighter than the data support.
+
+**How it is computed.** Estimated per row with the Politis–White selector (Politis and White 2004;
+Patton, Politis and White 2009) on the trace of the frame-scaled values, so the drift of the flow
+along the trajectory is not read as persistence, and capped at a quarter of the frames. The rank
+correlation interval `rho_ci_lo`/`rho_ci_hi` does not use it; it keeps its fixed block length.
+
+**Where it appears.** `axis_response__field-*.csv`.
+
 ---
 
 ## Group B: can the metric be fooled?
