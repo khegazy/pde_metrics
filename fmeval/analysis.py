@@ -29,6 +29,8 @@ import numpy as np
 import pandas as pd
 from scipy.stats import mannwhitneyu, spearmanr
 
+from . import stats
+
 log = logging.getLogger(__name__)
 
 #: Ladder labels that are probes or reference measurements, not monotone axes.
@@ -44,6 +46,23 @@ SENSITIVITY_FRACTION: float = 0.10
 
 #: Fraction of the uncorrelated limit at which a metric counts as saturated.
 SATURATION_FRACTION: float = 0.90
+
+#: Fraction of the clean-to-unrelated span at which the half-damage severity is read. Fixed
+#: once here, like the two fractions above.
+HALF_DAMAGE_FRACTION: float = 0.5
+
+#: How many of an axis's mildest usable levels the elasticity is fitted over. The slope over a
+#: whole ladder that saturates understates the small-damage exponent: on the pinned run
+#: comparison_1790639359, MSE on vorticity under translate_subpixel has a slope of 1.76 over all
+#: six levels and 1.99 over the first three, and the second is the double-penalty exponent.
+ELASTICITY_LEVELS: int = 3
+
+#: Per-axis columns added by :func:`_response_statistics`, in output order.
+RESPONSE_COLUMNS: tuple[str, ...] = (
+    "cliffs_delta_min", "elasticity", "elasticity_x", "response_shape",
+    "severity_10", "severity_50", "severity_resolution", "field_change_max",
+)
+_TEXT_COLUMNS = frozenset({"elasticity_x", "response_shape"})
 
 #: Relative size below which a quantity counts as round-off rather than signal, measured
 #: against the largest value in the same group.
@@ -277,6 +296,18 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
         }
         if norm is not None else {}
     )
+    # The anchor itself, for a target-valued metric: its onset span must be measured on the same
+    # |log(value / target)| scale its ordering statistics run on, not in raw units.
+    highs = (
+        {
+            key: (float("nan") if bool(degenerate) else float(high))
+            for key, high, degenerate in zip(
+                norm.set_index(["dataset", "metric", "field"]).index,
+                norm["value_uncorrelated"], norm["degenerate"], strict=True,
+            )
+        }
+        if norm is not None else {}
+    )
     rows = []
 
     # Severity levels that resolved to the same experiment as a milder one are not independent
@@ -372,6 +403,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                 monotone_fraction=np.nan, separability_auc_min=np.nan,
                 sensitivity_level=np.nan, saturation_level=np.nan,
             )
+            record.update(_withheld_response())
         else:
             per_frame = _per_frame_rho(oriented, frame_scale)
             lo, hi = _block_bootstrap_rho(oriented, rng, block_length, n_bootstrap,
@@ -416,6 +448,20 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                     oriented, oriented_clean, SATURATION_FRACTION,
                     _signed(spans.get((dataset, metric, field)), sign), group_scale),
             )
+            key = (dataset, metric, field)
+            if target is None:
+                response_span = _signed(spans.get(key), sign)
+            else:
+                high = highs.get(key, np.nan)
+                response_span = (
+                    float(_target_distance(pd.Series([high]), target).iloc[0]) - oriented_clean
+                    if np.isfinite(high) else np.nan
+                )
+            record.update(_response_statistics(
+                g, oriented, oriented_clean, target,
+                np.nan if response_span is None else response_span,
+                frame_scale, axis_round_off, record["separability_auc_min"],
+            ))
         if "damage" in g.columns:
             damage = g["damage"].to_numpy()
             # All-NaN whenever the anchor is degenerate, which is the documented outcome for a
@@ -431,6 +477,98 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
 def _signed(span: float | None, sign: int) -> float | None:
     """Orient a shared span, so a threshold on oriented values uses an oriented target."""
     return None if span is None else sign * span
+
+
+def _withheld_response() -> dict[str, object]:
+    """The response columns for a row that has no ordering to describe."""
+    return {c: "" if c in _TEXT_COLUMNS else np.nan for c in RESPONSE_COLUMNS}
+
+
+def _response_x(g: pd.DataFrame, levels: list) -> tuple[np.ndarray, str]:
+    """A severity per level that INCREASES with level, and the name of what it is.
+
+    A calibrated operator records the absolute value it resolved to, which can fall with level
+    and differs per field: on the pinned run comparison_1790639359 a vorticity low-pass records
+    cutoffs 33.3, 17.1, 8.0 and 4.7 under the name "energy removed". A slope against that has the
+    wrong sign and the wrong label, so a calibrated axis uses the configured fraction, which rises
+    with level and means the same on every field. An uncalibrated knob that falls with level (a
+    retained fraction) is read through its reciprocal.
+    """
+    calibration = g["calibration"].iloc[0] if "calibration" in g.columns else ""
+    calibrated = isinstance(calibration, str) and calibration != ""
+    column = "severity_nominal" if calibrated and "severity_nominal" in g.columns else "severity"
+    x = g.groupby("level", observed=True)[column].median().reindex(levels).to_numpy(float)
+    name = f"{column} ({g['severity_name'].iloc[0]})" if "severity_name" in g.columns else column
+    if len(x) > 1 and x[-1] < x[0]:
+        with np.errstate(divide="ignore"):
+            return 1.0 / x, f"1/{name}"
+    return x, name
+
+
+def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean: float,
+                         target: float | None, span: float, frame_scale: Mapping[int, float],
+                         axis_round_off: bool, auc: float) -> dict[str, object]:
+    """How strongly, how early and how precisely one axis moves the metric: the RESPONSE_COLUMNS.
+
+    Everything is read on the oriented scale the ordering statistics use, so a metric where larger
+    is better and a target-valued metric are handled as the other statistics handle them; ``span``
+    is the clean-to-unrelated span on that scale (NaN when the anchor is degenerate).
+
+    * ``cliffs_delta_min`` -- ``2 A - 1`` of the weakest adjacent pair, so 0 is no separation
+      (Cliff 1993, *Psychol. Bull.* 114(3):494-509; Vargha & Delaney 2000, *J. Educ. Behav. Stat.*
+      25(2):101-132).
+    * ``elasticity`` -- the log-log slope of the median response against the severity named by
+      ``elasticity_x``, over the mildest :data:`ELASTICITY_LEVELS` levels.
+    * ``response_shape`` -- see :func:`fmeval.stats.fit_response_shape`.
+    * ``severity_10`` / ``severity_50`` -- the severity at which the median crosses 10% / 50% of
+      the span, interpolated; the clean field is the point at severity zero.
+    * ``severity_resolution`` -- the median over adjacent pairs of the paired-step Fisher bound,
+      on values divided by the metric's largest value in the same frame, which removes the drift of
+      the flow along the trajectory (six orders on density) from what would otherwise be counted as
+      scatter. A target-valued metric is already on a drift-free scale and is not divided.
+    * ``field_change_max`` -- the median ``energy_changed`` at the harshest usable level.
+    """
+    frames = np.sort(g["frame_index"].unique())
+    levels = sorted(g["level"].unique())
+    Y = (oriented.pivot_table(index="frame_index", columns="level", values="value",
+                              aggfunc="median", observed=True)
+         .reindex(index=frames, columns=levels).to_numpy(float))
+    x, x_name = _response_x(g, levels)
+    out = _withheld_response()
+    out.update(
+        cliffs_delta_min=2.0 * auc - 1.0,
+        elasticity_x=x_name,
+        field_change_max=(
+            float(g.loc[g["level"] == levels[-1], "energy_changed"].median())
+            if "energy_changed" in g.columns else np.nan
+        ),
+    )
+    if axis_round_off:
+        return out
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        y = np.nanmedian(Y, axis=0)
+        if target is None:
+            scale = np.array([frame_scale.get(f, np.nan) for f in frames], dtype=float)
+            scale[scale <= 0] = np.nan
+            Y = Y / scale[:, None]
+        resolution = stats.fisher_severity_resolution(x, Y)
+        out["severity_resolution"] = (
+            float(np.nanmedian(resolution)) if np.isfinite(resolution).any()
+            or np.isinf(resolution).any() else np.nan
+        )
+    response = y - oriented_clean
+    out.update(
+        elasticity=stats.elasticity(x[:ELASTICITY_LEVELS], response[:ELASTICITY_LEVELS]),
+        response_shape=stats.fit_response_shape(x, response)[0],
+    )
+    if np.isfinite(span):
+        xs, ys = np.r_[0.0, x], np.r_[oriented_clean, y]
+        out.update(
+            severity_10=stats.severity_at(xs, ys, oriented_clean + SENSITIVITY_FRACTION * span),
+            severity_50=stats.severity_at(xs, ys, oriented_clean + HALF_DAMAGE_FRACTION * span),
+        )
+    return out
 
 
 def _per_frame_rho(g: pd.DataFrame,

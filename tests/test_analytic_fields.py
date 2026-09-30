@@ -192,3 +192,19 @@ def test_a_translated_anchor_is_unreliable_on_a_single_mode():
                                                "severities": [0, 1, 2, 3, 4, 5]}})
     anchor = rows[(rows["metric"] == "mse") & (rows["degradation"] == "uncorrelated")]["value"]
     assert np.ptp(anchor.to_numpy()) > 1.0, f"anchor values span only {np.ptp(anchor):.3f}"
+
+
+def test_the_analysis_reports_the_oracle_elasticity():
+    """What summarise_axes prints for elasticity reproduces the closed forms: linear on a shock,
+    quadratic (MSE) and linear (MAE) on a smooth feature."""
+    step = an.summarise_axes(_evaluate("step", _translation([1, 2, 4]), width=32, height=2.0),
+                             n_bootstrap=0)
+    bump = an.summarise_axes(_evaluate("bump", _translation([0.1875, 0.375, 0.75])),
+                             n_bootstrap=0)
+    for metric in ("mse", "mae"):
+        row = step[step["metric"] == metric].iloc[0]
+        assert row["elasticity"] == pytest.approx(1.0, abs=1e-3), f"{metric} on the step"
+        assert row["elasticity_x"] == "severity (distance)"
+    by_metric = bump.set_index("metric")["elasticity"]
+    assert by_metric["mse"] == pytest.approx(2.0, rel=0.05)
+    assert by_metric["mae"] == pytest.approx(1.0, rel=0.05)

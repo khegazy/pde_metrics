@@ -226,6 +226,114 @@ cannot rank anything above that point.
 
 **Where it appears.** `axis_detail__field-*.csv`; `saturation_level_median` in the summary.
 
+## Group A, continued: how strongly, how early, and how precisely?
+
+The rank statistics above say whether a metric puts the strengths in the right order. They say
+nothing about how much it moves: mean absolute error and mean squared error rank-correlate at
+0.986 across the ladder of the pinned run `comparison_1790639359`, yet at an eighth of a cell of
+displacement one charges 47 times the damage of the other on vorticity. The quantities below
+describe the size and shape of the response. More sensitive is not better: the double penalty
+this project exists to address *is* excess sensitivity to a displacement that is physically
+benign, so read every one of them against what the degradation does.
+
+All of them are computed on the same oriented scale as the ordering statistics, so a metric where
+larger is better and a metric with a target value are read in their own direction.
+
+### `cliffs_delta_min` — the level separation, centred on zero
+
+**What it is.** `separability_auc_min` rescaled so that 0 means two neighbouring strengths are
+indistinguishable and 1 that they never overlap: 2 × AUC − 1 (Cliff 1993; Vargha and Delaney
+2000). Nothing new is measured; zero-for-nothing is simply easier to read.
+
+**Range.** −1 to 1. Negative means the neighbouring strengths are reliably in the wrong order.
+
+**Where it appears.** `axis_detail__field-*.csv`; the portrait figure.
+
+### `elasticity`, `elasticity_x` — how fast the response grows with the strength
+
+**What it is.** The slope of log(response) against log(strength) over the three mildest usable
+strengths: 1 means the metric grows in proportion to the strength, 2 with its square, near 0 that
+it barely notices. For a small displacement of a smooth field mean squared error gives 2 and mean
+absolute error 1 — the double penalty as a number. `elasticity_x` names the strength the slope is
+taken against, because the exponent depends on it.
+
+**How it is computed.** Ordinary least squares of ln(median value − clean value) on ln(strength).
+On a degradation whose strength is calibrated per field the recorded absolute value can fall as
+the damage rises — a low-pass records its cutoff wavenumber, 33, 17, 8 and 4.7 on vorticity — so
+the slope is taken against the configured fraction instead (`severity_nominal`), which rises and
+means the same on every field. A strength that falls with damage and is not calibrated is read
+through its reciprocal (`1/severity`). Only the mildest levels are used because a ladder that
+saturates bends the whole-range slope down: over all six sub-pixel shifts mean squared error on
+vorticity has a slope of 1.76, over the first three 1.99.
+
+**Range.** Any real number. Needs three strengths with a positive response.
+
+**Caveats.** It depends on the field, not only on the metric. The closed-form tests show it: mean
+squared error has slope 2 for a displaced smooth bump and exactly 1 for a displaced step, because
+at a sharp edge the error grows with the displaced area, not its square. Read it per field.
+
+**Where it appears.** `axis_response__field-*.csv`; the sparkline figure; `elasticity_displacement`
+in the summary.
+
+### `response_shape` — one word for the curve
+
+**What it is.** Which of a straight line, a power law and a saturating exponential describes the
+median response best, or `undetermined`.
+
+**How it is computed.** Each form is fitted by least squares and compared by the small-sample
+corrected Akaike criterion (Hurvich and Tsai 1989); a form is only tried with at least two more
+strengths than it has parameters, and forms within two units of the best are treated as tied, the
+simplest winning. With three strengths only the line can be fitted, so the label is `undetermined`
+rather than a default.
+
+**Caveats.** A description of three to six points, not a model.
+
+**Where it appears.** `axis_response__field-*.csv`.
+
+### `severity_10`, `severity_50` — the strength at which the metric has moved a tenth, and half, of the way to an unrelated field
+
+**What it is.** `sensitivity_level` in the units of `elasticity_x`: the strength at which the median
+value crosses 10% (and 50%) of the shared clean-to-unrelated span. "Fires at 0.37 cells" instead of
+"fires at level 2".
+
+**How it is computed.** Interpolation between the two strengths that bracket the crossing, linear in
+the logarithm of the strength so a ladder of doublings is treated evenly, and linear on the segment
+that starts from the undamaged reference at strength zero.
+
+**Range.** Strength units, or `--` when the crossing is not reached within the ladder or the span is
+degenerate. `severity_50` is often `--`: few degradations reach half of an unrelated field.
+
+**Caveats.** Between levels the number is an interpolation convention, good to about one step.
+
+**Where it appears.** `axis_response__field-*.csv`.
+
+### `severity_resolution` — how precisely the metric's value pins down the strength
+
+**What it is.** Slope and scatter in one number: from one snapshot of this metric, the strength
+could be inferred to about ± this much. A steep but noisy metric and a flat quiet one both score
+badly, which the rank correlation cannot tell apart.
+
+**How it is computed.** For each pair of neighbouring strengths, the frame-to-frame scatter of the
+step between them divided by its mean, times the step in strength — the Cramér–Rao bound built from
+the Fisher information (Seung and Sompolinsky 1993). The step is taken within each frame, and the
+values are first divided by the metric's largest value in the same frame, so the drift of the flow
+along the trajectory — six orders of magnitude on density — is not counted as scatter. The median
+over pairs is reported. A target-valued metric is already on a drift-free scale and is not divided.
+
+**Range.** Strength units, 0 upward; `inf` where the median does not move between two strengths.
+
+**Caveats.** A lower bound, tight only when the scatter is small.
+
+**Where it appears.** `axis_response__field-*.csv`.
+
+### `field_change_max` — how much the harshest strength changed the field
+
+**What it is.** The median `energy_changed` at the harshest usable strength of the degradation: the
+mean squared difference from the reference divided by the reference variance. It is the denominator
+of `selectivity`, which reads each degradation's damage per unit of field change.
+
+**Where it appears.** `axis_response__field-*.csv`.
+
 ---
 
 ## Group B: can the metric be fooled?
