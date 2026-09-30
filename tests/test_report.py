@@ -154,34 +154,66 @@ def test_unknown_section_raises():
 # --- end to end ------------------------------------------------------------------------------
 
 
-@pytest.fixture
-def run_folder(tmp_path):
-    """A synthetic run folder, complete enough to render."""
-    frames = []
-    for metric in ("mse", "mae"):
-        for field in ("vorticity", "density"):
-            frames.append(make_frame(
-                metric=metric, field=field, n_frames=8, noise=0.05, seed=1,
-                axes={
-                    "gaussian_blur": [1.0, 2.0, 3.0, 4.0],
-                    "translate_x": [1.0, 3.0, 6.0, 9.0],
-                    "gaussian_impostor": [8.0],
-                    "uncorrelated": [10.0, 10.0, 10.0],
-                },
-            ))
-    df = pd.concat(frames, ignore_index=True)
+#: The synthetic ladder every report test renders: an axis of each length the real runs have
+#: (four, three and two usable levels), plus the two probes.
+LADDER = {
+    "gaussian_blur": [1.0, 2.0, 3.0, 4.0],
+    "translate_x": [1.0, 3.0, 6.0, 9.0],
+    "translate_subpixel": [0.5, 1.0, 2.0],
+    "median_blur": [2.0, 3.0],
+    "gaussian_impostor": [8.0],
+    "uncorrelated": [10.0, 10.0, 10.0],
+}
+#: The operator behind each ladder label, as the pipeline records it.
+OPERATORS = {"translate_x": "translate", "uncorrelated": "random_large_translation"}
+FIELDS = ("vorticity", "density", "velocity")
 
-    folder = RunFolder(tmp_path / "mse_1").create()
+
+def synthetic_rows(metrics=("mse", "mae", "rmse", "flat")) -> pd.DataFrame:
+    """Rows for a four-metric, three-field run.
+
+    ``mae`` is the square root of ``mse`` everywhere, anchor included -- the shape relation of
+    the real pair, so the two rank-correlate perfectly while disagreeing in magnitude; ``rmse`` is
+    proportional to ``mae``, so their damage is identical; ``flat`` is zero everywhere, a metric
+    with no damage scale.
+    """
+    transform = {"mse": lambda v: v, "mae": np.sqrt, "rmse": lambda v: 0.7 * np.sqrt(v),
+                 "flat": lambda v: 0.0 * v}
+    frames = []
+    for metric in metrics:
+        for field in FIELDS:
+            axes = {k: [float(transform[metric](v)) for v in vals] for k, vals in LADDER.items()}
+            frames.append(make_frame(metric=metric, field=field, n_frames=8,
+                                     noise=0.0 if metric == "flat" else 0.05, seed=1, axes=axes))
+    df = pd.concat(frames, ignore_index=True)
+    df["degradation_op"] = df["degradation_op"].astype(str).replace(OPERATORS)
+    df["energy_changed"] = np.where(df["level"] > 0, (0.1 * df["severity"]) ** 2, 0.0)
+    return df
+
+
+def _write_run(folder: RunFolder, df: pd.DataFrame) -> RunFolder:
     write_results(folder, df)
-    digest = write_config(folder, {"metrics": ["mse"], "seed": 1, "note": "a_b"},
-                          ["metrics=[mse]"])
+    digest = write_config(folder, {"metrics": sorted(df["metric"].unique()), "seed": 1,
+                                   "note": "a_b"}, ["metrics=[mse]"])
     write_maps(folder, {"mse:vorticity__gaussian_blur_l2__t3": np.abs(
         np.random.default_rng(0).standard_normal((16, 8)))})
     write_run_meta(folder, run_id=1, config_hash=digest, metric="mse",
-                   dataset="synthetic_d", n_frames=8, fields=["vorticity"],
-                   analysis_grid=16, ladder_axes=["gaussian_blur"], n_severity_levels=12, seed=1,
+                   dataset="synthetic_d", n_frames=8, fields=list(FIELDS),
+                   analysis_grid=16, ladder_axes=sorted(LADDER), n_severity_levels=15, seed=1,
                    command="python evaluate.py metrics=[mse]")
     return folder
+
+
+@pytest.fixture
+def run_folder(tmp_path):
+    """A synthetic run folder, complete enough to render."""
+    return _write_run(RunFolder(tmp_path / "mse_1").create(), synthetic_rows())
+
+
+def _degenerate_folder(tmp_path) -> RunFolder:
+    """Every metric zero everywhere: no damage scale anywhere."""
+    return _write_run(RunFolder(tmp_path / "flat_1").create(),
+                      synthetic_rows(metrics=("flat",)))
 
 
 def test_full_render(run_folder):
@@ -250,6 +282,7 @@ def test_single_metric_run_skips_cross_metric_renderers(run_folder):
     ctx = build_context(run_folder, bootstrap=0)
     ctx.df = ctx.df[ctx.df["metric"] == "mse"]
     ctx.card = ctx.card[ctx.card["metric"] == "mse"]
+    ctx.axes = ctx.axes[ctx.axes["metric"] == "mse"]
     rendered = render(run_folder, ctx, formats=("png",))
     skipped = {r.name: r.reason for r in rendered if r.status == "skipped"}
     assert "cost_frontier" in skipped
@@ -361,3 +394,52 @@ def test_displacement_prose_names_what_each_geometric_axis_leaves_unchanged(tmp_
     write_document(folder, ctx, render(folder, ctx, formats=("png",)))
     text = (folder.sections / "09_displacement.tex").read_text()
     assert "amplitude spectrum" in text and "test-verified" in text
+
+
+
+# --- plumbing --------------------------------------------------------------------------------
+
+
+def test_items_within_a_section_follow_their_declared_order(run_folder, monkeypatch):
+    """Registration order is what places a renderer; without it, the name did."""
+    import dataclasses
+
+    from fmeval.report import registry as rr
+    from fmeval.report.context import TableResult
+
+    def one_row(ctx, df, opts):
+        return TableResult(frame=pd.DataFrame({"x": [1]}), caption="t")
+
+    base = rr.TABLES["report_card"]
+    monkeypatch.setitem(rr.TABLES, "zz_first", dataclasses.replace(
+        base, name="zz_first", fn=one_row, section=7, order=5))
+    monkeypatch.setitem(rr.TABLES, "aa_second", dataclasses.replace(
+        base, name="aa_second", fn=one_row, section=7, order=50))
+    ctx = build_context(run_folder, bootstrap=0)
+    rendered = render(run_folder, ctx, only=["zz_first", "aa_second"], formats=("png",))
+    write_document(run_folder, ctx, rendered)
+    text = (run_folder.sections / "07_selectivity.tex").read_text()
+    assert text.index("zz_first") < text.index("aa_second")
+
+
+def test_long_tables_use_longtable():
+    frame = pd.DataFrame({"metric": ["a_b"] * 3, "value": [1.0, 2.0, 3.0]})
+    tex = latex.booktabs_table(frame, caption="c", label="l", long=True)
+    assert "\\begin{longtable}" in tex and "\\endhead" in tex
+    assert "\\begin{table}" not in tex, "a longtable cannot sit inside a float"
+    short = latex.booktabs_table(frame, caption="c", label="l")
+    assert "\\begin{table}" in short
+
+
+def test_wide_tables_are_set_small():
+    wide = pd.DataFrame({f"c{i}": [1.0] for i in range(13)})
+    assert "\\footnotesize" in latex.booktabs_table(wide, caption="c", label="l")
+
+
+def test_metric_styles_differ_when_colours_repeat():
+    from fmeval.report.style import Style
+
+    names = [f"m{i}" for i in range(9)]
+    style = Style.build(metrics=names)
+    assert style.metric_colour("m0") == style.metric_colour("m8"), "eight colours, nine metrics"
+    assert style.metric_style("m0") != style.metric_style("m8")

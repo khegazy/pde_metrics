@@ -193,6 +193,7 @@ def _emit_table(folder, spec, result, outcome) -> None:
         headers=result.headers,
         note=result.note,
         landscape=result.landscape or result.frame.shape[1] > 8,
+        long=result.long,
     )
     (folder.tables / f"{stem}.tex").write_text(tex)
     outcome.files.extend([
@@ -229,7 +230,7 @@ def write_document(folder: RunFolder, ctx: ReportContext,
             body += [escape(section.intro), ""]
         if prose:
             body += [prose, ""]
-        for item in sorted(items, key=lambda i: i.name):
+        for item in sorted(items, key=lambda i: (_declared_order(i), i.name)):
             body.extend(item.latex)
         name = f"{section.number:02d}_{section.key}"
         (folder.sections / f"{name}.tex").write_text("\n".join(body) + "\n")
@@ -239,6 +240,14 @@ def write_document(folder: RunFolder, ctx: ReportContext,
         document(written, title=f"Metric report: {metric}", subtitle=f"dataset: {dataset}")
     )
     return folder.root / "main.tex"
+
+
+def _declared_order(item: Rendered) -> int:
+    """The ``order`` a renderer was registered with, which places it within its section."""
+    from .registry import PLOTS, TABLES
+
+    spec = (PLOTS if item.kind == "plot" else TABLES).get(item.name)
+    return spec.order if spec is not None else 100
 
 
 def _section_prose(key: str, ctx: ReportContext) -> str:

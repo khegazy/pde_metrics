@@ -57,6 +57,8 @@ class TableResult:
     headers: dict[str, str] = dc_field(default_factory=dict)
     landscape: bool = False
     notes: list[str] = dc_field(default_factory=list)
+    long: bool = False
+    """Typeset as a ``longtable`` that breaks across pages, for one row per metric and axis."""
 
 
 @dataclass
