@@ -270,7 +270,10 @@ vorticity has a slope of 1.76, over the first three 1.99.
 
 **Caveats.** It depends on the field, not only on the metric. The closed-form tests show it: mean
 squared error has slope 2 for a displaced smooth bump and exactly 1 for a displaced step, because
-at a sharp edge the error grows with the displaced area, not its square. Read it per field.
+at a sharp edge the error grows with the displaced area, not its square. Read it per field. On the
+pinned run `comparison_1790639359`, over the three smallest sub-pixel shifts, mean squared error
+reads 1.999, 1.999 and 1.986 on density, velocity and vorticity, and mean absolute error 0.999,
+0.999 and 0.992: the turbulent fields behave as smooth fields at that scale.
 
 **Where it appears.** `axis_response__field-*.csv`; the sparkline figure; `elasticity_displacement`
 in the summary.
@@ -301,7 +304,8 @@ the logarithm of the strength so a ladder of doublings is treated evenly, and li
 that starts from the undamaged reference at strength zero.
 
 **Range.** Strength units, or `--` when the crossing is not reached within the ladder or the span is
-degenerate. `severity_50` is often `--`: few degradations reach half of an unrelated field.
+degenerate. `severity_50` is often `--`: few degradations reach half of an unrelated field — on
+the pinned run it is defined on 69 of the 360 rows, `severity_10` on 165.
 
 **Caveats.** Between levels the number is an interpolation convention, good to about one step.
 
@@ -379,6 +383,10 @@ be longer than the flow's decorrelation time or the bound is tighter than the da
 Patton, Politis and White 2009) on the trace of the frame-scaled values, so the drift of the flow
 along the trajectory is not read as persistence, and capped at a quarter of the frames. The rank
 correlation interval `rho_ci_lo`/`rho_ci_hi` does not use it; it keeps its fixed block length.
+
+**Caveats.** On the pinned run the selector returned a median of 21 frames (1 to 22 over 360 rows,
+none at the cap), about twice the fixed 10 the rank-correlation interval uses; `issues/042` records
+what that implies for that interval.
 
 **Where it appears.** `axis_response__field-*.csv`.
 

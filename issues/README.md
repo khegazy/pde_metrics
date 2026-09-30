@@ -43,6 +43,7 @@ Designed, hooks in place, not built.
 |---|---|---|
 | [031](031-saturation-never-reached.md) | No ladder severity level reaches the unrelated-field level | medium |
 | [040](040-mean-field-anchor.md) | A mean-field anchor for metrics that cannot see the translated one | medium |
+| [042](042-rank-interval-block-length-is-half-the-estimate.md) | The rank-correlation interval's fixed 10-frame blocks are half the estimated decorrelation, and its generator is shared across groups | medium |
 | [041](041-subpixel-shift-drops-the-nyquist-mode.md) | A fractional Fourier shift drops the Nyquist mode of an even grid; negligible on the production data | low |
 
 ## Technical debt

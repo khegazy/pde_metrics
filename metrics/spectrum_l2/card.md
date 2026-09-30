@@ -96,6 +96,16 @@ One row per family of degradation and physical field. **Rank correlation** asks 
 
 This table reports what was measured and grades none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
 
+**Profile.**
+
+| field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift (against severity (distance)) | compute cost (x cheapest in this run) |
+|---|---|---|---|---|---|---|
+| density | — | — | — | `additive_noise` `coarsen_bandlimited` `translate_subpixel` `translate_x` | — | 36.6 |
+| velocity | — | — | — | `additive_noise` `coarsen` `coarsen_bandlimited` `translate_subpixel` `translate_x` | — | 62.2 |
+| vorticity | — | — | — | `translate_subpixel` `translate_x` | — | 36.7 |
+
+One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
+
 <!-- END GENERATED performance -->
 
 ## Intuition
@@ -415,9 +425,69 @@ rather than disagreement: those are single-field quantities that fall as the dam
 
 ### Damage beside the other metrics
 
-<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence spectrum_l2`, do not edit -->
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790639359`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence spectrum_l2`.
+**Displacement, density, `translate_subpixel`** (strength: distance).
+
+| metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
+|---|---|---|---|---|---|---|
+| `spectrum_l2` | — | — | — | — | — | — |
+| `mae` | 0.00328 | 0.00655 | 0.0131 | 0.0262 | 0.0521 | 0.103 |
+| `mse` | 1.49e-05 | 5.97e-05 | 0.000238 | 0.000952 | 0.00379 | 0.015 |
+| `rmse` | 0.00386 | 0.00772 | 0.0154 | 0.0309 | 0.0616 | 0.123 |
+| `nrmse` | 0.00362 | 0.00723 | 0.0145 | 0.0289 | 0.0576 | 0.115 |
+
+**Displacement, density, `translate_x`** (strength: distance).
+
+| metric | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| `spectrum_l2` | — | — | — | — | — |
+| `mae` | 0.0262 | 0.0521 | 0.103 | 0.205 | 0.401 |
+| `mse` | 0.000952 | 0.00379 | 0.015 | 0.0584 | 0.211 |
+| `rmse` | 0.0309 | 0.0616 | 0.123 | 0.242 | 0.46 |
+| `nrmse` | 0.0289 | 0.0576 | 0.115 | 0.226 | 0.43 |
+
+**Displacement, velocity, `translate_subpixel`** (strength: distance).
+
+| metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
+|---|---|---|---|---|---|---|
+| `spectrum_l2` | — | — | — | — | — | — |
+| `mae` | 0.00163 | 0.00325 | 0.0065 | 0.013 | 0.0257 | 0.05 |
+| `mse` | 4.76e-06 | 1.91e-05 | 7.61e-05 | 0.000303 | 0.00118 | 0.00445 |
+| `rmse` | 0.00218 | 0.00437 | 0.00873 | 0.0174 | 0.0344 | 0.0667 |
+| `nrmse` | 0.00219 | 0.00437 | 0.00873 | 0.0174 | 0.0343 | 0.0667 |
+
+**Displacement, velocity, `translate_x`** (strength: distance).
+
+| metric | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| `spectrum_l2` | — | — | — | — | — |
+| `mae` | 0.013 | 0.0257 | 0.05 | 0.0951 | 0.18 |
+| `mse` | 0.000303 | 0.00118 | 0.00445 | 0.016 | 0.0541 |
+| `rmse` | 0.0174 | 0.0344 | 0.0667 | 0.127 | 0.233 |
+| `nrmse` | 0.0174 | 0.0343 | 0.0667 | 0.127 | 0.232 |
+
+**Displacement, vorticity, `translate_subpixel`** (strength: distance).
+
+| metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
+|---|---|---|---|---|---|---|
+| `spectrum_l2` | — | — | — | — | — | — |
+| `mae` | 0.0225 | 0.045 | 0.0892 | 0.172 | 0.306 | 0.453 |
+| `mse` | 0.000476 | 0.0019 | 0.00747 | 0.028 | 0.0889 | 0.187 |
+| `rmse` | 0.0218 | 0.0436 | 0.0865 | 0.167 | 0.298 | 0.432 |
+| `nrmse` | 0.0219 | 0.0437 | 0.0868 | 0.169 | 0.304 | 0.447 |
+
+**Displacement, vorticity, `translate_x`** (strength: distance).
+
+| metric | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| `spectrum_l2` | — | — | — | — | — |
+| `mae` | 0.172 | 0.306 | 0.453 | 0.581 | 0.69 |
+| `mse` | 0.028 | 0.0889 | 0.187 | 0.288 | 0.468 |
+| `rmse` | 0.167 | 0.298 | 0.432 | 0.537 | 0.684 |
+| `nrmse` | 0.169 | 0.304 | 0.447 | 0.555 | 0.702 |
+
+Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 an unrelated field; a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
 
 <!-- END GENERATED results_damage_by_level -->
 
