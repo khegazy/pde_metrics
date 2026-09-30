@@ -528,3 +528,37 @@ def test_deception_panel_says_which_metrics_have_no_damage_scale(run_folder):
     data = _figure_data(run_folder, "deception_panel__field-vorticity").set_index("metric")
     assert not bool(data.loc["flat", "has_scale"])
     assert bool(data.loc["mse", "has_scale"])
+
+
+# --- agreement in magnitude --------------------------------------------------------------------
+
+
+def test_concordance_is_below_spearman_for_a_shape_twin(run_folder):
+    outcome = _rendered(run_folder, "concordance_matrix")
+    assert outcome.status == "ok", outcome.reason
+    data = _figure_data(run_folder, "concordance_matrix")
+    pair = data[(data["metric_a"] == "mae") & (data["metric_b"] == "mse")].iloc[0]
+    assert pair["spearman"] == pytest.approx(1.0), "a monotone twin orders the ladder alike"
+    assert pair["concordance"] < 0.99, "but charges different amounts"
+
+
+def test_redundancy_dendrogram_leaves_out_the_metric_without_a_scale(run_folder):
+    outcome = _rendered(run_folder, "redundancy_dendrogram")
+    assert outcome.status == "ok", outcome.reason
+    leaves = set(_figure_data(run_folder, "redundancy_dendrogram")["leaves"].iloc[0].split(";"))
+    assert leaves == {"mae", "mse", "rmse"}
+
+
+def test_section_seven_prose_quotes_the_participation_ratio(run_folder):
+    ctx = build_context(run_folder, bootstrap=0)
+    write_document(run_folder, ctx, render(run_folder, ctx, only=["response_portrait"],
+                                           formats=("png",)))
+    text = (run_folder.sections / "07_selectivity.tex").read_text()
+    assert "independent directions" in text
+    assert "\\texttt{flat}" in text, "the metric left out for lacking a scale is named"
+
+
+@pytest.mark.parametrize("name", ["concordance_matrix", "redundancy_dendrogram"])
+def test_magnitude_figures_skip_on_a_single_metric(run_folder, name):
+    outcome = _rendered(run_folder, name, metric="mse")
+    assert outcome.status == "skipped"

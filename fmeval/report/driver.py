@@ -333,6 +333,35 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
             "magnitude."
         )
 
+    if key == "selectivity" and ctx.df["metric"].nunique() >= 2:
+        parts = []
+        ratio = an.participation_ratio_of_metrics(ctx.df, probe_labels=ctx.probe_labels)
+        scaled = sorted(str(m) for m in ctx.norm.loc[~ctx.norm["degenerate"].astype(bool),
+                                                      "metric"].unique())
+        missing = sorted(set(ctx.metrics) - set(scaled))
+        if np.isfinite(ratio):
+            parts.append(
+                f"The {len(scaled)} metrics with a damage scale span {_fmt(ratio)} independent "
+                "directions: the participation ratio of the eigenvalues of the covariance of "
+                "their damage over every strength of every degradation, which would read "
+                f"{len(scaled)} if each measured something different and 1 if they all measured "
+                "the same thing."
+            )
+        if missing:
+            parts.append("Left out, having no damage scale on this run: "
+                         + ", ".join(f"\\texttt{{{escape(m)}}}" for m in missing) + ".")
+        if "selectivity" in card.columns and card["selectivity"].notna().any():
+            low = card.loc[card["selectivity"].idxmin()]
+            high = card.loc[card["selectivity"].idxmax()]
+            parts.append(
+                f"Selectivity runs from {_fmt(low['selectivity'])} "
+                f"(\\texttt{{{escape(str(low['metric']))}}} on {escape(str(low['field']))}) to "
+                f"{_fmt(high['selectivity'])} (\\texttt{{{escape(str(high['metric']))}}} on "
+                f"{escape(str(high['field']))}), where 0 is a metric that charges every "
+                "degradation the same per unit of field change."
+            )
+        return " ".join(parts)
+
     if key == "displacement":
         text = (
             "A translation leaves every statistic of the field unchanged and alters only "

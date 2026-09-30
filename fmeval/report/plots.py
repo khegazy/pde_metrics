@@ -379,6 +379,111 @@ def response_portrait(ctx, df, opts) -> PlotResult:
     return PlotResult([FigureItem(fig, {}, caption=caption, data=pd.DataFrame(tidy))])
 
 
+def _matrix_panel(ax, matrix: pd.DataFrame, cmap, title: str):
+    """One annotated metric-by-metric coefficient matrix, grey where undefined."""
+    values = matrix.to_numpy(float)
+    mesh = ax.pcolormesh(np.ma.masked_invalid(values), cmap=cmap, vmin=-1.0, vmax=1.0,
+                         edgecolors="white", linewidth=0.5)
+    ax.invert_yaxis()
+    ax.set_aspect("equal")
+    ax.grid(False)
+    ticks = np.arange(len(matrix)) + 0.5
+    ax.set_xticks(ticks, list(matrix.columns), rotation=60, ha="right", fontsize="xx-small")
+    ax.set_yticks(ticks, list(matrix.index), fontsize="xx-small")
+    for (i, j), v in np.ndenumerate(values):
+        if np.isfinite(v):
+            ax.text(j + 0.5, i + 0.5, f"{v:.2f}", ha="center", va="center", fontsize=5,
+                    color="white" if abs(v) > 0.6 else "black")
+    ax.set_title(title, fontsize="small")
+    return mesh
+
+
+@plot(
+    section=7, order=30, scope="global", min_metrics=2,
+    title="Rank agreement beside magnitude agreement",
+    requires_columns=("damage", "value"),
+    defaults={"cmap": "RdBu_r"},
+)
+def concordance_matrix(ctx, df, opts) -> PlotResult:
+    """Spearman correlation of the metrics (left) beside Lin's concordance of their damage (right).
+
+    Two metrics can order every degradation identically and still charge very different amounts
+    for the same one; the left panel sees only the first, the right the second (Lin 1989,
+    *Biometrics* 45(1):255-268).
+    """
+    from fmeval.analysis import concordance_matrix as lins_concordance
+    from fmeval.analysis import cross_metric_correlation
+
+    rho = cross_metric_correlation(df)
+    rc = lins_concordance(df, probe_labels=ctx.probe_labels)
+    ctx.require(not rho.empty and not rc.empty,
+                "needs two metrics with common ladder levels and a damage scale")
+    names = sorted(set(rho.index) | set(rc.index))
+    rho, rc = rho.reindex(index=names, columns=names), rc.reindex(index=names, columns=names)
+    side = 0.42 * len(names) + 1.6
+    fig, grid = ctx.style.figure(1, 2, w=2 * side + 1.0, h=side)
+    cmap = matplotlib.colormaps[opts["cmap"]].with_extremes(bad="0.9")
+    mesh = _matrix_panel(grid[0, 0], rho, cmap, "Spearman, on median values")
+    _matrix_panel(grid[0, 1], rc, cmap, "Lin's concordance, on damage")
+    fig.colorbar(mesh, ax=list(grid.ravel()), shrink=0.7, label="coefficient")
+    unscaled = [m for m in names if rc.loc[m].isna().all()]
+    data = pd.DataFrame([
+        {"metric_a": a, "metric_b": b, "spearman": float(rho.loc[a, b]),
+         "concordance": float(rc.loc[a, b])}
+        for a in names for b in names
+    ])
+    caption = (
+        "Left: rank correlation between metrics over the median value at every strength of "
+        "every degradation, the existing redundancy statistic. Right: Lin's concordance "
+        "coefficient on damage, which also penalises departure from the identity line, so two "
+        "metrics that order every degradation alike but charge different amounts score high on "
+        "the left and lower on the right. Grey cells are undefined."
+        + (f" No damage scale, so undefined on the right: {', '.join(unscaled)}."
+           if unscaled else "")
+    )
+    return PlotResult([FigureItem(fig, {}, caption=caption, data=data)])
+
+
+@plot(
+    section=7, order=35, scope="global", min_metrics=3,
+    title="Which metrics agree in magnitude",
+    requires_columns=("damage",),
+)
+def redundancy_dendrogram(ctx, df, opts) -> PlotResult:
+    """Average-linkage clustering of the metrics on one minus the absolute concordance of damage.
+
+    Metrics joined near zero assign nearly the same damage everywhere. Drawn in one colour: the
+    tree shows structure, not a set of groups to adopt.
+    """
+    from scipy.cluster.hierarchy import dendrogram, linkage
+    from scipy.spatial.distance import squareform
+
+    from fmeval.analysis import concordance_matrix as lins_concordance
+
+    rc = lins_concordance(df, probe_labels=ctx.probe_labels)
+    keep = [m for m in rc.index if np.isfinite(rc.loc[m].to_numpy(float)).all()]
+    ctx.require(len(keep) >= 3, "needs three metrics with a damage scale")
+    distance = 1.0 - np.abs(rc.loc[keep, keep].to_numpy(float))
+    distance = np.clip((distance + distance.T) / 2, 0.0, None)
+    np.fill_diagonal(distance, 0.0)
+    tree = linkage(squareform(distance, checks=False), method="average")
+    fig, grid = ctx.style.figure(1, 1, h=0.35 * len(keep) + 1.2)
+    ax = grid[0, 0]
+    dendrogram(tree, labels=keep, orientation="right", ax=ax, color_threshold=0,
+               above_threshold_color="black")
+    ax.set_xlabel("1 - |Lin's concordance|")
+    ax.grid(False)
+    data = pd.DataFrame(tree, columns=["left", "right", "distance", "size"])
+    data["leaves"] = ";".join(keep)
+    caption = (
+        "Average-linkage clustering of the metrics that have a damage scale, on one minus the "
+        "absolute value of Lin's concordance of their damage. Metrics joined near zero assign "
+        "nearly the same damage to every strength of every degradation; the height of a join "
+        "is how far apart the two groups are."
+    )
+    return PlotResult([FigureItem(fig, {}, caption=caption, data=data)])
+
+
 @plot(
     section=6, order=20, scope="per_field",
     title="Damage against severity, every metric on every degradation",
