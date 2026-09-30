@@ -116,6 +116,25 @@ class ReportContext:
             out = out[out[key] == value]
         return out
 
+    def preserved_by(self, axis: str) -> tuple[str, ...]:
+        """What the operator behind a ladder axis is declared, and test-verified, to preserve.
+
+        Read from the run's own registry snapshot, so an old folder reports what its operators
+        declared then; the live registry answers for a folder written before the snapshot had it.
+        """
+        rows = self.df.loc[self.df["degradation"] == axis, "degradation_op"] \
+            if "degradation_op" in self.df.columns else []
+        if len(rows) == 0:
+            return ()
+        op = str(rows.iloc[0])
+        entry = (self.meta.get("registries", {}).get("degradations", {}) or {}).get(op, {})
+        if "preserves" in entry:
+            return tuple(entry["preserves"])
+        from degradations import registry as deg_registry
+
+        spec = deg_registry.REGISTRY.get(op)
+        return spec.preserves if spec is not None else ()
+
     def label(self, name: str) -> str:
         """Display form of a registry name: underscores become spaces."""
         return str(name).replace("_", " ")

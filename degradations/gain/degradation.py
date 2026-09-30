@@ -16,6 +16,7 @@ from ..registry import degradation
     severity_name="gain error",
     severity_units="relative",
     severity_direction="increasing",
+    preserves=("spatial_mean", "shape"),
 )
 def gain(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     """Scale the fluctuation by ``1 + severity``, leaving the spatial mean intact.

@@ -42,6 +42,7 @@ Designed, hooks in place, not built.
 | ID | Title | Priority |
 |---|---|---|
 | [031](031-saturation-never-reached.md) | No ladder severity level reaches the unrelated-field level | medium |
+| [041](041-subpixel-shift-drops-the-nyquist-mode.md) | A fractional Fourier shift drops the Nyquist mode of an even grid; negligible on the production data | low |
 
 ## Technical debt
 

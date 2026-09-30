@@ -61,6 +61,7 @@ def _spec_fields(bundle: Bundle) -> dict[str, Any]:
         "stochastic": spec.stochastic,
         "ensemble": spec.ensemble,
         "fields": list(spec.fields),
+        "preserves": list(spec.preserves),
     }
 
 

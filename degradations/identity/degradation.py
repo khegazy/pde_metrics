@@ -17,6 +17,7 @@ from ..registry import degradation
     severity_name="n/a",
     severity_units="",
     severity_direction="increasing",
+    preserves=("single_point_statistics", "amplitude_spectrum", "spatial_mean", "shape"),
 )
 def identity(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     """No-op: level 0 of every ladder. Pairwise error metrics must return exactly 0 here."""

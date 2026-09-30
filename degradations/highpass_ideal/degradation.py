@@ -18,6 +18,7 @@ from ..registry import degradation
     severity_units="fraction",
     severity_direction="increasing",
     calibration="energy_below",
+    preserves=("spatial_mean",),
 )
 def highpass_ideal(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     """Sharp high-pass: zero every mode with |k| < cutoff, keeping the spatial mean.

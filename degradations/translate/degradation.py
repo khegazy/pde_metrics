@@ -18,6 +18,7 @@ from ..registry import degradation
     severity_units="cells",
     severity_direction="increasing",
     defaults={"axis": "x"},
+    preserves=("single_point_statistics", "amplitude_spectrum", "spatial_mean", "shape"),
 )
 def translate(x: np.ndarray, severity: float, *, ctx, axis: str = "x") -> np.ndarray:
     """Whole-cell periodic translation.

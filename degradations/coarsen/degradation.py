@@ -19,6 +19,7 @@ from ..registry import degradation
     severity_name="factor",
     severity_units="",
     severity_direction="increasing",
+    preserves=("spatial_mean",),
 )
 def coarsen(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     """Conservative block average by ``factor``, then expand back to the fine grid.

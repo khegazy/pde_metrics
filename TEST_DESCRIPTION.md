@@ -921,6 +921,12 @@ and re-flagging needs no recomputation, so changing your mind is a config edit.
 
 ## The degradations
 
+Every operator also declares what it provably leaves unchanged — the multiset of values, the
+fluctuation's amplitude spectrum, the spatial mean, or the shape up to a rigid displacement — and
+a test measures each declaration at every strength. `python -m degradations` lists it in the
+`preserves` column, and the displacement section of a report quotes it beside the measured
+response. It is a fact about the degradation, never an expectation about a metric.
+
 Twenty-four operators in eight families. `python -m degradations` lists them with their
 severity units. Which failure modes you test for determines what the measurements mean, so
 this list is as important as the list of metrics.

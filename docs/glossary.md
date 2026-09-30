@@ -87,6 +87,11 @@ wrong direction.
 looks at a cell's neighbours. Cheap to compute, and blind to position by construction.
 Also called a *pointwise* metric.
 
+**Preserved property** — something a degradation provably leaves unchanged: the set of values
+in the field, how much energy sits at each scale, the average, or the shape of every feature up
+to a shift. Each degradation declares these and a test checks every declaration, so a report can
+say "this degradation moved features and changed nothing else" as a fact rather than a hope.
+
 **Reference** — the undamaged field that everything else is compared against; the ground
 truth of the experiment.
 

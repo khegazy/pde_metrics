@@ -335,3 +335,29 @@ def test_context_reads_the_declared_anchor(tmp_path):
     rendered = render(folder, ctx, formats=("png",))
     assert not [r for r in rendered if r.status == "error"], \
         [(r.name, r.reason) for r in rendered if r.status == "error"]
+
+
+def test_displacement_prose_names_what_each_geometric_axis_leaves_unchanged(tmp_path):
+    """The report states, beside a measured response, what that degradation provably preserved.
+
+    The rows name the operator as the pipeline does -- translate_x is an entry of the operator
+    translate -- because that is what the accessor looks up in the run's registry snapshot.
+    """
+    df = pd.concat([make_frame(metric=m, field="vorticity", n_frames=8,
+                               axes={"translate_x": [1.0, 3.0, 6.0], "uncorrelated": [10.0] * 2})
+                    for m in ("mse", "mae")], ignore_index=True)
+    df["degradation_op"] = df["degradation_op"].astype(str).replace({
+        "translate_x": "translate", "uncorrelated": "random_large_translation"})
+    folder = RunFolder(tmp_path / "mse_3").create()
+    write_results(folder, df)
+    digest = write_config(folder, {"metrics": ["mse"]}, [])
+    write_run_meta(folder, run_id=3, config_hash=digest, metric="mse", dataset="synthetic_d",
+                   n_frames=8, fields=["vorticity"], analysis_grid=16,
+                   ladder_axes=["translate_x"], n_severity_levels=6, seed=1)
+    ctx = build_context(folder, bootstrap=0)
+    assert ctx.preserved_by("translate_x") == ("single_point_statistics", "amplitude_spectrum",
+                                               "spatial_mean", "shape")
+    assert ctx.preserved_by("no_such_axis") == ()
+    write_document(folder, ctx, render(folder, ctx, formats=("png",)))
+    text = (folder.sections / "09_displacement.tex").read_text()
+    assert "amplitude spectrum" in text and "test-verified" in text

@@ -19,6 +19,7 @@ from ..registry import degradation
     severity_direction="increasing",
     ordinal=False,   # a reference measurement, not a severity level on a monotone axis
     stochastic=True,
+    preserves=("single_point_statistics", "amplitude_spectrum", "spatial_mean", "shape"),
 )
 def random_large_translation(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     """Translate by a large random offset on every axis: the statistically identical,

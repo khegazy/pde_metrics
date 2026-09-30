@@ -77,6 +77,7 @@ def _expand_axis(coarse: NDArray[np.floating], factor: int, axis: int) -> NDArra
     ordinal=True,
     stochastic=False,
     fields=("*",),
+    preserves=("spatial_mean",),
 )
 def coarsen_bandlimited(
     field: NDArray[np.floating],

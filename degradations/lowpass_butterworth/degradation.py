@@ -19,6 +19,7 @@ from ..registry import degradation
     severity_direction="increasing",
     calibration="energy_above",
     defaults={"order": 4},
+    preserves=("spatial_mean",),
 )
 def lowpass_butterworth(x: np.ndarray, severity: float, *, ctx, order: int = 4) -> np.ndarray:
     """Smooth low-pass, ``1 / (1 + (k/k_c)^(2n))``. No ringing: the ideal filter's control."""

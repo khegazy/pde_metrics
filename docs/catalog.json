@@ -17,6 +17,7 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [],
         "severity_direction": "increasing",
         "severity_name": "amplitude",
         "severity_units": "fraction of fluctuation rms",
@@ -58,6 +59,9 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "spatial_mean"
+        ],
         "severity_direction": "decreasing",
         "severity_name": "retained fraction",
         "severity_units": "",
@@ -99,6 +103,10 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "amplitude_spectrum",
+          "shape"
+        ],
         "severity_direction": "increasing",
         "severity_name": "offset",
         "severity_units": "fraction of fluctuation rms",
@@ -140,6 +148,9 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "spatial_mean"
+        ],
         "severity_direction": "increasing",
         "severity_name": "width",
         "severity_units": "cells",
@@ -181,6 +192,9 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "spatial_mean"
+        ],
         "severity_direction": "increasing",
         "severity_name": "factor",
         "severity_units": "",
@@ -222,6 +236,9 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "spatial_mean"
+        ],
         "severity_direction": "increasing",
         "severity_name": "factor",
         "severity_units": "",
@@ -263,6 +280,9 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "spatial_mean"
+        ],
         "severity_direction": "increasing",
         "severity_name": "radius",
         "severity_units": "cells",
@@ -304,6 +324,9 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "spatial_mean"
+        ],
         "severity_direction": "increasing",
         "severity_name": "radius",
         "severity_units": "cells",
@@ -345,6 +368,10 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "spatial_mean",
+          "shape"
+        ],
         "severity_direction": "increasing",
         "severity_name": "gain error",
         "severity_units": "relative",
@@ -386,6 +413,9 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "spatial_mean"
+        ],
         "severity_direction": "increasing",
         "severity_name": "sigma",
         "severity_units": "cells",
@@ -427,6 +457,10 @@
           "*"
         ],
         "ordinal": false,
+        "preserves": [
+          "amplitude_spectrum",
+          "spatial_mean"
+        ],
         "severity_direction": "increasing",
         "severity_name": "n/a",
         "severity_units": "",
@@ -468,6 +502,9 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "spatial_mean"
+        ],
         "severity_direction": "increasing",
         "severity_name": "energy removed",
         "severity_units": "fraction",
@@ -509,6 +546,9 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "spatial_mean"
+        ],
         "severity_direction": "increasing",
         "severity_name": "energy removed",
         "severity_units": "fraction",
@@ -550,6 +590,12 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "single_point_statistics",
+          "amplitude_spectrum",
+          "spatial_mean",
+          "shape"
+        ],
         "severity_direction": "increasing",
         "severity_name": "n/a",
         "severity_units": "",
@@ -591,6 +637,9 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "spatial_mean"
+        ],
         "severity_direction": "increasing",
         "severity_name": "energy removed",
         "severity_units": "fraction",
@@ -632,6 +681,9 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "spatial_mean"
+        ],
         "severity_direction": "increasing",
         "severity_name": "energy removed",
         "severity_units": "fraction",
@@ -673,6 +725,7 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [],
         "severity_direction": "increasing",
         "severity_name": "width",
         "severity_units": "cells",
@@ -714,6 +767,7 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [],
         "severity_direction": "increasing",
         "severity_name": "amplitude",
         "severity_units": "relative",
@@ -755,6 +809,12 @@
           "*"
         ],
         "ordinal": false,
+        "preserves": [
+          "single_point_statistics",
+          "amplitude_spectrum",
+          "spatial_mean",
+          "shape"
+        ],
         "severity_direction": "increasing",
         "severity_name": "draw",
         "severity_units": "",
@@ -796,6 +856,7 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [],
         "severity_direction": "increasing",
         "severity_name": "lost dispersion",
         "severity_units": "fraction of the calibrated spread",
@@ -837,6 +898,7 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [],
         "severity_direction": "increasing",
         "severity_name": "excess dispersion",
         "severity_units": "fraction of the calibrated spread",
@@ -878,6 +940,7 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [],
         "severity_direction": "increasing",
         "severity_name": "factor",
         "severity_units": "",
@@ -919,6 +982,12 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "single_point_statistics",
+          "amplitude_spectrum",
+          "spatial_mean",
+          "shape"
+        ],
         "severity_direction": "increasing",
         "severity_name": "distance",
         "severity_units": "cells",
@@ -960,6 +1029,9 @@
           "*"
         ],
         "ordinal": true,
+        "preserves": [
+          "spatial_mean"
+        ],
         "severity_direction": "increasing",
         "severity_name": "distance",
         "severity_units": "cells",

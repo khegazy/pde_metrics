@@ -325,13 +325,26 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
         )
 
     if key == "displacement":
-        return (
+        text = (
             "A translation leaves every statistic of the field unchanged and alters only "
             "position. A metric that approaches the unrelated-field level after a "
             "displacement much smaller than the structures in the flow is exhibiting the "
             "double penalty: it is reporting a large error for a field that is correct in "
             "shape and amplitude."
         )
+        geometric = sorted(
+            str(a) for a in ctx.df.loc[ctx.df["degradation_family"] == "geometric",
+                                       "degradation"].unique()
+            if str(a) in ctx.ordinal_axes
+        ) if "degradation_family" in ctx.df.columns else []
+        for axis in geometric:
+            words = ctx.preserved_by(axis)
+            if words:
+                text += (
+                    f" \\texttt{{{escape(axis)}}} is declared, and test-verified, to leave "
+                    "unchanged: " + ", ".join(w.replace("_", " ") for w in words) + "."
+                )
+        return text
 
     if key == "robustness":
         text = (

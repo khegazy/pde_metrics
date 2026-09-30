@@ -20,6 +20,7 @@ from ..registry import degradation
     ordinal=False,  # a pass/fail canary, NOT a severity level on any monotone axis
     stochastic=True,
     defaults={"match_moments": True},
+    preserves=("amplitude_spectrum", "spatial_mean"),
 )
 def gaussian_impostor(
     x: np.ndarray, severity: float, *, ctx, match_moments: bool = True
