@@ -23,6 +23,7 @@ from __future__ import annotations
 import logging
 import warnings
 from collections.abc import Mapping
+from dataclasses import dataclass
 from itertools import pairwise
 
 import numpy as np
@@ -952,6 +953,9 @@ def report_card(axes: pd.DataFrame, probes: pd.DataFrame,
                 rho_defined.groupby(keys, observed=True)["rho"].idxmin()
             ][[*keys, "degradation"]].rename(columns={"degradation": "worst_axis"})
             base = base.merge(worst, on=keys, how="left")
+        profiles = [dict(zip(keys, key, strict=True), **_profile(g))
+                    for key, g in ordinal.groupby(keys, observed=True)]
+        base = base.merge(pd.DataFrame(profiles), on=keys, how="left")
 
     for extra in (probes, norm[[*keys, "value_clean", "value_uncorrelated", "span",
                                 "anchor_source", "degenerate"]]):
@@ -962,6 +966,74 @@ def report_card(axes: pd.DataFrame, probes: pd.DataFrame,
         baseline = base["cost_s"].min()
         base["cost_relative"] = base["cost_s"] / baseline if baseline else np.nan
     return base
+
+
+def _profile(axes: pd.DataFrame) -> dict[str, object]:
+    """What one metric responds to, across the ordinal degradations of one field.
+
+    The response on each degradation is its largest damage per unit of field change,
+    ``damage_max / field_change_max``. Raw ``damage_max`` would describe the ladder rather than
+    the metric -- how far the config pushed each degradation -- and every metric would name the
+    harshest translation as its most sensitive axis. Per unit of ``energy_changed``, the mean
+    squared difference over the reference variance, mean squared error costs the same on every
+    degradation and the profile of any other metric is what it charges relative to that one.
+
+    * ``selectivity`` -- one minus the Treves-Rolls sparseness of that profile (Treves & Rolls 1991,
+      Network 2(4):371-397): 0 when every degradation costs the same per unit change, approaching
+      1 when one degradation carries it all. Depends on which degradations the ladder ran.
+    * ``most_sensitive_axis``, ``least_sensitive_axis`` -- the two ends of the profile.
+    * ``blind_axes`` -- degradations whose largest damage is provably below
+      :data:`BLINDNESS_MARGIN` (``blindness_q`` below :data:`FDR_LEVEL`), ``"; "``-joined.
+    * ``elasticity_displacement`` -- the elasticity on ``translate_subpixel``, the double-penalty
+      exponent, when the ladder ran it.
+    """
+    per_unit = pd.Series(dtype=float)
+    if {"damage_max", "field_change_max"} <= set(axes.columns):
+        with np.errstate(divide="ignore", invalid="ignore"):
+            per_unit = (axes["damage_max"] / axes["field_change_max"]).set_axis(axes["degradation"])
+        per_unit = per_unit[np.isfinite(per_unit)]
+    blind = (sorted(axes.loc[axes["blindness_q"] < FDR_LEVEL, "degradation"].astype(str))
+             if "blindness_q" in axes.columns else [])
+    displacement = (axes.loc[axes["degradation"] == "translate_subpixel", "elasticity"].dropna()
+                    if "elasticity" in axes.columns else pd.Series(dtype=float))
+    return {
+        "selectivity": (1.0 - stats.treves_rolls_sparseness(per_unit.to_numpy())
+                        if len(per_unit) >= 2 else np.nan),
+        "most_sensitive_axis": per_unit.idxmax() if len(per_unit) else pd.NA,
+        "least_sensitive_axis": per_unit.idxmin() if len(per_unit) else pd.NA,
+        "blind_axes": "; ".join(blind),
+        "elasticity_displacement": float(displacement.iloc[0]) if len(displacement) else np.nan,
+    }
+
+
+@dataclass(frozen=True)
+class Analysis:
+    """Everything the report and the cards derive from one run."""
+
+    norm: pd.DataFrame
+    scored: pd.DataFrame
+    """The result rows with ``damage`` attached."""
+    axes: pd.DataFrame
+    probes: pd.DataFrame
+    card: pd.DataFrame
+    """Unflagged; :func:`flag` is the report's business, and cards never carry flags."""
+
+
+def analyse(rows: pd.DataFrame, *, block_length: int = 10, n_bootstrap: int = 200,
+            seed: int = 0) -> Analysis:
+    """Every statistic of one run, in one call.
+
+    The report driver and the card evidence loader used to repeat this sequence by hand and had
+    drifted: the evidence loader skipped :func:`add_damage`, so a card carried none of the damage
+    based columns its report showed.
+    """
+    norm = normalisation(rows)
+    scored = add_damage(rows, norm)
+    axes = summarise_axes(scored, norm=norm, block_length=block_length, n_bootstrap=n_bootstrap,
+                          seed=seed)
+    probes = probe_summary(rows, norm)
+    return Analysis(norm=norm, scored=scored, axes=axes, probes=probes,
+                    card=report_card(axes, probes, norm))
 
 
 def flag(card: pd.DataFrame, thresholds: Mapping[str, float]) -> pd.DataFrame:

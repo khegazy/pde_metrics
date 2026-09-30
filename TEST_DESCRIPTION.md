@@ -624,6 +624,40 @@ unrelated-field anchor. Excluded from every rank correlation.
 The degradation on which this metric's `rho` was lowest. Names the weakest point rather
 than averaging it away.
 
+### `selectivity` — does the metric respond to something in particular, or to everything?
+
+**What it is.** How concentrated the metric's response is on a few degradations: 0 when every
+degradation costs it the same, approaching 1 when one degradation carries all of it. A metric that
+responds strongly to everything cannot say *what* went wrong; this is the "how specifically" beside
+the "how strongly" of the damage columns.
+
+**How it is computed.** One minus the Treves–Rolls sparseness (Treves and Rolls 1991) of the
+metric's response profile across the degradations of one field, where the response on each
+degradation is its largest damage divided by `field_change_max`, the field change that degradation
+made. Dividing by the field change is what keeps this a property of the metric rather than of the
+ladder: raw damage would mostly measure how hard the config pushed each degradation. Because the
+field change is itself mean squared error on a fixed scale, mean squared error costs the same on
+every degradation and reads 0 here; every other metric's profile is what it charges relative to
+that reference.
+
+**Caveats.** It depends on which degradations were run. Empty for a metric with no damage scale.
+
+### `most_sensitive_axis`, `least_sensitive_axis` — the two ends of that profile
+
+The degradations on which the metric charges the most and the least damage per unit of field
+change. Empty when no damage is defined.
+
+### `blind_axes` — the degradations the response is provably small on
+
+A semicolon list of the degradations whose `blindness_q` is below 0.10: the largest damage is
+provably below 0.05 at 90% confidence. Descriptive, never a verdict — a position-tolerant metric is
+*meant* to appear here for the translations. Empty when no degradation meets the bound.
+
+### `elasticity_displacement` — the double-penalty exponent
+
+`elasticity` on the `translate_subpixel` degradation, when the run has it: about 2 for a penalty
+quadratic in a small displacement, 1 for a linear one, below 1 for a metric gentler than that.
+
 ### `rho_median`, `rho_min`, `rho_pooled_min`, `monotone_fraction_min`, `sensitivity_level_median`, `saturation_level_median`
 
 The per-degradation quantities rolled up to one row per metric and field. `_min` takes the

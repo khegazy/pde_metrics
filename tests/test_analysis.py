@@ -555,3 +555,71 @@ def test_block_length_is_estimated_on_the_frame_scaled_trace():
     assert row["blindness_block_length"] <= 3, (
         f"block length {row['blindness_block_length']} reflects the drift, not the dependence"
     )
+
+
+# --- per-metric roll-ups ---------------------------------------------------------------------
+
+
+def _card_of(df: pd.DataFrame, n_bootstrap: int = 0) -> pd.Series:
+    scored, norm = _scored(df)
+    axes = an.summarise_axes(scored, norm=norm, n_bootstrap=n_bootstrap)
+    return an.report_card(axes, an.probe_summary(df, norm), norm).iloc[0]
+
+
+def _profile_frame(per_unit: dict[str, float]) -> pd.DataFrame:
+    """Axes with the same damage but different field change, so damage per unit change differs."""
+    ladder = {a: [1.0, 2.0, 3.0, 4.0] for a in per_unit}
+    df = make_frame(axes={**ladder, "uncorrelated": [10.0, 10.0]})
+    change = df["degradation"].map(per_unit).astype(float)
+    df["energy_changed"] = np.where(df["level"] > 0, df["value"] / 10 / change.fillna(1.0), 0.0)
+    return df
+
+
+def test_selectivity_is_zero_when_every_degradation_costs_the_same_per_unit_change():
+    """Mean squared error's own profile: damage in proportion to field change on every axis."""
+    card = _card_of(_profile_frame({"a": 1.0, "b": 1.0, "c": 1.0}))
+    assert card["selectivity"] == pytest.approx(0.0, abs=1e-12)
+
+
+def test_selectivity_is_high_when_one_degradation_dominates_per_unit_change():
+    card = _card_of(_profile_frame({"a": 10.0, "b": 1.0, "c": 1.0}))
+    assert card["selectivity"] > 0.5
+    assert card["most_sensitive_axis"] == "a"
+    assert card["least_sensitive_axis"] in {"b", "c"}
+
+
+def test_blind_axes_lists_only_axes_below_the_fdr_level():
+    card = _card_of(make_frame(axes={"flat": [1e-3] * 4, "steep": [1.0, 2.0, 3.0, 4.0],
+                                     "uncorrelated": [10.0, 10.0]}, noise=1e-4, n_frames=40),
+                    n_bootstrap=100)
+    assert card["blind_axes"] == "flat"
+    none = _card_of(make_frame(axes={"steep": [1.0, 2.0, 3.0, 4.0], "uncorrelated": [10.0, 10.0]},
+                               noise=1e-4, n_frames=40), n_bootstrap=100)
+    assert none["blind_axes"] == ""
+
+
+def test_elasticity_displacement_reads_translate_subpixel():
+    card = _card_of(make_frame(axes={"translate_subpixel": [1.0, 4.0, 9.0, 16.0],
+                                     "uncorrelated": [100.0, 100.0]}))
+    assert card["elasticity_displacement"] == pytest.approx(2.0, abs=1e-9)
+    assert np.isnan(_card_of(make_frame(axes={"a": [1.0, 2.0], "uncorrelated": [9.0, 9.0]}))[
+        "elasticity_displacement"])
+
+
+def test_report_card_survives_an_all_nan_damage_profile():
+    df = make_frame(axes={"a": [3.0, 3.0, 3.0], "b": [3.0, 3.0]})
+    df.loc[df["level"] == 0, "value"] = 3.0
+    card = _card_of(df)
+    assert np.isnan(card["selectivity"])
+    assert pd.isna(card["most_sensitive_axis"]) and pd.isna(card["least_sensitive_axis"])
+
+
+def test_analyse_returns_what_both_call_sites_need():
+    df = make_frame(axes={"a": [1.0, 2.0, 3.0], "gaussian_impostor": [9.0],
+                          "uncorrelated": [10.0, 10.0]})
+    result = an.analyse(df, n_bootstrap=0)
+    assert "damage" in result.scored.columns
+    assert set(an.RESPONSE_COLUMNS) <= set(result.axes.columns)
+    assert "gaussian_impostor_damage" in result.probes.columns
+    assert "selectivity" in result.card.columns
+    assert "flags" not in result.card.columns, "flagging is the report's business, not the cards'"
