@@ -599,3 +599,27 @@ def test_damage_by_level_table_names_the_metric_without_a_scale(run_folder):
 
 def test_damage_by_level_table_skips_on_a_single_metric(run_folder):
     assert _rendered(run_folder, "damage_by_level_table", metric="mse").status == "skipped"
+
+
+# --- the headline ------------------------------------------------------------------------------
+
+
+def test_summary_text_names_the_metric_in_a_comparison_folder(run_folder):
+    """Four metrics on three fields: without the metric column the rows cannot be told apart."""
+    ctx = build_context(run_folder, bootstrap=0)
+    text = write_summary_text(run_folder, ctx).read_text()
+    table = text.split("\n\n", 1)[1]
+    assert table.splitlines()[0].split()[0] == "metric"
+    assert "selectivity" in table.splitlines()[0]
+    assert "independent directions" in text
+
+
+def test_headline_prose_states_the_blindness_margin_from_the_analysis(run_folder):
+    from fmeval import analysis
+
+    ctx = build_context(run_folder, bootstrap=50)
+    write_document(run_folder, ctx, render(run_folder, ctx, only=["report_card"],
+                                           formats=("png",)))
+    text = (run_folder.sections / "02_headline.tex").read_text()
+    assert f"below {analysis.BLINDNESS_MARGIN:g}" in text
+    assert "selectivity" in text and "elasticity" in text

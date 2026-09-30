@@ -242,6 +242,36 @@ def write_document(folder: RunFolder, ctx: ReportContext,
     return folder.root / "main.tex"
 
 
+def _response_headline(row: pd.Series, ctx: ReportContext) -> list[str]:
+    """The response statistics of one metric and field, as clauses for the headline."""
+    def code_of(name: object) -> str:
+        return f"\\texttt{{{escape(str(name))}}}"
+
+    axes = ctx.axes[(ctx.axes["metric"] == row["metric"]) & (ctx.axes["field"] == row["field"])
+                    & ~ctx.axes["is_probe"]]
+    bits = []
+    if np.isfinite(row.get("selectivity", np.nan)):
+        bits.append(
+            f"its selectivity is {_fmt(row['selectivity'])}, charging most per unit of field "
+            f"change for {code_of(row['most_sensitive_axis'])} and least for "
+            f"{code_of(row['least_sensitive_axis'])}"
+        )
+    if "blindness_q" in axes.columns and axes["blindness_q"].notna().any():
+        blind = [a for a in str(row.get("blind_axes") or "").split("; ") if a]
+        bits.append(
+            f"its largest response is provably below {an.BLINDNESS_MARGIN:g} at "
+            f"{an.BLINDNESS_CONFIDENCE:.0%} confidence on "
+            + (", ".join(code_of(a) for a in blind) if blind else "no degradation")
+        )
+    if np.isfinite(row.get("elasticity_displacement", np.nan)):
+        against = axes.loc[axes["degradation"] == "translate_subpixel", "elasticity_x"]
+        bits.append(
+            f"its elasticity to a sub-pixel displacement is {_fmt(row['elasticity_displacement'])}"
+            + (f" against {escape(str(against.iloc[0]))}" if len(against) else "")
+        )
+    return bits
+
+
 def _declared_order(item: Rendered) -> int:
     """The ``order`` a renderer was registered with, which places it within its section."""
     from .registry import PLOTS, TABLES
@@ -282,8 +312,12 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
 
     if key == "headline" and not card.empty:
         parts = []
+        several = card["metric"].nunique() > 1
         for _, row in card.iterrows():
-            bits = [f"On {escape(str(row['field']))}, the weakest axis is "
+            subject = (f"For \\texttt{{{escape(str(row['metric']))}}} on "
+                       f"{escape(str(row['field']))}" if several
+                       else f"On {escape(str(row['field']))}")
+            bits = [f"{subject}, the weakest axis is "
                     f"\\texttt{{{escape(str(row.get('worst_axis', '')))}}} with a rank "
                     f"correlation of {_fmt(row.get('rho_min'))}"]
             if np.isfinite(row.get("gaussian_impostor_damage", np.nan)):
@@ -298,6 +332,7 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
                     f"field moves it by {row['gaussian_impostor_relative']:.1e} of its largest "
                     "response to any ordinary degradation"
                 )
+            bits.extend(_response_headline(row, ctx))
             flags = str(row.get("flags", ""))
             bits.append(
                 f"flagged: {escape(flags)}" if flags else
@@ -430,10 +465,16 @@ def write_summary_text(folder: RunFolder, ctx: ReportContext) -> Path:
              f"frames      : {ctx.meta.get('n_frames', '')}",
              f"config hash : {ctx.meta.get('config_hash', '')}", ""]
     if not ctx.card.empty:
-        columns = [c for c in ("field", "rho_min", "worst_axis",
-                               "separability_auc_min", "gaussian_impostor_damage",
-                               "flags") if c in ctx.card.columns]
+        columns = [c for c in ("metric", "field", "rho_min", "worst_axis",
+                               "separability_auc_min", "selectivity", "blind_axes",
+                               "gaussian_impostor_damage", "gaussian_impostor_relative",
+                               "cost_relative", "flags") if c in ctx.card.columns]
         lines.append(ctx.card[columns].to_string(index=False))
+    if ctx.df["metric"].nunique() > 1:
+        ratio = an.participation_ratio_of_metrics(ctx.df, probe_labels=ctx.probe_labels)
+        scaled = int((~ctx.norm.groupby("metric")["degenerate"].all()).sum())
+        lines += ["", f"independent directions : {_fmt(ratio)} across the {scaled} metrics "
+                      "with a damage scale (participation ratio)"]
     path = folder.root / "summary.txt"
     path.write_text("\n".join(lines) + "\n")
     return path
