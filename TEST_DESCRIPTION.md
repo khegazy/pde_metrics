@@ -518,6 +518,28 @@ losses they are not. Read this matrix alongside the displacement figure, never a
 **Where it appears.** `redundancy_table.csv`, in the comparison folder only, since it needs at
 least two metrics.
 
+### The concordance matrix, damage by level, and the participation ratio — agreement in magnitude
+
+**What they are.** The redundancy matrix asks whether two metrics *order* the ladder the same way;
+these ask whether they *agree*. Lin's concordance coefficient (Lin 1989) between two metrics'
+median damage at each strength of each degradation penalises departure from the identity line, not
+merely scatter about some line: on the pinned run `comparison_1790639359` mean absolute error and
+mean squared error rank-correlate at 0.986 and have a concordance of 0.699. The damage-by-level
+table writes that comparison out strength by strength. The participation ratio of the eigenvalues
+of the metric-by-metric covariance of those damages (Gao et al. 2017) is the effective number of
+independent directions the metrics span: on the pinned run the six metrics with a damage scale
+span 1.09.
+
+**How they are computed.** The reference level, the trap tests and severity levels that repeat a
+milder one are excluded. The covariance is taken on damage unstandardised, because damage already
+puts every metric on one scale.
+
+**Caveats.** A metric with no damage scale (a degenerate anchor) is absent from all three. The
+participation ratio counts directions of response, not of usefulness.
+
+**Where they appear.** The concordance figure and the dendrogram in the comparison folder; the
+per-level damage table in the displacement section and on each metric's page.
+
 ### The selectivity profile — what one metric detects, across everything
 
 **What it is.** One metric's `rho` across every degradation, read as a row rather than a column: a

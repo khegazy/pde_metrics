@@ -623,3 +623,74 @@ def test_analyse_returns_what_both_call_sites_need():
     assert "gaussian_impostor_damage" in result.probes.columns
     assert "selectivity" in result.card.columns
     assert "flags" not in result.card.columns, "flagging is the report's business, not the cards'"
+
+
+# --- agreement in magnitude ------------------------------------------------------------------
+
+
+def _two_metrics(a: dict, b: dict, **kwargs) -> pd.DataFrame:
+    return pd.concat([make_frame(metric="a", axes=a, **kwargs),
+                      make_frame(metric="b", axes=b, **kwargs)], ignore_index=True)
+
+
+def test_damage_by_level_has_one_row_per_level_and_one_column_per_metric():
+    df = _two_metrics({"x": [1.0, 2.0], "translate_x": [3.0, 4.0], "uncorrelated": [10.0, 10.0]},
+                      {"x": [2.0, 4.0], "translate_x": [6.0, 8.0], "uncorrelated": [20.0, 20.0]})
+    wide = an.damage_by_level(_scored(df)[0])
+    assert {"field", "degradation", "level", "severity", "a", "b"} <= set(wide.columns)
+    assert (wide["level"] > 0).all()
+    assert set(wide["degradation"]) == {"x", "translate_x"}, "probes are not ladder levels"
+    assert wide.loc[wide["degradation"] == "x", "a"].tolist() == pytest.approx([0.1, 0.2])
+    geometric = an.damage_by_level(_scored(df)[0], family="geometric")
+    assert set(geometric["degradation"]) == {"translate_x"}
+
+
+def test_damage_by_level_needs_the_damage_column():
+    with pytest.raises(KeyError, match="add_damage"):
+        an.damage_by_level(make_frame())
+
+
+def test_concordance_penalises_shape_disagreement_where_spearman_does_not():
+    """MAE and MSE on the pinned run: rank correlation 0.986, concordance 0.699. The same pattern
+    in miniature: b is a monotone but curved function of a."""
+    x = [1.0, 2.0, 3.0, 4.0]
+    df = _two_metrics({"s": x, "uncorrelated": [10.0, 10.0]},
+                      {"s": list(np.sqrt(x)), "uncorrelated": [np.sqrt(10.0)] * 2})
+    rho = an.cross_metric_correlation(df)
+    rc = an.concordance_matrix(_scored(df)[0])
+    assert rho.loc["a", "b"] == pytest.approx(1.0)
+    assert rc.loc["a", "b"] < 0.99
+    assert rc.loc["a", "b"] == pytest.approx(rc.loc["b", "a"])
+    assert rc.loc["a", "a"] == pytest.approx(1.0)
+
+
+def test_concordance_is_one_for_a_proportional_twin():
+    """A metric that is exactly twice another, anchor included, has identical damage: the scale
+    removes the factor. Pinned so nobody 'fixes' a concordance test by breaking D = 1."""
+    x = [1.0, 2.0, 3.0, 4.0]
+    df = _two_metrics({"s": x, "uncorrelated": [10.0, 10.0]},
+                      {"s": [2 * v for v in x], "uncorrelated": [20.0, 20.0]})
+    assert an.concordance_matrix(_scored(df)[0]).loc["a", "b"] == pytest.approx(1.0)
+
+
+def test_concordance_and_participation_ratio_tolerate_a_missing_level():
+    x = [1.0, 2.0, 3.0, 4.0]
+    df = _two_metrics({"s": x, "t": x, "uncorrelated": [10.0, 10.0]},
+                      {"s": list(np.sqrt(x)), "t": x, "uncorrelated": [10.0, 10.0]})
+    df = df[~((df["metric"] == "b") & (df["degradation"] == "s") & (df["level"] == 2))]
+    scored = _scored(df)[0]
+    assert np.isfinite(an.concordance_matrix(scored).loc["a", "b"])
+    assert np.isfinite(an.participation_ratio_of_metrics(scored))
+
+
+def test_participation_ratio_counts_independent_responses():
+    same = _two_metrics({"p": [1.0, 2.0, 3.0, 4.0], "uncorrelated": [10.0, 10.0]},
+                        {"p": [1.0, 2.0, 3.0, 4.0], "uncorrelated": [10.0, 10.0]})
+    apart = _two_metrics({"p": [1.0, 2.0, 3.0, 4.0], "q": [0.0] * 4, "uncorrelated": [10.0] * 2},
+                         {"p": [0.0] * 4, "q": [1.0, 2.0, 3.0, 4.0], "uncorrelated": [10.0] * 2})
+    one = an.participation_ratio_of_metrics(_scored(same)[0])
+    two = an.participation_ratio_of_metrics(_scored(apart)[0])
+    assert one == pytest.approx(1.0, abs=0.05), "identical responses span one direction"
+    assert one < two <= 2.0
+    assert np.isnan(an.participation_ratio_of_metrics(_scored(make_frame(
+        axes={"p": [1.0, 2.0, 3.0], "uncorrelated": [9.0, 9.0]}))[0]))

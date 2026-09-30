@@ -1098,6 +1098,85 @@ def cross_metric_correlation(df: pd.DataFrame, *, field: str | None = None) -> p
     return rho
 
 
+#: The columns of :func:`damage_by_level` that are not metrics.
+LEVEL_KEYS: tuple[str, ...] = ("field", "degradation", "level", "severity")
+
+
+def damage_by_level(scored: pd.DataFrame, *, field: str | None = None,
+                    family: str | None = None) -> pd.DataFrame:
+    """Median damage over frames at every strength of every degradation, one column per metric.
+
+    The table issues/035 asks for: two metrics can order every degradation identically and still
+    charge very different amounts for the same one, and this is where that shows. The reference
+    level, the probes and severity levels that repeat a milder one are excluded; a metric whose
+    damage is undefined everywhere (a degenerate anchor, issues/037) has no column.
+
+    Raises:
+        KeyError: If ``scored`` has no ``damage`` column.
+    """
+    if "damage" not in scored.columns:
+        raise KeyError("damage_by_level needs the damage column; pass add_damage(df, norm)")
+    sub = scored[(scored["level"] > 0) & ~scored["degradation"].isin(PROBE_LABELS)]
+    if "severity_degenerate" in sub.columns:
+        sub = sub[~sub["severity_degenerate"].fillna(False).astype(bool)]
+    if field is not None:
+        sub = sub[sub["field"] == field]
+    if family is not None:
+        sub = sub[sub["degradation_family"] == family]
+    if sub.empty:
+        return pd.DataFrame(columns=list(LEVEL_KEYS))
+    wide = (sub.groupby([*LEVEL_KEYS, "metric"], observed=True)["damage"].median()
+            .unstack("metric").dropna(axis=1, how="all").reset_index())
+    wide.columns = [str(c) for c in wide.columns]
+    return wide
+
+
+def _metric_columns(wide: pd.DataFrame) -> list[str]:
+    return [c for c in wide.columns if c not in LEVEL_KEYS]
+
+
+def concordance_matrix(scored: pd.DataFrame, *, field: str | None = None) -> pd.DataFrame:
+    """Lin's concordance between every pair of metrics' damage, over the rows of damage_by_level.
+
+    The redundancy matrix asks whether two metrics order the ladder alike; this asks whether they
+    agree in magnitude, penalising departure from the identity line (Lin 1989, Biometrics
+    45(1):255-268). On the pinned run comparison_1790639359, MAE and MSE rank-correlate at 0.986
+    and have a concordance of 0.699. Pairwise-complete; empty below two metrics or three rows.
+    """
+    wide = damage_by_level(scored, field=field)
+    metrics = _metric_columns(wide)
+    if len(metrics) < 2 or len(wide) < 3:
+        return pd.DataFrame()
+    out = pd.DataFrame(
+        [[stats.lins_ccc(wide[a].to_numpy(float), wide[b].to_numpy(float)) for b in metrics]
+         for a in metrics],
+        index=pd.Index(metrics, name="metric"), columns=metrics,
+    )
+    return out
+
+
+def participation_ratio_of_metrics(scored: pd.DataFrame) -> float:
+    """The effective number of independent directions the metrics' damage responses span.
+
+    (sum lambda)^2 / sum lambda^2 over the eigenvalues of the metric-by-metric covariance of the
+    complete rows of damage_by_level (Gao et al. 2017, bioRxiv 214262). The covariance is not
+    standardised on purpose: damage already puts every metric on one scale, and standardising
+    would give a nearly unresponsive metric's noise the weight of a responsive metric's signal.
+
+    Returns:
+        A number between 1 and the metric count, or NaN below two metrics or three complete rows.
+    """
+    wide = damage_by_level(scored)
+    metrics = _metric_columns(wide)
+    complete = wide[metrics].dropna()
+    if len(metrics) < 2 or len(complete) < 3:
+        return float("nan")
+    eigenvalues = np.clip(np.linalg.eigvalsh(np.cov(complete.to_numpy(float), rowvar=False)),
+                          0.0, None)
+    total = float(np.sum(eigenvalues**2))
+    return float(np.sum(eigenvalues) ** 2 / total) if total > 0 else float("nan")
+
+
 def selectivity_profile(axes: pd.DataFrame) -> pd.DataFrame:
     """Rank correlation per metric against every ladder axis: what a metric detects.
 
