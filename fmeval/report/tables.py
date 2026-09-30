@@ -26,15 +26,22 @@ def report_card(ctx, df, opts) -> TableResult:
     reference values were not met, so a row can be found quickly; an empty entry means
     nothing was flagged, not that the metric is approved.
     """
+    from fmeval.analysis import BLINDNESS_CONFIDENCE, BLINDNESS_MARGIN
+
     ctx.require(not ctx.card.empty, "no summary rows")
+    # Plain-language headers for the reader; the CSV keeps the column names the catalog and the
+    # cards pin. ASCII only: the preamble declares no input encoding.
     columns = [
         ("metric", "metric"), ("field", "field"),
-        ("n_axes", "axes"), ("rho_min", "worst rho"), ("worst_axis", "worst axis"),
-        ("separability_auc_min", "min AUC"),
-        ("gaussian_impostor_damage", "Gaussian field"),
-        ("sensitivity_level_median", "fires at"),
-        ("saturation_level_median", "saturates at"),
-        ("cost_relative", "rel. cost"),
+        ("n_axes", "axes"), ("rho_min", "severity tracking (rank), worst axis"),
+        ("worst_axis", "worst axis"),
+        ("separability_auc_min", "level-separation probability, worst pair"),
+        ("selectivity", "selectivity"),
+        ("blind_axes", f"response provably below {BLINDNESS_MARGIN:g} on"),
+        ("gaussian_impostor_damage", "impostor damage (1 = unrelated field)"),
+        ("sensitivity_level_median", "detection onset (level)"),
+        ("saturation_level_median", "saturation point (level)"),
+        ("cost_relative", "compute cost (x cheapest)"),
         ("flags", "flags"),
     ]
     present = [(c, h) for c, h in columns if c in ctx.card.columns]
@@ -43,10 +50,12 @@ def report_card(ctx, df, opts) -> TableResult:
         frame=frame,
         caption="Measured criteria for each metric and field. The flags column names the "
                 "configured reference values a row did not meet; it is an aid to reading, "
-                "not a judgement.",
+                "not a judgement. A degradation is listed as one the response is provably "
+                f"small on when the {BLINDNESS_CONFIDENCE:.0%} upper bound of its largest "
+                f"damage lies below {BLINDNESS_MARGIN:g}.",
         headers=dict(present),
         formats={"metric": "code", "field": "code", "worst_axis": "code",
-                 "flags": "%s"},
+                 "blind_axes": "code", "flags": "%s"},
         note="Rank correlation is computed within each ladder axis and never across; the "
              "reported value is the minimum over axes.",
     )
@@ -65,7 +74,8 @@ def axis_detail(ctx, df, opts) -> TableResult:
     rows = rows.sort_values(["metric", "rho"])
     keep = ["metric", "degradation", "n_levels", "rho", "rho_frame_min",
             "rho_pooled", "rho_ci_lo", "rho_ci_hi", "monotone_fraction",
-            "separability_auc_min", "sensitivity_level", "saturation_level"]
+            "separability_auc_min", "cliffs_delta_min", "sensitivity_level",
+            "saturation_level"]
     return TableResult(
         frame=rows[[c for c in keep if c in rows.columns]],
         keys={"field": field},
@@ -76,13 +86,61 @@ def axis_detail(ctx, df, opts) -> TableResult:
                 "non-stationary field rather than a defective metric. The interval is a "
                 "moving-block bootstrap over frames, which accounts for the "
                 "autocorrelation of the trace in time.",
-        headers={"degradation": "axis", "n_levels": "severity levels", "rho": "rho",
-                 "rho_frame_min": "rho worst frame", "rho_pooled": "rho pooled",
-                 "rho_ci_lo": "CI low", "rho_ci_hi": "CI high",
-                 "monotone_fraction": "frames ordered",
-                 "separability_auc_min": "min AUC",
-                 "sensitivity_level": "fires at", "saturation_level": "saturates at"},
+        headers={"degradation": "axis", "n_levels": "severity levels",
+                 "rho": "severity tracking (rank)", "rho_frame_min": "worst-frame tracking",
+                 "rho_pooled": "tracking, pooled", "rho_ci_lo": "tracking, 90% low",
+                 "rho_ci_hi": "tracking, 90% high",
+                 "monotone_fraction": "frames correctly ordered",
+                 "separability_auc_min": "level-separation probability (Vargha-Delaney A)",
+                 "cliffs_delta_min": "Cliff's delta",
+                 "sensitivity_level": "detection onset (level)",
+                 "saturation_level": "saturation point"},
         formats={"metric": "code", "degradation": "code"},
+        long=True,
+    )
+
+
+#: What the response table shows, in order. The CSV beside it carries every per-axis column.
+RESPONSE_TABLE = ("metric", "degradation", "elasticity_x", "elasticity", "response_shape",
+                  "sensitivity_level", "severity_10", "severity_50", "saturation_level",
+                  "severity_resolution", "damage_max_ucb", "blindness_q")
+
+
+@table(
+    section=6, order=30, scope="per_field",
+    title="How strongly, how early and how precisely each degradation moves each metric",
+    requires_columns=("degradation", "level", "value"),
+)
+def axis_response(ctx, df, opts) -> TableResult:
+    """The response statistics per metric and degradation: shape, onset, resolution, blindness."""
+    from fmeval.analysis import BLINDNESS_CONFIDENCE, BLINDNESS_MARGIN
+
+    field = str(df["field"].iloc[0])
+    ctx.require(set(RESPONSE_TABLE) <= set(ctx.axes.columns),
+                "this run's analysis has no response statistics")
+    rows = ctx.axes[(ctx.axes["field"] == field) & (~ctx.axes["is_probe"])
+                    & ctx.axes["metric"].isin(df["metric"].unique())]
+    ctx.require(not rows.empty, f"no ordinal axes for {field}")
+    rows = rows.sort_values(["metric", "degradation"])
+    return TableResult(
+        frame=rows[list(RESPONSE_TABLE)],
+        keys={"field": field},
+        caption=f"Response statistics on {field}. The elasticity is the log-log slope over the "
+                "mildest levels against the strength named in the second column. Onset and "
+                "half-damage are in that strength's units; the resolution is a lower bound on "
+                "how precisely one snapshot's value pins the strength down. The last two columns "
+                f"are the {BLINDNESS_CONFIDENCE:.0%} upper bound of the largest damage and the "
+                f"false-discovery-adjusted evidence that it stays below {BLINDNESS_MARGIN:g}.",
+        headers={"degradation": "axis", "elasticity_x": "against", "response_shape": "shape",
+                 "sensitivity_level": "detection onset (level)",
+                 "severity_10": "detection onset (strength)",
+                 "severity_50": "half-damage strength", "saturation_level": "saturation point",
+                 "severity_resolution": "severity resolution",
+                 "damage_max_ucb": "largest damage, upper bound",
+                 "blindness_q": "blindness q"},
+        formats={"metric": "code", "degradation": "code", "elasticity_x": "%s",
+                 "response_shape": "%s"},
+        long=True,
     )
 
 
@@ -114,7 +172,7 @@ def deception_table(ctx, df, opts) -> TableResult:
                 "removing all phase information. The unrelated field preserves every "
                 "statistic while removing alignment, and therefore defines a damage of 1.",
         headers={"gaussian_impostor_value": "Gaussian value",
-                 "gaussian_impostor_damage": "Gaussian damage",
+                 "gaussian_impostor_damage": "impostor damage (1 = unrelated field)",
                  "gaussian_impostor_nearest_level": "equivalent severity level",
                  "gaussian_impostor_relative": "Gaussian, fraction of largest response",
                  f"{anchor}_value": "anchor value",
@@ -123,6 +181,46 @@ def deception_table(ctx, df, opts) -> TableResult:
                  "gaussian_impostor_nearest_level": "code"},
         note="A damage near 1 for the unrelated field is expected by construction: it is "
              "the measurement that sets the scale.",
+    )
+
+
+@table(
+    section=9, order=20, scope="per_field", min_metrics=2,
+    title="Damage at every strength, beside the other metrics",
+    requires_columns=("damage",),
+    defaults={"families": ["geometric"]},
+)
+def damage_by_level_table(ctx, df, opts) -> TableResult:
+    """Median damage at every strength of the chosen families, one column per metric.
+
+    The table issues/035 asks for: the rank correlations say whether two metrics put the
+    strengths in the same order, this says how much each charges for the same strength.
+    """
+    from fmeval.analysis import damage_by_level
+
+    field = str(df["field"].iloc[0])
+    families = list(opts.get("families") or ["geometric"])
+    pieces = [damage_by_level(df, field=field, family=f, probe_labels=ctx.probe_labels)
+              for f in families]
+    frame = pd.concat([p for p in pieces if not p.empty], ignore_index=True) \
+        if any(not p.empty for p in pieces) else pd.DataFrame()
+    metrics = sorted(str(m) for m in df["metric"].unique())
+    shown = [m for m in metrics if m in frame.columns]
+    ctx.require(bool(shown), f"no metric has a damage scale on the {families} degradations")
+    frame = frame[["degradation", "level", "severity", *shown]].sort_values(
+        ["degradation", "level"])
+    left_out = [m for m in metrics if m not in shown]
+    return TableResult(
+        frame=frame,
+        keys={"field": field},
+        caption=f"Median damage over frames at every strength of the {', '.join(families)} "
+                f"degradations on {field}, one column per metric. Read across a row: two "
+                "metrics that rank every degradation alike can still charge very different "
+                "amounts for the same one.",
+        headers={"degradation": "axis"},
+        formats={"degradation": "code", **{m: "3" for m in shown}},
+        note=("No damage scale on this field, so left out: " + ", ".join(left_out) + "."
+              if left_out else ""),
     )
 
 

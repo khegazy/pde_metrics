@@ -562,3 +562,40 @@ def test_section_seven_prose_quotes_the_participation_ratio(run_folder):
 def test_magnitude_figures_skip_on_a_single_metric(run_folder, name):
     outcome = _rendered(run_folder, name, metric="mse")
     assert outcome.status == "skipped"
+
+
+# --- the tables --------------------------------------------------------------------------------
+
+
+def test_report_card_headers_are_plain_language_but_csv_columns_keep_their_names(run_folder):
+    assert _rendered(run_folder, "report_card").status == "ok"
+    tex = (run_folder.tables / "report_card.tex").read_text()
+    assert "severity tracking (rank)" in tex and "selectivity" in tex
+    header = (run_folder.data / "report_card.csv").read_text().splitlines()[0]
+    assert "rho_min" in header and "blind_axes" in header, "the machine-readable names stay"
+
+
+def test_axis_response_table_renders_or_skips_cleanly(run_folder):
+    outcome = _rendered(run_folder, "axis_response")
+    assert outcome.status == "ok", outcome.reason
+    tex = (run_folder.tables / "axis_response__field-vorticity.tex").read_text()
+    assert "\\begin{longtable}" in tex, "one row per metric and degradation needs page breaks"
+    ctx = build_context(run_folder, bootstrap=0)
+    ctx.axes = ctx.axes.drop(columns=["elasticity", "severity_10"])
+    rendered = {r.name: r for r in render(run_folder, ctx, only=["axis_response"],
+                                          formats=("png",))}
+    assert rendered["axis_response"].status == "skipped"
+
+
+def test_damage_by_level_table_names_the_metric_without_a_scale(run_folder):
+    outcome = _rendered(run_folder, "damage_by_level_table")
+    assert outcome.status == "ok", outcome.reason
+    data = pd.read_csv(run_folder.data / "damage_by_level_table__field-vorticity.csv")
+    assert {"mse", "mae", "rmse"} <= set(data.columns) and "flat" not in data.columns
+    assert set(data["degradation"]) == {"translate_x", "translate_subpixel"}, "geometric only"
+    tex = (run_folder.tables / "damage_by_level_table__field-vorticity.tex").read_text()
+    assert "flat" in tex, "the note names the metric left out"
+
+
+def test_damage_by_level_table_skips_on_a_single_metric(run_folder):
+    assert _rendered(run_folder, "damage_by_level_table", metric="mse").status == "skipped"
