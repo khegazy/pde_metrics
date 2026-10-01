@@ -24,6 +24,7 @@ writes.
 python -m fmeval.cards exemplars --all                              # if operators or the
                                                                     # canonical frame changed
 python -m fmeval.cards evidence --all --results results/comparison_<stamp>
+python -m fmeval.cards overview --results results/comparison_<stamp>  # docs/figures/<run>/
 python -m fmeval.cards catalog
 ```
 
@@ -35,7 +36,10 @@ a JSON file of the same name, so a figure cannot go stale relative to the table 
 probabilistic metrics are pinned to their own single-metric runs on `synthetic_ensemble`
 and are regenerated one at a time from those folders. Run from the repository root with a
 relative `--results` path, because the path is written into every block marker as typed.
-The catalog comes last, because it reads the fingerprint files the other steps write. The committed catalog is compared against a freshly built one in
+The `overview` step draws the cross-metric figures of the site's "Sensitivity at a glance"
+page into `docs/figures/<run>/`; delete the previous run's directory there when you replace
+the run, so the page shows one run. The catalog comes last, because it reads the fingerprint
+files the other steps write. The committed catalog is compared against a freshly built one in
 CI, so forgetting that last step fails the build rather than shipping a stale index.
 
 ## 3. The step that is easy to miss: the prose

@@ -110,6 +110,33 @@ def _panels(data: pd.DataFrame | None, key: str) -> dict[str, list[dict]]:
     return dict(sorted(panels.items()))
 
 
+def svg_rc(style: report_style.Style) -> dict:
+    """The rcParams a committed SVG is drawn and saved under: the theme plus the fixed salt."""
+    return {**style.rc, "svg.hashsalt": SVG_HASHSALT}
+
+
+def write_figure(item, path: Path, numbers: Path, *, record: dict, panel_key: str) -> None:
+    """Save one rendered figure as a byte-stable SVG and its numbers as strict JSON.
+
+    Must be called inside the same ``rc_context`` the figure was drawn in (see
+    :func:`svg_rc`): the hashsalt is read when the SVG is written. ``record`` is the
+    provenance the JSON carries beside ``caption`` and ``panels``.
+    """
+    item.fig.savefig(path, format="svg", metadata={"Date": None, "Creator": None})
+    record = {**record, "caption": item.caption, "panels": _panels(item.data, panel_key)}
+    numbers.write_text(
+        json.dumps(sanitize_json(record), indent=2, sort_keys=True, allow_nan=False) + "\n"
+    )
+
+
+def remove_stale(out_dir: Path, keep: set[str]) -> None:
+    """Delete every ``.svg`` in ``out_dir`` not in ``keep``, with the ``.json`` beside it."""
+    for stale in sorted(out_dir.glob("*.svg")):
+        if stale.name not in keep:
+            stale.unlink()
+            stale.with_suffix(".json").unlink(missing_ok=True)
+
+
 def metric_figures(run: Run, metric: str, out_dir: Path, *,
                    theme: str = "notebook") -> tuple[list[CardFigure], dict[str, str]]:
     """Draw every card figure for one metric and write each with its numbers.
@@ -135,7 +162,7 @@ def metric_figures(run: Run, metric: str, out_dir: Path, *,
     out_dir.mkdir(parents=True, exist_ok=True)
     written: list[CardFigure] = []
     reasons: dict[str, str] = {}
-    rc = {**ctx.style.rc, "svg.hashsalt": SVG_HASHSALT}
+    rc = svg_rc(ctx.style)
 
     for name in METRIC_FIGURES:
         spec = PLOTS[name]
@@ -162,26 +189,14 @@ def metric_figures(run: Run, metric: str, out_dir: Path, *,
                 plt.close("all")
                 continue
             item = result.figures[0]
-            item.fig.savefig(path, format="svg", metadata={"Date": None, "Creator": None})
+            item.caption = item.caption or spec.title
+            write_figure(item, path, numbers, panel_key=_PANEL_KEY.get(name, "field"),
+                         record={"metric": metric, "run": run.folder.name,
+                                 "dataset": str(run.rows["dataset"].iloc[0]), "figure": name})
             plt.close("all")
-        record = {
-            "metric": metric,
-            "run": run.folder.name,
-            "dataset": str(run.rows["dataset"].iloc[0]),
-            "figure": name,
-            "caption": item.caption or spec.title,
-            "panels": _panels(item.data, _PANEL_KEY.get(name, "field")),
-        }
-        numbers.write_text(
-            json.dumps(sanitize_json(record), indent=2, sort_keys=True, allow_nan=False) + "\n"
-        )
         written.append(CardFigure(name=name, path=path, numbers=numbers,
-                                  caption=item.caption or spec.title, alt=ALT_TEXT[name]))
+                                  caption=item.caption, alt=ALT_TEXT[name]))
 
     # Rule 3: nothing this generation did not write survives beside the card.
-    keep = {f.path.name for f in written} | {f.numbers.name for f in written}
-    for stale in sorted(out_dir.glob("*.svg")):
-        if stale.name not in keep:
-            stale.unlink()
-            stale.with_suffix(".json").unlink(missing_ok=True)
+    remove_stale(out_dir, {f.path.name for f in written})
     return written, reasons

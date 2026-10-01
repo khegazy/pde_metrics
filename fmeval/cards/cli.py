@@ -242,6 +242,25 @@ def cmd_exemplars(args: argparse.Namespace) -> int:
 
 
 
+def cmd_overview(args: argparse.Namespace) -> int:
+    """Draw the cross-metric overview figures of one run into docs/figures/<run>/."""
+    from .evidence import load_run
+    from .overview import FIGURES_ROOT, overview_figures
+
+    try:
+        run = load_run(Path(args.results))
+    except (FileNotFoundError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    out = Path(args.out) if args.out else FIGURES_ROOT / run.folder.name
+    figures, reasons = overview_figures(run, out)
+    for figure in figures:
+        print(f"wrote {figure.path}")
+    for name, why in reasons.items():
+        print(f"not drawn {name}: {why}")
+    return 0 if figures else 1
+
+
 def cmd_catalog(args: argparse.Namespace) -> int:
     """Write docs/catalog.json, the structured surface agents read instead of prose."""
     from .catalog import build, write
@@ -296,6 +315,14 @@ def build_parser() -> argparse.ArgumentParser:
     exemplars.add_argument("name", nargs="?", help="the degradation bundle; omit with --all")
     exemplars.add_argument("--all", action="store_true", help="every degradation bundle")
     exemplars.set_defaults(func=cmd_exemplars)
+
+    overview = sub.add_parser(
+        "overview", help="draw the cross-metric overview figures of a run for the site")
+    overview.add_argument("--results", required=True,
+                          help="a results/comparison_<stamp> folder on the canonical dataset")
+    overview.add_argument("--out", default=None,
+                          help="where to write; default docs/figures/<run name>")
+    overview.set_defaults(func=cmd_overview)
 
     catalog = sub.add_parser(
         "catalog", help="write the machine-readable index of every bundle")

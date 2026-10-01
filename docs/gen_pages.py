@@ -227,6 +227,7 @@ def main() -> None:
         )
 
     _write_catalogue_page(catalog)
+    _write_sensitivity_page(catalog)
     _write_gallery(catalog)
     _write_protocol()
     _write_nav(nav_metrics, nav_degradations)
@@ -269,6 +270,18 @@ def _write_catalogue_page(catalog: dict) -> None:
             print(f"| [{e['name']}](degradations/{e['name']}.md) | {_category(e)} "
                   f"| {d['severity_name']}{units} | {against} "
                   f"| {'yes' if d['ordinal'] else 'no: a trap test'} |", file=f)
+
+
+def _write_sensitivity_page(catalog: dict) -> None:
+    """Every metric on the same response figures, from the committed overview figures.
+
+    The figures live in `docs/figures/<run>/` and are tracked; only this page is generated,
+    from their JSON, so the captions on the page are the captions the renderer wrote.
+    """
+    from fmeval.cards.overview import page_markdown
+
+    with mkdocs_gen_files.open("sensitivity.md", "w") as f:
+        print(page_markdown(catalog=catalog), file=f)
 
 
 def _write_gallery(catalog: dict) -> None:
@@ -339,6 +352,7 @@ def _write_nav(metrics: list, degradations: list) -> None:
         print("- [Choosing a metric](choosing-a-metric.md)", file=f)
         print("- [Working in the repository](working-with-the-repo.md)", file=f)
         print("- [Catalogue](catalogue.md)", file=f)
+        print("- [Sensitivity at a glance](sensitivity.md)", file=f)
         print("- Metrics", file=f)
         for category in CATEGORIES:
             named = [m for m in metrics if m[1] == category]

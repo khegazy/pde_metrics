@@ -74,7 +74,8 @@ one or did nothing. A grey panel means the field has no damage scale for this me
 the raw value is drawn instead.
 
 Below the figures sits the table, one row per test family and physical field, so that two
-metrics can be compared at a glance.
+metrics can be compared at a glance. To compare every metric on the same figures, see
+[Sensitivity at a glance](sensitivity.md).
 
 **Results** breaks that summary down one test at a time. Each subsection links to the
 way of damaging the field that it reports, shows the numbers for that damage, and then

@@ -1238,6 +1238,7 @@ def test_the_cards_cli_takes_all_as_a_flag():
     args = parser.parse_args(["evidence", "mse", "--results", "results/x"])
     assert args.all is False and args.name == "mse"
     assert parser.parse_args(["exemplars", "--all"]).all is True
+    assert parser.parse_args(["overview", "--results", "results/x"]).out is None
     # Neither a name nor --all is a usage error, not a crash.
     assert main(["evidence", "--results", "results/x"]) == 1
     assert main(["exemplars"]) == 1
@@ -1400,6 +1401,7 @@ def test_committed_figures_fit_the_size_budget():
     which Git LFS is the answer. Fails naming the three largest files."""
     files = [p for b in BUNDLES for p in (b.path / "_generated").iterdir()
              if p.is_file() and p.name != ".gitkeep"]
+    files += [p for p in (REPO / "docs" / "figures").rglob("*") if p.is_file()]
     total = sum(p.stat().st_size for p in files)
     largest = sorted(files, key=lambda p: p.stat().st_size, reverse=True)[:3]
     assert total < 25_000_000, (
@@ -1407,6 +1409,69 @@ def test_committed_figures_fit_the_size_budget():
         + ", ".join(f"{p.parent.parent.name}/{p.name} {p.stat().st_size // 1024} KB"
                     for p in largest)
     )
+
+
+# --- the cross-metric overview --------------------------------------------------------------
+
+
+def test_overview_figures_are_byte_identical_and_cover_every_field(tmp_path):
+    from fmeval.cards import evidence
+    from fmeval.cards.overview import overview_figures
+
+    run = evidence.load_run(_figure_run(tmp_path))
+    first, reasons = overview_figures(run, tmp_path / "a")
+    second, _ = overview_figures(run, tmp_path / "b")
+    assert not reasons, reasons
+    assert [f.name for f in first] == ["response_sparklines__field-density",
+                                       "response_sparklines__field-velocity",
+                                       "response_sparklines__field-vorticity",
+                                       "response_portrait"]
+    for one, two in zip(first, second, strict=True):
+        assert one.path.read_bytes() == two.path.read_bytes(), f"{one.name} is not stable"
+        assert one.numbers.read_bytes() == two.numbers.read_bytes()
+    record = json.loads(first[0].numbers.read_text())
+    assert record["metrics"] == ["flat", "mae", "mse"] and record["keys"] == {"field": "density"}
+    assert set(record["panels"]) == {"flat", "mae", "mse"}, "numbers are keyed by metric"
+
+
+def test_the_sensitivity_page_shows_every_figure_and_names_what_is_not_on_it(tmp_path):
+    from fmeval.cards import evidence
+    from fmeval.cards.overview import overview_figures, page_markdown
+
+    root = tmp_path / "figures"
+    run = evidence.load_run(_figure_run(tmp_path))
+    figures, _ = overview_figures(run, root / "comparison_figures")
+    catalog = {"entries": [
+        {"name": "mse", "kind": "metric",
+         "evidence": {"measured": True, "run": "comparison_figures", "dataset": "kinet_re5e4"}},
+        {"name": "crps", "kind": "metric",
+         "evidence": {"measured": True, "run": "crps_1", "dataset": "synthetic_ensemble"}},
+        {"name": "gaussian_blur", "kind": "degradation", "evidence": {"measured": False}},
+    ]}
+    page = page_markdown(root, catalog)
+    for figure in figures:
+        assert f"](figures/comparison_figures/{figure.name}.svg)" in page
+        assert f"[{figure.name}.json](figures/comparison_figures/{figure.name}.json)" in page
+        assert figure.caption in page
+    assert "## Run `comparison_figures`" in page
+    assert "[crps](metrics/crps.md) (run `crps_1` on `synthetic_ensemble`)" in page
+    assert "[mse](metrics/mse.md) (run" not in page, "mse is on the grid"
+    assert "ranking" in page and "No overview figures" not in page
+    assert "No overview figures have been generated yet" in page_markdown(tmp_path / "none")
+
+
+def test_every_committed_overview_figure_has_its_numbers_beside_it():
+    root = REPO / "docs" / "figures"
+    svgs = sorted(root.rglob("*.svg")) if root.is_dir() else []
+    def refuse(token):
+        raise AssertionError(f"non-standard JSON token {token!r} in an overview figure's numbers")
+
+    for svg in svgs:
+        numbers = svg.with_suffix(".json")
+        assert numbers.is_file(), f"{svg.relative_to(REPO)} has no {numbers.name} beside it"
+        record = json.loads(numbers.read_text(), parse_constant=refuse)
+        assert record.get("panels"), f"{numbers.relative_to(REPO)} records no panels"
+        assert record["run"] == svg.parent.name, "a figure sits in the directory of its run"
 
 
 def test_exemplar_panels_are_byte_identical_within_one_environment(tmp_path):
