@@ -49,8 +49,10 @@ The negative values and the overshoot above one are real and are not a bug: they
 ringing that any band-limited interpolation of a sharp edge produces. On a smooth,
 well-resolved field they are small; on this deliberately sharp toy example they are large.
 
-What this degradation leaves untouched is the amplitude spectrum, exactly, and the spatial
-mean.
+What this degradation leaves untouched, exactly, is the spatial mean. How much variation the
+field has at each scale is kept too, except at the very finest scale the grid can hold: a shift by
+a fraction of a cell loses part of that finest wave, and all of it at half a cell. A well-resolved
+field has almost nothing at that scale, so in practice the loss is negligible.
 
 ## Severity scale
 
@@ -73,7 +75,11 @@ to spurious oscillation will register part of that as displacement damage.
 
 The operator is also only correct for periodic, band-limited data. On a field with
 significant energy at the Nyquist wavenumber the interpolation is not faithful, and on a
-non-periodic field it would be wrong outright.
+non-periodic field it would be wrong outright. On an even grid the phase ramp makes the Nyquist
+component imaginary and taking the real part discards it, so this operator declares only the
+spatial mean as preserved. Measured: half a cell changes the amplitude spectrum of a white-noise
+test field by 1.7e-2, and removes at most 8.2e-11 of the fluctuation energy of frame 5000 of the
+production trajectory, which has almost nothing at that scale (`issues/041`).
 
 As with the whole-cell version, the whole field moves together, which is a more coherent
 error than a real surrogate makes.
