@@ -34,13 +34,11 @@ FAMILY_BLOCKS = {family: f"results_{family}" for family in FAMILY_HEADINGS}
 
 NOT_MEASURED = "No measurements for this test in the recorded run."
 
-#: The degradation families whose per-strength damage a card sets beside the other metrics: the
-#: ones where magnitude, not order, is the claim (issues/035).
-DAMAGE_BLOCK_FAMILIES: tuple[str, ...] = ("geometric",)
-
-#: The metrics a card's damage table places beside its own: the pointwise controls every
-#: candidate has to be read against.
-DAMAGE_BLOCK_CONTROLS: tuple[str, ...] = ("mae", "mse", "rmse", "nrmse")
+#: Which families and which controls the damage table reports. Defined in the analysis so the
+#: report's figure of the same numbers reads them without importing the cards layer; kept
+#: under their old names here because this is where readers of the card generator look.
+DAMAGE_BLOCK_FAMILIES = an.DAMAGE_BLOCK_FAMILIES
+DAMAGE_BLOCK_CONTROLS = an.DAMAGE_BLOCK_CONTROLS
 
 
 @dataclass(frozen=True)

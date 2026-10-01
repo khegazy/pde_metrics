@@ -645,6 +645,57 @@ def test_damage_by_level_has_one_row_per_level_and_one_column_per_metric():
     assert set(geometric["degradation"]) == {"translate_x"}
 
 
+def test_per_level_response_records_every_level_once_with_its_quartiles():
+    """The curve record a figure draws: one row per field, degradation and level, probes out."""
+    df = _two_metrics({"x": [1.0, 2.0, 3.0], "translate_x": [3.0, 4.0],
+                       "gaussian_impostor": [9.0], "uncorrelated": [10.0, 10.0]},
+                      {"x": [2.0, 4.0, 6.0], "translate_x": [6.0, 8.0],
+                       "gaussian_impostor": [9.0], "uncorrelated": [20.0, 20.0]},
+                      noise=0.05, seed=3)
+    curve = an.per_level_response(_scored(df)[0], metric="a")
+    keys = curve[["field", "degradation", "level"]].apply(tuple, axis=1)
+    assert keys.is_unique and len(curve) == 5
+    assert set(curve["degradation"]) == {"x", "translate_x"}, "probes are not ladder levels"
+    assert (curve["level"] > 0).all() and curve["level"].dtype.kind == "i"
+    assert (curve["damage_q25"] <= curve["damage_median"]).all()
+    assert (curve["damage_median"] <= curve["damage_q75"]).all()
+    assert (curve["value_q25"] <= curve["value_median"]).all()
+    assert (curve["n_frames"] == 12).all()
+    assert list(curve.columns[:4]) == list(an.RESPONSE_KEYS)
+    assert not curve["severity_degenerate"].any()
+
+
+def test_per_level_response_agrees_with_damage_by_level():
+    """Two ways to get a median per level is how a figure and its table drift apart."""
+    df = _two_metrics({"x": [1.0, 2.0], "translate_x": [3.0, 4.0], "uncorrelated": [10.0, 10.0]},
+                      {"x": [2.0, 4.0], "translate_x": [6.0, 8.0], "uncorrelated": [20.0, 20.0]},
+                      noise=0.1, seed=5)
+    scored = _scored(df)[0]
+    scored.loc[(scored["degradation"] == "x") & (scored["level"] == 2),
+               "severity_degenerate"] = True
+    wide = an.damage_by_level(scored)
+    for metric in ("a", "b"):
+        curve = an.per_level_response(scored, metric=metric)
+        assert curve["severity_degenerate"].sum() == 1, "the flagged level is kept and flagged"
+        kept = curve[~curve["severity_degenerate"]]
+        merged = kept.merge(wide, on=["field", "degradation", "level"], suffixes=("", "_wide"))
+        assert len(merged) == len(kept) == len(wide)
+        assert merged["damage_median"].to_numpy() == pytest.approx(merged[metric].to_numpy())
+
+
+def test_per_level_response_without_a_damage_scale_still_records_the_value():
+    scored = _scored(_single_field({"blur": [1.0, 2.0, 3.0]}))[0]
+    curve = an.per_level_response(scored, metric="m")
+    assert curve["damage_median"].isna().all(), "no span between clean and the anchor"
+    assert np.isfinite(curve["value_median"]).all()
+    assert (curve["value_median"].diff().dropna() > 0).all()
+
+
+def test_per_level_response_needs_the_damage_column():
+    with pytest.raises(KeyError, match="add_damage"):
+        an.per_level_response(make_frame(), metric="m")
+
+
 def test_damage_by_level_needs_the_damage_column():
     with pytest.raises(KeyError, match="add_damage"):
         an.damage_by_level(make_frame())

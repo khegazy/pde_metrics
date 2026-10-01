@@ -1198,6 +1198,99 @@ def cross_metric_correlation(df: pd.DataFrame, *, field: str | None = None) -> p
 #: The columns of :func:`damage_by_level` that are not metrics.
 LEVEL_KEYS: tuple[str, ...] = ("field", "degradation", "level", "severity")
 
+#: The degradation families whose per-strength damage a card sets beside the other metrics: the
+#: ones where magnitude, not order, is the claim (issues/035).
+DAMAGE_BLOCK_FAMILIES: tuple[str, ...] = ("geometric",)
+
+#: The metrics a card's damage table and figure place beside its own: the pointwise controls
+#: every candidate has to be read against.
+DAMAGE_BLOCK_CONTROLS: tuple[str, ...] = ("mae", "mse", "rmse", "nrmse")
+
+#: The grouping keys of :func:`per_level_response`, in the order its rows are sorted.
+RESPONSE_KEYS: tuple[str, ...] = ("field", "degradation_family", "degradation", "level")
+
+#: Per-row columns :func:`per_level_response` carries through unchanged from the first row of
+#: each level, and the value used when a run predates the column.
+_RESPONSE_CARRIED: dict[str, object] = {
+    "severity": np.nan, "severity_nominal": np.nan, "severity_name": "", "calibration": "",
+}
+
+
+def per_level_response(scored: pd.DataFrame, *, metric: str,
+                       probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
+    """The response curve of one metric: one row per field, degradation and severity level.
+
+    This is the record a figure draws and the number a reader should be able to download: the
+    median, lower and upper quartile over frames of both the damage and the raw value at every
+    level, with the strength that was applied, how much it measurably changed the field, and
+    whether the level was a distinct experiment. The reference level and the probes are left
+    out; levels flagged ``severity_degenerate`` are **kept and flagged**, unlike in
+    :func:`damage_by_level`, because a figure should show a reader that a level was excluded
+    rather than silently draw a shorter curve. Over the non-degenerate rows the
+    ``damage_median`` column equals the metric's column of :func:`damage_by_level`, and a
+    test holds the two together.
+
+    Args:
+        scored: Rows with ``damage`` attached, from :func:`add_damage` or :func:`analyse`.
+        metric: The metric to record.
+        probe_labels: Ladder entries that are probes or anchors rather than ordered axes.
+
+    Returns:
+        A frame sorted by :data:`RESPONSE_KEYS`. ``damage_*`` are NaN wherever the field has
+        no damage scale; ``value_*`` are always finite where the metric produced a value.
+
+    Raises:
+        KeyError: If ``scored`` has no ``damage`` column.
+    """
+    if "damage" not in scored.columns:
+        raise KeyError("per_level_response needs the damage column; pass add_damage(df, norm)")
+    sub = scored[(scored["metric"].astype(str) == metric) & (scored["level"] > 0)
+                 & ~scored["degradation"].isin(probe_labels)].copy()
+    for column, default in _RESPONSE_CARRIED.items():
+        if column not in sub.columns:
+            sub[column] = default
+    if "energy_changed" not in sub.columns:
+        sub["energy_changed"] = np.nan
+    if "severity_degenerate" not in sub.columns:
+        sub["severity_degenerate"] = False
+    sub["severity_degenerate"] = sub["severity_degenerate"].fillna(False).astype(bool)
+    columns = [*RESPONSE_KEYS, *_RESPONSE_CARRIED, "severity_degenerate", "n_frames",
+               "damage_median", "damage_q25", "damage_q75",
+               "value_median", "value_q25", "value_q75", "energy_changed_median"]
+    if sub.empty:
+        return pd.DataFrame(columns=columns)
+
+    def quantile(q: float):
+        return lambda s: s.quantile(q)
+
+    out = (
+        sub.groupby(list(RESPONSE_KEYS), observed=True)
+        .agg(
+            severity=("severity", "first"),
+            severity_nominal=("severity_nominal", "first"),
+            severity_name=("severity_name", "first"),
+            calibration=("calibration", "first"),
+            # Any flagged row flags the level: a repeat is a property of the operation, and
+            # the harness marks it per row only because that is where it measures it.
+            severity_degenerate=("severity_degenerate", "any"),
+            n_frames=("frame_index", "nunique"),
+            damage_median=("damage", "median"),
+            damage_q25=("damage", quantile(0.25)),
+            damage_q75=("damage", quantile(0.75)),
+            value_median=("value", "median"),
+            value_q25=("value", quantile(0.25)),
+            value_q75=("value", quantile(0.75)),
+            energy_changed_median=("energy_changed", "median"),
+        )
+        .reset_index()
+        .sort_values(list(RESPONSE_KEYS), kind="stable")
+        .reset_index(drop=True)
+    )
+    out["level"] = out["level"].astype(int)
+    out["calibration"] = out["calibration"].fillna("").astype(str)
+    out["severity_name"] = out["severity_name"].fillna("").astype(str)
+    return out[columns]
+
 
 def damage_by_level(scored: pd.DataFrame, *, field: str | None = None,
                     family: str | None = None,
