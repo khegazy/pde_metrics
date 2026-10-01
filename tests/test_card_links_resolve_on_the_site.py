@@ -56,3 +56,15 @@ def test_relative_links_point_at_something_that_exists(card):
         if not path.exists():
             missing.append(target)
     assert not missing, f"{card.parent.name}/card.md links to missing files: {missing}"
+
+
+#: Every image target in a card. Images are excluded from `_LINK` above, so a broken figure
+#: path was invisible to both tests; `mkdocs --strict` would catch it, but only in the docs job.
+_IMAGE = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
+
+
+@pytest.mark.parametrize("card", CARDS, ids=[c.parent.name for c in CARDS])
+def test_every_figure_a_card_shows_exists_beside_it(card):
+    missing = [t for t in _IMAGE.findall(card.read_text())
+               if not t.startswith(("http://", "https://")) and not (card.parent / t).exists()]
+    assert not missing, f"{card.parent.name}/card.md shows figures that do not exist: {missing}"

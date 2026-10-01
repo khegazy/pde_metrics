@@ -898,6 +898,7 @@ def test_an_unmeasured_bundle_says_so_rather_than_omitting_the_key():
     e = entry(find_bundle("gaussian_blur"))
     assert e["evidence"]["measured"] is False
     assert e["evidence"]["axes"] == []
+    assert e["evidence"]["figures"] == [], "the shape is the same whether measured or not"
 
 
 def test_the_catalog_supports_the_query_it_exists_for():
@@ -1057,13 +1058,21 @@ def test_evidence_generation_is_idempotent(tmp_path, monkeypatch):
     bundle = _bundle_copy(tmp_path, monkeypatch)
     run = evidence.load_run(_synthetic_run(tmp_path))
 
-    evidence.generate("mse", run)
-    first_card = bundle.card_md.read_bytes()
-    first_print = (bundle.path / "_generated" / "fingerprint.json").read_bytes()
+    def snapshot() -> dict[str, bytes]:
+        files = {p.name: p.read_bytes() for p in (bundle.path / "_generated").iterdir()}
+        files["card.md"] = bundle.card_md.read_bytes()
+        return files
 
     evidence.generate("mse", run)
-    assert bundle.card_md.read_bytes() == first_card
-    assert (bundle.path / "_generated" / "fingerprint.json").read_bytes() == first_print
+    first = snapshot()
+    assert {"fingerprint.json", "response_curves.svg", "response_curves.json",
+            "sensitivity_profile.svg", "sensitivity_profile.json"} <= set(first)
+
+    evidence.generate("mse", run)
+    second = snapshot()
+    assert set(second) == set(first)
+    changed = sorted(name for name in first if first[name] != second[name])
+    assert not changed, f"regenerating from the same run rewrote {changed}"
 
 
 def test_evidence_fills_every_block_the_card_carries(tmp_path, monkeypatch):
@@ -1107,6 +1116,9 @@ def test_the_catalog_reads_what_the_evidence_writes(tmp_path, monkeypatch):
     assert measured["measured"] is True
     ordinary = [a for a in measured["axes"] if not a["is_probe"]]
     assert ordinary, "no ordinary axes surfaced from the fingerprint"
+    assert [f["name"] for f in measured["figures"]] == ["response_curves", "sensitivity_profile"]
+    for figure in measured["figures"]:
+        assert figure["file"].endswith(".svg") and figure["numbers"].endswith(".json")
     for axis in ordinary:
         assert axis["rank_correlation"] is not None, (
             f"{axis['axis']}: rank_correlation is null -- the key contract between "
@@ -1256,6 +1268,147 @@ def test_evidence_all_skips_a_metric_the_run_does_not_contain(tmp_path, monkeypa
     assert "skipped enstrophy" in out and "its own run" in out
 
 
+# --- the figures on a metric card ---------------------------------------------------------------
+
+
+def _figure_run(tmp_path, metrics=("mse", "mae", "flat"), *, impostor: bool = True):
+    """A results folder from the report suite's rows, stamped citable: three fields, a metric
+    with no damage scale, and optionally no impostor."""
+    from tests.test_report import synthetic_rows
+
+    df = synthetic_rows(metrics=metrics)
+    if not impostor:
+        df = df[df["degradation"] != "gaussian_impostor"]
+    df["dataset"] = "kinet_re5e4"
+    folder = tmp_path / "comparison_figures"
+    (folder / "data").mkdir(parents=True)
+    df.to_csv(folder / "data" / "results.csv", index=False)
+    return folder
+
+
+def test_metric_figures_are_byte_identical_within_one_environment(tmp_path):
+    """Two renders of the same figure must be the same bytes, SVG included.
+
+    SVG needs a fixed `svg.hashsalt` -- without it matplotlib salts element ids with a fresh
+    uuid, and two renders differ (measured) -- and no creation date in the metadata. Byte
+    identity is promised within one matplotlib version only, which is what one test run is.
+    """
+    from fmeval.cards import evidence
+    from fmeval.cards.metric_figures import METRIC_FIGURES, metric_figures
+
+    run = evidence.load_run(_figure_run(tmp_path))
+    first, _ = metric_figures(run, "mse", tmp_path / "a")
+    second, _ = metric_figures(run, "mse", tmp_path / "b")
+    assert [f.name for f in first] == list(METRIC_FIGURES)
+    for one, two in zip(first, second, strict=True):
+        assert one.path.read_bytes() == two.path.read_bytes(), f"{one.name} is not stable"
+        assert one.numbers.read_bytes() == two.numbers.read_bytes()
+        text = one.path.read_text()
+        assert "dc:date" not in text and "<dc:creator>" not in text
+
+
+def test_the_performance_block_opens_with_the_figures(tmp_path, monkeypatch):
+    """Picture first, table second; and every figure beside the card is one the card shows."""
+    from fmeval.cards import evidence
+    from fmeval.cards.metric_figures import ALT_TEXT
+
+    bundle = _bundle_copy(tmp_path, monkeypatch)
+    evidence.generate("mse", evidence.load_run(_synthetic_run(tmp_path)))
+
+    block = prose.generated_blocks(bundle.card_md.read_text())["performance"]
+    body = [line for line in block.splitlines()[1:] if line.strip()]
+    assert body[0] == f"![{ALT_TEXT['sensitivity_profile']}](_generated/sensitivity_profile.svg)"
+    assert body[2] == f"![{ALT_TEXT['response_curves']}](_generated/response_curves.svg)"
+    assert body[4].startswith("| test family |"), "the table follows the figures"
+    for alt in ALT_TEXT.values():
+        assert "]" not in alt and ")" not in alt, "alt text would truncate the link pattern"
+    referenced = set(re.findall(r"\]\(_generated/([^)]+\.svg)\)", block))
+    present = {p.name for p in (bundle.path / "_generated").glob("*.svg")}
+    assert referenced == present == {"response_curves.svg", "sensitivity_profile.svg"}
+
+
+def test_a_metric_without_a_damage_scale_still_gets_its_figures(tmp_path):
+    from fmeval.cards import evidence
+    from fmeval.cards.metric_figures import metric_figures
+
+    run = evidence.load_run(_figure_run(tmp_path))
+    _figures, reasons = metric_figures(run, "flat", tmp_path / "flat")
+    assert not reasons, reasons
+    curves = json.loads((tmp_path / "flat" / "response_curves.json").read_text())
+    assert set(curves["panels"]) == {"density", "velocity", "vorticity"}
+    rows = [r for rows in curves["panels"].values() for r in rows]
+    assert not any(r["has_scale"] for r in rows)
+    assert all(r["damage_median"] is None and r["value_median"] is not None for r in rows)
+    assert curves["metric"] == "flat" and curves["run"] == "comparison_figures"
+
+
+def test_card_figures_survive_a_run_without_the_impostor(tmp_path):
+    from fmeval.cards import evidence
+    from fmeval.cards.metric_figures import metric_figures
+
+    run = evidence.load_run(_figure_run(tmp_path, impostor=False))
+    _figures, reasons = metric_figures(run, "mse", tmp_path / "noimp")
+    assert not reasons, reasons
+    curves = json.loads((tmp_path / "noimp" / "response_curves.json").read_text())
+    assert all(r["impostor_damage"] is None
+               for rows in curves["panels"].values() for r in rows)
+
+
+def test_a_figure_this_generation_did_not_write_is_removed(tmp_path):
+    """A renamed or dropped figure must not linger beside a card that no longer shows it."""
+    from fmeval.cards import evidence
+    from fmeval.cards.metric_figures import metric_figures
+
+    out = tmp_path / "gen"
+    out.mkdir()
+    (out / "old_view.svg").write_text("<svg/>")
+    (out / "old_view.json").write_text("{}")
+    (out / "exemplars.png").write_bytes(b"png")      # not a card figure; left alone
+    metric_figures(evidence.load_run(_figure_run(tmp_path)), "mse", out)
+    assert not (out / "old_view.svg").exists() and not (out / "old_view.json").exists()
+    assert (out / "exemplars.png").exists()
+
+
+def test_an_unavailable_figure_is_said_in_the_block_not_dropped_silently(tmp_path, monkeypatch):
+    from fmeval.cards import evidence
+
+    run = evidence.load_run(_synthetic_run(tmp_path))
+    block = evidence.performance_block(run, "mse", [], {"response_curves": "no ordinal axes",
+                                                        "sensitivity_profile": "no axes"})
+    assert "No response to each family of degradation figure: no ordinal axes." in block
+    assert "No sensitivity profile figure: no axes." in block
+
+
+def test_the_figure_vocabulary_covers_what_the_figures_draw_and_grades_nothing():
+    """Every statistic a card figure labels has plain words, and none of the words is a verdict."""
+    from fmeval.cards.metric_figures import ALT_TEXT
+    from fmeval.report import vocabulary
+
+    drawn = {"rho", "rho_ci_lo", "rho_ci_hi", "cliffs_delta_min", "damage_per_change",
+             "damage_max_ucb", "blind_axes", "sensitivity_level", "damage", "value", "level",
+             "gaussian_impostor_damage", "severity_degenerate"}
+    missing = sorted(drawn - set(vocabulary.LABELS))
+    assert not missing, f"statistics a figure draws with no plain label: {missing}"
+    graded = re.compile(r"\b(" + "|".join(vocabulary.GRADING_WORDS) + r")\b", re.IGNORECASE)
+    for text in [*vocabulary.LABELS.values(), *vocabulary.FAMILY_LABELS.values(),
+                 *ALT_TEXT.values()]:
+        assert not graded.search(text), f"a label grades a measurement: {text!r}"
+
+
+def test_committed_figures_fit_the_size_budget():
+    """A ceiling with headroom, not a target: docs/decisions.md names 50 MB as the line past
+    which Git LFS is the answer. Fails naming the three largest files."""
+    files = [p for b in BUNDLES for p in (b.path / "_generated").iterdir()
+             if p.is_file() and p.name != ".gitkeep"]
+    total = sum(p.stat().st_size for p in files)
+    largest = sorted(files, key=lambda p: p.stat().st_size, reverse=True)[:3]
+    assert total < 25_000_000, (
+        f"committed generated files total {total / 1e6:.1f} MB; largest: "
+        + ", ".join(f"{p.parent.parent.name}/{p.name} {p.stat().st_size // 1024} KB"
+                    for p in largest)
+    )
+
+
 def test_exemplar_panels_are_byte_identical_within_one_environment(tmp_path):
     """Rendering the same panel twice must produce the same bytes.
 
@@ -1340,7 +1493,9 @@ def test_a_committed_figure_has_its_numbers_beside_it(bundle):
     unreadable to half this repository's intended audience, and the rule is easy to break
     by adding a figure without extending the generator that records its numbers.
     """
-    for panel in sorted((bundle.path / "_generated").glob("*.png")):
+    figures = [*(bundle.path / "_generated").glob("*.png"),
+               *(bundle.path / "_generated").glob("*.svg")]
+    for panel in sorted(figures):
         numbers = panel.with_suffix(".json")
         assert numbers.is_file(), (
             f"{bundle.name}: {panel.name} has no {numbers.name} beside it"

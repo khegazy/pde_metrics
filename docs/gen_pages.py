@@ -213,11 +213,13 @@ def main() -> None:
             print("\n" + _api(bundle), file=f)
         mkdocs_gen_files.set_edit_path(page, f"{bundle.path.parent.name}/{bundle.name}/card.md")
 
-        # Figures are served from beside the page.
-        for asset in sorted((bundle.path / "_generated").glob("*.png")):
-            target = f"{bundle.path.parent.name}/_generated/{bundle.name}_{asset.name}"
-            with mkdocs_gen_files.open(target, "wb") as f:
-                f.write(asset.read_bytes())
+        # Figures are served from beside the page, with the JSON of the numbers behind each
+        # one so an agent reading the site can read what a person sees.
+        for pattern in ("*.png", "*.svg", "*.json"):
+            for asset in sorted((bundle.path / "_generated").glob(pattern)):
+                target = f"{bundle.path.parent.name}/_generated/{bundle.name}_{asset.name}"
+                with mkdocs_gen_files.open(target, "wb") as f:
+                    f.write(asset.read_bytes())
 
         # Metrics are grouped in the navigation by type, degradations by nothing.
         (nav_metrics if bundle.kind == "metric" else nav_degradations).append(
@@ -375,6 +377,12 @@ def _write_machine_surfaces(catalog: dict) -> None:
         for e in catalog["entries"]:
             if e["kind"] == "metric":
                 print(f"- [{e['name']}](metrics/{e['name']}/): {e['summary']}", file=f)
+                for figure in e["evidence"].get("figures", []):
+                    # The numbers behind each figure on the page, at the path the site
+                    # serves them from (assets are namespaced by bundle name).
+                    print(f"    - numbers behind the {figure['name'].replace('_', ' ')} "
+                          f"figure: metrics/_generated/{e['name']}_{figure['name']}.json",
+                          file=f)
         print("\n## Degradations\n", file=f)
         for e in catalog["entries"]:
             if e["kind"] == "degradation":

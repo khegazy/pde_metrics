@@ -1,6 +1,13 @@
 /* Exemplar panels are wide; let them use the full column and scroll rather than shrink to
    illegibility on a narrow screen. */
 .md-typeset img { max-width: 100%; }
+/* Every committed figure has an opaque white background so it reads the same on GitHub and
+   here. On the dark scheme that is a white box on slate; a little padding and a rounded edge
+   make it read as a framed figure rather than a rendering mistake. No dark variants are
+   generated -- that would double the committed bytes for little gain. */
+.md-typeset img[src*="_generated/"] {
+  background: #fff; padding: 0.4rem; border-radius: 0.25rem; box-sizing: border-box;
+}
 .md-typeset table:not([class]) { display: table; width: 100%; }
 .md-typeset .md-typeset__table { overflow-x: auto; }
 
