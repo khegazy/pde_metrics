@@ -44,6 +44,24 @@ _CYCLE = ["blue", "vermillion", "green", "orange", "purple", "sky", "black", "ye
 #: Line styles carry the same information as hue, so a greyscale print stays readable.
 LINE_STYLES = ("-", "--", ":", "-.", (0, (3, 1, 1, 1)), (0, (5, 2)))
 
+#: One hue per degradation family, fixed here rather than assigned from whatever families a
+#: run happens to contain, so smoothing is the same colour on every card and in every report.
+#: Keys are ``degradations.registry.FAMILIES`` less ``identity``, which is the reference and
+#: is never drawn as a curve.
+FAMILY_COLOURS: dict[str, str] = {
+    "smoothing": "blue",
+    "spectral": "purple",
+    "geometric": "vermillion",
+    "resolution": "green",
+    "stochastic": "orange",
+    "pointwise": "sky",
+    "ensemble": "black",
+}
+
+#: Marker per physical field, in the order the sorted field names take, so a reader can tell
+#: density from vorticity on a greyscale print. Four is the most fields a run has had.
+FIELD_MARKERS = ("o", "s", "^", "D")
+
 _THEMES: dict[str, dict[str, Any]] = {
     "notebook": {
         "figure.dpi": 110,
@@ -80,6 +98,16 @@ _COMMON: dict[str, Any] = {
 def okabe(name: str) -> str:
     """A palette colour by name, so no renderer hardcodes a hex value."""
     return OKABE_ITO[name]
+
+
+def family_colour(family: str) -> str:
+    """The fixed hue of a degradation family; blue for a family the map does not know."""
+    return okabe(FAMILY_COLOURS.get(str(family), "blue"))
+
+
+def field_marker(index: int) -> str:
+    """The marker for the ``index``-th field in sorted order, cycling past four."""
+    return FIELD_MARKERS[index % len(FIELD_MARKERS)]
 
 
 @dataclass

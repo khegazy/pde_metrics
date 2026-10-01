@@ -634,6 +634,57 @@ def test_profile_table_is_the_source_of_the_headline_profile(run_folder):
 
 
 
+def test_response_curves_draw_one_record_per_metric_and_keep_the_unscaled_field_as_values(
+        run_folder):
+    """The per-metric curve figure: every family and field of one metric in one frame."""
+    outcome = _rendered(run_folder, "response_curves")
+    assert outcome.status == "ok", outcome.reason
+    data = _figure_data(run_folder, "response_curves__metric-mse")
+    assert set(data["degradation"]) == {"gaussian_blur", "translate_x", "translate_subpixel",
+                                        "median_blur"}, "probes are not ladder levels"
+    assert set(data["degradation_family"]) == {"stochastic", "geometric"}
+    assert set(data["field"]) == set(FIELDS)
+    assert data["has_scale"].all()
+    assert np.isfinite(data["impostor_damage"]).all(), "the run has the impostor on every field"
+    assert (data.loc[data["degradation"] == "median_blur", "n_frames"] == 8).all()
+    flat = _figure_data(run_folder, "response_curves__metric-flat")
+    assert not flat["has_scale"].any()
+    assert flat["damage_median"].isna().all() and np.isfinite(flat["value_median"]).all()
+
+
+def test_response_curves_survive_a_ladder_without_the_impostor(tmp_path):
+    df = synthetic_rows(metrics=("mse", "mae"))
+    df = df[df["degradation"] != "gaussian_impostor"]
+    folder = _write_run(RunFolder(tmp_path / "noimp_1").create(), df)
+    outcome = _rendered(folder, "response_curves")
+    assert outcome.status == "ok", outcome.reason
+    data = _figure_data(folder, "response_curves__metric-mse")
+    assert data["impostor_damage"].isna().all()
+
+
+def test_sensitivity_profile_rows_are_the_metric_s_ordinal_axes(run_folder):
+    outcome = _rendered(run_folder, "sensitivity_profile")
+    assert outcome.status == "ok", outcome.reason
+    data = _figure_data(run_folder, "sensitivity_profile__metric-mae")
+    assert set(data["degradation"]) == {"gaussian_blur", "translate_x", "translate_subpixel",
+                                        "median_blur"}
+    assert set(data["field"]) == set(FIELDS)
+    assert (data["metric"] == "mae").all()
+    assert data["blind"].dtype == bool
+    assert {"rho", "rho_ci_lo", "cliffs_delta_min", "damage_per_change",
+            "damage_max_ucb"} <= set(data.columns)
+
+
+def test_sensitivity_profile_skips_without_the_response_statistics(run_folder, monkeypatch):
+    """A folder analysed before the response columns existed declares itself unavailable."""
+    ctx = build_context(run_folder, bootstrap=0)
+    ctx.axes = ctx.axes.drop(columns=["cliffs_delta_min"])
+    rendered = {r.name: r for r in render(run_folder, ctx, only=["sensitivity_profile"],
+                                          formats=("png",))}
+    outcome = rendered["sensitivity_profile"]
+    assert outcome.status == "skipped" and "response statistics" in outcome.reason
+
+
 def test_a_folder_from_before_these_columns_still_renders(tmp_path):
     """Every newer input missing at once: no energy_changed, calibration, severity_nominal or
     severity_name in the rows, and no anchor_label, probe_labels or preserves in run_meta.json."""

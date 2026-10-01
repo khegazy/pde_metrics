@@ -12,18 +12,31 @@ mislead rather than merely disappoint:
 
 from __future__ import annotations
 
+import textwrap
+
 import matplotlib
 import numpy as np
 import pandas as pd
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
+from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon
+from matplotlib.ticker import LogLocator, MaxNLocator, NullFormatter
 
-from fmeval.analysis import UNCORRELATED_LABEL
+from fmeval.analysis import BLINDNESS_MARGIN, DEGENERATE_SPAN, UNCORRELATED_LABEL
 
 from .context import FigureItem, PlotResult
 from .registry import plot
-from .style import okabe, show_field, symmetric_limits
+from .style import (
+    LINE_STYLES,
+    family_colour,
+    field_marker,
+    okabe,
+    show_field,
+    symmetric_limits,
+)
+from .vocabulary import FAMILY_LABELS
+from .vocabulary import label as word
 
 
 def _axis_frame(df: pd.DataFrame, axis: str) -> pd.DataFrame:
@@ -100,6 +113,343 @@ def ladder_curves(ctx, df, opts) -> PlotResult:
                             "identical but positionally unrelated fields receive.",
                     data=pd.concat(tidy, ignore_index=True) if tidy else None)]
     )
+
+
+# --- the response at a glance: the two figures every metric card opens with -----------------
+#
+# Both are `per_metric`, so the LaTeX report draws one per metric and the card generator
+# (fmeval.cards.metric_figures) draws the one its card needs through the same function. The
+# subset `df` is one metric's rows; `ctx.axes`, `ctx.card` and `ctx.probes` are the whole
+# run's and are filtered here, because `iter_scope` subsets only the tidy frame.
+
+
+def _metric_rows(ctx, df: pd.DataFrame):
+    """The metric a per-metric subset holds, with its ordinal axes, card and probe rows."""
+    metric = str(df["metric"].iloc[0])
+    axes = ctx.axes[(ctx.axes["metric"].astype(str) == metric) & ~ctx.axes["is_probe"]]
+    card = (ctx.card[ctx.card["metric"].astype(str) == metric]
+            if "metric" in ctx.card.columns else ctx.card)
+    probes = (ctx.probes[ctx.probes["metric"].astype(str) == metric]
+              if "metric" in ctx.probes.columns else ctx.probes)
+    return metric, axes, card, probes
+
+
+def _blind_pairs(card: pd.DataFrame) -> set[tuple[str, str]]:
+    """``(field, degradation)`` pairs the card lists as a provably small response."""
+    pairs: set[tuple[str, str]] = set()
+    if "blind_axes" not in card.columns:
+        return pairs
+    for _, row in card.iterrows():
+        listed = row.get("blind_axes")
+        if isinstance(listed, str):
+            pairs.update((str(row["field"]), axis) for axis in listed.split("; ") if axis)
+    return pairs
+
+
+def _impostor_damage(probes: pd.DataFrame) -> dict[str, float]:
+    """Median damage of the fake prediction per field, where the ladder ran it.
+
+    The column itself may be absent: `probe_summary` emits columns only for probes the run
+    contained, so a ladder that skipped the impostor has no such column at all.
+    """
+    if "gaussian_impostor_damage" not in probes.columns:
+        return {}
+    values = {str(r.field): float(r.gaussian_impostor_damage) for r in probes.itertuples()}
+    return {f: v for f, v in values.items() if np.isfinite(v)}
+
+
+def _family_order(frame: pd.DataFrame) -> list[str]:
+    """Families in the card's fixed order, then any the vocabulary does not know, by name."""
+    present = set(frame["degradation_family"].astype(str))
+    known = [f for f in FAMILY_LABELS if f in present]
+    return known + sorted(present - set(FAMILY_LABELS))
+
+
+def _raw_value_axis(ax, panel: pd.DataFrame) -> None:
+    """Scale a panel that shows raw values because the field has no damage scale.
+
+    An axis the metric is invariant to varies only in the last bits -- `np.roll` cannot
+    change enstrophy but does change the summation order -- and autoscaling would stretch
+    that round-off across the whole panel under an offset label like ``1e-19+3.078e-6``.
+    The analysis withholds `rho` on such an axis (``DEGENERATE_SPAN``); the figure says the
+    same thing in words and keeps the panel flat.
+    """
+    values = panel["value_median"].to_numpy(float)
+    values = values[np.isfinite(values)]
+    ax.ticklabel_format(axis="y", style="sci", scilimits=(-3, 3), useOffset=False)
+    if len(values) == 0:
+        return
+    scale = float(np.max(np.abs(values)))
+    if scale > 0 and float(np.ptp(values)) <= DEGENERATE_SPAN * scale:
+        centre = float(np.median(values))
+        ax.set_ylim(centre - 0.05 * abs(centre), centre + 0.05 * abs(centre))
+        ax.text(0.5, 0.85, "unchanged to round-off", transform=ax.transAxes, ha="center",
+                va="center", fontsize="x-small", color="0.4")
+
+
+@plot(
+    section=3, order=15, scope="per_metric",
+    title="Response to each family of degradation",
+    requires_columns=("damage", "degradation", "level"), min_axes=1,
+    defaults={"clip": 2.0, "band": False},
+)
+def response_curves(ctx, df, opts) -> PlotResult:
+    """Median damage against severity level, one panel per degradation family and field.
+
+    The question a reader asks first -- where does this metric start to move, how fast, and
+    does it level off -- answered by position on one shared 0-to-1 scale rather than by a
+    table. Faceted by family (rows) and field (columns) so no panel carries more than a few
+    curves: twelve overlaid curves with bands is a spaghetti plot, and small multiples on a
+    common scale are what let onset and saturation be compared across panels (Tufte 2006,
+    *Beautiful Evidence*; Cleveland & McGill 1984, *J. Am. Stat. Assoc.* 79(387):531-554).
+
+    Conventions, each printed in the caption: the solid grey line is damage 1, an unrelated
+    field; the dotted black line is the fake prediction with the right spectrum; the hollow
+    black ring is the first level at which the metric has moved a tenth of the way to an
+    unrelated field; hollow grey markers are levels excluded for repeating a milder one or
+    doing nothing; a field with no damage scale shows the raw value on a grey panel instead.
+    """
+    from fmeval.analysis import per_level_response
+
+    metric, axes, _card, probes = _metric_rows(ctx, df)
+    curve = per_level_response(df, metric=metric, probe_labels=ctx.probe_labels)
+    ctx.require(not curve.empty, "no ordinal ladder axes")
+    families = _family_order(curve)
+    fields = sorted(str(f) for f in curve["field"].unique())
+    clip = float(opts["clip"])
+    scaled = {f: bool(curve.loc[curve["field"] == f, "damage_median"].notna().any())
+              for f in fields}
+    onset = {(str(r.field), str(r.degradation)): float(r.sensitivity_level)
+             for r in axes.itertuples()} if "sensitivity_level" in axes.columns else {}
+    impostor = _impostor_damage(probes)
+
+    # One y-range for every panel that has a damage scale, so a curve's height means the same
+    # thing in every panel. Capped at `clip`; points above it are drawn as triangles.
+    on_scale = pd.concat([curve.loc[curve["field"] == f, "damage_median"]
+                          for f in fields if scaled[f]] or [pd.Series(dtype=float)])
+    top = max(1.1, min(clip, float(np.nanmax([*on_scale.to_numpy(float), *impostor.values(),
+                                               1.0])) * 1.08))
+
+    fig, grid = ctx.style.figure(
+        len(families), len(fields),
+        w=min(ctx.style.panel_w * len(fields) + 1.9, ctx.style.max_size),
+        h=min(0.72 * ctx.style.panel_h * len(families) + 0.9, ctx.style.max_size),
+    )
+    tidy = curve.copy()
+    tidy["has_scale"] = tidy["field"].map(scaled)
+    tidy["impostor_damage"] = tidy["field"].map(impostor).astype(float)
+    tidy["onset_level"] = [onset.get((str(f), str(d)), np.nan)
+                           for f, d in zip(tidy["field"], tidy["degradation"])]
+
+    for i, family in enumerate(families):
+        colour = family_colour(family)
+        names = sorted(curve.loc[curve["degradation_family"] == family, "degradation"]
+                       .astype(str).unique())
+        for j, field in enumerate(fields):
+            ax = grid[i, j]
+            has_scale = scaled[field]
+            column = "damage_median" if has_scale else "value_median"
+            if not has_scale:
+                ax.set_facecolor("0.93")
+            for k, name in enumerate(names):
+                block = curve[(curve["field"] == field) & (curve["degradation"] == name)]
+                block = block.sort_values("level")
+                if block.empty:
+                    continue
+                usable = block[~block["severity_degenerate"]]
+                dropped = block[block["severity_degenerate"]]
+                x = usable["level"].to_numpy(int)
+                y = usable[column].to_numpy(float)
+                shown = np.minimum(y, clip) if has_scale else y
+                ax.plot(x, shown, color=colour, marker="o", ms=3,
+                        ls=LINE_STYLES[k % len(LINE_STYLES)] if len(x) > 3 else "none",
+                        lw=1.1, label=ctx.label(name))
+                if has_scale and opts.get("band"):
+                    ax.fill_between(x, np.minimum(usable["damage_q25"].to_numpy(float), clip),
+                                    np.minimum(usable["damage_q75"].to_numpy(float), clip),
+                                    color=colour, alpha=0.15, lw=0)
+                if has_scale and (y > clip).any():
+                    ax.plot(x[y > clip], shown[y > clip], "^", color=colour, ms=4.5)
+                if not dropped.empty:
+                    ax.plot(dropped["level"].to_numpy(int),
+                            np.minimum(dropped[column].to_numpy(float), clip) if has_scale
+                            else dropped[column].to_numpy(float),
+                            "o", mfc="none", mec="0.55", ms=3.5, ls="none")
+                first = onset.get((field, name), np.nan)
+                if has_scale and np.isfinite(first) and int(first) in set(x):
+                    ax.plot(first, shown[list(x).index(int(first))], "o", mfc="none",
+                            mec="black", mew=1.1, ms=7.5, ls="none", zorder=4)
+            if has_scale:
+                ax.axhline(1.0, color="0.3", lw=0.9)
+                if field in impostor:
+                    ax.axhline(min(impostor[field], clip), color="black", ls=":", lw=1.0)
+                ax.set_ylim(-0.04 * top, top)
+            else:
+                _raw_value_axis(ax, curve[(curve["field"] == field)
+                                          & (curve["degradation_family"] == family)])
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+            if i == 0:
+                ax.set_title(field if has_scale else f"{field}\n(no damage scale: raw value)",
+                             fontsize="small")
+            if i == len(families) - 1:
+                ax.set_xlabel(word("level"), fontsize="small")
+            ax.tick_params(labelsize="x-small")
+        grid[i, 0].set_ylabel(FAMILY_LABELS.get(family, family), fontsize="small")
+        grid[i, -1].legend(loc="center left", bbox_to_anchor=(1.02, 0.5), fontsize="x-small",
+                           frameon=False, title=None)
+    any_scale = any(scaled.values())
+    fig.supylabel(word("damage") if any_scale else f"{word('value')} (no damage scale)",
+                  fontsize="small")
+    fig.suptitle(f"{metric}: median {'damage' if any_scale else 'value'} over frames against "
+                 "severity level", fontsize="medium")
+
+    unscaled = [f for f in fields if not scaled[f]]
+    caption = (
+        f"Median damage over frames against severity level for {metric}, one row per family "
+        "of degradation and one column per field, on one shared scale. The solid grey line is "
+        "damage 1, an unrelated field; the dotted black line is the damage assigned to the fake "
+        "prediction with the right spectrum, where the run included it. The hollow black ring "
+        "marks the first level at which the metric has moved a tenth of the way to an unrelated "
+        "field. Hollow grey markers are strengths excluded for repeating a milder one or for "
+        "doing nothing. Degradations with three or fewer usable levels are drawn as markers "
+        f"only; points above {clip:g} are drawn as triangles at the top."
+        + (f" No damage scale on {', '.join(unscaled)}: the grey panels show the raw value "
+           "instead." if unscaled else "")
+    )
+    return PlotResult([FigureItem(fig, {"metric": metric}, caption=caption, data=tidy)])
+
+
+#: The four statistics the profile draws, with the x-range of each panel. ``None`` means the
+#: range follows the data; ``"log"`` a logarithmic axis.
+_PROFILE_PANELS: tuple[tuple[str, object], ...] = (
+    ("rho", (-1.05, 1.05)),
+    ("cliffs_delta_min", (-1.05, 1.05)),
+    ("damage_per_change", "log"),
+    ("damage_max_ucb", None),
+)
+
+
+@plot(
+    section=2, order=20, scope="per_metric",
+    title="Sensitivity profile",
+    requires_columns=("damage", "degradation", "level"), min_axes=1,
+)
+def sensitivity_profile(ctx, df, opts) -> PlotResult:
+    """Four per-degradation statistics on aligned rows: ordering, separation, charge, blindness.
+
+    A Cleveland dot plot (Cleveland 1985, *The Elements of Graphing Data*): one row per
+    degradation, grouped by family, and one marker per field, so every statistic is read by
+    position on a common scale. Panels: the rank correlation with its resampling interval; the
+    separation of neighbouring strengths as Cliff's delta, with Vargha and Delaney's anchors
+    as faint ticks for scale and not as grades; the damage charged per unit of field change,
+    on a log axis because it spans decades; and the upper confidence bound on the largest
+    damage beside the fixed margin below which a response counts as provably small.
+
+    A hollow marker, in every panel, is a field and degradation the card lists under
+    "response provably below the margin". That is a measured equivalence-test outcome the
+    Profile table already prints, drawn rather than graded. Sits in the headline section
+    because it is the one figure that summarises every axis of one metric.
+    """
+    ctx.require("cliffs_delta_min" in ctx.axes.columns,
+                "this run's analysis has no response statistics")
+    metric, axes, card, _probes = _metric_rows(ctx, df)
+    ordinal = set(df.loc[(df["level"] > 0) & ~df["degradation"].isin(ctx.probe_labels),
+                         "degradation"].astype(str))
+    rows = axes[axes["degradation"].astype(str).isin(ordinal)]
+    ctx.require(not rows.empty, f"no ordinal axes for {metric}")
+
+    families = _family_order(rows)
+    order = [d for family in families
+             for d in sorted(rows.loc[rows["degradation_family"] == family, "degradation"]
+                             .astype(str).unique())]
+    position = {d: len(order) - 1 - i for i, d in enumerate(order)}
+    fields = sorted(str(f) for f in rows["field"].unique())
+    blind = _blind_pairs(card)
+
+    fig, grid = ctx.style.figure(1, len(_PROFILE_PANELS), sharey=True,
+                                 w=min(2.3 * len(_PROFILE_PANELS) + 1.8, ctx.style.max_size),
+                                 h=min(0.34 * len(order) + 1.9, ctx.style.max_size))
+    tidy = []
+    for p, (column, span) in enumerate(_PROFILE_PANELS):
+        ax = grid[0, p]
+        values = rows[column].to_numpy(float) if column in rows.columns else np.array([])
+        if span == "log":
+            positive = values[np.isfinite(values) & (values > 0)]
+            # A log axis only earns its place over a decade or more; under that, matplotlib's
+            # minor labels pile up ("4x10^-1 5x10^-1 ...") and a linear axis reads better.
+            if len(positive) and positive.max() / positive.min() >= 10:
+                ax.set_xscale("log")
+                ax.xaxis.set_major_locator(LogLocator(numticks=5))
+                ax.xaxis.set_minor_formatter(NullFormatter())
+        for r in rows.itertuples():
+            x = float(getattr(r, column, np.nan)) if column in rows.columns else np.nan
+            y = position[str(r.degradation)]
+            colour = family_colour(str(r.degradation_family))
+            hollow = (str(r.field), str(r.degradation)) in blind
+            if not np.isfinite(x) or (span == "log" and x <= 0 and ax.get_xscale() == "log"):
+                continue
+            if column == "rho":
+                lo = float(getattr(r, "rho_ci_lo", np.nan))
+                hi = float(getattr(r, "rho_ci_hi", np.nan))
+                if np.isfinite(lo) and np.isfinite(hi):
+                    ax.hlines(y, lo, hi, color=colour, lw=0.9, alpha=0.6, zorder=1)
+            ax.plot(x, y, marker=field_marker(fields.index(str(r.field))), ms=5.5, ls="none",
+                    color=colour, mfc="none" if hollow else colour, mew=1.1, zorder=3)
+        if isinstance(span, tuple):
+            ax.set_xlim(*span)
+        if not np.isfinite(values).any():
+            # An empty panel reads as a missing figure; a sentence reads as a measurement.
+            ax.text(0.5, 0.5, "not defined\nfor this metric", transform=ax.transAxes,
+                    ha="center", va="center", fontsize="x-small", color="0.45")
+        if column in ("rho", "cliffs_delta_min"):
+            ax.axvline(0.0, color="0.3", lw=0.8)
+        if column == "cliffs_delta_min":
+            for anchor in _DELTA_ANCHORS:
+                ax.axvline(anchor, color="0.8", lw=0.6, ls=":")
+                ax.axvline(-anchor, color="0.8", lw=0.6, ls=":")
+        if column == "damage_max_ucb":
+            ax.axvline(BLINDNESS_MARGIN, color="0.3", lw=0.9, ls="--")
+            ax.text(BLINDNESS_MARGIN, len(order) - 0.45, f" margin {BLINDNESS_MARGIN:g}",
+                    fontsize="xx-small", color="0.3", va="bottom", ha="left")
+            ax.set_xlim(left=0.0)
+        ax.set_title(textwrap.fill(word(column), 30), fontsize="x-small")
+        ax.tick_params(labelsize="x-small")
+    grid[0, 0].set_yticks([position[d] for d in order], [ctx.label(d) for d in order],
+                          fontsize="x-small")
+    grid[0, 0].set_ylim(-0.7, len(order) - 0.3)
+    for r in rows.itertuples():
+        tidy.append({
+            "metric": metric, "field": str(r.field), "degradation": str(r.degradation),
+            "degradation_family": str(r.degradation_family),
+            **{c: float(getattr(r, c, np.nan)) for c in
+               ("rho", "rho_ci_lo", "rho_ci_hi", "cliffs_delta_min", "damage_per_change",
+                "damage_max_ucb", "blindness_q", "n_levels")},
+            "blind": (str(r.field), str(r.degradation)) in blind,
+        })
+
+    handles = [Line2D([], [], marker=field_marker(i), ls="none", color="0.3", ms=5.5, label=f)
+               for i, f in enumerate(fields)]
+    handles.append(Line2D([], [], marker="o", ls="none", color="0.3", mfc="none", ms=5.5,
+                          label=word("blind_axes")))
+    fig.legend(handles=handles, loc="outside lower center", ncol=len(handles),
+               fontsize="x-small", frameon=False)
+    fig.suptitle(f"{metric}: how it responded to each degradation, by field", fontsize="medium")
+
+    caption = (
+        f"Four measured statistics for {metric}, one row per degradation grouped by family and "
+        "one marker per field. From left: the rank correlation between the metric and the "
+        "applied strength within a frame, with the line showing the resampling interval; the "
+        "separation of neighbouring strengths as Cliff's delta, where 0 means the metric "
+        "cannot tell one strength from the next and the faint ticks at 0.12, 0.28 and 0.42 are "
+        "Vargha and Delaney's small, medium and large anchors, for scale and not as grades; the "
+        "damage charged per unit of field change at the harshest strength; and the upper "
+        f"confidence bound on the largest damage, beside the fixed margin of {BLINDNESS_MARGIN:g}. "
+        "A hollow marker is a field and degradation on which that bound lies below the margin, "
+        "so the response is provably small. A missing marker is a statistic the analysis "
+        "withheld, as the rank correlation is on an axis the metric is invariant to."
+    )
+    return PlotResult([FigureItem(fig, {"metric": metric}, caption=caption,
+                                  data=pd.DataFrame(tidy))])
 
 
 # --- section 4: is the response reliable? --------------------------------------------------

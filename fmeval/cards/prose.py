@@ -36,6 +36,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from fmeval.report.vocabulary import FAMILY_LABELS
+
 METRIC_SECTIONS: tuple[str, ...] = (
     "Definition",
     "Performance",
@@ -131,19 +133,13 @@ The generated half still may not be typed by hand: a number written by a person 
 claim about a measurement that nothing checks.
 """
 
-FAMILY_HEADINGS: dict[str, str] = {
-    "smoothing": "Smoothing",
-    "spectral": "Spectral filtering",
-    "geometric": "Displacement",
-    "resolution": "Resolution loss",
-    "stochastic": "Noise",
-    "pointwise": "Cell-value distortion",
-    "ensemble": "Ensemble dispersion",
-}
+FAMILY_HEADINGS: dict[str, str] = FAMILY_LABELS
 """Subsection heading for each degradation family, for ``## Results``.
 
 Readable names rather than the registry's own vocabulary, because the card is read by
-people who do not know this repository. Two subsections sit outside this mapping:
+people who do not know this repository. The same mapping labels the rows of the response
+figures (:mod:`fmeval.report.vocabulary`), so the heading over a table and the row label on
+the figure above it are one set of words. Two subsections sit outside this mapping:
 ``Trap tests`` for the deliberately fake predictions, which carry no ordered severity,
 and ``Compared with the other metrics`` for findings that span every test, such as how
 this metric correlates with the baseline controls.
