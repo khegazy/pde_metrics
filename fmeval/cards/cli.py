@@ -205,8 +205,18 @@ def cmd_evidence(args: argparse.Namespace) -> int:
         print(str(exc), file=sys.stderr)
         return 1
 
-    names = [b.name for b in iter_bundles("metric")] if args.name == "--all" else [args.name]
+    # `--all` is a real flag. It used to be recognised by comparing the positional name
+    # against the string "--all", which argparse never lets through: it rejected the
+    # option as unknown and the documented regeneration command did not parse.
+    names = [b.name for b in iter_bundles("metric")] if args.all else [args.name]
+    present = set(run.rows["metric"].astype(str).unique())
     for name in names:
+        if args.all and name not in present:
+            # A run that lacks a metric has nothing to say about it. Generating anyway
+            # would overwrite the card's blocks with "no measurements" and its fingerprint
+            # with empty axes -- erasing evidence from the run the card actually cites.
+            print(f"skipped {name}: not in {run.folder.name}; regenerate it from its own run")
+            continue
         try:
             generate_evidence(name, run)
         except KeyError as exc:
@@ -220,8 +230,7 @@ def cmd_exemplars(args: argparse.Namespace) -> int:
     """Render one degradation's exemplar panel, or every one."""
     from .exemplars import generate as generate_panel
 
-    names = ([b.name for b in iter_bundles("degradation")]
-             if args.name == "--all" else [args.name])
+    names = [b.name for b in iter_bundles("degradation")] if args.all else [args.name]
     for name in names:
         try:
             path = generate_panel(name)
@@ -275,14 +284,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     evidence = sub.add_parser(
         "evidence", help="fill in a metric card's measurements from an evaluation run")
-    evidence.add_argument("name", help="the metric bundle, or --all for every one")
+    evidence.add_argument("name", nargs="?", help="the metric bundle; omit with --all")
+    evidence.add_argument("--all", action="store_true",
+                          help="every metric bundle the run contains")
     evidence.add_argument("--results", required=True,
                           help="a results/<name>_<stamp> folder on the canonical dataset")
     evidence.set_defaults(func=cmd_evidence)
 
     exemplars = sub.add_parser(
         "exemplars", help="render a degradation's exemplar panel from the canonical frame")
-    exemplars.add_argument("name", help="the degradation bundle, or --all for every one")
+    exemplars.add_argument("name", nargs="?", help="the degradation bundle; omit with --all")
+    exemplars.add_argument("--all", action="store_true", help="every degradation bundle")
     exemplars.set_defaults(func=cmd_exemplars)
 
     catalog = sub.add_parser(
@@ -300,7 +312,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    if args.command == "check" and not args.all and not args.name:
+    if args.command in ("check", "evidence", "exemplars") and not args.all and not args.name:
         print("give a bundle name, or --all", file=sys.stderr)
         return 1
     return int(args.func(args))

@@ -1210,6 +1210,52 @@ def test_evidence_survives_a_run_whose_ladder_skipped_a_probe(tmp_path, monkeypa
     assert "gaussian_blur" in text
 
 
+def test_the_cards_cli_takes_all_as_a_flag():
+    """`evidence --all` and `exemplars --all` must parse.
+
+    Both used to be recognised by comparing the positional `name` against the literal
+    string "--all", which argparse never lets through -- it rejected the option as unknown,
+    so the regeneration command written in `docs/recipes/refresh-the-evidence.md` exited
+    with "the following arguments are required: name" and nobody could run it as written.
+    """
+    from fmeval.cards.cli import build_parser, main
+
+    parser = build_parser()
+    args = parser.parse_args(["evidence", "--all", "--results", "results/x"])
+    assert args.all is True and args.name is None
+    args = parser.parse_args(["evidence", "mse", "--results", "results/x"])
+    assert args.all is False and args.name == "mse"
+    assert parser.parse_args(["exemplars", "--all"]).all is True
+    # Neither a name nor --all is a usage error, not a crash.
+    assert main(["evidence", "--results", "results/x"]) == 1
+    assert main(["exemplars"]) == 1
+
+
+def test_evidence_all_skips_a_metric_the_run_does_not_contain(tmp_path, monkeypatch, capsys):
+    """`--all` must leave alone every card whose metric the run never evaluated.
+
+    Twelve cards cite the kinet comparison run and four ensemble cards cite their own
+    single-metric runs. Regenerating a card from a run that lacks its metric would write
+    "No measurements" into every block and an empty fingerprint -- erasing the evidence
+    from the run the card actually cites, with nothing to say that happened.
+    """
+    from argparse import Namespace
+
+    from fmeval.cards import cli, evidence
+
+    folder = _synthetic_run(tmp_path)            # holds mse and mae only
+    bundles = [loader.Bundle(name=n, kind="metric", path=tmp_path / n)
+               for n in ("enstrophy", "mse")]
+    monkeypatch.setattr(cli, "iter_bundles", lambda kind=None: bundles)
+    generated: list[str] = []
+    monkeypatch.setattr(evidence, "generate", lambda name, run: generated.append(name))
+
+    assert cli.cmd_evidence(Namespace(name=None, all=True, results=str(folder))) == 0
+    assert generated == ["mse"]
+    out = capsys.readouterr().out
+    assert "skipped enstrophy" in out and "its own run" in out
+
+
 def test_exemplar_panels_are_byte_identical_within_one_environment(tmp_path):
     """Rendering the same panel twice must produce the same bytes.
 
