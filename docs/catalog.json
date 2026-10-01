@@ -26,6 +26,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -71,6 +72,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -117,6 +119,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -162,6 +165,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -207,6 +211,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -252,6 +257,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -297,6 +303,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -342,6 +349,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -388,6 +396,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -433,6 +442,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -479,6 +489,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -524,6 +535,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -569,6 +581,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -617,6 +630,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -662,6 +676,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -707,6 +722,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -750,6 +766,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -793,6 +810,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -841,6 +859,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -884,6 +903,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -927,6 +947,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -970,6 +991,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -1018,6 +1040,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -1063,6 +1086,7 @@
       "evidence": {
         "axes": [],
         "dataset": null,
+        "figures": [],
         "measured": false,
         "probes": [],
         "profile": [],
@@ -1169,6 +1193,18 @@
           }
         ],
         "dataset": "synthetic_ensemble",
+        "figures": [
+          {
+            "file": "metrics/crps/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/crps/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/crps/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/crps/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 12,
         "measured": true,
         "probes": [],
@@ -1290,6 +1326,18 @@
           }
         ],
         "dataset": "synthetic_ensemble",
+        "figures": [
+          {
+            "file": "metrics/ensemble_mean_rmse/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/ensemble_mean_rmse/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/ensemble_mean_rmse/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/ensemble_mean_rmse/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 12,
         "measured": true,
         "probes": [],
@@ -1634,6 +1682,18 @@
           }
         ],
         "dataset": "kinet_re5e4",
+        "figures": [
+          {
+            "file": "metrics/enstrophy/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/enstrophy/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/enstrophy/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/enstrophy/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 161,
         "measured": true,
         "probes": [
@@ -2545,6 +2605,18 @@
           }
         ],
         "dataset": "kinet_re5e4",
+        "figures": [
+          {
+            "file": "metrics/h1_seminorm/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/h1_seminorm/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/h1_seminorm/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/h1_seminorm/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 161,
         "measured": true,
         "probes": [
@@ -3481,6 +3553,18 @@
           }
         ],
         "dataset": "kinet_re5e4",
+        "figures": [
+          {
+            "file": "metrics/h_minus_one/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/h_minus_one/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/h_minus_one/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/h_minus_one/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 161,
         "measured": true,
         "probes": [
@@ -4430,6 +4514,18 @@
           }
         ],
         "dataset": "kinet_re5e4",
+        "figures": [
+          {
+            "file": "metrics/increment_flatness/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/increment_flatness/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/increment_flatness/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/increment_flatness/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 161,
         "measured": true,
         "probes": [
@@ -5383,6 +5479,18 @@
           }
         ],
         "dataset": "kinet_re5e4",
+        "figures": [
+          {
+            "file": "metrics/increment_w1/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/increment_w1/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/increment_w1/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/increment_w1/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 161,
         "measured": true,
         "probes": [
@@ -5786,6 +5894,18 @@
           }
         ],
         "dataset": "kinet_re5e4",
+        "figures": [
+          {
+            "file": "metrics/kinetic_energy/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/kinetic_energy/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/kinetic_energy/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/kinetic_energy/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 161,
         "measured": true,
         "probes": [
@@ -6699,6 +6819,18 @@
           }
         ],
         "dataset": "kinet_re5e4",
+        "figures": [
+          {
+            "file": "metrics/mae/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/mae/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/mae/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/mae/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 161,
         "measured": true,
         "probes": [
@@ -7639,6 +7771,18 @@
           }
         ],
         "dataset": "kinet_re5e4",
+        "figures": [
+          {
+            "file": "metrics/mse/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/mse/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/mse/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/mse/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 161,
         "measured": true,
         "probes": [
@@ -8586,6 +8730,18 @@
           }
         ],
         "dataset": "kinet_re5e4",
+        "figures": [
+          {
+            "file": "metrics/nrmse/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/nrmse/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/nrmse/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/nrmse/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 161,
         "measured": true,
         "probes": [
@@ -8964,6 +9120,18 @@
           }
         ],
         "dataset": "kinet_re5e4",
+        "figures": [
+          {
+            "file": "metrics/palinstrophy/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/palinstrophy/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/palinstrophy/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/palinstrophy/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 161,
         "measured": true,
         "probes": [
@@ -9095,6 +9263,18 @@
           }
         ],
         "dataset": "synthetic_ensemble",
+        "figures": [
+          {
+            "file": "metrics/rank_histogram/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/rank_histogram/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/rank_histogram/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/rank_histogram/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 12,
         "measured": true,
         "probes": [],
@@ -9996,6 +10176,18 @@
           }
         ],
         "dataset": "kinet_re5e4",
+        "figures": [
+          {
+            "file": "metrics/rmse/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/rmse/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/rmse/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/rmse/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 161,
         "measured": true,
         "probes": [
@@ -10936,6 +11128,18 @@
           }
         ],
         "dataset": "kinet_re5e4",
+        "figures": [
+          {
+            "file": "metrics/spectrum_l2/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/spectrum_l2/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/spectrum_l2/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/spectrum_l2/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 161,
         "measured": true,
         "probes": [
@@ -11106,6 +11310,18 @@
           }
         ],
         "dataset": "synthetic_ensemble",
+        "figures": [
+          {
+            "file": "metrics/spread_skill/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/spread_skill/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/spread_skill/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/spread_skill/_generated/sensitivity_profile.json"
+          }
+        ],
         "frames": 12,
         "measured": true,
         "probes": [],
