@@ -48,9 +48,33 @@ The measured half of the page. Every number in both sections comes from one reco
 evaluation run, named at the top of Results along with the dataset, the grid and the
 number of snapshots it covered.
 
-**Performance** is a single table near the top of the card summarising how the metric
-behaved on every family of test, broken down by physical field, so that two metrics can
-be compared at a glance.
+**Performance** opens with two figures and then gives the table they summarise, so that
+the shape of the metric's behaviour is seen before any number is read.
+
+The first figure, the *sensitivity profile*, has one row per way of damaging the field,
+grouped by family, and four panels that share those rows. Each marker is one physical
+field (circle, square, triangle). From left to right the panels show: whether the metric
+put the strengths in the right order (the rank correlation, with a short line for its
+resampling interval); whether the metric can tell one strength from the next (Cliff's
+delta, where 0 means neighbouring strengths are indistinguishable and the faint ticks are
+reference anchors for scale, not grades); how much damage the metric charged per unit of
+change to the field; and the upper bound on the largest damage it ever assigned, beside
+the fixed margin below which a response counts as provably small. A hollow marker is a
+field and degradation on which the metric's response lies provably below that margin.
+A missing marker is a statistic the analysis withheld, which happens on an axis the
+metric cannot see at all.
+
+The second figure, the *response curves*, shows median damage against severity level,
+with one row per family of degradation and one column per field, every panel on the same
+0-to-1 scale. The solid grey line is damage 1, an unrelated field. The dotted black line is
+the damage the metric assigned to the fake prediction with the right spectrum. The hollow
+ring marks the first strength at which the metric moved a tenth of the way to an unrelated
+field. Hollow grey markers are strengths that were excluded because they repeated a milder
+one or did nothing. A grey panel means the field has no damage scale for this metric, and
+the raw value is drawn instead.
+
+Below the figures sits the table, one row per test family and physical field, so that two
+metrics can be compared at a glance.
 
 **Results** breaks that summary down one test at a time. Each subsection links to the
 way of damaging the field that it reports, shows the numbers for that damage, and then
@@ -86,3 +110,12 @@ Colour limits are shared across each row of a figure and printed at the row's ed
 matters more than it sounds. If each panel were autoscaled separately, a badly damaged
 field would be drawn with exactly the same colours as the original and would look
 identical to it — and it would do so with nothing on the page to warn you.
+
+Every figure on a metric page is drawn from the one recorded run named at the top of
+Results, by the same code that draws the evaluation report, and the numbers behind each
+figure are published beside it as a JSON file of the same name. Colour means the family
+of degradation throughout — smoothing is always the same blue — and marker shape means
+the physical field, so the figures can be read in greyscale. Reference lines mark fixed
+conventions of the analysis, never a judgement: damage 1 is what an unrelated field
+scores, and the blindness margin is where a response counts as provably small. Nothing
+on a figure is coloured good or bad.

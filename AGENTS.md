@@ -170,6 +170,9 @@ Six sections, fixed order, all required: `## Definition`, `## Performance`, `## 
 - **`## Performance` and `## Results`** — generated. Leave the marked blocks alone; write
   only the explanation below each Results block, saying what that test found about this
   metric. Link each subsection to the degradations it reports rather than describing them.
+  Performance opens with two figures drawn by `cards evidence` from the same run as its
+  table (`fmeval/cards/metric_figures.py`); they are committed SVGs with their numbers in
+  a JSON beside them, and nothing in them is ever drawn or edited by hand.
 
 There are no word counts. Say what the section needs to say and stop.
 
