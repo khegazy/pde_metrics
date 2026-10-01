@@ -16,6 +16,7 @@ from ..registry import degradation
     severity_name="offset",
     severity_units="fraction of fluctuation rms",
     severity_direction="increasing",
+    preserves=("amplitude_spectrum", "shape"),
 )
 def bias(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     """Add a uniform offset scaled to the reference fluctuation RMS.

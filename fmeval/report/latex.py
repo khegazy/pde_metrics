@@ -111,6 +111,7 @@ def booktabs_table(
     align: str | None = None,
     note: str = "",
     landscape: bool = False,
+    long: bool = False,
 ) -> str:
     """Render a DataFrame as a complete ``table`` float.
 
@@ -126,6 +127,9 @@ def booktabs_table(
         align: Column alignment string. Defaults to left for text, right for numbers.
         note: Optional footnote below the table.
         landscape: Wrap in a smaller font for wide tables.
+        long: Typeset as a ``longtable`` that breaks across pages and repeats its header, for
+            tables with a row per metric and axis. It cannot sit inside a float, so it is not
+            wrapped in one.
     """
     formats = formats or {}
     headers = headers or {}
@@ -160,8 +164,21 @@ def booktabs_table(
                 cells.append(escape(value))
         body.append(" & ".join(cells) + r" \\")
 
-    size = "\\small\n" if landscape else ""
+    size = "\\footnotesize\n" if df.shape[1] > 12 else ("\\small\n" if landscape else "")
     footnote = f"\n\\par\\smallskip\n\\footnotesize {escape(note)}" if note else ""
+    if long:
+        header = f"\\toprule\n{head} \\\\\n\\midrule\n"
+        return (
+            f"% generated {_stamp()}\n"
+            f"\\begingroup\n{size}"
+            f"\\begin{{longtable}}{{{align}}}\n"
+            f"\\caption{{{escape(caption)}}}\\label{{tab:{_clean(label)}}} \\\\\n"
+            f"{header}\\endfirsthead\n{header}\\endhead\n\\bottomrule\n\\endlastfoot\n"
+            + "\n".join(body)
+            + "\n\\end{longtable}"
+            + footnote
+            + "\n\\endgroup\n"
+        )
     return (
         f"% generated {_stamp()}\n"
         "\\begin{table}[htbp]\n\\centering\n"

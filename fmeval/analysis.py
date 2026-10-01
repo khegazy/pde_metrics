@@ -23,11 +23,15 @@ from __future__ import annotations
 import logging
 import warnings
 from collections.abc import Mapping
+from dataclasses import dataclass
 from itertools import pairwise
 
 import numpy as np
 import pandas as pd
-from scipy.stats import mannwhitneyu, spearmanr
+from scipy.stats import false_discovery_control, mannwhitneyu, spearmanr
+
+from . import stats
+from .context import derive_rng
 
 log = logging.getLogger(__name__)
 
@@ -44,6 +48,37 @@ SENSITIVITY_FRACTION: float = 0.10
 
 #: Fraction of the uncorrelated limit at which a metric counts as saturated.
 SATURATION_FRACTION: float = 0.90
+
+#: Fraction of the clean-to-unrelated span at which the half-damage severity is read. Fixed
+#: once here, like the two fractions above.
+HALF_DAMAGE_FRACTION: float = 0.5
+
+#: How many of an axis's mildest usable levels the elasticity is fitted over. The slope over a
+#: whole ladder that saturates understates the small-damage exponent: on the pinned run
+#: comparison_1790639359, MSE on vorticity under translate_subpixel has a slope of 1.76 over all
+#: six levels and 1.99 over the first three, and the second is the double-penalty exponent.
+ELASTICITY_LEVELS: int = 3
+
+#: The negligibility margin on the damage scale. A degradation on which the metric's largest
+#: damage is provably below it is listed as one the metric does not respond to. Half the
+#: detection fraction, so "detected" and "blind" can never both hold. A repository convention,
+#: fixed once and never per metric; the analogue followed is the smallest effect size of interest
+#: of equivalence testing (Lakens 2017, Soc. Psychol. Personal. Sci. 8(4):355-362).
+BLINDNESS_MARGIN: float = SENSITIVITY_FRACTION / 2
+
+#: Confidence of the upper bound on the largest damage (the bootstrap quantile it is read at).
+BLINDNESS_CONFIDENCE: float = 0.90
+
+#: False-discovery level below which an axis is listed as one the metric does not respond to.
+FDR_LEVEL: float = 0.10
+
+#: Per-axis columns added by :func:`_response_statistics`, in output order.
+RESPONSE_COLUMNS: tuple[str, ...] = (
+    "cliffs_delta_min", "elasticity", "elasticity_x", "response_shape",
+    "severity_10", "severity_50", "severity_resolution", "field_change_max",
+    "damage_per_change", "blindness_block_length", "damage_max_ucb", "blindness_q",
+)
+_TEXT_COLUMNS = frozenset({"elasticity_x", "response_shape"})
 
 #: Relative size below which a quantity counts as round-off rather than signal, measured
 #: against the largest value in the same group.
@@ -67,8 +102,22 @@ DEGENERATE_SPAN: float = 1e-9
 # --- normalisation --------------------------------------------------------------------
 
 
-def normalisation(df: pd.DataFrame,
-                  *, uncorrelated_label: str = UNCORRELATED_LABEL) -> pd.DataFrame:
+def run_labels(meta: Mapping, config: Mapping | None = None) -> tuple[str, frozenset[str]]:
+    """The anchor label and the probe labels a run declared, with the defaults for older runs.
+
+    ``evaluate.py`` records both in ``run_meta.json``: the anchor is ``analysis.anchor`` from the
+    configuration, the probes every ladder entry whose operator is declared ``ordinal=False``.
+    A folder written before that falls back to the resolved configuration, then to
+    :data:`UNCORRELATED_LABEL` and :data:`PROBE_LABELS`, so it keeps rendering as it did.
+    """
+    configured = ((config or {}).get("analysis") or {}).get("anchor")
+    anchor = meta.get("anchor_label") or configured or UNCORRELATED_LABEL
+    recorded = meta.get("probe_labels")
+    return str(anchor), (frozenset(recorded) if recorded is not None else PROBE_LABELS)
+
+
+def normalisation(df: pd.DataFrame, *, uncorrelated_label: str = UNCORRELATED_LABEL,
+                  probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
     """Anchors that put every metric on one dimensionless scale.
 
     Raw mean squared error and a raw transport distance are not comparable, so a *damage
@@ -100,7 +149,7 @@ def normalisation(df: pd.DataFrame,
     ):
         clean = float(g.loc[g["level"] == 0, "value"].median()) if (g["level"] == 0).any() \
             else float("nan")
-        high, source = _uncorrelated_anchor(g, uncorrelated_label)
+        high, source = _uncorrelated_anchor(g, uncorrelated_label, probe_labels)
         span = high - clean
         # The scale is the LARGEST value anywhere in the group, not the median. The median is
         # defeated in exactly the case this guard exists for: a metric invariant to the
@@ -127,7 +176,8 @@ def normalisation(df: pd.DataFrame,
     return pd.DataFrame(rows)
 
 
-def _uncorrelated_anchor(g: pd.DataFrame, preferred: str) -> tuple[float, str]:
+def _uncorrelated_anchor(g: pd.DataFrame, preferred: str,
+                         probe_labels: frozenset[str] = PROBE_LABELS) -> tuple[float, str]:
     """Estimate the value two statistically identical but unaligned fields would give."""
     if preferred and (g["degradation"] == preferred).any():
         sub = g[g["degradation"] == preferred]
@@ -143,7 +193,7 @@ def _uncorrelated_anchor(g: pd.DataFrame, preferred: str) -> tuple[float, str]:
             return float(top["value"].median()), f"{label}@max"
 
     # Otherwise fall back to the worst severity level of any ordinal axis, and say so.
-    ordinal = g[~g["degradation"].isin(PROBE_LABELS)]
+    ordinal = g[~g["degradation"].isin(probe_labels)]
     if ordinal.empty:
         return float("nan"), "none"
     worst = ordinal.loc[ordinal["value"].abs().idxmax()]
@@ -244,7 +294,7 @@ def response_direction(df: pd.DataFrame,
 
 def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                    block_length: int = 10, n_bootstrap: int = 200,
-                   seed: int = 0) -> pd.DataFrame:
+                   seed: int = 0, probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
     """One row per (dataset, metric, field, ladder axis) with the criteria of group A.
 
     Args:
@@ -258,6 +308,8 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
             intervals.
         n_bootstrap: Bootstrap resamples.
         seed: Bootstrap seed.
+        probe_labels: Ladder labels that are probes or anchors rather than monotone axes; the
+            run's declaration, from :func:`run_labels`.
     """
     rng = np.random.default_rng(seed)
     reference = df[df["level"] == 0]
@@ -273,6 +325,18 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
             for key, span, degenerate in zip(
                 norm.set_index(["dataset", "metric", "field"]).index,
                 norm["span"], norm["degenerate"], strict=True,
+            )
+        }
+        if norm is not None else {}
+    )
+    # The anchor itself, for a target-valued metric: its onset span must be measured on the same
+    # |log(value / target)| scale its ordering statistics run on, not in raw units.
+    highs = (
+        {
+            key: (float("nan") if bool(degenerate) else float(high))
+            for key, high, degenerate in zip(
+                norm.set_index(["dataset", "metric", "field"]).index,
+                norm["value_uncorrelated"], norm["degenerate"], strict=True,
             )
         }
         if norm is not None else {}
@@ -309,6 +373,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
     magnitude = df.assign(_abs=df["value"].abs())
     frame_scales = magnitude.groupby([*keys, "frame_index"], observed=True)["_abs"].max()
     group_scales = magnitude.groupby(keys, observed=True)["_abs"].max()
+    largest = _largest_responses(pd.concat([reference, ladder]), keys, probe_labels)
 
     for (dataset, metric, field, axis), g in ladder.groupby(
         ["dataset", "metric", "field", "degradation"], observed=True
@@ -317,7 +382,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
         group_scale = float(group_scales.loc[(dataset, metric, field)])
         levels = g["level"].to_numpy()
         values = g["value"].to_numpy()
-        is_probe = axis in PROBE_LABELS
+        is_probe = axis in probe_labels
         # Every ordering statistic below is computed on the value multiplied by this sign, so
         # "rises with damage" holds by construction and the four of them need no direction
         # argument. The reported values stay in the metric's own units.
@@ -331,13 +396,12 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
             # from the target is what makes the one-sided statistics mean what they say.
             oriented = g.assign(value=_target_distance(g["value"], target))
             sign = 1
-        clean = float(
-            reference[
-                (reference["dataset"] == dataset)
-                & (reference["metric"] == metric)
-                & (reference["field"] == field)
-            ]["value"].median()
-        )
+        clean_rows = reference[
+            (reference["dataset"] == dataset)
+            & (reference["metric"] == metric)
+            & (reference["field"] == field)
+        ]
+        clean = float(clean_rows["value"].median())
         # The clean value on the same scale the ordering statistics run on. For an
         # ordinary metric that is just the sign applied; for a target-valued one it is
         # the distance from the target, which is near zero for a calibrated prediction.
@@ -372,6 +436,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                 monotone_fraction=np.nan, separability_auc_min=np.nan,
                 sensitivity_level=np.nan, saturation_level=np.nan,
             )
+            record.update(_withheld_response())
         else:
             per_frame = _per_frame_rho(oriented, frame_scale)
             lo, hi = _block_bootstrap_rho(oriented, rng, block_length, n_bootstrap,
@@ -416,6 +481,24 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                     oriented, oriented_clean, SATURATION_FRACTION,
                     _signed(spans.get((dataset, metric, field)), sign), group_scale),
             )
+            key = (dataset, metric, field)
+            if target is None:
+                response_span = _signed(spans.get(key), sign)
+            else:
+                high = highs.get(key, np.nan)
+                response_span = (
+                    float(_target_distance(pd.Series([high]), target).iloc[0]) - oriented_clean
+                    if np.isfinite(high) else np.nan
+                )
+            record.update(_response_statistics(
+                g, oriented, oriented_clean, target,
+                np.nan if response_span is None else response_span,
+                frame_scale, axis_round_off, record["separability_auc_min"],
+                largest.get(key, np.nan), n_bootstrap,
+                derive_rng(seed, f"blindness/{dataset}/{metric}/{axis}", 0, str(field)),
+                clean_rows.assign(value=(sign * clean_rows["value"] if target is None
+                                         else _target_distance(clean_rows["value"], target))),
+            ))
         if "damage" in g.columns:
             damage = g["damage"].to_numpy()
             # All-NaN whenever the anchor is degenerate, which is the documented outcome for a
@@ -425,12 +508,234 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
             )
         rows.append(record)
 
-    return pd.DataFrame(rows)
+    axes = pd.DataFrame(rows)
+    if "blindness_p" in axes.columns:
+        # Benjamini & Yekutieli (2001, Ann. Stat. 29(4):1165-1188): valid under arbitrary
+        # dependence, which the rows have -- they share frames and fields, and metrics correlate.
+        # Adjusted over every row of the run, the several hundred tests the protocol runs at once.
+        tested = axes["blindness_p"].notna()
+        axes["blindness_q"] = np.nan
+        if tested.any():
+            axes.loc[tested, "blindness_q"] = false_discovery_control(
+                axes.loc[tested, "blindness_p"].to_numpy(float), method="by")
+        axes = axes.drop(columns="blindness_p")
+    return axes
+
+
+def _paired_medians(g: pd.DataFrame) -> pd.Series:
+    """Median over frames of each degradation level's value minus the clean value in the same frame.
+
+    Paired within the frame because a single-field quantity drifts along the trajectory --
+    enstrophy decays -- and against the trajectory's median clean value the drift itself would
+    read as a response, the same trap as pooling frames for a rank correlation.
+    """
+    clean = g[g["level"] == 0].groupby("frame_index", observed=True)["value"].median()
+    rest = g[g["level"] > 0]
+    difference = rest["value"] - rest["frame_index"].map(clean)
+    return difference.groupby([rest["degradation"], rest["level"]], observed=True).median()
+
+
+def _largest_responses(rows: pd.DataFrame, keys: list[str],
+                       probe_labels: frozenset[str] = PROBE_LABELS) -> dict[tuple, float]:
+    """The largest absolute paired departure from clean any ordinal level produces, per group.
+
+    The scale the blindness bound falls back to when the unrelated-field anchor is degenerate
+    (issues/037), so that a metric which cannot see the anchor can still be shown not to respond
+    to that anchor's operator.
+    """
+    out: dict[tuple, float] = {}
+    for key, g in rows.groupby(keys, observed=True):
+        medians = _paired_medians(g[~g["degradation"].isin(probe_labels) | (g["level"] == 0)])
+        if len(medians):
+            out[key] = float(np.nanmax(np.abs(medians.to_numpy(float))))
+    return out
 
 
 def _signed(span: float | None, sign: int) -> float | None:
     """Orient a shared span, so a threshold on oriented values uses an oriented target."""
     return None if span is None else sign * span
+
+
+def _withheld_response() -> dict[str, object]:
+    """The response columns for a row that has no ordering to describe."""
+    return {c: "" if c in _TEXT_COLUMNS else np.nan for c in RESPONSE_COLUMNS}
+
+
+def _response_x(g: pd.DataFrame, levels: list) -> tuple[np.ndarray, str]:
+    """A severity per level that INCREASES with level, and the name of what it is.
+
+    A calibrated operator records the absolute value it resolved to, which can fall with level
+    and differs per field: on the pinned run comparison_1790639359 a vorticity low-pass records
+    cutoffs 33.3, 17.1, 8.0 and 4.7 under the name "energy removed". A slope against that has the
+    wrong sign and the wrong label, so a calibrated axis uses the configured fraction, which rises
+    with level and means the same on every field.
+
+    An uncalibrated knob that falls with level is read through its complement ``1 - x`` when its
+    values are fractions -- a retained fraction, whose identity is 1 and whose harshest level is 0,
+    becomes the fraction removed -- and through its reciprocal otherwise. The reciprocal of a
+    retained fraction is infinite at total attenuation, which dropped that level from the onset
+    and the slope.
+    """
+    calibration = g["calibration"].iloc[0] if "calibration" in g.columns else ""
+    calibrated = isinstance(calibration, str) and calibration != ""
+    column = "severity_nominal" if calibrated and "severity_nominal" in g.columns else "severity"
+    x = g.groupby("level", observed=True)[column].median().reindex(levels).to_numpy(float)
+    name = f"{column} ({g['severity_name'].iloc[0]})" if "severity_name" in g.columns else column
+    if len(x) > 1 and x[-1] < x[0]:
+        if np.all((x >= 0) & (x <= 1)):
+            return 1.0 - x, f"1 - {name}"
+        with np.errstate(divide="ignore"):
+            return 1.0 / x, f"1/{name}"
+    return x, name
+
+
+def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean: float,
+                         target: float | None, span: float, frame_scale: Mapping[int, float],
+                         axis_round_off: bool, auc: float, largest_response: float,
+                         n_bootstrap: int, rng: np.random.Generator,
+                         clean_rows: pd.DataFrame) -> dict[str, object]:
+    """How strongly, how early and how precisely one axis moves the metric: the RESPONSE_COLUMNS.
+
+    Everything is read on the oriented scale the ordering statistics use, so a metric where larger
+    is better and a target-valued metric are handled as the other statistics handle them; ``span``
+    is the clean-to-unrelated span on that scale (NaN when the anchor is degenerate).
+
+    * ``cliffs_delta_min`` -- ``2 A - 1`` of the weakest adjacent pair, so 0 is no separation
+      (Cliff 1993, *Psychol. Bull.* 114(3):494-509; Vargha & Delaney 2000, *J. Educ. Behav. Stat.*
+      25(2):101-132).
+    * ``elasticity`` -- the log-log slope of the size of the median response against the severity
+      named by ``elasticity_x``, over the mildest :data:`ELASTICITY_LEVELS` levels.
+    * ``response_shape`` -- see :func:`fmeval.stats.fit_response_shape`.
+    * ``severity_10`` / ``severity_50`` -- the severity at which the median crosses 10% / 50% of
+      the span, interpolated between measured levels; the mildest level when it already has.
+    * ``severity_resolution`` -- the median over adjacent pairs of the paired-step Fisher bound,
+      on values divided by the metric's largest value in the same frame, which removes the drift of
+      the flow along the trajectory (six orders on density) from what would otherwise be counted as
+      scatter. A target-valued metric is already on a drift-free scale and is not divided.
+    * ``field_change_max`` -- the median ``energy_changed`` at the harshest usable level.
+    * ``damage_per_change`` -- the median damage at that level over ``field_change_max``: the
+      per-degradation response behind ``selectivity``. Both are medians at the same level.
+    * ``blindness_block_length``, ``damage_max_ucb``, ``blindness_q`` -- see
+      :func:`_blindness_bound`.
+      Computed on round-off axes too: a response that is round-off against a finite span is
+      exactly a response provably below the margin.
+
+    ``rng`` is derived from the group's own keys, never the generator the rank-correlation
+    interval shares across groups, so nothing here can move an existing interval.
+    """
+    frames = np.sort(g["frame_index"].unique())
+    levels = sorted(g["level"].unique())
+
+    def by_frame_and_level(frame: pd.DataFrame, column: str) -> np.ndarray:
+        return (frame.pivot_table(index="frame_index", columns="level", values=column,
+                                  aggfunc="median", observed=True)
+                .reindex(index=frames, columns=levels).to_numpy(float))
+
+    Y = by_frame_and_level(oriented, "value")
+    # The response is read within each frame, against the clean field of the same frame: a
+    # single-field quantity drifts along the trajectory (enstrophy decays), and against the
+    # trajectory's median clean value that drift would read as a response.
+    clean = clean_rows.groupby("frame_index", observed=True)[
+        [c for c in ("value", "damage") if c in clean_rows.columns]].median().reindex(frames)
+    paired = Y - clean["value"].to_numpy(float)[:, None]
+    Z = Y
+    if target is None:
+        scale = np.array([frame_scale.get(f, np.nan) for f in frames], dtype=float)
+        scale[scale <= 0] = np.nan
+        Z = Y / scale[:, None]
+    x, x_name = _response_x(g, levels)
+    out = _withheld_response()
+    out.update(
+        cliffs_delta_min=2.0 * auc - 1.0,
+        elasticity_x=x_name,
+        field_change_max=(
+            float(g.loc[g["level"] == levels[-1], "energy_changed"].median())
+            if "energy_changed" in g.columns else np.nan
+        ),
+    )
+    # Damage relative to the clean field of the same frame, where a damage scale exists. Not for a
+    # target-valued metric: its damage is on the raw ratio and is not oriented.
+    damage = None
+    if target is None and "damage" in g.columns and "damage" in clean.columns:
+        damage = by_frame_and_level(g, "damage") - clean["damage"].to_numpy(float)[:, None]
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            harshest = float(np.nanmedian(damage[:, -1]))
+        change = out["field_change_max"]
+        if np.isfinite(harshest) and np.isfinite(change) and change > 0:
+            out["damage_per_change"] = harshest / change
+    if damage is not None and n_bootstrap > 0:
+        D = damage
+        if not np.isfinite(D).any() and np.isfinite(largest_response) and largest_response > 0:
+            D = paired / largest_response      # the anchor is degenerate: read against the ladder
+        if np.isfinite(D).any():
+            out.update(_blindness_bound(D, Z, n_bootstrap, rng))
+    if axis_round_off:
+        return out
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        response = np.nanmedian(paired, axis=0)
+        resolution = stats.fisher_severity_resolution(x, Z)
+        out["severity_resolution"] = (
+            float(np.nanmedian(resolution)) if np.isfinite(resolution).any()
+            or np.isinf(resolution).any() else np.nan
+        )
+    # A fall is read by its size, as the two-sided bound is; rho already gives the direction.
+    magnitude = -response if np.isfinite(response[-1]) and response[-1] < 0 else response
+    out.update(
+        elasticity=stats.elasticity(x[:ELASTICITY_LEVELS], magnitude[:ELASTICITY_LEVELS]),
+        response_shape=stats.fit_response_shape(x, magnitude)[0],
+    )
+    if np.isfinite(span):
+        # Between measured levels only: a knob's identity is not always 0 (a coarsening factor's
+        # is 1), so a crossing before the mildest level is reported as that level.
+        out.update(
+            severity_10=stats.severity_at(x, response, SENSITIVITY_FRACTION * span),
+            severity_50=stats.severity_at(x, response, HALF_DAMAGE_FRACTION * span),
+        )
+    return out
+
+
+def _blindness_bound(D: np.ndarray, Z: np.ndarray, n_bootstrap: int,
+                     rng: np.random.Generator) -> dict[str, float]:
+    """An upper bound on the largest damage one degradation produces, and how surely it is small.
+
+    A metric that does not respond significantly is not thereby shown to be blind to the
+    degradation; that is accepting the null. Equivalence testing reverses the logic (Schuirmann
+    1987, J. Pharmacokinet. Biopharm. 15(6):657-680; Lakens 2017): the claim is made only when the
+    upper confidence bound of the response lies below a margin fixed in advance.
+
+    Two-sided, as the two one-sided tests of an equivalence test are: a large fall is a response
+    as much as a large rise. Frames are resampled in moving blocks, and in each resample the largest
+    absolute per-level median damage is taken. ``damage_max_ucb`` is the
+    :data:`BLINDNESS_CONFIDENCE` quantile of those, and
+    ``blindness_p`` the fraction of resamples in which it reached :data:`BLINDNESS_MARGIN` -- a
+    bootstrap tail fraction, not a test p-value -- which :func:`summarise_axes` adjusts across
+    the run and drops. On one trajectory the resampling measures variation along it, not between
+    realisations (issues/004).
+
+    The block length is estimated on ``Z``, the frame-scaled trace, so the drift of the flow along
+    the trajectory is not read as persistence (Politis & White 2004).
+
+    Args:
+        D: Frames by levels, damage (or the relative response when the anchor is degenerate).
+        Z: Frames by levels, the same values divided by the metric's scale in each frame.
+    """
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        block = stats.politis_white_block_length(np.nanmedian(Z, axis=1))
+        out: dict[str, float] = {"blindness_block_length": block}
+        if len(D) < 2 * block:
+            return out
+        draws = np.array([
+            np.nanmax(np.abs(np.nanmedian(D[idx], axis=0)))
+            for idx in stats.block_bootstrap(len(D), block, n_bootstrap, rng)
+        ])
+    draws = draws[np.isfinite(draws)]
+    if draws.size:
+        out["damage_max_ucb"] = float(np.percentile(draws, 100 * BLINDNESS_CONFIDENCE))
+        out["blindness_p"] = float(np.mean(draws >= BLINDNESS_MARGIN))
+    return out
 
 
 def _per_frame_rho(g: pd.DataFrame,
@@ -609,7 +914,9 @@ def _block_bootstrap_rho(
 # --- probes --------------------------------------------------------------------------
 
 
-def probe_summary(df: pd.DataFrame, norm: pd.DataFrame) -> pd.DataFrame:
+def probe_summary(df: pd.DataFrame, norm: pd.DataFrame, *,
+                  uncorrelated_label: str = UNCORRELATED_LABEL,
+                  probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
     """One row per (dataset, metric, field) for the non-monotone probes.
 
     Reports the IN-4 damage score alongside the ladder severity level whose damage is closest, which
@@ -621,14 +928,22 @@ def probe_summary(df: pd.DataFrame, norm: pd.DataFrame) -> pd.DataFrame:
     Emitting a row carrying only the group keys made the card generator write a trap-test
     line with an em dash for its score, which a reader cannot distinguish from a trap test
     that ran and could not be scored.
+
+    When the anchor is degenerate the impostor has no damage, so ``gaussian_impostor_relative``
+    reports its departure from clean as a fraction of the largest departure any ordinary level
+    produced, both in the metric's own direction -- the interim number issues/037 proposes. For a
+    phase-blind metric it reads about 1e-15: the fake prediction moves it no more than round-off
+    while a blur moves it fully. It is NaN whenever a damage exists, so the two never sit together.
     """
     scored = add_damage(df, norm)
+    directions = response_direction(df, norm)
+    degenerate = norm.set_index(["dataset", "metric", "field"])["degenerate"].to_dict()
     rows = []
     for (dataset, metric, field), g in scored.groupby(
         ["dataset", "metric", "field"], observed=True
     ):
         record = {"dataset": dataset, "metric": metric, "field": field}
-        present = sorted(PROBE_LABELS & set(g["degradation"].unique()))
+        present = sorted(probe_labels & set(g["degradation"].unique()))
         if not present:
             continue
         for label in present:
@@ -636,10 +951,17 @@ def probe_summary(df: pd.DataFrame, norm: pd.DataFrame) -> pd.DataFrame:
             damage = float(sub["damage"].median())
             record[f"{label}_value"] = float(sub["value"].median())
             record[f"{label}_damage"] = damage
-            if label != UNCORRELATED_LABEL:
+            if label != uncorrelated_label:
                 # The anchor's nearest severity level is the largest translation by construction,
                 # so reporting it would add a column that carries no information.
-                record[f"{label}_nearest_level"] = _nearest_level(g, damage, exclude=label)
+                record[f"{label}_nearest_level"] = _nearest_level(g, damage, exclude=label,
+                                                                  probe_labels=probe_labels)
+        if "gaussian_impostor" in present:
+            key = (dataset, metric, field)
+            record["gaussian_impostor_relative"] = (
+                _relative_response(g, "gaussian_impostor", directions.get(key, 1), probe_labels)
+                if bool(degenerate.get(key, False)) else np.nan
+            )
         rows.append(record)
     if not rows:
         # Empty, but still carrying the group keys: every consumer filters this frame by
@@ -649,9 +971,26 @@ def probe_summary(df: pd.DataFrame, norm: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def _nearest_level(g: pd.DataFrame, damage: float, exclude: str) -> str:
+def _relative_response(g: pd.DataFrame, label: str, sign: int,
+                       probe_labels: frozenset[str]) -> float:
+    """A probe's paired departure from clean as a fraction of the largest ordinary-level one."""
+    scale = float(np.nanmax(np.abs(g["value"].to_numpy()))) or 1.0
+    medians = _paired_medians(g)
+    if medians.empty:
+        return float("nan")
+    degradations = medians.index.get_level_values(0)
+    ordinary = medians[~np.isin(degradations.astype(str), list(probe_labels))]
+    largest = float(np.nanmax(np.abs(ordinary.to_numpy(float)))) if len(ordinary) else np.nan
+    if not np.isfinite(largest) or largest < DEGENERATE_SPAN * scale:
+        return float("nan")                    # the ladder itself is round-off: no scale at all
+    probe = medians[degradations.astype(str) == label]
+    return float(sign * probe.iloc[0] / largest) if len(probe) else float("nan")
+
+
+def _nearest_level(g: pd.DataFrame, damage: float, exclude: str,
+                   probe_labels: frozenset[str] = PROBE_LABELS) -> str:
     """The ordinal severity level whose damage is closest to ``damage``, for interpretation."""
-    ordinal = g[(~g["degradation"].isin(PROBE_LABELS)) & (g["level"] > 0)]
+    ordinal = g[(~g["degradation"].isin(probe_labels)) & (g["level"] > 0)]
     if ordinal.empty or not np.isfinite(damage):
         return ""
     medians = ordinal.groupby(["degradation", "level", "severity"], observed=True)[
@@ -707,6 +1046,9 @@ def report_card(axes: pd.DataFrame, probes: pd.DataFrame,
                 rho_defined.groupby(keys, observed=True)["rho"].idxmin()
             ][[*keys, "degradation"]].rename(columns={"degradation": "worst_axis"})
             base = base.merge(worst, on=keys, how="left")
+        profiles = [dict(zip(keys, key, strict=True), **_profile(g))
+                    for key, g in ordinal.groupby(keys, observed=True)]
+        base = base.merge(pd.DataFrame(profiles), on=keys, how="left")
 
     for extra in (probes, norm[[*keys, "value_clean", "value_uncorrelated", "span",
                                 "anchor_source", "degenerate"]]):
@@ -717,6 +1059,78 @@ def report_card(axes: pd.DataFrame, probes: pd.DataFrame,
         baseline = base["cost_s"].min()
         base["cost_relative"] = base["cost_s"] / baseline if baseline else np.nan
     return base
+
+
+def _profile(axes: pd.DataFrame) -> dict[str, object]:
+    """What one metric responds to, across the ordinal degradations of one field.
+
+    The response on each degradation is ``damage_per_change``: the median damage at its harshest
+    usable level over the median field change there. Raw damage would describe the ladder rather
+    than the metric -- how far the config pushed each degradation -- and every metric would name the
+    harshest translation as its most sensitive axis. Per unit of ``energy_changed``, the mean
+    squared difference over the reference variance, mean squared error costs the same on every
+    degradation and the profile of any other metric is what it charges relative to that one.
+
+    * ``selectivity`` -- one minus the Treves-Rolls sparseness of that profile (Treves & Rolls 1991,
+      Network 2(4):371-397): 0 when every degradation costs the same per unit change, approaching
+      1 when one degradation carries it all. Depends on which degradations the ladder ran.
+    * ``most_sensitive_axis``, ``least_sensitive_axis`` -- the two ends of the profile.
+    * ``blind_axes`` -- degradations whose largest damage is provably below
+      :data:`BLINDNESS_MARGIN` (``blindness_q`` below :data:`FDR_LEVEL`), ``"; "``-joined.
+    * ``elasticity_displacement`` -- the elasticity on ``translate_subpixel``, the double-penalty
+      exponent, when the ladder ran it.
+    """
+    per_unit = pd.Series(dtype=float)
+    if "damage_per_change" in axes.columns:
+        per_unit = axes["damage_per_change"].set_axis(axes["degradation"])
+        per_unit = per_unit[np.isfinite(per_unit)]
+    blind = (sorted(axes.loc[axes["blindness_q"] < FDR_LEVEL, "degradation"].astype(str))
+             if "blindness_q" in axes.columns else [])
+    displacement = (axes.loc[axes["degradation"] == "translate_subpixel", "elasticity"].dropna()
+                    if "elasticity" in axes.columns else pd.Series(dtype=float))
+    return {
+        "selectivity": (1.0 - stats.treves_rolls_sparseness(per_unit.to_numpy())
+                        if len(per_unit) >= 2 else np.nan),
+        "most_sensitive_axis": per_unit.idxmax() if len(per_unit) else pd.NA,
+        "least_sensitive_axis": per_unit.idxmin() if len(per_unit) else pd.NA,
+        "blind_axes": "; ".join(blind),
+        "elasticity_displacement": float(displacement.iloc[0]) if len(displacement) else np.nan,
+    }
+
+
+@dataclass(frozen=True)
+class Analysis:
+    """Everything the report and the cards derive from one run."""
+
+    norm: pd.DataFrame
+    scored: pd.DataFrame
+    """The result rows with ``damage`` attached."""
+    axes: pd.DataFrame
+    probes: pd.DataFrame
+    card: pd.DataFrame
+    """Unflagged; :func:`flag` is the report's business, and cards never carry flags."""
+    anchor_label: str = UNCORRELATED_LABEL
+    probe_labels: frozenset[str] = PROBE_LABELS
+
+
+def analyse(rows: pd.DataFrame, *, meta: Mapping | None = None, config: Mapping | None = None,
+            block_length: int = 10, n_bootstrap: int = 200, seed: int = 0) -> Analysis:
+    """Every statistic of one run, in one call.
+
+    The report driver and the card evidence loader used to repeat this sequence by hand and had
+    drifted: the evidence loader skipped :func:`add_damage`, so a card carried none of the damage
+    based columns its report showed. ``meta`` and ``config`` are the run's ``run_meta.json`` and
+    resolved configuration, from which the anchor and probe labels are read (:func:`run_labels`).
+    """
+    anchor, probe_labels = run_labels(meta or {}, config)
+    norm = normalisation(rows, uncorrelated_label=anchor, probe_labels=probe_labels)
+    scored = add_damage(rows, norm)
+    axes = summarise_axes(scored, norm=norm, block_length=block_length, n_bootstrap=n_bootstrap,
+                          seed=seed, probe_labels=probe_labels)
+    probes = probe_summary(rows, norm, uncorrelated_label=anchor, probe_labels=probe_labels)
+    return Analysis(norm=norm, scored=scored, axes=axes, probes=probes,
+                    card=report_card(axes, probes, norm), anchor_label=anchor,
+                    probe_labels=probe_labels)
 
 
 def flag(card: pd.DataFrame, thresholds: Mapping[str, float]) -> pd.DataFrame:
@@ -779,6 +1193,88 @@ def cross_metric_correlation(df: pd.DataFrame, *, field: str | None = None) -> p
     rho = pivot.corr(method="spearman")
     rho.index.name = "metric"
     return rho
+
+
+#: The columns of :func:`damage_by_level` that are not metrics.
+LEVEL_KEYS: tuple[str, ...] = ("field", "degradation", "level", "severity")
+
+
+def damage_by_level(scored: pd.DataFrame, *, field: str | None = None,
+                    family: str | None = None,
+                    probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
+    """Median damage over frames at every strength of every degradation, one column per metric.
+
+    The table issues/035 asks for: two metrics can order every degradation identically and still
+    charge very different amounts for the same one, and this is where that shows. The reference
+    level, the probes and severity levels that repeat a milder one are excluded; a metric whose
+    damage is undefined everywhere (a degenerate anchor, issues/037) has no column.
+
+    Raises:
+        KeyError: If ``scored`` has no ``damage`` column.
+    """
+    if "damage" not in scored.columns:
+        raise KeyError("damage_by_level needs the damage column; pass add_damage(df, norm)")
+    sub = scored[(scored["level"] > 0) & ~scored["degradation"].isin(probe_labels)]
+    if "severity_degenerate" in sub.columns:
+        sub = sub[~sub["severity_degenerate"].fillna(False).astype(bool)]
+    if field is not None:
+        sub = sub[sub["field"] == field]
+    if family is not None:
+        sub = sub[sub["degradation_family"] == family]
+    if sub.empty:
+        return pd.DataFrame(columns=list(LEVEL_KEYS))
+    wide = (sub.groupby([*LEVEL_KEYS, "metric"], observed=True)["damage"].median()
+            .unstack("metric").dropna(axis=1, how="all").reset_index())
+    wide.columns = [str(c) for c in wide.columns]
+    return wide
+
+
+def _metric_columns(wide: pd.DataFrame) -> list[str]:
+    return [c for c in wide.columns if c not in LEVEL_KEYS]
+
+
+def concordance_matrix(scored: pd.DataFrame, *, field: str | None = None,
+                       probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
+    """Lin's concordance between every pair of metrics' damage, over the rows of damage_by_level.
+
+    The redundancy matrix asks whether two metrics order the ladder alike; this asks whether they
+    agree in magnitude, penalising departure from the identity line (Lin 1989, Biometrics
+    45(1):255-268). On the pinned run comparison_1790639359, MAE and MSE rank-correlate at 0.986
+    and have a concordance of 0.699. Pairwise-complete; empty below two metrics or three rows.
+    """
+    wide = damage_by_level(scored, field=field, probe_labels=probe_labels)
+    metrics = _metric_columns(wide)
+    if len(metrics) < 2 or len(wide) < 3:
+        return pd.DataFrame()
+    out = pd.DataFrame(
+        [[stats.lins_ccc(wide[a].to_numpy(float), wide[b].to_numpy(float)) for b in metrics]
+         for a in metrics],
+        index=pd.Index(metrics, name="metric"), columns=metrics,
+    )
+    return out
+
+
+def participation_ratio_of_metrics(scored: pd.DataFrame,
+                                   probe_labels: frozenset[str] = PROBE_LABELS) -> float:
+    """The effective number of independent directions the metrics' damage responses span.
+
+    (sum lambda)^2 / sum lambda^2 over the eigenvalues of the metric-by-metric covariance of the
+    complete rows of damage_by_level (Gao et al. 2017, bioRxiv 214262). The covariance is not
+    standardised on purpose: damage already puts every metric on one scale, and standardising
+    would give a nearly unresponsive metric's noise the weight of a responsive metric's signal.
+
+    Returns:
+        A number between 1 and the metric count, or NaN below two metrics or three complete rows.
+    """
+    wide = damage_by_level(scored, probe_labels=probe_labels)
+    metrics = _metric_columns(wide)
+    complete = wide[metrics].dropna()
+    if len(metrics) < 2 or len(complete) < 3:
+        return float("nan")
+    eigenvalues = np.clip(np.linalg.eigvalsh(np.cov(complete.to_numpy(float), rowvar=False)),
+                          0.0, None)
+    total = float(np.sum(eigenvalues**2))
+    return float(np.sum(eigenvalues) ** 2 / total) if total > 0 else float("nan")
 
 
 def selectivity_profile(axes: pd.DataFrame) -> pd.DataFrame:

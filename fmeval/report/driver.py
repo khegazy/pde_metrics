@@ -90,19 +90,15 @@ def build_context(
     maps = _read_maps(folder.data / "error_maps.npz")
     spectrum = _read_csv(folder.data / "calibration_spectrum.csv")
 
-    norm = an.normalisation(df)
-    scored = an.add_damage(df, norm)
-    axes = an.summarise_axes(scored, norm=norm, block_length=block_length,
-                             n_bootstrap=bootstrap)
-    probes = an.probe_summary(df, norm)
-    card = an.flag(an.report_card(axes, probes, norm), thresholds or {})
+    analysis = an.analyse(df, meta=meta, config=config, block_length=block_length,
+                          n_bootstrap=bootstrap)
 
     return ReportContext(
-        df=scored,
-        norm=norm,
-        axes=axes,
-        probes=probes,
-        card=card,
+        df=analysis.scored,
+        norm=analysis.norm,
+        axes=analysis.axes,
+        probes=analysis.probes,
+        card=an.flag(analysis.card, thresholds or {}),
         spectrum=spectrum,
         maps=maps,
         meta=meta,
@@ -110,6 +106,8 @@ def build_context(
         style=Style.build(theme, metrics=df["metric"].unique(),
                           axes=df["degradation"].unique()),
         thresholds=thresholds or {},
+        anchor_label=analysis.anchor_label,
+        probe_labels=analysis.probe_labels,
     )
 
 
@@ -195,6 +193,7 @@ def _emit_table(folder, spec, result, outcome) -> None:
         headers=result.headers,
         note=result.note,
         landscape=result.landscape or result.frame.shape[1] > 8,
+        long=result.long,
     )
     (folder.tables / f"{stem}.tex").write_text(tex)
     outcome.files.extend([
@@ -231,7 +230,7 @@ def write_document(folder: RunFolder, ctx: ReportContext,
             body += [escape(section.intro), ""]
         if prose:
             body += [prose, ""]
-        for item in sorted(items, key=lambda i: i.name):
+        for item in sorted(items, key=lambda i: (_declared_order(i), i.name)):
             body.extend(item.latex)
         name = f"{section.number:02d}_{section.key}"
         (folder.sections / f"{name}.tex").write_text("\n".join(body) + "\n")
@@ -241,6 +240,44 @@ def write_document(folder: RunFolder, ctx: ReportContext,
         document(written, title=f"Metric report: {metric}", subtitle=f"dataset: {dataset}")
     )
     return folder.root / "main.tex"
+
+
+def _response_headline(row: pd.Series, ctx: ReportContext) -> list[str]:
+    """The response statistics of one metric and field, as clauses for the headline."""
+    def code_of(name: object) -> str:
+        return f"\\texttt{{{escape(str(name))}}}"
+
+    axes = ctx.axes[(ctx.axes["metric"] == row["metric"]) & (ctx.axes["field"] == row["field"])
+                    & ~ctx.axes["is_probe"]]
+    bits = []
+    if np.isfinite(row.get("selectivity", np.nan)):
+        bits.append(
+            f"its selectivity is {_fmt(row['selectivity'])}, charging most per unit of field "
+            f"change for {code_of(row['most_sensitive_axis'])} and least for "
+            f"{code_of(row['least_sensitive_axis'])}"
+        )
+    if "blindness_q" in axes.columns and axes["blindness_q"].notna().any():
+        blind = [a for a in str(row.get("blind_axes") or "").split("; ") if a]
+        bits.append(
+            f"its largest response is provably below {an.BLINDNESS_MARGIN:g} at "
+            f"{an.BLINDNESS_CONFIDENCE:.0%} confidence on "
+            + (", ".join(code_of(a) for a in blind) if blind else "no degradation")
+        )
+    if np.isfinite(row.get("elasticity_displacement", np.nan)):
+        against = axes.loc[axes["degradation"] == "translate_subpixel", "elasticity_x"]
+        bits.append(
+            f"its elasticity to a sub-pixel displacement is {_fmt(row['elasticity_displacement'])}"
+            + (f" against {escape(str(against.iloc[0]))}" if len(against) else "")
+        )
+    return bits
+
+
+def _declared_order(item: Rendered) -> int:
+    """The ``order`` a renderer was registered with, which places it within its section."""
+    from .registry import PLOTS, TABLES
+
+    spec = (PLOTS if item.kind == "plot" else TABLES).get(item.name)
+    return spec.order if spec is not None else 100
 
 
 def _section_prose(key: str, ctx: ReportContext) -> str:
@@ -275,8 +312,12 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
 
     if key == "headline" and not card.empty:
         parts = []
+        several = card["metric"].nunique() > 1
         for _, row in card.iterrows():
-            bits = [f"On {escape(str(row['field']))}, the weakest axis is "
+            subject = (f"For \\texttt{{{escape(str(row['metric']))}}} on "
+                       f"{escape(str(row['field']))}" if several
+                       else f"On {escape(str(row['field']))}")
+            bits = [f"{subject}, the weakest axis is "
                     f"\\texttt{{{escape(str(row.get('worst_axis', '')))}}} with a rank "
                     f"correlation of {_fmt(row.get('rho_min'))}"]
             if np.isfinite(row.get("gaussian_impostor_damage", np.nan)):
@@ -285,6 +326,13 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
                     f"{_fmt(row['gaussian_impostor_damage'])}, where 1 is the value two "
                     "unrelated fields receive"
                 )
+            elif np.isfinite(row.get("gaussian_impostor_relative", np.nan)):
+                bits.append(
+                    "this metric has no damage scale here, and the spectrum-matched Gaussian "
+                    f"field moves it by {row['gaussian_impostor_relative']:.1e} of its largest "
+                    "response to any ordinary degradation"
+                )
+            bits.extend(_response_headline(row, ctx))
             flags = str(row.get("flags", ""))
             bits.append(
                 f"flagged: {escape(flags)}" if flags else
@@ -320,17 +368,59 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
             "magnitude."
         )
 
+    if key == "selectivity" and ctx.df["metric"].nunique() >= 2:
+        parts = []
+        ratio = an.participation_ratio_of_metrics(ctx.df, probe_labels=ctx.probe_labels)
+        scaled = sorted(str(m) for m in ctx.norm.loc[~ctx.norm["degenerate"].astype(bool),
+                                                      "metric"].unique())
+        missing = sorted(set(ctx.metrics) - set(scaled))
+        if np.isfinite(ratio):
+            parts.append(
+                f"The {len(scaled)} metrics with a damage scale span {_fmt(ratio)} independent "
+                "directions: the participation ratio of the eigenvalues of the covariance of "
+                "their damage over every strength of every degradation, which would read "
+                f"{len(scaled)} if each measured something different and 1 if they all measured "
+                "the same thing."
+            )
+        if missing:
+            parts.append("Left out, having no damage scale on this run: "
+                         + ", ".join(f"\\texttt{{{escape(m)}}}" for m in missing) + ".")
+        if "selectivity" in card.columns and card["selectivity"].notna().any():
+            low = card.loc[card["selectivity"].idxmin()]
+            high = card.loc[card["selectivity"].idxmax()]
+            parts.append(
+                f"Selectivity runs from {_fmt(low['selectivity'])} "
+                f"(\\texttt{{{escape(str(low['metric']))}}} on {escape(str(low['field']))}) to "
+                f"{_fmt(high['selectivity'])} (\\texttt{{{escape(str(high['metric']))}}} on "
+                f"{escape(str(high['field']))}), where 0 is a metric that charges every "
+                "degradation the same per unit of field change."
+            )
+        return " ".join(parts)
+
     if key == "displacement":
-        return (
+        text = (
             "A translation leaves every statistic of the field unchanged and alters only "
             "position. A metric that approaches the unrelated-field level after a "
             "displacement much smaller than the structures in the flow is exhibiting the "
             "double penalty: it is reporting a large error for a field that is correct in "
             "shape and amplitude."
         )
+        geometric = sorted(
+            str(a) for a in ctx.df.loc[ctx.df["degradation_family"] == "geometric",
+                                       "degradation"].unique()
+            if str(a) in ctx.ordinal_axes
+        ) if "degradation_family" in ctx.df.columns else []
+        for axis in geometric:
+            words = ctx.preserved_by(axis)
+            if words:
+                text += (
+                    f" \\texttt{{{escape(axis)}}} is declared, and test-verified, to leave "
+                    "unchanged: " + ", ".join(w.replace("_", " ") for w in words) + "."
+                )
+        return text
 
     if key == "robustness":
-        return (
+        text = (
             "Two constructions are used. The spectrum-matched Gaussian field retains every "
             "Fourier amplitude and replaces every phase, so its energy spectrum and "
             "two-point correlation are identical to the reference to machine precision "
@@ -340,6 +430,14 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
             "random offset, which preserves every statistic exactly while removing "
             "alignment, and therefore defines a damage of one."
         )
+        if ctx.anchor_label != an.UNCORRELATED_LABEL:
+            text += (
+                " In this run the damage scale is anchored instead on the ladder entry "
+                f"\\texttt{{{escape(ctx.anchor_label)}}} (set by \\texttt{{analysis.anchor}}), "
+                "so a damage of one is the value that entry receives rather than the value of "
+                "an unrelated field."
+            )
+        return text
 
     if key == "reproducibility":
         config = _dump_yaml(ctx.config)
@@ -367,10 +465,16 @@ def write_summary_text(folder: RunFolder, ctx: ReportContext) -> Path:
              f"frames      : {ctx.meta.get('n_frames', '')}",
              f"config hash : {ctx.meta.get('config_hash', '')}", ""]
     if not ctx.card.empty:
-        columns = [c for c in ("field", "rho_min", "worst_axis",
-                               "separability_auc_min", "gaussian_impostor_damage",
-                               "flags") if c in ctx.card.columns]
+        columns = [c for c in ("metric", "field", "rho_min", "worst_axis",
+                               "separability_auc_min", "selectivity", "blind_axes",
+                               "gaussian_impostor_damage", "gaussian_impostor_relative",
+                               "cost_relative", "flags") if c in ctx.card.columns]
         lines.append(ctx.card[columns].to_string(index=False))
+    if ctx.df["metric"].nunique() > 1:
+        ratio = an.participation_ratio_of_metrics(ctx.df, probe_labels=ctx.probe_labels)
+        scaled = int((~ctx.norm.groupby("metric")["degenerate"].all()).sum())
+        lines += ["", f"independent directions : {_fmt(ratio)} across the {scaled} metrics "
+                      "with a damage scale (participation ratio)"]
     path = folder.root / "summary.txt"
     path.write_text("\n".join(lines) + "\n")
     return path

@@ -21,6 +21,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from fmeval.analysis import PROBE_LABELS, UNCORRELATED_LABEL
+
 from .registry import RendererUnavailable
 from .style import Style
 
@@ -55,6 +57,8 @@ class TableResult:
     headers: dict[str, str] = dc_field(default_factory=dict)
     landscape: bool = False
     notes: list[str] = dc_field(default_factory=list)
+    long: bool = False
+    """Typeset as a ``longtable`` that breaks across pages, for one row per metric and axis."""
 
 
 @dataclass
@@ -79,6 +83,10 @@ class ReportContext:
     config: dict[str, Any] = dc_field(default_factory=dict)
     style: Style = dc_field(default_factory=Style)
     thresholds: Mapping[str, float] = dc_field(default_factory=dict)
+    anchor_label: str = UNCORRELATED_LABEL
+    """The ladder entry that defines damage 1 in this run (``analysis.anchor``)."""
+    probe_labels: frozenset[str] = PROBE_LABELS
+    """Ladder entries that are probes or anchors rather than monotone axes, as the run declared."""
 
     # --- graceful skip ---------------------------------------------------------------
 
@@ -91,11 +99,9 @@ class ReportContext:
 
     @property
     def ordinal_axes(self) -> list[str]:
-        """Ladder axes that carry an ordering, excluding the probes."""
-        from fmeval.analysis import PROBE_LABELS
-
+        """Ladder axes that carry an ordering, excluding the probes the run declared."""
         labels = self.df.loc[self.df["level"] > 0, "degradation"].unique()
-        return sorted(str(a) for a in labels if a not in PROBE_LABELS)
+        return sorted(str(a) for a in labels if a not in self.probe_labels)
 
     @property
     def metrics(self) -> list[str]:
@@ -111,6 +117,25 @@ class ReportContext:
         for key, value in filters.items():
             out = out[out[key] == value]
         return out
+
+    def preserved_by(self, axis: str) -> tuple[str, ...]:
+        """What the operator behind a ladder axis is declared, and test-verified, to preserve.
+
+        Read from the run's own registry snapshot, so an old folder reports what its operators
+        declared then; the live registry answers for a folder written before the snapshot had it.
+        """
+        rows = self.df.loc[self.df["degradation"] == axis, "degradation_op"] \
+            if "degradation_op" in self.df.columns else []
+        if len(rows) == 0:
+            return ()
+        op = str(rows.iloc[0])
+        entry = (self.meta.get("registries", {}).get("degradations", {}) or {}).get(op, {})
+        if "preserves" in entry:
+            return tuple(entry["preserves"])
+        from degradations import registry as deg_registry
+
+        spec = deg_registry.REGISTRY.get(op)
+        return spec.preserves if spec is not None else ()
 
     def label(self, name: str) -> str:
         """Display form of a registry name: underscores become spaces."""

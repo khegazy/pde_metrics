@@ -18,6 +18,7 @@ from ..registry import degradation
     severity_units="cells",
     severity_direction="increasing",
     calibration="scale",
+    preserves=("spatial_mean",),
 )
 def disk_blur(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     """Isotropic top-hat: a uniform disk, unlike box_blur's square."""

@@ -26,6 +26,10 @@ Two pieces of metadata exist to stop silent corruption of every Spearman downstr
     Whether the operator lies on a monotone axis at all. The IN-4 impostor does not; it is
     a pass/fail canary, and folding it in as "level 6" of some family would corrupt every
     rank correlation it touched.
+
+A third, ``preserves``, is a fact rather than a safeguard: what the operator provably leaves
+unchanged, measured by a contract test exactly as ``severity_direction`` is. It lets a report
+say, beside a measured response, what that degradation left intact.
 """
 
 from __future__ import annotations
@@ -72,6 +76,20 @@ FAMILIES = (
     "ensemble",
 )
 
+#: What an operator can declare it PROVABLY leaves unchanged, a closed vocabulary. Each word is a
+#: fact about the operator, verified at every test severity by
+#: tests/test_degradation_contract.py::test_declared_preservation_is_true. It is never a statement
+#: about any metric: docs/decisions.md "There are no predictions" still holds.
+#:
+#: ``single_point_statistics``  the multiset of cell values (the sorted values are identical)
+#: ``amplitude_spectrum``       |FFT| of the fluctuation at every nonzero wavenumber
+#: ``spatial_mean``             the mean of each channel (the zero wavenumber)
+#: ``shape``                    the pattern, up to a rigid displacement of any size and an
+#:                              increasing affine map of the values
+PRESERVED: tuple[str, ...] = (
+    "single_point_statistics", "amplitude_spectrum", "spatial_mean", "shape",
+)
+
 
 @dataclass(frozen=True)
 class DegradationSpec:
@@ -101,6 +119,8 @@ class DegradationSpec:
     scaling one member about its own value is meaningless; it needs to see the members
     together, and declares this.
     """
+    preserves: tuple[str, ...] = ()
+    """What the operator provably leaves unchanged, from :data:`PRESERVED`."""
 
     def sort_severities(self, severities: Sequence[float]) -> list[float]:
         """Order a severity list by increasing damage.
@@ -141,6 +161,7 @@ def degradation(
     whole_frame: bool = False,
     ensemble: bool = False,
     defaults: dict[str, Any] | None = None,
+    preserves: Sequence[str] = (),
 ) -> Callable[[Callable], Callable]:
     """Register a degradation operator.
 
@@ -169,6 +190,9 @@ def degradation(
             ``whole_frame``. Operators that do not declare it are applied to each member
             independently when the frame carries an ensemble.
         defaults: Default keyword options, overridable per ladder entry in config.
+        preserves: What the operator provably leaves unchanged, words from :data:`PRESERVED`.
+            Verified by measurement at every test severity; declare only what holds on any
+            field, never what you expect a metric to do.
 
     Returns:
         The undecorated function.
@@ -183,6 +207,11 @@ def degradation(
         if family not in FAMILIES:
             raise ValueError(
                 f"{key}: unknown family {family!r}; expected one of {FAMILIES}"
+            )
+        unknown = sorted(set(preserves) - set(PRESERVED))
+        if unknown:
+            raise ValueError(
+                f"{key}: preserves={unknown} is outside the vocabulary PRESERVED = {PRESERVED}"
             )
         if ensemble and whole_frame:
             raise ValueError(
@@ -218,6 +247,7 @@ def degradation(
             takes_ctx="ctx" in params,
             defaults=dict(defaults or {}),
             ensemble=ensemble,
+            preserves=tuple(word for word in PRESERVED if word in preserves),
         )
         return fn
 
@@ -294,11 +324,12 @@ def _main() -> None:
             "yes" if s.ordinal else "NO (canary)",
             "yes" if s.stochastic else "-",
             ",".join(s.fields),
+            ",".join(s.preserves) or "-",
         )
         for s in sorted(REGISTRY.values(), key=lambda s: (s.family, s.name))
     ]
     head = ("degradation", "family", "severity", "relative to", "direction", "ordinal",
-            "stoch", "fields")
+            "stoch", "fields", "preserves")
     widths = [max(len(h), *(len(r[i]) for r in rows)) for i, h in enumerate(head)]
     line = "  ".join(h.ljust(w) for h, w in zip(head, widths))
     print(line)

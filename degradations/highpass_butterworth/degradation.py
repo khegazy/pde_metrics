@@ -19,6 +19,7 @@ from ..registry import degradation
     severity_direction="increasing",
     calibration="energy_below",
     defaults={"order": 4},
+    preserves=("spatial_mean",),
 )
 def highpass_butterworth(
     x: np.ndarray, severity: float, *, ctx, order: int = 4

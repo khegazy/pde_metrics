@@ -231,6 +231,12 @@ def test_run_folder_round_trip(tmp_path, traj):
     assert "mse" in meta["registries"]["metrics"]
     assert "gaussian_impostor" in meta["registries"]["degradations"]
     assert meta["registries"]["degradations"]["gaussian_impostor"]["ordinal"] is False
+    # What an operator provably preserves, and how its severity is scaled, belong to what a run
+    # meant: a later reader of the folder must not need the code as it stood that day.
+    translate = meta["registries"]["degradations"]["translate"]
+    assert translate["preserves"] == ["single_point_statistics", "amplitude_spectrum",
+                                      "spatial_mean", "shape"]
+    assert meta["registries"]["degradations"]["gaussian_blur"]["calibration"] == "scale"
 
 
 def test_config_hash_is_stable_and_sensitive(tmp_path):

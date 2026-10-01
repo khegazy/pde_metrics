@@ -18,6 +18,7 @@ from ..registry import degradation
     severity_units="cells",
     severity_direction="increasing",
     calibration="scale",
+    preserves=("spatial_mean",),
 )
 def epanechnikov_blur(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     """Epanechnikov kernel, 3/4 (1 - u^2): the MSE-optimal smoothing kernel."""

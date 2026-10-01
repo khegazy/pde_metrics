@@ -93,6 +93,9 @@ class Style:
     metric_colours: dict[str, str] = dc_field(default_factory=dict)
     axis_colours: dict[str, str] = dc_field(default_factory=dict)
     axis_styles: dict[str, Any] = dc_field(default_factory=dict)
+    metric_styles: dict[str, Any] = dc_field(default_factory=dict)
+    """Line style per metric: solid for the first eight, then a new dash each time the colour
+    cycle repeats, so two metrics never share both colour and line."""
 
     @classmethod
     def build(cls, theme: Theme = "notebook", *, metrics=(), axes=()) -> Style:
@@ -102,6 +105,7 @@ class Style:
             style.panel_w, style.panel_h = 2.3, 1.9
         for i, name in enumerate(sorted(set(metrics))):
             style.metric_colours[name] = okabe(_CYCLE[i % len(_CYCLE)])
+            style.metric_styles[name] = LINE_STYLES[(i // len(_CYCLE)) % len(LINE_STYLES)]
         for i, name in enumerate(sorted(set(axes))):
             style.axis_colours[name] = okabe(_CYCLE[i % len(_CYCLE)])
             style.axis_styles[name] = LINE_STYLES[i % len(LINE_STYLES)]
@@ -119,6 +123,9 @@ class Style:
 
     def axis_style(self, name: str) -> Any:
         return self.axis_styles.get(name, "-")
+
+    def metric_style(self, name: str) -> Any:
+        return self.metric_styles.get(name, "-")
 
     def level_colours(self, base: str, n: int) -> list[str]:
         """A lightness ramp within one hue: family by colour, severity level by lightness.

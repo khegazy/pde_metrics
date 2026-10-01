@@ -42,6 +42,9 @@ Designed, hooks in place, not built.
 | ID | Title | Priority |
 |---|---|---|
 | [031](031-saturation-never-reached.md) | No ladder severity level reaches the unrelated-field level | medium |
+| [040](040-mean-field-anchor.md) | A mean-field anchor for metrics that cannot see the translated one | medium |
+| [042](042-rank-interval-block-length-is-half-the-estimate.md) | The rank-correlation interval's fixed 10-frame blocks are half the estimated decorrelation, and its generator is shared across groups | medium |
+| [041](041-subpixel-shift-drops-the-nyquist-mode.md) | A fractional Fourier shift drops the Nyquist mode of an even grid; negligible on the production data | low |
 
 ## Technical debt
 
@@ -50,7 +53,6 @@ Designed, hooks in place, not built.
 | [020](020-import-name-collision.md) | `metrics` is a very generic top-level import name | low |
 | [032](032-prose-numbers-can-go-stale.md) | Numbers written into card prose can go stale unnoticed | medium |
 | [033](033-link-rewriting-is-only-checked-for-deadness.md) | Site link rewriting is checked for dead links, not correct destinations | medium |
-| [035](035-no-generated-block-for-cross-metric-damage.md) | No generated block carries per-level damage beside the other metrics, which is the whole claim of a displacement-tolerant metric | medium |
 | [036](036-increment-flatness-is-not-monotone-under-smoothing.md) | Increment flatness is not monotone under smoothing on any field, so it fails the stated acceptance rule; needs a decision, not a fix | medium |
 | [022](022-sim-config-parsing.md) | Solver configs carry executable YAML tags | low |
 | [023](023-vendored-kinet-drift.md) | Vendored kinet code is pinned and may drift | low |
@@ -72,4 +74,5 @@ issue. Do not delete a marker without fixing the issue it names.
 |---|---|---|
 | [021](021-tracker-ids-for-baselines.md) | Identifier for the L^p baselines | `NM-0` accepted 2026-08-07. One follow-up: add it to the master table in the metrics tracker |
 | [038](038-spectrum-l2-bins-by-exact-wavenumber.md) | `spectrum_l2` binned by exact `\|k\|`, nearly a per-mode comparison | Integer shells, `rint(\|k\|)`, adopted 2026-09-28; evidence regenerated |
+| [035](035-no-generated-block-for-cross-metric-damage.md) | No generated block carried per-level damage beside the other metrics | `results_damage_by_level` block and `damage_by_level_table` added, 2026-09-30 |
 | [039](039-h1-seminorm-is-not-monotone-under-coarsening.md) | Under `coarsen`, derivative-based metrics measured the staircase, not the lost resolution | `h1_seminorm` kept; `coarsen_bandlimited` added and run beside `coarsen` on every kinet metric, 2026-09-28. A small per-frame disorder on density is recorded there, unexplained |

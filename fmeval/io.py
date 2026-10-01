@@ -288,6 +288,11 @@ def _registry_snapshot() -> dict[str, Any]:
                 "severity_direction": s.severity_direction,
                 "ordinal": s.ordinal,
                 "stochastic": s.stochastic,
+                "calibration": s.calibration,
+                "ensemble": s.ensemble,
+                "defaults": s.defaults,
+                "fields": list(s.fields),
+                "preserves": list(s.preserves),
                 "module": s.module,
                 "doc": s.doc.splitlines()[0] if s.doc else "",
             }

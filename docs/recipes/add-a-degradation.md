@@ -27,6 +27,10 @@ ctx, **options) -> ndarray`, returning an array of the same shape it was given.
   for a fraction of the field's energy above or below a cutoff. Getting the calibration side
   wrong silently reverses the order of your strengths while leaving every number looking
   plausible.
+- Declare `preserves` for what your operator provably leaves unchanged — words from
+  `degradations.registry.PRESERVED` — and nothing else. A contract test measures each word at
+  every strength you list, so a hopeful declaration fails. It describes the operator, never how
+  a metric ought to respond.
 - Set `ordinal=False` if your strengths carry no order at all, which makes this a trap test
   rather than a graded sequence. Set `stochastic=True` if the operator draws random numbers
   — always from `ctx.rng`, never from a seed of your own.

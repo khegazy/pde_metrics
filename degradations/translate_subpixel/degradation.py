@@ -18,6 +18,7 @@ from ..registry import degradation
     severity_units="cells",
     severity_direction="increasing",
     defaults={"axis": "x"},
+    preserves=("spatial_mean",),
 )
 def translate_subpixel(
     x: np.ndarray, severity: float, *, ctx, axis: str = "x"
@@ -27,6 +28,12 @@ def translate_subpixel(
     Resolves the sub-cell region where the double-penalty curve actually distinguishes
     metrics. At integer distances it reproduces ``np.roll`` to floating-point tolerance,
     which the contract test pins.
+
+    Exact except at the Nyquist mode of an even grid: a fractional shift makes that component
+    imaginary and the real part discards it, so it declares only ``spatial_mean``. Measured:
+    1.7e-2 of the amplitude of a white-noise test field at half a cell, and at most 8.2e-11 of
+    the fluctuation energy of frame 5000 of kinet_re5e4, which has almost nothing at the grid
+    scale (issues/041).
     """
     if severity == 0:
         return x

@@ -2,7 +2,9 @@
 
 **Category:** technical debt
 **Priority:** medium
-**Status:** open
+**Status:** resolved 2026-09-30 — the `results_damage_by_level` block, filled by
+`python -m fmeval.cards evidence`, now carries per-strength damage for each deterministic metric
+beside the pointwise controls, and the report has `damage_by_level_table`
 
 ## Context
 

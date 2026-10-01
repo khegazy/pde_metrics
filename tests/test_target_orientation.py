@@ -178,3 +178,15 @@ def test_a_value_at_or_below_zero_does_not_break_the_ranking():
     row = _row(df)
     assert np.isfinite(row["rho"])
     assert row["rho"] == pytest.approx(1.0)
+
+
+def test_response_statistics_run_on_the_distance_from_the_target():
+    """Onset and resolution are read on |log(value / target)|, the scale the ordering runs on."""
+    from fmeval.analysis import add_damage, normalisation
+
+    df = _frame({0: [1.0], 1: [1.2], 2: [1.5], 3: [2.0], 4: [3.0]}, metric="spread_skill",
+                target=1.0)
+    row = summarise_axes(add_damage(df, normalisation(df)), norm=normalisation(df),
+                         n_bootstrap=0).iloc[0]
+    assert row["elasticity"] > 0, "the distance from calibration rises along the ladder"
+    assert row["response_shape"] != "" and np.isfinite(row["severity_resolution"])

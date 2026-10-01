@@ -598,3 +598,113 @@ def test_highpass_ladder_is_monotone_on_a_field_with_a_large_mean():
         f"damage {damage[-1]:.3e} exceeds the fluctuation variance {variance:.3e}; "
         "the filter is probably removing the spatial mean"
     )
+
+
+# --- declared preservation ---------------------------------------------------------------------
+
+#: Relative change below which a declared property counts as preserved. An FFT round trip on this
+#: grid moves values by ~1e-15; the smallest genuine change any operator here makes to the test
+#: field is ~1e-3 of its range (median blur's mean, measured). Fixed once, never per operator.
+PRESERVATION_TOLERANCE = 1e-9
+
+
+def _fluctuation_amplitudes(x: np.ndarray) -> np.ndarray:
+    spatial = tuple(range(1, x.ndim))
+    return np.abs(np.fft.fftn(x - x.mean(axis=spatial, keepdims=True), axes=spatial))
+
+
+def _standardised(x: np.ndarray) -> np.ndarray | None:
+    spatial = tuple(range(1, x.ndim))
+    centred = x - x.mean(axis=spatial, keepdims=True)
+    spread = centred.std(axis=spatial, keepdims=True)
+    return None if np.any(spread == 0) else centred / spread
+
+
+def _rigid_shift_residual(x: np.ndarray, y: np.ndarray) -> float:
+    """How far ``y`` is from ``x`` moved rigidly by any shift, up to an increasing affine map.
+
+    The displacement along each axis is read off the phase of the lowest mode along it and removed;
+    what remains is compared with the standardised original.
+    """
+    xs, ys = _standardised(x), _standardised(y)
+    if xs is None or ys is None:
+        return float("inf")
+    X, Y = np.fft.fftn(xs[0]), np.fft.fftn(ys[0])
+    for axis, n in enumerate(x.shape[1:]):
+        unit = tuple(1 if a == axis else 0 for a in range(X.ndim))
+        assert abs(X[unit]) > 1e-6 * abs(X).max(), "test field has no energy in a unit mode"
+        delta = -np.angle(Y[unit] * np.conj(X[unit])) * n / (2 * np.pi)
+        freq = np.fft.fftfreq(n).reshape([-1 if a == axis else 1 for a in range(X.ndim)])
+        Y = Y * np.exp(2j * np.pi * freq * delta)
+    return float(np.max(np.abs(np.fft.ifftn(Y).real - xs[0])) / np.max(np.abs(xs[0])))
+
+
+#: One residual per word of degradations.registry.PRESERVED, each relative to the original.
+PRESERVATION_CHECKS = {
+    "single_point_statistics": lambda x, y: float(
+        np.max(np.abs(np.sort(y.ravel()) - np.sort(x.ravel()))) / np.max(np.abs(x))),
+    "amplitude_spectrum": lambda x, y: float(
+        np.max(np.abs(_fluctuation_amplitudes(y) - _fluctuation_amplitudes(x)))
+        / np.max(_fluctuation_amplitudes(x))),
+    "spatial_mean": lambda x, y: float(
+        np.max(np.abs(y.mean(axis=(1, 2)) - x.mean(axis=(1, 2)))) / np.max(np.abs(x))),
+    "shape": _rigid_shift_residual,
+}
+
+
+def test_every_preserved_word_has_a_check():
+    assert set(PRESERVATION_CHECKS) == set(deg.PRESERVED)
+
+
+def test_declared_preservation_is_true(spec):
+    """Every declared word is measured at every test severity, as severity_direction is.
+
+    One-way by design: an operator may preserve a property on this field without guaranteeing it,
+    so only a declaration is checked, never an absence.
+    """
+    if spec.ensemble:
+        pytest.skip("the vocabulary describes a field; ensemble operators have their own tests")
+    if not spec.preserves:
+        pytest.skip("declares nothing")
+    x = synthetic_field(SHAPE, 1, seed=0)
+    for severity in LADDERS[spec.name]:
+        y = call(spec, x, severity)
+        for word in spec.preserves:
+            residual = PRESERVATION_CHECKS[word](x, y)
+            assert residual < PRESERVATION_TOLERANCE, (
+                f"{spec.name} declares preserves={word!r} but severity {severity} changed it by a "
+                f"relative {residual:.2e}; the declaration is false -- remove the word, do not "
+                "loosen the tolerance"
+            )
+
+
+def test_preservation_vocabulary_is_closed():
+    with pytest.raises(ValueError, match=r"PRESERVED|vocabulary"):
+        deg.degradation(name="_unregistered_colour", preserves=("colour",))(lambda x, s: x)
+
+
+def test_preservation_checks_have_teeth():
+    """A check that passes for everything verifies nothing."""
+    x = synthetic_field(SHAPE, 1, seed=0)
+    subpixel, blur = deg.get("translate_subpixel"), deg.get("gaussian_blur")
+    assert PRESERVATION_CHECKS["single_point_statistics"](x, call(subpixel, x, 0.5)) > 1e-3
+    assert PRESERVATION_CHECKS["shape"](x, call(deg.get("gaussian_impostor"), x, 0)) > 1e-1
+    assert PRESERVATION_CHECKS["amplitude_spectrum"](x, call(blur, x, 0.3)) > 1e-3
+    median = call_absolute(deg.get("median_blur"), x, 3)
+    assert PRESERVATION_CHECKS["spatial_mean"](x, median) > 1e-6
+    # A field with nothing at the grid scale is shifted exactly by a fraction of a cell, and the
+    # shape check recognises a fractional rigid shift as one.
+    band_limited = np.fft.fftn(x[0])
+    band_limited[SHAPE[0] // 2, :] = 0
+    band_limited[:, SHAPE[1] // 2] = 0
+    smooth = np.fft.ifftn(band_limited).real[None]
+    assert PRESERVATION_CHECKS["shape"](smooth, call(subpixel, smooth, 0.5)) < 1e-9
+
+
+def test_a_fractional_shift_loses_the_nyquist_mode_of_an_even_grid():
+    """Why translate_subpixel declares only the mean: the phase ramp makes the Nyquist component
+    imaginary and the real part discards it. 1.7e-2 of the amplitude on this white-noise field;
+    at most 8.2e-11 of the fluctuation energy on frame 5000 of kinet_re5e4 (issues/041)."""
+    x = synthetic_field(SHAPE, 1, seed=0)
+    y = call(deg.get("translate_subpixel"), x, 0.5)
+    assert PRESERVATION_CHECKS["amplitude_spectrum"](x, y) > 1e-3

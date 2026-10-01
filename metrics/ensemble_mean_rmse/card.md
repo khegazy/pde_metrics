@@ -37,12 +37,20 @@ consults its neighbours and the domain edge never enters.
 
 | test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
 |---|---|---|---|---|---|
-| Ensemble dispersion | density | 2 | — to — | 0.5 | level — |
+| Ensemble dispersion | density | 2 | — to — | — | level — |
 | Cell-value distortion | density | 1 | 1 to 1 | 1 | level 2 |
 
 One row per family of degradation and physical field. **Rank correlation** asks whether the metric put the strengths of one degradation in the right order: it is the Spearman correlation between the metric and the applied strength, computed inside a single frame, and the column gives the range over the degradations in that family. A value of 1 means every strength was ordered correctly in every frame. **Weakest gap between neighbouring strengths** asks whether the metric can tell one strength from the next: it is the smallest Mann-Whitney overlap between any two neighbouring strengths, where 1 means the two never overlap and 0.5 means the metric cannot separate them at all. **First strength detected** is the mildest strength at which the metric has moved a tenth of the way from the undegraded reference toward a field with no relation to the truth; a dash means the metric never reached that tenth. **Damage** is that same 0-to-1 scale read as a number: 0 is the undegraded reference and 1 is an unrelated field.
 
 This table reports what was measured and grades none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
+
+**Profile.**
+
+| field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift | compute cost (x cheapest in this run) |
+|---|---|---|---|---|---|---|
+| density | 0.667 | `bias` | `spread_deflate` | `spread_deflate` `spread_inflate` | — | 1 |
+
+One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
 <!-- END GENERATED performance -->
 
@@ -147,8 +155,8 @@ regenerated against it and this section will say something different.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `spread_deflate` | density | 4 | — | 0 | 0.5 |
-| `spread_inflate` | density | 4 | — | 0 | 0.5 |
+| `spread_deflate` | density | 4 | — | — | — |
+| `spread_inflate` | density | 4 | — | — | — |
 
 <!-- END GENERATED results_ensemble -->
 

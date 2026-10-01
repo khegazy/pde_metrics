@@ -19,6 +19,7 @@ from ..registry import degradation
     severity_units="cells",
     severity_direction="increasing",
     calibration="scale",
+    preserves=("spatial_mean",),
 )
 def box_blur(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     """Square top-hat (moving average) smoothing.

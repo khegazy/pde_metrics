@@ -19,7 +19,7 @@ from typing import Any
 
 from .loader import Bundle, iter_bundles, load_card
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 """Bump when an entry's shape changes in a way a consumer could not ignore."""
 
 
@@ -61,6 +61,7 @@ def _spec_fields(bundle: Bundle) -> dict[str, Any]:
         "stochastic": spec.stochastic,
         "ensemble": spec.ensemble,
         "fields": list(spec.fields),
+        "preserves": list(spec.preserves),
     }
 
 
@@ -72,7 +73,8 @@ def _measured(bundle: Bundle) -> dict[str, Any]:
     """
     fingerprint = bundle.path / "_generated" / "fingerprint.json"
     if not fingerprint.is_file():
-        return {"measured": False, "run": None, "dataset": None, "axes": [], "probes": []}
+        return {"measured": False, "run": None, "dataset": None, "axes": [], "probes": [],
+                "profile": []}
 
     data = json.loads(fingerprint.read_text())
     axes = [
@@ -86,8 +88,28 @@ def _measured(bundle: Bundle) -> dict[str, Any]:
             "monotone_fraction": row.get("monotone_fraction"),
             "weakest_separation": row.get("separability_auc_min"),
             "first_detected_level": row.get("sensitivity_level"),
+            "cliffs_delta": row.get("cliffs_delta_min"),
+            "elasticity": row.get("elasticity"),
+            "elasticity_x": row.get("elasticity_x"),
+            "response_shape": row.get("response_shape"),
+            "detection_onset_severity": row.get("severity_10"),
+            "half_damage_severity": row.get("severity_50"),
+            "severity_resolution": row.get("severity_resolution"),
+            "largest_response_upper_bound": row.get("damage_max_ucb"),
+            "blindness_q": row.get("blindness_q"),
         }
         for row in data.get("axes", [])
+    ]
+    profile = [
+        {
+            "field": row["field"],
+            "selectivity": row.get("selectivity"),
+            "most_sensitive_axis": row.get("most_sensitive_axis"),
+            "least_sensitive_axis": row.get("least_sensitive_axis"),
+            "blind_axes": [a for a in (row.get("blind_axes") or "").split("; ") if a],
+            "elasticity_displacement": row.get("elasticity_displacement"),
+        }
+        for row in data.get("profile", [])
     ]
     probes = [
         {
@@ -105,6 +127,7 @@ def _measured(bundle: Bundle) -> dict[str, Any]:
         "frames": len(data.get("frames", [])),
         "axes": axes,
         "probes": probes,
+        "profile": profile,
     }
 
 

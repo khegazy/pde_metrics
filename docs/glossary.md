@@ -4,6 +4,11 @@ Every term this site uses that a first-time reader would have to guess at, in pl
 language. Where a word has an older or shorter name that still appears in the code, that
 name is given too.
 
+**Anchor** — the ladder entry whose value defines a damage of one. By default it is a field
+with the reference's statistics and no relationship to it, so a damage of one reads "as different
+as an unrelated field". A run can declare another entry with `analysis.anchor`, and the recorded
+`anchor_source` says which one a number was measured against.
+
 **Analysis grid** — the one common grid that both fields are placed on before anything is
 compared. Two fields stored at different resolutions cannot be compared directly, so both
 are transferred onto this shared grid first by averaging over blocks of cells, and the
@@ -82,8 +87,23 @@ wrong direction.
 looks at a cell's neighbours. Cheap to compute, and blind to position by construction.
 Also called a *pointwise* metric.
 
+**Preserved property** — something a degradation provably leaves unchanged: the set of values
+in the field, how much energy sits at each scale, the average, or the shape of every feature up
+to a shift. Each degradation declares these and a test checks every declaration, so a report can
+say "this degradation moved features and changed nothing else" as a fact rather than a hope.
+
 **Reference** — the undamaged field that everything else is compared against; the ground
 truth of the experiment.
+
+**Selectivity** — how concentrated a metric's response is on a few kinds of damage rather than
+spread over all of them. A metric that responds equally to everything cannot say what went wrong;
+one that responds to one kind of damage alone says exactly that. Measured per unit of how much the
+damage changed the field, so it describes the metric rather than how hard each test was pushed.
+
+**Sensitivity** — how strongly and how early a metric responds to a kind of damage. More sensitive
+is not better: the problem this site is about is a metric that is too sensitive to a harmless
+shift. Not the *sensitivity analysis* of Sobol or Morris, which splits the variance of a model's
+output among its inputs and is not used here.
 
 **Separation** — how reliably a metric can tell one strength of damage from the next
 strength up. Reported as the smallest overlap found anywhere along the sequence, where 1

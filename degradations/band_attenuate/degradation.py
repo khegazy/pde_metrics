@@ -18,6 +18,7 @@ from ..registry import degradation
     severity_units="",
     severity_direction="decreasing",  # retaining LESS is worse
     defaults={"k_lo": 16.0, "k_hi": 64.0},
+    preserves=("spatial_mean",),
 )
 def band_attenuate(
     x: np.ndarray, severity: float, *, ctx, k_lo: float = 16.0, k_hi: float = 64.0

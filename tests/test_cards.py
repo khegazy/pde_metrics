@@ -985,29 +985,49 @@ def test_the_site_builds_without_the_dataset(tmp_path):
 # wrong content into a card that looks exactly like right content.
 
 
-def _synthetic_run(tmp_path):
+def _synthetic_run(tmp_path, with_mae: bool = True):
     """A results folder small enough to analyse in milliseconds.
 
     Built from the analysis suite's own fixture so the columns are exactly what
     fmeval.analysis expects, then stamped with the canonical dataset name so
     `load_run` accepts it as citable evidence.
     """
+    import numpy as np
+    import pandas as pd
+
     from tests.test_analysis import make_frame
 
-    df = make_frame(
-        metric="mse",
-        axes={
-            "gaussian_blur": [1.0, 2.0, 3.0, 4.0],
-            "translate_x": [0.5, 1.0, 2.0, 4.0],
-            "uncorrelated": [10.0, 10.0, 10.0],
-            "gaussian_impostor": [8.0],
-        },
-    )
+    ladder = {
+        "gaussian_blur": [1.0, 2.0, 3.0, 4.0],
+        "translate_x": [0.5, 1.0, 2.0, 4.0],
+        "translate_subpixel": [0.25, 1.0, 4.0],
+        "uncorrelated": [10.0, 10.0, 10.0],
+        "gaussian_impostor": [8.0],
+    }
+    frames = [make_frame(metric="mse", axes=ladder)]
+    if with_mae:
+        # The square root of mse everywhere, anchor included: the real pair's shape relation.
+        frames.append(make_frame(metric="mae", axes={k: [float(np.sqrt(v)) for v in vals]
+                                                     for k, vals in ladder.items()}))
+    df = pd.concat(frames, ignore_index=True)
+    df["energy_changed"] = np.where(df["level"] > 0, 0.01 * df["severity"] ** 2, 0.0)
     df["dataset"] = "kinet_re5e4"
     folder = tmp_path / "comparison_synthetic"
     (folder / "data").mkdir(parents=True)
     df.to_csv(folder / "data" / "results.csv", index=False)
     return folder
+
+
+def test_load_run_goes_through_the_one_analysis_entry_point(tmp_path):
+    """The evidence loader and the report once computed different things from one run."""
+    from fmeval import analysis
+    from fmeval.cards import evidence
+
+    run = evidence.load_run(_synthetic_run(tmp_path))
+    assert set(analysis.RESPONSE_COLUMNS) <= set(run.axes.columns)
+    assert "damage" in run.scored.columns
+    assert "selectivity" in run.card.columns
+    assert run.anchor_label == "uncorrelated"
 
 
 def _bundle_copy(tmp_path, monkeypatch):
@@ -1095,6 +1115,9 @@ def test_the_catalog_reads_what_the_evidence_writes(tmp_path, monkeypatch):
         assert axis["levels"] is not None
     probes = measured["probes"]
     assert probes and probes[0]["unrelated_field_value"] is not None
+    for axis in ordinary:
+        assert axis["cliffs_delta"] is not None and axis["elasticity_x"], axis["axis"]
+    assert measured["profile"] and measured["profile"][0]["selectivity"] is not None
 
 
 def test_write_block_replaces_only_its_block(tmp_path):
@@ -1278,3 +1301,53 @@ def test_a_committed_figure_has_its_numbers_beside_it(bundle):
         )
         recorded = json.loads(numbers.read_text())
         assert recorded.get("panels"), f"{bundle.name}: {numbers.name} records no panels"
+
+
+
+# --- the response blocks -----------------------------------------------------------------------
+
+
+def test_damage_by_level_block_puts_this_metric_first_beside_the_controls(tmp_path):
+    from fmeval.cards import evidence
+
+    run = evidence.load_run(_synthetic_run(tmp_path))
+    block = evidence.damage_by_level_block(run, "mae")
+    assert "`translate_x`" in block
+    rows = [line for line in block.splitlines() if line.startswith("| `")]
+    assert rows[0].startswith("| `mae`") and rows[1].startswith("| `mse`"), (
+        "one row per metric, this metric first, then the pointwise controls")
+    alone = evidence.load_run(_synthetic_run(tmp_path / "alone", with_mae=False))
+    assert "Only one metric" in evidence.damage_by_level_block(alone, "mse")
+
+
+def test_performance_block_carries_the_measured_profile(tmp_path):
+    from fmeval import analysis
+    from fmeval.cards import evidence
+
+    block = evidence.performance_block(evidence.load_run(_synthetic_run(tmp_path)), "mse")
+    assert "**Profile.**" in block and "selectivity" in block.lower()
+    assert f"{analysis.BLINDNESS_MARGIN:g}" in block, "the margin is read from the analysis"
+
+
+def test_a_second_cross_cutting_subsection_needs_no_degradation_link():
+    text = build_prose(Results=(
+        "### Damage beside the other metrics\n\n"
+        "<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence "
+        "example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED results_damage_by_level -->"
+        "\n\n" + "What the per-strength damage shows beside the other metrics. " * 4
+    ))
+    assert not [p for p in problems_for(text) if "link" in p.message]
+
+
+
+def test_profile_header_nests_no_parentheses(tmp_path):
+    """The strength an elasticity is taken against already carries its name in parentheses."""
+    from fmeval.cards import evidence
+
+    block = evidence.performance_block(evidence.load_run(_synthetic_run(tmp_path)), "mse")
+    header = next(line for line in block.splitlines() if line.startswith("| field | selectivity"))
+    depth = deepest = 0
+    for character in header:
+        depth += {"(": 1, ")": -1}.get(character, 0)
+        deepest = max(deepest, depth)
+    assert "against" in header and deepest <= 1, header

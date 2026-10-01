@@ -106,6 +106,27 @@ it. Never run that command, not even to test it — it writes the user's name. T
 also refuses to run until the bundle has measurements, because most of a page's claims are
 claims about measurements, and a signature recorded before them would attest to nothing.
 
+## There is still no expectation per degradation
+
+A degradation declares what it provably leaves unchanged (`preserves`), and a test measures each
+declaration. It does not declare how a metric should respond to it, and nothing in the
+configuration does either.
+
+Why: which metrics *should* respond to a displacement is exactly the question under study, and an
+expectation written into the ladder would be an opinion presented as a setting. What the
+degradation preserves is a fact about the operator; whether a metric responds is a measurement
+(`damage_max_ucb`, `blind_axes`). Put side by side, the two carry the information an expectation
+would, without a prediction.
+
+## Analytic fields are fixtures, not evidence
+
+The fields in `tests/analytic_fields.py` — a Gaussian bump, a stripe, a single mode — have metric
+responses known in closed form and exist to test the statistics. They are not a registered dataset
+and nothing measured on them may appear on a metric's page.
+
+Why: a closed form says what a metric does to an idealised feature, not to turbulence. Numbers
+from a fixture, once written into a page, would read exactly like numbers from a flow.
+
 ## A page is validated at `get()`, not at import
 
 A broken or missing page makes `registry.get(<name>)` fail, with the command that fixes

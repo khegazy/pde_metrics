@@ -149,7 +149,8 @@ and ``Compared with the other metrics`` for findings that span every test, such 
 this metric correlates with the baseline controls.
 """
 
-CROSS_CUTTING_SUBSECTIONS = frozenset({"Compared with the other metrics"})
+CROSS_CUTTING_SUBSECTIONS = frozenset({"Compared with the other metrics",
+                                       "Damage beside the other metrics"})
 """Result subsections that report no single degradation and so link to none.
 
 Every other subsection of ``## Results`` reports named degradations and must link to the

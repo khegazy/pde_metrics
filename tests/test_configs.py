@@ -120,6 +120,7 @@ def test_every_group_option_on_disk_is_tested(group_files=None):
     # Fields and seed.
     ("fields=[vorticity]", lambda c: list(c.fields) == ["vorticity"]),
     ("seed=1", lambda c: c.seed == 1),
+    ("analysis.anchor=mean_field", lambda c: c.analysis.anchor == "mean_field"),
     # Ladder selection.
     ("degradation.only=[translate_x]", lambda c: list(c.degradation.only) == ["translate_x"]),
     ("degradation.skip=[median_blur]", lambda c: list(c.degradation.skip) == ["median_blur"]),
