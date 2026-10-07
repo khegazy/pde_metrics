@@ -74,7 +74,7 @@ def _measured(bundle: Bundle) -> dict[str, Any]:
     fingerprint = bundle.path / "_generated" / "fingerprint.json"
     if not fingerprint.is_file():
         return {"measured": False, "run": None, "dataset": None, "axes": [], "probes": [],
-                "profile": []}
+                "profile": [], "figures": []}
 
     data = json.loads(fingerprint.read_text())
     axes = [
@@ -120,6 +120,16 @@ def _measured(bundle: Bundle) -> dict[str, Any]:
         }
         for row in data.get("probes", [])
     ]
+    # The figures beside the card, each with the JSON of the numbers it draws. Listed from
+    # the files rather than from the fingerprint so the catalog cannot name a figure that is
+    # not there. Additive, so SCHEMA_VERSION is unchanged: a consumer that ignores the key
+    # reads the entry exactly as before.
+    relative = bundle.path.relative_to(bundle.path.parent.parent)
+    figures = [
+        {"name": svg.stem, "file": str(relative / "_generated" / svg.name),
+         "numbers": str(relative / "_generated" / svg.with_suffix(".json").name)}
+        for svg in sorted((bundle.path / "_generated").glob("*.svg"))
+    ]
     return {
         "measured": True,
         "run": data.get("run"),
@@ -128,6 +138,7 @@ def _measured(bundle: Bundle) -> dict[str, Any]:
         "axes": axes,
         "probes": probes,
         "profile": profile,
+        "figures": figures,
     }
 
 

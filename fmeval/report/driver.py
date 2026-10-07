@@ -142,19 +142,35 @@ def render(
 
         outcome = Rendered(spec.name, spec.kind, spec.section, spec.title, "ok")
         started = time.perf_counter()
+        unavailable: list[str] = []
+        rendered_any = False
         try:
             for keys, subset in iter_scope(spec.scope, ctx.df):
                 opts = dict(spec.defaults)
-                with rc_context(ctx.style.rc):
-                    result = spec.fn(ctx, subset, opts)
+                # Unavailability is declared per scope subset. A renderer that cannot draw
+                # one metric -- a single-field quantity with no damage scale -- must not
+                # silence the figure for every other metric in the run, which is what a
+                # single try around the whole loop did: `damage_beside_controls` was
+                # skipped for all twelve metrics because enstrophy, first alphabetically,
+                # declared itself unavailable.
+                try:
+                    with rc_context(ctx.style.rc):
+                        result = spec.fn(ctx, subset, opts)
+                except RendererUnavailable as exc:
+                    where = ", ".join(f"{k}={v}" for k, v in keys.items()) or "all"
+                    unavailable.append(f"{where}: {exc}")
+                    log.info("skip %s (%s): %s", spec.name, where, exc)
+                    continue
+                rendered_any = True
                 if spec.kind == "plot":
                     _emit_plot(folder, spec, result, formats, outcome)
                 else:
                     _emit_table(folder, spec, result, outcome)
                 outcome.notes.extend(getattr(result, "notes", []))
-        except RendererUnavailable as exc:
-            outcome.status, outcome.reason = "skipped", str(exc)
-            log.info("skip %s: %s", spec.name, exc)
+            if unavailable and not rendered_any:
+                outcome.status, outcome.reason = "skipped", "; ".join(unavailable)
+            elif unavailable:
+                outcome.notes.append("not drawn for " + "; ".join(unavailable))
         except Exception:  # deliberately broad - a bad figure must not lose the evaluation
             outcome.status = "error"
             outcome.reason = traceback.format_exc(limit=3)

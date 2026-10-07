@@ -148,11 +148,14 @@ in exception handlers to keep a run alive.
 
 ## Figures are committed, and only the numbers behind them must be byte-stable
 
-The example panels (PNG files) are committed so that pages render on GitHub with no build
-step. Regenerating a panel with the same matplotlib version must produce a byte-identical
-file; across different matplotlib versions the PNGs may differ, and that is acceptable.
-The numbers in `exemplars.json` and `fingerprint.json` are the stable record — never the
-pixels.
+The example panels (PNG files) and the two figures on every metric card (SVG files) are
+committed so that pages render on GitHub with no build step. Regenerating a figure with the
+same matplotlib version must produce a byte-identical file; across different matplotlib
+versions the files may differ, and that is acceptable. For the SVGs that identity needs a
+fixed `svg.hashsalt` and no creation date in the metadata, both set in
+`fmeval/cards/metric_figures.py` and both measured to be necessary — without the salt two
+renders of one figure differ. The numbers in `exemplars.json`, `fingerprint.json` and the
+`.json` beside each card figure are the stable record — never the pixels or the paths.
 
 One fixed snapshot (`configs/cards/default.yaml`, `exemplar_frame`) is used for every
 panel in the repository, so that panels can be compared with one another. Do not
@@ -171,8 +174,11 @@ by its own test. Where the two disagree, the recipe wins.
   beside them (`issues/032`). Until that check exists, reconciling them after a new
   evaluation run is a manual step, described in
   `docs/recipes/refresh-the-evidence.md`.
-- The committed figures currently total about 6 MB. If the repository grows past roughly
-  50 MB, the fallback is Git LFS — raise the question, do not delete panels.
+- The committed generated files total 13.6 MB (measured 2026-10-01: 7.2 MB of example
+  panels, 6.3 MB under `metrics/`, of which 5.8 MB are the card figures and their numbers).
+  A test caps the total at 25 MB and names the largest files when it trips. If the
+  repository grows past roughly 50 MB, the fallback is Git LFS — raise the question, do not
+  delete panels or figures.
 - Your local copy of the repository may sit in a directory named `fluid_metrics`. The
   repository is `pde_metrics`; the directory name is historical and means nothing.
 

@@ -213,11 +213,13 @@ def main() -> None:
             print("\n" + _api(bundle), file=f)
         mkdocs_gen_files.set_edit_path(page, f"{bundle.path.parent.name}/{bundle.name}/card.md")
 
-        # Figures are served from beside the page.
-        for asset in sorted((bundle.path / "_generated").glob("*.png")):
-            target = f"{bundle.path.parent.name}/_generated/{bundle.name}_{asset.name}"
-            with mkdocs_gen_files.open(target, "wb") as f:
-                f.write(asset.read_bytes())
+        # Figures are served from beside the page, with the JSON of the numbers behind each
+        # one so an agent reading the site can read what a person sees.
+        for pattern in ("*.png", "*.svg", "*.json"):
+            for asset in sorted((bundle.path / "_generated").glob(pattern)):
+                target = f"{bundle.path.parent.name}/_generated/{bundle.name}_{asset.name}"
+                with mkdocs_gen_files.open(target, "wb") as f:
+                    f.write(asset.read_bytes())
 
         # Metrics are grouped in the navigation by type, degradations by nothing.
         (nav_metrics if bundle.kind == "metric" else nav_degradations).append(
@@ -225,6 +227,7 @@ def main() -> None:
         )
 
     _write_catalogue_page(catalog)
+    _write_sensitivity_page(catalog)
     _write_gallery(catalog)
     _write_protocol()
     _write_nav(nav_metrics, nav_degradations)
@@ -267,6 +270,18 @@ def _write_catalogue_page(catalog: dict) -> None:
             print(f"| [{e['name']}](degradations/{e['name']}.md) | {_category(e)} "
                   f"| {d['severity_name']}{units} | {against} "
                   f"| {'yes' if d['ordinal'] else 'no: a trap test'} |", file=f)
+
+
+def _write_sensitivity_page(catalog: dict) -> None:
+    """Every metric on the same response figures, from the committed overview figures.
+
+    The figures live in `docs/figures/<run>/` and are tracked; only this page is generated,
+    from their JSON, so the captions on the page are the captions the renderer wrote.
+    """
+    from fmeval.cards.overview import page_markdown
+
+    with mkdocs_gen_files.open("sensitivity.md", "w") as f:
+        print(page_markdown(catalog=catalog), file=f)
 
 
 def _write_gallery(catalog: dict) -> None:
@@ -337,6 +352,7 @@ def _write_nav(metrics: list, degradations: list) -> None:
         print("- [Choosing a metric](choosing-a-metric.md)", file=f)
         print("- [Working in the repository](working-with-the-repo.md)", file=f)
         print("- [Catalogue](catalogue.md)", file=f)
+        print("- [Sensitivity at a glance](sensitivity.md)", file=f)
         print("- Metrics", file=f)
         for category in CATEGORIES:
             named = [m for m in metrics if m[1] == category]
@@ -375,6 +391,12 @@ def _write_machine_surfaces(catalog: dict) -> None:
         for e in catalog["entries"]:
             if e["kind"] == "metric":
                 print(f"- [{e['name']}](metrics/{e['name']}/): {e['summary']}", file=f)
+                for figure in e["evidence"].get("figures", []):
+                    # The numbers behind each figure on the page, at the path the site
+                    # serves them from (assets are namespaced by bundle name).
+                    print(f"    - numbers behind the {figure['name'].replace('_', ' ')} "
+                          f"figure: metrics/_generated/{e['name']}_{figure['name']}.json",
+                          file=f)
         print("\n## Degradations\n", file=f)
         for e in catalog["entries"]:
             if e["kind"] == "degradation":

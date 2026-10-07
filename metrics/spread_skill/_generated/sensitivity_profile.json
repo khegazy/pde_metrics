@@ -1,0 +1,56 @@
+{
+  "caption": "Four measured statistics for spread_skill, one row per degradation grouped by family and one marker per field. From left: the rank correlation between the metric and the applied strength within a frame, with the line showing the resampling interval; the separation of neighbouring strengths as Cliff's delta, where 0 means the metric cannot tell one strength from the next and the faint ticks at 0.12, 0.28 and 0.42 are Vargha and Delaney's small, medium and large anchors, for scale and not as grades; the damage charged per unit of field change at the harshest strength; and the upper confidence bound on the largest damage, beside the fixed margin of 0.05. A hollow marker is a field and degradation on which that bound lies below the margin, so the response is provably small. A missing marker is a statistic the analysis withheld, as the rank correlation is on an axis the metric is invariant to.",
+  "dataset": "synthetic_ensemble",
+  "figure": "sensitivity_profile",
+  "metric": "spread_skill",
+  "panels": {
+    "density": [
+      {
+        "blind": false,
+        "blindness_q": null,
+        "cliffs_delta_min": 1.0,
+        "damage_max_ucb": null,
+        "damage_per_change": null,
+        "degradation": "bias",
+        "degradation_family": "pointwise",
+        "field": "density",
+        "metric": "spread_skill",
+        "n_levels": 4.0,
+        "rho": 1.0,
+        "rho_ci_hi": null,
+        "rho_ci_lo": null
+      },
+      {
+        "blind": false,
+        "blindness_q": null,
+        "cliffs_delta_min": 1.0,
+        "damage_max_ucb": null,
+        "damage_per_change": null,
+        "degradation": "spread_deflate",
+        "degradation_family": "ensemble",
+        "field": "density",
+        "metric": "spread_skill",
+        "n_levels": 4.0,
+        "rho": 1.0,
+        "rho_ci_hi": null,
+        "rho_ci_lo": null
+      },
+      {
+        "blind": false,
+        "blindness_q": null,
+        "cliffs_delta_min": 1.0,
+        "damage_max_ucb": null,
+        "damage_per_change": null,
+        "degradation": "spread_inflate",
+        "degradation_family": "ensemble",
+        "field": "density",
+        "metric": "spread_skill",
+        "n_levels": 4.0,
+        "rho": 1.0,
+        "rho_ci_hi": null,
+        "rho_ci_lo": null
+      }
+    ]
+  },
+  "run": "spread_skill_1787800137"
+}

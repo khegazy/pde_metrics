@@ -13,6 +13,7 @@ report of the same run cannot disagree.
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -22,6 +23,7 @@ import pandas as pd
 from fmeval import analysis as an
 
 from .exemplars import load_cards_config, write_block
+from .metric_figures import CardFigure, metric_figures
 from .prose import FAMILY_HEADINGS
 
 #: Which generated block each degradation family's results go into.
@@ -34,13 +36,11 @@ FAMILY_BLOCKS = {family: f"results_{family}" for family in FAMILY_HEADINGS}
 
 NOT_MEASURED = "No measurements for this test in the recorded run."
 
-#: The degradation families whose per-strength damage a card sets beside the other metrics: the
-#: ones where magnitude, not order, is the claim (issues/035).
-DAMAGE_BLOCK_FAMILIES: tuple[str, ...] = ("geometric",)
-
-#: The metrics a card's damage table places beside its own: the pointwise controls every
-#: candidate has to be read against.
-DAMAGE_BLOCK_CONTROLS: tuple[str, ...] = ("mae", "mse", "rmse", "nrmse")
+#: Which families and which controls the damage table reports. Defined in the analysis so the
+#: report's figure of the same numbers reads them without importing the cards layer; kept
+#: under their old names here because this is where readers of the card generator look.
+DAMAGE_BLOCK_FAMILIES = an.DAMAGE_BLOCK_FAMILIES
+DAMAGE_BLOCK_CONTROLS = an.DAMAGE_BLOCK_CONTROLS
 
 
 @dataclass(frozen=True)
@@ -138,15 +138,46 @@ def run_block(run: Run) -> str:
     )
 
 
-def performance_block(run: Run, metric: str) -> str:
-    """The summary table: how this metric behaved on every test, at a glance."""
+def figure_lines(figures: Sequence[CardFigure], reasons: Mapping[str, str],
+                 block: str = "performance") -> list[str]:
+    """The image and caption for each figure of one block, or one sentence saying why it is absent.
+
+    Images sit inside the generated block, never outside it: the card checker strips
+    generated blocks before counting hand-written words, and an image outside one would be
+    read as prose (`fmeval.cards.prose`). The alt text is the figure's question and the
+    caption its reading, both from the renderer, so a reader of the repository on GitHub and
+    a reader of the site see the same figure with the same words.
+    """
+    from fmeval.report.registry import PLOTS
+
+    from .metric_figures import FIGURE_BLOCKS, METRIC_FIGURES
+
+    lines: list[str] = []
+    by_name = {f.name: f for f in figures}
+    for name in METRIC_FIGURES:
+        if FIGURE_BLOCKS[name] != block:
+            continue
+        figure = by_name.get(name)
+        if figure is None:
+            title = PLOTS[name].title.lower()
+            lines += [f"No {title} figure: {reasons.get(name, 'not drawn')}.", ""]
+            continue
+        lines += [f"![{figure.alt}](_generated/{figure.path.name})", "", figure.caption, ""]
+    return lines
+
+
+def performance_block(run: Run, metric: str, figures: Sequence[CardFigure] = (),
+                      reasons: Mapping[str, str] | None = None) -> str:
+    """The summary, at a glance: the figures first, then the table they summarise."""
     axes = run.axes[run.axes["metric"] == metric]
     if axes.empty:
         return NOT_MEASURED
 
-    lines = ["| test family | field | degradations | rank correlation | weakest gap "
-             "between neighbouring strengths | first strength detected |",
-             "|---|---|---|---|---|---|"]
+    lines = (figure_lines(figures, reasons or {}, "performance")
+             if (figures or reasons) else [])
+    lines += ["| test family | field | degradations | rank correlation | weakest gap "
+              "between neighbouring strengths | first strength detected |",
+              "|---|---|---|---|---|---|"]
     for family, group in axes[~axes["is_probe"]].groupby("degradation_family"):
         # The same readable name the matching '### ' subsection uses, so a reader moving
         # between the summary and the detail is not asked to learn two vocabularies.
@@ -230,17 +261,20 @@ def _profile_lines(run: Run, metric: str, axes: pd.DataFrame) -> list[str]:
     return lines
 
 
-def damage_by_level_block(run: Run, metric: str) -> str:
+def damage_by_level_block(run: Run, metric: str, figures: Sequence[CardFigure] = (),
+                          reasons: Mapping[str, str] | None = None) -> str:
     """Per-strength damage for this metric beside the pointwise controls (issues/035).
 
-    One table per field and translation degradation, one row per metric -- this one first -- and
-    one column per strength, so the magnitude claims a card makes have a generated source.
+    The figure of those numbers first, then one table per field and translation degradation,
+    one row per metric -- this one first -- and one column per strength, so the magnitude
+    claims a card makes have a generated source.
     """
     present = set(run.rows["metric"].astype(str).unique())
     others = [m for m in DAMAGE_BLOCK_CONTROLS if m in present and m != metric]
     if not others:
         return "Only one metric in the recorded run; there is nothing to place this one beside."
-    lines: list[str] = []
+    lines: list[str] = (figure_lines(figures, reasons or {}, "results_damage_by_level")
+                        if (figures or reasons) else [])
     for family in DAMAGE_BLOCK_FAMILIES:
         for field in sorted(run.scored["field"].astype(str).unique()):
             wide = an.damage_by_level(run.scored, field=field, family=family,
@@ -367,12 +401,17 @@ def generate(metric: str, run: Run) -> Path:
         raise KeyError(f"no metric bundle named {metric!r}")
 
     command = f"python -m fmeval.cards evidence {metric} --results {run.folder}"
+    # Figures first, so a figure that cannot be drawn is reported inside the block that
+    # would have shown it rather than discovered as a missing file.
+    cfg = load_cards_config()
+    figures, reasons = metric_figures(run, metric, bundle.path / "_generated",
+                                      theme=str(cfg.figures.theme))
     blocks = {
         "run": run_block(run),
-        "performance": performance_block(run, metric),
+        "performance": performance_block(run, metric, figures, reasons),
         "results_canaries": canaries_block(run, metric),
         "results_summary": summary_block(run, metric),
-        "results_damage_by_level": damage_by_level_block(run, metric),
+        "results_damage_by_level": damage_by_level_block(run, metric, figures, reasons),
     }
     for family, block in FAMILY_BLOCKS.items():
         blocks[block] = family_block(run, metric, family)

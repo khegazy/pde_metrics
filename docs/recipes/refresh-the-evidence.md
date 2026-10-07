@@ -24,12 +24,22 @@ writes.
 python -m fmeval.cards exemplars --all                              # if operators or the
                                                                     # canonical frame changed
 python -m fmeval.cards evidence --all --results results/comparison_<stamp>
+python -m fmeval.cards overview --results results/comparison_<stamp>  # docs/figures/<run>/
 python -m fmeval.cards catalog
 ```
 
 Example panels come before measurements, because a metric's measurements may reference a
-degradation's panel. The catalog comes last, because it reads the fingerprint files the
-other two steps write. The committed catalog is compared against a freshly built one in
+degradation's panel. The `evidence` step also redraws each card's figures (the sensitivity
+profile and the response curves) into `_generated/` as SVG with the numbers behind each in
+a JSON file of the same name, so a figure cannot go stale relative to the table beside it.
+`--all` skips any card whose metric the run does not contain and says so; the four
+probabilistic metrics are pinned to their own single-metric runs on `synthetic_ensemble`
+and are regenerated one at a time from those folders. Run from the repository root with a
+relative `--results` path, because the path is written into every block marker as typed.
+The `overview` step draws the cross-metric figures of the site's "Sensitivity at a glance"
+page into `docs/figures/<run>/`; delete the previous run's directory there when you replace
+the run, so the page shows one run. The catalog comes last, because it reads the fingerprint
+files the other steps write. The committed catalog is compared against a freshly built one in
 CI, so forgetting that last step fails the build rather than shipping a stale index.
 
 ## 3. The step that is easy to miss: the prose

@@ -39,6 +39,14 @@ boundary condition can enter.
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence mae --results results/comparison_1790639359`, do not edit -->
 
+![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
+
+Four measured statistics for mae, one row per degradation grouped by family and one marker per field. From left: the rank correlation between the metric and the applied strength within a frame, with the line showing the resampling interval; the separation of neighbouring strengths as Cliff's delta, where 0 means the metric cannot tell one strength from the next and the faint ticks at 0.12, 0.28 and 0.42 are Vargha and Delaney's small, medium and large anchors, for scale and not as grades; the damage charged per unit of field change at the harshest strength; and the upper confidence bound on the largest damage, beside the fixed margin of 0.05. A hollow marker is a field and degradation on which that bound lies below the margin, so the response is provably small. A missing marker is a statistic the analysis withheld, as the rank correlation is on an axis the metric is invariant to.
+
+![median damage against severity level, one panel per degradation family and field, on one shared scale](_generated/response_curves.svg)
+
+Median damage over frames against severity level for mae, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, an unrelated field; the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to an unrelated field. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points above 2 are drawn as triangles at the top.
+
 | test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
 |---|---|---|---|---|---|
 | Displacement | density | 2 | 1 to 1 | 0.959 | level 3 |
@@ -314,6 +322,10 @@ want the score dominated by the worst cell.
 ### Damage beside the other metrics
 
 <!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence mae --results results/comparison_1790639359`, do not edit -->
+
+![damage against applied strength for this metric beside the pointwise controls, log-log, one panel per displacement degradation and field](_generated/damage_beside_controls.svg)
+
+Median damage over frames against the applied strength, log-log, for mae (bold, in colour) and the pointwise controls mse, rmse, nrmse (thin, grey), one column per displacement degradation and one row per field. The grey line is damage 1, an unrelated field. Parallel lines charge in the same proportion at every strength; a steeper line charges relatively more for the larger shifts, which is what decides whether two metrics are interchangeable as training losses. These are the same numbers as the table beneath.
 
 **Displacement, density, `translate_subpixel`** (strength: distance).
 
