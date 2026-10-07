@@ -138,8 +138,9 @@ def run_block(run: Run) -> str:
     )
 
 
-def figure_lines(figures: Sequence[CardFigure], reasons: Mapping[str, str]) -> list[str]:
-    """The image and caption for each card figure, or one sentence saying why it is absent.
+def figure_lines(figures: Sequence[CardFigure], reasons: Mapping[str, str],
+                 block: str = "performance") -> list[str]:
+    """The image and caption for each figure of one block, or one sentence saying why it is absent.
 
     Images sit inside the generated block, never outside it: the card checker strips
     generated blocks before counting hand-written words, and an image outside one would be
@@ -149,11 +150,13 @@ def figure_lines(figures: Sequence[CardFigure], reasons: Mapping[str, str]) -> l
     """
     from fmeval.report.registry import PLOTS
 
-    from .metric_figures import METRIC_FIGURES
+    from .metric_figures import FIGURE_BLOCKS, METRIC_FIGURES
 
     lines: list[str] = []
     by_name = {f.name: f for f in figures}
     for name in METRIC_FIGURES:
+        if FIGURE_BLOCKS[name] != block:
+            continue
         figure = by_name.get(name)
         if figure is None:
             title = PLOTS[name].title.lower()
@@ -170,7 +173,8 @@ def performance_block(run: Run, metric: str, figures: Sequence[CardFigure] = (),
     if axes.empty:
         return NOT_MEASURED
 
-    lines = figure_lines(figures, reasons or {}) if (figures or reasons) else []
+    lines = (figure_lines(figures, reasons or {}, "performance")
+             if (figures or reasons) else [])
     lines += ["| test family | field | degradations | rank correlation | weakest gap "
               "between neighbouring strengths | first strength detected |",
               "|---|---|---|---|---|---|"]
@@ -257,17 +261,20 @@ def _profile_lines(run: Run, metric: str, axes: pd.DataFrame) -> list[str]:
     return lines
 
 
-def damage_by_level_block(run: Run, metric: str) -> str:
+def damage_by_level_block(run: Run, metric: str, figures: Sequence[CardFigure] = (),
+                          reasons: Mapping[str, str] | None = None) -> str:
     """Per-strength damage for this metric beside the pointwise controls (issues/035).
 
-    One table per field and translation degradation, one row per metric -- this one first -- and
-    one column per strength, so the magnitude claims a card makes have a generated source.
+    The figure of those numbers first, then one table per field and translation degradation,
+    one row per metric -- this one first -- and one column per strength, so the magnitude
+    claims a card makes have a generated source.
     """
     present = set(run.rows["metric"].astype(str).unique())
     others = [m for m in DAMAGE_BLOCK_CONTROLS if m in present and m != metric]
     if not others:
         return "Only one metric in the recorded run; there is nothing to place this one beside."
-    lines: list[str] = []
+    lines: list[str] = (figure_lines(figures, reasons or {}, "results_damage_by_level")
+                        if (figures or reasons) else [])
     for family in DAMAGE_BLOCK_FAMILIES:
         for field in sorted(run.scored["field"].astype(str).unique()):
             wide = an.damage_by_level(run.scored, field=field, family=family,
@@ -404,7 +411,7 @@ def generate(metric: str, run: Run) -> Path:
         "performance": performance_block(run, metric, figures, reasons),
         "results_canaries": canaries_block(run, metric),
         "results_summary": summary_block(run, metric),
-        "results_damage_by_level": damage_by_level_block(run, metric),
+        "results_damage_by_level": damage_by_level_block(run, metric, figures, reasons),
     }
     for family, block in FAMILY_BLOCKS.items():
         blocks[block] = family_block(run, metric, family)

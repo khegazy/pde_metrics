@@ -1116,7 +1116,8 @@ def test_the_catalog_reads_what_the_evidence_writes(tmp_path, monkeypatch):
     assert measured["measured"] is True
     ordinary = [a for a in measured["axes"] if not a["is_probe"]]
     assert ordinary, "no ordinary axes surfaced from the fingerprint"
-    assert [f["name"] for f in measured["figures"]] == ["response_curves", "sensitivity_profile"]
+    assert [f["name"] for f in measured["figures"]] == [
+        "damage_beside_controls", "response_curves", "sensitivity_profile"]
     for figure in measured["figures"]:
         assert figure["file"].endswith(".svg") and figure["numbers"].endswith(".json")
     for axis in ordinary:
@@ -1324,8 +1325,30 @@ def test_the_performance_block_opens_with_the_figures(tmp_path, monkeypatch):
     for alt in ALT_TEXT.values():
         assert "]" not in alt and ")" not in alt, "alt text would truncate the link pattern"
     referenced = set(re.findall(r"\]\(_generated/([^)]+\.svg)\)", block))
+    assert referenced == {"response_curves.svg", "sensitivity_profile.svg"}
+    damage = prose.generated_blocks(bundle.card_md.read_text())["results_damage_by_level"]
+    first = next(line for line in damage.splitlines()[1:] if line.strip())
+    assert first == (f"![{ALT_TEXT['damage_beside_controls']}]"
+                     "(_generated/damage_beside_controls.svg)"), "the figure heads its table"
+    shown = set(re.findall(r"\]\(_generated/([^)]+\.svg)\)", bundle.card_md.read_text()))
     present = {p.name for p in (bundle.path / "_generated").glob("*.svg")}
-    assert referenced == present == {"response_curves.svg", "sensitivity_profile.svg"}
+    assert shown == present == {"response_curves.svg", "sensitivity_profile.svg",
+                                "damage_beside_controls.svg"}
+
+
+def test_a_single_metric_run_gets_no_damage_figure_and_the_block_says_only_that(tmp_path):
+    """The ensemble cards are pinned to single-metric runs: no controls, so no figure and no
+    extra sentence -- the block's existing one already says there is nothing to place beside."""
+    from fmeval.cards import evidence
+    from fmeval.cards.metric_figures import metric_figures
+
+    run = evidence.load_run(_synthetic_run(tmp_path, with_mae=False))
+    figures, reasons = metric_figures(run, "mse", tmp_path / "one")
+    assert [f.name for f in figures] == ["sensitivity_profile", "response_curves"]
+    assert "2 metrics" in reasons["damage_beside_controls"]
+    block = evidence.damage_by_level_block(run, "mse", figures, reasons)
+    assert block.startswith("Only one metric in the recorded run")
+    assert "figure" not in block
 
 
 def test_a_metric_without_a_damage_scale_still_gets_its_figures(tmp_path):
@@ -1334,7 +1357,8 @@ def test_a_metric_without_a_damage_scale_still_gets_its_figures(tmp_path):
 
     run = evidence.load_run(_figure_run(tmp_path))
     _figures, reasons = metric_figures(run, "flat", tmp_path / "flat")
-    assert not reasons, reasons
+    assert set(reasons) == {"damage_beside_controls"}, reasons
+    assert "no damage scale" in reasons["damage_beside_controls"]
     curves = json.loads((tmp_path / "flat" / "response_curves.json").read_text())
     assert set(curves["panels"]) == {"density", "velocity", "vorticity"}
     rows = [r for rows in curves["panels"].values() for r in rows]

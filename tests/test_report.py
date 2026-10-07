@@ -261,6 +261,20 @@ def test_no_unescaped_underscore_survives_into_any_generated_tex(run_folder):
         assert not offenders, f"{path.name} has {len(offenders)} unescaped underscore(s)"
 
 
+def test_one_unavailable_subset_does_not_silence_a_renderer_for_the_others(run_folder):
+    """`flat` has no damage scale, so `damage_beside_controls` declines to draw it. The other
+    three metrics must still get their figure, and the manifest must say which one did not."""
+    outcome = _rendered(run_folder, "damage_beside_controls")
+    assert outcome.status == "ok", outcome.reason
+    drawn = {f for f in outcome.files if f.endswith(".png")}
+    assert {"plots/damage_beside_controls__metric-mse.png",
+            "plots/damage_beside_controls__metric-mae.png",
+            "plots/damage_beside_controls__metric-rmse.png"} <= drawn
+    assert not any("metric-flat" in f for f in drawn)
+    assert any(note.startswith("not drawn for metric=flat") for note in outcome.notes), \
+        outcome.notes
+
+
 def test_renderer_failures_are_recorded_but_not_fatal(run_folder, monkeypatch):
     """A bad figure must not destroy an expensive evaluation's output."""
     from fmeval.report import registry as rr
@@ -683,6 +697,23 @@ def test_sensitivity_profile_skips_without_the_response_statistics(run_folder, m
                                           formats=("png",))}
     outcome = rendered["sensitivity_profile"]
     assert outcome.status == "skipped" and "response statistics" in outcome.reason
+
+
+def test_damage_beside_controls_draws_this_metric_with_the_controls_present(run_folder):
+    outcome = _rendered(run_folder, "damage_beside_controls")
+    assert outcome.status == "ok", outcome.reason
+    data = _figure_data(run_folder, "damage_beside_controls__metric-mse")
+    assert set(data["metric"]) == {"mse", "mae", "rmse"}, "flat is not a control"
+    assert set(data["degradation"]) == {"translate_x", "translate_subpixel"}
+    assert set(data["field"]) == set(FIELDS)
+    assert data.loc[data["metric"] == "mse", "is_this_metric"].all()
+    assert not data.loc[data["metric"] != "mse", "is_this_metric"].any()
+
+
+def test_damage_beside_controls_skips_without_a_second_metric(tmp_path):
+    folder = _write_run(RunFolder(tmp_path / "one_1").create(), synthetic_rows(metrics=("mse",)))
+    outcome = _rendered(folder, "damage_beside_controls")
+    assert outcome.status == "skipped" and "2 metrics" in outcome.reason
 
 
 def test_a_folder_from_before_these_columns_still_renders(tmp_path):

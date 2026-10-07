@@ -79,7 +79,13 @@ metrics can be compared at a glance. To compare every metric on the same figures
 
 **Results** breaks that summary down one test at a time. Each subsection links to the
 way of damaging the field that it reports, shows the numbers for that damage, and then
-says in a few sentences what those numbers mean for this metric.
+says in a few sentences what those numbers mean for this metric. The last subsection,
+*Damage beside the other metrics*, opens with a third figure: this metric's damage against
+the applied shift, log-log, beside the four cell-by-cell baselines drawn thin and grey. Two
+parallel lines charge in the same proportion at every shift; a steeper line charges
+relatively more for the larger shifts. That is the difference between two metrics that
+order models alike and two that could replace each other as training losses, and the table
+beneath gives the same numbers.
 
 Three measured quantities recur in those tables, and they are worth understanding before
 you read one.

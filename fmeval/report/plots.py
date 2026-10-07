@@ -23,7 +23,13 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon
 from matplotlib.ticker import LogLocator, MaxNLocator, NullFormatter
 
-from fmeval.analysis import BLINDNESS_MARGIN, DEGENERATE_SPAN, UNCORRELATED_LABEL
+from fmeval.analysis import (
+    BLINDNESS_MARGIN,
+    DAMAGE_BLOCK_CONTROLS,
+    DAMAGE_BLOCK_FAMILIES,
+    DEGENERATE_SPAN,
+    UNCORRELATED_LABEL,
+)
 
 from .context import FigureItem, PlotResult
 from .registry import plot
@@ -1129,6 +1135,122 @@ def displacement_response(ctx, df, opts) -> PlotResult:
     return PlotResult(
         [FigureItem(fig, {"field": field}, caption=caption, data=pd.DataFrame(tidy))]
     )
+
+
+@plot(
+    section=9, order=20, scope="per_metric", min_metrics=2,
+    title="Damage beside the pointwise controls",
+    requires_columns=("damage", "degradation", "level", "severity"),
+)
+def damage_beside_controls(ctx, df, opts) -> PlotResult:
+    """One metric's damage against applied strength beside the pointwise controls, log-log.
+
+    The magnitude comparison the rank correlation cannot make (issues/035): two metrics can
+    order every strength identically and still charge amounts that differ by an order of
+    magnitude for the same shift. MAE and MSE correlate at 0.986 on the pinned run and differ
+    by 47x in damage at an eighth of a cell, because one is linear and the other quadratic in
+    the displacement; on a log-log axis that is a difference of slope, read at a glance. Drawn
+    from `damage_by_level`, exactly the numbers the card's table beside it prints.
+
+    One column per degradation in the families where magnitude is the claim (the
+    translations), one row per field; this metric in its own colour and weight, the
+    controls thin and grey with distinct line styles. Unavailable on a single-metric run,
+    and on a field where this metric has no damage scale the panel says so.
+    """
+    from fmeval.analysis import damage_by_level
+
+    metric, _axes, _card, _probes = _metric_rows(ctx, df)
+    present = set(ctx.df["metric"].astype(str).unique())
+    controls = [m for m in DAMAGE_BLOCK_CONTROLS if m in present and m != metric]
+    ctx.require(bool(controls), "no pointwise control in the run to place this metric beside")
+    fields = sorted(str(f) for f in df["field"].unique())
+
+    tables: dict[tuple[str, str], pd.DataFrame] = {}
+    for family in DAMAGE_BLOCK_FAMILIES:
+        for field in fields:
+            wide = damage_by_level(ctx.df, field=field, family=family,
+                                   probe_labels=ctx.probe_labels)
+            for degradation, block in wide.groupby("degradation", observed=True):
+                tables[(str(degradation), field)] = block.sort_values("severity")
+    degradations = sorted({d for d, _ in tables})
+    ctx.require(bool(degradations), "no degradation in the magnitude families")
+    ctx.require(any(metric in t.columns and np.isfinite(t[metric].to_numpy(float)).any()
+                    for t in tables.values()),
+                f"{metric} has no damage scale on any field for these degradations")
+
+    fig, grid = ctx.style.figure(len(fields), len(degradations),
+                                 w=min(ctx.style.panel_w * len(degradations) + 1.8,
+                                       ctx.style.max_size),
+                                 h=min(0.8 * ctx.style.panel_h * len(fields) + 0.8,
+                                       ctx.style.max_size))
+    tidy = []
+    handles: dict[str, object] = {}
+    for i, field in enumerate(fields):
+        for j, degradation in enumerate(degradations):
+            ax = grid[i, j]
+            block = tables.get((degradation, field))
+            if block is None:
+                ax.set_axis_off()
+                continue
+            x = block["severity"].to_numpy(float)
+            drawn_any = False
+            for k, name in enumerate([metric, *controls]):
+                if name not in block.columns:
+                    continue
+                y = block[name].to_numpy(float)
+                if not np.isfinite(y).any() or not (y > 0).any():
+                    continue
+                look = ({"color": ctx.style.metric_colour(metric), "lw": 2.0, "ls": "-",
+                         "zorder": 3} if name == metric else
+                        {"color": "0.55", "lw": 1.0, "ls": LINE_STYLES[k % len(LINE_STYLES)],
+                         "zorder": 2})
+                (line,) = ax.plot(x, y, marker="o", ms=3 if name == metric else 2.2,
+                                  label=name, **look)
+                handles.setdefault(name, line)
+                drawn_any = True
+                tidy += [{"metric": name, "field": field, "degradation": degradation,
+                          "level": int(lv), "severity": float(sv), "damage": float(v),
+                          "is_this_metric": name == metric}
+                         for lv, sv, v in zip(block["level"], x, y)]
+            if not drawn_any:
+                ax.text(0.5, 0.5, "no damage scale\nfor this metric", transform=ax.transAxes,
+                        ha="center", va="center", fontsize="x-small", color="0.45")
+                ax.set_xticks([])
+                ax.set_yticks([])
+                continue
+            ax.axhline(1.0, color="0.3", lw=0.8)
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            # Tick at the strengths actually applied, in plain numbers: the log axis's own
+            # minor labels pile up over a range of a few octaves.
+            ax.set_xticks(x, [f"{v:g}" for v in x])
+            ax.xaxis.set_minor_formatter(NullFormatter())
+            ax.tick_params(labelsize="x-small")
+            if i == 0:
+                ax.set_title(ctx.label(degradation), fontsize="small")
+            if i == len(fields) - 1:
+                name = str(ctx.df.loc[ctx.df["degradation"] == degradation,
+                                      "severity_name"].iloc[0]) \
+                    if "severity_name" in ctx.df.columns else "strength"
+                ax.set_xlabel(f"applied strength ({name})", fontsize="small")
+        grid[i, 0].set_ylabel(field, fontsize="small")
+    fig.supylabel(word("damage"), fontsize="small")
+    ordered = [n for n in [metric, *controls] if n in handles]
+    fig.legend([handles[n] for n in ordered], ordered, loc="outside right upper",
+               fontsize="x-small", frameon=False)
+    fig.suptitle(f"{metric} beside the pointwise controls: damage against applied strength",
+                 fontsize="medium")
+    caption = (
+        f"Median damage over frames against the applied strength, log-log, for {metric} (bold, "
+        f"in colour) and the pointwise controls {', '.join(controls)} (thin, grey), one column "
+        "per displacement degradation and one row per field. The grey line is damage 1, an "
+        "unrelated field. Parallel lines charge in the same proportion at every strength; a "
+        "steeper line charges relatively more for the larger shifts, which is what decides "
+        "whether two metrics are interchangeable as training losses. These are the same numbers "
+        "as the table beneath."
+    )
+    return PlotResult([FigureItem(fig, {"metric": metric}, caption=caption,
+                                  data=pd.DataFrame(tidy))])
 
 
 # --- section 10: cost -----------------------------------------------------------------------

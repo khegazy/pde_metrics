@@ -47,7 +47,16 @@ if TYPE_CHECKING:
 
 #: The renderers a metric card draws, in the order the card shows them. Each must be a
 #: ``scope="per_metric"`` plot in :data:`fmeval.report.registry.PLOTS`.
-METRIC_FIGURES: tuple[str, ...] = ("sensitivity_profile", "response_curves")
+METRIC_FIGURES: tuple[str, ...] = ("sensitivity_profile", "response_curves",
+                                   "damage_beside_controls")
+
+#: Which generated block of the card each figure opens. The two response figures head the
+#: Performance summary; the magnitude comparison sits above the table of the same numbers.
+FIGURE_BLOCKS: dict[str, str] = {
+    "sensitivity_profile": "performance",
+    "response_curves": "performance",
+    "damage_beside_controls": "results_damage_by_level",
+}
 
 #: Fixed salt for SVG element ids. Any string works; what matters is that it never changes,
 #: because a changed salt rewrites every committed SVG at once.
@@ -62,10 +71,14 @@ ALT_TEXT: dict[str, str] = {
                            "unit of field change, and the bound on its largest response",
     "response_curves": "median damage against severity level, one panel per degradation "
                        "family and field, on one shared scale",
+    "damage_beside_controls": "damage against applied strength for this metric beside the "
+                              "pointwise controls, log-log, one panel per displacement "
+                              "degradation and field",
 }
 
 #: The column whose values key ``panels`` in the figure's JSON, per figure.
-_PANEL_KEY: dict[str, str] = {"response_curves": "field", "sensitivity_profile": "field"}
+_PANEL_KEY: dict[str, str] = {"response_curves": "field", "sensitivity_profile": "field",
+                              "damage_beside_controls": "field"}
 
 
 @dataclass(frozen=True)
