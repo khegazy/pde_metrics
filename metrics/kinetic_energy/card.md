@@ -262,6 +262,8 @@ Computed on the median value at each combination of degradation and strength, ov
 
 <!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
 
+No damage beside the pointwise controls figure: kinetic_energy has no damage scale on any field for these degradations.
+
 **Displacement, density, `translate_subpixel`** (strength: distance).
 
 | metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |

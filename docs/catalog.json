@@ -2607,6 +2607,11 @@
         "dataset": "kinet_re5e4",
         "figures": [
           {
+            "file": "metrics/h1_seminorm/_generated/damage_beside_controls.svg",
+            "name": "damage_beside_controls",
+            "numbers": "metrics/h1_seminorm/_generated/damage_beside_controls.json"
+          },
+          {
             "file": "metrics/h1_seminorm/_generated/response_curves.svg",
             "name": "response_curves",
             "numbers": "metrics/h1_seminorm/_generated/response_curves.json"
@@ -3554,6 +3559,11 @@
         ],
         "dataset": "kinet_re5e4",
         "figures": [
+          {
+            "file": "metrics/h_minus_one/_generated/damage_beside_controls.svg",
+            "name": "damage_beside_controls",
+            "numbers": "metrics/h_minus_one/_generated/damage_beside_controls.json"
+          },
           {
             "file": "metrics/h_minus_one/_generated/response_curves.svg",
             "name": "response_curves",
@@ -6821,6 +6831,11 @@
         "dataset": "kinet_re5e4",
         "figures": [
           {
+            "file": "metrics/mae/_generated/damage_beside_controls.svg",
+            "name": "damage_beside_controls",
+            "numbers": "metrics/mae/_generated/damage_beside_controls.json"
+          },
+          {
             "file": "metrics/mae/_generated/response_curves.svg",
             "name": "response_curves",
             "numbers": "metrics/mae/_generated/response_curves.json"
@@ -7772,6 +7787,11 @@
         ],
         "dataset": "kinet_re5e4",
         "figures": [
+          {
+            "file": "metrics/mse/_generated/damage_beside_controls.svg",
+            "name": "damage_beside_controls",
+            "numbers": "metrics/mse/_generated/damage_beside_controls.json"
+          },
           {
             "file": "metrics/mse/_generated/response_curves.svg",
             "name": "response_curves",
@@ -8731,6 +8751,11 @@
         ],
         "dataset": "kinet_re5e4",
         "figures": [
+          {
+            "file": "metrics/nrmse/_generated/damage_beside_controls.svg",
+            "name": "damage_beside_controls",
+            "numbers": "metrics/nrmse/_generated/damage_beside_controls.json"
+          },
           {
             "file": "metrics/nrmse/_generated/response_curves.svg",
             "name": "response_curves",
@@ -10177,6 +10202,11 @@
         ],
         "dataset": "kinet_re5e4",
         "figures": [
+          {
+            "file": "metrics/rmse/_generated/damage_beside_controls.svg",
+            "name": "damage_beside_controls",
+            "numbers": "metrics/rmse/_generated/damage_beside_controls.json"
+          },
           {
             "file": "metrics/rmse/_generated/response_curves.svg",
             "name": "response_curves",
