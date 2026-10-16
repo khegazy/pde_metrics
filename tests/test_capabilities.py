@@ -27,87 +27,27 @@ import pytest
 
 from degradations import registry as deg_registry
 from fmeval import analysis as an
-from fmeval.context import FieldContext, derive_rng, fluctuation_rms
-from fmeval.data.base import GridSpec, TimeSelection
+from fmeval.data.base import TimeSelection
 from fmeval.ladder import build_ladder
 from fmeval.pipeline import DatasetInfo, run
 from metrics import registry as metric_registry
-from tests.conftest import synthetic_field
-from tests.test_robustness import SyntheticTrajectory, temporary_metric  # noqa: F401
+from metrics.h_minus_one.metric import h_minus_one
+from metrics.spectrum_l2.metric import radial_energy_spectrum
+from tests.conftest import SyntheticTrajectory, make_ctx, synthetic_field
 
 SHAPE: tuple[int, int] = (32, 16)  # non-square; large enough for a spectral ladder
 
 
-def grid_for(shape: tuple[int, ...]) -> GridSpec:
-    n = len(shape)
-    return GridSpec(tuple(shape), (1.0,) * n, (True,) * n, ("x", "y", "z")[:n],
-                    (0.0,) * n)
-
-
-def ctx_for(x: np.ndarray, *, field: str = "vorticity", seed: int = 0) -> FieldContext:
-    return FieldContext(
-        field=field, grid=grid_for(x.shape[1:]), frame_index=0, time=0.0,
-        fluctuation_rms=fluctuation_rms(x),
-        rng=derive_rng(seed, "capability", 0, field),
-    )
-
-
-# --- reference implementations of first-wave candidates -----------------------------------
-#
-# Kept as plain functions so each test can register whichever it needs. Both are standard
-# textbook definitions rather than novel constructions.
-
-
-def h_minus_one(reference: np.ndarray, candidate: np.ndarray, *, ctx) -> float:
-    """Homogeneous negative Sobolev norm ``||r - c||_{H^-1}`` of the difference.
-
-    The NM-2 candidate. In Fourier space the homogeneous H^s norm of a periodic field is
-    ``(sum_k |k|^{2s} |f_k|^2)^{1/2}``; at s = -1 the ``|k|^{-1}`` weight makes the norm
-    insensitive to a displacement in proportion to how large the displaced structure is,
-    which is what makes it a candidate cure for the double penalty. Standard definition;
-    see e.g. Peyre (2018), ESAIM:COCV 24(4), 1489, Eq. (1.2) for the H^-1 / Wasserstein
-    linearisation this is the norm half of.
-
-    The ``k = 0`` mode is excluded because the homogeneous norm is undefined there; that
-    makes the quantity blind to a uniform offset, which is a property of the norm rather
-    than of this implementation.
-    """
-    difference = reference - candidate
-    spatial = tuple(range(1, difference.ndim))
-    spectrum = np.fft.fftn(difference, axes=spatial)
-    wavenumbers = [
-        2 * np.pi * np.fft.fftfreq(n, d=dx)
-        for n, dx in zip(ctx.grid.shape, ctx.grid.spacing)
-    ]
-    k_squared = sum(g**2 for g in np.meshgrid(*wavenumbers, indexing="ij"))
-    weight = np.zeros_like(k_squared)
-    nonzero = k_squared > 0
-    weight[nonzero] = 1.0 / k_squared[nonzero]
-    n_cells = int(np.prod(ctx.grid.shape))
-    return float(np.sqrt((np.abs(spectrum) ** 2 * weight).sum()) / n_cells)
-
-
-def radial_energy_spectrum(x: np.ndarray) -> np.ndarray:
-    """Energy in each integer wavenumber shell, summed over channels.
-
-    A function of ``|F(x)|`` alone: invariant to every phase, and therefore to translation.
-    """
-    axes = np.meshgrid(
-        *[np.fft.fftfreq(n) * n for n in x.shape[1:]], indexing="ij"
-    )
-    shells = np.sqrt(sum(a**2 for a in axes)).astype(int).ravel()
-    n_shells = int(shells.max()) + 1
-    out = np.zeros(n_shells)
-    for channel in range(x.shape[0]):
-        power = (np.abs(np.fft.fftn(x[channel])) ** 2).ravel()
-        out += np.bincount(shells, power, minlength=n_shells)
-    return out
+# The candidates registered below reuse the registered bundles' code -- `h_minus_one` from its
+# bundle, the shell spectrum from `spectrum_l2` -- under a temporary name, which exercises the
+# extension surface exactly as an outside contributor meets it without a second copy of the
+# mathematics drifting from the first.
 
 
 def spectrum_distance(reference: np.ndarray, candidate: np.ndarray) -> float:
     """Relative L1 distance between radial energy spectra: the BD-1 shape of metric."""
-    r = radial_energy_spectrum(reference)
-    c = radial_energy_spectrum(candidate)
+    r = radial_energy_spectrum(reference, make_ctx(reference))
+    c = radial_energy_spectrum(candidate, make_ctx(candidate))
     return float(np.abs(r - c).sum() / (r.sum() + 1e-300))
 
 
@@ -157,7 +97,8 @@ def test_a_vector_returning_metric_expands_into_one_row_per_component(temporary_
                       fields=("*",), returns="vector", units="dimensionless")
     def _spectrum_profile(reference, candidate):
         """Per-shell energy difference: one number per wavenumber shell."""
-        out = radial_energy_spectrum(reference) - radial_energy_spectrum(candidate)
+        out = (radial_energy_spectrum(reference, make_ctx(reference))
+               - radial_energy_spectrum(candidate, make_ctx(candidate)))
         n_shells[0] = len(out)
         return out
 
@@ -173,7 +114,7 @@ def test_a_vector_returning_metric_expands_into_one_row_per_component(temporary_
     assert result.rows["value"].notna().all()
 
 
-def test_a_new_degradation_inherits_the_whole_contract(temporary_degradation_local):
+def test_a_new_degradation_inherits_the_whole_contract(temporary_degradation):
     """A degradation is one decorated function, and the ladder machinery picks it up.
 
     The counterpart of the metric test above, for the other open extension surface. What is
@@ -183,7 +124,7 @@ def test_a_new_degradation_inherits_the_whole_contract(temporary_degradation_loc
     a real operator would meet them.
     """
 
-    @temporary_degradation_local(name="_probe_quantise", family="pointwise",
+    @temporary_degradation(name="_probe_quantise", family="pointwise",
                                  severity_name="levels", severity_units="",
                                  severity_direction="decreasing")
     def _probe_quantise(x, severity, *, ctx):
@@ -208,9 +149,10 @@ def test_a_new_degradation_inherits_the_whole_contract(temporary_degradation_loc
     )
 
     field = synthetic_field(SHAPE, 1, seed=0)
+    ctx = make_ctx(field, label="capability")
     spec = deg_registry.get("_probe_quantise")
     damage = [
-        float(np.mean((field - spec.fn(field, r.severity, ctx=ctx_for(field))) ** 2))
+        float(np.mean((field - spec.fn(field, r.severity, ctx=ctx)) ** 2))
         for r in severity_levels
     ]
     assert damage == sorted(damage), (
@@ -218,23 +160,6 @@ def test_a_new_degradation_inherits_the_whole_contract(temporary_degradation_loc
         f"{[r.severity for r in severity_levels]}; "
         "severity_direction='decreasing' would be wrong"
     )
-
-
-@pytest.fixture
-def temporary_degradation_local():
-    """Register a degradation for one test and remove it again."""
-    added: list[str] = []
-
-    def _register(**kwargs):
-        def _decorate(fn):
-            added.append(kwargs.get("name") or fn.__name__)
-            return deg_registry.degradation(**kwargs)(fn)
-
-        return _decorate
-
-    yield _register
-    for name in added:
-        deg_registry.REGISTRY.pop(name, None)
 
 
 # --- the protocol's own claims ---------------------------------------------------------------
@@ -256,11 +181,12 @@ def test_the_impostor_preserves_the_radial_energy_spectrum():
     deg_registry.discover()
     field = synthetic_field(SHAPE, 1, seed=0)
     spec = deg_registry.get("gaussian_impostor")
+    ctx = make_ctx(field, label="capability")
 
     for match_moments in (True, False):
-        impostor = spec.fn(field, 0, ctx=ctx_for(field), match_moments=match_moments)
-        before = radial_energy_spectrum(field)
-        after = radial_energy_spectrum(impostor)
+        impostor = spec.fn(field, 0, ctx=ctx, match_moments=match_moments)
+        before = radial_energy_spectrum(field, make_ctx(field))
+        after = radial_energy_spectrum(impostor, make_ctx(impostor))
         error = float(np.abs(after - before).sum() / before.sum())
         assert error < 1e-10, (
             f"match_moments={match_moments}: radial spectrum changed by a relative "
@@ -285,10 +211,9 @@ def test_the_impostor_is_scored_perfectly_by_a_spectrum_only_metric(temporary_me
     """
     deg_registry.discover()
     field = synthetic_field(SHAPE, 1, seed=0)
-    impostor = deg_registry.get("gaussian_impostor").fn(
-        field, 0, ctx=ctx_for(field), match_moments=True
-    )
-    blurred = deg_registry.get("gaussian_blur").fn(field, 2.0, ctx=ctx_for(field))
+    ctx = make_ctx(field, label="capability")
+    impostor = deg_registry.get("gaussian_impostor").fn(field, 0, ctx=ctx, match_moments=True)
+    blurred = deg_registry.get("gaussian_blur").fn(field, 2.0, ctx=ctx)
 
     on_impostor = spectrum_distance(field, impostor)
     on_blur = spectrum_distance(field, blurred)
@@ -337,7 +262,7 @@ def test_h_minus_one_is_more_displacement_tolerant_than_the_l2_baseline(temporar
     from pathlib import Path
 
     from fmeval.data.kinet_raw import KinetRawTrajectory
-    from fmeval.derived import recompute_frame
+    from fmeval.derived import RecomputingTrajectory
 
     path = Path(
         "datasets/kinet/doubly_periodic/weakly_compressible_isoT_fluids/"
@@ -351,28 +276,13 @@ def test_h_minus_one_is_more_displacement_tolerant_than_the_l2_baseline(temporar
     metric_registry.discover()
     deg_registry.discover()
 
-    class _Recomputing:
-        """The wrapper evaluate.py applies, so vorticity is our spectral curl."""
-
-        def __init__(self, inner):
-            self._inner = inner
-
-        def __getattr__(self, name):
-            return getattr(self._inner, name)
-
-        def __len__(self):
-            return len(self._inner)
-
-        def frame(self, t, fields):
-            return recompute_frame(self._inner.frame(t, fields))
-
     specs = [metric_registry.get("mse"), metric_registry.get("_h_minus_one")]
     severity_levels = build_ladder({
         "translate_x": {"op": "translate", "severities": [1, 2, 4],
                         "options": {"axis": "x"}},
         "uncorrelated": {"op": "random_large_translation", "severities": [0, 1, 2]},
     })
-    trajectory = _Recomputing(KinetRawTrajectory(path))
+    trajectory = RecomputingTrajectory(KinetRawTrajectory(path))
     try:
         result = run(
             trajectory, specs, severity_levels, fields=["velocity", "vorticity"],

@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from .._ensemble import as_ensemble
 from ..registry import metric
 
 
@@ -73,17 +74,8 @@ def crps(reference: np.ndarray, members: np.ndarray) -> float:
         ValueError: If ``members`` does not carry a leading member axis over an array
             shaped like ``reference``, or if the ensemble is empty.
     """
-    reference = np.asarray(reference, dtype=np.float64)
-    members = np.asarray(members, dtype=np.float64)
-
-    if members.ndim != reference.ndim + 1 or members.shape[1:] != reference.shape:
-        raise ValueError(
-            f"members has shape {members.shape}, expected (N, *{reference.shape}) with "
-            "the member axis leading"
-        )
+    reference, members = as_ensemble(reference, members, min_members=1, what="crps")
     n_members = members.shape[0]
-    if n_members < 1:
-        raise ValueError("crps needs at least one ensemble member, got an empty ensemble")
 
     # E|X - y|, estimated by the sample mean over members at every cell.
     skill = np.abs(members - reference[None]).mean(axis=0)

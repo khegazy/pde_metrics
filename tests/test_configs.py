@@ -10,27 +10,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from hydra import compose, initialize_config_dir
 from omegaconf import OmegaConf
 
-CONFIGS = str(Path(__file__).resolve().parent.parent / "configs")
-
-
-def build(*overrides: str):
-    """Compose the config the way `evaluate.py` does, with CLI-style overrides.
-
-    The HydraConfig singleton has to be installed explicitly. `hydra.main` does that for
-    you, and without it `${hydra:runtime.cwd}` -- which `paths.data` depends on -- raises
-    "HydraConfig was not set". Composing without it would test a configuration that never
-    actually runs.
-    """
-    from hydra.core.hydra_config import HydraConfig
-
-    with initialize_config_dir(config_dir=CONFIGS, version_base=None):
-        cfg = compose(config_name="config", overrides=list(overrides),
-                      return_hydra_config=True)
-        HydraConfig.instance().set_config(cfg)
-        return cfg
+from tests.conftest import CONFIGS, build
 
 
 def test_default_config_composes():
@@ -125,7 +107,9 @@ def test_every_group_option_on_disk_is_tested(group_files=None):
     ("degradation.only=[translate_x]", lambda c: list(c.degradation.only) == ["translate_x"]),
     ("degradation.skip=[median_blur]", lambda c: list(c.degradation.skip) == ["median_blur"]),
     # Reporting.
-    ("report.style.theme=paper", lambda c: c.report.style.theme == "paper"),
+    ("report.error_map.enabled=false", lambda c: c.report.error_map.enabled is False),
+    ("report=none", lambda c: c.report.error_map.enabled is False
+     and c.report.thresholds.spearman == 0.90),
     # Data root, for someone whose data is not where the symlink points.
     ("paths.data=/tmp/data", lambda c: str(c.paths.data) == "/tmp/data"),
     # Refusing the HTTP fallback, for a run that must read a local copy or fail.

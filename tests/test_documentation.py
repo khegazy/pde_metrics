@@ -12,7 +12,8 @@ from pathlib import Path
 
 import pytest
 
-REPO = Path(__file__).resolve().parent.parent
+from tests.conftest import REPO
+
 DOC = REPO / "TEST_DESCRIPTION.md"
 
 #: Columns that are provenance or grouping keys rather than measurements. They are still
@@ -57,7 +58,7 @@ def test_every_analysis_column_is_documented(doc):
     """Columns produced by summarise_axes, probe_summary and report_card."""
 
     from fmeval import analysis as an
-    from tests.test_analysis import make_frame
+    from tests.conftest import make_frame
 
     df = make_frame(axes={"a": [1.0, 2.0, 3.0], "gaussian_impostor": [9.0],
                           "uncorrelated": [10.0, 10.0]})
@@ -185,6 +186,9 @@ def test_agents_states_the_non_negotiables():
         "non-square",                                       # the transpose trap
         "severity_direction",                               # the inverted ladder
         "does not decide",                                  # no verdicts
+        "Define every value once",                          # one source of truth
+        "Grep before you write",                            # reuse before writing
+        "never import from another `test_*.py` module",     # shared test helpers
     ):
         assert rule in text, f"AGENTS.md does not state the rule about {rule!r}"
 
@@ -349,6 +353,8 @@ RECIPES = {
         "Never state expected behaviour",
         "never sign a card",
         "report it rather than writing around it",
+        "Reuse before you write",
+        "Prove that a refactor changes no number",
     ),
     "add-a-metric.md": (
         "python -m fmeval.cards new <name>",
@@ -365,7 +371,7 @@ RECIPES = {
         "severity_direction",
         "configs/degradation/default.yaml",
         "FAMILY_BLOCKS",
-        "FAMILY_HEADINGS",
+        "FAMILY_INFO",
         "exemplars",
         "python -m fmeval.cards exemplars <name>",
         "mode: draws",
@@ -389,7 +395,9 @@ RECIPES = {
         "fmeval/cards/schema.py",
     ),
     "verify-a-refactor.md": (
-        "any numerical difference is a bug you introduced",
+        "any difference beyond the stated tolerance is a bug you introduced",
+        "every column is compared except",
+        "docs/recipes/compare_runs.py",
         "variant_label",
         "_IMPORT_ERRORS",
         "dataset=kinet_re5e4_dev",
@@ -446,3 +454,82 @@ def test_agents_points_at_the_recipes():
     """AGENTS.md is the summary; an agent reading only it must be sent to the recipes."""
     text = (REPO / "AGENTS.md").read_text()
     assert "docs/recipes/" in text, "AGENTS.md never mentions the recipes directory"
+
+
+# --------------------------------------------------------------------------------------
+# One source of truth, checked mechanically where a check is cheap and exact
+# --------------------------------------------------------------------------------------
+
+
+def _python_sources(*roots: str) -> list[Path]:
+    return [p for root in roots for p in sorted((REPO / root).rglob("*.py"))
+            if "_template" not in p.parts and "__pycache__" not in p.parts]
+
+
+def test_no_test_module_imports_from_another_test_module():
+    """Shared test helpers live in ``tests/conftest.py``, never in a ``test_*`` module.
+
+    A test module is collected by pytest, not a library. Helpers imported out of one were
+    copied into a second file whenever the import felt awkward, and the copies drifted: the
+    capability tests carried their own radial spectrum, rounding shells down where the
+    registered metric rounds to the nearest shell.
+    """
+    pattern = re.compile(r"^\s*from tests\.test_\w+ import|^\s*import tests\.test_", re.M)
+    offenders = [str(p.relative_to(REPO)) for p in _python_sources("tests", "metrics",
+                                                                    "degradations")
+                 if p.name != Path(__file__).name and pattern.search(p.read_text())]
+    assert not offenders, (
+        f"{offenders} import from another test module; move the helper to tests/conftest.py"
+    )
+
+
+def test_no_module_level_alias():
+    """A module-level ``NAME = other_name`` is a second name for one thing; import the original.
+
+    Every alias found when this test was written had a reason beside it and was still a copy a
+    reader had to resolve: ``MetricContext = FieldContext``, ``FAMILY_HEADINGS = FAMILY_LABELS``
+    and three more. Only an assignment whose value is a bare name or attribute chain counts, so a
+    value computed by a call is untouched.
+    """
+    import ast
+
+    aliases = []
+    for path in _python_sources("fmeval", "metrics", "degradations", "tests", "docs"):
+        for node in ast.parse(path.read_text()).body:
+            if not isinstance(node, (ast.Assign, ast.AnnAssign)) or node.value is None:
+                continue
+            value = node.value
+            if (isinstance(value, (ast.Name, ast.Attribute))
+                    and not any(isinstance(n, ast.Call) for n in ast.walk(value))):
+                targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+                names = [t.id for t in targets if isinstance(t, ast.Name)]
+                if names and names != ["pytestmark"]:
+                    aliases.append(f"{path.relative_to(REPO)}:{node.lineno} {names[0]} = "
+                                   f"{ast.unparse(value)}")
+    assert not aliases, f"module-level aliases; import the original instead: {aliases}"
+
+
+def test_the_degradation_families_are_listed_once():
+    """Only the registry enumerates the families, and only the vocabulary describes them.
+
+    A literal holding five or more family names anywhere else is a second list of them. Three
+    such lists -- figure labels, colours and site wording -- each had to be kept in step with the
+    registry by hand, and a test, before they became one table.
+    """
+    import ast
+
+    from degradations.registry import FAMILIES
+
+    allowed = {REPO / "degradations" / "registry.py", REPO / "fmeval" / "report" / "vocabulary.py",
+               Path(__file__)}
+    copies = []
+    for path in _python_sources("fmeval", "metrics", "degradations", "tests", "docs"):
+        if path in allowed:
+            continue
+        for node in ast.walk(ast.parse(path.read_text())):
+            items = (node.keys if isinstance(node, ast.Dict)
+                     else node.elts if isinstance(node, (ast.List, ast.Tuple, ast.Set)) else [])
+            named = {i.value for i in items if isinstance(i, ast.Constant)} & set(FAMILIES)
+            if len(named) >= 5:
+                copies.append(f"{path.relative_to(REPO)}:{node.lineno}")
+    assert not copies, f"a second list of the degradation families at {copies}"

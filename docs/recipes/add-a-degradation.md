@@ -50,9 +50,9 @@ statistics rather than quietly counted.
 ## 4. If this is a new family
 
 Every metric's Results section has one subsection per family of degradation. A new family
-must be added to `FAMILY_BLOCKS` in `fmeval/cards/evidence.py` and to `FAMILY_HEADINGS` in
-`fmeval/cards/prose.py`, and every metric's `card.md` needs the new `###` subsection with
-its generated block. Without those, your new degradation is measured and its numbers
+is added once, to `FAMILY_INFO` in `fmeval/report/vocabulary.py` (its heading, colour and
+site wording); `FAMILY_BLOCKS` in `fmeval/cards/evidence.py` is derived from it. Every metric's
+`card.md` then needs the new `###` subsection with its generated block. Without those, your new degradation is measured and its numbers
 appear in **no metric's page at all** — they land in the fingerprint file and nothing
 renders them. This is the one sanctioned exception to "never edit another bundle": add the
 empty subsection to each metric's page, and change nothing else in those pages.

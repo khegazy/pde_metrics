@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from .._shared.grids import _subsample_kernel, _upsample
+from fmeval import remap
+
+from .._shared.grids import _upsample
 from ..registry import degradation
 
 
@@ -29,4 +31,4 @@ def subsample(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     factor = int(round(severity))
     if factor <= 1:
         return x
-    return _upsample(_subsample_kernel(x, factor), factor, x.shape[1:])
+    return _upsample(remap.subsample(x, factor), factor)

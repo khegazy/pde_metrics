@@ -20,7 +20,7 @@ target instead of assuming monotone damage. The metric keeps reporting the quant
 literature reports.
 
 If a function additionally declares a keyword-only parameter named ``ctx``, the pipeline
-passes a :class:`~fmeval.context.MetricContext` carrying grid spacing, periodicity, the
+passes a :class:`~fmeval.context.FieldContext` carrying grid spacing, periodicity, the
 field name and the physical time. Detection happens once, here, via :mod:`inspect`, so the
 common case needs no boilerplate.
 
@@ -32,15 +32,21 @@ density. Declare the companion map with :func:`pointwise_map` and the reduction 
 from __future__ import annotations
 
 import dataclasses
-import importlib
 import inspect
-import pkgutil
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from dataclasses import field as dc_field
 from typing import Any, Literal
 
 import numpy as np
+
+from metrics._registry_core import (
+    Accepts,
+    check_new,
+    discover_package,
+    lookup,
+    positional_count,
+    print_table,
+)
 
 Arity = Literal["pairwise", "single", "ensemble"]
 
@@ -60,7 +66,7 @@ REDUCTIONS: dict[str, Callable[[np.ndarray, int], float]] = {
 
 
 @dataclass(frozen=True)
-class MetricSpec:
+class MetricSpec(Accepts):
     """Everything the harness knows about one metric."""
 
     name: str
@@ -85,7 +91,6 @@ class MetricSpec:
     takes_ctx: bool
     reduction: str
     pointwise: Callable[..., np.ndarray] | None = None
-    defaults: dict[str, Any] = dc_field(default_factory=dict)
     target: float | None = None
     """The value a perfectly calibrated prediction attains, if it is not zero.
 
@@ -110,6 +115,16 @@ class MetricSpec:
     def reduce(self, map_: np.ndarray, n_channels: int) -> float:
         """Apply this metric's declared reduction to a pointwise map."""
         return REDUCTIONS[self.reduction](map_, n_channels)
+
+    def describe(self) -> dict[str, Any]:
+        """What the decorator declares, as plain data: the catalog entry and run provenance."""
+        return {
+            "arity": self.arity, "fields": list(self.fields), "returns": self.returns,
+            "units": self.units, "cost": self.cost, "differentiable": self.differentiable,
+            "symmetric": self.symmetric, "higher_is_better": self.higher_is_better,
+            "target": self.target, "measures": self.measures, "reduction": self.reduction,
+            "has_pointwise_map": self.has_pointwise,
+        }
 
 
 REGISTRY: dict[str, MetricSpec] = {}
@@ -141,7 +156,6 @@ def metric(
     monotone_under_smoothing: bool = True,
     units: str = "field",
     reduction: str = "mean",
-    defaults: dict[str, Any] | None = None,
     target: float | None = None,
     measures: Measures = "error",
 ) -> Callable[[Callable], Callable]:
@@ -170,7 +184,6 @@ def metric(
             use it to slip past a gate it would otherwise have passed.
         units: Free text, e.g. ``"field"``, ``"field^2"``, ``"dimensionless"``.
         reduction: How a pointwise map reduces to the scalar. Key of :data:`REDUCTIONS`.
-        defaults: Default keyword arguments, overridable from config.
         target: The value a perfectly calibrated prediction attains, when that is not
             zero. Mutually exclusive with ``higher_is_better``: they are two different
             models of what "better" means.
@@ -190,10 +203,7 @@ def metric(
 
     def _decorate(fn: Callable) -> Callable:
         key = name or fn.__name__
-        if key in REGISTRY:
-            raise ValueError(
-                f"duplicate metric {key!r}: {REGISTRY[key].module} vs {fn.__module__}"
-            )
+        check_new(REGISTRY, key, "metric", fn.__module__)
         if reduction not in REDUCTIONS:
             raise ValueError(
                 f"{key}: unknown reduction {reduction!r}; expected one of {sorted(REDUCTIONS)}"
@@ -210,12 +220,8 @@ def metric(
                     "are different models of what 'better' means, so pick one"
                 )
 
-        params = inspect.signature(fn).parameters
-        takes_ctx = "ctx" in params
-        n_pos = sum(
-            p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
-            for p in params.values()
-        )
+        takes_ctx = "ctx" in inspect.signature(fn).parameters
+        n_pos = positional_count(fn)
         expected = ARITY_POSITIONAL[arity]
         if n_pos != expected:
             raise TypeError(
@@ -239,7 +245,6 @@ def metric(
             module=fn.__module__,
             takes_ctx=takes_ctx,
             reduction=reduction,
-            defaults=dict(defaults or {}),
             target=None if target is None else float(target),
             measures=measures,
         )
@@ -278,60 +283,24 @@ def pointwise_map(*, of: str) -> Callable[[Callable], Callable]:
 def discover(force: bool = False) -> dict[str, Exception]:
     """Import every module under ``metrics/`` so the decorators fire.
 
-    Import failures are collected rather than raised: one colleague's broken
-    work-in-progress file must not abort everyone's run. The collected errors surface in
-    the :func:`get` error message when a lookup actually misses.
-
     Args:
         force: Re-run discovery even if it has already been done.
 
     Returns:
-        Mapping of module name to the exception it raised, empty if all imported.
+        Mapping of module name to the exception it raised, empty if all imported. See
+        :func:`metrics._registry_core.discover_package` for why failures are collected.
     """
     global _DISCOVERED
     if _DISCOVERED and not force:
         return _IMPORT_ERRORS
-
-    import metrics as _pkg
-
-    for mod in pkgutil.walk_packages(_pkg.__path__, prefix=f"{_pkg.__name__}."):
-        # Every component after the package name is checked, not just the last one:
-        # a bundle directory named `_template` must not be entered even though the
-        # module inside it is called `metric`. Leading underscores mark templates and
-        # shared helpers; `test_` marks the tests that live inside each bundle, which
-        # would otherwise drag pytest into every evaluation run.
-        parts = mod.name.split(".")[1:]
-        if any(p.startswith(("_", "test_")) for p in parts) or parts[-1] == "registry":
-            continue
-        try:
-            importlib.import_module(mod.name)
-        except Exception as exc:  # noqa: BLE001 - deliberately broad, see docstring
-            _IMPORT_ERRORS[mod.name] = exc
+    discover_package("metrics", _IMPORT_ERRORS)
     _DISCOVERED = True
     return _IMPORT_ERRORS
 
 
 def get(name: str) -> MetricSpec:
-    """Look up a metric by name, running discovery first if needed.
-
-    Raises:
-        KeyError: If no such metric exists. The message lists what is available and, if
-            any metric modules failed to import, what went wrong with them.
-    """
-    if name not in REGISTRY:
-        errors = discover()
-        if name not in REGISTRY:
-            hint = ""
-            if errors:
-                broken = ", ".join(f"{m}: {e!r}" for m, e in errors.items())
-                hint = f"\n(modules that failed to import: {broken})"
-            raise KeyError(
-                f"unknown metric {name!r}; available: {sorted(REGISTRY)}{hint}"
-            )
-    spec = REGISTRY[name]
-    if CARD_VALIDATOR is not None:
-        CARD_VALIDATOR(spec)
-    return spec
+    """Look up a metric by name, running discovery first if needed, and validate its card."""
+    return lookup(name, REGISTRY, "metric", discover, CARD_VALIDATOR)
 
 
 def available() -> list[str]:
@@ -343,9 +312,6 @@ def available() -> list[str]:
 def _main() -> None:
     """Print the registry as a table. Entry point for ``python -m metrics``."""
     discover()
-    if not REGISTRY:
-        print("no metrics registered")
-        return
     rows = [
         (
             s.name,
@@ -358,12 +324,5 @@ def _main() -> None:
         )
         for s in sorted(REGISTRY.values(), key=lambda s: s.name)
     ]
-    head = ("metric", "arity", "fields", "units", "cost", "pointwise", "diff'able")
-    widths = [max(len(h), *(len(r[i]) for r in rows)) for i, h in enumerate(head)]
-    line = "  ".join(h.ljust(w) for h, w in zip(head, widths))
-    print(line)
-    print("-" * len(line))
-    for r in rows:
-        print("  ".join(c.ljust(w) for c, w in zip(r, widths)))
-    for mod, exc in _IMPORT_ERRORS.items():
-        print(f"\n!! {mod} failed to import: {exc!r}")
+    print_table(("metric", "arity", "fields", "units", "cost", "pointwise", "diff'able"),
+                rows, _IMPORT_ERRORS, "no metrics registered")

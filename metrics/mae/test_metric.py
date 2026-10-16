@@ -12,23 +12,9 @@ from __future__ import annotations
 
 import numpy as np
 
+from tests.conftest import SQUARE_HALF_AMPLITUDE, SQUARE_REFERENCE, SQUARE_SHIFTED
+
 from .metric import mae, mae_map
-
-# The same 4x4 feature the MSE card uses, so the two cards can be read against each other.
-REFERENCE = np.array([[[0.0, 0.0, 0.0, 0.0],
-                       [0.0, 1.0, 1.0, 0.0],
-                       [0.0, 1.0, 1.0, 0.0],
-                       [0.0, 0.0, 0.0, 0.0]]])
-
-SHIFTED = np.array([[[0.0, 0.0, 0.0, 0.0],
-                     [0.0, 0.0, 1.0, 1.0],
-                     [0.0, 0.0, 1.0, 1.0],
-                     [0.0, 0.0, 0.0, 0.0]]])
-
-HALF_AMPLITUDE = np.array([[[0.0, 0.0, 0.0, 0.0],
-                            [0.0, 0.5, 0.5, 0.0],
-                            [0.0, 0.5, 0.5, 0.0],
-                            [0.0, 0.0, 0.0, 0.0]]])
 
 
 def test_worked_example_from_the_card():
@@ -38,8 +24,8 @@ def test_worked_example_from_the_card():
     error is 4/16. Four cells differ by a half when the amplitude is halved, so it is
     4*0.5/16.
     """
-    assert mae(REFERENCE, SHIFTED) == 0.25
-    assert mae(REFERENCE, HALF_AMPLITUDE) == 0.125
+    assert mae(SQUARE_REFERENCE, SQUARE_SHIFTED) == 0.25
+    assert mae(SQUARE_REFERENCE, SQUARE_HALF_AMPLITUDE) == 0.125
 
 
 def test_a_one_cell_shift_costs_twice_a_halved_amplitude():
@@ -48,7 +34,8 @@ def test_a_one_cell_shift_costs_twice_a_halved_amplitude():
     Both metrics prefer the damped candidate to the displaced one. They disagree by how
     much, and that factor is the whole practical difference between them.
     """
-    assert mae(REFERENCE, SHIFTED) == 2.0 * mae(REFERENCE, HALF_AMPLITUDE)
+    shifted = mae(SQUARE_REFERENCE, SQUARE_SHIFTED)
+    assert shifted == 2.0 * mae(SQUARE_REFERENCE, SQUARE_HALF_AMPLITUDE)
 
 
 def test_response_to_a_small_displacement_is_linear():
@@ -66,7 +53,7 @@ def test_response_to_a_small_displacement_is_linear():
 
 def test_the_error_map_shows_two_lobes_for_a_displaced_feature():
     """The double penalty as a picture: error where the feature is not, and where it is."""
-    error = mae_map(REFERENCE, SHIFTED)
+    error = mae_map(SQUARE_REFERENCE, SQUARE_SHIFTED)
     assert np.all(error[1:3, 1] == 1.0)          # where the feature should be and is not
     assert np.all(error[1:3, 3] == 1.0)          # where it is and should not be
     assert np.all(error[1:3, 2] == 0.0)          # where they overlap, no error at all

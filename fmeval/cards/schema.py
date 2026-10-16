@@ -18,6 +18,7 @@ to tell which one is stale. The catalog merges the two sources at read time.
 
 from __future__ import annotations
 
+import dataclasses
 import datetime as _dt
 import re
 from dataclasses import dataclass
@@ -36,22 +37,23 @@ See the module docstring of :mod:`fmeval.cards` for the versioning policy.
 
 KINDS = ("metric", "degradation")
 
-CATEGORIES = (
-    "pointwise",
-    "physical",
-    "spectral",
-    "statistical",
-    "probabilistic",
-    "transport",
-    "functional",
-    "geometric",
-    "topological",
-)
+CATEGORIES: dict[str, str] = {
+    "pointwise": "compares the fields cell by cell",
+    "physical": "a physical quantity of the flow",
+    "spectral": "compares the fields scale by scale",
+    "statistical": "compares distributions or moments of the field",
+    "probabilistic": "compares whole ensembles",
+    "transport": "the cost of moving one field onto the other",
+    "functional": "a norm that weights the scales differently",
+    "geometric": "where features are, and what shape they have",
+    "topological": "which features exist, and how they connect",
+}
 """What kind of measurement a metric makes. Set by whoever adds the metric.
 
 This is the primary way a reader browses: the navigation groups metrics by it, and it is
 the first row of every metric's header table. Each name answers "what does this thing
-look at?" rather than "how good is it" or "how far has the work got".
+look at?" rather than "how good is it" or "how far has the work got". Each value is the
+phrase the site shows a first-time reader beside the code; the codes are described below.
 
 ``pointwise``
     Compares the two fields cell by cell and never consults a neighbour. MAE, MSE, RMSE
@@ -128,13 +130,6 @@ EXEMPLAR_MODES = ("severity", "draws", "none")
     all, and the unrelated-field anchor is indexed by draw number.
 ``none``
     No panel. Only the identity operator, which by definition changes nothing.
-"""
-
-DATA_REQUIREMENTS = ("ensemble", "vector_field", "time_series")
-"""What a metric needs beyond a single pair of fields on the analysis grid.
-
-Fields are not listed here: the ``@metric`` decorator's ``fields`` argument already says
-which physical fields a metric accepts, and the card does not restate it.
 """
 
 _NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
@@ -384,13 +379,8 @@ def parse_card(data: Any, *, where: str) -> Card:
     return card
 
 
-_KNOWN_KEYS = frozenset(
-    {
-        "schema_version", "name", "kind", "category", "summary", "status", "owners",
-        "output", "math", "exemplars", "references",
-        "review", "failure_mode",
-    }
-)
+#: The top-level keys a card may carry: exactly the fields of :class:`Card`.
+_KNOWN_KEYS = frozenset(f.name for f in dataclasses.fields(Card))
 
 
 def _check_unknown_keys(data: dict[str, Any], where: str) -> None:
@@ -443,7 +433,9 @@ def _parse_math(data: Any, where: str, fix: str) -> MathProperties | None:
 def _parse_exemplars(data: Any, where: str, fix: str) -> Exemplars | None:
     if data is None:
         return None
-    mode = _one_of(data.get("mode", "severity"), EXEMPLAR_MODES, "exemplars.mode", where, fix)
+    # Absent keys take the dataclass's own defaults, so each default is written once.
+    default = {f.name: f.default for f in dataclasses.fields(Exemplars)}
+    mode = _one_of(data.get("mode", default["mode"]), EXEMPLAR_MODES, "exemplars.mode", where, fix)
     levels = tuple(float(v) for v in (data.get("levels") or ()))
     if mode == "severity" and len(levels) != 3:
         raise CardError(
@@ -469,9 +461,9 @@ def _parse_exemplars(data: Any, where: str, fix: str) -> Exemplars | None:
     return Exemplars(
         mode=mode,
         levels=levels,
-        n_draws=int(data.get("n_draws", 3)),
+        n_draws=int(data.get("n_draws", default["n_draws"])),
         diagnostics=_str_tuple(data.get("diagnostics"), "exemplars.diagnostics", where, fix),
-        field_name=str(data.get("field_name", "vorticity")),
+        field_name=str(data.get("field_name", default["field_name"])),
         rationale=rationale,
     )
 

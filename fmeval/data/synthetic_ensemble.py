@@ -81,6 +81,7 @@ class SyntheticEnsembleTrajectory(Trajectory):
     """An exchangeable Gaussian ensemble, generated on the fly from a seed."""
 
     is_ensemble = True
+    reads_from_disk = False
 
     def __init__(
         self,
@@ -168,16 +169,7 @@ class SyntheticEnsembleTrajectory(Trajectory):
             "omega": self._omega,
             "seed": self._seed,
             "fields": list(self._fields),
-            "notes": (
-                "Generated, not measured. Reference and members are independent draws "
-                "from one N(base, sigma^2) process, hence exchangeable. Not physical "
-                "evidence."
-            ),
         }
-
-    @property
-    def n_members(self) -> int:
-        return self._n_members
 
     def read_frame(self, t: int, fields: Sequence[str]) -> dict[str, np.ndarray]:
         """Generate one frame: a reference realization and ``N`` members per field."""

@@ -12,24 +12,18 @@ import numpy as np
 import pytest
 
 from fmeval.calibration import DRIFT_WARN, calibrate, calibrate_field
-from fmeval.data.base import GridSpec
 from fmeval.ladder import build_ladder, resolve_severity
+from fmeval.wavenumbers import wavenumber_magnitude
+from tests.conftest import unit_grid
 
 SHAPE = (64, 48)  # non-square, so an axis mix-up in the wavenumber grid shows up
-
-
-def grid(shape: tuple[int, ...] = SHAPE) -> GridSpec:
-    n = len(shape)
-    return GridSpec(tuple(shape), (1.0,) * n, (True,) * n, ("x", "y", "z")[:n], (0.0,) * n)
 
 
 def band_limited(k_max: float, shape: tuple[int, ...] = SHAPE, *, seed: int = 0,
                  mean: float = 0.0) -> np.ndarray:
     """A field whose fluctuation energy lies entirely below ``k_max``."""
     rng = np.random.default_rng(seed)
-    axes = np.meshgrid(*[np.fft.fftfreq(n) * n for n in shape], indexing="ij")
-    k = np.sqrt(sum(a**2 for a in axes))
-    spectrum = np.fft.fftn(rng.standard_normal(shape)) * (k <= k_max)
+    spectrum = np.fft.fftn(rng.standard_normal(shape)) * (wavenumber_magnitude(shape) <= k_max)
     return (mean + np.real(np.fft.ifftn(spectrum)))[None]
 
 
@@ -37,7 +31,7 @@ def band_limited(k_max: float, shape: tuple[int, ...] = SHAPE, *, seed: int = 0,
 
 
 def test_cumulative_energy_reaches_one_and_is_monotone():
-    c = calibrate_field([band_limited(8.0)], grid(), "vorticity").cumulative_energy
+    c = calibrate_field([band_limited(8.0)], unit_grid(SHAPE), "vorticity").cumulative_energy
     assert c[-1] == pytest.approx(1.0)
     assert np.all(np.diff(c) >= -1e-12)
 
@@ -48,7 +42,7 @@ def test_a_band_limited_field_has_no_energy_above_its_band():
     Note the curve is indexed by position in the list of distinct magnitudes, not by wavenumber,
     so it is read through the accessors rather than by integer index.
     """
-    cal = calibrate_field([band_limited(8.0)], grid(), "vorticity")
+    cal = calibrate_field([band_limited(8.0)], unit_grid(SHAPE), "vorticity")
     assert cal.energy_removed(8.0, "below") == pytest.approx(1.0, abs=1e-12)
     assert cal.energy_removed(8.0, "above") == pytest.approx(0.0, abs=1e-12)
     assert cal.wavenumber_for_energy_fraction(0.999) <= 8.0
@@ -62,8 +56,8 @@ def test_the_spatial_mean_is_removed_before_measuring():
     """
     fluctuation = band_limited(8.0, seed=1)
     with_mean = fluctuation + 1000.0
-    a = calibrate_field([fluctuation], grid(), "density")
-    b = calibrate_field([with_mean], grid(), "density")
+    a = calibrate_field([fluctuation], unit_grid(SHAPE), "density")
+    b = calibrate_field([with_mean], unit_grid(SHAPE), "density")
     # atol, not rtol alone: the k=0 bin is zero by construction in both, and subtracting a
     # mean of 1000 leaves a different round-off there (1e-35 against 1e-25). Both are zero.
     np.testing.assert_allclose(a.cumulative_energy, b.cumulative_energy,
@@ -72,21 +66,21 @@ def test_the_spatial_mean_is_removed_before_measuring():
 
 
 def test_a_smoother_field_has_a_larger_characteristic_scale():
-    smooth = calibrate_field([band_limited(2.0)], grid(), "density")
-    rough = calibrate_field([band_limited(20.0)], grid(), "vorticity")
+    smooth = calibrate_field([band_limited(2.0)], unit_grid(SHAPE), "density")
+    rough = calibrate_field([band_limited(20.0)], unit_grid(SHAPE), "vorticity")
     assert smooth.characteristic_scale > rough.characteristic_scale
 
 
 def test_a_uniform_field_cannot_be_calibrated():
     """It has no spectrum, so failing loudly beats inventing a scale for it."""
     with pytest.raises(ValueError, match="no fluctuation energy"):
-        calibrate_field([np.ones((1, *SHAPE))], grid(), "temperature")
+        calibrate_field([np.ones((1, *SHAPE))], unit_grid(SHAPE), "temperature")
 
 
 def test_calibrate_skips_a_field_it_cannot_measure_rather_than_aborting():
     out = calibrate(
         {"density": [band_limited(4.0)], "temperature": [np.ones((1, *SHAPE))]},
-        grid(), ["density", "temperature"],
+        unit_grid(SHAPE), ["density", "temperature"],
     )
     assert "density" in out
     assert "temperature" not in out
@@ -94,11 +88,11 @@ def test_calibrate_skips_a_field_it_cannot_measure_rather_than_aborting():
 
 def test_scale_spread_reports_drift_across_frames():
     """The diagnostic for whether one fixed calibration is defensible on a trajectory."""
-    steady = calibrate_field([band_limited(8.0, seed=s) for s in range(4)], grid(), "v")
+    steady = calibrate_field([band_limited(8.0, seed=s) for s in range(4)], unit_grid(SHAPE), "v")
     assert steady.scale_spread < DRIFT_WARN
 
     drifting = calibrate_field(
-        [band_limited(k, seed=2) for k in (2.0, 6.0, 18.0, 30.0)], grid(), "v"
+        [band_limited(k, seed=2) for k in (2.0, 6.0, 18.0, 30.0)], unit_grid(SHAPE), "v"
     )
     assert drifting.scale_spread > DRIFT_WARN
 
@@ -112,7 +106,7 @@ def test_removing_energy_uses_the_declared_side():
     Swapping the two inverts the axis silently: "remove 5%" would resolve to the wavenumber
     holding 5% of the energy, and the filter would remove the other 95%.
     """
-    cal = calibrate_field([band_limited(20.0)], grid(), "vorticity")
+    cal = calibrate_field([band_limited(20.0)], unit_grid(SHAPE), "vorticity")
     low = cal.cutoff_removing_energy(0.05, "above")
     high = cal.cutoff_removing_energy(0.05, "below")
     assert low > high, "a mild low-pass cuts high, a mild high-pass cuts low"
@@ -121,7 +115,7 @@ def test_removing_energy_uses_the_declared_side():
 
 
 def test_a_harsher_request_moves_a_lowpass_cutoff_down_and_a_highpass_cutoff_up():
-    cal = calibrate_field([band_limited(20.0)], grid(), "vorticity")
+    cal = calibrate_field([band_limited(20.0)], unit_grid(SHAPE), "vorticity")
     lows = [cal.cutoff_removing_energy(f, "above") for f in (0.05, 0.2, 0.5)]
     highs = [cal.cutoff_removing_energy(f, "below") for f in (0.5, 0.7, 0.9)]
     assert lows == sorted(lows, reverse=True)
@@ -129,13 +123,13 @@ def test_a_harsher_request_moves_a_lowpass_cutoff_down_and_a_highpass_cutoff_up(
 
 
 def test_an_energy_fraction_outside_the_unit_interval_is_rejected():
-    cal = calibrate_field([band_limited(8.0)], grid(), "v")
+    cal = calibrate_field([band_limited(8.0)], unit_grid(SHAPE), "v")
     with pytest.raises(ValueError, match=r"\[0, 1\]"):
         cal.wavenumber_for_energy_fraction(1.5)
 
 
 def test_a_scale_fraction_resolves_to_a_length_in_cells():
-    cal = calibrate_field([band_limited(4.0)], grid(), "density")
+    cal = calibrate_field([band_limited(4.0)], unit_grid(SHAPE), "density")
     assert cal.length_for_scale_fraction(0.25) == pytest.approx(
         0.25 * cal.characteristic_scale
     )
@@ -159,7 +153,7 @@ def test_the_same_config_severity_resolves_differently_per_field():
     """The whole point: one number, the same fraction of structure destroyed on each field."""
     cal = calibrate(
         {"density": [band_limited(2.0)], "vorticity": [band_limited(20.0)]},
-        grid(), ["density", "vorticity"],
+        unit_grid(SHAPE), ["density", "vorticity"],
     )
     severity_level = build_ladder({"gaussian_blur": {"severities": [0.1]}},
                         include_reference=False)[0]
@@ -195,7 +189,7 @@ def test_two_cutoffs_inside_one_shell_are_the_same_experiment():
 
 def test_two_widths_rounding_to_one_odd_window_are_the_same_experiment():
     x = band_limited(6.0, seed=10)
-    cal_scale = calibrate_field([x], grid(), "vorticity").characteristic_scale
+    cal_scale = calibrate_field([x], unit_grid(SHAPE), "vorticity").characteristic_scale
     # Two fractions whose widths differ by less than a cell either side of the same odd number.
     fractions = [3.0 / cal_scale, 3.4 / cal_scale]
     effects = [apply("box_blur", [f], "vorticity", x).energy_changed["vorticity"]
@@ -212,7 +206,7 @@ def test_distinct_experiments_do_not_collide():
 
 
 def test_a_cutoff_quantises_to_an_available_magnitude():
-    cal = calibrate_field([band_limited(20.0)], grid(), "vorticity")
+    cal = calibrate_field([band_limited(20.0)], unit_grid(SHAPE), "vorticity")
     for cutoff in (1.2, 3.7, 9.9):
         snapped = cal.quantised_cutoff(cutoff)
         assert snapped <= cutoff
@@ -225,7 +219,7 @@ def test_a_cutoff_quantises_to_an_available_magnitude():
 def _frame_of(field: str, array: np.ndarray):
     from fmeval.data.base import Frame
 
-    return Frame(index=0, time=0.0, grid=grid(array.shape[1:]), fields={field: array})
+    return Frame(index=0, time=0.0, grid=unit_grid(array.shape[1:]), fields={field: array})
 
 
 def apply(label: str, severities: list[float], field: str, array: np.ndarray):

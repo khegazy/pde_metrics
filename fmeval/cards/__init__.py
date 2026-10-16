@@ -41,9 +41,3 @@ version. A change that would invalidate an existing card bumps
 function in :mod:`fmeval.cards.schema`, which the loader applies with a warning. The
 loader refuses a card written by a newer schema than it knows, rather than guessing.
 """
-
-from __future__ import annotations
-
-from .schema import SCHEMA_VERSION, Card, CardError
-
-__all__ = ["SCHEMA_VERSION", "Card", "CardError"]

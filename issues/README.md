@@ -54,6 +54,7 @@ Designed, hooks in place, not built.
 | [032](032-prose-numbers-can-go-stale.md) | Numbers written into card prose can go stale unnoticed | medium |
 | [033](033-link-rewriting-is-only-checked-for-deadness.md) | Site link rewriting is checked for dead links, not correct destinations | medium |
 | [036](036-increment-flatness-is-not-monotone-under-smoothing.md) | Increment flatness is not monotone under smoothing on any field, so it fails the stated acceptance rule; needs a decision, not a fix | medium |
+| [043](043-card-levels-outside-the-ladder-and-stale-exemplar-captions.md) | Four degradation cards illustrate strengths no ladder runs, and twenty exemplar captions predate their generator; needs a decision | low |
 | [022](022-sim-config-parsing.md) | Solver configs carry executable YAML tags | low |
 | [023](023-vendored-kinet-drift.md) | Vendored kinet code is pinned and may drift | low |
 

@@ -193,11 +193,6 @@ def test_works_without_a_context():
     assert np.isfinite(rank_histogram(reference, members))
 
 
-def test_rejects_members_without_a_member_axis():
-    with pytest.raises(ValueError):
-        rank_histogram(np.zeros((1, 4, 4)), np.zeros((1, 4, 4)), ctx=_ctx())
-
-
 def test_needs_at_least_two_members():
     with pytest.raises(ValueError, match="two"):
         rank_histogram(np.zeros((1, 4, 4)), np.zeros((1, 1, 4, 4)), ctx=_ctx())

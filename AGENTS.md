@@ -66,6 +66,55 @@ than the cutoff controls and flattened the whole axis".
 **Write an issue while the evidence is in front of you.** `issues/` holds one file per open
 item with its measurements. An issue written later from memory is worth much less.
 
+### One source of truth, least new code
+
+Every rule below exists because a second copy of something drifted from the first while every
+test still passed.
+
+- **Define every value once.** A constant, default, label, column name, file name or path
+  convention has exactly one definition, and everything else imports it. A value a user may
+  set lives in `configs/` and the code reads it; the code never carries a second default for
+  it. Evidence: the report thresholds once lived in four places and only one was read; the
+  column labels lived in three vocabularies that used different words for the same column.
+- **No aliases.** No `x = y` renames, no function that only forwards to another, no
+  `__init__` re-export that nothing imports, no dataclass field copying another object's
+  field. Import the original. A name forced by a collision is imported as its module
+  (`from . import vocabulary`, then `vocabulary.label(...)`) rather than renamed.
+- **A helper needs two callers, or a reason.** Split code into a function when it is reused,
+  or when the block is large and cleanly separable; otherwise keep it inline, so a reader
+  sees one task in one place.
+- **Grep before you write.** Before adding a function or constant, search for the one that
+  already does the job and extend it, even if that means extending its signature. Two
+  functions doing the same job is a bug: merge them and say so in the PR. Evidence: the
+  rank-correlation interval re-implemented `stats.block_bootstrap` beside it, and the
+  capability tests carried their own radial spectrum that rounded shells down where the
+  metric rounds to the nearest shell.
+- **Consolidating numerics changes no number.** Move the arithmetic into the shared helper as
+  it was, then prove the refactor with [`docs/recipes/verify-a-refactor.md`](docs/recipes/verify-a-refactor.md):
+  every result agrees within the tolerance it states, and a larger difference is a bug.
+
+Where the shared code already lives, so the search has somewhere to start:
+
+| What | Where |
+|---|---|
+| Wavenumber magnitude `\|k\|` | `fmeval/wavenumbers.py` |
+| Fluctuation statistics (`fluctuation`, `fluctuation_energy`, `fluctuation_rms`) | `fmeval/context.py` |
+| Resampling and rank statistics (block bootstrap, Spearman helpers) | `fmeval/stats.py` |
+| Every statistic a report or card shows, and its constants (`GROUP_KEYS`, `N_BOOTSTRAP`, ...) | `fmeval/analysis.py` |
+| Display words, colours and site wording for columns and degradation families (`FAMILY_INFO`) | `fmeval/report/vocabulary.py` |
+| LaTeX escaping, identifiers and numbers | `fmeval/report/latex.py` |
+| Running one renderer (`draw`), and the report and card view of a run (`ReportContext.from_analysis`) | `fmeval/report/registry.py`, `fmeval/report/context.py` |
+| Generated-block markers in `card.md` (`write_block`, `has_block`) | `fmeval/cards/prose.py` |
+| Bundle paths and strict JSON output (`Bundle`, `write_strict_json`) | `fmeval/cards/loader.py` |
+| Run-folder layout and readers (`RunFolder`, `read_results`, `read_run_meta`, `read_config`) | `fmeval/io.py` |
+| Error-map keys (`map_key`, `parse_map_key`) | `fmeval/pipeline.py` |
+| Opening an HDF5 file locally or over HTTP, and what the HDF5 readers share | `fmeval/data/hdf5.py`, `fmeval/data/remote.py` |
+| The field vocabulary and which fields readers exclude | `fmeval/data/base.py` |
+| Discovery, lookup and listing shared by both plugin registries | `metrics/_registry_core.py` |
+| Degradation kernels, filters (`butterworth`), grid expansion, ensemble scaling | `degradations/_shared/` |
+| Ensemble input validation for metrics | `metrics/_ensemble.py` |
+| Test fixtures and helpers | `tests/conftest.py` |
+
 ---
 
 ## 2. Environment and commands
@@ -81,7 +130,8 @@ root as the working directory.
 python check_setup.py               # confirm the environment; run this FIRST when anything
                                     # unexpected happens, before debugging code
 
-pytest                              # ~20 s. Skips CFS-reading and LaTeX tests
+pytest                              # skips CFS-reading and LaTeX tests; 306 s measured on
+                                    # a shared NERSC login node (2026-10-15)
 pytest -m data                      # reads the real files on CFS
 pytest -m web                       # reads the published copy over HTTP
 module load texlive/2024 && pytest -m slow   # compiles a report
@@ -366,20 +416,25 @@ from degradations.registry import degradation
     ordinal=True,                    # False for a probe that is not on a monotone axis
     stochastic=False,                # True to redraw the RNG per frame
     fields=("*",),
-    defaults={"order": 4},           # per-entry options, overridable in config
+    zero_is_identity=True,           # severity 0 returns the input unchanged; verified both ways
     preserves=("spatial_mean",),     # what the operator PROVABLY leaves unchanged, words from
                                      # degradations.registry.PRESERVED. A contract test measures
                                      # every word at every test severity. A fact about the
                                      # operator, never a prediction about any metric
 )
-def my_blur(x, severity, *, ctx):
+def my_blur(x, severity, *, ctx, order: int = 4):
     """One line; shown by `python -m degradations`."""
     return ...
 ```
 
+**Per-entry options are the operator's keyword-only parameters**, such as `order` above. Their
+defaults are the signature's and are recorded with every run; a ladder entry overrides one with
+`options: {order: 2}` in config. There is no separate list of defaults to keep in step.
+
 **`preserves` is a measured fact, not an expectation.** Declare only what the operator leaves
 unchanged on every field: the multiset of values, the fluctuation's amplitude spectrum, the
-spatial mean, or the shape up to a rigid displacement. The contract test applies every test
+spatial mean, or the shape up to a rigid displacement. An `ensemble=True` operator may declare
+only `ensemble_mean`, the member mean cell by cell, and a field operator may not. The contract test applies every test
 severity and rejects any word it can measure a change in, so a wrong declaration fails loudly.
 The report uses it to say, beside a measured response, what that degradation left intact; it is
 not, and must not become, a per-axis expectation of how a metric should respond
@@ -667,6 +722,13 @@ touching a reader, a remap or an anchor. The LaTeX side is less exposed than it 
 `test_no_unescaped_underscore_survives_into_any_generated_tex`, is an ordinary test and does run
 in CI. Only the `latexmk` compile is left to `module load texlive/2024 && pytest -m slow`.
 
+**Test helpers live in `tests/conftest.py`; never import from another `test_*.py` module.** A
+test module is collected by pytest, not a library, and a helper imported out of one gets
+copied into the next file instead. A test enforces this.
+
+**Before adding a per-bundle test, check whether a contract test already covers it.** If it
+does, do not add it: two tests of one property drift apart, and only one gets updated.
+
 **Prefer a contract test parametrized over a registry** to a test of one implementation. The
 metric, degradation and loader contracts are each parametrized over their whole registry, so
 every future contribution inherits them. That is the single highest-leverage pattern here.
@@ -788,6 +850,7 @@ listed so nobody has to rediscover them.
 | **Two definitions of `\|k\|`** | The filters compared a continuous magnitude, the calibration binned into shells of `rint(\|k\|)`, so the diagonal modes fell on opposite sides of one cutoff. On density a low-pass asked to remove 30% removed 99.997% | `fmeval/wavenumbers.py` |
 | **Ranking values that differ only in the last bits** | `np.roll` cannot change a translation-invariant quantity but does change the summation order in `np.mean`. The reported `rho` was 0.707 over a relative 1.6e-16 | `analysis.py::_is_round_off` |
 | **A median as the scale in a degeneracy guard** | When most severity levels are round-off the median collapses with them, so the guard compares noise against noise and passes — defeated in exactly the case it exists for. Use the largest value | `analysis.py::normalisation` |
+| **Two copies of one value that have already diverged** | The report thresholds were defined in four places and only one was read; three vocabularies named the same column differently; a test's radial spectrum rounded shells down where the metric rounds to nearest. Every test passed throughout | §1, "One source of truth" |
 | **Assuming every metric rises with damage** | Three one-sided statistics scored a perfectly ordered similarity metric at `monotone_fraction = 0`, `AUC = 0`, `rho = -1`, flagging a correct metric on three criteria | `analysis.py::response_direction` |
 
 Two interpretive traps, which are not bugs but produce wrong conclusions:

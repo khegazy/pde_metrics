@@ -14,7 +14,7 @@ import pytest
 from degradations import registry as deg
 from fmeval.calibration import calibrate_field
 from fmeval.context import FieldContext, derive_rng, fluctuation_rms
-from fmeval.data.base import Frame, GridSpec
+from fmeval.data.base import Frame
 from fmeval.ladder import (
     REFERENCE_LEVEL,
     apply_severity_level,
@@ -22,7 +22,8 @@ from fmeval.ladder import (
     ladder_axes,
     ordinal_axes,
 )
-from tests.conftest import synthetic_field
+from fmeval.wavenumbers import wavenumber_magnitude
+from tests.conftest import make_ctx, members, synthetic_field, unit_grid
 
 #: Grid for the calibrated operators. Larger and with a red spectrum, because a calibrated
 #: severity is a fraction of a measured property: on a small broadband field the characteristic
@@ -33,31 +34,11 @@ CALIBRATION_SHAPE = (64, 48)
 SHAPE = (32, 16)  # non-square, and divisible by the coarsening factors under test
 
 
-def grid(shape: tuple[int, ...] = SHAPE) -> GridSpec:
-    n = len(shape)
-    return GridSpec(tuple(shape), (1.0,) * n, (True,) * n, ("x", "y", "z")[:n],
-                    (0.0,) * n)
-
-
-def ctx_for(x: np.ndarray, seed: int = 0, label: str = "t") -> FieldContext:
-    """Context matching the array actually passed in, not a fixed shape."""
-    return FieldContext(
-        field="vorticity",
-        grid=grid(x.shape[1:]),
-        frame_index=0,
-        time=0.0,
-        fluctuation_rms=fluctuation_rms(x),
-        rng=derive_rng(seed, label, 0, "vorticity"),
-    )
-
-
 def smooth_field(shape: tuple[int, ...] = CALIBRATION_SHAPE) -> np.ndarray:
     """A field with a decaying spectrum, so it has a characteristic scale to calibrate against."""
     rng = np.random.default_rng(7)
     noise = rng.standard_normal((1, *shape))
-    axes = np.meshgrid(*[np.fft.fftfreq(n) * n for n in shape], indexing="ij")
-    k = np.sqrt(sum(a ** 2 for a in axes))
-    transfer = 1.0 / (1.0 + k ** 2)
+    transfer = 1.0 / (1.0 + wavenumber_magnitude(shape) ** 2)
     return np.real(np.fft.ifftn(np.fft.fftn(noise[0]) * transfer))[None]
 
 
@@ -70,7 +51,7 @@ def resolve_for(spec: deg.DegradationSpec, x: np.ndarray, severity: float) -> fl
     """
     if spec.calibration is None:
         return severity
-    measured = calibrate_field([x], grid(x.shape[1:]), "vorticity")
+    measured = calibrate_field([x], unit_grid(x.shape[1:]), "vorticity")
     if spec.calibration == "scale":
         return measured.length_for_scale_fraction(severity)
     side = "above" if spec.calibration == "energy_above" else "below"
@@ -80,22 +61,6 @@ def resolve_for(spec: deg.DegradationSpec, x: np.ndarray, severity: float) -> fl
 def call(spec: deg.DegradationSpec, x: np.ndarray, severity: float, **kw) -> np.ndarray:
     """Apply an operator to ``x`` at a config-facing severity, resolving it if calibrated."""
     return call_absolute(spec, x, resolve_for(spec, x, severity), **kw)
-
-
-#: Ensemble size for the operators that act on a member stack.
-N_MEMBERS = 6
-
-
-def as_members(x: np.ndarray, *, n_members: int = N_MEMBERS, seed: int = 0) -> np.ndarray:
-    """Scatter a field into an ``(N, C, *spatial)`` ensemble centred on it.
-
-    Ensemble operators change dispersion, so they need something to disperse: handing
-    them N identical copies would make every severity a no-op and every direction test
-    pass vacuously.
-    """
-    rng = np.random.default_rng(seed)
-    scale = 0.3 * fluctuation_rms(x)
-    return x[None] + scale * rng.standard_normal((n_members, *x.shape))
 
 
 def call_absolute(spec: deg.DegradationSpec, x: np.ndarray, severity: float,
@@ -113,12 +78,11 @@ def call_absolute(spec: deg.DegradationSpec, x: np.ndarray, severity: float,
     kwargs = dict(spec.defaults)
     kwargs.update(kw)
     if spec.takes_ctx:
-        kwargs["ctx"] = ctx_for(x)
+        kwargs["ctx"] = make_ctx(x)
     if spec.ensemble:
-        out = spec.fn(as_members(x), severity, **kwargs)
-        # Collapse back to a field so the shared assertions still read as they were
-        # written. Dispersion changes leave the mean fixed, so damage is measured
-        # against the ensemble's *spread*, which `damage_of` handles.
+        out = spec.fn(members(x), severity, **kwargs)
+        # The member stack itself: dispersion changes leave the mean fixed, so the shared
+        # assertions compare stacks, and damage is measured against the ensemble's spread.
         return np.asarray(out, dtype=np.float64)
     return spec.fn(x, severity, **kwargs)
 
@@ -181,22 +145,30 @@ def test_every_operator_has_a_test_ladder(spec):
 
 def test_preserves_shape_and_dtype(spec):
     x = synthetic_field(SHAPE, 2, seed=0)
-    want = as_members(x).shape if spec.ensemble else x.shape
+    want = members(x).shape if spec.ensemble else x.shape
     out = call(spec, x, LADDERS[spec.name][-1])
     assert out.shape == want
     assert np.asarray(out).dtype == np.float64
     assert np.isfinite(out).all(), f"{spec.name} produced non-finite values"
 
 
-def test_zero_severity_is_a_passthrough(spec):
-    """Level 0 must be a no-op, or pairwise metrics do not return 0 on the clean severity level."""
-    if spec.name in {"gaussian_impostor", "random_large_translation", "band_attenuate",
-                     "lowpass_ideal", "lowpass_butterworth", "highpass_ideal",
-                     "highpass_butterworth", "median_blur"}:
-        pytest.skip("severity 0 is not a no-op for this operator")
+def test_zero_severity_matches_its_declaration(spec):
+    """Severity 0 is a no-op exactly when the operator declares ``zero_is_identity``.
+
+    A no-op at 0 is what makes pairwise metrics return 0 on the clean level. 0 is the
+    config-facing severity, so a calibrated operator is judged after resolution: removing no
+    energy keeps every mode of a sharp low-pass, while a Butterworth high-pass still attenuates
+    the lowest shells a little. Checked both ways: this was once a hand-kept skip list of eight
+    names, three of which -- the sharp low- and high-pass filters and the median blur -- were in
+    fact the identity at 0 and so escaped the check for nothing.
+    """
     x = synthetic_field(SHAPE, 1, seed=0)
-    want = as_members(x) if spec.ensemble else x
-    assert np.allclose(call(spec, x, 0), want, rtol=0, atol=1e-15)
+    want = members(x) if spec.ensemble else x
+    unchanged = np.allclose(call(spec, x, 0), want, rtol=0, atol=1e-15)
+    assert unchanged == spec.zero_is_identity, (
+        f"{spec.name} declares zero_is_identity={spec.zero_is_identity} but severity 0 "
+        f"{'left the field unchanged' if unchanged else 'changed the field'}"
+    )
 
 
 def test_declared_direction_is_true(spec):
@@ -214,7 +186,7 @@ def test_declared_direction_is_true(spec):
         # calibrated ensemble, not by how far it moves a field: dispersion scaling
         # leaves the ensemble mean exactly where it was, so a mean-based damage measure
         # would read zero at every severity and the direction test would prove nothing.
-        clean = as_members(x)
+        clean = members(x)
         damage = [float(((clean - call(spec, x, s)) ** 2).mean()) for s in severities]
     else:
         damage = [float(((x - call(spec, x, s)) ** 2).mean()) for s in severities]
@@ -250,7 +222,7 @@ def test_stochastic_operators_are_seed_reproducible(spec):
     kw = dict(spec.defaults)
 
     def run(seed, frame_index, field):
-        c = FieldContext("vorticity", grid(), frame_index, 0.0, fluctuation_rms(x),
+        c = FieldContext("vorticity", unit_grid(SHAPE), frame_index, 0.0, fluctuation_rms(x),
                          derive_rng(seed, "lbl", frame_index, field))
         return spec.fn(x, s, **{**kw, "ctx": c})
 
@@ -322,7 +294,7 @@ def test_impostor_is_real_and_gaussian():
     x[0, ::16, ::16] += 20.0
     assert _flatness(x[0]) > 50, "test field is not intermittent enough to discriminate"
 
-    g = grid((64, 64))
+    g = unit_grid((64, 64))
     values = []
     for seed in range(8):
         c = FieldContext("v", g, 0, 0.0, fluctuation_rms(x),
@@ -358,7 +330,7 @@ def test_random_large_translation_preserves_every_statistic():
 
 def _draws(x, n=8, shape=None):
     spec = deg.get("random_large_translation")
-    g = grid(shape or x.shape[1:])
+    g = unit_grid(shape or x.shape[1:])
     return [
         spec.fn(x, 0, ctx=FieldContext("v", g, 0, 0.0, fluctuation_rms(x),
                                        derive_rng(seed, "unc", 0, "v")))
@@ -405,12 +377,12 @@ def test_lowpass_then_highpass_reconstructs():
     Both keep the cutoff band |k| == c, and the high-pass additionally keeps k = 0 on
     purpose (see highpass_ideal), so each is counted twice and subtracted once.
     """
-    from degradations._shared.filters import _apply_filter, _wavenumber_magnitude
+    from degradations._shared.filters import _apply_filter
 
     x = synthetic_field((32, 32), 1, seed=0, noise=0.3)
     lo = call_absolute(deg.get("lowpass_ideal"), x, 8)
     hi = call_absolute(deg.get("highpass_ideal"), x, 8)
-    k = _wavenumber_magnitude((32, 32))
+    k = wavenumber_magnitude((32, 32))
     overlap = _apply_filter(x, (k == 8).astype(float))
     mean = np.full_like(x, x.mean())
     assert np.allclose(lo + hi - overlap - mean, x, atol=1e-10)
@@ -509,7 +481,7 @@ def test_build_ladder_rejects_malformed_entries():
 
 
 def _frame() -> Frame:
-    g = grid()
+    g = unit_grid(SHAPE)
     return Frame(
         index=3,
         time=1.5,
@@ -649,6 +621,9 @@ PRESERVATION_CHECKS = {
     "spatial_mean": lambda x, y: float(
         np.max(np.abs(y.mean(axis=(1, 2)) - x.mean(axis=(1, 2)))) / np.max(np.abs(x))),
     "shape": _rigid_shift_residual,
+    # Over a member stack (N, C, *spatial): the member mean, cell by cell.
+    "ensemble_mean": lambda x, y: float(
+        np.max(np.abs(y.mean(axis=0) - x.mean(axis=0))) / np.max(np.abs(x))),
 }
 
 
@@ -662,20 +637,32 @@ def test_declared_preservation_is_true(spec):
     One-way by design: an operator may preserve a property on this field without guaranteeing it,
     so only a declaration is checked, never an absence.
     """
-    if spec.ensemble:
-        pytest.skip("the vocabulary describes a field; ensemble operators have their own tests")
     if not spec.preserves:
         pytest.skip("declares nothing")
     x = synthetic_field(SHAPE, 1, seed=0)
+    before = members(x) if spec.ensemble else x
     for severity in LADDERS[spec.name]:
         y = call(spec, x, severity)
         for word in spec.preserves:
-            residual = PRESERVATION_CHECKS[word](x, y)
+            residual = PRESERVATION_CHECKS[word](before, y)
             assert residual < PRESERVATION_TOLERANCE, (
                 f"{spec.name} declares preserves={word!r} but severity {severity} changed it by a "
                 f"relative {residual:.2e}; the declaration is false -- remove the word, do not "
                 "loosen the tolerance"
             )
+
+
+def test_an_ensemble_word_needs_an_ensemble_operator(temporary_degradation):
+    """``ensemble_mean`` describes a member stack, the other words a field; they cannot mix."""
+    with pytest.raises(ValueError, match="member stack"):
+        @temporary_degradation(name="_probe_field_claims_ensemble", preserves=("ensemble_mean",))
+        def _field(x, severity):
+            return x
+    with pytest.raises(ValueError, match="a field"):
+        @temporary_degradation(name="_probe_ensemble_claims_field", ensemble=True,
+                               preserves=("spatial_mean",))
+        def _ensemble(members, severity):
+            return members
 
 
 def test_preservation_vocabulary_is_closed():

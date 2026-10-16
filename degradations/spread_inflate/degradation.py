@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .._ensemble_ops import scale_spread
+from .._shared.ensemble import scale_spread
 from ..registry import degradation
 
 
@@ -18,6 +18,7 @@ from ..registry import degradation
     severity_units="fraction of the calibrated spread",
     severity_direction="increasing",
     ensemble=True,
+    preserves=("ensemble_mean",),
 )
 def spread_inflate(members: np.ndarray, severity: float) -> np.ndarray:
     """Widen the ensemble about its own mean: the overdispersed, hedging forecast.

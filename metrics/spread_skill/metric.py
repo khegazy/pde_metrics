@@ -23,6 +23,7 @@ import numpy as np
 
 from .._ensemble import as_ensemble
 from ..registry import metric
+from ..rmse.metric import rmse
 
 
 @metric(
@@ -85,8 +86,7 @@ def spread_skill(reference: np.ndarray, members: np.ndarray) -> float:
     variance = members.var(axis=0, ddof=1)
     spread = float(np.sqrt(variance.mean()))
 
-    error = members.mean(axis=0) - reference
-    skill = float(np.sqrt((error**2).mean()))
+    skill = rmse(reference, members.mean(axis=0))   # the ensemble-mean error, as ensemble_mean_rmse
 
     # Finite-ensemble correction, so a calibrated ensemble reads one at any size.
     spread *= np.sqrt((n_members + 1) / n_members)

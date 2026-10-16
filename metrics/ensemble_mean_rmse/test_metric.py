@@ -78,11 +78,6 @@ def test_increases_monotonically_with_bias():
     assert values == sorted(values), values
 
 
-def test_rejects_members_without_a_member_axis():
-    with pytest.raises(ValueError):
-        ensemble_mean_rmse(np.zeros((1, 4, 4)), np.zeros((1, 4, 4)))
-
-
 def test_rejects_an_empty_ensemble():
     with pytest.raises(ValueError):
         ensemble_mean_rmse(np.zeros((1, 4, 4)), np.zeros((0, 1, 4, 4)))

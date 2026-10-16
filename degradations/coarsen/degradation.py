@@ -29,4 +29,4 @@ def coarsen(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     factor = int(round(severity))
     if factor <= 1:
         return x
-    return _upsample(block_average(x, factor), factor, x.shape[1:])
+    return _upsample(block_average(x, factor), factor)

@@ -25,91 +25,16 @@ import pytest
 
 from degradations import registry as deg_registry
 from fmeval import analysis as an
-from fmeval.data.base import GridSpec, Trajectory
 from fmeval.ladder import apply_severity_level, build_ladder
 from fmeval.pipeline import DatasetInfo, MapRequest, run
 from metrics import registry as metric_registry
-from tests.conftest import synthetic_field
-from tests.test_analysis import make_frame
+from tests.conftest import SyntheticTrajectory, make_frame
 
 # --- scaffolding ---------------------------------------------------------------------
 
 #: Deliberately non-square, and divisible by 2 twice, so a coarsening ladder can be run
 #: against it without the shape itself being the reason something fails.
 SHAPE: tuple[int, int] = (16, 8)
-
-
-class SyntheticTrajectory(Trajectory):
-    """A four-frame in-memory trajectory, so pipeline tests need no files and no CFS."""
-
-    def __init__(self, shape: tuple[int, ...] = SHAPE, n_frames: int = 4) -> None:
-        self._shape = shape
-        self._n = n_frames
-        self._grid = GridSpec(
-            tuple(shape), (1.0,) * len(shape), (True,) * len(shape),
-            ("x", "y", "z")[: len(shape)], (0.0,) * len(shape),
-        )
-
-    @property
-    def fields(self) -> tuple[str, ...]:
-        return ("density",)
-
-    @property
-    def times(self) -> np.ndarray:
-        return np.arange(self._n, dtype=np.float64)
-
-    @property
-    def grid(self) -> GridSpec:
-        return self._grid
-
-    @property
-    def meta(self) -> dict:
-        return {"format": "synthetic"}
-
-    def read_frame(self, t: int, fields):
-        # Density-like: 1.0 with small fluctuations, matching the real data's scale, so
-        # relative-severity operators behave as they do on the real thing.
-        return {"density": 1.0 + 1e-3 * synthetic_field(self._shape, 1, seed=t)}
-
-
-@pytest.fixture
-def temporary_metric():
-    """Register a metric for one test and remove it again.
-
-    Metrics must not be registered at module import: ``test_metric_contract`` parametrizes
-    its fixtures over the registry at collection time, so a probe metric left behind would
-    be silently held to the whole metric contract and would change another file's test IDs.
-    """
-    added: list[str] = []
-
-    def _register(**kwargs):
-        def _decorate(fn):
-            name = kwargs.get("name") or fn.__name__
-            added.append(name)
-            return metric_registry.metric(**kwargs)(fn)
-
-        return _decorate
-
-    yield _register
-    for name in added:
-        metric_registry.REGISTRY.pop(name, None)
-
-
-@pytest.fixture
-def temporary_degradation():
-    """Register a degradation for one test and remove it again. See `temporary_metric`."""
-    added: list[str] = []
-
-    def _register(**kwargs):
-        def _decorate(fn):
-            added.append(kwargs.get("name") or fn.__name__)
-            return deg_registry.degradation(**kwargs)(fn)
-
-        return _decorate
-
-    yield _register
-    for name in added:
-        deg_registry.REGISTRY.pop(name, None)
 
 
 def _frame_with_anchor(anchor_values: list[float], **kwargs) -> pd.DataFrame:
@@ -710,3 +635,28 @@ def test_a_severity_the_grid_cannot_support_is_still_dropped_with_a_warning(capl
     assert [level.severity for level in kept if level.label == "coarsen"] == [2.0]
     assert any("cannot run on the 8-cell analysis grid" in r.message for r in caplog.records)
     assert any("will not appear in the results" in r.message for r in caplog.records)
+
+
+@pytest.mark.parametrize("first_import", ["evaluate", "metrics.registry", "degradations.registry",
+                                          "fmeval"])
+def test_the_card_validator_survives_every_import_order(first_import):
+    """Whatever is imported first, both registries end up enforcing cards at `get()`.
+
+    `fmeval/__init__` installs the validator onto the registry modules. A registry that
+    imported `fmeval` while it was itself half-imported would then overwrite the hook with its
+    own `CARD_VALIDATOR = None`: measured on a draft of the shared registry machinery, card
+    validation was silently off for every `evaluate.py` run while the suite still passed. Run in
+    a fresh interpreter, because this process imported everything long ago.
+    """
+    import subprocess
+    import sys
+
+    from tests.conftest import REPO
+
+    code = (f"import {first_import}\n"
+            "import fmeval, metrics.registry as m, degradations.registry as d\n"
+            "assert m.CARD_VALIDATOR is not None, 'metric registry lost its card validator'\n"
+            "assert d.CARD_VALIDATOR is not None, 'degradation registry lost its validator'\n")
+    result = subprocess.run([sys.executable, "-c", code], cwd=REPO, capture_output=True,
+                            text=True, timeout=120)
+    assert result.returncode == 0, result.stderr[-2000:]

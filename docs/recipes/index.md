@@ -24,9 +24,9 @@ instructions: gutting any recipe fails the build with a message naming that reci
 
 ## Rules that apply to every recipe
 
-Breaking one of these rules produces documentation that is plausible and wrong, which is
-the exact failure this repository is designed to prevent. Each rule is repeated in the
-recipes where it bites, and gathered here once.
+Breaking one of these rules produces documentation or code that is plausible and wrong,
+which is the exact failure this repository is designed to prevent. They are gathered here
+once; a recipe repeats one only where it bites hardest.
 
 1. **Never invent a number.** Every value in a description is generated from a named
    evaluation run, computed by a test, or absent. If there is no measurement, the
@@ -47,3 +47,13 @@ recipes where it bites, and gathered here once.
    working around it hides that bug.
 8. **Report what you did**: what was added, every `TODO(cite)` you left behind, and
    anything flagged that you could not resolve.
+9. **Reuse before you write.** Search for the function, constant or default that already
+   does the job and extend it rather than adding a second one beside it. Two copies drift
+   apart without any test noticing: the filters and the spectral calibration once had two
+   definitions of |k|, and a low-pass asked to remove 30% of the energy removed 99.997%.
+   `AGENTS.md` §1 lists where the shared code lives.
+10. **Prove that a refactor changes no number.** Follow
+    [verify-a-refactor.md](verify-a-refactor.md) before and after the change; every result
+    must agree within the tolerance it states. A larger difference is a bug you introduced,
+    not an improvement: splitting one module once lost 630 rows of results while every test
+    passed.

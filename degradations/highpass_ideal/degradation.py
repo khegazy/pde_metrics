@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from .._shared.filters import _apply_filter, _wavenumber_magnitude
+from fmeval.wavenumbers import wavenumber_magnitude
+
+from .._shared.filters import _apply_filter
 from ..registry import degradation
 
 
@@ -34,5 +36,5 @@ def highpass_ideal(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     the mean makes the operator measure what it is named for -- removal of large-scale
     structure -- and restores a monotone ladder on every field.
     """
-    k = _wavenumber_magnitude(ctx.grid.shape)
+    k = wavenumber_magnitude(ctx.grid.shape)
     return _apply_filter(x, (k >= severity).astype(float), keep_mean=True)

@@ -11,15 +11,9 @@ import numpy as np
 import pytest
 from scipy.stats import spearmanr
 
-from fmeval.context import FieldContext
-from fmeval.data.base import GridSpec
+from fmeval.data.base import CANONICAL_FIELDS
 from metrics import registry
-from tests.conftest import GRID, synthetic_field
-
-# Canonical field vocabulary, mirrored from fmeval.data.base to keep this test importable
-# without the data layer. Kept in sync by test_field_vocabulary_matches_data_layer below.
-CANONICAL_FIELDS = {"density", "velocity", "vorticity", "pressure", "temperature",
-                    "distribution"}
+from tests.conftest import GRID, N_MEMBERS, make_ctx, members, synthetic_field
 
 
 def all_specs() -> list[registry.MetricSpec]:
@@ -42,14 +36,11 @@ def _channels_for(spec: registry.MetricSpec) -> int:
 
 #: Ensemble size used when building arguments for an ``ensemble``-arity metric. Small,
 #: but above the two members a sample variance needs.
-N_MEMBERS = 6
 
 
 def _members(shape: tuple[int, ...], n_channels: int, *, seed: int = 1) -> np.ndarray:
     """An ``(N, C, *spatial)`` ensemble scattered about a common base field."""
-    base = synthetic_field(shape, n_channels, seed=seed, noise=0.0)
-    rng = np.random.default_rng(seed)
-    return base[None] + 0.3 * rng.standard_normal((N_MEMBERS, *base.shape))
+    return members(synthetic_field(shape, n_channels, seed=seed, noise=0.0), seed=seed, scale=0.3)
 
 
 def _args_for(
@@ -74,29 +65,6 @@ def _args_for(
     return (a, synthetic_field(shape, c, seed=seed_b))
 
 
-def _ctx(shape: tuple[int, ...]) -> FieldContext:
-    """A context for a metric that asks for one, on a unit-spaced periodic grid.
-
-    Unit spacing keeps the generic checks below reading the same as they did before any
-    metric took a ctx: a metric whose value carries a length then returns the same number
-    it would have on a grid it had to assume. What the ctx must *not* be is absent -- the
-    pipeline always supplies one, so a contract test that omitted it would be testing a
-    call the harness never makes.
-    """
-    return FieldContext(
-        field="density",
-        grid=GridSpec(
-            shape=tuple(shape),
-            spacing=(1.0,) * len(shape),
-            periodic=(True,) * len(shape),
-        ),
-        frame_index=0,
-        time=0.0,
-        fluctuation_rms=1.0,
-        rng=np.random.default_rng(0),
-    )
-
-
 def _kwargs_for(spec: registry.MetricSpec, first: np.ndarray) -> dict[str, object]:
     """``{"ctx": ...}`` for a metric that declares one, empty otherwise.
 
@@ -107,7 +75,7 @@ def _kwargs_for(spec: registry.MetricSpec, first: np.ndarray) -> dict[str, objec
     """
     if not spec.takes_ctx:
         return {}
-    return {"ctx": _ctx(first.shape[1:])}
+    return {"ctx": make_ctx(first.shape[1:])}
 
 
 def _call(spec: registry.MetricSpec, *arrays: np.ndarray):
@@ -253,12 +221,6 @@ def test_monotone_on_synthetic_blur_ladder(spec):
         )
 
 
-def test_ctx_flag_matches_signature(spec):
-    import inspect
-
-    assert spec.takes_ctx == ("ctx" in inspect.signature(spec.fn).parameters)
-
-
 # --- the ensemble arity ------------------------------------------------------------
 
 
@@ -300,8 +262,8 @@ def test_ensemble_error_metric_is_zero_on_a_perfect_ensemble(spec):
         pytest.skip("not an ensemble error metric")
     c = _channels_for(spec)
     a = synthetic_field(GRID, c, seed=0)
-    members = np.repeat(a[None], N_MEMBERS, axis=0)
-    assert _call(spec, a, members) == pytest.approx(0.0, abs=1e-12)
+    collapsed = np.repeat(a[None], N_MEMBERS, axis=0)
+    assert _call(spec, a, collapsed) == pytest.approx(0.0, abs=1e-12)
 
 
 def test_declared_target_is_consistent_with_direction(spec):

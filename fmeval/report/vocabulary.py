@@ -13,18 +13,41 @@ and does not decide (``docs/decisions.md``, "There is no pass or fail").
 
 from __future__ import annotations
 
-#: Plain name for each degradation family, used as a figure row label and as the ``###``
-#: heading of the matching card subsection. The two are one mapping so a reader moving
-#: between a figure and the table beneath it is never asked to translate.
-FAMILY_LABELS: dict[str, str] = {
-    "smoothing": "Smoothing",
-    "spectral": "Spectral filtering",
-    "geometric": "Displacement",
-    "resolution": "Resolution loss",
-    "stochastic": "Noise",
-    "pointwise": "Cell-value distortion",
-    "ensemble": "Ensemble dispersion",
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Family:
+    """How one degradation family is shown, everywhere it is shown."""
+
+    label: str
+    """Figure row label, and the ``###`` heading of the matching card subsection: one set of
+    words, so a reader moving between a figure and the table beneath it never translates."""
+    colour: str
+    """Okabe-Ito colour name (``style.OKABE_ITO``), fixed per family rather than assigned from
+    whatever families a run contains, so smoothing is the same colour on every page."""
+    description: str
+    """What a degradation of this family does, for the site's header table."""
+
+
+#: Every degradation family a figure, card or page shows. The keys are
+#: ``degradations.registry.FAMILIES`` less ``identity``, which is the reference and is never
+#: drawn; a test holds the two equal. One table, so the label, colour and wording of a family
+#: cannot fall out of step -- they were three dictionaries in three modules.
+FAMILY_INFO: dict[str, Family] = {
+    "smoothing": Family("Smoothing", "blue", "smoothing away fine detail"),
+    "spectral": Family("Spectral filtering", "purple", "filtering out chosen scales"),
+    "geometric": Family("Displacement", "vermillion", "moving features to the wrong place"),
+    "resolution": Family("Resolution loss", "green", "losing grid resolution"),
+    "stochastic": Family("Noise", "orange", "adding noise"),
+    "pointwise": Family("Cell-value distortion", "sky", "distorting each cell's value"),
+    "ensemble": Family("Ensemble dispersion", "black", "making the ensemble the wrong width"),
 }
+
+
+def family_label(family: str) -> str:
+    """The plain name of a degradation family, or the family code if it has none."""
+    return FAMILY_INFO[family].label if family in FAMILY_INFO else str(family)
 
 #: Plain label for each statistic a figure draws, keyed by its column name. The label says
 #: what the number is and which way it runs, in words the card tables already use.
@@ -44,6 +67,10 @@ LABELS: dict[str, str] = {
     "gaussian_impostor_damage": "fake prediction with the right spectrum",
     "severity_degenerate": "strength that repeated a milder one or did nothing (excluded)",
     "energy_changed": "field change (normalised mean squared error)",
+    # The profile, worded identically in the LaTeX report and on the cards.
+    "most_sensitive_axis": "charges most for",
+    "least_sensitive_axis": "charges least for",
+    "elasticity_displacement": "elasticity to a sub-pixel shift",
 }
 
 #: Words a label or caption may not contain. A label that calls a measurement good, bad,

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from ..mse.metric import mse
+from ..mse.metric import mse, mse_map
 from ..registry import metric, pointwise_map
 
 
@@ -46,10 +46,10 @@ def rmse(reference: np.ndarray, candidate: np.ndarray) -> float:
 
 @pointwise_map(of="rmse")
 def rmse_map(reference: np.ndarray, candidate: np.ndarray) -> np.ndarray:
-    """Per-cell *squared* error, summed over channels.
+    """Per-cell *squared* error, summed over channels: ``mse``'s map.
 
     Note the declared reduction is ``sqrt_mean``, not ``mean``: this map does not average
     to the metric value. That mismatch is exactly why the reduction is declared on the
     decorator rather than assumed from the map.
     """
-    return ((reference - candidate) ** 2).sum(axis=0)
+    return mse_map(reference, candidate)

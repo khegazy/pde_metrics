@@ -10,29 +10,16 @@ from __future__ import annotations
 
 import numpy as np
 
+from tests.conftest import SQUARE_HALF_AMPLITUDE, SQUARE_REFERENCE, SQUARE_SHIFTED
+
 from ..mse.metric import mse
 from .metric import rmse, rmse_map
-
-REFERENCE = np.array([[[0.0, 0.0, 0.0, 0.0],
-                       [0.0, 1.0, 1.0, 0.0],
-                       [0.0, 1.0, 1.0, 0.0],
-                       [0.0, 0.0, 0.0, 0.0]]])
-
-SHIFTED = np.array([[[0.0, 0.0, 0.0, 0.0],
-                     [0.0, 0.0, 1.0, 1.0],
-                     [0.0, 0.0, 1.0, 1.0],
-                     [0.0, 0.0, 0.0, 0.0]]])
-
-HALF_AMPLITUDE = np.array([[[0.0, 0.0, 0.0, 0.0],
-                            [0.0, 0.5, 0.5, 0.0],
-                            [0.0, 0.5, 0.5, 0.0],
-                            [0.0, 0.0, 0.0, 0.0]]])
 
 
 def test_worked_example_from_the_card():
     """Four of sixteen cells wrong by one gives sqrt(4/16) = 0.5; by a half, 0.25."""
-    assert rmse(REFERENCE, SHIFTED) == 0.5
-    assert rmse(REFERENCE, HALF_AMPLITUDE) == 0.25
+    assert rmse(SQUARE_REFERENCE, SQUARE_SHIFTED) == 0.5
+    assert rmse(SQUARE_REFERENCE, SQUARE_HALF_AMPLITUDE) == 0.25
 
 
 def test_it_is_exactly_the_square_root_of_mse():
@@ -41,8 +28,8 @@ def test_it_is_exactly_the_square_root_of_mse():
     A square root is monotone, so any ranking of candidates by RMSE is the same ranking
     MSE gives. The two differ in scale, never in order.
     """
-    for candidate in (SHIFTED, HALF_AMPLITUDE):
-        assert rmse(REFERENCE, candidate) == np.sqrt(mse(REFERENCE, candidate))
+    for candidate in (SQUARE_SHIFTED, SQUARE_HALF_AMPLITUDE):
+        assert rmse(SQUARE_REFERENCE, candidate) == np.sqrt(mse(SQUARE_REFERENCE, candidate))
 
 
 def test_a_one_cell_shift_costs_twice_a_halved_amplitude():
@@ -51,7 +38,8 @@ def test_a_one_cell_shift_costs_twice_a_halved_amplitude():
     Taking the square root pulls the quadratic penalty back to a linear-looking ratio on
     these fields, which is why RMSE reads like MAE while ordering like MSE.
     """
-    assert rmse(REFERENCE, SHIFTED) == 2.0 * rmse(REFERENCE, HALF_AMPLITUDE)
+    shifted = rmse(SQUARE_REFERENCE, SQUARE_SHIFTED)
+    assert shifted == 2.0 * rmse(SQUARE_REFERENCE, SQUARE_HALF_AMPLITUDE)
 
 
 def test_the_map_does_not_average_to_the_metric():
@@ -60,7 +48,7 @@ def test_the_map_does_not_average_to_the_metric():
     The stored per-cell map is the squared error. Averaging it gives MSE, not RMSE, so a
     consumer that assumed every map averages to its metric would be silently wrong here.
     """
-    mean_of_map = rmse_map(REFERENCE, SHIFTED).mean()
-    assert mean_of_map == mse(REFERENCE, SHIFTED)
-    assert mean_of_map != rmse(REFERENCE, SHIFTED)
-    assert np.sqrt(mean_of_map) == rmse(REFERENCE, SHIFTED)
+    mean_of_map = rmse_map(SQUARE_REFERENCE, SQUARE_SHIFTED).mean()
+    assert mean_of_map == mse(SQUARE_REFERENCE, SQUARE_SHIFTED)
+    assert mean_of_map != rmse(SQUARE_REFERENCE, SQUARE_SHIFTED)
+    assert np.sqrt(mean_of_map) == rmse(SQUARE_REFERENCE, SQUARE_SHIFTED)

@@ -35,8 +35,9 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from pathlib import Path
 
-from fmeval.report.vocabulary import FAMILY_LABELS
+from fmeval.report.vocabulary import FAMILY_INFO
 
 METRIC_SECTIONS: tuple[str, ...] = (
     "Definition",
@@ -67,12 +68,15 @@ metric misses, and how this metric compares to the baseline controls, so a reade
 decide whether it fits the question they are asking.
 """
 
+#: The results heading of a degradation card, whose generated block `cards exemplars` writes.
+DEGRADATION_RESULTS = "What the degradation looks like"
+
 DEGRADATION_SECTIONS: tuple[str, ...] = (
     "Definition",
     "Intuition",
     "Severity scale",
     "Limitations",
-    "What the degradation looks like",
+    DEGRADATION_RESULTS,
     "References",
 )
 """Required H2 headings of a degradation card, in order.
@@ -116,7 +120,7 @@ numbers are good, which this repository does not make. The reading of the number
 in ``## Results``, beside the test that produced each one.
 """
 
-RESULT_SECTIONS = frozenset({"Results", "What the degradation looks like"})
+RESULT_SECTIONS = frozenset({"Results", DEGRADATION_RESULTS})
 """Sections that pair generated measurements with the prose explaining them.
 
 Each is built from ``###`` subsections, one per kind of test, and each subsection opens
@@ -133,18 +137,11 @@ The generated half still may not be typed by hand: a number written by a person 
 claim about a measurement that nothing checks.
 """
 
-FAMILY_HEADINGS: dict[str, str] = FAMILY_LABELS
-"""Subsection heading for each degradation family, for ``## Results``.
-
-Readable names rather than the registry's own vocabulary, because the card is read by
-people who do not know this repository. The same mapping labels the rows of the response
-figures (:mod:`fmeval.report.vocabulary`), so the heading over a table and the row label on
-the figure above it are one set of words. Two subsections sit outside this mapping:
-``Trap tests`` for the deliberately fake predictions, which carry no ordered severity,
-and ``Compared with the other metrics`` for findings that span every test, such as how
-this metric correlates with the baseline controls.
-"""
-
+#: The ``## Results`` subsection of each degradation family is headed by its label in
+#: :data:`fmeval.report.vocabulary.FAMILY_INFO` -- the same words as the row label of the response
+#: figures, so the heading over a table and the figure above it agree. Two subsections sit
+#: outside the families: ``Trap tests`` for the deliberately fake predictions, which carry no
+#: ordered severity, and the cross-cutting ones below.
 CROSS_CUTTING_SUBSECTIONS = frozenset({"Compared with the other metrics",
                                        "Damage beside the other metrics"})
 """Result subsections that report no single degradation and so link to none.
@@ -154,7 +151,7 @@ bundles that define them. This one reports what holds over all the degradations 
 such as how this metric correlates with the baseline controls.
 """
 
-NO_MATH_SECTIONS = frozenset({"Intuition", "What the degradation looks like"})
+NO_MATH_SECTIONS = frozenset({"Intuition", DEGRADATION_RESULTS})
 """Sections a reader from outside the field must be able to follow, so notation is not
 allowed in them. The audience is an early graduate student: avoid jargon, not rigor."""
 
@@ -280,6 +277,44 @@ def generated_blocks(text: str) -> dict[str, str]:
     return {m.group("name"): m.group(0) for m in _GENERATED_BLOCK.finditer(text)}
 
 
+def has_block(text: str, name: str) -> bool:
+    """Whether a card opens a generated block called ``name``."""
+    return name in _GENERATED_OPEN_RE.findall(text)
+
+
+def write_block(card_md: Path, block: str, body: str, *, command: str) -> None:
+    """Replace one generated block in a card, leaving every other byte alone.
+
+    The generated content lives in ``card.md`` itself rather than in a file included at
+    build time, because GitHub does not resolve includes: a figure that appears on the
+    documentation site and shows as a literal include line in the repository fails the
+    reader who never leaves the repository. The markers keep the boundary explicit, so the
+    checker can still refuse hand-written numbers and the review ledger can hash the prose
+    alone.
+
+    Args:
+        card_md: The card to rewrite.
+        block: The block name, matching the marker.
+        body: The generated markdown to place between the markers.
+        command: The command that regenerates it, named in the marker for a reader who
+            wonders where the content came from.
+
+    Raises:
+        KeyError: If the card has no block by that name, which means the card and the
+            generator disagree about what is generated.
+    """
+    text = card_md.read_text()
+    current = generated_blocks(text).get(block)
+    if current is None:
+        raise KeyError(
+            f"{card_md} has no '{block}' generated block. The card and the generator "
+            f"disagree about what is generated; add the markers or run  {command}"
+        )
+    opener = GENERATED_OPEN.format(name=block, command=command)
+    closer = GENERATED_CLOSE.format(name=block)
+    card_md.write_text(text.replace(current, f"{opener}\n\n{body.strip()}\n\n{closer}", 1))
+
+
 def strip_generated(text: str) -> str:
     """The card with its generated blocks removed, for hashing the prose alone.
 
@@ -353,15 +388,8 @@ def frontmatter(text: str) -> dict[str, str]:
     return found
 
 
-def _words(body: str) -> int:
-    """Count words, ignoring code blocks and tables so an example cannot pad the count."""
-    prose = _TABLE_OR_CODE.sub("", body)
-    prose = re.sub(r"```.*?```", "", prose, flags=re.DOTALL)
-    return len(prose.split())
-
-
 def _check_result_section(section: str, body: str, name: str) -> list[Problem]:
-    """Check one ``## Results`` or ``## Exemplars`` section.
+    """Check one ``## Results`` or ``## What the degradation looks like`` section.
 
     The shape is one ``###`` subsection per kind of test, each opening with a generated
     include and continuing with the explanation of those numbers. Checked here: that the
@@ -376,7 +404,7 @@ def _check_result_section(section: str, body: str, name: str) -> list[Problem]:
     Returns:
         One problem per structural fault.
     """
-    generator = "exemplars" if section == "Exemplars" else "evidence"
+    generator = "exemplars" if section == DEGRADATION_RESULTS else "evidence"
     regenerate = f"python -m fmeval.cards {generator} {name}"
     problems: list[Problem] = []
 
@@ -407,7 +435,7 @@ def _check_result_section(section: str, body: str, name: str) -> list[Problem]:
                 "beside the claim.",
                 "add a '### <test>' subsection per test, each with its generated "
                 "include followed by what those numbers show; see "
-                f"{', '.join(sorted(set(FAMILY_HEADINGS.values())))}",
+                f"{', '.join(sorted({f.label for f in FAMILY_INFO.values()}))}",
             )
         )
 

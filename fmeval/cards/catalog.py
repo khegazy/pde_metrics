@@ -13,14 +13,18 @@ pick a winner -- disagreement means something is wrong and the card checks catch
 
 from __future__ import annotations
 
+import dataclasses
 import json
 from pathlib import Path
 from typing import Any
 
-from .loader import Bundle, iter_bundles, load_card
+from fmeval import analysis as an
 
-SCHEMA_VERSION = 2
-"""Bump when an entry's shape changes in a way a consumer could not ignore."""
+from .loader import GENERATED_DIR, Bundle, iter_bundles, load_card
+
+CATALOG_SCHEMA_VERSION = 2
+"""Bump when an entry's shape changes in a way a consumer could not ignore. Not the card
+schema's version (:data:`fmeval.cards.schema.SCHEMA_VERSION`), which versions ``card.yaml``."""
 
 
 def _spec_fields(bundle: Bundle) -> dict[str, Any]:
@@ -31,38 +35,9 @@ def _spec_fields(bundle: Bundle) -> dict[str, Any]:
     """
     if bundle.kind == "metric":
         from metrics import registry
-
-        spec = registry.get(bundle.name)
-        return {
-            "arity": spec.arity,
-            "fields": list(spec.fields),
-            "returns": spec.returns,
-            "units": spec.units,
-            "cost": spec.cost,
-            "differentiable": spec.differentiable,
-            "symmetric": spec.symmetric,
-            "higher_is_better": spec.higher_is_better,
-            "target": spec.target,
-            "measures": spec.measures,
-            "reduction": spec.reduction,
-            "has_pointwise_map": spec.has_pointwise,
-        }
-
-    from degradations import registry as deg
-
-    spec = deg.get(bundle.name)
-    return {
-        "family": spec.family,
-        "severity_name": spec.severity_name,
-        "severity_units": spec.severity_units,
-        "severity_direction": spec.severity_direction,
-        "calibration": spec.calibration,
-        "ordinal": spec.ordinal,
-        "stochastic": spec.stochastic,
-        "ensemble": spec.ensemble,
-        "fields": list(spec.fields),
-        "preserves": list(spec.preserves),
-    }
+    else:
+        from degradations import registry
+    return registry.get(bundle.name).describe()
 
 
 def _measured(bundle: Bundle) -> dict[str, Any]:
@@ -71,7 +46,7 @@ def _measured(bundle: Bundle) -> dict[str, Any]:
     A consumer must be able to tell "no measurements yet" from "measured and unremarkable"
     without inferring it from a missing key, so the shape is the same either way.
     """
-    fingerprint = bundle.path / "_generated" / "fingerprint.json"
+    fingerprint = bundle.fingerprint
     if not fingerprint.is_file():
         return {"measured": False, "run": None, "dataset": None, "axes": [], "probes": [],
                 "profile": [], "figures": []}
@@ -106,7 +81,7 @@ def _measured(bundle: Bundle) -> dict[str, Any]:
             "selectivity": row.get("selectivity"),
             "most_sensitive_axis": row.get("most_sensitive_axis"),
             "least_sensitive_axis": row.get("least_sensitive_axis"),
-            "blind_axes": [a for a in (row.get("blind_axes") or "").split("; ") if a],
+            "blind_axes": an.split_blind(row.get("blind_axes")),
             "elasticity_displacement": row.get("elasticity_displacement"),
         }
         for row in data.get("profile", [])
@@ -122,13 +97,13 @@ def _measured(bundle: Bundle) -> dict[str, Any]:
     ]
     # The figures beside the card, each with the JSON of the numbers it draws. Listed from
     # the files rather than from the fingerprint so the catalog cannot name a figure that is
-    # not there. Additive, so SCHEMA_VERSION is unchanged: a consumer that ignores the key
+    # not there. Additive, so CATALOG_SCHEMA_VERSION is unchanged: a consumer that ignores the key
     # reads the entry exactly as before.
     relative = bundle.path.relative_to(bundle.path.parent.parent)
     figures = [
-        {"name": svg.stem, "file": str(relative / "_generated" / svg.name),
-         "numbers": str(relative / "_generated" / svg.with_suffix(".json").name)}
-        for svg in sorted((bundle.path / "_generated").glob("*.svg"))
+        {"name": svg.stem, "file": str(relative / GENERATED_DIR / svg.name),
+         "numbers": str(relative / GENERATED_DIR / svg.with_suffix(".json").name)}
+        for svg in sorted(bundle.generated.glob("*.svg"))
     ]
     return {
         "measured": True,
@@ -156,16 +131,7 @@ def entry(bundle: Bundle) -> dict[str, Any]:
         "path": f"{bundle.path.parent.name}/{bundle.path.name}",
         "card": f"{bundle.path.parent.name}/{bundle.path.name}/card.md",
         "declared": _spec_fields(bundle),
-        "math": (
-            {
-                "triangle_inequality": card.math.triangle_inequality,
-                "scale_dependent": card.math.scale_dependent,
-                "resolution_dependent": card.math.resolution_dependent,
-                "complexity": card.math.complexity,
-            }
-            if card.math is not None
-            else None
-        ),
+        "math": dataclasses.asdict(card.math) if card.math is not None else None,
         "output": {"description": card.output.description,
                    "lower_bound": card.output.lower,
                    "upper_bound": card.output.upper},
@@ -180,7 +146,7 @@ def build() -> dict[str, Any]:
     """The whole catalog, metrics and degradations together, sorted by name."""
     entries = sorted((entry(b) for b in iter_bundles()), key=lambda e: (e["kind"], e["name"]))
     return {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": CATALOG_SCHEMA_VERSION,
         "counts": {
             "metrics": sum(1 for e in entries if e["kind"] == "metric"),
             "degradations": sum(1 for e in entries if e["kind"] == "degradation"),

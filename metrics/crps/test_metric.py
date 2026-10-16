@@ -161,18 +161,6 @@ def test_averages_over_channels_and_cells():
     assert crps(reference, members) == pytest.approx(np.mean(per_channel))
 
 
-def test_rejects_members_without_a_member_axis():
-    reference = np.zeros((1, 4, 4))
-    with pytest.raises(ValueError):
-        crps(reference, np.zeros((1, 4, 4)))
-
-
-def test_rejects_mismatched_grids():
-    reference = np.zeros((1, 4, 4))
-    with pytest.raises(ValueError):
-        crps(reference, np.zeros((3, 1, 4, 5)))
-
-
 def test_rejects_an_empty_ensemble():
     reference = np.zeros((1, 4, 4))
     with pytest.raises(ValueError):

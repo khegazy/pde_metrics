@@ -30,7 +30,12 @@ from fmeval.report.registry import (
     TABLES,
     iter_renderers,
 )
-from tests.test_analysis import make_frame
+from tests.conftest import (
+    SYNTHETIC_FIELDS,
+    SYNTHETIC_LADDER,
+    make_frame,
+    synthetic_rows,
+)
 
 # --- escaping -------------------------------------------------------------------------
 
@@ -154,41 +159,6 @@ def test_unknown_section_raises():
 # --- end to end ------------------------------------------------------------------------------
 
 
-#: The synthetic ladder every report test renders: an axis of each length the real runs have
-#: (four, three and two usable levels), plus the two probes.
-LADDER = {
-    "gaussian_blur": [1.0, 2.0, 3.0, 4.0],
-    "translate_x": [1.0, 3.0, 6.0, 9.0],
-    "translate_subpixel": [0.5, 1.0, 2.0],
-    "median_blur": [2.0, 3.0],
-    "gaussian_impostor": [8.0],
-    "uncorrelated": [10.0, 10.0, 10.0],
-}
-#: The operator behind each ladder label, as the pipeline records it.
-OPERATORS = {"translate_x": "translate", "uncorrelated": "random_large_translation"}
-FIELDS = ("vorticity", "density", "velocity")
-
-
-def synthetic_rows(metrics=("mse", "mae", "rmse", "flat")) -> pd.DataFrame:
-    """Rows for a four-metric, three-field run.
-
-    ``mae`` is the square root of ``mse`` everywhere, anchor included -- the shape relation of
-    the real pair, so the two rank-correlate perfectly while disagreeing in magnitude; ``rmse`` is
-    proportional to ``mae``, so their damage is identical; ``flat`` is zero everywhere, a metric
-    with no damage scale.
-    """
-    transform = {"mse": lambda v: v, "mae": np.sqrt, "rmse": lambda v: 0.7 * np.sqrt(v),
-                 "flat": lambda v: 0.0 * v}
-    frames = []
-    for metric in metrics:
-        for field in FIELDS:
-            axes = {k: [float(transform[metric](v)) for v in vals] for k, vals in LADDER.items()}
-            frames.append(make_frame(metric=metric, field=field, n_frames=8,
-                                     noise=0.0 if metric == "flat" else 0.05, seed=1, axes=axes))
-    df = pd.concat(frames, ignore_index=True)
-    df["degradation_op"] = df["degradation_op"].astype(str).replace(OPERATORS)
-    df["energy_changed"] = np.where(df["level"] > 0, (0.1 * df["severity"]) ** 2, 0.0)
-    return df
 
 
 def _write_run(folder: RunFolder, df: pd.DataFrame) -> RunFolder:
@@ -198,8 +168,9 @@ def _write_run(folder: RunFolder, df: pd.DataFrame) -> RunFolder:
     write_maps(folder, {"mse:vorticity__gaussian_blur_l2__t3": np.abs(
         np.random.default_rng(0).standard_normal((16, 8)))})
     write_run_meta(folder, run_id=1, config_hash=digest, metric="mse",
-                   dataset="synthetic_d", n_frames=8, fields=list(FIELDS),
-                   analysis_grid=16, ladder_axes=sorted(LADDER), n_severity_levels=15, seed=1,
+                   dataset="synthetic_d", n_frames=8, fields=list(SYNTHETIC_FIELDS),
+                   analysis_grid=16, ladder_axes=sorted(SYNTHETIC_LADDER), n_severity_levels=15,
+                   seed=1,
                    command="python evaluate.py metrics=[mse]")
     return folder
 
@@ -657,7 +628,7 @@ def test_response_curves_draw_one_record_per_metric_and_keep_the_unscaled_field_
     assert set(data["degradation"]) == {"gaussian_blur", "translate_x", "translate_subpixel",
                                         "median_blur"}, "probes are not ladder levels"
     assert set(data["degradation_family"]) == {"stochastic", "geometric"}
-    assert set(data["field"]) == set(FIELDS)
+    assert set(data["field"]) == set(SYNTHETIC_FIELDS)
     assert data["has_scale"].all()
     assert np.isfinite(data["impostor_damage"]).all(), "the run has the impostor on every field"
     assert (data.loc[data["degradation"] == "median_blur", "n_frames"] == 8).all()
@@ -682,7 +653,7 @@ def test_sensitivity_profile_rows_are_the_metric_s_ordinal_axes(run_folder):
     data = _figure_data(run_folder, "sensitivity_profile__metric-mae")
     assert set(data["degradation"]) == {"gaussian_blur", "translate_x", "translate_subpixel",
                                         "median_blur"}
-    assert set(data["field"]) == set(FIELDS)
+    assert set(data["field"]) == set(SYNTHETIC_FIELDS)
     assert (data["metric"] == "mae").all()
     assert data["blind"].dtype == bool
     assert {"rho", "rho_ci_lo", "cliffs_delta_min", "damage_per_change",
@@ -705,7 +676,7 @@ def test_damage_beside_controls_draws_this_metric_with_the_controls_present(run_
     data = _figure_data(run_folder, "damage_beside_controls__metric-mse")
     assert set(data["metric"]) == {"mse", "mae", "rmse"}, "flat is not a control"
     assert set(data["degradation"]) == {"translate_x", "translate_subpixel"}
-    assert set(data["field"]) == set(FIELDS)
+    assert set(data["field"]) == set(SYNTHETIC_FIELDS)
     assert data.loc[data["metric"] == "mse", "is_this_metric"].all()
     assert not data.loc[data["metric"] != "mse", "is_this_metric"].any()
 

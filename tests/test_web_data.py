@@ -25,7 +25,7 @@ from fmeval.data.locate import default_data_url, resolve_dataset_path
 from fmeval.ladder import build_ladder
 from fmeval.pipeline import run
 from metrics import registry as metric_registry
-from tests.test_configs import build
+from tests.conftest import build
 
 pytestmark = pytest.mark.web
 

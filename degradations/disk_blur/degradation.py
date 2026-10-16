@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .._shared.kernels import _convolve_spatial, _radial_kernel
+from .._shared.kernels import _radial_blur
 from ..registry import degradation
 
 
@@ -22,7 +22,4 @@ from ..registry import degradation
 )
 def disk_blur(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     """Isotropic top-hat: a uniform disk, unlike box_blur's square."""
-    if severity < 1:
-        return x
-    kernel = _radial_kernel(severity, ctx.grid.n_spatial, "disk")
-    return _convolve_spatial(x, kernel)
+    return _radial_blur(x, severity, ctx, "disk")

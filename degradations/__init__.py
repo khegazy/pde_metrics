@@ -14,25 +14,3 @@ decorated function in any module under ``degradations/``::
 Operators take one field, ``(C, *spatial)``, and return the same shape. Discovery is
 lazy -- see the note in ``metrics/__init__.py`` for why this module does not call it.
 """
-
-from __future__ import annotations
-
-from .registry import (
-    FAMILIES,
-    REGISTRY,
-    DegradationSpec,
-    available,
-    degradation,
-    discover,
-    get,
-)
-
-__all__ = [
-    "FAMILIES",
-    "REGISTRY",
-    "DegradationSpec",
-    "available",
-    "degradation",
-    "discover",
-    "get",
-]

@@ -38,9 +38,9 @@ from matplotlib import rc_context
 from fmeval.report import plots as _plots  # noqa: F401  (importing registers the renderers)
 from fmeval.report import style as report_style
 from fmeval.report.context import ReportContext
-from fmeval.report.registry import PLOTS, RendererUnavailable, check_preconditions, iter_scope
+from fmeval.report.registry import PLOTS, check_preconditions, draw, iter_scope
 
-from .exemplars import sanitize_json
+from .loader import write_strict_json
 
 if TYPE_CHECKING:
     from .evidence import Run
@@ -76,11 +76,6 @@ ALT_TEXT: dict[str, str] = {
                               "degradation and field",
 }
 
-#: The column whose values key ``panels`` in the figure's JSON, per figure.
-_PANEL_KEY: dict[str, str] = {"response_curves": "field", "sensitivity_profile": "field",
-                              "damage_beside_controls": "field"}
-
-
 @dataclass(frozen=True)
 class CardFigure:
     """One figure written beside a card, and the numbers written beside it."""
@@ -92,7 +87,7 @@ class CardFigure:
     alt: str
 
 
-def report_context(run: Run, *, theme: str = "notebook") -> ReportContext:
+def report_context(run: Run, *, theme: str = report_style.DEFAULT_THEME) -> ReportContext:
     """The renderers' view of an evidence run.
 
     The same frames :func:`fmeval.report.driver.build_context` would build from the folder,
@@ -100,14 +95,7 @@ def report_context(run: Run, *, theme: str = "notebook") -> ReportContext:
     draws are the numbers the tables beside it print. The card frame is unflagged: cards
     carry no flags.
     """
-    scored = run.scored
-    return ReportContext(
-        df=scored, norm=run.norm, axes=run.axes, probes=run.probes, card=run.card,
-        meta=run.meta,
-        style=report_style.Style.build(theme, metrics=scored["metric"].unique(),
-                                       axes=scored["degradation"].unique()),
-        anchor_label=run.anchor_label, probe_labels=run.probe_labels,
-    )
+    return ReportContext.from_analysis(run, meta=run.meta, theme=theme)
 
 
 def _panels(data: pd.DataFrame | None, key: str) -> dict[str, list[dict]]:
@@ -137,9 +125,7 @@ def write_figure(item, path: Path, numbers: Path, *, record: dict, panel_key: st
     """
     item.fig.savefig(path, format="svg", metadata={"Date": None, "Creator": None})
     record = {**record, "caption": item.caption, "panels": _panels(item.data, panel_key)}
-    numbers.write_text(
-        json.dumps(sanitize_json(record), indent=2, sort_keys=True, allow_nan=False) + "\n"
-    )
+    write_strict_json(numbers, record)
 
 
 def remove_stale(out_dir: Path, keep: set[str]) -> None:
@@ -150,8 +136,9 @@ def remove_stale(out_dir: Path, keep: set[str]) -> None:
             stale.with_suffix(".json").unlink(missing_ok=True)
 
 
-def metric_figures(run: Run, metric: str, out_dir: Path, *,
-                   theme: str = "notebook") -> tuple[list[CardFigure], dict[str, str]]:
+def metric_figures(
+    run: Run, metric: str, out_dir: Path, *, theme: str = report_style.DEFAULT_THEME,
+) -> tuple[list[CardFigure], dict[str, str]]:
     """Draw every card figure for one metric and write each with its numbers.
 
     Args:
@@ -195,15 +182,14 @@ def metric_figures(run: Run, metric: str, out_dir: Path, *,
         # Drawing and saving share one rc_context: the hashsalt is read when the SVG is
         # written, so a save outside the context would get a fresh uuid every time.
         with rc_context(rc):
-            try:
-                result = spec.fn(ctx, subset, dict(spec.defaults))
-            except RendererUnavailable as exc:
-                reasons[name] = str(exc)
+            result, why = draw(spec, ctx, subset)
+            if result is None:
+                reasons[name] = why
                 plt.close("all")
                 continue
             item = result.figures[0]
             item.caption = item.caption or spec.title
-            write_figure(item, path, numbers, panel_key=_PANEL_KEY.get(name, "field"),
+            write_figure(item, path, numbers, panel_key="field",
                          record={"metric": metric, "run": run.folder.name,
                                  "dataset": str(run.rows["dataset"].iloc[0]), "figure": name})
             plt.close("all")

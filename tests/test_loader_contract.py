@@ -34,11 +34,6 @@ from tests.fixtures_h5 import N_FRAMES, SHAPE, write_kinet_raw
 
 
 @pytest.fixture
-def kinet_file(tmp_path):
-    return write_kinet_raw(tmp_path / "kinet_raw.h5")
-
-
-@pytest.fixture
 def traj(kinet_file):
     with KinetRawTrajectory(kinet_file, nan_policy="error") as t:
         yield t

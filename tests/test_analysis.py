@@ -12,55 +12,7 @@ import pytest
 
 from fmeval import analysis as an
 from fmeval.pipeline import RESULT_DTYPES
-
-
-def make_frame(
-    *,
-    metric: str = "m",
-    field: str = "f",
-    axes: dict[str, list[float]] | None = None,
-    n_frames: int = 12,
-    noise: float = 0.0,
-    seed: int = 0,
-) -> pd.DataFrame:
-    """A result frame whose values are a known function of level.
-
-    ``axes`` maps a ladder label to the per-level values; level 0 (the reference) is added
-    automatically with value 0.
-    """
-    axes = axes or {"a": [1.0, 2.0, 3.0, 4.0]}
-    rng = np.random.default_rng(seed)
-    rows = []
-    for frame in range(n_frames):
-        rows.append(_row(metric, field, "identity", "identity", 0, 0.0, 0.0, frame))
-        for label, values in axes.items():
-            family = "geometric" if "translate" in label or label == "uncorrelated" \
-                else "stochastic"
-            for level, value in enumerate(values, start=1):
-                v = value + noise * rng.standard_normal()
-                rows.append(
-                    _row(metric, field, label, family, level, float(level), v, frame)
-                )
-    df = pd.DataFrame(rows)
-    for column, dtype in RESULT_DTYPES.items():
-        if column in df.columns:
-            df[column] = df[column].astype(dtype)
-    return df
-
-
-def _row(metric, field, label, family, level, severity, value, frame):
-    return {
-        "dataset": "d", "dataset_family": "", "complexity_rank": 0,
-        "param_reynolds": np.nan, "param_mach": np.nan, "param_resolution": 16,
-        "trajectory": "t", "frame_index": frame, "time": float(frame),
-        "field": field, "analysis_grid": 16, "remap_op": "block_mean",
-        "metric": metric, "arity": "pairwise",
-        "degradation": label, "degradation_op": label, "degradation_family": family,
-        "level": level, "severity": severity, "severity_name": "s",
-        "variant_label": f"{label}_l{level}" if level else "reference",
-        "component": "", "value": value, "seed": 0, "wall_time_s": 1e-4,
-    }
-
+from tests.conftest import make_frame, result_row
 
 # --- normalisation --------------------------------------------------------------------
 
@@ -285,9 +237,9 @@ def test_per_frame_correlation_survives_a_trend_in_the_field():
     rows = []
     for frame in range(10):
         scale = 10.0 ** frame          # six orders of magnitude across the trajectory
-        rows.append(_row("m", "f", "identity", "identity", 0, 0.0, 0.0, frame))
+        rows.append(result_row("m", "f", "identity", "identity", 0, 0.0, 0.0, frame))
         for level, step in enumerate([1.0, 2.0, 3.0, 4.0], start=1):
-            rows.append(_row("m", "f", "a", "stochastic", level, float(level),
+            rows.append(result_row("m", "f", "a", "stochastic", level, float(level),
                              step * scale, frame))
     df = pd.DataFrame(rows)
     for column, dtype in RESULT_DTYPES.items():

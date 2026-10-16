@@ -85,8 +85,8 @@ def exemplar_panel(
     path: Path,
     title: str,
     grid: Any = None,
-    dpi: int = 150,
-    theme: str = "notebook",
+    dpi: int,
+    theme: str = style.DEFAULT_THEME,
 ) -> Panel:
     """Render one exemplar panel and return the numbers behind it.
 

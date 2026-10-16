@@ -23,8 +23,7 @@ import yaml
 
 from fmeval.cards import loader, prose, review
 from fmeval.cards.schema import SCHEMA_VERSION, CardError, parse_card
-
-REPO = pathlib.Path(__file__).resolve().parent.parent
+from tests.conftest import REPO
 
 # --------------------------------------------------------------------------------------
 # A minimal valid card, used as the base for the negative tests
@@ -106,74 +105,33 @@ def test_status_vocabulary_is_closed_and_has_no_rejected_value():
         parse(card(status="rejected"))
 
 
-def test_every_metric_type_can_be_said_in_words_on_the_site():
-    """A type with no plain-language rendering reaches the reader as a bare code.
+def test_every_degradation_family_has_one_entry_for_its_label_colour_and_wording():
+    """Each registered family is shown with one label, one colour and one phrase.
 
-    `docs/gen_pages.py` prints the type in words in three places -- the header table on
-    every metric page, the catalogue, and the navigation group label -- falling back to the
-    raw code when it has no entry. That fallback is silent, so adding a value to CATEGORIES
-    and forgetting the wording ships `functional` to a reader who has been told nothing.
-
-    Skipped where the docs toolchain is not installed: `gen_pages` imports
-    `mkdocs_gen_files` at module scope. It runs in the docs job, where the toolchain is
-    present by definition.
+    These were four dictionaries in four modules -- the figure label, the card heading, the
+    colour and the site wording -- held in step by tests like this one. Now they are one table,
+    so the test only has to check that table against the registry: a family missing from it
+    would reach the reader as a bare code, in blue, under no card heading.
     """
-    import sys
+    from degradations.registry import FAMILIES
+    from fmeval.report.style import OKABE_ITO
+    from fmeval.report.vocabulary import FAMILY_INFO
 
-    pytest.importorskip("mkdocs_gen_files", reason="the docs toolchain is not installed")
+    # `identity` labels the reference severity level rather than a kind of damage.
+    assert set(FAMILY_INFO) == set(FAMILIES) - {"identity"}, (
+        f"fmeval/report/vocabulary.py:FAMILY_INFO covers {sorted(FAMILY_INFO)}, the registry "
+        f"defines {sorted(set(FAMILIES) - {'identity'})}"
+    )
+    unknown = {k: f.colour for k, f in FAMILY_INFO.items() if f.colour not in OKABE_ITO}
+    assert not unknown, f"family colours outside the Okabe-Ito palette: {unknown}"
 
-    sys.path.insert(0, str(REPO / "docs"))
-    try:
-        import gen_pages
-    finally:
-        sys.path.pop(0)
 
+def test_every_metric_type_can_be_said_in_words_on_the_site():
+    """A type with no plain-language phrase would reach the reader as a bare code."""
     from fmeval.cards.schema import CATEGORIES
 
-    missing = sorted(set(CATEGORIES) - set(gen_pages._METRIC_CATEGORY))
-    assert not missing, (
-        f"docs/gen_pages.py:_METRIC_CATEGORY has no wording for {missing}; those types "
-        "would appear on the site as their bare code"
-    )
-    unknown = sorted(set(gen_pages._METRIC_CATEGORY) - set(CATEGORIES))
-    assert not unknown, (
-        f"docs/gen_pages.py:_METRIC_CATEGORY describes {unknown}, which no card may "
-        "declare; the schema and the site have come apart"
-    )
-
-
-def test_every_degradation_family_can_be_said_in_words_on_the_site():
-    """The same silent fallback, for the vocabulary degradations use.
-
-    Degradations are labelled by their registry `family`, not by the metric category
-    vocabulary, and the two maps are separate on purpose. A family added to the registry
-    without wording here reaches the reader as a bare code on the gallery and on every
-    page of that family.
-    """
-    import sys
-
-    pytest.importorskip("mkdocs_gen_files", reason="the docs toolchain is not installed")
-
-    sys.path.insert(0, str(REPO / "docs"))
-    try:
-        import gen_pages
-    finally:
-        sys.path.pop(0)
-
-    from degradations.registry import FAMILIES
-
-    # `identity` labels the reference severity level rather than a kind of damage, and no
-    # bundle is grouped under it on the site.
-    missing = sorted(set(FAMILIES) - set(gen_pages._DEGRADATION_FAMILY) - {"identity"})
-    assert not missing, (
-        f"docs/gen_pages.py:_DEGRADATION_FAMILY has no wording for {missing}; those "
-        "families would appear on the site as their bare code"
-    )
-    unknown = sorted(set(gen_pages._DEGRADATION_FAMILY) - set(FAMILIES))
-    assert not unknown, (
-        f"docs/gen_pages.py:_DEGRADATION_FAMILY describes {unknown}, which the registry "
-        "does not define; the registry and the site have come apart"
-    )
+    empty = sorted(code for code, said in CATEGORIES.items() if not said.strip())
+    assert not empty, f"categories with no wording for the site: {empty}"
 
 
 def test_a_degradation_card_category_is_its_registry_family():
@@ -356,29 +314,6 @@ def test_sections_must_be_in_the_fixed_order():
     a, b, c = (text.index(f"## {s}") for s in (first, second, third))
     swapped = text[:a] + text[b:c] + text[a:b] + text[c:]
     assert any("out of order" in p.message for p in problems_for(swapped))
-
-
-def test_every_degradation_family_can_have_its_results_generated():
-    """Every family a card can head a subsection with must have a block to fill it.
-
-    These were two hand-maintained lists of the same families. A family added to the
-    headings but not to the blocks produced a card that named the subsection, passed the
-    prose check, and kept its "Not generated yet" placeholder while `cards evidence`
-    reported success -- a card that looks finished and cites nothing.
-    """
-    from fmeval.cards.evidence import FAMILY_BLOCKS
-
-    missing = sorted(set(prose.FAMILY_HEADINGS) - set(FAMILY_BLOCKS))
-    assert not missing, f"families with a heading but no generated block: {missing}"
-
-
-def test_every_registered_degradation_family_is_documented():
-    """A family in the registry that no card can report is a family nobody will read."""
-    from degradations.registry import FAMILIES
-
-    # `identity` is the reference severity level, not a test family: it heads no subsection.
-    missing = sorted(set(FAMILIES) - set(prose.FAMILY_HEADINGS) - {"identity"})
-    assert not missing, f"registered families with no card heading: {missing}"
 
 
 def test_the_declared_order_is_the_one_the_cards_use():
@@ -996,7 +931,7 @@ def _synthetic_run(tmp_path, with_mae: bool = True):
     import numpy as np
     import pandas as pd
 
-    from tests.test_analysis import make_frame
+    from tests.conftest import make_frame
 
     ladder = {
         "gaussian_blur": [1.0, 2.0, 3.0, 4.0],
@@ -1140,7 +1075,7 @@ def test_write_block_replaces_only_its_block(tmp_path):
     replacement is interpreted rather than written. Measured tables contain dollar signs
     and backslashes routinely, so corruption here would be routine too.
     """
-    from fmeval.cards.exemplars import write_block
+    from fmeval.cards.prose import write_block
 
     card = tmp_path / "card.md"
     card.write_text(
@@ -1161,7 +1096,7 @@ def test_write_block_replaces_only_its_block(tmp_path):
 
 
 def test_write_block_refuses_a_missing_marker_and_leaves_the_file_alone(tmp_path):
-    from fmeval.cards.exemplars import write_block
+    from fmeval.cards.prose import write_block
 
     card = tmp_path / "card.md"
     original = "no markers here\n"
@@ -1206,7 +1141,7 @@ def test_evidence_survives_a_run_whose_ladder_skipped_a_probe(tmp_path, monkeypa
     an em dash, never an error.
     """
     from fmeval.cards import evidence
-    from tests.test_analysis import make_frame
+    from tests.conftest import make_frame
 
     df = make_frame(metric="mse",
                     axes={"gaussian_blur": [1.0, 2.0], "uncorrelated": [10.0, 10.0]})
@@ -1245,6 +1180,56 @@ def test_the_cards_cli_takes_all_as_a_flag():
     assert main(["exemplars"]) == 1
 
 
+def test_check_strict_counts_warnings_as_errors(capsys):
+    """`check --strict` must fail on what plain `check` only warns about.
+
+    The flag was parsed and then never read, so `--strict` printed exactly what `check` did
+    and exited 0 on 78 warnings. Every bundle is unsigned until a person signs it, so each one
+    carries at least the review warning, which is what this test relies on.
+    """
+    from fmeval.cards.cli import main
+
+    assert main(["check", "mse"]) == 0
+    capsys.readouterr()
+    assert main(["check", "mse", "--strict"]) == 1
+    assert "[error] card.yaml  review" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("kind", ["metric", "degradation"])
+def test_a_scaffolded_bundle_does_not_call_itself_a_template(kind, tmp_path, monkeypatch, capsys):
+    """`cards new` must not copy the template's "not a metric itself" docstring.
+
+    Seven real bundles carried it, because the scaffolder substituted the placeholder name
+    but left the template's own description; the step list also named `test_metric.py` for a
+    degradation. Runs against a temporary bundle root so nothing is written into the repo.
+    """
+    import shutil
+
+    from fmeval.cards import cli
+
+    root = tmp_path / kind
+    shutil.copytree(loader.bundle_root(kind) / cli.TEMPLATE_DIR, root / cli.TEMPLATE_DIR)
+    monkeypatch.setattr(cli, "bundle_root", lambda _kind: root)
+    assert cli.main(["new", "probe_bundle", "--kind", kind]) == 0
+    docstring = (root / "probe_bundle" / "__init__.py").read_text()
+    assert "Template bundle" not in docstring and f"The `probe_bundle` {kind}." in docstring
+    assert f"test_{kind}.py" in capsys.readouterr().out
+
+
+def test_a_degradation_results_fix_names_the_exemplars_command():
+    """A structural fault in a degradation's results section must say `cards exemplars`.
+
+    The check compared the section against "Exemplars", a heading that no longer exists, so
+    every degradation card was told to run `cards evidence`, which refuses degradations.
+    """
+    body = ("<!-- GENERATED a: x -->\n<!-- END GENERATED a -->\n"
+            "<!-- GENERATED b: y -->\n<!-- END GENERATED b -->\n")
+    degradation = prose._check_result_section(prose.DEGRADATION_RESULTS, body, "gain")
+    metric = prose._check_result_section("Results", body, "mse")
+    assert any("python -m fmeval.cards exemplars gain" in p.fix for p in degradation)
+    assert any("python -m fmeval.cards evidence mse" in p.fix for p in metric)
+
+
 def test_evidence_all_skips_a_metric_the_run_does_not_contain(tmp_path, monkeypatch, capsys):
     """`--all` must leave alone every card whose metric the run never evaluated.
 
@@ -1276,7 +1261,7 @@ def test_evidence_all_skips_a_metric_the_run_does_not_contain(tmp_path, monkeypa
 def _figure_run(tmp_path, metrics=("mse", "mae", "flat"), *, impostor: bool = True):
     """A results folder from the report suite's rows, stamped citable: three fields, a metric
     with no damage scale, and optionally no impostor."""
-    from tests.test_report import synthetic_rows
+    from tests.conftest import synthetic_rows
 
     df = synthetic_rows(metrics=metrics)
     if not impostor:
@@ -1415,7 +1400,9 @@ def test_the_figure_vocabulary_covers_what_the_figures_draw_and_grades_nothing()
     missing = sorted(drawn - set(vocabulary.LABELS))
     assert not missing, f"statistics a figure draws with no plain label: {missing}"
     graded = re.compile(r"\b(" + "|".join(vocabulary.GRADING_WORDS) + r")\b", re.IGNORECASE)
-    for text in [*vocabulary.LABELS.values(), *vocabulary.FAMILY_LABELS.values(),
+    for text in [*vocabulary.LABELS.values(),
+                 *(f.label for f in vocabulary.FAMILY_INFO.values()),
+                 *(f.description for f in vocabulary.FAMILY_INFO.values()),
                  *ALT_TEXT.values()]:
         assert not graded.search(text), f"a label grades a measurement: {text!r}"
 
@@ -1510,6 +1497,7 @@ def test_exemplar_panels_are_byte_identical_within_one_environment(tmp_path):
     import numpy as np
     from scipy.ndimage import gaussian_filter
 
+    from fmeval.cards.exemplars import load_cards_config
     from fmeval.cards.figures import Column, exemplar_panel
 
     base = np.random.default_rng(0).normal(size=(48, 48))
@@ -1519,13 +1507,14 @@ def test_exemplar_panels_are_byte_identical_within_one_environment(tmp_path):
     ]
     rows = ["difference", "radial_spectrum", "pdf"]
 
-    first = exemplar_panel(columns, rows, path=tmp_path / "a.png", title="determinism")
-    second = exemplar_panel(columns, rows, path=tmp_path / "b.png", title="determinism")
+    dpi = int(load_cards_config().figures.dpi)
+    first = exemplar_panel(columns, rows, path=tmp_path / "a.png", title="determinism", dpi=dpi)
+    second = exemplar_panel(columns, rows, path=tmp_path / "b.png", title="determinism", dpi=dpi)
 
     assert (tmp_path / "a.png").read_bytes() == (tmp_path / "b.png").read_bytes()
     # Compared through the sanitiser, because a NaN statistic -- "not measured" -- is
     # never equal to itself, and comparing raw dicts would fail on unchanged output.
-    from fmeval.cards.exemplars import sanitize_json
+    from fmeval.cards.loader import sanitize_json
 
     assert sanitize_json(first.statistics) == sanitize_json(second.statistics)
 

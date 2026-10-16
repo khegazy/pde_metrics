@@ -149,8 +149,3 @@ def test_needs_at_least_two_members():
     """A single member has no spread to speak of, and the ddof=1 variance is undefined."""
     with pytest.raises(ValueError, match="two"):
         spread_skill(np.zeros((1, 4, 4)), np.zeros((1, 1, 4, 4)))
-
-
-def test_rejects_members_without_a_member_axis():
-    with pytest.raises(ValueError):
-        spread_skill(np.zeros((1, 4, 4)), np.zeros((1, 4, 4)))

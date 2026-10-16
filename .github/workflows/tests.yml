@@ -44,7 +44,7 @@ jobs:
   pytest:
     name: pytest (offline suite)
     runs-on: ubuntu-latest
-    # The suite is ~25 s; the rest is the environment. This is a runaway guard, not a target.
+    # A runaway guard, not a target: the suite's duration depends on the machine.
     timeout-minutes: 15
 
     steps:

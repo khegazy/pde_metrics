@@ -36,9 +36,8 @@ NanPolicy = Literal["error", "warn", "ignore"]
 
 @dataclass(frozen=True)
 class FieldSpec:
-    """One entry of the canonical field vocabulary."""
+    """One entry of the canonical field vocabulary; its name is its key in :data:`FIELDS`."""
 
-    name: str
     kind: FieldKind
     #: How many channels this field has on an ``n_spatial``-dimensional grid.
     channels: str  # "1" | "n_spatial" | "vorticity" | "9"
@@ -57,36 +56,41 @@ class FieldSpec:
 
 #: The canonical vocabulary. Readers map their own names onto these.
 FIELDS: dict[str, FieldSpec] = {
-    "density": FieldSpec("density", "primitive", "1", "Mass density."),
+    "density": FieldSpec("primitive", "1", "Mass density."),
     "velocity": FieldSpec(
-        "velocity", "primitive", "n_spatial",
+        "primitive", "n_spatial",
         "Velocity; channel i is the component along dims[i]."
     ),
     "distribution": FieldSpec(
-        "distribution", "primitive", "9", "Lattice-Boltzmann distribution (D2Q9)."
+        "primitive", "9", "Lattice-Boltzmann distribution (D2Q9)."
     ),
     "vorticity": FieldSpec(
-        "vorticity", "derived", "vorticity",
+        "derived", "vorticity",
         "Curl of the velocity. Recomputed from velocity on the analysis grid, never "
         "block-averaged -- see fmeval.derived."
     ),
     "pressure": FieldSpec(
-        "pressure", "derived", "1",
+        "derived", "1",
         "Pressure. For the isothermal D2Q9 solver this is density * c_s^2 with "
         "c_s^2 = 1/3, i.e. density/3 to within one ulp."
     ),
     "temperature": FieldSpec(
-        "temperature", "primitive", "1", "Temperature (degenerate for isothermal runs)."
+        "primitive", "1", "Temperature (degenerate for isothermal runs)."
     ),
 }
 
 CANONICAL_FIELDS: frozenset[str] = frozenset(FIELDS)
-PRIMITIVE_FIELDS: frozenset[str] = frozenset(
-    n for n, s in FIELDS.items() if s.kind == "primitive"
-)
 DERIVED_FIELDS: frozenset[str] = frozenset(
     n for n, s in FIELDS.items() if s.kind == "derived"
 )
+
+#: Stored by some solvers but reconstructible from a primitive -- pressure is density * c_s^2 to
+#: within an ulp for the isothermal D2Q9 solver -- so readers exclude it unless asked. Carrying
+#: both doubles the I/O and injects a guaranteed rho = 1 pair into the cross-metric correlation.
+REDUNDANT_FIELDS: frozenset[str] = frozenset({"pressure"})
+
+#: Stored but constant for an isothermal run, so it is a parameter rather than a field.
+DEGENERATE_FIELDS: frozenset[str] = frozenset({"temperature"})
 
 
 @dataclass(frozen=True)
@@ -247,6 +251,10 @@ class Trajectory(ABC):
     """
 
     nan_policy: NanPolicy = "error"
+
+    reads_from_disk: bool = True
+    """False for a reader whose frames are generated, so ``dataset.path`` names nothing on disk
+    and the harness must not insist that it exists."""
 
     is_ensemble: bool = False
     """Whether :meth:`read_frame` also returns ``f"{name}__members"`` member stacks.

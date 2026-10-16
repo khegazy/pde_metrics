@@ -29,8 +29,11 @@ from fmeval.analysis import (
     DAMAGE_BLOCK_FAMILIES,
     DEGENERATE_SPAN,
     UNCORRELATED_LABEL,
+    split_blind,
 )
+from fmeval.pipeline import parse_map_key
 
+from . import vocabulary
 from .context import FigureItem, PlotResult
 from .registry import plot
 from .style import (
@@ -39,10 +42,7 @@ from .style import (
     field_marker,
     okabe,
     show_field,
-    symmetric_limits,
 )
-from .vocabulary import FAMILY_LABELS
-from .vocabulary import label as word
 
 
 def _axis_frame(df: pd.DataFrame, axis: str) -> pd.DataFrame:
@@ -132,7 +132,7 @@ def ladder_curves(ctx, df, opts) -> PlotResult:
 def _metric_rows(ctx, df: pd.DataFrame):
     """The metric a per-metric subset holds, with its ordinal axes, card and probe rows."""
     metric = str(df["metric"].iloc[0])
-    axes = ctx.axes[(ctx.axes["metric"].astype(str) == metric) & ~ctx.axes["is_probe"]]
+    axes = ctx.ordinal_rows(metric=metric)
     card = (ctx.card[ctx.card["metric"].astype(str) == metric]
             if "metric" in ctx.card.columns else ctx.card)
     probes = (ctx.probes[ctx.probes["metric"].astype(str) == metric]
@@ -146,9 +146,7 @@ def _blind_pairs(card: pd.DataFrame) -> set[tuple[str, str]]:
     if "blind_axes" not in card.columns:
         return pairs
     for _, row in card.iterrows():
-        listed = row.get("blind_axes")
-        if isinstance(listed, str):
-            pairs.update((str(row["field"]), axis) for axis in listed.split("; ") if axis)
+        pairs.update((str(row["field"]), axis) for axis in split_blind(row.get("blind_axes")))
     return pairs
 
 
@@ -167,8 +165,8 @@ def _impostor_damage(probes: pd.DataFrame) -> dict[str, float]:
 def _family_order(frame: pd.DataFrame) -> list[str]:
     """Families in the card's fixed order, then any the vocabulary does not know, by name."""
     present = set(frame["degradation_family"].astype(str))
-    known = [f for f in FAMILY_LABELS if f in present]
-    return known + sorted(present - set(FAMILY_LABELS))
+    known = [f for f in vocabulary.FAMILY_INFO if f in present]
+    return known + sorted(present - set(vocabulary.FAMILY_INFO))
 
 
 def _raw_value_axis(ax, panel: pd.DataFrame) -> None:
@@ -298,14 +296,14 @@ def response_curves(ctx, df, opts) -> PlotResult:
                 ax.set_title(field if has_scale else f"{field}\n(no damage scale: raw value)",
                              fontsize="small")
             if i == len(families) - 1:
-                ax.set_xlabel(word("level"), fontsize="small")
+                ax.set_xlabel(vocabulary.label("level"), fontsize="small")
             ax.tick_params(labelsize="x-small")
-        grid[i, 0].set_ylabel(FAMILY_LABELS.get(family, family), fontsize="small")
+        grid[i, 0].set_ylabel(vocabulary.family_label(family), fontsize="small")
         grid[i, -1].legend(loc="center left", bbox_to_anchor=(1.02, 0.5), fontsize="x-small",
                            frameon=False, title=None)
     any_scale = any(scaled.values())
-    fig.supylabel(word("damage") if any_scale else f"{word('value')} (no damage scale)",
-                  fontsize="small")
+    fig.supylabel(vocabulary.label("damage") if any_scale
+                  else f"{vocabulary.label('value')} (no damage scale)", fontsize="small")
     fig.suptitle(f"{metric}: median {'damage' if any_scale else 'value'} over frames against "
                  "severity level", fontsize="medium")
 
@@ -418,7 +416,7 @@ def sensitivity_profile(ctx, df, opts) -> PlotResult:
             ax.text(BLINDNESS_MARGIN, len(order) - 0.45, f" margin {BLINDNESS_MARGIN:g}",
                     fontsize="xx-small", color="0.3", va="bottom", ha="left")
             ax.set_xlim(left=0.0)
-        ax.set_title(textwrap.fill(word(column), 30), fontsize="x-small")
+        ax.set_title(textwrap.fill(vocabulary.label(column), 30), fontsize="x-small")
         ax.tick_params(labelsize="x-small")
     grid[0, 0].set_yticks([position[d] for d in order], [ctx.label(d) for d in order],
                           fontsize="x-small")
@@ -436,7 +434,7 @@ def sensitivity_profile(ctx, df, opts) -> PlotResult:
     handles = [Line2D([], [], marker=field_marker(i), ls="none", color="0.3", ms=5.5, label=f)
                for i, f in enumerate(fields)]
     handles.append(Line2D([], [], marker="o", ls="none", color="0.3", mfc="none", ms=5.5,
-                          label=word("blind_axes")))
+                          label=vocabulary.label("blind_axes")))
     fig.legend(handles=handles, loc="outside lower center", ncol=len(handles),
                fontsize="x-small", frameon=False)
     fig.suptitle(f"{metric}: how it responded to each degradation, by field", fontsize="medium")
@@ -474,7 +472,7 @@ def monotonicity_heatmap(ctx, df, opts) -> PlotResult:
     configured reference value.
     """
     field = str(df["field"].iloc[0])
-    rows = ctx.axes[(ctx.axes["field"] == field) & (~ctx.axes["is_probe"])]
+    rows = ctx.ordinal_rows(field=field)
     ctx.require(not rows.empty, f"no ordinal axes for {field}")
     grid_df = rows.pivot_table(index="metric", columns="degradation", values="rho",
                                observed=True)
@@ -503,7 +501,7 @@ def monotonicity_heatmap(ctx, df, opts) -> PlotResult:
                     color="white" if abs(value) > 0.6 else "black")
             if np.isfinite(limit) and value < limit:
                 ax.add_patch(
-                    __import__("matplotlib").patches.Rectangle(
+                    matplotlib.patches.Rectangle(
                         (j - 0.5, i - 0.5), 1, 1, fill=False, hatch="///",
                         edgecolor="black", lw=1.2)
                 )
@@ -561,7 +559,7 @@ def severity_level_separation(ctx, df, opts) -> PlotResult:
                                                         len(levels))):
             body.set_facecolor(colour)
             body.set_alpha(0.85)
-        auc = ctx.axis_rows(metric=metric, field=field, degradation=name)
+        auc = ctx.ordinal_rows(metric=metric, field=field, degradation=name)
         if not auc.empty and np.isfinite(auc["separability_auc_min"].iloc[0]):
             ax.set_title(f"{ctx.label(name)}\nmin AUC {auc['separability_auc_min'].iloc[0]:.2f}",
                          fontsize="x-small")
@@ -589,43 +587,39 @@ def severity_level_separation(ctx, df, opts) -> PlotResult:
 
 @plot(
     section=6, order=10, scope="per_field",
-    title="Reference field and its degraded variants",
+    title="Pointwise metric density of each degraded variant",
     requires_maps=True,
-    defaults={"cmap": "RdBu_r"},
 )
 def field_gallery(ctx, df, opts) -> PlotResult:
-    """The reference field beside each degraded variant, on shared colour limits.
+    """The pointwise metric density of each degraded variant, on shared colour limits.
 
     Shared limits are not a stylistic choice: autoscaling each panel would make a heavily
     smoothed field look identical to the reference, which is the opposite of what the
     figure is for.
     """
     field = str(df["field"].iloc[0])
-    stored = {k: v for k, v in ctx.maps.items() if f":{field}__" in k}
+    stored = {k: v for k, v in ctx.maps.items() if parse_map_key(k)[1] == field}
     ctx.require(bool(stored), f"no stored maps for {field}")
 
-    reference = ctx.maps.get(f"__field__{field}")
     panels = sorted(stored)[:12]
-    n = len(panels) + (1 if reference is not None else 0)
-    ncols = min(4, n)
-    nrows = int(np.ceil(n / ncols))
+    ncols = min(4, len(panels))
+    nrows = int(np.ceil(len(panels) / ncols))
     fig, grid = ctx.style.figure(nrows, ncols)
     flat = [grid[r, c] for r in range(nrows) for c in range(ncols)]
 
-    limits = symmetric_limits(np.concatenate([v.ravel() for v in stored.values()]), 0.995)
-    i = 0
-    if reference is not None:
-        show_field(flat[0], reference, cmap=opts.get("cmap"), vmin=limits[0], vmax=limits[1])
-        flat[0].set_title("reference", fontsize="x-small")
-        i = 1
-    for key in panels:
-        ax = flat[i]
-        show_field(ax, stored[key], cmap="magma")
-        ax.set_title(key.split("__", 1)[1].rsplit("__", 1)[0], fontsize="xx-small")
+    # One colour scale for every panel, from all of them together (see the docstring). The
+    # maps are per-cell densities, so the scale starts at their smallest value rather than
+    # being centred on zero.
+    values = np.concatenate([stored[key].ravel() for key in panels])
+    values = values[np.isfinite(values)]
+    vmin, vmax = (float(values.min()), float(np.quantile(values, 0.995))) if values.size \
+        else (0.0, 1.0)
+    for ax, key in zip(flat, panels):
+        show_field(ax, stored[key], cmap="magma", vmin=vmin, vmax=vmax)
+        ax.set_title(parse_map_key(key)[2], fontsize="xx-small")
         ax.set_xticks([])
         ax.set_yticks([])
-        i += 1
-    for ax in flat[i:]:
+    for ax in flat[len(panels):]:
         ax.set_axis_off()
     fig.suptitle(f"Pointwise metric density — {field}", fontsize="small")
 
@@ -866,7 +860,7 @@ def response_sparklines(ctx, df, opts) -> PlotResult:
     ctx.require(bool(axes_present), f"no ordinal degradation on {field}")
     info = {
         (str(r.metric), str(r.degradation)): r
-        for r in ctx.axes[(ctx.axes["field"] == field) & ~ctx.axes["is_probe"]].itertuples()
+        for r in ctx.ordinal_rows(field=field).itertuples()
     }
 
     clip = float(opts["clip"])
@@ -952,7 +946,7 @@ def selectivity_profile(ctx, df, opts) -> PlotResult:
     damage in general rather than to a specific failure mode.
     """
     field = str(df["field"].iloc[0])
-    rows = ctx.axes[(ctx.axes["field"] == field) & (~ctx.axes["is_probe"])]
+    rows = ctx.ordinal_rows(field=field)
     ctx.require(rows["metric"].nunique() >= 2, "needs at least two metrics")
     grid_df = rows.pivot_table(index="degradation", columns="metric", values="rho",
                                observed=True)
@@ -1234,7 +1228,7 @@ def damage_beside_controls(ctx, df, opts) -> PlotResult:
                     if "severity_name" in ctx.df.columns else "strength"
                 ax.set_xlabel(f"applied strength ({name})", fontsize="small")
         grid[i, 0].set_ylabel(field, fontsize="small")
-    fig.supylabel(word("damage"), fontsize="small")
+    fig.supylabel(vocabulary.label("damage"), fontsize="small")
     ordered = [n for n in [metric, *controls] if n in handles]
     fig.legend([handles[n] for n in ordered], ordered, loc="outside right upper",
                fontsize="x-small", frameon=False)

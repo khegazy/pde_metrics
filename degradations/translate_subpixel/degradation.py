@@ -17,7 +17,6 @@ from ..registry import degradation
     severity_name="distance",
     severity_units="cells",
     severity_direction="increasing",
-    defaults={"axis": "x"},
     preserves=("spatial_mean",),
 )
 def translate_subpixel(

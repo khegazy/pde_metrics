@@ -22,6 +22,7 @@ problem should surface.
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 from dataclasses import dataclass
@@ -32,7 +33,10 @@ import yaml
 
 from .schema import Card, CardError, parse_card
 
-BUNDLE_FILES = ("card.yaml", "card.md", "refs.bib")
+CARD_YAML = "card.yaml"
+"""The typed record that marks a directory as a bundle."""
+
+BUNDLE_FILES = (CARD_YAML, "card.md", "refs.bib")
 """Files every bundle must contain, whatever it holds."""
 
 GENERATED_DIR = "_generated"
@@ -52,19 +56,20 @@ class Bundle:
 
     @property
     def card_yaml(self) -> Path:
-        return self.path / "card.yaml"
+        return self.path / CARD_YAML
 
     @property
     def card_md(self) -> Path:
         return self.path / "card.md"
 
     @property
-    def refs(self) -> Path:
-        return self.path / "refs.bib"
-
-    @property
     def generated(self) -> Path:
         return self.path / GENERATED_DIR
+
+    @property
+    def fingerprint(self) -> Path:
+        """The measured half of a metric's card, written by ``cards evidence``."""
+        return self.generated / "fingerprint.json"
 
     @property
     def implementation(self) -> Path:
@@ -109,7 +114,7 @@ def iter_bundles(kind: str | None = None) -> list[Bundle]:
         for entry in sorted(root.iterdir()):
             if not entry.is_dir() or entry.name.startswith(("_", ".")):
                 continue
-            if (entry / "card.yaml").is_file():
+            if (entry / CARD_YAML).is_file():
                 found.append(Bundle(name=entry.name, kind=k, path=entry))
     return found
 
@@ -122,7 +127,7 @@ def find_bundle(name: str, kind: str | None = None) -> Bundle | None:
     return None
 
 
-def bundle_for_module(module: str, name: str, kind: str) -> Bundle | None:
+def bundle_for_module(module: str, kind: str) -> Bundle | None:
     """Locate the bundle that defines an already-imported module.
 
     The registries record ``fn.__module__`` rather than a path, so the file is recovered
@@ -131,7 +136,6 @@ def bundle_for_module(module: str, name: str, kind: str) -> Bundle | None:
 
     Args:
         module: Dotted module name, as recorded on the spec.
-        name: Registered name, used to confirm the directory matches.
         kind: ``"metric"`` or ``"degradation"``.
 
     Returns:
@@ -142,7 +146,7 @@ def bundle_for_module(module: str, name: str, kind: str) -> Bundle | None:
     if file is None:
         return None
     directory = Path(file).resolve().parent
-    if not (directory / "card.yaml").is_file():
+    if not (directory / CARD_YAML).is_file():
         return None
     return Bundle(name=directory.name, kind=kind, path=directory)
 
@@ -225,7 +229,7 @@ def _validate_spec(spec: Any, kind: str) -> None:
     """
     if os.environ.get(SKIP_ENV) == "1":
         return
-    bundle = bundle_for_module(spec.module, spec.name, kind)
+    bundle = bundle_for_module(spec.module, kind)
     if bundle is None:
         # Not in a bundle at all. Tests register throwaway metrics this way on purpose,
         # and so does anyone experimenting in a notebook, so this is not an error.
@@ -270,3 +274,30 @@ def install() -> None:
 
     metric_registry.CARD_VALIDATOR = lambda spec: _validate_spec(spec, "metric")
     deg_registry.CARD_VALIDATOR = lambda spec: _validate_spec(spec, "degradation")
+
+
+def sanitize_json(value: Any) -> Any:
+    """Replace NaN and infinities with None, recursively, before serialising.
+
+    ``json.dumps`` writes float('nan') as a bare ``NaN`` token, which is not JSON: a
+    strict parser refuses the whole file. These files exist precisely for machine
+    readers, and thirteen committed fingerprints were unreadable to them before this.
+    "Not a number" here always means "not measured", and null is how JSON says that.
+    """
+    if isinstance(value, dict):
+        return {k: sanitize_json(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [sanitize_json(v) for v in value]
+    if isinstance(value, float) and (value != value or value in (float("inf"), float("-inf"))):
+        return None
+    return value
+
+
+def write_strict_json(path: Path, value: Any) -> None:
+    """Write ``value`` as strict, sorted, indented JSON with a trailing newline.
+
+    Every machine-readable file a bundle carries is written this way, so they diff cleanly and
+    a strict parser reads all of them; see :func:`sanitize_json`.
+    """
+    path.write_text(json.dumps(sanitize_json(value), indent=2, sort_keys=True,
+                               allow_nan=False) + "\n")

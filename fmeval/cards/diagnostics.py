@@ -89,6 +89,12 @@ class RowContext:
 # --------------------------------------------------------------------------------------
 
 
+def _plane(data: np.ndarray) -> np.ndarray:
+    """The 2-D plane a diagnostic draws: the first channel of a ``(C, X, Y)`` field."""
+    array = np.asarray(data)
+    return array[0] if array.ndim == 3 else array
+
+
 @diagnostic(name="field", label="field")
 def draw_field(ax, data: np.ndarray, ctx: RowContext) -> dict[str, float]:
     """The field itself, on limits shared with every other column."""
@@ -120,9 +126,7 @@ def draw_lineout(ax, data: np.ndarray, ctx: RowContext) -> dict[str, float]:
 
     The row that shows what happens to a sharp front, which a colour map flattens.
     """
-    array = np.asarray(data)
-    array = array[0] if array.ndim == 3 else array
-    reference = ctx.reference[0] if ctx.reference.ndim == 3 else ctx.reference
+    array, reference = _plane(data), _plane(ctx.reference)
     row = array.shape[1] // 2
     ax.plot(reference[:, row], color="0.7", lw=1.0)
     ax.plot(array[:, row], color=style.okabe("blue"), lw=1.0)
@@ -139,8 +143,7 @@ def draw_lineout(ax, data: np.ndarray, ctx: RowContext) -> dict[str, float]:
 
 def _radial_spectrum(data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Radially averaged power spectrum, using the repository's one |k| definition."""
-    array = np.asarray(data)
-    array = array[0] if array.ndim == 3 else array
+    array = _plane(data)
     power = np.abs(np.fft.fftn(array)) ** 2
     k = wavenumber_magnitude(array.shape)
     shells = np.rint(k).astype(int)
@@ -188,9 +191,7 @@ def draw_spectral_phase(ax, data: np.ndarray, ctx: RowContext) -> dict[str, floa
     The row for degradations that move structure without changing how much of it there
     is. A translation leaves every amplitude untouched and shows up only here.
     """
-    array = np.asarray(data)
-    array = array[0] if array.ndim == 3 else array
-    reference = ctx.reference[0] if ctx.reference.ndim == 3 else ctx.reference
+    array, reference = _plane(data), _plane(ctx.reference)
     delta = np.angle(np.fft.fftn(array) * np.conj(np.fft.fftn(reference)))
     style.show_field(ax, np.fft.fftshift(delta), cmap="twilight_shifted",
                      vmin=-np.pi, vmax=np.pi)
@@ -234,7 +235,7 @@ def draw_autocorrelation(ax, data: np.ndarray, ctx: RowContext) -> dict[str, flo
     The row that shows a change in the size of structures rather than their amplitude.
     """
     def profile(array: np.ndarray) -> np.ndarray:
-        array = array[0] if array.ndim == 3 else array
+        array = _plane(array)
         centred = array - array.mean()
         power = np.abs(np.fft.fftn(centred)) ** 2
         correlation = np.real(np.fft.ifftn(power))

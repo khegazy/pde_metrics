@@ -24,7 +24,7 @@ directory.
 
 ```bash
 python check_setup.py                        # confirm the environment before anything expensive
-pytest                                       # ~20 s; skips the CFS-reading and LaTeX tests
+pytest                                       # skips the CFS-reading and LaTeX tests
 pytest -m data                               # reads the real files on CFS
 module load texlive/2024 && pytest -m slow   # compiles a report with latexmk
 pytest tests/test_analysis.py -q -k spearman # one file, one pattern
@@ -38,7 +38,8 @@ python make_report.py results/mse_<time> --compile --zip
 
 `evaluate.py` writes one `results/<metric>_<time>/` folder per metric plus a
 `comparison_<time>/` when several metrics run. Each is self-contained — raw numbers, resolved
-config, provenance, and a `main.tex` that compiles standalone and renders on Overleaf.
+config and provenance. `evaluate.py` never renders a report: `make_report.py <folder>` writes a
+`main.tex` into the folder that compiles standalone and renders on Overleaf.
 
 Two size knobs, both recorded with the results: `dataset.time.reduction` (evaluate every Nth
 frame) and `analysis_grid.resolution` (the IN-2 analysis grid). The full trajectory at
@@ -100,6 +101,10 @@ First-wave priorities (in order of value per effort): IN-4, NM-2 (Ḣ⁻¹ norm)
 
 ## Implementation conventions
 
+- **One source of truth, least new code.** Define every value once, add no aliases, give a
+  helper two callers or a reason, and search for existing code before writing new code. The
+  rules and the table of where shared code lives are in `AGENTS.md` §1, and
+  `tests/test_documentation.py` pins them.
 - **Fix detector thresholds once in the evaluator and never tune them per model** — otherwise the metric becomes gameable. This applies to shock sensors (SH-1), vortex criteria (PD-4), and any thresholded quantity.
 - **Known-correct estimators matter**: e.g. ensemble spread must be computed as the square root of the average ensemble variance, not the average of spreads (Fortin et al. 2014, see PS-3 in the tracker). When the tracker records a computational gotcha, follow it.
 - **Cross-mesh comparison (IN-2)**: remap fields conservatively onto a common analysis grid, compare cell averages rather than point samples, and record the remapping operator as part of the metric definition.

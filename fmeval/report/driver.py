@@ -33,15 +33,15 @@ from fmeval.io import RunFolder
 from . import plots as _plots  # noqa: F401  (registers the figure renderers)
 from . import tables as _tables  # noqa: F401  (registers the table renderers)
 from .context import ReportContext
-from .latex import booktabs_table, document, escape, figure, preamble, slug, verbatim
+from .latex import booktabs_table, code, document, escape, figure, preamble, slug, verbatim
 from .registry import (
     SECTIONS,
-    RendererUnavailable,
     check_preconditions,
+    draw,
     iter_renderers,
     iter_scope,
 )
-from .style import Style
+from .style import DEFAULT_THEME
 
 log = logging.getLogger(__name__)
 
@@ -61,6 +61,11 @@ class Rendered:
     notes: list[str] = dc_field(default_factory=list)
     duration_s: float = 0.0
 
+    @classmethod
+    def of(cls, spec, status: str, reason: str = "") -> Rendered:
+        """The outcome of ``spec``, before anything has been drawn."""
+        return cls(spec.name, spec.kind, spec.section, spec.title, status, reason)
+
 
 def _read_csv(path) -> pd.DataFrame:
     """Read an optional analysis CSV, empty if the run does not have it.
@@ -70,44 +75,42 @@ def _read_csv(path) -> pd.DataFrame:
     return pd.read_csv(path) if path.exists() else pd.DataFrame()
 
 
+#: The repository's report settings, read only for a run folder that did not record its own.
+REPORT_DEFAULTS = Path(__file__).resolve().parents[2] / "configs" / "report" / "default.yaml"
+
+
 def build_context(
     folder: RunFolder,
     *,
-    theme: str = "notebook",
+    theme: str = DEFAULT_THEME,
     thresholds: Mapping[str, float] | None = None,
-    bootstrap: int = 200,
-    block_length: int = 10,
+    bootstrap: int = an.N_BOOTSTRAP,
+    block_length: int = an.BLOCK_LENGTH,
 ) -> ReportContext:
     """Load a run folder and compute everything the renderers need.
 
-    All the statistics happen here, once, so a figure and its table cannot disagree.
+    All the statistics happen here, once, so a figure and its table cannot disagree. The
+    advisory thresholds are the run's own, ``report.thresholds`` as its config recorded them,
+    so a folder re-renders as it was run; a folder that predates the record takes the
+    repository's ``configs/report/default.yaml``. ``thresholds`` overrides them key by key.
     """
-    from fmeval.io import read_results
+    from fmeval.io import read_config, read_results, read_run_meta
 
     df = read_results(folder)
-    meta = _read_json(folder.data / "run_meta.json")
-    config = _read_yaml(folder.data / "config.yaml")
-    maps = _read_maps(folder.data / "error_maps.npz")
+    meta = read_run_meta(folder)
+    config = read_config(folder)
+    recorded = ((config.get("report") or {}).get("thresholds")
+                or _read_yaml(REPORT_DEFAULTS)["thresholds"])
+    thresholds = {**recorded, **(thresholds or {})}
+    maps = _read_maps(folder.maps_path)
     spectrum = _read_csv(folder.data / "calibration_spectrum.csv")
 
     analysis = an.analyse(df, meta=meta, config=config, block_length=block_length,
                           n_bootstrap=bootstrap)
 
-    return ReportContext(
-        df=analysis.scored,
-        norm=analysis.norm,
-        axes=analysis.axes,
-        probes=analysis.probes,
-        card=an.flag(analysis.card, thresholds or {}),
-        spectrum=spectrum,
-        maps=maps,
-        meta=meta,
-        config=config,
-        style=Style.build(theme, metrics=df["metric"].unique(),
-                          axes=df["degradation"].unique()),
-        thresholds=thresholds or {},
-        anchor_label=analysis.anchor_label,
-        probe_labels=analysis.probe_labels,
+    return ReportContext.from_analysis(
+        analysis, meta=meta, theme=theme, card=an.flag(analysis.card, thresholds),
+        spectrum=spectrum, maps=maps, config=config, thresholds=thresholds,
     )
 
 
@@ -125,41 +128,36 @@ def render(
 
     for spec in iter_renderers():
         if only and spec.name not in only:
-            results.append(Rendered(spec.name, spec.kind, spec.section, spec.title,
-                                    "disabled", "not selected"))
+            results.append(Rendered.of(spec, "disabled", "not selected"))
             continue
         if spec.name in skip or "*" in skip:
-            results.append(Rendered(spec.name, spec.kind, spec.section, spec.title,
-                                    "disabled", "skipped by config"))
+            results.append(Rendered.of(spec, "disabled", "skipped by config"))
             continue
 
         ok, why = check_preconditions(spec, ctx)
         if not ok:
             log.info("skip %s: %s", spec.name, why)
-            results.append(Rendered(spec.name, spec.kind, spec.section, spec.title,
-                                    "skipped", why))
+            results.append(Rendered.of(spec, "skipped", why))
             continue
 
-        outcome = Rendered(spec.name, spec.kind, spec.section, spec.title, "ok")
+        outcome = Rendered.of(spec, "ok")
         started = time.perf_counter()
         unavailable: list[str] = []
         rendered_any = False
         try:
             for keys, subset in iter_scope(spec.scope, ctx.df):
-                opts = dict(spec.defaults)
                 # Unavailability is declared per scope subset. A renderer that cannot draw
                 # one metric -- a single-field quantity with no damage scale -- must not
                 # silence the figure for every other metric in the run, which is what a
                 # single try around the whole loop did: `damage_beside_controls` was
                 # skipped for all twelve metrics because enstrophy, first alphabetically,
                 # declared itself unavailable.
-                try:
-                    with rc_context(ctx.style.rc):
-                        result = spec.fn(ctx, subset, opts)
-                except RendererUnavailable as exc:
+                with rc_context(ctx.style.rc):
+                    result, why = draw(spec, ctx, subset)
+                if result is None:
                     where = ", ".join(f"{k}={v}" for k, v in keys.items()) or "all"
-                    unavailable.append(f"{where}: {exc}")
-                    log.info("skip %s (%s): %s", spec.name, where, exc)
+                    unavailable.append(f"{where}: {why}")
+                    log.info("skip %s (%s): %s", spec.name, where, why)
                     continue
                 rendered_any = True
                 if spec.kind == "plot":
@@ -208,7 +206,7 @@ def _emit_table(folder, spec, result, outcome) -> None:
         formats=result.formats,
         headers=result.headers,
         note=result.note,
-        landscape=result.landscape or result.frame.shape[1] > 8,
+        landscape=result.frame.shape[1] > 8,
         long=result.long,
     )
     (folder.tables / f"{stem}.tex").write_text(tex)
@@ -253,34 +251,30 @@ def write_document(folder: RunFolder, ctx: ReportContext,
         written.append(name)
 
     (folder.root / "main.tex").write_text(
-        document(written, title=f"Metric report: {metric}", subtitle=f"dataset: {dataset}")
+        document(written)
     )
     return folder.root / "main.tex"
 
 
 def _response_headline(row: pd.Series, ctx: ReportContext) -> list[str]:
     """The response statistics of one metric and field, as clauses for the headline."""
-    def code_of(name: object) -> str:
-        return f"\\texttt{{{escape(str(name))}}}"
-
-    axes = ctx.axes[(ctx.axes["metric"] == row["metric"]) & (ctx.axes["field"] == row["field"])
-                    & ~ctx.axes["is_probe"]]
+    axes = ctx.ordinal_rows(metric=row["metric"], field=row["field"])
     bits = []
     if np.isfinite(row.get("selectivity", np.nan)):
         bits.append(
             f"its selectivity is {_fmt(row['selectivity'])}, charging most per unit of field "
-            f"change for {code_of(row['most_sensitive_axis'])} and least for "
-            f"{code_of(row['least_sensitive_axis'])}"
+            f"change for {code(row['most_sensitive_axis'])} and least for "
+            f"{code(row['least_sensitive_axis'])}"
         )
     if "blindness_q" in axes.columns and axes["blindness_q"].notna().any():
-        blind = [a for a in str(row.get("blind_axes") or "").split("; ") if a]
+        blind = an.split_blind(row.get("blind_axes"))
         bits.append(
             f"its largest response is provably below {an.BLINDNESS_MARGIN:g} at "
             f"{an.BLINDNESS_CONFIDENCE:.0%} confidence on "
-            + (", ".join(code_of(a) for a in blind) if blind else "no degradation")
+            + (", ".join(code(a) for a in blind) if blind else "no degradation")
         )
     if np.isfinite(row.get("elasticity_displacement", np.nan)):
-        against = axes.loc[axes["degradation"] == "translate_subpixel", "elasticity_x"]
+        against = axes.loc[axes["degradation"] == an.DISPLACEMENT_AXIS, "elasticity_x"]
         bits.append(
             f"its elasticity to a sub-pixel displacement is {_fmt(row['elasticity_displacement'])}"
             + (f" against {escape(str(against.iloc[0]))}" if len(against) else "")
@@ -312,7 +306,7 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
             f"{meta.get('n_frames', '?')} frames and "
             f"{len(meta.get('ladder_axes', []) or [])} ladder axes, on an analysis grid of "
             f"{meta.get('analysis_grid', '?')}. Configuration hash "
-            f"\\texttt{{{escape(meta.get('config_hash', ''))}}}."
+            f"{code(meta.get('config_hash', ''))}."
         )
         if entry:
             lines.append(
@@ -330,11 +324,11 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
         parts = []
         several = card["metric"].nunique() > 1
         for _, row in card.iterrows():
-            subject = (f"For \\texttt{{{escape(str(row['metric']))}}} on "
+            subject = (f"For {code(str(row['metric']))} on "
                        f"{escape(str(row['field']))}" if several
                        else f"On {escape(str(row['field']))}")
             bits = [f"{subject}, the weakest axis is "
-                    f"\\texttt{{{escape(str(row.get('worst_axis', '')))}}} with a rank "
+                    f"{code(str(row.get('worst_axis', '')))} with a rank "
                     f"correlation of {_fmt(row.get('rho_min'))}"]
             if np.isfinite(row.get("gaussian_impostor_damage", np.nan)):
                 bits.append(
@@ -358,7 +352,7 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
         return "\n\n".join(parts)
 
     if key == "reliability" and not ctx.axes.empty:
-        ordinal = ctx.axes[~ctx.axes["is_probe"]]
+        ordinal = ctx.ordinal_rows()
         ordinal = ordinal[ordinal["rho"].notna()]
         if ordinal.empty:
             # Every ordinal axis has an undefined correlation. That is what a metric invariant
@@ -374,8 +368,8 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
         worst = ordinal.loc[ordinal["rho"].idxmin()]
         return (
             f"Rank correlation ranges from {_fmt(worst['rho'])} on "
-            f"\\texttt{{{escape(worst['degradation'])}}} to {_fmt(best['rho'])} on "
-            f"\\texttt{{{escape(best['degradation'])}}}. Each is computed within a single "
+            f"{code(worst['degradation'])} to {_fmt(best['rho'])} on "
+            f"{code(best['degradation'])}. Each is computed within a single "
             "ladder axis; correlating across axes would be meaningless, since severities "
             "on different axes have no order relative to one another. Each is also "
             "computed within a single frame and then aggregated: pooling every frame "
@@ -400,14 +394,14 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
             )
         if missing:
             parts.append("Left out, having no damage scale on this run: "
-                         + ", ".join(f"\\texttt{{{escape(m)}}}" for m in missing) + ".")
+                         + ", ".join(f"{code(m)}" for m in missing) + ".")
         if "selectivity" in card.columns and card["selectivity"].notna().any():
             low = card.loc[card["selectivity"].idxmin()]
             high = card.loc[card["selectivity"].idxmax()]
             parts.append(
                 f"Selectivity runs from {_fmt(low['selectivity'])} "
-                f"(\\texttt{{{escape(str(low['metric']))}}} on {escape(str(low['field']))}) to "
-                f"{_fmt(high['selectivity'])} (\\texttt{{{escape(str(high['metric']))}}} on "
+                f"({code(str(low['metric']))} on {escape(str(low['field']))}) to "
+                f"{_fmt(high['selectivity'])} ({code(str(high['metric']))} on "
                 f"{escape(str(high['field']))}), where 0 is a metric that charges every "
                 "degradation the same per unit of field change."
             )
@@ -430,7 +424,7 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
             words = ctx.preserved_by(axis)
             if words:
                 text += (
-                    f" \\texttt{{{escape(axis)}}} is declared, and test-verified, to leave "
+                    f" {code(axis)} is declared, and test-verified, to leave "
                     "unchanged: " + ", ".join(w.replace("_", " ") for w in words) + "."
                 )
         return text
@@ -449,7 +443,7 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
         if ctx.anchor_label != an.UNCORRELATED_LABEL:
             text += (
                 " In this run the damage scale is anchored instead on the ladder entry "
-                f"\\texttt{{{escape(ctx.anchor_label)}}} (set by \\texttt{{analysis.anchor}}), "
+                f"{code(ctx.anchor_label)} (set by \\texttt{{analysis.anchor}}), "
                 "so a damage of one is the value that entry receives rather than the value of "
                 "an unrelated field."
             )
@@ -512,10 +506,6 @@ def _fmt(value: object, digits: int = 2) -> str:
     except (TypeError, ValueError):
         return "--"
     return f"{v:.{digits}f}" if np.isfinite(v) else "--"
-
-
-def _read_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text()) if path.exists() else {}
 
 
 def _read_yaml(path: Path) -> dict[str, Any]:

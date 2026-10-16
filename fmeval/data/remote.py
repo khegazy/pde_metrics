@@ -36,7 +36,6 @@ meant to work out of the box. See docs/decisions.md.
 from __future__ import annotations
 
 import http.client
-import socket
 import threading
 import time
 import urllib.parse
@@ -50,9 +49,16 @@ import h5py
 #: size, a frame costs 10-13 requests and 2.5-3.2 MiB against 2 MiB of payload.
 DEFAULT_BLOCK_BYTES = 256 * 1024
 
-#: LRU depth, in blocks. 128 * 256 KiB = 32 MiB, matching the readers' `chunk_cache_mb`
-#: default. Note that those are two separate caches: an open remote file holds both.
-DEFAULT_CACHE_BLOCKS = 128
+#: h5py's chunk cache per open file, in MiB: the readers' `chunk_cache_mb` default.
+DEFAULT_CHUNK_CACHE_MB = 32
+
+#: Hash slots of that chunk cache. A prime, as h5py advises, well above the number of chunks
+#: the cache can hold.
+CHUNK_CACHE_SLOTS = 10007
+
+#: LRU depth, in blocks: the same 32 MiB as the chunk cache. Note that those are two separate
+#: caches: an open remote file holds both.
+DEFAULT_CACHE_BLOCKS = DEFAULT_CHUNK_CACHE_MB * 2**20 // DEFAULT_BLOCK_BYTES
 
 #: No legitimate read here approaches this. A runaway guard, not a tuning knob.
 MAX_REQUEST_BYTES = 64 * 1024 * 1024
@@ -61,10 +67,7 @@ MAX_REQUEST_BYTES = 64 * 1024 * 1024
 TRANSIENT = (
     http.client.BadStatusLine,
     http.client.IncompleteRead,
-    http.client.RemoteDisconnected,
-    ConnectionError,
-    socket.timeout,
-    OSError,
+    OSError,         # covers ConnectionError, socket.timeout and http.client.RemoteDisconnected
 )
 
 
@@ -241,12 +244,9 @@ class HTTPRangeFile:
         redirects = _Redirects()
         while True:
             response = self._request("HEAD", {})
-            try:
-                status = response.status
-                headers = response.headers
-                response.read()  # a HEAD body is empty; drains the connection for reuse
-            finally:
-                pass
+            status = response.status
+            headers = response.headers
+            response.read()  # a HEAD body is empty; drains the connection for reuse
 
             if status in (301, 302, 303, 307, 308):
                 location = headers.get("Location")
@@ -496,7 +496,7 @@ def _split(url: str) -> tuple[str, str, bool]:
 
 
 def open_h5(
-    url: str, *, chunk_cache_mb: int = 32, **kwargs: Any
+    url: str, *, chunk_cache_mb: int = DEFAULT_CHUNK_CACHE_MB, **kwargs: Any
 ) -> tuple[h5py.File, HTTPRangeFile]:
     """Open a remote HDF5 file. Both handles are returned; both must be closed.
 
@@ -505,7 +505,8 @@ def open_h5(
     """
     stream = HTTPRangeFile(url, **kwargs)
     try:
-        handle = h5py.File(stream, "r", rdcc_nbytes=chunk_cache_mb * 2**20, rdcc_nslots=10007)
+        handle = h5py.File(stream, "r", rdcc_nbytes=chunk_cache_mb * 2**20,
+                           rdcc_nslots=CHUNK_CACHE_SLOTS)
     except Exception:
         stream.close()
         raise

@@ -14,24 +14,9 @@ from __future__ import annotations
 
 import numpy as np
 
+from tests.conftest import SQUARE_HALF_AMPLITUDE, SQUARE_REFERENCE, SQUARE_SHIFTED
+
 from .metric import mse, mse_map
-
-# A sharp feature on a 4x4 grid, and two ways of getting it wrong: moving it by one cell,
-# and halving its amplitude where it stands. These exact arrays appear in card.md.
-REFERENCE = np.array([[[0.0, 0.0, 0.0, 0.0],
-                       [0.0, 1.0, 1.0, 0.0],
-                       [0.0, 1.0, 1.0, 0.0],
-                       [0.0, 0.0, 0.0, 0.0]]])
-
-SHIFTED = np.array([[[0.0, 0.0, 0.0, 0.0],
-                     [0.0, 0.0, 1.0, 1.0],
-                     [0.0, 0.0, 1.0, 1.0],
-                     [0.0, 0.0, 0.0, 0.0]]])
-
-HALF_AMPLITUDE = np.array([[[0.0, 0.0, 0.0, 0.0],
-                            [0.0, 0.5, 0.5, 0.0],
-                            [0.0, 0.5, 0.5, 0.0],
-                            [0.0, 0.0, 0.0, 0.0]]])
 
 
 def test_worked_example_from_the_card():
@@ -40,8 +25,8 @@ def test_worked_example_from_the_card():
     Four of sixteen cells differ by one when the feature moves, so the mean squared error
     is 4/16. Four cells differ by a half when the amplitude is halved, so it is 4*0.25/16.
     """
-    assert mse(REFERENCE, SHIFTED) == 0.25
-    assert mse(REFERENCE, HALF_AMPLITUDE) == 0.0625
+    assert mse(SQUARE_REFERENCE, SQUARE_SHIFTED) == 0.25
+    assert mse(SQUARE_REFERENCE, SQUARE_HALF_AMPLITUDE) == 0.0625
 
 
 def test_a_one_cell_shift_costs_four_times_a_halved_amplitude():
@@ -51,12 +36,13 @@ def test_a_one_cell_shift_costs_four_times_a_halved_amplitude():
     feature's shape and amplitude exactly right and is punished four times as hard as one
     that keeps the position and gets the amplitude badly wrong.
     """
-    assert mse(REFERENCE, SHIFTED) == 4.0 * mse(REFERENCE, HALF_AMPLITUDE)
+    shifted = mse(SQUARE_REFERENCE, SQUARE_SHIFTED)
+    assert shifted == 4.0 * mse(SQUARE_REFERENCE, SQUARE_HALF_AMPLITUDE)
 
 
 def test_the_error_map_shows_two_lobes_for_a_displaced_feature():
     """The double penalty as a picture: error where the feature is not, and where it is."""
-    error = mse_map(REFERENCE, SHIFTED)
+    error = mse_map(SQUARE_REFERENCE, SQUARE_SHIFTED)
     missing = error[1:3, 1]     # where the feature should be and is not
     spurious = error[1:3, 3]    # where it is and should not be
     overlap = error[1:3, 2]     # where the two agree, and the error vanishes

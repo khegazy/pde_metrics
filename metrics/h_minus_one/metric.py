@@ -20,7 +20,7 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from fmeval.context import MetricContext
+from fmeval.context import FieldContext
 from metrics.registry import metric, pointwise_map
 
 
@@ -84,7 +84,7 @@ def h_minus_one(
     reference: NDArray[np.floating],
     candidate: NDArray[np.floating],
     *,
-    ctx: MetricContext,
+    ctx: FieldContext,
 ) -> float:
     """Homogeneous H^-1 seminorm of the error, in the field's units times a length.
 
@@ -122,7 +122,7 @@ def h_minus_one_map(
     reference: NDArray[np.floating],
     candidate: NDArray[np.floating],
     *,
-    ctx: MetricContext,
+    ctx: FieldContext,
 ) -> NDArray[np.floating]:
     """Per-cell squared smoothed error, summed over channels. Reduces by ``sqrt_mean``.
 

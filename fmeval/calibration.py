@@ -34,6 +34,7 @@ from dataclasses import field as dc_field
 
 import numpy as np
 
+from .context import fluctuation
 from .data.base import GridSpec
 from .wavenumbers import wavenumber_magnitude
 
@@ -159,11 +160,9 @@ def _binned_energy(field: np.ndarray, inverse: np.ndarray, n_bins: int) -> np.nd
         inverse: For each mode, the index of its magnitude in the sorted distinct magnitudes.
         n_bins: How many distinct magnitudes there are.
     """
-    spatial = tuple(range(1, field.ndim))
-    fluct = field - field.mean(axis=spatial, keepdims=True)
     power = sum(
         np.abs(np.fft.fftn(channel, axes=tuple(range(channel.ndim)))) ** 2
-        for channel in fluct
+        for channel in fluctuation(field)
     )
     return np.bincount(inverse.ravel(), power.ravel(), minlength=n_bins)
 

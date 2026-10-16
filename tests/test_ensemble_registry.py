@@ -19,66 +19,53 @@ import pytest
 from metrics import registry
 
 
-def test_ensemble_arity_registers():
-    @registry.metric(name="_probe_ensemble_ok", arity="ensemble")
+def test_ensemble_arity_registers(temporary_metric):
+    @temporary_metric(name="_probe_ensemble_ok", arity="ensemble")
     def _fn(reference: np.ndarray, members: np.ndarray) -> float:
         return 0.0
 
-    try:
-        spec = registry.REGISTRY["_probe_ensemble_ok"]
-        assert spec.arity == "ensemble"
-    finally:
-        registry.REGISTRY.pop("_probe_ensemble_ok", None)
+    spec = registry.REGISTRY["_probe_ensemble_ok"]
+    assert spec.arity == "ensemble"
 
 
-def test_ensemble_arity_requires_two_positional_arguments():
+def test_ensemble_arity_requires_two_positional_arguments(temporary_metric):
     with pytest.raises(TypeError, match="positional"):
 
-        @registry.metric(name="_probe_ensemble_bad", arity="ensemble")
+        @temporary_metric(name="_probe_ensemble_bad", arity="ensemble")
         def _fn(only_one: np.ndarray) -> float:
             return 0.0
 
-    registry.REGISTRY.pop("_probe_ensemble_bad", None)
 
-
-def test_target_defaults_to_none():
-    @registry.metric(name="_probe_no_target", arity="pairwise")
+def test_target_defaults_to_none(temporary_metric):
+    @temporary_metric(name="_probe_no_target", arity="pairwise")
     def _fn(a: np.ndarray, b: np.ndarray) -> float:
         return 0.0
 
-    try:
-        assert registry.REGISTRY["_probe_no_target"].target is None
-    finally:
-        registry.REGISTRY.pop("_probe_no_target", None)
+    assert registry.REGISTRY["_probe_no_target"].target is None
 
 
-def test_target_is_recorded():
-    @registry.metric(name="_probe_target", arity="ensemble", target=1.0)
+def test_target_is_recorded(temporary_metric):
+    @temporary_metric(name="_probe_target", arity="ensemble", target=1.0)
     def _fn(reference: np.ndarray, members: np.ndarray) -> float:
         return 1.0
 
-    try:
-        assert registry.REGISTRY["_probe_target"].target == 1.0
-    finally:
-        registry.REGISTRY.pop("_probe_target", None)
+    assert registry.REGISTRY["_probe_target"].target == 1.0
 
 
-def test_a_target_must_be_finite():
+def test_a_target_must_be_finite(temporary_metric):
     """A NaN or infinite target would silently disable the orientation it exists for."""
     with pytest.raises(ValueError, match="target"):
 
-        @registry.metric(name="_probe_bad_target", arity="ensemble", target=float("nan"))
+        @temporary_metric(name="_probe_bad_target", arity="ensemble", target=float("nan"))
         def _fn(reference: np.ndarray, members: np.ndarray) -> float:
             return 0.0
 
-    registry.REGISTRY.pop("_probe_bad_target", None)
 
-
-def test_a_target_metric_cannot_also_claim_higher_is_better():
+def test_a_target_metric_cannot_also_claim_higher_is_better(temporary_metric):
     """The two are different orientation models; declaring both is a contradiction."""
     with pytest.raises(ValueError, match="target"):
 
-        @registry.metric(
+        @temporary_metric(
             name="_probe_target_conflict",
             arity="ensemble",
             target=1.0,
@@ -86,5 +73,3 @@ def test_a_target_metric_cannot_also_claim_higher_is_better():
         )
         def _fn(reference: np.ndarray, members: np.ndarray) -> float:
             return 0.0
-
-    registry.REGISTRY.pop("_probe_target_conflict", None)

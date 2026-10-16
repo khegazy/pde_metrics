@@ -22,7 +22,6 @@ import logging
 import platform
 import subprocess
 import sys
-import time
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -63,15 +62,25 @@ class RunFolder:
     def figure_data(self) -> Path:
         return self.data / "figure_data"
 
+    @property
+    def meta_path(self) -> Path:
+        """Provenance, written by :func:`write_run_meta`."""
+        return self.data / "run_meta.json"
+
+    @property
+    def config_path(self) -> Path:
+        """The fully resolved configuration, written by :func:`write_config`."""
+        return self.data / "config.yaml"
+
+    @property
+    def maps_path(self) -> Path:
+        """Stored pointwise metric maps, written by :func:`write_maps`."""
+        return self.data / "error_maps.npz"
+
     def create(self) -> RunFolder:
         for path in (self.data, self.plots, self.tables, self.sections, self.figure_data):
             path.mkdir(parents=True, exist_ok=True)
         return self
-
-
-def run_id() -> int:
-    """Integer seconds since the epoch, used to stamp every folder of one invocation."""
-    return int(time.time())
 
 
 def make_run_folder(results_root: Path | str, name: str, stamp: int) -> RunFolder:
@@ -102,9 +111,8 @@ def write_maps(folder: RunFolder, maps: Mapping[str, np.ndarray]) -> Path | None
     """Write pointwise metric maps to a compressed npz, or nothing if there are none."""
     if not maps:
         return None
-    path = folder.data / "error_maps.npz"
-    np.savez_compressed(path, **maps)
-    return path
+    np.savez_compressed(folder.maps_path, **maps)
+    return folder.maps_path
 
 
 def write_config(folder: RunFolder, resolved: Mapping[str, Any],
@@ -123,7 +131,7 @@ def write_config(folder: RunFolder, resolved: Mapping[str, Any],
     import yaml
 
     text = yaml.safe_dump(_plain(resolved), sort_keys=True, default_flow_style=False)
-    (folder.data / "config.yaml").write_text(text)
+    folder.config_path.write_text(text)
     (folder.data / "config_overrides.yaml").write_text(
         yaml.safe_dump(list(overrides or []), default_flow_style=False)
     )
@@ -164,22 +172,39 @@ def write_run_meta(folder: RunFolder, **extra: Any) -> Path:
         "registries": _registry_snapshot(),
         **extra,
     }
-    path = folder.data / "run_meta.json"
-    path.write_text(json.dumps(meta, indent=2, default=str) + "\n")
-    return path
+    folder.meta_path.write_text(json.dumps(meta, indent=2, default=str) + "\n")
+    return folder.meta_path
 
 
 # --- reading ------------------------------------------------------------------------
 
 
+def _folder(folder: RunFolder | Path) -> RunFolder:
+    return folder if isinstance(folder, RunFolder) else RunFolder(Path(folder))
+
+
 def read_results(folder: RunFolder | Path, name: str = "results") -> pd.DataFrame:
     """Read a tidy frame back, from either the plain or the gzipped form."""
-    data = folder.data if isinstance(folder, RunFolder) else Path(folder) / "data"
+    data = _folder(folder).data
     for suffix in (".csv", ".csv.gz"):
         path = data / f"{name}{suffix}"
         if path.exists():
             return pd.read_csv(path)
     raise FileNotFoundError(f"no {name}.csv or {name}.csv.gz in {data}")
+
+
+def read_run_meta(folder: RunFolder | Path) -> dict[str, Any]:
+    """A run's provenance, or an empty mapping for a folder written before it was recorded."""
+    path = _folder(folder).meta_path
+    return json.loads(path.read_text()) if path.exists() else {}
+
+
+def read_config(folder: RunFolder | Path) -> dict[str, Any]:
+    """A run's resolved configuration, or an empty mapping if the folder has none."""
+    import yaml
+
+    path = _folder(folder).config_path
+    return yaml.safe_load(path.read_text()) if path.exists() else {}
 
 
 def load_runs(pattern: str, root: Path | str = "results") -> pd.DataFrame:
@@ -267,35 +292,12 @@ def _registry_snapshot() -> dict[str, Any]:
 
     met.discover()
     deg.discover()
+
+    def provenance(spec) -> dict[str, Any]:
+        return {**spec.describe(), "module": spec.module,
+                "doc": spec.doc.splitlines()[0] if spec.doc else ""}
+
     return {
-        "metrics": {
-            s.name: {
-                "arity": s.arity,
-                "units": s.units,
-                "reduction": s.reduction,
-                "has_pointwise": s.has_pointwise,
-                "differentiable": s.differentiable,
-                "module": s.module,
-                "doc": s.doc.splitlines()[0] if s.doc else "",
-            }
-            for s in met.REGISTRY.values()
-        },
-        "degradations": {
-            s.name: {
-                "family": s.family,
-                "severity_name": s.severity_name,
-                "severity_units": s.severity_units,
-                "severity_direction": s.severity_direction,
-                "ordinal": s.ordinal,
-                "stochastic": s.stochastic,
-                "calibration": s.calibration,
-                "ensemble": s.ensemble,
-                "defaults": s.defaults,
-                "fields": list(s.fields),
-                "preserves": list(s.preserves),
-                "module": s.module,
-                "doc": s.doc.splitlines()[0] if s.doc else "",
-            }
-            for s in deg.REGISTRY.values()
-        },
+        "metrics": {s.name: provenance(s) for s in met.REGISTRY.values()},
+        "degradations": {s.name: provenance(s) for s in deg.REGISTRY.values()},
     }

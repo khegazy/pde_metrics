@@ -20,8 +20,10 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from fmeval.context import MetricContext
+from fmeval.context import FieldContext
 from metrics.registry import metric
+
+from ..h1_seminorm.metric import squared_gradient
 
 
 @metric(
@@ -36,7 +38,7 @@ from metrics.registry import metric
     symmetric=False,
     units="field^2/length^2",
 )
-def palinstrophy(x: NDArray[np.floating], *, ctx: MetricContext) -> float:
+def palinstrophy(x: NDArray[np.floating], *, ctx: FieldContext) -> float:
     """Mean palinstrophy, one half the mean squared vorticity gradient.
 
     Boffetta & Ecke (2012), Annu. Rev. Fluid Mech. 44, 427, DOI
@@ -66,11 +68,4 @@ def palinstrophy(x: NDArray[np.floating], *, ctx: MetricContext) -> float:
     Returns:
         ``0.5 * <|grad omega|^2>``, in the square of the vorticity units per square length.
     """
-    from fmeval.external.kinet_spectral import spectral_derivative
-
-    spacing = list(ctx.grid.spacing)
-    total = 0.0
-    for channel in x:
-        for axis in range(channel.ndim):
-            total += float(np.mean(spectral_derivative(channel, axis, spacing=spacing) ** 2))
-    return 0.5 * total
+    return float(0.5 * squared_gradient(x, ctx).mean())

@@ -29,12 +29,6 @@ from fmeval.data.well import WellTrajectory
 from tests.fixtures_h5 import N_FRAMES, write_kinet_raw, write_well
 from tests.http_fixture import serve
 
-
-@pytest.fixture
-def kinet_file(tmp_path):
-    return write_kinet_raw(tmp_path / "kinet_raw.h5")
-
-
 # --- the reader over HTTP is the reader ---------------------------------------------
 
 

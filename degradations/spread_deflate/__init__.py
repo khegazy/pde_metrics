@@ -1,7 +1,3 @@
-"""Template bundle. Copied by ``python -m fmeval.cards new --kind degradation``.
-
-The leading underscore keeps this directory out of registry discovery and out of the
-bundle listing, so the placeholder never registers itself or appears in the catalog.
+"""The `spread_deflate` degradation. Discovery registers it from ``degradation.py``;
+see ``card.md`` for what it stands in for and where it misleads.
 """
-
-from __future__ import annotations

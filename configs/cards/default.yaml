@@ -28,8 +28,10 @@ evidence_datasets:
   - kinet_re5e4
   - synthetic_ensemble
 
-# The window within those datasets that counts as developed flow. Recorded in every
-# fingerprint so a reader can never mistake one run's numbers for another's.
+# The window within those datasets that counts as developed flow: the convention a run cited
+# as evidence follows (`dataset.time.start`, `dataset.time.reduction`). Nothing reads it to
+# select frames; a test checks the exemplar frame below lies inside it, and each fingerprint
+# records the frames its run actually used.
 evidence_window:
   start: 2000       # the flow is developed well before this
   reduction: 50     # every 50th frame; ~160 frames, a run of about a minute

@@ -10,12 +10,14 @@ document being consulted.
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import sys
 from pathlib import Path
 
 import yaml
 
+from . import review
 from .loader import (
     Bundle,
     bundle_root,
@@ -25,8 +27,6 @@ from .loader import (
     load_card,
 )
 from .prose import check_prose
-from .review import review_state
-from .review import sign as build_signature
 from .schema import CardError
 
 TEMPLATE_DIR = "_template"
@@ -53,12 +53,18 @@ def cmd_new(args: argparse.Namespace) -> int:
     for path in sorted(target.rglob("*")):
         if path.is_file() and path.suffix in {".py", ".md", ".yaml", ".bib"}:
             path.write_text(path.read_text().replace(placeholder, name))
+    # The template's own docstring says it is a template; the new bundle is not one.
+    implementation = f"{kind}.py"
+    (target / "__init__.py").write_text(
+        f'"""The `{name}` {kind}. Discovery registers it from ``{implementation}``; see\n'
+        '``card.md`` for what it is and where it misleads.\n"""\n'
+    )
 
     print(f"created {target.relative_to(bundle_root(kind).parent)}\n")
     print("Fill these in, in this order:")
-    print(f"  1. {'metric.py' if kind == 'metric' else 'degradation.py'}"
-          "  the implementation. This is the only file holding your science.")
-    print("  2. test_metric.py   at least one test whose expected value you worked out")
+    print(f"  1. {implementation}  the implementation. This is the only file holding "
+          "your science.")
+    print(f"  2. test_{implementation}  at least one test whose expected value you worked out")
     print("                      by hand. Keep the inputs small: this same example goes")
     print("                      into the card, so a 4x4 field is ideal.")
     print("  3. card.yaml        the typed record. Every field is documented in")
@@ -77,6 +83,7 @@ def _report(bundle: Bundle, *, strict: bool) -> int:
 
     def show(where: str, problem: str, fix: str, *, warn: bool = False) -> None:
         nonlocal header_shown, errors, warnings
+        warn = warn and not strict          # --strict: every warning counts as an error
         if not header_shown:
             print(f"\n{bundle.path.name}/")
             header_shown = True
@@ -104,7 +111,7 @@ def _report(bundle: Bundle, *, strict: bool) -> int:
             where = f"card.md  {problem.section}".strip()
             show(where, problem.message, problem.fix, warn=warn)
 
-        state = review_state(bundle, card.review.prose_sha256 if card.review else None)
+        state = review.review_state(bundle, card.review.prose_sha256 if card.review else None)
         if state != "current":
             reason = (
                 "no one has signed this prose yet. A card is signed once its claims "
@@ -175,7 +182,7 @@ def cmd_sign(args: argparse.Namespace) -> int:
     if bundle is None:
         print(f"no bundle named {args.name!r}", file=sys.stderr)
         return 1
-    if not (bundle.path / "_generated" / "fingerprint.json").is_file():
+    if not bundle.fingerprint.is_file():
         print(
             f"{args.name} has no measurements yet, so there is nothing for a signature "
             f"to stand behind.\n"
@@ -185,7 +192,7 @@ def cmd_sign(args: argparse.Namespace) -> int:
         )
         return 1
     data = yaml.safe_load(bundle.card_yaml.read_text()) or {}
-    data["review"] = build_signature(bundle, args.by)
+    data["review"] = review.sign(bundle, args.by)
     bundle.card_yaml.write_text(
         yaml.safe_dump(data, sort_keys=False, allow_unicode=True, width=88)
     )
@@ -245,6 +252,7 @@ def cmd_exemplars(args: argparse.Namespace) -> int:
 def cmd_overview(args: argparse.Namespace) -> int:
     """Draw the cross-metric overview figures of one run into docs/figures/<run>/."""
     from .evidence import load_run
+    from .exemplars import load_cards_config
     from .overview import FIGURES_ROOT, overview_figures
 
     try:
@@ -253,7 +261,7 @@ def cmd_overview(args: argparse.Namespace) -> int:
         print(str(exc), file=sys.stderr)
         return 1
     out = Path(args.out) if args.out else FIGURES_ROOT / run.folder.name
-    figures, reasons = overview_figures(run, out)
+    figures, reasons = overview_figures(run, out, theme=str(load_cards_config().figures.theme))
     for figure in figures:
         print(f"wrote {figure.path}")
     for name, why in reasons.items():
@@ -263,10 +271,10 @@ def cmd_overview(args: argparse.Namespace) -> int:
 
 def cmd_catalog(args: argparse.Namespace) -> int:
     """Write docs/catalog.json, the structured surface agents read instead of prose."""
-    from .catalog import build, write
+    from .catalog import write
 
     path = write(Path(args.out))
-    counts = build()["counts"]
+    counts = json.loads(path.read_text())["counts"]
     print(f"wrote {path}: {counts['metrics']} metrics, {counts['degradations']} "
           f"degradations, {counts['with_measurements']} with measurements, "
           f"{counts['reviewed']} reviewed")

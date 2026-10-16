@@ -38,10 +38,11 @@ including the native one; the stored field is only ever read as a cross-check.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import Any
 
 import numpy as np
 
-from .data.base import FIELDS, Frame, GridSpec
+from .data.base import DERIVED_FIELDS, Frame, GridSpec, Trajectory
 from .external.kinet_spectral import spectral_vorticity
 
 #: Isothermal D2Q9 lattice sound speed squared. The solver writes ``pressure = rho * c_s^2``
@@ -107,39 +108,53 @@ def recompute(
     Raises:
         KeyError: If ``name`` has no recipe or a required primitive is missing.
     """
-    inputs = RECIPES.get(name)
-    if inputs is None:
+    if name not in RECIPES:
         raise KeyError(f"no recipe for derived field {name!r}")
-    missing = [i for i in inputs if i not in fields]
-    if missing:
+    if not recomputable(name, fields):
+        missing = [i for i in RECIPES[name] if i not in fields]
         raise KeyError(f"cannot recompute {name!r}: missing {missing}")
-
     if name == "vorticity":
         return vorticity_from_velocity(fields["velocity"], grid)
-    if name == "pressure":
-        return pressure_from_density(fields["density"])
-    raise KeyError(f"no implementation for derived field {name!r}")
+    return pressure_from_density(fields["density"])
 
 
-def recompute_frame(frame: Frame, names: tuple[str, ...] | None = None) -> Frame:
-    """Return a copy of ``frame`` with derived fields recomputed from its primitives.
+def recompute_frame(frame: Frame) -> Frame:
+    """Return a copy of ``frame`` with every derived field recomputed from its primitives.
 
     Used to put the *native* grid on the same footing as every coarse grid, so a
     grid-independence sweep compares like with like rather than a lattice-stencil
-    vorticity against a spectral one.
-
-    Args:
-        frame: Frame whose derived fields should be replaced.
-        names: Which derived fields to recompute. Defaults to every derived field present
-            that has its inputs available.
+    vorticity against a spectral one. A derived field whose inputs are absent is kept.
     """
-    targets = names or tuple(
-        n for n in frame.fields
-        if FIELDS[n].kind == "derived" and recomputable(n, frame.fields)
-    )
+    targets = [n for n in frame.fields if n in DERIVED_FIELDS and recomputable(n, frame.fields)]
     if not targets:
         return frame
     out = dict(frame.fields)
     for name in targets:
         out[name] = recompute(name, frame.fields, frame.grid)
     return frame.with_fields(out, frame.grid)
+
+
+class RecomputingTrajectory:
+    """A trajectory whose stored derived fields are replaced by this module's operators.
+
+    Without this the native grid would carry the solver's lattice-stencil vorticity while
+    every coarse grid carries a spectral one, and a grid-independence comparison would be
+    measuring the difference between two discretisations rather than between two grids --
+    8.1% rms on vorticity (module docstring). ``evaluate.py`` wraps every dataset that sets
+    ``recompute_derived``; the pipeline reads frames only through :meth:`frame`.
+    """
+
+    def __init__(self, inner: Trajectory) -> None:
+        self._inner = inner
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._inner, name)
+
+    def __len__(self) -> int:
+        return len(self._inner)
+
+    def frame(self, t: int, fields) -> Frame:
+        return recompute_frame(self._inner.frame(t, fields))
+
+    def close(self) -> None:
+        self._inner.close()

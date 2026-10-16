@@ -26,7 +26,7 @@ from degradations import registry as deg_registry
 from degradations.registry import DegradationSpec
 
 from .calibration import Calibration, FieldCalibration
-from .context import FieldContext, derive_rng, fluctuation_rms
+from .context import FieldContext, derive_rng, fluctuation_energy, fluctuation_rms
 from .data.base import Frame
 
 
@@ -47,17 +47,21 @@ class SeverityLevel:
     absolute value actually applied, which differs per field."""
     calibration: str | None
     severity_name: str
-    severity_units: str
     ordinal: bool
-    stochastic: bool
     options: dict[str, Any] = dc_field(default_factory=dict)
+
+    @classmethod
+    def from_spec(cls, spec: DegradationSpec, *, label: str, level: int, severity: float,
+                  options: dict[str, Any]) -> SeverityLevel:
+        """One severity of the operator ``spec``, carrying the spec fields a result row needs."""
+        return cls(label=label, op=spec.name, family=spec.family, level=level,
+                   severity=float(severity), calibration=spec.calibration,
+                   severity_name=spec.severity_name, ordinal=spec.ordinal, options=options)
 
     @property
     def variant_label(self) -> str:
         """Stable identifier for this severity level, used in filenames and result rows."""
-        if self.op == "identity":
-            return "reference"
-        return f"{self.label}_l{self.level}"
+        return "reference" if self.is_reference else f"{self.label}_l{self.level}"
 
     @property
     def is_reference(self) -> bool:
@@ -72,9 +76,7 @@ REFERENCE_LEVEL = SeverityLevel(
     severity=0.0,
     calibration=None,
     severity_name="n/a",
-    severity_units="",
     ordinal=True,
-    stochastic=False,
 )
 
 
@@ -131,21 +133,8 @@ def build_ladder(
         # Sorted by increasing damage, so a decreasing-direction list written in any
         # order still gets correct ordinal levels. Getting this wrong inverts a Spearman.
         for level, severity in enumerate(spec.sort_severities(severities), start=1):
-            severity_levels.append(
-                SeverityLevel(
-                    label=label,
-                    op=op_name,
-                    family=spec.family,
-                    level=level,
-                    severity=float(severity),
-                    calibration=spec.calibration,
-                    severity_name=spec.severity_name,
-                    severity_units=spec.severity_units,
-                    ordinal=spec.ordinal,
-                    stochastic=spec.stochastic,
-                    options=options,
-                )
-            )
+            severity_levels.append(SeverityLevel.from_spec(
+                spec, label=label, level=level, severity=severity, options=options))
     return severity_levels
 
 
@@ -309,36 +298,21 @@ def apply_severity_level(
         if spec.whole_frame:
             # Already produced above, in one call over the whole frame. Only the per-field
             # bookkeeping below still has to happen.
-            rms = (
-                reference_rms[name]
-                if reference_rms is not None and name in reference_rms
-                else fluctuation_rms(source)
-            )
+            rms = _rms_for(name, source, reference_rms)
             if _is_noop(source, out[name], rms):
                 unchanged.add(name)
             removed[name], changed[name] = _energy_effect(source, out[name])
             continue
-        if spec.fields != ("*",) and name not in spec.fields:
+        if not spec.accepts(name):
             out[name] = source
             continue
         severity = resolve_severity(severity_level, name, calibration)
         resolved[name] = severity
-        rms = (
-            reference_rms[name]
-            if reference_rms is not None and name in reference_rms
-            else fluctuation_rms(source)
-        )
-        ctx = FieldContext(
-            field=name,
-            grid=frame.grid,
-            frame_index=frame.index,
-            time=frame.time,
-            fluctuation_rms=rms,
-            rng=derive_rng(seed, severity_level.variant_label, frame.index, name),
-        )
+        rms = _rms_for(name, source, reference_rms)
         kwargs = dict(severity_level.options)
         if spec.takes_ctx:
-            kwargs["ctx"] = ctx
+            kwargs["ctx"] = _context(frame, name, rms, seed=seed,
+                                     label=severity_level.variant_label)
         result = np.asarray(spec.fn(source, severity, **kwargs), dtype=np.float64)
         if result.shape != source.shape:
             raise ValueError(
@@ -399,7 +373,7 @@ def _apply_to_ensemble(
         reference = frame.fields[name]
         source = frame.members[name]
 
-        if not spec.ensemble and spec.fields != ("*",) and name not in spec.fields:
+        if not spec.ensemble and not spec.accepts(name):
             members_out[name] = source
             out[name] = source.mean(axis=0)
             removed[name], changed[name] = 0.0, 0.0
@@ -407,31 +381,14 @@ def _apply_to_ensemble(
 
         severity = resolve_severity(severity_level, name, calibration)
         resolved[name] = severity
-        rms = (
-            reference_rms[name]
-            if reference_rms is not None and name in reference_rms
-            else fluctuation_rms(reference)
-        )
-
-        # `name` and `rms` are bound as defaults rather than closed over. Every call is
-        # made inside this iteration, so closing over them would be correct today -- but
-        # the two differ the moment anyone stores one of these contexts to build later,
-        # and then every field would silently get the last field's name and RMS.
-        def _ctx_for(label: str, *, name: str = name, rms: float = rms) -> FieldContext:
-            return FieldContext(
-                field=name,
-                grid=frame.grid,
-                frame_index=frame.index,
-                time=frame.time,
-                fluctuation_rms=rms,
-                rng=derive_rng(seed, label, frame.index, name),
-            )
+        rms = _rms_for(name, reference, reference_rms)
 
         options = dict(severity_level.options)
         if spec.ensemble:
             kwargs = dict(options)
             if spec.takes_ctx:
-                kwargs["ctx"] = _ctx_for(severity_level.variant_label)
+                kwargs["ctx"] = _context(frame, name, rms, seed=seed,
+                                         label=severity_level.variant_label)
             result = np.asarray(spec.fn(source, severity, **kwargs), dtype=np.float64)
         else:
             per_member = []
@@ -446,7 +403,7 @@ def _apply_to_ensemble(
                         f"{severity_level.variant_label}__member{i}"
                         if spec.stochastic else severity_level.variant_label
                     )
-                    kwargs["ctx"] = _ctx_for(label)
+                    kwargs["ctx"] = _context(frame, name, rms, seed=seed, label=label)
                 per_member.append(
                     np.asarray(spec.fn(member, severity, **kwargs), dtype=np.float64)
                 )
@@ -475,6 +432,23 @@ def _apply_to_ensemble(
         fields=out, resolved=resolved, unchanged=unchanged,
         energy_removed=removed, energy_changed=changed, members=members_out,
     )
+
+
+def _rms_for(name: str, field: np.ndarray, reference_rms: Mapping[str, float] | None) -> float:
+    """The fluctuation RMS a relative severity is measured against: the reference's when known,
+    so the amplitude does not depend on what a previous severity level left behind."""
+    if reference_rms is not None and name in reference_rms:
+        return reference_rms[name]
+    return fluctuation_rms(field)
+
+
+def _context(frame: Frame, field: str, rms: float, *, seed: int, label: str,
+             rng_field: str | None = None) -> FieldContext:
+    """The context an operator receives, with its generator derived from
+    ``(seed, label, frame, field)`` so draws reproduce and do not depend on iteration order."""
+    return FieldContext(field=field, grid=frame.grid, frame_index=frame.index, time=frame.time,
+                        fluctuation_rms=rms,
+                        rng=derive_rng(seed, label, frame.index, rng_field or field))
 
 
 #: Relative change below which an operator is treated as having done nothing. Bitwise equality
@@ -532,21 +506,14 @@ def _apply_whole_frame(
             "all of them. Use per-field application, or an absolute severity."
         )
 
-    ctx = FieldContext(
-        field=",".join(fields),      # the operator sees every field, so no single name fits
-        grid=frame.grid,
-        frame_index=frame.index,
-        time=frame.time,
-        fluctuation_rms=float(np.mean([
-            reference_rms[name] if reference_rms is not None and name in reference_rms
-            else fluctuation_rms(frame.fields[name])
-            for name in fields
-        ])) if fields else 0.0,
-        rng=derive_rng(seed, severity_level.variant_label, frame.index, "*"),
-    )
+    rms = float(np.mean([_rms_for(name, frame.fields[name], reference_rms)
+                         for name in fields])) if fields else 0.0
     kwargs = dict(severity_level.options)
     if spec.takes_ctx:
-        kwargs["ctx"] = ctx
+        # The operator sees every field, so no single name fits, and it draws from one
+        # generator for the whole frame.
+        kwargs["ctx"] = _context(frame, ",".join(fields), rms, seed=seed,
+                                 label=severity_level.variant_label, rng_field="*")
 
     source = {name: frame.fields[name] for name in fields}
     result = spec.fn(source, severity, **kwargs)
@@ -579,13 +546,10 @@ def _energy_effect(source: np.ndarray, result: np.ndarray) -> tuple[float, float
     calibration is: on density the mean is four orders of magnitude larger than the fluctuation, so
     energies computed about zero would say every operator changed nothing.
     """
-    spatial = tuple(range(1, source.ndim))
-    reference = source - source.mean(axis=spatial, keepdims=True)
-    degraded = result - result.mean(axis=spatial, keepdims=True)
-    total = float((reference**2).mean())
+    total = float(fluctuation_energy(source))
     if total <= 0:
         return 0.0, 0.0
-    removed = 1.0 - float((degraded**2).mean()) / total
+    removed = 1.0 - float(fluctuation_energy(result)) / total
     changed = float(((result - source) ** 2).mean()) / total
     return removed, changed
 
@@ -596,11 +560,6 @@ def _is_noop(source: np.ndarray, result: np.ndarray, rms: float) -> bool:
         return bool(np.array_equal(source, result))
     change = float(np.sqrt(np.mean((result - source) ** 2)))
     return change < NOOP_RELATIVE_TOLERANCE * rms
-
-
-def reference_fluctuation_rms(frame: Frame, fields: Sequence[str]) -> dict[str, float]:
-    """Fluctuation RMS of each reference field, for scaling relative severities."""
-    return {name: fluctuation_rms(frame.fields[name]) for name in fields}
 
 
 def ladder_axes(severity_levels: Sequence[SeverityLevel]) -> list[str]:
@@ -619,8 +578,3 @@ def ordinal_axes(severity_levels: Sequence[SeverityLevel]) -> list[str]:
         for label in ladder_axes(severity_levels)
         if next(r for r in severity_levels if r.label == label).ordinal
     ]
-
-
-def spec_for(severity_level: SeverityLevel) -> DegradationSpec:
-    """The registry spec behind a severity level."""
-    return deg_registry.get(severity_level.op)

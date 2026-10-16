@@ -29,12 +29,12 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from fmeval.context import MetricContext
+from fmeval.context import FieldContext, fluctuation
 from metrics.registry import metric
 
 
 def radial_energy_spectrum(
-    field: NDArray[np.floating], ctx: MetricContext
+    field: NDArray[np.floating], ctx: FieldContext
 ) -> NDArray[np.floating]:
     """Fluctuation energy of ``field`` summed into unit-width shells, ``rint(|k|)``.
 
@@ -71,9 +71,7 @@ def radial_energy_spectrum(
     from fmeval.wavenumbers import wavenumber_magnitude
 
     shell = np.rint(wavenumber_magnitude(tuple(ctx.grid.shape))).astype(np.int64)
-    spatial = tuple(range(1, field.ndim))
-    fluct = field - field.mean(axis=spatial, keepdims=True)
-    power = sum(np.abs(np.fft.fftn(channel)) ** 2 for channel in fluct)
+    power = sum(np.abs(np.fft.fftn(channel)) ** 2 for channel in fluctuation(field))
     return np.bincount(shell.ravel(), power.ravel(), minlength=int(shell.max()) + 1)
 
 
@@ -93,7 +91,7 @@ def spectrum_l2(
     reference: NDArray[np.floating],
     candidate: NDArray[np.floating],
     *,
-    ctx: MetricContext,
+    ctx: FieldContext,
 ) -> float:
     """Relative L2 distance between two radial energy spectra.
 

@@ -51,3 +51,25 @@ def _convolve_spatial(x: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     for c in range(x.shape[0]):
         out[c] = convolve(x[c], kernel, mode="wrap")
     return out
+
+
+def _window_filter(x: np.ndarray, severity: float, ctx, filt) -> np.ndarray:
+    """Apply a ``scipy.ndimage`` window filter of odd width over the spatial axes, wrapping.
+
+    ``filt`` is ``uniform_filter`` or ``median_filter``; the width is :func:`_odd_width` of the
+    severity, and a width of one is the identity.
+    """
+    width = _odd_width(severity)
+    if width <= 1:
+        return x
+    size = [1] * x.ndim
+    for axis in ctx.spatial_axes:
+        size[axis] = width
+    return filt(x, size=size, mode="wrap")
+
+
+def _radial_blur(x: np.ndarray, severity: float, ctx, profile: str) -> np.ndarray:
+    """Convolve with a normalised isotropic kernel of radius ``severity``; identity below 1."""
+    if severity < 1:
+        return x
+    return _convolve_spatial(x, _radial_kernel(severity, ctx.grid.n_spatial, profile))

@@ -24,7 +24,8 @@ from matplotlib import pyplot as plt
 from matplotlib import rc_context
 
 from fmeval.report.latex import slug
-from fmeval.report.registry import PLOTS, RendererUnavailable, check_preconditions, iter_scope
+from fmeval.report.registry import PLOTS, check_preconditions, draw, iter_scope
+from fmeval.report.style import DEFAULT_THEME
 
 from .exemplars import REPO
 from .metric_figures import CardFigure, remove_stale, report_context, svg_rc, write_figure
@@ -55,7 +56,7 @@ HEADINGS: dict[str, str] = {
 
 
 def overview_figures(run: Run, out_dir: Path, *,
-                     theme: str = "notebook") -> tuple[list[CardFigure], dict[str, str]]:
+                     theme: str = DEFAULT_THEME) -> tuple[list[CardFigure], dict[str, str]]:
     """Draw the overview figures of one run into ``out_dir`` and write their numbers.
 
     Returns the figures written, in page order, and the reason for any that a renderer
@@ -78,10 +79,9 @@ def overview_figures(run: Run, out_dir: Path, *,
         for keys, subset in iter_scope(spec.scope, ctx.df):
             stem = slug(name, **keys)
             with rc_context(svg_rc(ctx.style)):
-                try:
-                    result = spec.fn(ctx, subset, dict(spec.defaults))
-                except RendererUnavailable as exc:
-                    reasons[stem] = str(exc)
+                result, why = draw(spec, ctx, subset)
+                if result is None:
+                    reasons[stem] = why
                     plt.close("all")
                     continue
                 item = result.figures[0]

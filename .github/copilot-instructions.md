@@ -8,10 +8,12 @@ It covers how to add a metric, a degradation, a data source, and a figure or tab
 write tests here; how to treat the generated LaTeX; and a table of traps that have already
 caught someone, each of which would quietly corrupt results.
 
-Two rules worth repeating because they are easy to violate by accident:
+Three rules worth repeating because they are easy to violate by accident:
 
 - **Verify before claiming.** `pytest | tail` masks the exit code, so a `&&` chain passes with
   failing tests. Use
   `pytest -q > /tmp/pt.txt 2>&1; RC=$?; tail -3 /tmp/pt.txt; [ $RC -eq 0 ] || exit 1`.
 - **Never hand-edit anything under `results/`.** It is generated. Fix the renderer and re-run
   `make_report.py`.
+- **Define every value once.** Before writing a function or constant, search for the one that
+  already exists and extend it (`AGENTS.md` §1).

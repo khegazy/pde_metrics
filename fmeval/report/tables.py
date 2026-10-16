@@ -10,8 +10,11 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from fmeval import analysis as an
+
 from .context import TableResult
 from .registry import table
+from .vocabulary import label
 
 
 @table(
@@ -69,7 +72,7 @@ def report_card(ctx, df, opts) -> TableResult:
 def axis_detail(ctx, df, opts) -> TableResult:
     """Every criterion for every metric and ladder axis, with the bootstrap interval."""
     field = str(df["field"].iloc[0])
-    rows = ctx.axes[(ctx.axes["field"] == field) & (~ctx.axes["is_probe"])].copy()
+    rows = ctx.ordinal_rows(field=field).copy()
     ctx.require(not rows.empty, f"no ordinal axes for {field}")
     rows = rows.sort_values(["metric", "rho"])
     keep = ["metric", "degradation", "n_levels", "rho", "rho_frame_min",
@@ -118,8 +121,8 @@ def axis_response(ctx, df, opts) -> TableResult:
     field = str(df["field"].iloc[0])
     ctx.require(set(RESPONSE_TABLE) <= set(ctx.axes.columns),
                 "this run's analysis has no response statistics")
-    rows = ctx.axes[(ctx.axes["field"] == field) & (~ctx.axes["is_probe"])
-                    & ctx.axes["metric"].isin(df["metric"].unique())]
+    rows = ctx.ordinal_rows(field=field)
+    rows = rows[rows["metric"].isin(df["metric"].unique())]
     ctx.require(not rows.empty, f"no ordinal axes for {field}")
     rows = rows.sort_values(["metric", "degradation"])
     return TableResult(
@@ -195,8 +198,7 @@ def profile_table(ctx, df, opts) -> TableResult:
     The machine-readable source of the numbers the headline prose quotes about each metric's
     profile.
     """
-    columns = ["metric", "field", "selectivity", "most_sensitive_axis", "least_sensitive_axis",
-               "blind_axes", "elasticity_displacement"]
+    columns = ["metric", "field", *an.PROFILE_COLUMNS]
     ctx.require(set(columns) <= set(ctx.card.columns), "this run's analysis has no profile")
     frame = ctx.card[ctx.card["metric"].isin(df["metric"].unique())][columns]
     ctx.require(not frame.empty, "no summary rows")
@@ -206,10 +208,9 @@ def profile_table(ctx, df, opts) -> TableResult:
                 "degradations it charges most and least for, those its largest response is "
                 "provably small on over the strengths tested, and its elasticity to a sub-pixel "
                 "displacement.",
-        headers={"most_sensitive_axis": "charges most for",
-                 "least_sensitive_axis": "charges least for",
-                 "blind_axes": "response provably small on",
-                 "elasticity_displacement": "elasticity to a sub-pixel shift"},
+        headers={**{c: label(c) for c in ("most_sensitive_axis", "least_sensitive_axis",
+                                           "elasticity_displacement")},
+                 "blind_axes": "response provably small on"},
         formats={"metric": "code", "field": "code", "most_sensitive_axis": "code",
                  "least_sensitive_axis": "code", "blind_axes": "code"},
         long=True,
@@ -305,7 +306,7 @@ def redundancy_table(ctx, df, opts) -> TableResult:
 
     rho = cross_metric_correlation(df)
     ctx.require(not rho.empty, "needs at least two metrics with common ladder severity levels")
-    limit = float(ctx.thresholds.get("redundancy", 0.95))
+    limit = float(ctx.thresholds.get("redundancy", np.nan))
     frame = rho.reset_index()
     pairs = [
         f"{a}/{b}"
@@ -318,7 +319,8 @@ def redundancy_table(ctx, df, opts) -> TableResult:
         caption="Spearman correlation between metrics across the ladder.",
         formats={"metric": "code"},
         note=(f"Pairs at or above {limit:g}: {', '.join(pairs)}." if pairs
-              else f"No pair reaches {limit:g}."),
+              else f"No pair reaches {limit:g}." if np.isfinite(limit)
+              else "No redundancy threshold is configured."),
     )
 
 

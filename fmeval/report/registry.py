@@ -202,6 +202,20 @@ def check_preconditions(spec: RendererSpec, ctx) -> tuple[bool, str]:
     return True, ""
 
 
+def draw(spec: RendererSpec, ctx, subset: pd.DataFrame) -> tuple[Any, str]:
+    """Run one renderer on one scope subset: ``(result, "")``, or ``(None, reason)``.
+
+    The reason is the renderer's own :class:`RendererUnavailable` message. Anything else it
+    raises propagates, and each caller decides what that means: the report records it and
+    carries on, card generation stops. Call inside the caller's ``rc_context``. The renderer
+    gets a fresh copy of its defaults, so one call cannot change the next.
+    """
+    try:
+        return spec.fn(ctx, subset, dict(spec.defaults)), ""
+    except RendererUnavailable as exc:
+        return None, str(exc)
+
+
 def iter_scope(scope: Scope, df: pd.DataFrame):
     """Split a frame according to a renderer's scope, yielding ``(keys, subset)``."""
     if scope == "global":

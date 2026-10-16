@@ -18,25 +18,3 @@ This module deliberately does *not* call ``discover()`` at import time -- that w
 an import cycle and make ``import metrics.registry`` drag in every metric. ``get()`` and
 ``available()`` trigger discovery lazily.
 """
-
-from __future__ import annotations
-
-from .registry import (
-    REGISTRY,
-    MetricSpec,
-    available,
-    discover,
-    get,
-    metric,
-    pointwise_map,
-)
-
-__all__ = [
-    "REGISTRY",
-    "MetricSpec",
-    "available",
-    "discover",
-    "get",
-    "metric",
-    "pointwise_map",
-]

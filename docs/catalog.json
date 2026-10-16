@@ -11,6 +11,7 @@
       "category": "stochastic",
       "declared": {
         "calibration": null,
+        "defaults": {},
         "ensemble": false,
         "family": "stochastic",
         "fields": [
@@ -55,6 +56,10 @@
       "category": "spectral",
       "declared": {
         "calibration": null,
+        "defaults": {
+          "k_hi": 64.0,
+          "k_lo": 16.0
+        },
         "ensemble": false,
         "family": "spectral",
         "fields": [
@@ -101,6 +106,7 @@
       "category": "pointwise",
       "declared": {
         "calibration": null,
+        "defaults": {},
         "ensemble": false,
         "family": "pointwise",
         "fields": [
@@ -148,6 +154,7 @@
       "category": "smoothing",
       "declared": {
         "calibration": "scale",
+        "defaults": {},
         "ensemble": false,
         "family": "smoothing",
         "fields": [
@@ -194,6 +201,7 @@
       "category": "resolution",
       "declared": {
         "calibration": null,
+        "defaults": {},
         "ensemble": false,
         "family": "resolution",
         "fields": [
@@ -240,6 +248,7 @@
       "category": "resolution",
       "declared": {
         "calibration": null,
+        "defaults": {},
         "ensemble": false,
         "family": "resolution",
         "fields": [
@@ -286,6 +295,7 @@
       "category": "smoothing",
       "declared": {
         "calibration": "scale",
+        "defaults": {},
         "ensemble": false,
         "family": "smoothing",
         "fields": [
@@ -332,6 +342,7 @@
       "category": "smoothing",
       "declared": {
         "calibration": "scale",
+        "defaults": {},
         "ensemble": false,
         "family": "smoothing",
         "fields": [
@@ -378,6 +389,7 @@
       "category": "pointwise",
       "declared": {
         "calibration": null,
+        "defaults": {},
         "ensemble": false,
         "family": "pointwise",
         "fields": [
@@ -425,6 +437,7 @@
       "category": "smoothing",
       "declared": {
         "calibration": "scale",
+        "defaults": {},
         "ensemble": false,
         "family": "smoothing",
         "fields": [
@@ -471,6 +484,9 @@
       "category": "stochastic",
       "declared": {
         "calibration": null,
+        "defaults": {
+          "match_moments": true
+        },
         "ensemble": false,
         "family": "stochastic",
         "fields": [
@@ -518,6 +534,9 @@
       "category": "spectral",
       "declared": {
         "calibration": "energy_below",
+        "defaults": {
+          "order": 4
+        },
         "ensemble": false,
         "family": "spectral",
         "fields": [
@@ -564,6 +583,7 @@
       "category": "spectral",
       "declared": {
         "calibration": "energy_below",
+        "defaults": {},
         "ensemble": false,
         "family": "spectral",
         "fields": [
@@ -610,6 +630,7 @@
       "category": "identity",
       "declared": {
         "calibration": null,
+        "defaults": {},
         "ensemble": false,
         "family": "identity",
         "fields": [
@@ -659,6 +680,9 @@
       "category": "spectral",
       "declared": {
         "calibration": "energy_above",
+        "defaults": {
+          "order": 4
+        },
         "ensemble": false,
         "family": "spectral",
         "fields": [
@@ -705,6 +729,7 @@
       "category": "spectral",
       "declared": {
         "calibration": "energy_above",
+        "defaults": {},
         "ensemble": false,
         "family": "spectral",
         "fields": [
@@ -751,6 +776,7 @@
       "category": "smoothing",
       "declared": {
         "calibration": "scale",
+        "defaults": {},
         "ensemble": false,
         "family": "smoothing",
         "fields": [
@@ -795,6 +821,7 @@
       "category": "stochastic",
       "declared": {
         "calibration": null,
+        "defaults": {},
         "ensemble": false,
         "family": "stochastic",
         "fields": [
@@ -839,6 +866,7 @@
       "category": "geometric",
       "declared": {
         "calibration": null,
+        "defaults": {},
         "ensemble": false,
         "family": "geometric",
         "fields": [
@@ -888,13 +916,16 @@
       "category": "ensemble",
       "declared": {
         "calibration": null,
+        "defaults": {},
         "ensemble": true,
         "family": "ensemble",
         "fields": [
           "*"
         ],
         "ordinal": true,
-        "preserves": [],
+        "preserves": [
+          "ensemble_mean"
+        ],
         "severity_direction": "increasing",
         "severity_name": "lost dispersion",
         "severity_units": "fraction of the calibrated spread",
@@ -932,13 +963,16 @@
       "category": "ensemble",
       "declared": {
         "calibration": null,
+        "defaults": {},
         "ensemble": true,
         "family": "ensemble",
         "fields": [
           "*"
         ],
         "ordinal": true,
-        "preserves": [],
+        "preserves": [
+          "ensemble_mean"
+        ],
         "severity_direction": "increasing",
         "severity_name": "excess dispersion",
         "severity_units": "fraction of the calibrated spread",
@@ -976,6 +1010,7 @@
       "category": "resolution",
       "declared": {
         "calibration": null,
+        "defaults": {},
         "ensemble": false,
         "family": "resolution",
         "fields": [
@@ -1020,6 +1055,9 @@
       "category": "geometric",
       "declared": {
         "calibration": null,
+        "defaults": {
+          "axis": "x"
+        },
         "ensemble": false,
         "family": "geometric",
         "fields": [
@@ -1069,6 +1107,9 @@
       "category": "geometric",
       "declared": {
         "calibration": null,
+        "defaults": {
+          "axis": "x"
+        },
         "ensemble": false,
         "family": "geometric",
         "fields": [

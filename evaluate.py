@@ -25,20 +25,14 @@ from omegaconf import DictConfig, OmegaConf
 
 from degradations import registry as deg_registry
 from fmeval import io as fio
-from fmeval.analysis import UNCORRELATED_LABEL
 from fmeval.data.base import READERS, TimeSelection, Trajectory
 from fmeval.data.locate import resolve_dataset_path, trajectory_provenance
-from fmeval.derived import recompute_frame
-from fmeval.ladder import build_ladder
-from fmeval.pipeline import DatasetInfo, MapRequest, run
+from fmeval.derived import RecomputingTrajectory
+from fmeval.ladder import build_ladder, ladder_axes
+from fmeval.pipeline import DatasetInfo, MapRequest, parse_map_key, run
 from metrics import registry as metric_registry
 
 log = logging.getLogger(__name__)
-
-
-#: Formats whose frames are generated rather than read, so ``dataset.path`` names nothing
-#: on disk and the existence check below would reject a perfectly usable config.
-GENERATED_FORMATS: frozenset[str] = frozenset({"synthetic_ensemble"})
 
 
 def open_trajectory(cfg: DictConfig) -> Trajectory:
@@ -58,7 +52,7 @@ def open_trajectory(cfg: DictConfig) -> Trajectory:
         raise KeyError(f"unknown dataset format {fmt!r}; available: {sorted(READERS)}")
 
     reader_kwargs = OmegaConf.to_container(cfg.dataset.get("reader", {}), resolve=True)
-    if fmt in GENERATED_FORMATS:
+    if not READERS[fmt].reads_from_disk:
         return READERS[fmt](Path(cfg.dataset.path), **reader_kwargs)
 
     location = resolve_dataset_path(
@@ -70,24 +64,6 @@ def open_trajectory(cfg: DictConfig) -> Trajectory:
             cfg.dataset.name, location.url,
         )
     return READERS[fmt](location.target, **reader_kwargs)
-
-
-def _missing_dataset_message(cfg: DictConfig, path: Path) -> str:
-    """Explain an unreadable dataset in terms of the cause, not the failed open.
-
-    Kept as a thin wrapper over the resolver's own diagnosis so there is one explanation
-    rather than two that can drift apart. It matters because this is the first error a new
-    user hits, and because with a URL fallback in place it is only reached when *both* the
-    local copy and the published one were unavailable -- a message that named only the
-    symlink would now be actively misleading.
-    """
-    try:
-        resolve_dataset_path(
-            cfg.dataset.path, cfg.paths.data, data_url=cfg.paths.get("data_url")
-        )
-    except FileNotFoundError as exc:
-        return f"dataset {cfg.dataset.name!r} is not readable.\n{exc}"
-    return f"dataset {cfg.dataset.name!r} at {path} could not be opened."
 
 
 def select_fields(cfg: DictConfig, trajectory: Trajectory,
@@ -108,7 +84,7 @@ def select_fields(cfg: DictConfig, trajectory: Trajectory,
 
     wanted: list[str] = []
     for field in candidates:
-        if any(s.fields == ("*",) or field in s.fields for s in specs):
+        if any(s.accepts(field) for s in specs):
             wanted.append(field)
     if not wanted:
         raise ValueError(
@@ -136,21 +112,21 @@ def main(cfg: DictConfig) -> None:
         stream=sys.stdout, force=True,
     )
     started = time.perf_counter()
-    stamp = fio.run_id()
+    stamp = int(time.time())     # stamps every folder this invocation writes
 
     specs = [metric_registry.get(name) for name in cfg.metrics]
     deg_registry.discover()
     severity_levels = build_ladder(
         OmegaConf.to_container(cfg.degradation.ladder, resolve=True),
-        include_reference=cfg.degradation.get("include_reference", True),
+        include_reference=bool(cfg.degradation.include_reference),
         only=list(cfg.degradation.get("only") or []),
         skip=list(cfg.degradation.get("skip") or []),
     )
-    n_axes = len({r.label for r in severity_levels if not r.is_reference})
-    log.info("ladder: %d severity levels over %d axes", len(severity_levels), n_axes)
+    axes = sorted(ladder_axes(severity_levels))
+    log.info("ladder: %d severity levels over %d axes", len(severity_levels), len(axes))
     # The analysis reads both back from run_meta.json: which entry defines D = 1, and which
     # entries are probes rather than monotone axes (declared ordinal=False by their operator).
-    anchor = str(OmegaConf.select(cfg, "analysis.anchor", default=UNCORRELATED_LABEL))
+    anchor = str(cfg.analysis.anchor)
     probes = sorted({r.label for r in severity_levels if not r.ordinal})
     if anchor not in {r.label for r in severity_levels}:
         log.warning("analysis.anchor=%r is not an entry of this ladder; the analysis will fall "
@@ -165,24 +141,17 @@ def main(cfg: DictConfig) -> None:
         selection = TimeSelection(**OmegaConf.to_container(cfg.dataset.time, resolve=True))
         n_frames = len(selection.resolve(len(trajectory)))
         resolution = cfg.analysis_grid.get("resolution")
-        native_resolution = trajectory.grid.shape[0]
+        analysis_grid = resolution or trajectory.grid.shape[0]
         log.info(
             "dataset %s: %d of %d frames (reduction %d), fields %s, analysis grid %s",
             cfg.dataset.name, n_frames, len(trajectory), selection.reduction, fields,
-            resolution or trajectory.grid.shape[0],
+            analysis_grid,
         )
 
-        if cfg.dataset.get("recompute_derived", True):
-            trajectory = _RecomputingTrajectory(trajectory)
+        if cfg.dataset.recompute_derived:
+            trajectory = RecomputingTrajectory(trajectory)
 
-        report_cfg = cfg.get("report", {})
-        map_cfg = report_cfg.get("error_map", {}) if report_cfg else {}
-        maps = MapRequest(
-            enabled=bool(map_cfg.get("enabled", False)),
-            frames=list(map_cfg.get("frames") or []),
-            axes=list(map_cfg.get("axes") or []),
-            fields=list(map_cfg.get("fields") or []),
-        )
+        maps = MapRequest(**OmegaConf.to_container(cfg.report.error_map, resolve=True))
 
         result = run(
             trajectory,
@@ -193,7 +162,7 @@ def main(cfg: DictConfig) -> None:
             dataset=dataset_info(cfg),
             seed=int(cfg.seed),
             analysis_resolution=resolution,
-            remap_method=cfg.analysis_grid.get("method", "block_mean"),
+            remap_method=cfg.analysis_grid.method,
             maps=maps,
         )
         # Before the `finally`: the request counters live on the HTTP file object, which
@@ -216,108 +185,56 @@ def main(cfg: DictConfig) -> None:
     spectrum_table = pd.DataFrame(result.calibration.spectrum_frame())
 
     overrides = _overrides()
-    written = []
-    for spec in specs:
-        subset = result.rows[result.rows["metric"] == spec.name]
-        folder = fio.make_run_folder(cfg.paths.results, spec.name, stamp)
-        fio.write_results(folder, subset)
+    complexity = cfg.dataset.get("complexity") or {}
+
+    def write_folder(name: str, rows: pd.DataFrame, maps: dict, **meta: Any) -> Path:
+        """One self-contained run folder: numbers, calibration, config, maps, provenance."""
+        folder = fio.make_run_folder(cfg.paths.results, name, stamp)
+        fio.write_results(folder, rows)
         fio.write_table(folder, calibration_table, "calibration")
         fio.write_table(folder, spectrum_table, "calibration_spectrum")
         digest = fio.write_config(folder, cfg, overrides)
-        prefix = f"{spec.name}:"
-        fio.write_maps(
-            folder,
-            {k: v for k, v in result.maps.items() if k.startswith(prefix)},
-        )
+        fio.write_maps(folder, maps)
         fio.copy_documentation(folder)
         fio.write_run_meta(
             folder,
             run_id=stamp,
             config_hash=digest,
-            metric=spec.name,
             dataset=cfg.dataset.name,
+            dataset_label=str(complexity.get("label", "")),
+            dataset_notes=str(cfg.dataset.get("notes", "")),
             data_source=data_source,
             n_frames=result.n_frames,
-            n_rows=len(subset),
+            n_rows=len(rows),
             fields=fields,
-            analysis_grid=resolution or native_resolution,
-            ladder_axes=sorted({r.label for r in severity_levels if not r.is_reference}),
+            analysis_grid=analysis_grid,
+            ladder_axes=axes,
             n_severity_levels=len(severity_levels),
             anchor_label=anchor,
             probe_labels=probes,
             seed=int(cfg.seed),
-            timings={
-                "total_s": elapsed,
-                "io_s": result.io_seconds,
-                "degrade_s": result.degrade_seconds,
-                "metric_s": result.metric_seconds,
-            },
             command=" ".join(sys.argv),
+            **meta,
         )
-        written.append(folder.root)
+        return folder.root
 
+    timings = {"total_s": elapsed, "io_s": result.io_seconds,
+               "degrade_s": result.degrade_seconds, "metric_s": result.metric_seconds}
+    written = [
+        write_folder(spec.name, result.rows[result.rows["metric"] == spec.name],
+                     {k: v for k, v in result.maps.items() if parse_map_key(k)[0] == spec.name},
+                     metric=spec.name, timings=timings)
+        for spec in specs
+    ]
     # Cross-metric figures -- redundancy, the selectivity comparison, the cost frontier --
     # are meaningless inside a single-metric folder and are skipped there by their own
     # preconditions. They live in one comparison folder holding every metric's rows.
     if len(specs) > 1:
-        folder = fio.make_run_folder(cfg.paths.results, "comparison", stamp)
-        fio.write_results(folder, result.rows)
-        fio.write_table(folder, calibration_table, "calibration")
-        fio.write_table(folder, spectrum_table, "calibration_spectrum")
-        digest = fio.write_config(folder, cfg, overrides)
-        fio.write_maps(folder, result.maps)
-        fio.copy_documentation(folder)
-        fio.write_run_meta(
-            folder,
-            run_id=stamp,
-            config_hash=digest,
-            metric=", ".join(s.name for s in specs),
-            dataset=cfg.dataset.name,
-            data_source=data_source,
-            n_frames=result.n_frames,
-            n_rows=len(result.rows),
-            fields=fields,
-            analysis_grid=resolution or native_resolution,
-            ladder_axes=sorted({r.label for r in severity_levels if not r.is_reference}),
-            n_severity_levels=len(severity_levels),
-            anchor_label=anchor,
-            probe_labels=probes,
-            seed=int(cfg.seed),
-            command=" ".join(sys.argv),
-            comparison=True,
-        )
-        written.append(folder.root)
+        written.append(write_folder("comparison", result.rows, result.maps,
+                                    metric=", ".join(s.name for s in specs), comparison=True))
 
     for path in written:
         log.info("wrote %s", path)
-
-
-class _RecomputingTrajectory:
-    """Wrapper that replaces stored derived fields with our own operator.
-
-    Without this the native grid would carry the solver's lattice-stencil vorticity while
-    every coarse grid carries a spectral one, and a grid-independence comparison would be
-    measuring the difference between two discretisations rather than between two grids.
-    """
-
-    def __init__(self, inner: Trajectory) -> None:
-        self._inner = inner
-
-    def __getattr__(self, name: str) -> Any:
-        return getattr(self._inner, name)
-
-    def __len__(self) -> int:
-        return len(self._inner)
-
-    def frame(self, t: int, fields):
-        return recompute_frame(self._inner.frame(t, fields))
-
-    def iter_frames(self, fields, selection=None):
-        for frame in self._inner.iter_frames(fields, selection):
-            yield recompute_frame(frame)
-
-    def close(self) -> None:
-        self._inner.close()
 
 
 def _overrides() -> list[str]:
