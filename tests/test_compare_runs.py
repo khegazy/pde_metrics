@@ -83,3 +83,35 @@ def test_a_missing_row_a_wall_clock_change_and_a_sibling_folder_are_handled(pair
 def test_an_extra_file_is_a_difference(pair):
     shutil.copy(pair[1] / "data" / "config.yaml", pair[1] / "data" / "unexpected.yaml")
     assert compare_runs.main([str(p) for p in pair]) == 1
+
+
+def test_rows_of_a_vector_metric_are_keyed_by_component(tmp_path):
+    """A vector metric writes one row per component, all sharing every other key."""
+    pair = _run(tmp_path / "before"), _run(tmp_path / "after")
+    for folder in pair:
+        for path in folder.parent.glob("*/data/results.csv"):
+            df = pd.read_csv(path, dtype=str, keep_default_na=False)
+            df = pd.concat([df.assign(component="0"), df.assign(component="1")])
+            df.to_csv(path, index=False)
+    assert compare_runs.main([str(p) for p in pair]) == 0
+
+
+def test_a_symlinked_results_directory_is_not_a_difference(tmp_path):
+    """evaluate.py records paths as typed; a symlinked home must not read as a change."""
+    real = tmp_path / "real"
+    real.mkdir()
+    (tmp_path / "link").symlink_to(real)
+    pair = _run(tmp_path / "link" / "before"), _run(tmp_path / "link" / "after")
+    assert compare_runs.main([str(p) for p in pair]) == 0
+
+
+def test_a_declared_change_is_named_by_dotted_prefix(pair):
+    """``--ignore`` and ``--ignore-config`` drop exactly the leaves a change declares."""
+    meta = pair[1] / "data" / "run_meta.json"
+    meta.write_text(json.dumps({**json.loads(meta.read_text()), "extra": {"a": 1}}))
+    config = pair[1] / "data" / "config.yaml"
+    config.write_text(config.read_text() + "report:\n  style: {dpi: 150}\n")
+    argv = [str(p) for p in pair]
+    assert compare_runs.main(argv) == 1
+    assert compare_runs.main([*argv, "--ignore", "extra.a", "--ignore-config", "report"]) == 0
+    assert compare_runs.main([*argv, "--ignore", "extra.b", "--ignore-config", "report"]) == 1

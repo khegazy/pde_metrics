@@ -71,7 +71,7 @@ done
 Both diffs must be empty and each comparison must end in `IDENTICAL`. The script compares
 every folder an invocation wrote, the comparison folder and each per-metric folder, and every
 file in each. Rows are keyed on `metric, field, degradation, level, frame_index,
-variant_label`, so row order cannot hide anything, and every column is compared except
+variant_label, component`, so row order cannot hide anything, and every column is compared except
 `wall_time_s`, which is a clock rather than a result. A file present on one side only is a
 difference, so a file the script has never heard of is still checked. Its docstring states
 the rule for each kind of file.
@@ -79,8 +79,10 @@ the rule for each kind of file.
 Degradations that draw random numbers are held to the same standard: every draw is seeded
 from the run seed, the label, the snapshot and the field together, so the draws reproduce.
 
-If a change adds a key to `run_meta.json` on purpose, name it with `--ignore <key>` and say
-so in the pull request. Never use it for a key whose value you did not mean to change.
+If a change alters `run_meta.json` or `config.yaml` on purpose, name exactly what it alters with
+`--ignore` or `--ignore-config`, by dotted prefix (`--ignore registries.metrics`,
+`--ignore-config report.style`), and say so in the pull request. Never use either for a value
+you did not mean to change.
 
 ## 4. If it is not identical
 

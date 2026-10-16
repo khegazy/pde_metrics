@@ -312,9 +312,9 @@ reported against.
 ### `evaluate.py` and `make_report.py` — run them, don't edit them
 
 `evaluate.py` runs the metrics over every degradation and writes one self-contained folder
-per metric under `results/`, holding the raw numbers, the resolved configuration, a record
-of where the numbers came from, and a `main.tex` that compiles on its own.
-`make_report.py` re-renders one of those folders from the saved numbers without
+per metric under `results/`, holding the raw numbers, the resolved configuration and a record
+of where the numbers came from. It never draws a report: `make_report.py` renders one of those
+folders from the saved numbers, adding a `main.tex` that compiles on its own, without
 recomputing anything.
 
 To change what a run does, change the configuration or pass an override. Editing these two

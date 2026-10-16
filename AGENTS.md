@@ -74,7 +74,8 @@ test still passed.
 - **Define every value once.** A constant, default, label, column name, file name or path
   convention has exactly one definition, and everything else imports it. A value a user may
   set lives in `configs/` and the code reads it; the code never carries a second default for
-  it. Evidence: the report thresholds once lived in four places and only one was read; the
+  it. The one exception is an operator's options, whose defaults are its function signature's
+  and which `configs/` overrides per ladder entry (§4). Evidence: the report thresholds once lived in four places and only one was read; the
   column labels lived in three vocabularies that used different words for the same column.
 - **No aliases.** No `x = y` renames, no function that only forwards to another, no
   `__init__` re-export that nothing imports, no dataclass field copying another object's
@@ -99,7 +100,7 @@ Where the shared code already lives, so the search has somewhere to start:
 |---|---|
 | Wavenumber magnitude `\|k\|` | `fmeval/wavenumbers.py` |
 | Fluctuation statistics (`fluctuation`, `fluctuation_energy`, `fluctuation_rms`) | `fmeval/context.py` |
-| Resampling and rank statistics (block bootstrap, Spearman helpers) | `fmeval/stats.py` |
+| Resampling and response statistics (block bootstrap and its block length, elasticity, Lin's CCC) | `fmeval/stats.py` |
 | Every statistic a report or card shows, and its constants (`GROUP_KEYS`, `N_BOOTSTRAP`, ...) | `fmeval/analysis.py` |
 | Display words, colours and site wording for columns and degradation families (`FAMILY_INFO`) | `fmeval/report/vocabulary.py` |
 | LaTeX escaping, identifiers and numbers | `fmeval/report/latex.py` |
@@ -724,7 +725,9 @@ in CI. Only the `latexmk` compile is left to `module load texlive/2024 && pytest
 
 **Test helpers live in `tests/conftest.py`; never import from another `test_*.py` module.** A
 test module is collected by pytest, not a library, and a helper imported out of one gets
-copied into the next file instead. A test enforces this.
+copied into the next file instead. A helper module that is not a test module is fine:
+`tests/fixtures_h5.py`, `tests/analytic_fields.py` and `tests/http_fixture.py` are shared that
+way. A test enforces this.
 
 **Before adding a per-bundle test, check whether a contract test already covers it.** If it
 does, do not add it: two tests of one property drift apart, and only one gets updated.
@@ -789,7 +792,8 @@ listings, hyperref`. No `minted`, nothing needing `--shell-escape`, no local `.s
 document must compile on Overleaf with no setup.
 
 **Keep run folders self-contained.** A folder holds the raw numbers, the resolved config, full
-provenance, a copy of `TEST_DESCRIPTION.md`, and a `main.tex` that compiles standalone. Never
+provenance and a copy of `TEST_DESCRIPTION.md`; `make_report.py` adds a `main.tex` that compiles
+standalone. Never
 add a path that points outside the folder — it is meant to survive being zipped and handed to
 someone.
 

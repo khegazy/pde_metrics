@@ -34,8 +34,6 @@ def _channels_for(spec: registry.MetricSpec) -> int:
     return 1
 
 
-#: Ensemble size used when building arguments for an ``ensemble``-arity metric. Small,
-#: but above the two members a sample variance needs.
 
 
 def _members(shape: tuple[int, ...], n_channels: int, *, seed: int = 1) -> np.ndarray:

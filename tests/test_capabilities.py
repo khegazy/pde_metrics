@@ -6,10 +6,10 @@ first-wave candidates from CLAUDE.md -- NM-2, BD-1, PS-4 -- does the harness car
 without a code change, and does the acceptance protocol behave the way the documentation
 says it will?
 
-Every metric here is registered for the duration of one test and removed again. They are
-deliberately *not* contributions to ``metrics/``: the point is to exercise the extension
-surface as an outside contributor meets it, not to grow the panel. A metric that graduates
-belongs in ``metrics/`` as its own bundle, with the card that bundle requires.
+Every metric here is registered for the duration of one test, under a private name, and removed
+again: the point is to exercise the extension surface as an outside contributor meets it. Where a
+candidate has since become a bundle, its registered code is reused rather than copied, so the
+two cannot drift; the rest stay test-only.
 
 Two of these tests are the interesting ones scientifically:
 

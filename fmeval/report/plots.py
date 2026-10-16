@@ -607,16 +607,22 @@ def field_gallery(ctx, df, opts) -> PlotResult:
     fig, grid = ctx.style.figure(nrows, ncols)
     flat = [grid[r, c] for r in range(nrows) for c in range(ncols)]
 
-    # One colour scale for every panel, from all of them together (see the docstring). The
-    # maps are per-cell densities, so the scale starts at their smallest value rather than
-    # being centred on zero.
-    values = np.concatenate([stored[key].ravel() for key in panels])
-    values = values[np.isfinite(values)]
-    vmin, vmax = (float(values.min()), float(np.quantile(values, 0.995))) if values.size \
-        else (0.0, 1.0)
+    # One colour scale per metric, shared by all of that metric's panels (see the docstring).
+    # Per metric, not per figure: a comparison folder stores maps of several metrics, whose
+    # densities carry different units. The maps are per-cell densities, so the scale starts at
+    # their smallest value rather than being centred on zero.
+    limits: dict[str, tuple[float, float]] = {}
+    for metric in {parse_map_key(key)[0] for key in panels}:
+        values = np.concatenate([stored[k].ravel() for k in panels
+                                 if parse_map_key(k)[0] == metric])
+        values = values[np.isfinite(values)]
+        limits[metric] = ((float(values.min()), float(np.quantile(values, 0.995)))
+                          if values.size else (0.0, 1.0))
     for ax, key in zip(flat, panels):
-        show_field(ax, stored[key], cmap="magma", vmin=vmin, vmax=vmax)
-        ax.set_title(parse_map_key(key)[2], fontsize="xx-small")
+        metric, _, variant, _ = parse_map_key(key)
+        show_field(ax, stored[key], cmap="magma", vmin=limits[metric][0],
+                   vmax=limits[metric][1])
+        ax.set_title(f"{metric}: {variant}", fontsize="xx-small")
         ax.set_xticks([])
         ax.set_yticks([])
     for ax in flat[len(panels):]:

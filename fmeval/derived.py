@@ -115,7 +115,9 @@ def recompute(
         raise KeyError(f"cannot recompute {name!r}: missing {missing}")
     if name == "vorticity":
         return vorticity_from_velocity(fields["velocity"], grid)
-    return pressure_from_density(fields["density"])
+    if name == "pressure":
+        return pressure_from_density(fields["density"])
+    raise KeyError(f"no implementation for derived field {name!r}")
 
 
 def recompute_frame(frame: Frame) -> Frame:
@@ -155,6 +157,12 @@ class RecomputingTrajectory:
 
     def frame(self, t: int, fields) -> Frame:
         return recompute_frame(self._inner.frame(t, fields))
+
+    def iter_frames(self, fields, selection=None):
+        # Without this, `__getattr__` would hand back the inner trajectory's iterator, whose
+        # frames carry the stored derived fields this wrapper exists to replace.
+        for frame in self._inner.iter_frames(fields, selection):
+            yield recompute_frame(frame)
 
     def close(self) -> None:
         self._inner.close()

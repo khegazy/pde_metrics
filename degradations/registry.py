@@ -93,6 +93,8 @@ FAMILIES = (
 #: ``spatial_mean``             the mean of each channel (the zero wavenumber)
 #: ``shape``                    the pattern, up to a rigid displacement of any size and an
 #:                              increasing affine map of the values
+#: ``ensemble_mean``            the member mean of an ``(N, C, *spatial)`` stack, cell by cell;
+#:                              the one word an ``ensemble=True`` operator may declare
 PRESERVED: tuple[str, ...] = (
     "single_point_statistics", "amplitude_spectrum", "spatial_mean", "shape",
     "ensemble_mean",

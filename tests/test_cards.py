@@ -1106,6 +1106,15 @@ def test_write_block_refuses_a_missing_marker_and_leaves_the_file_alone(tmp_path
     assert card.read_text() == original
 
 
+def test_a_marker_not_alone_on_its_line_is_refused_rather_than_skipped():
+    """An indented marker would otherwise leave its block silently ungenerated."""
+    from fmeval.cards.prose import has_block
+
+    assert not has_block("no markers here\n", "alpha")
+    with pytest.raises(ValueError, match="must start its own line"):
+        has_block("  <!-- GENERATED alpha: x -->\n<!-- END GENERATED alpha -->\n", "alpha")
+
+
 def test_the_review_ledger_through_a_real_regeneration(tmp_path, monkeypatch):
     """The signature's whole point, exercised on files rather than strings.
 

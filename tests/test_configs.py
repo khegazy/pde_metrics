@@ -173,6 +173,23 @@ def test_every_dataset_names_a_registered_reader():
         )
 
 
+@pytest.mark.parametrize("group,keys", [
+    ("dataset", ("name", "format", "path", "time", "recompute_derived")),
+    ("degradation", ("include_reference", "only", "skip", "ladder")),
+])
+def test_every_option_defines_the_keys_evaluate_reads_without_a_default(group, keys):
+    """`evaluate.py` reads these with no fallback, so each option of the group must set them.
+
+    Each once had a second default in `evaluate.py`, which a missing key silently fell back
+    to; with the config the one source, a missing key would stop the run instead. This finds
+    it in the suite.
+    """
+    for option in sorted(p.stem for p in Path(CONFIGS, group).glob("*.yaml")):
+        cfg = build(f"{group}={option}")[group]
+        missing = [k for k in keys if k not in cfg]
+        assert not missing, f"{group}/{option}.yaml does not set {missing}"
+
+
 def test_default_metrics_are_registered():
     from metrics import registry as met
 

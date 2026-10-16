@@ -263,3 +263,26 @@ def test_load_runs_concatenates_and_tags(tmp_path, traj):
 def test_load_runs_without_matches_raises(tmp_path):
     with pytest.raises(FileNotFoundError, match="no run folders"):
         fio.load_runs("nothing_*", root=tmp_path)
+
+
+def test_a_map_key_round_trips_even_when_the_label_contains_a_double_underscore():
+    from fmeval.pipeline import map_key, parse_map_key
+
+    for variant in ("gaussian_blur_l2", "blur__fine_l1", "reference"):
+        assert parse_map_key(map_key("mse", "density", variant, 3)) == (
+            "mse", "density", variant, 3)
+
+
+def test_the_recomputing_wrapper_recomputes_on_iteration_too(tmp_path):
+    """Iterating the wrapper must not fall through to the stored derived fields."""
+    from fmeval.derived import RecomputingTrajectory, recompute_frame
+
+    trajectory = KinetRawTrajectory(write_kinet_raw(tmp_path / "k.h5"))
+    try:
+        fields = [f for f in ("velocity", "vorticity") if f in trajectory.fields]
+        for frame in RecomputingTrajectory(trajectory).iter_frames(fields):
+            expected = recompute_frame(trajectory.frame(frame.index, fields))
+            for name in fields:
+                np.testing.assert_array_equal(frame.fields[name], expected.fields[name])
+    finally:
+        trajectory.close()

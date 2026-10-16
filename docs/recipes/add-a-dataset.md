@@ -11,8 +11,10 @@ scratch data and the wrong one for a physical regime the pages ought to cover.
 ## 1. Make it readable
 
 Add `configs/dataset/<name>.yaml`, following an existing one: `format`, `path` (under
-`${paths.data}`), `fields` from the canonical vocabulary, `time` selection, and the
-`complexity` block naming its family and parameters.
+`${paths.data}`), `fields` from the canonical vocabulary, `time` selection,
+`recompute_derived` (true unless the reader generates its fields), and the `complexity` block
+naming its family and parameters. `evaluate.py` reads every key it needs without a fallback,
+so a key left out fails at the start of the run rather than defaulting silently.
 
 If the file layout is new, add a reader in `fmeval/data/` implementing the `Trajectory`
 contract in `fmeval/data/base.py`, and register it with `@register_reader`. Readers are a

@@ -278,8 +278,16 @@ def generated_blocks(text: str) -> dict[str, str]:
 
 
 def has_block(text: str, name: str) -> bool:
-    """Whether a card opens a generated block called ``name``."""
-    return name in _GENERATED_OPEN_RE.findall(text)
+    """Whether a card opens a generated block called ``name``.
+
+    Raises:
+        ValueError: If the marker appears but not alone on its line, which would otherwise
+            leave the block silently ungenerated.
+    """
+    found = name in _GENERATED_OPEN_RE.findall(text)
+    if not found and f"<!-- GENERATED {name}:" in text:
+        raise ValueError(f"the GENERATED {name} marker must start its own line")
+    return found
 
 
 def write_block(card_md: Path, block: str, body: str, *, command: str) -> None:

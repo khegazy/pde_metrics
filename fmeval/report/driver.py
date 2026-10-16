@@ -92,7 +92,8 @@ def build_context(
     All the statistics happen here, once, so a figure and its table cannot disagree. The
     advisory thresholds are the run's own, ``report.thresholds`` as its config recorded them,
     so a folder re-renders as it was run; a folder that predates the record takes the
-    repository's ``configs/report/default.yaml``. ``thresholds`` overrides them key by key.
+    repository's ``configs/report/default.yaml``. ``thresholds`` overrides them key by key,
+    so an empty mapping changes nothing; a NaN value switches that one flag off.
     """
     from fmeval.io import read_config, read_results, read_run_meta
 
@@ -100,7 +101,7 @@ def build_context(
     meta = read_run_meta(folder)
     config = read_config(folder)
     recorded = ((config.get("report") or {}).get("thresholds")
-                or _read_yaml(REPORT_DEFAULTS)["thresholds"])
+                or _read_yaml(REPORT_DEFAULTS).get("thresholds", {}))
     thresholds = {**recorded, **(thresholds or {})}
     maps = _read_maps(folder.maps_path)
     spectrum = _read_csv(folder.data / "calibration_spectrum.csv")

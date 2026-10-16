@@ -474,7 +474,9 @@ def test_no_test_module_imports_from_another_test_module():
     capability tests carried their own radial spectrum, rounding shells down where the
     registered metric rounds to the nearest shell.
     """
-    pattern = re.compile(r"^\s*from tests\.test_\w+ import|^\s*import tests\.test_", re.M)
+    # Any module path with a `test_` component: `tests.test_x`, or another bundle's
+    # `..mse.test_metric`. A bundle test importing its own `.metric` does not match.
+    pattern = re.compile(r"^\s*(from|import)\s+[\w.]*\btest_\w+(\s+import|\s*$)", re.M)
     offenders = [str(p.relative_to(REPO)) for p in _python_sources("tests", "metrics",
                                                                     "degradations")
                  if p.name != Path(__file__).name and pattern.search(p.read_text())]

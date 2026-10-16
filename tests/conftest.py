@@ -12,9 +12,11 @@ indistinguishable, so the synthetic field is a two-scale sine plus a seeded nois
 smoothing operators bite the small scale first, which is what makes a synthetic
 degradation ladder monotone the way a real one is.
 
-Every helper shared by more than one test file lives here, so a test file never imports
-from another test file: a test module is collected by pytest, not a library, and a helper
-copied into a second file drifts from the first without any test noticing.
+Every helper shared by more than one test file lives here or in a helper module that is
+not itself a test module (``fixtures_h5``, ``analytic_fields``, ``http_fixture``), so a test
+file never imports from another test file: a test module is collected by pytest, not a
+library, and a helper copied into a second file drifts from the first without any test
+noticing.
 """
 
 from __future__ import annotations

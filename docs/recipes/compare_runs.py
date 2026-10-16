@@ -16,11 +16,14 @@ What "agrees" means:
   in half the cells of a real file.
 * Every other CSV row by row, the same way; ``error_maps.npz`` array by array.
 * ``run_meta.json`` leaf by leaf, without the keys that differ between two runs of the same
-  code (git state, the folder stamp, wall-clock timings, the host, the config hash); ``--ignore``
-  drops further keys a change adds or alters on purpose, which the change must declare.
-* Every other file byte for byte, after replacing each side's results directory with one
-  placeholder and wall-clock stamps with another. A file present on one side only is a
-  difference, so a file this script does not know about is still checked.
+  code (git state, the folder stamp, wall-clock timings, the host, the config hash). ``config.yaml``
+  leaf by leaf as well. ``--ignore`` and ``--ignore-config`` drop further leaves of each, named
+  by dotted prefix (``registries.metrics``, ``report.style``), that a change adds or alters on
+  purpose -- which the change must declare.
+* Every other file byte for byte. In every text the results directory of each side, under both
+  its spelling as given and its resolved spelling (a symlinked home on NERSC differs), is
+  replaced by one placeholder, and wall-clock stamps by another. A file present on one side
+  only is a difference, so a file this script does not know about is still checked.
 
 The largest relative difference among numbers that were not bitwise equal is printed, so a
 pass that relied on the tolerance says so.
@@ -37,8 +40,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import yaml
 
-KEYS = ["metric", "field", "degradation", "level", "frame_index", "variant_label"]
+KEYS = ["metric", "field", "degradation", "level", "frame_index", "variant_label", "component"]
 EXCLUDED_COLUMNS = {"wall_time_s"}
 VOLATILE_META = {"git", "run_id", "timings", "host", "config_hash"}
 _STAMP = re.compile(r"\d{4}-\d\d-\d\d \d\d:\d\d(:\d\d)?")
@@ -47,9 +51,10 @@ _STAMP = re.compile(r"\d{4}-\d\d-\d\d \d\d:\d\d(:\d\d)?")
 class Comparison:
     """One before/after comparison: the tolerance, the placeholders, and what it has seen."""
 
-    def __init__(self, rtol: float, roots: tuple[Path, Path], ignore: set[str],
-                 skip_images: bool) -> None:
-        self.rtol, self.roots, self.ignore, self.skip_images = rtol, roots, ignore, skip_images
+    def __init__(self, rtol: float, roots: tuple[list[str], list[str]], ignore: set[str],
+                 ignore_config: set[str], skip_images: bool) -> None:
+        self.rtol, self.roots, self.skip_images = rtol, roots, skip_images
+        self.ignore, self.ignore_config = ignore, ignore_config
         self.max_rel, self.n_inexact = 0.0, 0
 
     # --- numbers --------------------------------------------------------------------
@@ -67,7 +72,9 @@ class Comparison:
 
     def text(self, value: str, side: int) -> str:
         """A recorded string with this side's results directory and clock stamps replaced."""
-        return _STAMP.sub("<STAMP>", value.replace(str(self.roots[side]), "<RESULTS>"))
+        for root in self.roots[side]:
+            value = value.replace(root, "<RESULTS>")
+        return _STAMP.sub("<STAMP>", value)
 
     # --- one file -------------------------------------------------------------------
 
@@ -96,21 +103,22 @@ class Comparison:
         raw = [pd.read_csv(p, dtype=str, keep_default_na=False) for p in (before, after)]
         if list(raw[0].columns) != list(raw[1].columns):
             return [f"columns differ: {list(raw[0].columns)} vs {list(raw[1].columns)}"]
+        keys = [k for k in KEYS if k in raw[0].columns]   # the identifying columns it has
         repeated = [f"{side}: {n} rows repeat a key" for side, df in zip(("before", "after"), raw)
-                    if (n := int(df.duplicated(KEYS).sum()))]
+                    if (n := int(df.duplicated(keys).sum()))]
         if repeated:
             return repeated
         out = []
-        if len(raw[0]) == len(raw[1]) and not raw[0][KEYS].equals(raw[1][KEYS]):
+        if len(raw[0]) == len(raw[1]) and not raw[0][keys].equals(raw[1][keys]):
             out.append("row order differs (same keys, different sequence)")
-        merged = raw[0].merge(raw[1], on=KEYS, how="outer", suffixes=("_b", "_a"),
+        merged = raw[0].merge(raw[1], on=keys, how="outer", suffixes=("_b", "_a"),
                               indicator=True)
         for side, label in (("left_only", "missing from after"), ("right_only", "new in after")):
             rows = merged[merged["_merge"] == side]
             if len(rows):
-                out.append(f"{label}: {len(rows)} rows, e.g. {rows[KEYS].head(3).values.tolist()}")
+                out.append(f"{label}: {len(rows)} rows, e.g. {rows[keys].head(3).values.tolist()}")
         both = merged[merged["_merge"] == "both"]
-        columns = [c for c in raw[0].columns if c not in KEYS]
+        columns = [c for c in raw[0].columns if c not in keys]
         b, a = (both[[f"{c}{s}" for c in columns]].fillna("").set_axis(columns, axis=1)
                 for s in ("_b", "_a"))
         return out + self.cells(b, a, "results")
@@ -121,13 +129,13 @@ class Comparison:
             return [f"shape or columns differ: {raw[0].shape} vs {raw[1].shape}"]
         return self.cells(raw[0], raw[1], before.name)
 
-    def json(self, before: Path, after: Path, drop: set[str]) -> list[str]:
+    def tree(self, before: Path, after: Path, load, drop: set[str]) -> list[str]:
+        """Two JSON or YAML documents leaf by leaf; ``drop`` holds dotted prefixes to skip."""
         def leaves(path: Path, side: int) -> dict[str, object]:
-            data = json.loads(path.read_text())
-            if isinstance(data, dict):
-                data = {k: v for k, v in data.items() if k not in drop}
             return {k: (self.text(v, side) if isinstance(v, str) else v)
-                    for k, v in _flatten(data).items() if not k.endswith("duration_s")}
+                    for k, v in _flatten(load(path.read_text())).items()
+                    if not k.endswith("duration_s")
+                    and not any(k == p or k.startswith(p + ".") for p in drop)}
 
         b, a = leaves(before, 0), leaves(after, 1)
         out = []
@@ -177,7 +185,9 @@ class Comparison:
             return self.csv(before, after)
         if name.endswith(".json"):
             drop = VOLATILE_META | self.ignore if name == "run_meta.json" else set()
-            return self.json(before, after, drop)
+            return self.tree(before, after, json.loads, drop)
+        if name == "config.yaml":
+            return self.tree(before, after, yaml.safe_load, self.ignore_config)
         if name.endswith(".npz"):
             return self.maps(before, after)
         return self.raw(before, after)
@@ -220,16 +230,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("after", type=Path)
     parser.add_argument("--rtol", type=float, default=1e-12)
     parser.add_argument("--ignore", nargs="*", default=[],
-                        help="further run_meta.json keys the change alters on purpose")
+                        help="run_meta.json leaves the change alters on purpose, by dotted prefix")
+    parser.add_argument("--ignore-config", nargs="*", default=[],
+                        help="config.yaml leaves the change alters on purpose, by dotted prefix")
     parser.add_argument("--folder-only", action="store_true",
                         help="compare the two folders alone, e.g. two rendered reports")
     parser.add_argument("--skip-images", action="store_true",
                         help="skip PDF/PNG files, whose bytes embed dates")
     args = parser.parse_args(argv)
-    before, after = args.before.resolve(), args.after.resolve()
+    before, after = args.before.absolute(), args.after.absolute()
     runs = ([{"folder": before}, {"folder": after}] if args.folder_only
             else [invocation(before), invocation(after)])
-    check = Comparison(args.rtol, (before.parent, after.parent), set(args.ignore),
+    roots = tuple(sorted({str(p.parent), str(p.parent.resolve())}, key=len, reverse=True)
+                  for p in (before, after))
+    check = Comparison(args.rtol, roots, set(args.ignore), set(args.ignore_config),
                        args.skip_images)
     differences = [f"run folder {name}_*: only {side}"
                    for side, mine, other in (("before", *runs), ("after", runs[1], runs[0]))

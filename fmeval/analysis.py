@@ -1136,7 +1136,9 @@ BLIND_SEPARATOR = "; "
 
 def split_blind(value: object) -> list[str]:
     """The degradations a ``blind_axes`` cell lists; empty for a missing or empty cell."""
-    return [a for a in str(value or "").split(BLIND_SEPARATOR) if a and a != "nan"]
+    if not isinstance(value, str):
+        return []      # None, NaN or pd.NA: a group with nothing listed
+    return [a for a in value.split(BLIND_SEPARATOR) if a]
 
 
 def flag(card: pd.DataFrame, thresholds: Mapping[str, float]) -> pd.DataFrame:

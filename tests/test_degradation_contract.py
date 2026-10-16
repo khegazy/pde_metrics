@@ -654,7 +654,7 @@ def test_declared_preservation_is_true(spec):
 
 def test_an_ensemble_word_needs_an_ensemble_operator(temporary_degradation):
     """``ensemble_mean`` describes a member stack, the other words a field; they cannot mix."""
-    with pytest.raises(ValueError, match="member stack"):
+    with pytest.raises(ValueError, match="describes a member stack"):
         @temporary_degradation(name="_probe_field_claims_ensemble", preserves=("ensemble_mean",))
         def _field(x, severity):
             return x

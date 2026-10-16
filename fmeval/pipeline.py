@@ -205,10 +205,15 @@ def map_key(metric: str, field: str, variant: str, frame_index: int) -> str:
 
 
 def parse_map_key(key: str) -> tuple[str, str, str, int]:
-    """``(metric, field, variant, frame_index)`` of an ``error_maps.npz`` key."""
+    """``(metric, field, variant, frame_index)`` of an ``error_maps.npz`` key.
+
+    Parsed from both ends, because a ladder label -- and so a variant -- may itself contain
+    ``__``, while metric and canonical field names never contain ``:`` or ``__``.
+    """
     metric, rest = key.split(":", 1)
-    field, variant, frame = rest.split("__")
-    return metric, field, variant, int(frame.removeprefix("t"))
+    rest, frame = rest.rsplit("__t", 1)
+    field, variant = rest.split("__", 1)
+    return metric, field, variant, int(frame)
 
 
 def run(
