@@ -29,8 +29,6 @@ def report_card(ctx, df, opts) -> TableResult:
     reference values were not met, so a row can be found quickly; an empty entry means
     nothing was flagged, not that the metric is approved.
     """
-    from fmeval.analysis import BLINDNESS_CONFIDENCE, BLINDNESS_MARGIN
-
     ctx.require(not ctx.card.empty, "no summary rows")
     # Plain-language headers for the reader; the CSV keeps the column names the catalog and the
     # cards pin. ASCII only: the preamble declares no input encoding.
@@ -40,7 +38,7 @@ def report_card(ctx, df, opts) -> TableResult:
         ("worst_axis", "worst axis"),
         ("separability_auc_min", "level-separation probability, worst pair"),
         ("selectivity", "selectivity"),
-        ("blind_axes", f"response provably below {BLINDNESS_MARGIN:g} on"),
+        ("blind_axes", f"response provably below {an.BLINDNESS_MARGIN:g} on"),
         ("gaussian_impostor_damage", "impostor damage (1 = unrelated field)"),
         ("sensitivity_level_median", "detection onset (level)"),
         ("saturation_level_median", "saturation point (level)"),
@@ -48,14 +46,13 @@ def report_card(ctx, df, opts) -> TableResult:
         ("flags", "flags"),
     ]
     present = [(c, h) for c, h in columns if c in ctx.card.columns]
-    frame = ctx.card[[c for c, _ in present]].copy()
     return TableResult(
-        frame=frame,
+        frame=ctx.card[[c for c, _ in present]],
         caption="Measured criteria for each metric and field. The flags column names the "
                 "configured reference values a row did not meet; it is an aid to reading, "
                 "not a judgement. A degradation is listed as one the response is provably "
-                f"small on when the {BLINDNESS_CONFIDENCE:.0%} upper bound of its largest "
-                f"damage lies below {BLINDNESS_MARGIN:g}.",
+                f"small on when the {an.BLINDNESS_CONFIDENCE:.0%} upper bound of its largest "
+                f"damage lies below {an.BLINDNESS_MARGIN:g}.",
         headers=dict(present),
         formats={"metric": "code", "field": "code", "worst_axis": "code",
                  "blind_axes": "code", "flags": "%s"},
@@ -72,7 +69,7 @@ def report_card(ctx, df, opts) -> TableResult:
 def axis_detail(ctx, df, opts) -> TableResult:
     """Every criterion for every metric and ladder axis, with the bootstrap interval."""
     field = str(df["field"].iloc[0])
-    rows = ctx.ordinal_rows(field=field).copy()
+    rows = ctx.ordinal_rows(field=field)
     ctx.require(not rows.empty, f"no ordinal axes for {field}")
     rows = rows.sort_values(["metric", "rho"])
     keep = ["metric", "degradation", "n_levels", "rho", "rho_frame_min",
@@ -116,8 +113,6 @@ RESPONSE_TABLE = ("metric", "degradation", "elasticity_x", "elasticity", "respon
 )
 def axis_response(ctx, df, opts) -> TableResult:
     """The response statistics per metric and degradation: shape, onset, resolution, blindness."""
-    from fmeval.analysis import BLINDNESS_CONFIDENCE, BLINDNESS_MARGIN
-
     field = str(df["field"].iloc[0])
     ctx.require(set(RESPONSE_TABLE) <= set(ctx.axes.columns),
                 "this run's analysis has no response statistics")
@@ -132,8 +127,8 @@ def axis_response(ctx, df, opts) -> TableResult:
                 "mildest levels against the strength named in the second column. Onset and "
                 "half-damage are in that strength's units; the resolution is a lower bound on "
                 "how precisely one snapshot's value pins the strength down. The last two columns "
-                f"are the {BLINDNESS_CONFIDENCE:.0%} upper bound of the largest damage and the "
-                f"false-discovery-adjusted evidence that it stays below {BLINDNESS_MARGIN:g}.",
+                f"are the {an.BLINDNESS_CONFIDENCE:.0%} upper bound of the largest damage and the "
+                f"false-discovery-adjusted evidence that it stays below {an.BLINDNESS_MARGIN:g}.",
         headers={"degradation": "axis", "elasticity_x": "against", "response_shape": "shape",
                  "sensitivity_level": "detection onset (level)",
                  "severity_10": "detection onset (strength)",
@@ -160,16 +155,14 @@ def deception_table(ctx, df, opts) -> TableResult:
     ordinary degradation the metric considers equally bad.
     """
     ctx.require(not ctx.probes.empty, "no probe rows")
-    frame = ctx.probes.copy()
-    anchor = ctx.anchor_label
     keep = [c for c in (
         "metric", "field",
         "gaussian_impostor_value", "gaussian_impostor_damage",
         "gaussian_impostor_nearest_level", "gaussian_impostor_relative",
-        f"{anchor}_value", f"{anchor}_damage",
-    ) if c in frame.columns]
+        f"{ctx.anchor_label}_value", f"{ctx.anchor_label}_damage",
+    ) if c in ctx.probes.columns]
     return TableResult(
-        frame=frame[keep],
+        frame=ctx.probes[keep],
         caption="Response to fields built to mislead. The spectrum-matched Gaussian field "
                 "preserves the energy spectrum and two-point correlation exactly while "
                 "removing all phase information. The unrelated field preserves every "
@@ -178,8 +171,8 @@ def deception_table(ctx, df, opts) -> TableResult:
                  "gaussian_impostor_damage": "impostor damage (1 = unrelated field)",
                  "gaussian_impostor_nearest_level": "equivalent severity level",
                  "gaussian_impostor_relative": "Gaussian, fraction of largest response",
-                 f"{anchor}_value": "anchor value",
-                 f"{anchor}_damage": "anchor damage"},
+                 f"{ctx.anchor_label}_value": "anchor value",
+                 f"{ctx.anchor_label}_damage": "anchor damage"},
         formats={"metric": "code", "field": "code",
                  "gaussian_impostor_nearest_level": "code"},
         note="A damage near 1 for the unrelated field is expected by construction: it is "
@@ -221,7 +214,7 @@ def profile_table(ctx, df, opts) -> TableResult:
     section=9, order=20, scope="per_field", min_metrics=2,
     title="Damage at every strength, beside the other metrics",
     requires_columns=("damage",),
-    defaults={"families": ["geometric"]},
+    defaults={"families": an.DAMAGE_BLOCK_FAMILIES},
 )
 def damage_by_level_table(ctx, df, opts) -> TableResult:
     """Median damage at every strength of the chosen families, one column per metric.
@@ -229,14 +222,12 @@ def damage_by_level_table(ctx, df, opts) -> TableResult:
     The table issues/035 asks for: the rank correlations say whether two metrics put the
     strengths in the same order, this says how much each charges for the same strength.
     """
-    from fmeval.analysis import damage_by_level
-
     field = str(df["field"].iloc[0])
-    families = list(opts.get("families") or ["geometric"])
-    pieces = [damage_by_level(df, field=field, family=f, probe_labels=ctx.probe_labels)
+    families = list(opts["families"])
+    pieces = [an.damage_by_level(df, field=field, family=f, probe_labels=ctx.probe_labels)
               for f in families]
-    frame = pd.concat([p for p in pieces if not p.empty], ignore_index=True) \
-        if any(not p.empty for p in pieces) else pd.DataFrame()
+    pieces = [p for p in pieces if not p.empty]
+    frame = pd.concat(pieces, ignore_index=True) if pieces else pd.DataFrame()
     metrics = sorted(str(m) for m in df["metric"].unique())
     shown = [m for m in metrics if m in frame.columns]
     ctx.require(bool(shown), f"no metric has a damage scale on the {families} degradations")
@@ -257,6 +248,10 @@ def damage_by_level_table(ctx, df, opts) -> TableResult:
     )
 
 
+#: The length of the full kinet trajectory the cost projection assumes, in frames.
+FULL_TRAJECTORY_FRAMES = 10001
+
+
 @table(
     section=10, order=10, scope="global",
     title="Cost",
@@ -272,19 +267,17 @@ def cost_table(ctx, df, opts) -> TableResult:
     n_frames = int(ctx.meta.get("n_frames", 0)) or int(df["frame_index"].nunique())
     n_variants = int(df["variant_label"].nunique())
     stats["per_frame_s"] = stats["median"] * n_variants
-    stats["full_trajectory_s"] = stats["per_frame_s"] * 10001
-    baseline = stats["median"].min()
-    stats["relative"] = stats["median"] / baseline if baseline else np.nan
+    stats["full_trajectory_s"] = stats["per_frame_s"] * FULL_TRAJECTORY_FRAMES
+    stats["relative"] = an.relative_cost(stats["median"])
     return TableResult(
         frame=stats,
         caption="Metric evaluation cost, excluding input and degradation. The projection "
-                "assumes a 10001-frame trajectory at the present ladder width "
-                f"({n_variants} variants per frame), which is the number that decides "
+                f"assumes a {FULL_TRAJECTORY_FRAMES}-frame trajectory at the present ladder "
+                f"width ({n_variants} variants per frame), which is the number that decides "
                 "whether a metric is usable on a full rollout.",
         headers={"median": "median [s]", "p95": "p95 [s]",
                  "per_frame_s": "per frame [s]",
-                 "full_trajectory_s": "full trajectory [s]",
-                 "relative": "relative"},
+                 "full_trajectory_s": "full trajectory [s]"},
         formats={"metric": "code", "field": "code"},
         note=f"Measured over {n_frames} frames.",
     )
@@ -298,13 +291,10 @@ def cost_table(ctx, df, opts) -> TableResult:
 def redundancy_table(ctx, df, opts) -> TableResult:
     """Rank correlation between metrics across the ladder, for pruning the panel.
 
-    One observation per axis and severity level, using the median over frames. The reference
-    severity level is excluded: every pairwise error metric is exactly zero there, so keeping it
-    would add a point all metrics share by construction.
+    The statistic is :func:`fmeval.analysis.cross_metric_correlation`; the note lists the pairs at
+    or above the configured redundancy threshold.
     """
-    from fmeval.analysis import cross_metric_correlation
-
-    rho = cross_metric_correlation(df)
+    rho = an.cross_metric_correlation(df)
     ctx.require(not rho.empty, "needs at least two metrics with common ladder severity levels")
     limit = float(ctx.thresholds.get("redundancy", np.nan))
     frame = rho.reset_index()
@@ -378,13 +368,15 @@ def calibrated_severities_table(ctx, df, opts) -> TableResult:
     cutoff on a smooth field than on a broadband one. That is the point of calibrating, and it
     means the absolute numbers in the rest of the report belong to this table.
 
-    The last two columns are what the severity level *measurably did*, which is not the same as what
-    it asked
-    for. A cutoff must land on an available set of modes, so where a field's energy is concentrated
-    the realised removal jumps rather than following the request: 69% of density's fluctuation
-    energy is in the four diagonal modes at |k| = sqrt(2) and 3e-5 of it below them, so two
-    consecutive cutoffs there differ by most of the field. Without these columns a reader cannot
-    tell a severity level that did what was asked from one that overshot to the next set of modes.
+    The last two columns are what the severity level *measurably did*, which is not the same as
+    what it asked for. A cutoff must land on an available set of modes, so where a field's energy
+    is concentrated the realised removal jumps rather than following the request: 69% of
+    density's fluctuation energy is in the four diagonal modes at |k| = sqrt(2) and 3e-5 of it
+    below them, so two consecutive cutoffs there differ by most of the field. Without these
+    columns a reader cannot tell a severity level that did what was asked from one that
+    overshot to the next set of modes; the note names every spectral level whose removal missed
+    its request by more than :data:`MISSED_REQUEST`, because the nominal severity is what
+    appears on every axis label in the report.
     """
     calibrated = df[df["calibration"].astype(str).ne("") & (df["level"] > 0)]
     ctx.require(len(calibrated) > 0, "no calibrated axis in this run")
@@ -406,11 +398,6 @@ def calibrated_severities_table(ctx, df, opts) -> TableResult:
         })
     frame = pd.DataFrame(rows).sort_values(["field", "axis", "level"])
 
-    # A severity level can be a perfectly valid experiment and still not be the one that was
-    # requested.
-    # A cutoff selects whole sets of modes, so where a field's energy is concentrated the nearest
-    # available cutoff can remove far more or far less than the fraction asked for. That is worth
-    # naming, because the nominal severity is what appears on every axis label in the report.
     spectral = frame[frame["relative to"].str.startswith("energy")]
     missed = spectral[
         (spectral["energy removed"] - spectral["configured"]).abs() > MISSED_REQUEST
@@ -449,7 +436,6 @@ def calibrated_severities_table(ctx, df, opts) -> TableResult:
         caption="Configured (relative) against applied (absolute) severity and the realised "
                 "effect, per field.",
         formats={"field": "code", "axis": "code", "relative to": "code"},
-        headers={"energy removed": "energy removed", "energy changed": "energy changed"},
         note=note,
         notes=[
             "\\emph{energy removed} is $1 - \\mathrm{var}(\\text{degraded}) / "

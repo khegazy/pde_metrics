@@ -13,21 +13,14 @@ following an import knows exactly which file to open.
 
 from __future__ import annotations
 
+import logging
 
-def _install_card_validator() -> None:
-    """Wire up card enforcement, tolerating an incomplete checkout.
+# Wire up card enforcement, tolerating an incomplete checkout. A failure here must not stop the
+# harness importing: the validator is a guard rail, and a broken guard rail should be visible
+# without also making the tool unusable. Hence the guarded import.
+try:
+    from .cards.loader import install
 
-    A failure here must not stop the harness importing: the validator is a guard rail, and
-    a broken guard rail should be visible without also making the tool unusable.
-    """
-    try:
-        from .cards.loader import install
-
-        install()
-    except Exception:  # deliberately broad - see docstring
-        import logging
-
-        logging.getLogger(__name__).debug("card validation unavailable", exc_info=True)
-
-
-_install_card_validator()
+    install()
+except Exception:  # deliberately broad, see the comment above
+    logging.getLogger(__name__).debug("card validation unavailable", exc_info=True)

@@ -84,10 +84,8 @@ DEGRADATION_SECTIONS: tuple[str, ...] = (
 ``What the degradation looks like`` is the human companion to the generated figure. A
 panel of images does not explain itself, so this section says, in plain language, what
 changes between the weak and the strong columns and which row of the panel makes the
-change visible.
-
-The section used to be called ``Exemplars``. That word told a first-time reader neither
-what was being exemplified nor what to look at, so the heading now says both.
+change visible. The heading says both what is shown and what to look at, which a one-word
+heading such as ``Exemplars`` would not tell a first-time reader.
 """
 
 REQUIRED_SUBSECTIONS: dict[str, str] = {"Definition": "Boundary handling"}
@@ -127,11 +125,9 @@ Each is built from ``###`` subsections, one per kind of test, and each subsectio
 with a generated include and continues with a human explanation of what those particular
 numbers show.
 
-The two halves used to be separate sections -- generated evidence, then an assessment of
-all of it at once. Splitting them that way meant a reader comparing a claim to the number
-behind that claim had to scroll between two places and work out which figure the sentence
-was about, and it invited an assessment that summarised the whole degradation ladder in
-general rather than saying what each test found.
+The two halves sit together so a reader comparing a claim to the number behind it finds
+both in one place, and so the prose says what each test found rather than summarising the
+whole degradation ladder at once.
 
 The generated half still may not be typed by hand: a number written by a person here is a
 claim about a measurement that nothing checks.
@@ -256,13 +252,14 @@ def check_math(text: str) -> list[Problem]:
 
 
 _HEADING = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
-_FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
-# A generated block, written into card.md by fmeval.cards rather than included from a
-# separate file at build time. Two readers matter -- GitHub's web UI and the documentation
-# site -- and only one of them resolves includes; a card whose figures appear on the site
-# and show as a literal `{{ include ... }}` on GitHub fails the reader who never leaves
-# the repository. Markers keep the boundary explicit so the checker can tell generated
-# content from prose, and the review ledger can hash the prose alone.
+_SUBHEADING = re.compile(r"^### (.+?)\s*$", re.MULTILINE)
+_LINK = re.compile(r"\[[^\]]*\]\([^)]*\)")
+_DEGRADATION_LINK = re.compile(r"\]\(\.\./\.\./degradations/([a-z][a-z0-9_]*)/card\.md\)")
+_TABLE_OR_CODE = re.compile(r"^```|^\s*\|", re.MULTILINE)
+#: A card's YAML front matter, which the site replaces with its own header.
+FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
+# The markers around a generated block in card.md; see write_block for why generated
+# content is written into the card rather than included at build time.
 GENERATED_OPEN = "<!-- GENERATED {name}: written by `{command}`, do not edit -->"
 GENERATED_CLOSE = "<!-- END GENERATED {name} -->"
 _GENERATED_BLOCK = re.compile(
@@ -331,10 +328,6 @@ def strip_generated(text: str) -> str:
     both.
     """
     return _GENERATED_BLOCK.sub("", text)
-_SUBHEADING = re.compile(r"^### (.+?)\s*$", re.MULTILINE)
-_LINK = re.compile(r"\[[^\]]*\]\([^)]*\)")
-_DEGRADATION_LINK = re.compile(r"\]\(\.\./\.\./degradations/([a-z][a-z0-9_]*)/card\.md\)")
-_TABLE_OR_CODE = re.compile(r"^```|^\s*\|", re.MULTILINE)
 
 
 @dataclass(frozen=True)
@@ -370,30 +363,6 @@ def split_sections(text: str) -> dict[str, str]:
         end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
         sections[match.group(1)] = text[match.end() : end].strip()
     return sections
-
-
-def frontmatter(text: str) -> dict[str, str]:
-    """Read the ``name:`` and ``kind:`` lines from a card's YAML front matter.
-
-    Deliberately a two-key reader rather than a YAML parse: the front matter exists only
-    to cross-check the file against its directory, and anything else that appeared there
-    would be a second, unvalidated copy of the typed card.
-
-    Args:
-        text: The contents of ``card.md``.
-
-    Returns:
-        The keys found; empty if there is no front matter.
-    """
-    match = _FRONTMATTER.match(text)
-    if not match:
-        return {}
-    found = {}
-    for line in match.group(1).splitlines():
-        if ":" in line:
-            key, _, value = line.partition(":")
-            found[key.strip()] = value.strip().strip("'\"")
-    return found
 
 
 def _check_result_section(section: str, body: str, name: str) -> list[Problem]:
@@ -513,8 +482,7 @@ def _check_result_section(section: str, body: str, name: str) -> list[Problem]:
                     "run was is in the run summary, and what the degradation does is in "
                     "its own bundle.",
                     "write the reading below the include line; if the evidence has not "
-                    f"been generated yet, run  python -m fmeval.cards {generator} {name}"
-                    "  first",
+                    f"been generated yet, run  {regenerate}  first",
                     severity="warning",
                 )
             )
@@ -538,12 +506,17 @@ def check_prose(text: str, *, kind: str, name: str) -> list[Problem]:
     check = f"python -m fmeval.cards check {name}"
     problems: list[Problem] = []
 
-    meta = frontmatter(text)
-    if meta.get("name") != name:
+    # Only `name` is read from the front matter, and without a YAML parse: the front matter
+    # exists to cross-check the file against its directory, and anything else there would be
+    # a second, unvalidated copy of the typed card. The last `name:` line wins.
+    match = FRONTMATTER.match(text)
+    found = re.findall(r"^[ \t]*name[ \t]*:(.*)$", match.group(1), re.MULTILINE) if match else []
+    declared = found[-1].strip().strip("'\"") if found else None
+    if declared != name:
         problems.append(
             Problem(
                 "",
-                f"front matter says name: {meta.get('name')!r}, but the bundle is {name!r}.",
+                f"front matter says name: {declared!r}, but the bundle is {name!r}.",
                 f"set `name: {name}` in the front matter",
             )
         )
@@ -566,10 +539,11 @@ def check_prose(text: str, *, kind: str, name: str) -> list[Problem]:
 
     problems.extend(check_math(text))
 
+    sections = split_sections(text)
     for section, subsection in REQUIRED_SUBSECTIONS.items():
         if section not in required:
             continue
-        body = split_sections(text).get(section, "")
+        body = sections.get(section, "")
         if f"### {subsection}" not in body:
             problems.append(
                 Problem(
@@ -583,7 +557,6 @@ def check_prose(text: str, *, kind: str, name: str) -> list[Problem]:
                 )
             )
 
-    sections = split_sections(text)
     present = [s for s in sections if s in required]
     missing = [s for s in required if s not in sections]
     for section in missing:

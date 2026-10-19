@@ -7,7 +7,7 @@ two halves:
 
 ``card.yaml``
     The typed half. Anything a machine can check, compare, or filter on lives here:
-    the category, the status, the output's bounds, the predicted responses, the
+    the category, the status, the output's bounds, the mathematical properties, the
     reference keys, the review ledger. :mod:`fmeval.cards.schema` is the single
     definition of what is allowed, and nothing else may hard-code field names.
 

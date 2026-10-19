@@ -23,22 +23,22 @@ import pandas as pd
 
 from fmeval import analysis as an
 from fmeval.io import read_config, read_results, read_run_meta
+from fmeval.report.registry import PLOTS
 from fmeval.report.vocabulary import FAMILY_INFO, family_label, label
 
+from . import loader
 from .exemplars import load_cards_config
 from .loader import write_strict_json
-from .metric_figures import CardFigure, metric_figures
+from .metric_figures import FIGURE_BLOCKS, METRIC_FIGURES, CardFigure, metric_figures
 from .prose import has_block, write_block
 
-#: Which generated block each degradation family's results go into.
-#:
-#: Derived from :data:`fmeval.report.vocabulary.FAMILY_INFO` rather than written out again:
-#: these were two hand-maintained lists of the same families, and adding a family to one and
-#: not the other left its results silently ungenerated -- the card kept its "Not generated yet"
-#: placeholder while `cards evidence` reported success.
+#: Which generated block each degradation family's results go into. Derived from
+#: :data:`fmeval.report.vocabulary.FAMILY_INFO` rather than written out again, so a family
+#: added there cannot be left with its results silently ungenerated.
 FAMILY_BLOCKS = {family: f"results_{family}" for family in FAMILY_INFO}
 
 NOT_MEASURED = "No measurements for this test in the recorded run."
+
 
 @dataclass(frozen=True, kw_only=True)
 class Run(an.Analysis):
@@ -90,9 +90,8 @@ def _cell(row: Any, column: str) -> Any:
 
     `probe_summary` only emits columns for the probes the ladder actually ran. A run whose
     ladder skipped the impostor -- `degradation.skip=[gaussian_impostor]`, or a custom
-    ladder -- legitimately lacks those columns, and indexing them raised a bare KeyError
-    that named a column instead of the situation. Absent means not measured, which
-    `_fmt` renders as an em dash.
+    ladder -- legitimately lacks those columns. Absent means not measured, which `_fmt`
+    renders as an em dash.
     """
     return row[column] if column in row.index else None
 
@@ -135,10 +134,6 @@ def figure_lines(figures: Sequence[CardFigure] | None, reasons: Mapping[str, str
     """
     if not (figures or reasons):
         return []      # drawn without figures, e.g. from a test: no figure lines at all
-    from fmeval.report.registry import PLOTS
-
-    from .metric_figures import FIGURE_BLOCKS, METRIC_FIGURES
-
     reasons = reasons or {}
     lines: list[str] = []
     by_name = {f.name: f for f in figures or ()}
@@ -374,18 +369,17 @@ def generate(metric: str, run: Run) -> Path:
             writes -- which means the card and the generator disagree about what is
             generated.
     """
-    from .loader import find_bundle
-
-    bundle = find_bundle(metric)
+    # Looked up through the module, so a test that substitutes `loader.find_bundle` with a
+    # throwaway copy keeps the generator away from the tracked bundle.
+    bundle = loader.find_bundle(metric)
     if bundle is None:
         raise KeyError(f"no metric bundle named {metric!r}")
 
     command = f"python -m fmeval.cards evidence {metric} --results {run.folder}"
     # Figures first, so a figure that cannot be drawn is reported inside the block that
     # would have shown it rather than discovered as a missing file.
-    cfg = load_cards_config()
     figures, reasons = metric_figures(run, metric, bundle.generated,
-                                      theme=str(cfg.figures.theme))
+                                      theme=str(load_cards_config().figures.theme))
     blocks = {
         "run": run_block(run),
         "performance": performance_block(run, metric, figures, reasons),

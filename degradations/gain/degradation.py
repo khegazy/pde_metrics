@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import numpy as np
 
+from fmeval.context import fluctuation
+
 from ..registry import degradation
 
 
@@ -26,6 +28,4 @@ def gain(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     """
     if severity == 0:
         return x
-    spatial = tuple(range(1, x.ndim))
-    mean = x.mean(axis=spatial, keepdims=True)
-    return mean + (1.0 + severity) * (x - mean)
+    return x + severity * fluctuation(x)

@@ -112,9 +112,9 @@ def test_the_dev_trajectory_is_published_too(tmp_path):
     """The documented inner loop must work on a machine with no CFS mount.
 
     `README.md`, `AGENTS.md` section 2, `evaluate.py`'s docstring and a pinned phrase in
-    docs/recipes/verify-a-refactor.md all start a newcomer on `kinet_re5e4_dev`. Until it
-    was published that command failed for anyone without CFS, which is the whole audience
-    this fallback exists for.
+    docs/recipes/verify-a-refactor.md all start a newcomer on `kinet_re5e4_dev`. Unpublished,
+    that command would fail for anyone without CFS, which is the whole audience this
+    fallback exists for.
     """
     cfg = build("dataset=kinet_re5e4_dev", f"paths.data={tmp_path}")
     trajectory = open_trajectory(cfg)

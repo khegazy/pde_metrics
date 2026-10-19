@@ -7,15 +7,21 @@ compile time, and therefore invisible until someone uploads the folder to Overle
 
 from __future__ import annotations
 
+import dataclasses
+import json
 import re
 import shutil
+import subprocess
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from fmeval import analysis
 from fmeval.io import RunFolder, write_config, write_maps, write_results, write_run_meta
 from fmeval.report import latex
+from fmeval.report.context import TableResult
 from fmeval.report.driver import (
     build_context,
     render,
@@ -23,13 +29,16 @@ from fmeval.report.driver import (
     write_manifest,
     write_summary_text,
 )
+from fmeval.report.plots import _cell_wedges
 from fmeval.report.registry import (
     PLOTS,
     SECTIONS,
     SECTIONS_BY_NUMBER,
     TABLES,
     iter_renderers,
+    plot,
 )
+from fmeval.report.style import Style
 from tests.conftest import (
     SYNTHETIC_FIELDS,
     SYNTHETIC_LADDER,
@@ -137,8 +146,6 @@ def test_registries_are_not_empty():
 
 
 def test_duplicate_registration_raises():
-    from fmeval.report.registry import plot
-
     with pytest.raises(ValueError, match="duplicate"):
 
         @plot(section=3, name="ladder_curves")
@@ -147,8 +154,6 @@ def test_duplicate_registration_raises():
 
 
 def test_unknown_section_raises():
-    from fmeval.report.registry import plot
-
     with pytest.raises(ValueError, match="section"):
 
         @plot(section=99, name="_bad_section")
@@ -159,9 +164,9 @@ def test_unknown_section_raises():
 # --- end to end ------------------------------------------------------------------------------
 
 
-
-
-def _write_run(folder: RunFolder, df: pd.DataFrame) -> RunFolder:
+def _write_run(path: Path, df: pd.DataFrame) -> RunFolder:
+    """A run folder at ``path`` holding ``df``, complete enough to render."""
+    folder = RunFolder(path).create()
     write_results(folder, df)
     digest = write_config(folder, {"metrics": sorted(df["metric"].unique()), "seed": 1,
                                    "note": "a_b"}, ["metrics=[mse]"])
@@ -178,84 +183,66 @@ def _write_run(folder: RunFolder, df: pd.DataFrame) -> RunFolder:
 @pytest.fixture
 def run_folder(tmp_path):
     """A synthetic run folder, complete enough to render."""
-    return _write_run(RunFolder(tmp_path / "mse_1").create(), synthetic_rows())
+    return _write_run(tmp_path / "mse_1", synthetic_rows())
 
 
-def _degenerate_folder(tmp_path) -> RunFolder:
-    """Every metric zero everywhere: no damage scale anywhere."""
-    return _write_run(RunFolder(tmp_path / "flat_1").create(),
-                      synthetic_rows(metrics=("flat",)))
+@pytest.fixture(scope="module")
+def full_report(tmp_path_factory):
+    """The synthetic run rendered once into a complete document, for the tests that only read it.
 
-
-def test_full_render(run_folder):
-    ctx = build_context(run_folder, thresholds={"spearman": 0.9, "impostor_damage": 0.5},
+    Rendering every renderer is the slow step, so it is shared; a test that changes the context
+    or the registry renders its own folder.
+    """
+    folder = _write_run(tmp_path_factory.mktemp("report") / "mse_1", synthetic_rows())
+    ctx = build_context(folder, thresholds={"spearman": 0.9, "impostor_damage": 0.5},
                         bootstrap=0)
-    rendered = render(run_folder, ctx, formats=("png",))
-    write_document(run_folder, ctx, rendered)
-    write_manifest(run_folder, rendered)
-    write_summary_text(run_folder, ctx)
+    rendered = render(folder, ctx, formats=("png",))
+    write_document(folder, ctx, rendered)
+    write_manifest(folder, rendered)
+    write_summary_text(folder, ctx)
+    return folder, rendered
 
+
+def test_full_render(full_report):
+    folder, rendered = full_report
     assert any(r.status == "ok" for r in rendered)
     assert not [r for r in rendered if r.status == "error"], \
         [(r.name, r.reason) for r in rendered if r.status == "error"]
-    assert (run_folder.root / "main.tex").exists()
-    assert (run_folder.root / "preamble.tex").exists()
-    assert (run_folder.root / "summary.txt").exists()
-    assert list(run_folder.plots.glob("*.png"))
-    assert list(run_folder.tables.glob("*.tex"))
+    assert (folder.root / "main.tex").exists()
+    assert (folder.root / "preamble.tex").exists()
+    assert (folder.root / "summary.txt").exists()
+    assert list(folder.plots.glob("*.png"))
+    assert list(folder.tables.glob("*.tex"))
 
 
-def test_sections_are_written_in_ascending_order_with_none_empty(run_folder):
-    ctx = build_context(run_folder, bootstrap=0)
-    rendered = render(run_folder, ctx, formats=("png",))
-    write_document(run_folder, ctx, rendered)
-
-    names = sorted(p.name for p in run_folder.sections.glob("*.tex"))
+def test_sections_are_written_in_ascending_order_with_none_empty(full_report):
+    folder, _ = full_report
+    names = sorted(p.name for p in folder.sections.glob("*.tex"))
     numbers = [int(n.split("_")[0]) for n in names]
     assert numbers == sorted(numbers)
-    for path in run_folder.sections.glob("*.tex"):
+    for path in folder.sections.glob("*.tex"):
         text = path.read_text()
         assert text.strip(), f"{path.name} is empty"
         assert "\\section{" in text
 
 
-def test_no_unescaped_underscore_survives_into_any_generated_tex(run_folder):
+def test_no_unescaped_underscore_survives_into_any_generated_tex(full_report):
     """The bug that would otherwise be found on Overleaf, not here."""
-    ctx = build_context(run_folder, bootstrap=0)
-    rendered = render(run_folder, ctx, formats=("png",))
-    write_document(run_folder, ctx, rendered)
-
-    for path in [*run_folder.sections.glob("*.tex"),
-                 *run_folder.tables.glob("*.tex"),
-                 run_folder.root / "main.tex"]:
+    folder, _ = full_report
+    for path in [*folder.sections.glob("*.tex"),
+                 *folder.tables.glob("*.tex"),
+                 folder.root / "main.tex"]:
         offenders = _unescaped_underscores(path.read_text())
         assert not offenders, f"{path.name} has {len(offenders)} unescaped underscore(s)"
 
 
-def test_one_unavailable_subset_does_not_silence_a_renderer_for_the_others(run_folder):
-    """`flat` has no damage scale, so `damage_beside_controls` declines to draw it. The other
-    three metrics must still get their figure, and the manifest must say which one did not."""
-    outcome = _rendered(run_folder, "damage_beside_controls")
-    assert outcome.status == "ok", outcome.reason
-    drawn = {f for f in outcome.files if f.endswith(".png")}
-    assert {"plots/damage_beside_controls__metric-mse.png",
-            "plots/damage_beside_controls__metric-mae.png",
-            "plots/damage_beside_controls__metric-rmse.png"} <= drawn
-    assert not any("metric-flat" in f for f in drawn)
-    assert any(note.startswith("not drawn for metric=flat") for note in outcome.notes), \
-        outcome.notes
-
-
 def test_renderer_failures_are_recorded_but_not_fatal(run_folder, monkeypatch):
     """A bad figure must not destroy an expensive evaluation's output."""
-    from fmeval.report import registry as rr
-
     def boom(ctx, df, opts):
         raise RuntimeError("deliberate")
 
-    monkeypatch.setitem(rr.PLOTS, "ladder_curves",
-                        rr.PLOTS["ladder_curves"].__class__(
-                            **{**rr.PLOTS["ladder_curves"].__dict__, "fn": boom}))
+    monkeypatch.setitem(PLOTS, "ladder_curves",
+                        dataclasses.replace(PLOTS["ladder_curves"], fn=boom))
     ctx = build_context(run_folder, bootstrap=0)
     rendered = render(run_folder, ctx, formats=("png",))
     failed = [r for r in rendered if r.name == "ladder_curves"]
@@ -263,22 +250,9 @@ def test_renderer_failures_are_recorded_but_not_fatal(run_folder, monkeypatch):
     assert any(r.status == "ok" for r in rendered), "other renderers must still run"
 
 
-def test_single_metric_run_skips_cross_metric_renderers(run_folder):
-    ctx = build_context(run_folder, bootstrap=0)
-    ctx.df = ctx.df[ctx.df["metric"] == "mse"]
-    ctx.card = ctx.card[ctx.card["metric"] == "mse"]
-    ctx.axes = ctx.axes[ctx.axes["metric"] == "mse"]
-    rendered = render(run_folder, ctx, formats=("png",))
-    skipped = {r.name: r.reason for r in rendered if r.status == "skipped"}
-    assert "cost_frontier" in skipped
-    assert "metrics" in skipped["cost_frontier"]
-
-
-def test_config_appears_verbatim_in_the_report(run_folder):
-    ctx = build_context(run_folder, bootstrap=0)
-    rendered = render(run_folder, ctx, formats=("png",))
-    write_document(run_folder, ctx, rendered)
-    text = (run_folder.sections / "11_reproducibility.tex").read_text()
+def test_config_appears_verbatim_in_the_report(full_report):
+    folder, _ = full_report
+    text = (folder.sections / "11_reproducibility.tex").read_text()
     assert "lstlisting" in text
     assert "metrics" in text, "the resolved config must be reproduced in the document"
 
@@ -292,8 +266,6 @@ def test_report_compiles_with_latex(run_folder):
 
     Skipped when pdflatex is absent. On NERSC: ``module load texlive/2024``.
     """
-    import subprocess
-
     if shutil.which("latexmk") is None:
         pytest.skip("latexmk not available")
     ctx = build_context(run_folder, bootstrap=0)
@@ -318,8 +290,6 @@ def test_imshow_is_confined_to_the_style_helper():
     keeps the convention. ``monotonicity_heatmap`` is exempt: it draws a matrix of
     correlations, not a spatial field.
     """
-    from pathlib import Path
-
     report_dir = Path(__file__).resolve().parent.parent / "fmeval" / "report"
     allowed = {"style.py"}
     for path in report_dir.glob("*.py"):
@@ -381,24 +351,18 @@ def test_displacement_prose_names_what_each_geometric_axis_leaves_unchanged(tmp_
     assert "amplitude spectrum" in text and "test-verified" in text
 
 
-
 # --- plumbing --------------------------------------------------------------------------------
 
 
 def test_items_within_a_section_follow_their_declared_order(run_folder, monkeypatch):
-    """Registration order is what places a renderer; without it, the name did."""
-    import dataclasses
-
-    from fmeval.report import registry as rr
-    from fmeval.report.context import TableResult
-
+    """Registration order places a renderer within its section, not its name."""
     def one_row(ctx, df, opts):
         return TableResult(frame=pd.DataFrame({"x": [1]}), caption="t")
 
-    base = rr.TABLES["report_card"]
-    monkeypatch.setitem(rr.TABLES, "zz_first", dataclasses.replace(
+    base = TABLES["report_card"]
+    monkeypatch.setitem(TABLES, "zz_first", dataclasses.replace(
         base, name="zz_first", fn=one_row, section=7, order=5))
-    monkeypatch.setitem(rr.TABLES, "aa_second", dataclasses.replace(
+    monkeypatch.setitem(TABLES, "aa_second", dataclasses.replace(
         base, name="aa_second", fn=one_row, section=7, order=50))
     ctx = build_context(run_folder, bootstrap=0)
     rendered = render(run_folder, ctx, only=["zz_first", "aa_second"], formats=("png",))
@@ -422,8 +386,6 @@ def test_wide_tables_are_set_small():
 
 
 def test_metric_styles_differ_when_colours_repeat():
-    from fmeval.report.style import Style
-
     names = [f"m{i}" for i in range(9)]
     style = Style.build(metrics=names)
     assert style.metric_colour("m0") == style.metric_colour("m8"), "eight colours, nine metrics"
@@ -433,8 +395,10 @@ def test_metric_styles_differ_when_colours_repeat():
 # --- the response figures --------------------------------------------------------------------
 
 
-def _rendered(folder, name, **filters):
-    ctx = build_context(folder, bootstrap=0)
+def _rendered(folder, name, ctx=None, **filters):
+    """Run one renderer on ``folder``, on ``ctx`` if given, after keeping only the rows whose
+    columns equal ``filters``."""
+    ctx = ctx or build_context(folder, bootstrap=0)
     for column, value in filters.items():
         ctx.df = ctx.df[ctx.df[column] == value]
         ctx.axes = ctx.axes[ctx.axes[column] == value]
@@ -458,14 +422,14 @@ def test_response_sparklines_render_and_grey_the_metric_without_a_scale(run_fold
 
 
 def test_response_sparklines_skip_when_no_metric_has_a_scale(tmp_path):
-    outcome = _rendered(_degenerate_folder(tmp_path), "response_sparklines")
+    """Every metric zero everywhere: no damage scale anywhere."""
+    folder = _write_run(tmp_path / "flat_1", synthetic_rows(metrics=("flat",)))
+    outcome = _rendered(folder, "response_sparklines")
     assert outcome.status == "skipped" and "damage scale" in outcome.reason
 
 
 @pytest.mark.parametrize("n", [1, 2, 3, 4])
 def test_portrait_wedges_tile_the_unit_square(n):
-    from fmeval.report.plots import _cell_wedges
-
     def area(polygon):
         x, y = np.array(polygon).T
         return 0.5 * abs(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1)))
@@ -500,9 +464,7 @@ def test_displacement_companion_panel_reads_damage_against_field_change(run_fold
 def test_displacement_response_still_renders_without_energy_changed(run_folder):
     ctx = build_context(run_folder, bootstrap=0)
     ctx.df = ctx.df.drop(columns="energy_changed")
-    rendered = {r.name: r for r in render(run_folder, ctx, only=["displacement_response"],
-                                          formats=("png",))}
-    assert rendered["displacement_response"].status == "ok"
+    assert _rendered(run_folder, "displacement_response", ctx).status == "ok"
     data = _figure_data(run_folder, "displacement_response__field-vorticity")
     assert "energy_changed" not in data.columns or data["energy_changed"].isna().all()
 
@@ -543,10 +505,23 @@ def test_section_seven_prose_quotes_the_participation_ratio(run_folder):
     assert "\\texttt{flat}" in text, "the metric left out for lacking a scale is named"
 
 
-@pytest.mark.parametrize("name", ["concordance_matrix", "redundancy_dendrogram"])
-def test_magnitude_figures_skip_on_a_single_metric(run_folder, name):
+@pytest.mark.parametrize("name", [
+    # Agreement in magnitude is a relation between metrics.
+    pytest.param("concordance_matrix", id="concordance"),
+    pytest.param("redundancy_dendrogram", id="dendrogram"),
+    # The geometric damage table puts metrics side by side, one column each.
+    pytest.param("damage_by_level_table", id="damage-table"),
+    # The cost frontier trades one metric's sensitivity against another's cost.
+    pytest.param("cost_frontier", id="cost-frontier"),
+    # A metric is drawn beside the pointwise controls, so with only one there is nothing to
+    # place it beside.
+    pytest.param("damage_beside_controls", id="beside-controls"),
+])
+def test_cross_metric_renderers_skip_on_a_single_metric(run_folder, name):
+    """A renderer that compares metrics declares itself unavailable on a one-metric run, and
+    says that is why."""
     outcome = _rendered(run_folder, name, metric="mse")
-    assert outcome.status == "skipped"
+    assert outcome.status == "skipped" and "metric" in outcome.reason, outcome.reason
 
 
 # --- the tables --------------------------------------------------------------------------------
@@ -567,9 +542,7 @@ def test_axis_response_table_renders_or_skips_cleanly(run_folder):
     assert "\\begin{longtable}" in tex, "one row per metric and degradation needs page breaks"
     ctx = build_context(run_folder, bootstrap=0)
     ctx.axes = ctx.axes.drop(columns=["elasticity", "severity_10"])
-    rendered = {r.name: r for r in render(run_folder, ctx, only=["axis_response"],
-                                          formats=("png",))}
-    assert rendered["axis_response"].status == "skipped"
+    assert _rendered(run_folder, "axis_response", ctx).status == "skipped"
 
 
 def test_damage_by_level_table_names_the_metric_without_a_scale(run_folder):
@@ -580,10 +553,6 @@ def test_damage_by_level_table_names_the_metric_without_a_scale(run_folder):
     assert set(data["degradation"]) == {"translate_x", "translate_subpixel"}, "geometric only"
     tex = (run_folder.tables / "damage_by_level_table__field-vorticity.tex").read_text()
     assert "flat" in tex, "the note names the metric left out"
-
-
-def test_damage_by_level_table_skips_on_a_single_metric(run_folder):
-    assert _rendered(run_folder, "damage_by_level_table", metric="mse").status == "skipped"
 
 
 # --- the headline ------------------------------------------------------------------------------
@@ -600,8 +569,6 @@ def test_summary_text_names_the_metric_in_a_comparison_folder(run_folder):
 
 
 def test_headline_prose_states_the_blindness_margin_from_the_analysis(run_folder):
-    from fmeval import analysis
-
     ctx = build_context(run_folder, bootstrap=50)
     write_document(run_folder, ctx, render(run_folder, ctx, only=["report_card"],
                                            formats=("png",)))
@@ -616,7 +583,6 @@ def test_profile_table_is_the_source_of_the_headline_profile(run_folder):
     header = (run_folder.data / "profile_table.csv").read_text().splitlines()[0]
     for column in ("most_sensitive_axis", "least_sensitive_axis", "elasticity_displacement"):
         assert column in header
-
 
 
 def test_response_curves_draw_one_record_per_metric_and_keep_the_unscaled_field_as_values(
@@ -640,7 +606,7 @@ def test_response_curves_draw_one_record_per_metric_and_keep_the_unscaled_field_
 def test_response_curves_survive_a_ladder_without_the_impostor(tmp_path):
     df = synthetic_rows(metrics=("mse", "mae"))
     df = df[df["degradation"] != "gaussian_impostor"]
-    folder = _write_run(RunFolder(tmp_path / "noimp_1").create(), df)
+    folder = _write_run(tmp_path / "noimp_1", df)
     outcome = _rendered(folder, "response_curves")
     assert outcome.status == "ok", outcome.reason
     data = _figure_data(folder, "response_curves__metric-mse")
@@ -660,19 +626,29 @@ def test_sensitivity_profile_rows_are_the_metric_s_ordinal_axes(run_folder):
             "damage_max_ucb"} <= set(data.columns)
 
 
-def test_sensitivity_profile_skips_without_the_response_statistics(run_folder, monkeypatch):
+def test_sensitivity_profile_skips_without_the_response_statistics(run_folder):
     """A folder analysed before the response columns existed declares itself unavailable."""
     ctx = build_context(run_folder, bootstrap=0)
     ctx.axes = ctx.axes.drop(columns=["cliffs_delta_min"])
-    rendered = {r.name: r for r in render(run_folder, ctx, only=["sensitivity_profile"],
-                                          formats=("png",))}
-    outcome = rendered["sensitivity_profile"]
+    outcome = _rendered(run_folder, "sensitivity_profile", ctx)
     assert outcome.status == "skipped" and "response statistics" in outcome.reason
 
 
-def test_damage_beside_controls_draws_this_metric_with_the_controls_present(run_folder):
+def test_damage_beside_controls_draws_each_metric_with_the_controls_present(run_folder):
+    """Each metric with a damage scale is drawn beside the pointwise controls.
+
+    ``flat`` has no damage scale, so the renderer declines to draw it; the other three metrics
+    must still get their figure, and the manifest must say which one did not.
+    """
     outcome = _rendered(run_folder, "damage_beside_controls")
     assert outcome.status == "ok", outcome.reason
+    drawn = {f for f in outcome.files if f.endswith(".png")}
+    assert {"plots/damage_beside_controls__metric-mse.png",
+            "plots/damage_beside_controls__metric-mae.png",
+            "plots/damage_beside_controls__metric-rmse.png"} <= drawn
+    assert not any("metric-flat" in f for f in drawn)
+    assert any(note.startswith("not drawn for metric=flat") for note in outcome.notes), \
+        outcome.notes
     data = _figure_data(run_folder, "damage_beside_controls__metric-mse")
     assert set(data["metric"]) == {"mse", "mae", "rmse"}, "flat is not a control"
     assert set(data["degradation"]) == {"translate_x", "translate_subpixel"}
@@ -681,19 +657,12 @@ def test_damage_beside_controls_draws_this_metric_with_the_controls_present(run_
     assert not data.loc[data["metric"] != "mse", "is_this_metric"].any()
 
 
-def test_damage_beside_controls_skips_without_a_second_metric(tmp_path):
-    folder = _write_run(RunFolder(tmp_path / "one_1").create(), synthetic_rows(metrics=("mse",)))
-    outcome = _rendered(folder, "damage_beside_controls")
-    assert outcome.status == "skipped" and "2 metrics" in outcome.reason
-
-
 def test_a_folder_from_before_these_columns_still_renders(tmp_path):
     """Every newer input missing at once: no energy_changed, calibration, severity_nominal or
     severity_name in the rows, and no anchor_label, probe_labels or preserves in run_meta.json."""
-    import json
-
-    df = synthetic_rows(metrics=("mse", "mae")).drop(columns=["energy_changed", "severity_name"])
-    folder = _write_run(RunFolder(tmp_path / "old_1").create(), df)
+    df = synthetic_rows(metrics=("mse", "mae")).drop(
+        columns=["energy_changed", "calibration", "severity_nominal", "severity_name"])
+    folder = _write_run(tmp_path / "old_1", df)
     meta_path = folder.data / "run_meta.json"
     meta = json.loads(meta_path.read_text())
     for entry in meta.get("registries", {}).get("degradations", {}).values():
@@ -702,7 +671,6 @@ def test_a_folder_from_before_these_columns_still_renders(tmp_path):
     meta.pop("anchor_label", None)
     meta.pop("probe_labels", None)
     meta_path.write_text(json.dumps(meta))
-    assert not {"calibration", "severity_nominal"} & set(df.columns)
 
     ctx = build_context(folder, bootstrap=20)
     rendered = render(folder, ctx, formats=("png",))
@@ -710,3 +678,24 @@ def test_a_folder_from_before_these_columns_still_renders(tmp_path):
     assert not [r for r in rendered if r.status == "error"], \
         [(r.name, r.reason) for r in rendered if r.status == "error"]
     assert ctx.anchor_label == "uncorrelated"
+
+
+def test_a_renderer_gets_the_spec_defaults_and_an_unknown_option_is_refused():
+    """Registration options are RendererSpec's fields with their defaults; any other key is
+    refused with a TypeError naming it, rather than silently ignored."""
+    with pytest.raises(TypeError, match="requires_colums"):
+        plot(section=1, requires_colums=("value",))(lambda ctx, df, opts: None)
+
+    def bare_renderer_probe(ctx, df, opts):
+        """A renderer registered with no options."""
+
+    try:
+        plot(section=1)(bare_renderer_probe)
+        spec = PLOTS["bare_renderer_probe"]
+        assert (spec.title, spec.doc, spec.order, spec.scope, spec.requires_columns,
+                spec.requires_degradations, spec.min_metrics, spec.min_axes, spec.min_frames,
+                spec.min_datasets, spec.requires_maps, spec.defaults) == (
+            "bare renderer probe", "A renderer registered with no options.", 100, "global",
+            (), (), 1, 0, 1, 1, False, {})
+    finally:
+        PLOTS.pop("bare_renderer_probe", None)

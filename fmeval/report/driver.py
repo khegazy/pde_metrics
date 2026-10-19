@@ -16,11 +16,11 @@ import json
 import logging
 import time
 import traceback
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from dataclasses import field as dc_field
 from pathlib import Path
-from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,14 +28,16 @@ import pandas as pd
 from matplotlib import rc_context
 
 from fmeval import analysis as an
-from fmeval.io import RunFolder
+from fmeval.io import RunFolder, dump_yaml, read_config, read_results, read_run_meta, read_yaml
 
 from . import plots as _plots  # noqa: F401  (registers the figure renderers)
 from . import tables as _tables  # noqa: F401  (registers the table renderers)
 from .context import ReportContext
 from .latex import booktabs_table, code, document, escape, figure, preamble, slug, verbatim
 from .registry import (
+    PLOTS,
     SECTIONS,
+    TABLES,
     check_preconditions,
     draw,
     iter_renderers,
@@ -67,14 +69,6 @@ class Rendered:
         return cls(spec.name, spec.kind, spec.section, spec.title, status, reason)
 
 
-def _read_csv(path) -> pd.DataFrame:
-    """Read an optional analysis CSV, empty if the run does not have it.
-
-    Older run folders lack the newer files, and re-rendering one must not fail because of it.
-    """
-    return pd.read_csv(path) if path.exists() else pd.DataFrame()
-
-
 #: The repository's report settings, read only for a run folder that did not record its own.
 REPORT_DEFAULTS = Path(__file__).resolve().parents[2] / "configs" / "report" / "default.yaml"
 
@@ -85,7 +79,6 @@ def build_context(
     theme: str = DEFAULT_THEME,
     thresholds: Mapping[str, float] | None = None,
     bootstrap: int = an.N_BOOTSTRAP,
-    block_length: int = an.BLOCK_LENGTH,
 ) -> ReportContext:
     """Load a run folder and compute everything the renderers need.
 
@@ -93,21 +86,20 @@ def build_context(
     advisory thresholds are the run's own, ``report.thresholds`` as its config recorded them,
     so a folder re-renders as it was run; a folder that predates the record takes the
     repository's ``configs/report/default.yaml``. ``thresholds`` overrides them key by key,
-    so an empty mapping changes nothing; a NaN value switches that one flag off.
+    so an empty mapping changes nothing; a NaN value switches that one flag off. A folder without
+    ``calibration_spectrum.csv`` gets an empty spectrum rather than a failure.
     """
-    from fmeval.io import read_config, read_results, read_run_meta
-
     df = read_results(folder)
     meta = read_run_meta(folder)
     config = read_config(folder)
     recorded = ((config.get("report") or {}).get("thresholds")
-                or _read_yaml(REPORT_DEFAULTS).get("thresholds", {}))
+                or read_yaml(REPORT_DEFAULTS).get("thresholds", {}))
     thresholds = {**recorded, **(thresholds or {})}
     maps = _read_maps(folder.maps_path)
-    spectrum = _read_csv(folder.data / "calibration_spectrum.csv")
+    spectrum_path = folder.data / "calibration_spectrum.csv"
+    spectrum = pd.read_csv(spectrum_path) if spectrum_path.exists() else pd.DataFrame()
 
-    analysis = an.analyse(df, meta=meta, config=config, block_length=block_length,
-                          n_bootstrap=bootstrap)
+    analysis = an.analyse(df, meta=meta, config=config, n_bootstrap=bootstrap)
 
     return ReportContext.from_analysis(
         analysis, meta=meta, theme=theme, card=an.flag(analysis.card, thresholds),
@@ -147,12 +139,9 @@ def render(
         rendered_any = False
         try:
             for keys, subset in iter_scope(spec.scope, ctx.df):
-                # Unavailability is declared per scope subset. A renderer that cannot draw
+                # Unavailability is declared per scope subset: a renderer that cannot draw
                 # one metric -- a single-field quantity with no damage scale -- must not
-                # silence the figure for every other metric in the run, which is what a
-                # single try around the whole loop did: `damage_beside_controls` was
-                # skipped for all twelve metrics because enstrophy, first alphabetically,
-                # declared itself unavailable.
+                # silence the figure for every other metric in the run.
                 with rc_context(ctx.style.rc):
                     result, why = draw(spec, ctx, subset)
                 if result is None:
@@ -251,9 +240,7 @@ def write_document(folder: RunFolder, ctx: ReportContext,
         (folder.sections / f"{name}.tex").write_text("\n".join(body) + "\n")
         written.append(name)
 
-    (folder.root / "main.tex").write_text(
-        document(written)
-    )
+    (folder.root / "main.tex").write_text(document(written))
     return folder.root / "main.tex"
 
 
@@ -285,8 +272,6 @@ def _response_headline(row: pd.Series, ctx: ReportContext) -> list[str]:
 
 def _declared_order(item: Rendered) -> int:
     """The ``order`` a renderer was registered with, which places it within its section."""
-    from .registry import PLOTS, TABLES
-
     spec = (PLOTS if item.kind == "plot" else TABLES).get(item.name)
     return spec.order if spec is not None else 100
 
@@ -381,9 +366,7 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
 
     if key == "selectivity" and ctx.df["metric"].nunique() >= 2:
         parts = []
-        ratio = an.participation_ratio_of_metrics(ctx.df, probe_labels=ctx.probe_labels)
-        scaled = sorted(str(m) for m in ctx.norm.loc[~ctx.norm["degenerate"].astype(bool),
-                                                      "metric"].unique())
+        ratio, scaled = _independent_directions(ctx)
         missing = sorted(set(ctx.metrics) - set(scaled))
         if np.isfinite(ratio):
             parts.append(
@@ -451,7 +434,7 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
         return text
 
     if key == "reproducibility":
-        config = _dump_yaml(ctx.config)
+        config = dump_yaml(dict(ctx.config))
         command = ctx.meta.get("command", "")
         body = []
         if command:
@@ -482,23 +465,30 @@ def write_summary_text(folder: RunFolder, ctx: ReportContext) -> Path:
                                "cost_relative", "flags") if c in ctx.card.columns]
         lines.append(ctx.card[columns].to_string(index=False))
     if ctx.df["metric"].nunique() > 1:
-        ratio = an.participation_ratio_of_metrics(ctx.df, probe_labels=ctx.probe_labels)
-        scaled = int((~ctx.norm.groupby("metric")["degenerate"].all()).sum())
-        lines += ["", f"independent directions : {_fmt(ratio)} across the {scaled} metrics "
-                      "with a damage scale (participation ratio)"]
+        ratio, scaled = _independent_directions(ctx)
+        lines += ["", f"independent directions : {_fmt(ratio)} across the {len(scaled)} "
+                      "metrics with a damage scale (participation ratio)"]
     path = folder.root / "summary.txt"
     path.write_text("\n".join(lines) + "\n")
     return path
 
 
 def status_line(rendered: Sequence[Rendered]) -> str:
-    counts: dict[str, int] = {}
-    for item in rendered:
-        counts[item.status] = counts.get(item.status, 0) + 1
+    """How many renderers ended in each status, e.g. ``ok 30 · skipped 4``."""
+    counts = Counter(item.status for item in rendered)
     return " · ".join(f"{k} {v}" for k, v in sorted(counts.items()))
 
 
 # --- small helpers --------------------------------------------------------------------------
+
+
+def _independent_directions(ctx: ReportContext) -> tuple[float, list[str]]:
+    """The participation ratio of the metrics' damage, and the metrics with a damage scale on
+    this run (any non-degenerate normalisation), which is what the ratio is quoted over."""
+    ratio = an.participation_ratio_of_metrics(ctx.df, probe_labels=ctx.probe_labels)
+    scaled = sorted(str(m) for m in ctx.norm.loc[~ctx.norm["degenerate"].astype(bool),
+                                                  "metric"].unique())
+    return ratio, scaled
 
 
 def _fmt(value: object, digits: int = 2) -> str:
@@ -507,18 +497,6 @@ def _fmt(value: object, digits: int = 2) -> str:
     except (TypeError, ValueError):
         return "--"
     return f"{v:.{digits}f}" if np.isfinite(v) else "--"
-
-
-def _read_yaml(path: Path) -> dict[str, Any]:
-    import yaml
-
-    return yaml.safe_load(path.read_text()) if path.exists() else {}
-
-
-def _dump_yaml(data: Mapping[str, Any]) -> str:
-    import yaml
-
-    return yaml.safe_dump(dict(data), sort_keys=True, default_flow_style=False)
 
 
 def _read_maps(path: Path) -> dict[str, np.ndarray]:

@@ -23,13 +23,16 @@ from omegaconf import OmegaConf
 from degradations import registry as deg_registry
 from fmeval.calibration import calibrate
 from fmeval.context import FieldContext, derive_rng, fluctuation_rms
+from fmeval.data import kinet_raw, locate, well  # noqa: F401  (importing registers the formats)
+from fmeval.data.base import READERS
 from fmeval.ladder import SeverityLevel, resolve_severity
 
-from .loader import repo_root, write_strict_json
+from . import loader
+from .figures import Column, exemplar_panel
+from .loader import load_card, repo_root, write_strict_json
 from .prose import write_block
 
-REPO = repo_root()
-CARDS_CONFIG = REPO / "configs" / "cards" / "default.yaml"
+CARDS_CONFIG = repo_root() / "configs" / "cards" / "default.yaml"
 
 
 @dataclass(frozen=True)
@@ -73,25 +76,20 @@ def load_canonical_frame(cfg: Any | None = None, *, allow_remote: bool = False) 
     # Hydra supplies. Documentation generation is not a Hydra run, so the one key that
     # matters is substituted directly below.
     dataset_cfg = OmegaConf.load(
-        REPO / "configs" / "dataset" / f"{cfg.exemplar_frame.dataset}.yaml"
+        repo_root() / "configs" / "dataset" / f"{cfg.exemplar_frame.dataset}.yaml"
     )
     raw_path = OmegaConf.to_container(dataset_cfg, resolve=False)["path"]
 
-    from fmeval.data import kinet_raw, locate, well  # noqa: F401  (register the formats)
-    from fmeval.data.base import READERS
-    from fmeval.data.locate import resolve_dataset_path
-
-    # The same resolver `evaluate.py` uses. Sharing it matters more than it looks: this
-    # function used to carry its own substitution rule, and two rules for where a dataset
-    # lives diverge the moment either one grows a case.
+    # The same resolver `evaluate.py` uses: two rules for where a dataset lives would
+    # diverge the moment either one grows a case.
     #
     # `allow_url=False` on purpose. Exemplar panels are committed artifacts generated
     # where the data lives, and the documentation build must keep working on a runner with
     # no data at all; silently fetching 166 GiB worth of ranges during a docs build is not
     # an improvement. Pass allow_remote=True to opt in deliberately.
     try:
-        location = resolve_dataset_path(
-            raw_path, REPO / "datasets", data_url=locate.default_data_url(),
+        location = locate.resolve_dataset_path(
+            raw_path, repo_root() / "datasets", data_url=locate.default_data_url(),
             allow_url=allow_remote,
         )
     except FileNotFoundError as exc:
@@ -121,8 +119,6 @@ def build_columns(name: str, card: Any, frame: CanonicalFrame, *, seed: int) -> 
     Returns:
         The columns, and a record of what was applied for the fingerprint.
     """
-    from .figures import Column
-
     spec = deg_registry.get(name)
     field_name = card.exemplars.field_name
     data = frame.fields[field_name]
@@ -148,7 +144,9 @@ def build_columns(name: str, card: Any, frame: CanonicalFrame, *, seed: int) -> 
             shown = _ensemble_member(spec, data, resolved, seed=seed)
         else:
             shown = spec.fn(data, resolved, ctx=ctx)
-        columns.append(Column(title=_title(spec, resolved), data=shown))
+        # The title is the severity that was applied, with its units.
+        units = f" {spec.severity_units}" if spec.severity_units else ""
+        columns.append(Column(title=f"{spec.severity_name} = {resolved:.3g}{units}", data=shown))
         applied["severities"].append(float(severity))
         applied["resolved"].append(float(resolved))
     return columns, applied
@@ -178,12 +176,6 @@ def _ensemble_member(spec: Any, data: np.ndarray, severity: float, *, seed: int
     return np.asarray(spec.fn(members, severity))[0]
 
 
-def _title(spec: Any, resolved: float) -> str:
-    """Panel title: the severity that was applied, with its units."""
-    units = f" {spec.severity_units}" if spec.severity_units else ""
-    return f"{spec.severity_name} = {resolved:.3g}{units}"
-
-
 def _context(field_name: str, frame: CanonicalFrame, data: np.ndarray, *,
              seed: int, label: str) -> FieldContext:
     """A field context matching the one the pipeline builds, so panels match runs."""
@@ -205,10 +197,9 @@ def generate(name: str, *, seed: int | None = None) -> Path | None:
     Returns:
         The path to the written panel, or ``None`` if the card declares ``mode: none``.
     """
-    from .figures import exemplar_panel
-    from .loader import find_bundle, load_card
-
-    bundle = find_bundle(name)
+    # Looked up through the module, so a test that substitutes `loader.find_bundle` with a
+    # throwaway copy keeps the generator away from the tracked bundle.
+    bundle = loader.find_bundle(name)
     if bundle is None:
         raise KeyError(f"no degradation bundle named {name!r}")
     card = load_card(bundle)
@@ -218,7 +209,7 @@ def generate(name: str, *, seed: int | None = None) -> Path | None:
     cfg = load_cards_config()
     frame = load_canonical_frame(cfg)
     if seed is None:
-        seed = int(OmegaConf.load(REPO / "configs" / "config.yaml").seed)
+        seed = int(OmegaConf.load(repo_root() / "configs" / "config.yaml").seed)
     columns, applied = build_columns(name, card, frame, seed=seed)
 
     out = bundle.generated

@@ -16,16 +16,14 @@ from tests.conftest import members
 
 from .degradation import spread_inflate
 
-
-def _ensemble(n_members: int = 8, seed: int = 0) -> np.ndarray:
-    """Pure unit-variance noise members on a non-square grid."""
-    return members(np.zeros((1, 8, 4)), n_members=n_members, seed=seed, scale=1.0)
+#: Pure unit-variance noise members on a non-square grid. Never modified: the operator
+#: returns a new array.
+NOISE = members(np.zeros((1, 8, 4)), n_members=8, scale=1.0)
 
 
 def test_severity_is_the_excess_dispersion():
     """Severity one doubles the spread; severity three quadruples it."""
-    members = _ensemble()
-    base = members.std(axis=0, ddof=1).mean()
+    base = NOISE.std(axis=0, ddof=1).mean()
     for severity, factor in ((1.0, 2.0), (3.0, 4.0)):
-        widened = spread_inflate(members, severity).std(axis=0, ddof=1).mean()
+        widened = spread_inflate(NOISE, severity).std(axis=0, ddof=1).mean()
         assert widened == pytest.approx(factor * base, rel=1e-12)

@@ -20,7 +20,7 @@ from typing import Any
 
 from fmeval import analysis as an
 
-from .loader import GENERATED_DIR, Bundle, iter_bundles, load_card
+from .loader import GENERATED_DIR, Bundle, iter_bundles, load_card, write_strict_json
 
 CATALOG_SCHEMA_VERSION = 2
 """Bump when an entry's shape changes in a way a consumer could not ignore. Not the card
@@ -158,7 +158,7 @@ def build() -> dict[str, Any]:
 
 
 def write(path: Path) -> Path:
-    """Write the catalog, sorted and with a trailing newline so diffs stay readable."""
+    """Write the catalog as strict, sorted JSON with a trailing newline, so diffs stay readable."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(build(), indent=2, sort_keys=True) + "\n")
+    write_strict_json(path, build())
     return path

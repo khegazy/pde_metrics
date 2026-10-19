@@ -160,18 +160,10 @@ class DegradationSpec(Accepts):
 
 REGISTRY: dict[str, DegradationSpec] = {}
 CARD_VALIDATOR: Callable[[Any], None] | None = None
-"""Optional check run when a degradation is requested by name.
-
-:mod:`fmeval.cards` installs a validator here that reads the degradation's card and refuses
-to hand back a spec whose documentation is missing or contradicts the code. It is a hook
-rather than a direct import for two reasons: this module would otherwise depend on the
-whole harness (and its pandas and matplotlib dependencies) when it needs only numpy, and
-validating at *lookup* rather than at *import* means a half-written card in one bundle
-cannot break an unrelated run. See ``fmeval/cards/loader.py``.
-"""
+"""Optional check run when a degradation is requested by name; installed by :mod:`fmeval.cards`.
+Why it is a hook rather than an import: see ``metrics.registry.CARD_VALIDATOR``."""
 
 _IMPORT_ERRORS: dict[str, Exception] = {}
-_DISCOVERED = False
 
 
 def degradation(
@@ -294,17 +286,9 @@ def degradation(
 
 
 def discover(force: bool = False) -> dict[str, Exception]:
-    """Import every module under ``degradations/`` so the decorators fire.
-
-    Returns the import failures, collected rather than raised; see
-    :func:`metrics._registry_core.discover_package`.
-    """
-    global _DISCOVERED
-    if _DISCOVERED and not force:
-        return _IMPORT_ERRORS
-    discover_package("degradations", _IMPORT_ERRORS)
-    _DISCOVERED = True
-    return _IMPORT_ERRORS
+    """Import every module under ``degradations/`` so the decorators fire; returns the import
+    failures. See :func:`metrics._registry_core.discover_package`."""
+    return discover_package("degradations", _IMPORT_ERRORS, force)
 
 
 def get(name: str) -> DegradationSpec:

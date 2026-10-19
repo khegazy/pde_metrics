@@ -12,6 +12,7 @@ import numpy as np
 
 from tests.conftest import SQUARE_REFERENCE, SQUARE_SHIFTED
 
+from ..rmse.metric import rmse
 from .metric import nrmse
 
 
@@ -27,8 +28,6 @@ def test_worked_example_of_scale_invariance_from_the_card():
     The same displaced feature, scored as it stands and with both fields multiplied by a
     ten-thousandth. RMSE falls by four orders of magnitude; NRMSE does not move.
     """
-    from ..rmse.metric import rmse
-
     assert rmse(SQUARE_REFERENCE, SQUARE_SHIFTED) == 0.5
     assert np.isclose(rmse(SQUARE_REFERENCE * 1e-4, SQUARE_SHIFTED * 1e-4), 5e-05)
     assert np.isclose(nrmse(SQUARE_REFERENCE, SQUARE_SHIFTED), 1.155, atol=5e-4)

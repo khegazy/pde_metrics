@@ -35,6 +35,7 @@ from fmeval.report.style import DEFAULT_THEME, Theme
 
 log = logging.getLogger("make_report")
 
+
 def build(
     folder_path: Path | str,
     *,
@@ -42,7 +43,6 @@ def build(
     only: tuple[str, ...] = (),
     skip: tuple[str, ...] = (),
     formats: tuple[str, ...] = ("pdf", "png"),
-    thresholds: dict[str, float] | None = None,
     bootstrap: int = an.N_BOOTSTRAP,
 ) -> Path:
     """Render one run folder. Returns the path to ``main.tex``."""
@@ -50,9 +50,7 @@ def build(
     if not folder.data.is_dir():
         raise FileNotFoundError(f"{folder.root} has no data/ directory")
 
-    ctx = build_context(folder, theme=theme,
-                        thresholds=thresholds,
-                        bootstrap=bootstrap)
+    ctx = build_context(folder, theme=theme, bootstrap=bootstrap)
     rendered = render(folder, ctx, only=only, skip=skip, formats=formats)
     main = write_document(folder, ctx, rendered)
     write_manifest(folder, rendered)
@@ -82,8 +80,6 @@ def compile_pdf(main: Path) -> bool:
 def make_zip(folder: Path) -> Path:
     """Archive the folder for upload to Overleaf, which detects main.tex automatically."""
     archive = folder.parent / f"{folder.name}.zip"
-    if archive.exists():
-        archive.unlink()
     shutil.make_archive(str(archive.with_suffix("")), "zip",
                         root_dir=folder.parent, base_dir=folder.name)
     log.info("wrote %s", archive)

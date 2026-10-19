@@ -3,7 +3,7 @@
 ``kinet_raw`` and ``well`` differ only in how a file lays its fields out, which each parses in
 its own ``__init__`` and :meth:`~fmeval.data.base.Trajectory.read_frame`. Everything else --
 opening the file locally or over HTTP, the chunk cache, the ``fields``/``times``/``grid``
-properties, the provenance record and closing both handles -- was written twice and is here.
+properties, the provenance record and closing both handles -- is here, once.
 
 A reader takes a *location*, not a path: a ``Path`` or an ``https://`` URL of the copy published
 at ``paths.data_url``. The URL is kept as text in ``source`` and never pushed through ``Path``,

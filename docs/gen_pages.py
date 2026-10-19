@@ -30,6 +30,8 @@ sys.path.insert(0, str(REPO))
 
 from fmeval.cards.catalog import build as build_catalog  # noqa: E402
 from fmeval.cards.loader import iter_bundles  # noqa: E402
+from fmeval.cards.overview import page_markdown  # noqa: E402
+from fmeval.cards.prose import FRONTMATTER  # noqa: E402
 from fmeval.cards.schema import CATEGORIES  # noqa: E402
 from fmeval.report.vocabulary import FAMILY_INFO  # noqa: E402
 
@@ -64,13 +66,6 @@ def _for_site(text: str, name: str) -> str:
     # sibling section is one level up.
     text = _CARD_LINK.sub(lambda m: f"](../{m.group(1)}/{m.group(2)}.md)", text)
     return _ASSET.sub(lambda m: f"](_generated/{name}_{m.group(1)})", text)
-
-
-def _front_matter_stripped(text: str) -> str:
-    """A card without its YAML front matter, which the site header replaces."""
-    if text.startswith("---"):
-        return text.split("---", 2)[2].lstrip("\n")
-    return text
 
 
 def _strength(declared: dict) -> str:
@@ -162,8 +157,7 @@ def _category(entry: dict) -> str:
     on the kind of bundle. A degradation reuses the ``family`` its registry entry declares,
     which overlaps the metric vocabulary in spelling and not in meaning -- ``pointwise`` is
     cell-by-cell *comparison* for a metric and cell-by-cell *distortion* for a degradation --
-    so the kind chooses the vocabulary. One shared map silently mislabelled whichever sense
-    was written second.
+    so the kind chooses the vocabulary; one shared map would mislabel one of the two senses.
     """
     code = entry["category"]
     if entry["kind"] == "metric":
@@ -173,12 +167,6 @@ def _category(entry: dict) -> str:
     return f"{said} (`{code}`)" if said else str(code)
 
 
-def _api(bundle) -> str:
-    """The implementation's API, pulled from its docstrings by mkdocstrings."""
-    module = f"{bundle.path.parent.name}.{bundle.name}.{bundle.implementation.stem}"
-    return f"## Implementation\n\n::: {module}\n"
-
-
 def main() -> None:
     catalog = build_catalog()
     by_name = {e["name"]: e for e in catalog["entries"]}
@@ -186,15 +174,18 @@ def main() -> None:
 
     for bundle in iter_bundles():
         entry = by_name[bundle.name]
-        card = _front_matter_stripped(bundle.card_md.read_text())
+        # The front matter is replaced by the header table drawn from the typed record.
+        card = FRONTMATTER.sub("", bundle.card_md.read_text()).lstrip("\n")
         page = f"{bundle.path.parent.name}/{bundle.name}.md"
+        # The implementation's API, pulled from its docstrings by mkdocstrings.
+        module = f"{bundle.path.parent.name}.{bundle.name}.{bundle.implementation.stem}"
         with mkdocs_gen_files.open(page, "w") as f:
             print(f"# {bundle.name}\n", file=f)
             print(f"{entry['summary']}\n", file=f)
             print(_ORIENTATION[bundle.kind] + "\n", file=f)
             print(_header(entry) + "\n", file=f)
             print(_for_site(card, bundle.name), file=f)
-            print("\n" + _api(bundle), file=f)
+            print(f"\n## Implementation\n\n::: {module}\n", file=f)
         mkdocs_gen_files.set_edit_path(page, f"{bundle.path.parent.name}/{bundle.name}/card.md")
 
         # Figures are served from beside the page, with the JSON of the numbers behind each
@@ -207,11 +198,15 @@ def main() -> None:
 
         # Metrics are grouped in the navigation by type, degradations by nothing.
         (nav_metrics if bundle.kind == "metric" else nav_degradations).append(
-            (bundle.name, entry["category"], f"{bundle.path.parent.name}/{bundle.name}.md")
+            (bundle.name, entry["category"], page)
         )
 
     _write_catalogue_page(catalog)
-    _write_sensitivity_page(catalog)
+    # Every metric on the same response figures. The figures are committed under
+    # docs/figures/<run>/; only this page is generated, from their JSON, so the captions on
+    # the page are the captions the renderer wrote.
+    with mkdocs_gen_files.open("sensitivity.md", "w") as f:
+        print(page_markdown(catalog=catalog), file=f)
     _write_gallery(catalog)
     _write_protocol()
     _write_nav(nav_metrics, nav_degradations)
@@ -252,18 +247,6 @@ def _write_catalogue_page(catalog: dict) -> None:
             print(f"| [{e['name']}](degradations/{e['name']}.md) | {_category(e)} "
                   f"| {_strength(d)} | {_measured_against(d)} "
                   f"| {'yes' if d['ordinal'] else 'no: a trap test'} |", file=f)
-
-
-def _write_sensitivity_page(catalog: dict) -> None:
-    """Every metric on the same response figures, from the committed overview figures.
-
-    The figures live in `docs/figures/<run>/` and are tracked; only this page is generated,
-    from their JSON, so the captions on the page are the captions the renderer wrote.
-    """
-    from fmeval.cards.overview import page_markdown
-
-    with mkdocs_gen_files.open("sensitivity.md", "w") as f:
-        print(page_markdown(catalog=catalog), file=f)
 
 
 def _write_gallery(catalog: dict) -> None:
@@ -314,11 +297,10 @@ def _write_protocol() -> None:
 def _write_nav(metrics: list, degradations: list) -> None:
     """The navigation tree, with the metrics grouped by what kind of measurement they make.
 
-    Grouping used to be by ``status``, which answered "how far has the work got" -- a
-    question about this repository's progress rather than about metrics, and one that gave
-    a reader scanning the sidebar no way to find the metric they wanted. Type answers
-    "what does this thing look at", which is the question someone browsing actually has.
-    The group label is the type said in words for the same reason.
+    Type answers "what does this thing look at", which is the question someone browsing
+    actually has; ``status`` answers how far the work has got, which says nothing about the
+    metric and gives a reader scanning the sidebar no way to find the one they want. The
+    group label is the type said in words for the same reason.
 
     Groups follow the order of ``CATEGORIES`` rather than the alphabet, so the ordering is
     declared in one place and adding a type does not silently reshuffle the sidebar. A type

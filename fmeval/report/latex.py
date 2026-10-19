@@ -83,15 +83,10 @@ def slug(name: str, **keys: object) -> str:
 
     A single dot in the final filename matters: ``graphicx`` mis-parses paths with more.
     """
-    parts = [name]
-    for key in ("dataset", "metric", "field", "degradation", "t"):
-        if key in keys and keys[key] not in (None, ""):
-            parts.append(f"{key}-{_clean(keys[key])}")
-    for key, value in keys.items():
-        if (key not in ("dataset", "metric", "field", "degradation", "t")
-                and value not in (None, "")):
-            parts.append(f"{key}-{_clean(value)}")
-    return "__".join(parts)
+    first = ("dataset", "metric", "field", "degradation", "t")
+    ordered = [*(k for k in first if k in keys), *(k for k in keys if k not in first)]
+    return "__".join([name, *(f"{k}-{_clean(keys[k])}" for k in ordered
+                              if keys[k] not in (None, ""))])
 
 
 def _clean(value: object) -> str:

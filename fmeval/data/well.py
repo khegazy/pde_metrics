@@ -47,8 +47,6 @@ FIELD_MAP: dict[str, tuple[str, str]] = {
 }
 
 
-
-
 @register_reader("well")
 class WellTrajectory(HDF5Trajectory):
     """One rollout from a Well-format HDF5 file."""
@@ -83,7 +81,8 @@ class WellTrajectory(HDF5Trajectory):
                    sim_index=sim_index)
 
         dims = self._file["dimensions"]
-        names = [_text(n) for n in dims.attrs.get("spatial_dims", ["x", "y"])]
+        names = [n.decode() if isinstance(n, bytes) else str(n)
+                 for n in dims.attrs.get("spatial_dims", ["x", "y"])]
         expected = ("x", "y", "z")[: len(names)]
         if tuple(names) != expected:
             raise ValueError(
@@ -150,7 +149,3 @@ class WellTrajectory(HDF5Trajectory):
             else:
                 out[name] = np.asarray(ds[self._sim, t], dtype=np.float64)[np.newaxis]
         return out
-
-
-def _text(value: object) -> str:
-    return value.decode() if isinstance(value, bytes) else str(value)

@@ -30,6 +30,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from fmeval.context import FieldContext, fluctuation
+from fmeval.wavenumbers import wavenumber_magnitude
 from metrics.registry import metric
 
 
@@ -39,18 +40,16 @@ def radial_energy_spectrum(
     """Fluctuation energy of ``field`` summed into unit-width shells, ``rint(|k|)``.
 
     The magnitude ``|k|`` is the repository's one definition, from ``fmeval/wavenumbers.py``;
-    only the grouping is local. That module exists because the filters and the calibration
-    once disagreed about which side of a cutoff the diagonal modes fell on, and a filter
-    that was asked to remove 30% of density's energy removed 99.997%. The hazard is two
-    operators disagreeing about the *same* cutoff. A metric that groups the shared
-    magnitudes into shells does not create it, so the shells here can follow the
-    turbulence literature without reintroducing it.
+    only the grouping is local. One definition matters where two operators must agree about
+    which side of the *same* cutoff a mode falls, as the filters and the calibration must. A
+    metric that groups the shared magnitudes into shells does not create that hazard, so the
+    shells here can follow the turbulence literature.
 
-    Shells were first taken as the calibration's exact distinct magnitudes. That gives 5924
-    shells of a median 8 modes on 256 x 256, against 182 here, which makes the comparison
-    close to a mode-by-mode one: two realisations of the same flow would differ through
-    the scatter of individual mode amplitudes rather than through their spectra.
-    ``issues/038`` records the measurement and the decision to switch.
+    The shells are unit-width rather than the calibration's exact distinct magnitudes. Those
+    give 5924 shells of a median 8 modes on 256 x 256, against 182 here, which would make the
+    comparison close to a mode-by-mode one: two realisations of the same flow would differ
+    through the scatter of individual mode amplitudes rather than through their spectra.
+    ``issues/038`` records the measurement.
 
     Every mode is kept, including the corners beyond ``|k| = N/2``, whose shells are only
     partly populated by the square grid. Nothing is dropped, so the total energy in the
@@ -68,8 +67,6 @@ def radial_energy_spectrum(
     Returns:
         1-D array of energy per shell, summed over channels, ascending in ``|k|``.
     """
-    from fmeval.wavenumbers import wavenumber_magnitude
-
     shell = np.rint(wavenumber_magnitude(tuple(ctx.grid.shape))).astype(np.int64)
     power = sum(np.abs(np.fft.fftn(channel)) ** 2 for channel in fluctuation(field))
     return np.bincount(shell.ravel(), power.ravel(), minlength=int(shell.max()) + 1)

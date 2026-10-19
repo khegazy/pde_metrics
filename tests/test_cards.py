@@ -4,26 +4,39 @@ Two kinds of test live here. The first checks the schema and the prose rules aga
 hand-built examples, so a change to the rules shows up as a specific failure rather than
 as twenty bundles going red at once. The second is parametrized over every bundle on
 disk, so a real bundle that drifts out of contract names itself.
-
-The parametrized tests pass vacuously while no bundles exist yet. That is intended: the
-card system lands before the bundles move, so the move can be verified one bundle at a
-time.
 """
 
 from __future__ import annotations
 
+import dataclasses
 import datetime as dt
 import json
+import os
 import pathlib
 import re
+import shutil
+import subprocess
 import sys
+from argparse import Namespace
 
+import numpy as np
+import pandas as pd
 import pytest
 import yaml
+from scipy.ndimage import gaussian_filter
 
-from fmeval.cards import loader, prose, review
-from fmeval.cards.schema import SCHEMA_VERSION, CardError, parse_card
-from tests.conftest import REPO
+from degradations import registry as deg_registry
+from fmeval import analysis
+from fmeval.cards import catalog, cli, evidence, loader, prose, review
+from fmeval.cards.exemplars import load_cards_config
+from fmeval.cards.figures import Column, _row_limits, exemplar_panel
+from fmeval.cards.metric_figures import ALT_TEXT, METRIC_FIGURES, metric_figures
+from fmeval.cards.overview import overview_figures, page_markdown
+from fmeval.cards.schema import CATEGORIES, SCHEMA_VERSION, STATUSES, CardError, parse_card
+from fmeval.report import vocabulary
+from fmeval.report.style import OKABE_ITO
+from metrics import registry as metric_registry
+from tests.conftest import REPO, make_frame, synthetic_rows
 
 # --------------------------------------------------------------------------------------
 # A minimal valid card, used as the base for the negative tests
@@ -80,24 +93,47 @@ def test_every_required_key_is_required(missing):
         parse(data)
 
 
-def test_an_unknown_key_is_rejected():
-    """A key nothing reads is a claim nothing checks, which is the failure mode the card
-    system exists to prevent. A typo must not pass silently."""
-    with pytest.raises(CardError, match="unrecognised key"):
-        parse(card(triangle_inequality=True))
+@pytest.mark.parametrize("overrides,match", [
+    # A key nothing reads is a claim nothing checks, which is the failure mode the card
+    # system exists to prevent. A typo -- here a `math` key written at the top level --
+    # must not pass silently.
+    pytest.param({"triangle_inequality": True}, "unrecognised key", id="unknown-key"),
+    # Nothing in a card may state how a metric is expected to behave. A statement about
+    # behaviour is either measured -- and then it belongs in the generated evidence -- or
+    # it comes from published work, and then it belongs in `## Definition` or
+    # `## Assessment` with a citation. An unsourced prediction is an opinion, and an
+    # opinion in structured YAML reads like a finding.
+    pytest.param({"expectations": [{"axis": "translate_x", "response": "increasing"}]},
+                 "unrecognised key", id="prediction"),
+    # The category comes from a closed vocabulary, which is what the navigation groups by.
+    pytest.param({"category": "fluids"}, "category", id="unknown-category"),
+    # Bounds whose lower end is not below the upper describe no range at all.
+    pytest.param({"output": {"description": "Something measurable.",
+                             "bounds": {"lower": 1.0, "upper": 0.0}}},
+                 "not below", id="unordered-bounds"),
+    # A card from the future may use fields this code cannot interpret. Refusing is the
+    # only safe answer; the error tells the reader to update rather than to edit the card.
+    pytest.param({"schema_version": SCHEMA_VERSION + 1}, "newer than this checkout",
+                 id="newer-schema"),
+    # A review signature records the digest of the prose it stands behind.
+    pytest.param({"review": {"prose_sha256": "not-a-hash", "reviewer": "x",
+                             "date": "2026-08-18"}}, "sha256", id="signature-not-a-digest"),
+])
+def test_a_malformed_card_is_refused(overrides, match):
+    """A card that breaks the schema is refused with an error naming what is wrong."""
+    with pytest.raises(CardError, match=match):
+        parse(card(**overrides))
 
 
 def test_status_vocabulary_is_closed_and_has_no_rejected_value():
     """`rejected` is absent on purpose: nothing here reduces a metric to pass or fail.
 
-    `control` is absent too, and for a different reason. It answered "what kind of thing is
-    this" while the other values answer "how far has the work got", so a metric could not be
-    both a familiar baseline and unreviewed -- the field had to pick one. What kind of
+    `control` is absent too, and for a different reason. It would answer "what kind of thing
+    is this" while the other values answer "how far has the work got", so a metric could not
+    be both a familiar baseline and unreviewed -- the field would have to pick one. What kind of
     measurement a metric makes is `category`, which is orthogonal to this and is what the
     navigation groups by.
     """
-    from fmeval.cards.schema import STATUSES
-
     assert "rejected" not in STATUSES
     assert "control" not in STATUSES
     assert set(STATUSES) == {"candidate", "validated", "deprecated"}
@@ -108,28 +144,23 @@ def test_status_vocabulary_is_closed_and_has_no_rejected_value():
 def test_every_degradation_family_has_one_entry_for_its_label_colour_and_wording():
     """Each registered family is shown with one label, one colour and one phrase.
 
-    These were four dictionaries in four modules -- the figure label, the card heading, the
-    colour and the site wording -- held in step by tests like this one. Now they are one table,
-    so the test only has to check that table against the registry: a family missing from it
-    would reach the reader as a bare code, in blue, under no card heading.
+    All three live in one table, ``vocabulary.FAMILY_INFO``, checked here against the
+    registry: a family missing from it would reach the reader as a bare code, in blue, under
+    no card heading.
     """
-    from degradations.registry import FAMILIES
-    from fmeval.report.style import OKABE_ITO
-    from fmeval.report.vocabulary import FAMILY_INFO
-
+    families = set(deg_registry.FAMILIES) - {"identity"}
     # `identity` labels the reference severity level rather than a kind of damage.
-    assert set(FAMILY_INFO) == set(FAMILIES) - {"identity"}, (
-        f"fmeval/report/vocabulary.py:FAMILY_INFO covers {sorted(FAMILY_INFO)}, the registry "
-        f"defines {sorted(set(FAMILIES) - {'identity'})}"
+    assert set(vocabulary.FAMILY_INFO) == families, (
+        f"fmeval/report/vocabulary.py:FAMILY_INFO covers {sorted(vocabulary.FAMILY_INFO)}, "
+        f"the registry defines {sorted(families)}"
     )
-    unknown = {k: f.colour for k, f in FAMILY_INFO.items() if f.colour not in OKABE_ITO}
+    unknown = {k: f.colour for k, f in vocabulary.FAMILY_INFO.items()
+               if f.colour not in OKABE_ITO}
     assert not unknown, f"family colours outside the Okabe-Ito palette: {unknown}"
 
 
 def test_every_metric_type_can_be_said_in_words_on_the_site():
     """A type with no plain-language phrase would reach the reader as a bare code."""
-    from fmeval.cards.schema import CATEGORIES
-
     empty = sorted(code for code, said in CATEGORIES.items() if not said.strip())
     assert not empty, f"categories with no wording for the site: {empty}"
 
@@ -139,23 +170,15 @@ def test_a_degradation_card_category_is_its_registry_family():
 
     The site labels a degradation page from its card and groups the gallery from the
     registry, so a bundle whose two disagree is filed under one name and described by
-    another. Every degradation predating this test already agreed; the check keeps it so.
+    another.
     """
-    from degradations import registry as deg
-
-    deg.discover()
     wrong = []
     for bundle in (b for b in loader.iter_bundles() if b.kind == "degradation"):
         card = loader.load_card(bundle)
-        family = deg.REGISTRY[bundle.name].family
+        family = deg_registry.get(bundle.name).family
         if card.category != family:
             wrong.append(f"{bundle.name}: card says {card.category!r}, registry says {family!r}")
     assert not wrong, "\n".join(wrong)
-
-
-def test_a_metric_needs_a_category_from_the_vocabulary():
-    with pytest.raises(CardError, match="category"):
-        parse(card(category="fluids"))
 
 
 def test_a_metric_card_needs_its_math_block():
@@ -165,29 +188,50 @@ def test_a_metric_card_needs_its_math_block():
         parse(data)
 
 
-def test_bounds_must_be_ordered():
-    with pytest.raises(CardError, match="not below"):
+def test_an_older_schema_version_without_a_migration_is_refused():
+    """No migration exists yet, so an older card is refused with the fix rather than read as
+    if it were current."""
+    with pytest.raises(CardError, match="no migration"):
+        parse(card(schema_version=SCHEMA_VERSION - 1))
+
+
+def test_the_bounds_order_error_shows_the_bounds_compared():
+    """Bounds are converted to floats once; equal bounds are refused, and the message shows
+    the two values that were compared."""
+    with pytest.raises(CardError, match=r"lower \(1\.0\) is not below upper \(1\.0\)"):
         parse(card(output={"description": "Something measurable.",
-                           "bounds": {"lower": 1.0, "upper": 0.0}}))
+                           "bounds": {"lower": 1, "upper": 1}}))
 
 
-def test_a_newer_schema_version_is_refused_rather_than_guessed_at():
-    """A card from the future may use fields this code cannot interpret. Refusing is the
-    only safe answer; the error tells the reader to update rather than to edit the card."""
-    with pytest.raises(CardError, match="newer than this checkout"):
-        parse(card(schema_version=SCHEMA_VERSION + 1))
-
-
-def test_a_card_cannot_carry_a_prediction():
-    """Nothing in a card may state how a metric is expected to behave.
-
-    A statement about behaviour is either measured -- and then it belongs in the
-    generated evidence -- or it comes from published work, and then it belongs in
-    `## Definition` or `## Assessment` with a citation. An unsourced prediction is an
-    opinion, and an opinion in structured YAML reads like a finding.
-    """
-    with pytest.raises(CardError, match="unrecognised key"):
-        parse(card(expectations=[{"axis": "translate_x", "response": "increasing"}]))
+@pytest.mark.parametrize("section, value, key", [
+    # `output` holds a description and bounds. A misspelt key here would document a
+    # property of the output that no tool ever reads.
+    pytest.param("output", {"description": "Something measurable.", "n_draw": 3},
+                 "output.n_draw", id="output"),
+    # The bounds sit one level deeper; a misspelt `upper` would leave the bound unset
+    # while the card appeared to state it.
+    pytest.param("output", {"description": "Something measurable.",
+                            "bounds": {"lower": 0.0, "uper": 1.0}},
+                 "output.bounds.uper", id="output-bounds"),
+    # Symmetry is declared on the @metric decorator, so a `symmetric` key in the card
+    # would be a second, unchecked answer to the same question.
+    pytest.param("math", {**VALID_METRIC_CARD["math"], "symmetric": True},
+                 "math.symmetric", id="math"),
+    # `levels` is the key the panel reads; `level` would leave the panel without
+    # severities while the card appeared to choose them.
+    pytest.param("exemplars", {"mode": "none", "level": [1.0]},
+                 "exemplars.level", id="exemplars"),
+    # The review date is stored under `date`, the key `cards sign` writes; any other
+    # spelling is refused rather than read as an alternative.
+    pytest.param("review", {"prose_sha256": "0" * 64, "reviewer": "someone",
+                            "reviewed_at": "2026-01-01"},
+                 "review.reviewed_at", id="review"),
+])
+def test_an_unknown_key_inside_a_section_is_rejected(section, value, key):
+    """Every nested section refuses keys it does not define, as the top level does, and the
+    message names the key with its section so the reader can find it."""
+    with pytest.raises(CardError, match=rf"unrecognised key\(s\): {re.escape(key)}\."):
+        parse(card(**{section: value}))
 
 
 def test_a_degradation_card_must_illustrate_itself():
@@ -219,18 +263,14 @@ def test_exemplar_order_is_checked_against_the_declared_direction():
     band_attenuate states a *retained* fraction, so 0.8 is milder than 0.0. The check
     lives where the registry spec is in hand, because "weakest" is not a numeric fact.
     """
-    from degradations import registry as deg
-    from fmeval.cards import loader
-
-    deg.discover()
-    bundle = loader.find_bundle("band_attenuate")
-    card = loader.load_card(bundle)
+    card = loader.load_card(loader.find_bundle("band_attenuate"))
     assert card.exemplars.levels == (0.8, 0.5, 0.0)
-    loader._check_exemplar_order(card, deg.get("band_attenuate"), bundle)  # must not raise
+    spec = deg_registry.get("band_attenuate")
+    loader._validate_spec(spec, "degradation")  # must not raise
 
-    inverted = deg.get("gaussian_blur")
+    inverted = dataclasses.replace(spec, severity_direction="increasing")
     with pytest.raises(CardError, match="weakest to strongest"):
-        loader._check_exemplar_order(card, inverted, bundle)
+        loader._validate_spec(inverted, "degradation")
 
 
 def test_a_degradation_without_an_ordered_severity_uses_draws_instead():
@@ -245,12 +285,6 @@ def test_a_degradation_without_an_ordered_severity_uses_draws_instead():
     assert parsed.exemplars is not None
     assert parsed.exemplars.mode == "draws"
     assert parsed.exemplars.levels == ()
-
-
-def test_a_review_signature_must_look_like_a_digest():
-    with pytest.raises(CardError, match="sha256"):
-        parse(card(review={"prose_sha256": "not-a-hash", "reviewer": "x",
-                           "date": "2026-08-18"}))
 
 
 def test_a_review_round_trips():
@@ -299,13 +333,9 @@ def problems_for(text, **kwargs):
 
 
 def test_a_complete_card_has_no_prose_problems():
+    """The defaults include the accepted forms most often doubted: a Performance section that
+    is nothing but its generated include, and "None." as the boundary-handling answer."""
     assert problems_for(build_prose()) == []
-
-
-def test_a_missing_section_is_named():
-    text = build_prose().replace("## Limitations", "## Limits")
-    messages = [p.message for p in problems_for(text)]
-    assert any("Limitations" in m for m in messages)
 
 
 def test_sections_must_be_in_the_fixed_order():
@@ -344,77 +374,69 @@ def test_the_declared_order_is_the_one_the_cards_use():
     )
 
 
-def test_the_outside_reader_section_may_not_contain_notation():
-    """Intuition is the one section a reader from another field is guaranteed to read."""
-    text = build_prose(Intuition="The error is $\\sum (a-b)^2$ over cells. " * 30
-                       + "\n\n```\n1 2\n```\n")
-    assert any("mathematical notation" in p.message for p in problems_for(text))
-
-
-def test_the_outside_reader_section_must_show_a_worked_example():
-    text = build_prose(Intuition="Words about the idea, but no numbers anywhere. " * 30)
-    assert any("worked example" in p.message for p in problems_for(text))
-
-
-def test_the_definition_must_state_its_boundary_handling():
-    """The detail most likely to differ silently between two implementations.
-
-    Periodic wrap, reflection, zero padding and dropping the edge give different numbers
-    from the same formula, and a reader comparing across projects cannot tell which was
-    used. Silence and "none" look identical; only one of them is a claim.
-    """
-    text = build_prose(Definition="An equation and some words about it. " * 10)
-    assert any("Boundary handling" in p.message for p in problems_for(text))
-
-
-def test_none_is_an_acceptable_boundary_answer():
-    text = build_prose(
-        Definition=(
-            "An equation and some words about it. " * 10
-            + "\n\n### Boundary handling\n\nNone. The operation is local to each cell."
-        )
-    )
-    assert not any("Boundary handling" in p.message for p in problems_for(text))
-
-
-def test_the_performance_summary_may_not_be_hand_written():
-    """A number typed into the summary is a claim about a measurement nothing checks.
-
-    The section sits near the top so it can be read at a glance and compared across
-    metrics, which is exactly why it must come from the generator rather than from
-    whoever last edited the card.
-    """
-    text = build_prose(Performance="Excellent on smoothing, weak on displacement.")
-    assert any("hand-written" in p.message for p in problems_for(text))
-
-
-def test_the_performance_summary_accepts_its_include():
-    text = build_prose(Performance="<!-- GENERATED performance: written by `python -m fmeval.cards evidence example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED performance -->")
-    assert not any(p.section == "Performance" for p in problems_for(text))
-
-
-def test_results_must_be_broken_into_subsections():
-    """One kind of test per subsection, so evidence sits beside the claim it supports."""
-    text = build_prose(Results="Everything went well across the whole ladder. " * 10)
-    assert any("no '###' subsections" in p.message for p in problems_for(text))
-
-
-def test_a_result_subsection_needs_its_generated_numbers():
-    text = build_prose(
-        Results="### Smoothing\n\nMSE rose steeply with kernel width. " * 6
-    )
-    assert any("generated block" in p.message for p in problems_for(text))
-
-
-def test_measurements_come_before_the_explanation():
-    """The number is the evidence; the prose reads it. Reversed, the prose leads."""
-    text = build_prose(
-        Results=(
-            "### Smoothing\n\nMSE rose steeply with kernel width, as the numbers below "
-            "show and as anyone would say. \n\n<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED results_smoothing -->\n"
-        )
-    )
-    assert any("before its generated numbers" in p.message for p in problems_for(text))
+@pytest.mark.parametrize("text,fragment", [
+    # A section renamed or dropped is named in the problem.
+    pytest.param(build_prose().replace("## Limitations", "## Limits"), "Limitations",
+                 id="missing-section"),
+    # Intuition is the one section a reader from another field is guaranteed to read, so it
+    # may not contain notation.
+    pytest.param(build_prose(Intuition="The error is $\\sum (a-b)^2$ over cells. " * 30
+                             + "\n\n```\n1 2\n```\n"),
+                 "mathematical notation", id="notation-in-intuition"),
+    # Intuition must also show a worked example; words alone do not.
+    pytest.param(build_prose(Intuition="Words about the idea, but no numbers anywhere. " * 30),
+                 "worked example", id="no-worked-example"),
+    # Boundary handling is the detail most likely to differ silently between two
+    # implementations. Periodic wrap, reflection, zero padding and dropping the edge give
+    # different numbers from the same formula, and a reader comparing across projects
+    # cannot tell which was used. Silence and "none" look identical; only one is a claim.
+    pytest.param(build_prose(Definition="An equation and some words about it. " * 10),
+                 "Boundary handling", id="no-boundary-handling"),
+    # A number typed into the performance summary is a claim about a measurement nothing
+    # checks. The section sits near the top so it can be read at a glance and compared
+    # across metrics, which is exactly why it must come from the generator rather than
+    # from whoever last edited the card.
+    pytest.param(build_prose(Performance="Excellent on smoothing, weak on displacement."),
+                 "hand-written", id="hand-written-performance"),
+    # One kind of test per subsection, so evidence sits beside the claim it supports.
+    pytest.param(build_prose(Results="Everything went well across the whole ladder. " * 10),
+                 "no '###' subsections", id="results-without-subsections"),
+    # A result subsection without its generated numbers is an unsupported claim.
+    pytest.param(build_prose(Results="### Smoothing\n\nMSE rose steeply with kernel width. " * 6),
+                 "generated block", id="result-without-numbers"),
+    # The number is the evidence; the prose reads it. Reversed, the prose leads.
+    pytest.param(build_prose(Results=(
+        "### Smoothing\n\nMSE rose steeply with kernel width, as the numbers below "
+        "show and as anyone would say. \n\n<!-- GENERATED results_smoothing: written by "
+        "`python -m fmeval.cards evidence example`, do not edit -->\n\nplaceholder\n\n"
+        "<!-- END GENERATED results_smoothing -->\n")),
+        "before its generated numbers", id="explanation-before-numbers"),
+    # The run summary is stated once, before the first subsection; a second include there
+    # is refused.
+    pytest.param(build_prose(Results=(
+        "<!-- GENERATED run: written by `python -m fmeval.cards evidence example`, do not "
+        "edit -->\n\nplaceholder\n\n<!-- END GENERATED run -->\n\n"
+        "<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence "
+        "example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED results_summary "
+        "-->\n\n### Smoothing\n\n[gaussian_blur](../../degradations/gaussian_blur/card.md)"
+        "\n\n<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence "
+        "example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED results_smoothing "
+        "-->\n\n" + "What the smoothing axes found, at length. " * 5)),
+        "before its first subsection", id="second-preamble-include"),
+    # The card sends the reader out for what the test is, rather than restating it, so a
+    # result subsection links to its degradations.
+    pytest.param(build_prose(Results=(
+        "### Smoothing\n\n<!-- GENERATED results_smoothing: written by `python -m "
+        "fmeval.cards evidence example`, do not edit -->\n\nplaceholder\n\n<!-- END "
+        "GENERATED results_smoothing -->\n\n" + "What the smoothing axes found, at length. " * 5)),
+        "does not link to the degradations", id="no-degradation-link"),
+    # The front matter must agree with the bundle name.
+    pytest.param(build_prose(name="other"), "front matter", id="front-matter-name"),
+])
+def test_a_prose_fault_is_named(text, fragment):
+    """Each prose rule, broken on an otherwise complete card, produces a problem naming it."""
+    messages = [p.message for p in problems_for(text)]
+    assert any(fragment in m for m in messages), messages
 
 
 def test_an_unexplained_result_subsection_warns_but_does_not_fail():
@@ -447,75 +469,55 @@ def test_the_contract_sets_no_word_counts():
     )
 
 
-def test_the_run_summary_may_precede_the_subsections():
-    """One include before the first subsection is the run summary, stated once.
-
-    Which dataset, resolution and frames produced the numbers is the same for every
-    subsection of every card, so it is said here rather than thirty times.
-    """
-    text = build_prose(
-        Results=(
-            "<!-- GENERATED run: written by `python -m fmeval.cards evidence example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED run -->\n\n### Smoothing\n\n"
-            "[gaussian_blur](../../degradations/gaussian_blur/card.md)\n\n"
-            "<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED results_smoothing -->\n\n"
-            + "What the smoothing axes found, at length. " * 5
-        )
-    )
-    assert not any("before its first subsection" in p.message for p in problems_for(text))
-
-
-def test_a_second_preamble_include_is_refused():
-    text = build_prose(
-        Results=(
-            "<!-- GENERATED run: written by `python -m fmeval.cards evidence example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED run -->\n\n"
-            "<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED results_summary -->\n\n### Smoothing\n\n"
-            "[gaussian_blur](../../degradations/gaussian_blur/card.md)\n\n"
-            "<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED results_smoothing -->\n\n"
-            + "What the smoothing axes found, at length. " * 5
-        )
-    )
-    assert any("before its first subsection" in p.message for p in problems_for(text))
+@pytest.mark.parametrize("text,fragment", [
+    # One include before the first subsection is the run summary, stated once: which
+    # dataset, resolution and frames produced the numbers is the same for every subsection
+    # of every card, so it is said there rather than thirty times.
+    pytest.param(build_prose(Results=(
+        "<!-- GENERATED run: written by `python -m fmeval.cards evidence example`, do not "
+        "edit -->\n\nplaceholder\n\n<!-- END GENERATED run -->\n\n### Smoothing\n\n"
+        "[gaussian_blur](../../degradations/gaussian_blur/card.md)\n\n"
+        "<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence "
+        "example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED results_smoothing "
+        "-->\n\n" + "What the smoothing axes found, at length. " * 5)),
+        "before its first subsection", id="run-summary-first"),
+    # A cross-cutting subsection, such as damage beside the other metrics, is about every
+    # degradation at once and so has no single degradation to link to.
+    pytest.param(build_prose(Results=(
+        "### Damage beside the other metrics\n\n"
+        "<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence "
+        "example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED "
+        "results_damage_by_level -->\n\n"
+        + "What the per-strength damage shows beside the other metrics. " * 4)),
+        "link", id="cross-cutting-subsection"),
+])
+def test_an_accepted_form_raises_no_such_problem(text, fragment):
+    """A form the rules allow produces no problem of the kind its look-alike fault does."""
+    assert not [p for p in problems_for(text) if fragment in p.message]
 
 
-def test_a_result_subsection_must_link_to_its_degradations():
-    """The card sends the reader out for what the test is, rather than restating it."""
-    text = build_prose(
-        Results=(
-            "### Smoothing\n\n<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED results_smoothing -->\n\n"
-            + "What the smoothing axes found, at length. " * 5
-        )
-    )
-    assert any("does not link to the degradations" in p.message for p in problems_for(text))
-
-
-def test_the_portable_subset_is_accepted():
-    text = (
-        "Inline $f_{c,i}$ and a display equation:\n\n"
-        "$$\n\\mathrm{MSE} = \\frac{1}{N} \\sum_i d_i^2 \\tag{1}\n$$\n\n"
-        "as Equation (1) shows.\n"
-    )
+@pytest.mark.parametrize("text", [
+    # The portable subset: inline dollars, and a display block with a tag.
+    pytest.param("Inline $f_{c,i}$ and a display equation:\n\n"
+                 "$$\n\\mathrm{MSE} = \\frac{1}{N} \\sum_i d_i^2 \\tag{1}\n$$\n\n"
+                 "as Equation (1) shows.\n", id="portable-subset"),
+    # A card may legitimately show LaTeX source inside a code block, as an example of what
+    # not to write.
+    pytest.param("```\n\\begin{equation}\nx = 1\n\\end{equation}\n```\n",
+                 id="code-block"),
+])
+def test_math_that_renders_everywhere_is_accepted(text):
     assert prose.check_math(text) == []
 
 
-def test_an_unterminated_display_block_is_caught():
-    """One missing fence swallows the rest of the section into an equation."""
-    problems = prose.check_math("$$\nx = 1\n\n## Next section\n")
-    assert any("unterminated" in p.message for p in problems)
-
-
-def test_an_unterminated_inline_equation_is_caught():
-    problems = prose.check_math("The value $x is large.\n")
-    assert any("odd number of `$`" in p.message for p in problems)
-
-
-def test_math_inside_a_code_block_is_left_alone():
-    """A card may legitimately show LaTeX source as an example of what not to write."""
-    text = "```\n\\begin{equation}\nx = 1\n\\end{equation}\n```\n"
-    assert prose.check_math(text) == []
-
-
-def test_front_matter_must_agree_with_the_bundle_name():
-    assert any("front matter" in p.message for p in problems_for(build_prose(name="other")))
+@pytest.mark.parametrize("text,fragment", [
+    # One missing fence swallows the rest of the section into an equation.
+    pytest.param("$$\nx = 1\n\n## Next section\n", "unterminated", id="display-block"),
+    # An unpaired dollar turns the rest of the paragraph into maths.
+    pytest.param("The value $x is large.\n", "odd number of `$`", id="inline"),
+])
+def test_an_unterminated_equation_is_caught(text, fragment):
+    assert any(fragment in p.message for p in prose.check_math(text))
 
 
 # --------------------------------------------------------------------------------------
@@ -586,11 +588,8 @@ IDS = [f"{b.kind}:{b.name}" for b in BUNDLES]
 
 @pytest.mark.parametrize("bundle", BUNDLES, ids=IDS)
 def test_bundle_has_every_required_file(bundle):
-    assert check_files(bundle) == [], f"{bundle.name}: " + "; ".join(check_files(bundle))
-
-
-def check_files(bundle):
-    return loader.check_bundle_files(bundle)
+    missing = loader.check_bundle_files(bundle)
+    assert missing == [], f"{bundle.name}: " + "; ".join(missing)
 
 
 @pytest.mark.parametrize("bundle", BUNDLES, ids=IDS)
@@ -664,39 +663,9 @@ def test_every_equation_in_every_card_actually_typesets(bundle):
 
 
 @pytest.mark.parametrize("bundle", BUNDLES, ids=IDS)
-def test_every_degradation_a_card_links_to_exists(bundle):
-    """A card's links out must land somewhere.
-
-    A metric card sends the reader to the degradation bundles for what each test does,
-    rather than repeating it. That only works while the targets exist, and a dead link
-    is worse than no link -- it looks like the explanation is one click away.
-
-    Missing targets are reported rather than tolerated. While the degradations are still
-    being migrated into bundles this test will name the ones not yet moved, which is the
-    intended signal.
-    """
-    degradations = pathlib.Path(__file__).resolve().parent.parent / "degradations"
-    if not any(d.is_dir() and not d.name.startswith("_") for d in degradations.iterdir()):
-        pytest.skip("no degradation bundles yet; the links are targets for the migration")
-
-    text = bundle.card_md.read_text()
-    targets = re.findall(r"\]\((\.\./\.\./degradations/[a-z0-9_]+/card\.md)\)", text)
-    missing = sorted({
-        target for target in targets
-        if not (bundle.path / target).resolve().is_file()
-    })
-    assert not missing, (
-        f"{bundle.name}: links to degradation bundles that do not exist yet: {missing}"
-    )
-
-
-@pytest.mark.parametrize("bundle", BUNDLES, ids=IDS)
 def test_bundle_name_matches_the_registered_name(bundle):
     """The directory, the card and the decorator must agree on what this is called."""
-    import degradations.registry as deg
-    import metrics.registry as met
-
-    registry = met if bundle.kind == "metric" else deg
+    registry = metric_registry if bundle.kind == "metric" else deg_registry
     assert bundle.name in registry.available(), (
         f"{bundle.path} is a bundle, but nothing registers the name {bundle.name!r}. "
         f"Check the name= argument of its decorator."
@@ -728,15 +697,13 @@ def test_template_is_valid_apart_from_its_sentinels(kind):
     assert not unexpected, "\n".join(f"{p.section}: {p.message}" for p in unexpected)
 
 
-@pytest.mark.parametrize("kind", ["metric", "degradation"])
-def test_template_is_not_itself_a_bundle(kind):
+def test_template_is_not_itself_a_bundle():
     """The underscore keeps it out of discovery, the catalog and the registry."""
     assert all(b.name != "_template" for b in loader.iter_bundles())
 
 
 def test_bundle_ids_are_unique():
-    names = [f"{b.kind}:{b.name}" for b in BUNDLES]
-    assert len(names) == len(set(names))
+    assert len(IDS) == len(set(IDS))
 
 
 # --------------------------------------------------------------------------------------
@@ -780,16 +747,21 @@ def test_a_signed_card_has_measurements_behind_it(bundle):
     )
 
 
+def _run_folder(path: pathlib.Path, df: pd.DataFrame, dataset: str = "kinet_re5e4"):
+    """A results folder at ``path`` holding ``df``, stamped with ``dataset``.
+
+    The default is the canonical dataset, so `load_run` accepts the folder as citable
+    evidence.
+    """
+    (path / "data").mkdir(parents=True)
+    df.assign(dataset=dataset).to_csv(path / "data" / "results.csv", index=False)
+    return path
+
+
 def test_evidence_refuses_a_run_on_a_dataset_cards_may_not_cite(tmp_path):
-    import pandas as pd
-
-    from fmeval.cards import evidence
-
-    folder = tmp_path / "comparison_1"
-    (folder / "data").mkdir(parents=True)
-    pd.DataFrame({"dataset": ["kinet_re5e4_dev"], "metric": ["mse"], "field": ["vorticity"],
-                  "value": [1.0]}).to_csv(folder / "data" / "results.csv", index=False)
-
+    folder = _run_folder(tmp_path / "comparison_1",
+                         pd.DataFrame({"metric": ["mse"], "field": ["vorticity"], "value": [1.0]}),
+                         dataset="kinet_re5e4_dev")
     with pytest.raises(ValueError, match="cards may not cite"):
         evidence.load_run(folder)
 
@@ -800,12 +772,10 @@ def test_evidence_refuses_a_run_on_a_dataset_cards_may_not_cite(tmp_path):
 
 
 def test_the_catalog_covers_every_bundle():
-    from fmeval.cards.catalog import build
-
-    catalog = build()
-    names = {e["name"] for e in catalog["entries"]}
+    built = catalog.build()
+    names = {e["name"] for e in built["entries"]}
     assert names == {b.name for b in BUNDLES}
-    assert catalog["counts"]["metrics"] + catalog["counts"]["degradations"] == len(BUNDLES)
+    assert built["counts"]["metrics"] + built["counts"]["degradations"] == len(BUNDLES)
 
 
 def test_the_catalog_reports_the_code_not_the_card():
@@ -815,22 +785,15 @@ def test_the_catalog_reports_the_code_not_the_card():
     prose half of a card, a metric could claim to be usable as a training loss because
     someone wrote that it was.
     """
-    from fmeval.cards.catalog import entry
-    from fmeval.cards.loader import find_bundle
-    from metrics import registry
-
-    e = entry(find_bundle("nrmse"))
-    spec = registry.get("nrmse")
+    e = catalog.entry(loader.find_bundle("nrmse"))
+    spec = metric_registry.get("nrmse")
     assert e["declared"]["symmetric"] is spec.symmetric is False
     assert e["declared"]["units"] == spec.units == "dimensionless"
 
 
 def test_an_unmeasured_bundle_says_so_rather_than_omitting_the_key():
     """A consumer must tell "not measured" from "measured and unremarkable"."""
-    from fmeval.cards.catalog import entry
-    from fmeval.cards.loader import find_bundle
-
-    e = entry(find_bundle("gaussian_blur"))
+    e = catalog.entry(loader.find_bundle("gaussian_blur"))
     assert e["evidence"]["measured"] is False
     assert e["evidence"]["axes"] == []
     assert e["evidence"]["figures"] == [], "the shape is the same whether measured or not"
@@ -838,17 +801,15 @@ def test_an_unmeasured_bundle_says_so_rather_than_omitting_the_key():
 
 def test_the_catalog_supports_the_query_it_exists_for():
     """"Which metrics are differentiable, cheap, and measured?" without reading prose."""
-    from fmeval.cards.catalog import build
-
     answer = [
-        e["name"] for e in build()["entries"]
+        e["name"] for e in catalog.build()["entries"]
         if e["kind"] == "metric"
         and e["declared"]["differentiable"]
         and e["declared"]["cost"] == "cheap"
         and e["evidence"]["measured"]
     ]
     # crps and ensemble_mean_rmse qualify on the same terms as the pointwise family: both
-    # are piecewise-differentiable and cheap, and both now carry measurements. The two
+    # are piecewise-differentiable and cheap, and both carry measurements. The two
     # calibration metrics are absent because they declare differentiable=False -- a rank
     # is integer-valued and a ratio of square roots is not a loss.
     assert set(answer) == {
@@ -875,10 +836,8 @@ def test_the_committed_catalog_matches_the_bundles():
     CI rebuilds and diffs it; this fails locally first, which is where it is cheaper to
     notice.
     """
-    from fmeval.cards.catalog import build
-
     committed = json.loads((REPO / "docs" / "catalog.json").read_text())
-    assert committed == build(), (
+    assert committed == catalog.build(), (
         "docs/catalog.json is stale; run  python -m fmeval.cards catalog"
     )
 
@@ -891,11 +850,7 @@ def test_the_site_builds_without_the_dataset(tmp_path):
     generator reads those rather than running anything. If that stops being true the site
     becomes unbuildable by anyone without NERSC access, and CI is the first to find out.
     """
-    import subprocess
-
     pytest.importorskip("mkdocs", reason="the docs toolchain is not installed")
-    import os
-
     result = subprocess.run(
         [sys.executable, "-m", "mkdocs", "build", "--strict", "--site-dir", str(tmp_path)],
         cwd=REPO, capture_output=True, text=True,
@@ -914,25 +869,14 @@ def test_the_site_builds_without_the_dataset(tmp_path):
 # The generators, tested end to end on synthetic data
 # --------------------------------------------------------------------------------------
 #
-# These functions rewrite committed files, so they were verified by hand when written and
-# then trusted. That is backwards: the failure modes here -- unstable ordering between
-# regenerations, a block swallowing its neighbour, regex escapes corrupting a body, silent
-# key drift between writer and reader -- are all quiet, and every one of them would put
+# These functions rewrite committed files, and their failure modes -- unstable ordering
+# between regenerations, a block swallowing its neighbour, regex escapes corrupting a body,
+# silent key drift between writer and reader -- are all quiet: every one of them would put
 # wrong content into a card that looks exactly like right content.
 
 
 def _synthetic_run(tmp_path, with_mae: bool = True):
-    """A results folder small enough to analyse in milliseconds.
-
-    Built from the analysis suite's own fixture so the columns are exactly what
-    fmeval.analysis expects, then stamped with the canonical dataset name so
-    `load_run` accepts it as citable evidence.
-    """
-    import numpy as np
-    import pandas as pd
-
-    from tests.conftest import make_frame
-
+    """A results folder small enough to analyse in milliseconds, from the analysis fixture."""
     ladder = {
         "gaussian_blur": [1.0, 2.0, 3.0, 4.0],
         "translate_x": [0.5, 1.0, 2.0, 4.0],
@@ -947,18 +891,11 @@ def _synthetic_run(tmp_path, with_mae: bool = True):
                                                      for k, vals in ladder.items()}))
     df = pd.concat(frames, ignore_index=True)
     df["energy_changed"] = np.where(df["level"] > 0, 0.01 * df["severity"] ** 2, 0.0)
-    df["dataset"] = "kinet_re5e4"
-    folder = tmp_path / "comparison_synthetic"
-    (folder / "data").mkdir(parents=True)
-    df.to_csv(folder / "data" / "results.csv", index=False)
-    return folder
+    return _run_folder(tmp_path / "comparison_synthetic", df)
 
 
 def test_load_run_goes_through_the_one_analysis_entry_point(tmp_path):
-    """The evidence loader and the report once computed different things from one run."""
-    from fmeval import analysis
-    from fmeval.cards import evidence
-
+    """A card and a report computed from one run carry the same statistics."""
     run = evidence.load_run(_synthetic_run(tmp_path))
     assert set(analysis.RESPONSE_COLUMNS) <= set(run.axes.columns)
     assert "damage" in run.scored.columns
@@ -968,15 +905,11 @@ def test_load_run_goes_through_the_one_analysis_entry_point(tmp_path):
 
 def _bundle_copy(tmp_path, monkeypatch):
     """A throwaway copy of the mse bundle, so generators never touch tracked files."""
-    import shutil
-
-    from fmeval.cards import loader as loader_module
-
     dst = tmp_path / "mse"
     shutil.copytree(REPO / "metrics" / "mse", dst,
                     ignore=shutil.ignore_patterns("__pycache__"))
     bundle = loader.Bundle(name="mse", kind="metric", path=dst)
-    monkeypatch.setattr(loader_module, "find_bundle", lambda *a, **k: bundle)
+    monkeypatch.setattr(loader, "find_bundle", lambda *a, **k: bundle)
     return bundle
 
 
@@ -988,8 +921,6 @@ def test_evidence_generation_is_idempotent(tmp_path, monkeypatch):
     shows up as a meaningless diff on every regeneration, and reviewers learn to ignore
     exactly the files where a real change matters most.
     """
-    from fmeval.cards import evidence
-
     bundle = _bundle_copy(tmp_path, monkeypatch)
     run = evidence.load_run(_synthetic_run(tmp_path))
 
@@ -1018,8 +949,6 @@ def test_evidence_fills_every_block_the_card_carries(tmp_path, monkeypatch):
     that block permanently saying "not generated yet" with no error anywhere. This pins
     the count: after generating, no block in the mse card still carries the placeholder.
     """
-    from fmeval.cards import evidence
-
     bundle = _bundle_copy(tmp_path, monkeypatch)
     run = evidence.load_run(_synthetic_run(tmp_path))
     evidence.generate("mse", run)
@@ -1041,8 +970,6 @@ def test_the_catalog_reads_what_the_evidence_writes(tmp_path, monkeypatch):
     null for every metric and the catalog would look measured-but-empty, which is worse
     than an error.
     """
-    from fmeval.cards import catalog, evidence
-
     bundle = _bundle_copy(tmp_path, monkeypatch)
     run = evidence.load_run(_synthetic_run(tmp_path))
     evidence.generate("mse", run)
@@ -1075,8 +1002,6 @@ def test_write_block_replaces_only_its_block(tmp_path):
     replacement is interpreted rather than written. Measured tables contain dollar signs
     and backslashes routinely, so corruption here would be routine too.
     """
-    from fmeval.cards.prose import write_block
-
     card = tmp_path / "card.md"
     card.write_text(
         "prose above\n\n"
@@ -1086,7 +1011,7 @@ def test_write_block_replaces_only_its_block(tmp_path):
         "<!-- END GENERATED beta -->\n\nprose below\n"
     )
     tricky = "a table with $ and \\1 and \\g<0> and $$maths$$"
-    write_block(card, "alpha", tricky, command="cmd")
+    prose.write_block(card, "alpha", tricky, command="cmd")
 
     text = card.read_text()
     assert tricky in text, "regex escapes corrupted the body"
@@ -1096,68 +1021,53 @@ def test_write_block_replaces_only_its_block(tmp_path):
 
 
 def test_write_block_refuses_a_missing_marker_and_leaves_the_file_alone(tmp_path):
-    from fmeval.cards.prose import write_block
-
     card = tmp_path / "card.md"
     original = "no markers here\n"
     card.write_text(original)
     with pytest.raises(KeyError, match="no 'alpha' generated block"):
-        write_block(card, "alpha", "body", command="cmd")
+        prose.write_block(card, "alpha", "body", command="cmd")
     assert card.read_text() == original
 
 
 def test_a_marker_not_alone_on_its_line_is_refused_rather_than_skipped():
     """An indented marker would otherwise leave its block silently ungenerated."""
-    from fmeval.cards.prose import has_block
-
-    assert not has_block("no markers here\n", "alpha")
+    assert not prose.has_block("no markers here\n", "alpha")
     with pytest.raises(ValueError, match="must start its own line"):
-        has_block("  <!-- GENERATED alpha: x -->\n<!-- END GENERATED alpha -->\n", "alpha")
+        prose.has_block("  <!-- GENERATED alpha: x -->\n<!-- END GENERATED alpha -->\n", "alpha")
 
 
 def test_the_review_ledger_through_a_real_regeneration(tmp_path, monkeypatch):
     """The signature's whole point, exercised on files rather than strings.
 
     Regenerating evidence must not invalidate a human's signature -- they signed the
-    prose, not the tables. Editing the prose must invalidate it. Both directions were
-    tested on strings at the unit level; this drives them through sign, generate and
-    review_state on a real bundle copy, which is the path production takes.
+    prose, not the tables. Editing the prose must invalidate it. The tests above check
+    both directions on strings; this drives them through sign, generate and review_state on
+    a real bundle copy, which is the path production takes.
     """
-    from fmeval.cards import evidence
-    from fmeval.cards.review import review_state, sign
-
     bundle = _bundle_copy(tmp_path, monkeypatch)
     run = evidence.load_run(_synthetic_run(tmp_path))
     evidence.generate("mse", run)                      # the gate: evidence before signing
 
-    assert review_state(bundle, None) == "unsigned"
-    signature = sign(bundle, "someone")["prose_sha256"]
-    assert review_state(bundle, signature) == "current"
+    assert review.review_state(bundle, None) == "unsigned"
+    signature = review.sign(bundle, "someone")["prose_sha256"]
+    assert review.review_state(bundle, signature) == "current"
 
     evidence.generate("mse", run)                      # regeneration: signature survives
-    assert review_state(bundle, signature) == "current"
+    assert review.review_state(bundle, signature) == "current"
 
     bundle.card_md.write_text(bundle.card_md.read_text() + "\nA new sentence of prose.\n")
-    assert review_state(bundle, signature) == "stale"  # prose edit: signature dies
+    assert review.review_state(bundle, signature) == "stale"  # prose edit: signature dies
 
 
 def test_evidence_survives_a_run_whose_ladder_skipped_a_probe(tmp_path, monkeypatch):
     """A ladder without the impostor is legitimate; the generator must not crash on it.
 
     `probe_summary` only emits columns for probes that ran, so a run produced with
-    `degradation.skip=[gaussian_impostor]` has no impostor columns at all. This used to
-    raise a bare KeyError naming a column. Absent probes are "not measured", rendered as
-    an em dash, never an error.
+    `degradation.skip=[gaussian_impostor]` has no impostor columns at all. Absent probes are
+    "not measured", rendered as an em dash, never an error.
     """
-    from fmeval.cards import evidence
-    from tests.conftest import make_frame
-
-    df = make_frame(metric="mse",
-                    axes={"gaussian_blur": [1.0, 2.0], "uncorrelated": [10.0, 10.0]})
-    df["dataset"] = "kinet_re5e4"
-    folder = tmp_path / "comparison_noimpostor"
-    (folder / "data").mkdir(parents=True)
-    df.to_csv(folder / "data" / "results.csv", index=False)
+    folder = _run_folder(tmp_path / "comparison_noimpostor", make_frame(
+        metric="mse", axes={"gaussian_blur": [1.0, 2.0], "uncorrelated": [10.0, 10.0]}))
 
     bundle = _bundle_copy(tmp_path, monkeypatch)
     evidence.generate("mse", evidence.load_run(folder))
@@ -1170,14 +1080,12 @@ def test_evidence_survives_a_run_whose_ladder_skipped_a_probe(tmp_path, monkeypa
 def test_the_cards_cli_takes_all_as_a_flag():
     """`evidence --all` and `exemplars --all` must parse.
 
-    Both used to be recognised by comparing the positional `name` against the literal
-    string "--all", which argparse never lets through -- it rejected the option as unknown,
-    so the regeneration command written in `docs/recipes/refresh-the-evidence.md` exited
-    with "the following arguments are required: name" and nobody could run it as written.
+    They are the regeneration commands written in `docs/recipes/refresh-the-evidence.md`.
+    Recognising `--all` by comparing the positional `name` with the literal string cannot
+    work: argparse rejects the option as unknown first, and the command exits with "the
+    following arguments are required: name".
     """
-    from fmeval.cards.cli import build_parser, main
-
-    parser = build_parser()
+    parser = cli.build_parser()
     args = parser.parse_args(["evidence", "--all", "--results", "results/x"])
     assert args.all is True and args.name is None
     args = parser.parse_args(["evidence", "mse", "--results", "results/x"])
@@ -1185,22 +1093,19 @@ def test_the_cards_cli_takes_all_as_a_flag():
     assert parser.parse_args(["exemplars", "--all"]).all is True
     assert parser.parse_args(["overview", "--results", "results/x"]).out is None
     # Neither a name nor --all is a usage error, not a crash.
-    assert main(["evidence", "--results", "results/x"]) == 1
-    assert main(["exemplars"]) == 1
+    assert cli.main(["evidence", "--results", "results/x"]) == 1
+    assert cli.main(["exemplars"]) == 1
 
 
 def test_check_strict_counts_warnings_as_errors(capsys):
     """`check --strict` must fail on what plain `check` only warns about.
 
-    The flag was parsed and then never read, so `--strict` printed exactly what `check` did
-    and exited 0 on 78 warnings. Every bundle is unsigned until a person signs it, so each one
-    carries at least the review warning, which is what this test relies on.
+    Every bundle is unsigned until a person signs it, so each one carries at least the
+    review warning, which is what this test relies on.
     """
-    from fmeval.cards.cli import main
-
-    assert main(["check", "mse"]) == 0
+    assert cli.main(["check", "mse"]) == 0
     capsys.readouterr()
-    assert main(["check", "mse", "--strict"]) == 1
+    assert cli.main(["check", "mse", "--strict"]) == 1
     assert "[error] card.yaml  review" in capsys.readouterr().out
 
 
@@ -1208,14 +1113,10 @@ def test_check_strict_counts_warnings_as_errors(capsys):
 def test_a_scaffolded_bundle_does_not_call_itself_a_template(kind, tmp_path, monkeypatch, capsys):
     """`cards new` must not copy the template's "not a metric itself" docstring.
 
-    Seven real bundles carried it, because the scaffolder substituted the placeholder name
-    but left the template's own description; the step list also named `test_metric.py` for a
-    degradation. Runs against a temporary bundle root so nothing is written into the repo.
+    The scaffolder substitutes the placeholder name, replaces the template's own description,
+    and names the test file of the bundle's kind in its step list. Runs against a temporary
+    bundle root so nothing is written into the repo.
     """
-    import shutil
-
-    from fmeval.cards import cli
-
     root = tmp_path / kind
     shutil.copytree(loader.bundle_root(kind) / cli.TEMPLATE_DIR, root / cli.TEMPLATE_DIR)
     monkeypatch.setattr(cli, "bundle_root", lambda _kind: root)
@@ -1228,8 +1129,8 @@ def test_a_scaffolded_bundle_does_not_call_itself_a_template(kind, tmp_path, mon
 def test_a_degradation_results_fix_names_the_exemplars_command():
     """A structural fault in a degradation's results section must say `cards exemplars`.
 
-    The check compared the section against "Exemplars", a heading that no longer exists, so
-    every degradation card was told to run `cards evidence`, which refuses degradations.
+    `cards evidence` refuses degradations, so a fix naming it would send the author to a
+    command that cannot help.
     """
     body = ("<!-- GENERATED a: x -->\n<!-- END GENERATED a -->\n"
             "<!-- GENERATED b: y -->\n<!-- END GENERATED b -->\n")
@@ -1247,10 +1148,6 @@ def test_evidence_all_skips_a_metric_the_run_does_not_contain(tmp_path, monkeypa
     "No measurements" into every block and an empty fingerprint -- erasing the evidence
     from the run the card actually cites, with nothing to say that happened.
     """
-    from argparse import Namespace
-
-    from fmeval.cards import cli, evidence
-
     folder = _synthetic_run(tmp_path)            # holds mse and mae only
     bundles = [loader.Bundle(name=n, kind="metric", path=tmp_path / n)
                for n in ("enstrophy", "mse")]
@@ -1264,22 +1161,66 @@ def test_evidence_all_skips_a_metric_the_run_does_not_contain(tmp_path, monkeypa
     assert "skipped enstrophy" in out and "its own run" in out
 
 
+@pytest.mark.parametrize("argv, message", [
+    # A results folder holding no results: `evidence` reads the run before anything else,
+    # and the reader's fix is to name the right folder.
+    pytest.param(["evidence", "mse", "--results", "{missing}"], "no results.csv",
+                 id="evidence-no-results"),
+    # A run on the dev dataset, which cards may not cite. This message is two lines by
+    # design: the refusal, then what evidence must come from.
+    pytest.param(["evidence", "mse", "--results", "{dev}"], "cards may not cite",
+                 id="evidence-uncitable-run"),
+    # A readable run and a metric name with no bundle: the generator, not the loader,
+    # refuses it.
+    pytest.param(["evidence", "no_such_metric", "--results", "{run}"],
+                 "no metric bundle named", id="evidence-unknown-metric"),
+    # A degradation name with no bundle, refused before any data is read.
+    pytest.param(["exemplars", "no_such_degradation"], "no degradation bundle named",
+                 id="exemplars-unknown"),
+    # `overview` reads the run the same way `evidence` does.
+    pytest.param(["overview", "--results", "{missing}"], "no results.csv",
+                 id="overview-no-results"),
+])
+def test_a_cli_error_the_reader_can_fix_exits_1_with_its_message(argv, message, tmp_path,
+                                                                  capsys):
+    """`main` turns FileNotFoundError, ValueError and KeyError from any subcommand into exit
+    code 1 and the exception's message on stderr, with no traceback."""
+    dev = tmp_path / "comparison_dev"
+    (dev / "data").mkdir(parents=True)
+    (dev / "data" / "results.csv").write_text(
+        "dataset,metric,field,value\nkinet_re5e4_dev,mse,vorticity,1.0\n")
+    paths = {"missing": tmp_path / "missing", "dev": dev, "run": _synthetic_run(tmp_path)}
+
+    assert cli.main([a.format(**paths) for a in argv]) == 1
+    err = capsys.readouterr().err
+    assert message in err and "Traceback" not in err
+    assert len(err.splitlines()) <= 2, err
+
+
+def test_a_cli_error_in_a_subcommand_without_its_own_handler_exits_1(tmp_path, monkeypatch,
+                                                                     capsys):
+    """`sign` has no handler of its own: a bundle with measurements but no card.yaml reaches
+    the one in `main`, which prints the one-line message and exits 1."""
+    bundle = loader.Bundle(name="probe", kind="metric", path=tmp_path / "probe")
+    bundle.fingerprint.parent.mkdir(parents=True)
+    bundle.fingerprint.write_text("{}")
+    monkeypatch.setattr(cli, "find_bundle", lambda name: bundle)
+
+    assert cli.main(["sign", "probe", "--by", "someone"]) == 1
+    err = capsys.readouterr().err
+    assert "card.yaml" in err and len(err.splitlines()) == 1, err
+
+
 # --- the figures on a metric card ---------------------------------------------------------------
 
 
 def _figure_run(tmp_path, metrics=("mse", "mae", "flat"), *, impostor: bool = True):
     """A results folder from the report suite's rows, stamped citable: three fields, a metric
     with no damage scale, and optionally no impostor."""
-    from tests.conftest import synthetic_rows
-
     df = synthetic_rows(metrics=metrics)
     if not impostor:
         df = df[df["degradation"] != "gaussian_impostor"]
-    df["dataset"] = "kinet_re5e4"
-    folder = tmp_path / "comparison_figures"
-    (folder / "data").mkdir(parents=True)
-    df.to_csv(folder / "data" / "results.csv", index=False)
-    return folder
+    return _run_folder(tmp_path / "comparison_figures", df)
 
 
 def test_metric_figures_are_byte_identical_within_one_environment(tmp_path):
@@ -1289,9 +1230,6 @@ def test_metric_figures_are_byte_identical_within_one_environment(tmp_path):
     uuid, and two renders differ (measured) -- and no creation date in the metadata. Byte
     identity is promised within one matplotlib version only, which is what one test run is.
     """
-    from fmeval.cards import evidence
-    from fmeval.cards.metric_figures import METRIC_FIGURES, metric_figures
-
     run = evidence.load_run(_figure_run(tmp_path))
     first, _ = metric_figures(run, "mse", tmp_path / "a")
     second, _ = metric_figures(run, "mse", tmp_path / "b")
@@ -1305,9 +1243,6 @@ def test_metric_figures_are_byte_identical_within_one_environment(tmp_path):
 
 def test_the_performance_block_opens_with_the_figures(tmp_path, monkeypatch):
     """Picture first, table second; and every figure beside the card is one the card shows."""
-    from fmeval.cards import evidence
-    from fmeval.cards.metric_figures import ALT_TEXT
-
     bundle = _bundle_copy(tmp_path, monkeypatch)
     evidence.generate("mse", evidence.load_run(_synthetic_run(tmp_path)))
 
@@ -1333,9 +1268,6 @@ def test_the_performance_block_opens_with_the_figures(tmp_path, monkeypatch):
 def test_a_single_metric_run_gets_no_damage_figure_and_the_block_says_only_that(tmp_path):
     """The ensemble cards are pinned to single-metric runs: no controls, so no figure and no
     extra sentence -- the block's existing one already says there is nothing to place beside."""
-    from fmeval.cards import evidence
-    from fmeval.cards.metric_figures import metric_figures
-
     run = evidence.load_run(_synthetic_run(tmp_path, with_mae=False))
     figures, reasons = metric_figures(run, "mse", tmp_path / "one")
     assert [f.name for f in figures] == ["sensitivity_profile", "response_curves"]
@@ -1346,9 +1278,6 @@ def test_a_single_metric_run_gets_no_damage_figure_and_the_block_says_only_that(
 
 
 def test_a_metric_without_a_damage_scale_still_gets_its_figures(tmp_path):
-    from fmeval.cards import evidence
-    from fmeval.cards.metric_figures import metric_figures
-
     run = evidence.load_run(_figure_run(tmp_path))
     _figures, reasons = metric_figures(run, "flat", tmp_path / "flat")
     assert set(reasons) == {"damage_beside_controls"}, reasons
@@ -1362,9 +1291,6 @@ def test_a_metric_without_a_damage_scale_still_gets_its_figures(tmp_path):
 
 
 def test_card_figures_survive_a_run_without_the_impostor(tmp_path):
-    from fmeval.cards import evidence
-    from fmeval.cards.metric_figures import metric_figures
-
     run = evidence.load_run(_figure_run(tmp_path, impostor=False))
     _figures, reasons = metric_figures(run, "mse", tmp_path / "noimp")
     assert not reasons, reasons
@@ -1375,9 +1301,6 @@ def test_card_figures_survive_a_run_without_the_impostor(tmp_path):
 
 def test_a_figure_this_generation_did_not_write_is_removed(tmp_path):
     """A renamed or dropped figure must not linger beside a card that no longer shows it."""
-    from fmeval.cards import evidence
-    from fmeval.cards.metric_figures import metric_figures
-
     out = tmp_path / "gen"
     out.mkdir()
     (out / "old_view.svg").write_text("<svg/>")
@@ -1388,9 +1311,7 @@ def test_a_figure_this_generation_did_not_write_is_removed(tmp_path):
     assert (out / "exemplars.png").exists()
 
 
-def test_an_unavailable_figure_is_said_in_the_block_not_dropped_silently(tmp_path, monkeypatch):
-    from fmeval.cards import evidence
-
+def test_an_unavailable_figure_is_said_in_the_block_not_dropped_silently(tmp_path):
     run = evidence.load_run(_synthetic_run(tmp_path))
     block = evidence.performance_block(run, "mse", [], {"response_curves": "no ordinal axes",
                                                         "sensitivity_profile": "no axes"})
@@ -1400,9 +1321,6 @@ def test_an_unavailable_figure_is_said_in_the_block_not_dropped_silently(tmp_pat
 
 def test_the_figure_vocabulary_covers_what_the_figures_draw_and_grades_nothing():
     """Every statistic a card figure labels has plain words, and none of the words is a verdict."""
-    from fmeval.cards.metric_figures import ALT_TEXT
-    from fmeval.report import vocabulary
-
     drawn = {"rho", "rho_ci_lo", "rho_ci_hi", "cliffs_delta_min", "damage_per_change",
              "damage_max_ucb", "blind_axes", "sensitivity_level", "damage", "value", "level",
              "gaussian_impostor_damage", "severity_degenerate"}
@@ -1435,9 +1353,6 @@ def test_committed_figures_fit_the_size_budget():
 
 
 def test_overview_figures_are_byte_identical_and_cover_every_field(tmp_path):
-    from fmeval.cards import evidence
-    from fmeval.cards.overview import overview_figures
-
     run = evidence.load_run(_figure_run(tmp_path))
     first, reasons = overview_figures(run, tmp_path / "a")
     second, _ = overview_figures(run, tmp_path / "b")
@@ -1455,20 +1370,17 @@ def test_overview_figures_are_byte_identical_and_cover_every_field(tmp_path):
 
 
 def test_the_sensitivity_page_shows_every_figure_and_names_what_is_not_on_it(tmp_path):
-    from fmeval.cards import evidence
-    from fmeval.cards.overview import overview_figures, page_markdown
-
     root = tmp_path / "figures"
     run = evidence.load_run(_figure_run(tmp_path))
     figures, _ = overview_figures(run, root / "comparison_figures")
-    catalog = {"entries": [
+    catalog_json = {"entries": [
         {"name": "mse", "kind": "metric",
          "evidence": {"measured": True, "run": "comparison_figures", "dataset": "kinet_re5e4"}},
         {"name": "crps", "kind": "metric",
          "evidence": {"measured": True, "run": "crps_1", "dataset": "synthetic_ensemble"}},
         {"name": "gaussian_blur", "kind": "degradation", "evidence": {"measured": False}},
     ]}
-    page = page_markdown(root, catalog)
+    page = page_markdown(root, catalog_json)
     for figure in figures:
         assert f"](figures/comparison_figures/{figure.name}.svg)" in page
         assert f"[{figure.name}.json](figures/comparison_figures/{figure.name}.json)" in page
@@ -1503,12 +1415,6 @@ def test_exemplar_panels_are_byte_identical_within_one_environment(tmp_path):
     matters. Byte identity is only promised within one matplotlib version, which is what
     a single test run is.
     """
-    import numpy as np
-    from scipy.ndimage import gaussian_filter
-
-    from fmeval.cards.exemplars import load_cards_config
-    from fmeval.cards.figures import Column, exemplar_panel
-
     base = np.random.default_rng(0).normal(size=(48, 48))
     columns = [Column("original", base)] + [
         Column(f"sigma = {s} cells", gaussian_filter(base, s, mode="wrap"))
@@ -1523,9 +1429,7 @@ def test_exemplar_panels_are_byte_identical_within_one_environment(tmp_path):
     assert (tmp_path / "a.png").read_bytes() == (tmp_path / "b.png").read_bytes()
     # Compared through the sanitiser, because a NaN statistic -- "not measured" -- is
     # never equal to itself, and comparing raw dicts would fail on unchanged output.
-    from fmeval.cards.loader import sanitize_json
-
-    assert sanitize_json(first.statistics) == sanitize_json(second.statistics)
+    assert loader.sanitize_json(first.statistics) == loader.sanitize_json(second.statistics)
 
 
 def test_every_panel_row_shares_one_set_of_limits(tmp_path):
@@ -1536,10 +1440,6 @@ def test_every_panel_row_shares_one_set_of_limits(tmp_path):
     must come from the strongest column, so the weak column reads as faint; a weak
     difference drawn on its own scale would look as severe as the strong one.
     """
-    import numpy as np
-
-    from fmeval.cards.figures import Column, _row_limits
-
     base = np.zeros((16, 16))
     weak, strong = base.copy(), base.copy()
     weak[8, 8] = 0.1
@@ -1558,14 +1458,13 @@ def test_every_generated_json_is_strict_json(bundle):
 
     These files exist for machine readers. `json.dumps` writes float('nan') as a bare
     `NaN` token, which is not JSON and which a strict parser refuses -- so a single
-    unmeasured statistic made a whole fingerprint unreadable. Thirteen committed files
-    were in that state before this test existed. "Not a number" means "not measured", and
-    null is how JSON says that.
+    unmeasured statistic would make a whole fingerprint unreadable. "Not a number" means
+    "not measured", and null is how JSON says that.
     """
     def refuse(token):
         raise AssertionError(
-            f"{bundle.name}: non-standard JSON token {token!r}. Regenerate: the writers "
-            "sanitise NaN to null, so this file predates that fix."
+            f"{bundle.name}: non-standard JSON token {token!r}. Regenerate it: the writers "
+            "sanitise NaN to null."
         )
 
     for path in sorted((bundle.path / "_generated").glob("*.json")):
@@ -1591,13 +1490,10 @@ def test_a_committed_figure_has_its_numbers_beside_it(bundle):
         assert recorded.get("panels"), f"{bundle.name}: {numbers.name} records no panels"
 
 
-
 # --- the response blocks -----------------------------------------------------------------------
 
 
 def test_damage_by_level_block_puts_this_metric_first_beside_the_controls(tmp_path):
-    from fmeval.cards import evidence
-
     run = evidence.load_run(_synthetic_run(tmp_path))
     block = evidence.damage_by_level_block(run, "mae")
     assert "`translate_x`" in block
@@ -1609,29 +1505,13 @@ def test_damage_by_level_block_puts_this_metric_first_beside_the_controls(tmp_pa
 
 
 def test_performance_block_carries_the_measured_profile(tmp_path):
-    from fmeval import analysis
-    from fmeval.cards import evidence
-
     block = evidence.performance_block(evidence.load_run(_synthetic_run(tmp_path)), "mse")
     assert "**Profile.**" in block and "selectivity" in block.lower()
     assert f"{analysis.BLINDNESS_MARGIN:g}" in block, "the margin is read from the analysis"
 
 
-def test_a_second_cross_cutting_subsection_needs_no_degradation_link():
-    text = build_prose(Results=(
-        "### Damage beside the other metrics\n\n"
-        "<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence "
-        "example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED results_damage_by_level -->"
-        "\n\n" + "What the per-strength damage shows beside the other metrics. " * 4
-    ))
-    assert not [p for p in problems_for(text) if "link" in p.message]
-
-
-
 def test_profile_header_nests_no_parentheses(tmp_path):
     """The strength an elasticity is taken against already carries its name in parentheses."""
-    from fmeval.cards import evidence
-
     block = evidence.performance_block(evidence.load_run(_synthetic_run(tmp_path)), "mse")
     header = next(line for line in block.splitlines() if line.startswith("| field | selectivity"))
     depth = deepest = 0

@@ -37,11 +37,12 @@ that it gets a colour map centred on zero. If it needs special limits — a log 
 fixed range — extend `_row_limits` in `fmeval/cards/figures.py` with a case for your row's
 name.
 
-## 2. Add the name to the vocabulary
+## 2. There is no vocabulary to update
 
-Add your row's name to the list of allowed diagnostics in `fmeval/cards/schema.py`, so
-that a degradation can declare it and a typo in a degradation's configuration fails
-validation instead of silently drawing nothing.
+The registry in `fmeval/cards/diagnostics.py` is the list of diagnostics. A degradation
+declares a row by name in `exemplars.diagnostics`, and `exemplar_panel` in
+`fmeval/cards/figures.py` refuses a name that is not registered when the panel is drawn,
+naming the registered ones, so a typo fails loudly instead of drawing nothing.
 
 ## 3. Use the row, and check that it earns its place
 

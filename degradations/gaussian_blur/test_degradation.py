@@ -13,19 +13,14 @@ from __future__ import annotations
 
 import numpy as np
 
-from tests.conftest import make_ctx
+from tests.conftest import SQUARE_REFERENCE, make_ctx
 
 from .degradation import gaussian_blur
-
-FIELD = np.array([[[0.0, 0.0, 0.0, 0.0],
-                   [0.0, 1.0, 1.0, 0.0],
-                   [0.0, 1.0, 1.0, 0.0],
-                   [0.0, 0.0, 0.0, 0.0]]])
 
 
 def test_worked_example_from_the_card():
     """The 4x4 numbers printed in the card's Intuition section, to two decimals."""
-    out = gaussian_blur(FIELD, 1.0, ctx=make_ctx((4, 4)))
+    out = gaussian_blur(SQUARE_REFERENCE, 1.0, ctx=make_ctx((4, 4)))
     expected = np.array([[0.13, 0.23, 0.23, 0.13],
                          [0.23, 0.42, 0.42, 0.23],
                          [0.23, 0.42, 0.42, 0.23],

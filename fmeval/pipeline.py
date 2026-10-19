@@ -145,6 +145,8 @@ class PipelineResult:
     maps: dict[str, np.ndarray] = dc_field(default_factory=dict)
     """``"<metric>:<field>__<variant>__t<frame>"`` -> pointwise density, for ``error_maps.npz``."""
     n_frames: int = 0
+    analysis_grid: int = 0
+    """Extent of the analysis grid along its first axis, as written to every row."""
     calibration: Calibration | None = None
     io_seconds: float = 0.0
     degrade_seconds: float = 0.0
@@ -235,7 +237,7 @@ def run(
     Args:
         trajectory: Source of frames.
         metrics: Metric specs to evaluate.
-        severity levels: The degradation ladder, including its reference severity level.
+        severity_levels: The degradation ladder, including its reference severity level.
         fields: Canonical field names to read. Metrics that do not accept a field skip it.
         selection: Which frames to evaluate. Defaults to all of them.
         dataset: Provenance copied onto every row.
@@ -244,10 +246,7 @@ def run(
         remap_method: ``"block_mean"`` (conservative) or ``"subsample"``.
         maps: Which pointwise maps to retain.
         calibration_frames: How many frames to average the per-field spectral calibration
-            over. Measured once and then held fixed for the whole run: re-measuring per frame
-            would make the ladder itself drift as the flow evolves, so two frames would no
-            longer be running the same experiment and the per-frame rank correlation would be
-            comparing different ladders.
+            over. Measured once and held fixed for the whole run; see :mod:`fmeval.calibration`.
 
     Returns:
         A :class:`PipelineResult` whose ``rows`` follow :data:`RESULT_DTYPES` exactly.
@@ -346,8 +345,7 @@ def run(
                                       value, wall, n_members=n_members))
 
                     if (
-                        maps.enabled
-                        and spec.has_pointwise
+                        spec.has_pointwise_map
                         and frame.index in keep_frames
                         and (not maps.axes or severity_level.label in maps.axes)
                         and (not maps.fields or field in maps.fields)
@@ -372,6 +370,7 @@ def run(
         rows=df,
         maps=stored_maps,
         n_frames=len(indices),
+        analysis_grid=grid_size,
         calibration=calibration,
         io_seconds=t_io,
         degrade_seconds=t_deg,
@@ -391,10 +390,13 @@ def _flag_repeated_levels(df: pd.DataFrame) -> pd.DataFrame:
 
     Such a severity level is not padding, it is corruption: the rank correlation would
     score the tie as agreement and the adjacent-severity level separability would compare
-    a distribution against itself. It is also not a misconfiguration: 69% of density's
-    fluctuation energy is in the four diagonal modes
-    at |k| = sqrt(2), so the available cutoffs there are few and far apart and a sharp ladder has
-    only a couple of distinct severity levels however it is written.
+    a distribution against itself. It is also not a misconfiguration: a field whose energy sits
+    in a few wavenumber shells offers only a few distinct cutoffs, however the ladder is written
+    (:meth:`fmeval.calibration.Calibration.spectrum_frame` shows the curve).
+
+    Severity levels already marked degenerate because the operator left the field unchanged to
+    within round-off (:func:`fmeval.ladder.apply_severity_level`) are logged here too, before the
+    merge, so the two reasons stay distinguishable in the log.
     """
     if df.empty:
         return df
@@ -420,41 +422,29 @@ def _flag_repeated_levels(df: pd.DataFrame) -> pd.DataFrame:
                 field, axis, [a for a, _ in levels], [b for _, b in levels],
             )
 
-    _log_noop_levels(df)          # before the merge, so the two reasons stay distinguishable
+    flagged = df[(df["level"] > 0) & df["severity_degenerate"]]
+    for (field, axis), g in flagged.groupby(["field", "degradation"], observed=True):
+        log.warning(
+            "%s / %s: level(s) %s resolve to a severity at which the operator leaves the "
+            "field unchanged, and are excluded from the acceptance statistics.",
+            field, axis, sorted(int(level) for level in g["level"].unique()),
+        )
     df = df.copy()
     df["severity_degenerate"] = df["severity_degenerate"] | repeated
     return df
-
-
-def _log_noop_levels(df: pd.DataFrame) -> None:
-    """Log severity levels whose severity resolved to one at which the operator does nothing.
-
-    Measured, not modelled: an operator is treated as having done nothing when it moved the field
-    by less than round-off relative to its own fluctuation.
-    """
-    flagged = df[(df["level"] > 0) & df["severity_degenerate"]]
-    for (field, axis), g in flagged.groupby(["field", "degradation"], observed=True):
-        levels = sorted(int(level) for level in g["level"].unique())
-        if levels:
-            log.warning(
-                "%s / %s: level(s) %s resolve to a severity at which the operator leaves the "
-                "field unchanged, and are excluded from the acceptance statistics.",
-                field, axis, levels,
-            )
 
 
 def _map_frames(maps: MapRequest, indices: np.ndarray) -> set[int]:
     """Resolve ``report.error_map.frames`` positions to trajectory frame indices.
 
     The positions are *within the selected frames*, so what is valid depends on
-    ``dataset.time.reduction``, ``start``/``stop`` and the trajectory length. Raising the
-    reduction shrinks the selection under a configured position, and indexing it raised
-    ``IndexError: index 7 is out of bounds for axis 0 with size 4`` -- which names neither the
-    setting that was out of range nor the one that shrank the selection. Negative positions count
+    ``dataset.time.reduction``, ``start``/``stop`` and the trajectory length, and raising the
+    reduction can shrink the selection under a configured position. Negative positions count
     from the end, as elsewhere in numpy, and ``-1`` is the shipped default.
 
     Raises:
-        ValueError: If a position is outside the selection.
+        ValueError: If a position is outside the selection, naming both the setting and the
+            selection bounds rather than an index.
     """
     if not (maps.enabled and maps.frames):
         return set()
@@ -478,17 +468,12 @@ _OPERATOR_DEFECTS = (NameError, AttributeError, ImportError, TypeError)
 :func:`_runnable_levels` drops a severity level it cannot apply, which is right when the
 analysis grid is too small for the severity asked of it -- that is one missing experiment,
 not a reason to discard the others. It is wrong when the operator itself is defective:
-the run then completes, reports fewer rows, and says nothing that would make a reader
-suspect an axis is missing rather than merely quiet.
+the run would then complete with fewer rows and a warning blaming the analysis grid, and
+nothing would make a reader suspect an axis is missing rather than merely quiet.
 
-That happened. Splitting the degradation modules into bundles dropped two private helpers
-that three operators depended on, and the resulting NameError was reported as "cannot run
-on the 16-cell analysis grid; raise analysis_grid.resolution" -- advice pointing at a knob
-that had nothing to do with it. The run finished with 630 rows missing.
-
-A NameError, AttributeError, ImportError or TypeError is a defect in the code, so it stops
+So a NameError, AttributeError, ImportError or TypeError -- a defect in the code -- stops
 the run. Anything else is treated as a limit of this grid and drops the level with a
-warning, as before.
+warning.
 """
 
 
@@ -505,10 +490,8 @@ def _runnable_levels(
 
     ``analysis_grid.resolution`` is one of the two documented size knobs, and turning it down
     far enough puts the configured ladder outside what the grid can support: the shipped ladder
-    coarsens by up to 16, so at resolution 8 the run used to die partway through the first frame
-    with ``ValueError: factor 16 does not divide grid (8, 8)`` -- an error naming the operator
-    but not the knob that caused it, raised after the I/O for that frame had been paid. On a long
-    trajectory that is a slow way to learn about a typo.
+    coarsens by up to 16, which cannot run at resolution 8. Checking before the loop names the
+    knob, and does so before any frame's I/O has been paid.
 
     The check is a trial application on one already-remapped frame, so it needs no per-operator
     declaration of what it can support and stays correct as operators are added. Severity
@@ -578,17 +561,13 @@ def _measure_calibration(
     chosen = indices[np.unique(np.linspace(0, len(indices) - 1, n_sample).astype(int))]
 
     frames_by_field: dict[str, list[np.ndarray]] = {f: [] for f in fields}
-    grid = None
     for index in chosen:
         frame = remap_frame(trajectory.frame(int(index), fields), factor,
                             method=remap_method)
-        grid = frame.grid
         for name, array in frame.fields.items():
-            frames_by_field.setdefault(name, []).append(array)
+            frames_by_field[name].append(array)
 
-    if grid is None:  # pragma: no cover - indices is non-empty by this point
-        return Calibration()
-    result = calibrate(frames_by_field, grid, fields)
+    result = calibrate(frames_by_field, frame.grid, fields)
     for entry in result.summary():
         log.info(
             "calibration %s: scale %.1f cells (spread %.0f%%), k(50/90/99%%) = %d/%d/%d",
@@ -606,10 +585,7 @@ def _coerce(df: pd.DataFrame) -> pd.DataFrame:
     extra = set(df.columns) - set(RESULT_DTYPES)
     if extra:
         raise ValueError(f"result frame has unexpected columns: {sorted(extra)}")
-    df = df[list(RESULT_DTYPES)]
-    for column, dtype in RESULT_DTYPES.items():
-        df[column] = df[column].astype(dtype)
-    return df
+    return df[list(RESULT_DTYPES)].astype(RESULT_DTYPES)
 
 
 def empty_results() -> pd.DataFrame:

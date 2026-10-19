@@ -28,14 +28,7 @@ import numpy as np
 
 from . import remote as _remote
 from ._timeaxis import TimeAxisMode, read_time_axis
-from .base import (
-    DEGENERATE_FIELDS,
-    FIELDS,
-    REDUNDANT_FIELDS,
-    GridSpec,
-    NanPolicy,
-    register_reader,
-)
+from .base import FIELDS, REDUNDANT_FIELDS, GridSpec, NanPolicy, register_reader
 from .hdf5 import HDF5Trajectory
 
 #: Canonical name -> dataset name in the file.
@@ -46,28 +39,6 @@ FIELD_MAP: dict[str, str] = {
     "pressure": "pressure",
     "distribution": "F",
 }
-
-
-
-
-def _frames_from_discretization(disc: dict) -> int | None:
-    """Frame count implied by the root ``discretization`` attribute, or None if absent.
-
-    ``temporal.grid`` counts solver **steps**. Frame 0 is the initial condition, so a file
-    holds one more *frame* than it has steps. Measured on
-    ``D2Q9_shape-256-256_T-10000_H-dc804f.h5``: ``temporal.grid`` is 10000 while
-    ``time.shape`` is ``(10001,)``.
-
-    This is a cross-check rather than the source of the count. ``time.shape[0]`` is the
-    length of the very axis being described, so it cannot be off by one, and reading a
-    shape is free. Note also that ``temporal.length`` is 10000.0 in *lattice-step* units
-    while the physical timestep is 2.2552744890219753e-4, so the attribute cannot supply
-    the clock either -- only the number of entries on it.
-    """
-    temporal = disc.get("temporal") if isinstance(disc, dict) else None
-    if not isinstance(temporal, dict) or "grid" not in temporal:
-        return None
-    return int(temporal["grid"]) + 1
 
 
 @register_reader("kinet_raw")
@@ -123,18 +94,25 @@ class KinetRawTrajectory(HDF5Trajectory):
             self._file["time"], remote=self.is_remote, mode=time_axis
         )
         n_frames = len(self._times)
-        declared = _frames_from_discretization(disc)
-        if declared is not None and declared != n_frames:
-            raise ValueError(
-                f"{self.source}: the `time` dataset has {n_frames} entries but "
-                f"discretization.temporal.grid implies {declared}. A wrong frame count "
-                "silently corrupts every dataset.time selection downstream."
-            )
+        # A cross-check of the frame count, not its source: `time.shape[0]` is the length of
+        # the very axis being described, so it cannot be off by one. `temporal.grid` counts
+        # solver *steps* and frame 0 is the initial condition, so a file holds one more frame
+        # than it has steps -- measured on D2Q9_shape-256-256_T-10000_H-dc804f.h5, grid 10000
+        # against time.shape (10001,). The attribute cannot supply the clock either:
+        # `temporal.length` is 10000.0 in lattice-step units while the physical timestep is
+        # 2.2552744890219753e-4.
+        temporal = disc.get("temporal")
+        if isinstance(temporal, dict) and "grid" in temporal:
+            declared = int(temporal["grid"]) + 1
+            if declared != n_frames:
+                raise ValueError(
+                    f"{self.source}: the `time` dataset has {n_frames} entries but "
+                    f"discretization.temporal.grid implies {declared}. A wrong frame count "
+                    "silently corrupts every dataset.time selection downstream."
+                )
 
         available = []
         for canonical, dataset in FIELD_MAP.items():
-            if canonical in DEGENERATE_FIELDS:
-                continue
             if canonical in REDUNDANT_FIELDS and not include_redundant:
                 continue
             if dataset not in self._file:

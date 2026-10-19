@@ -12,6 +12,10 @@ from pathlib import Path
 import pytest
 from omegaconf import OmegaConf
 
+from degradations import registry as deg_registry
+from fmeval.data import kinet_raw, well  # noqa: F401  (register the formats)
+from fmeval.data.base import READERS
+from metrics import registry as metric_registry
 from tests.conftest import CONFIGS, build
 
 
@@ -41,23 +45,6 @@ def test_hydra_output_dirs_resolve_without_a_live_hydra_context():
         assert not str(value).startswith("/"), f"hydra.{key} should be relative"
 
 
-@pytest.mark.parametrize("group,option", [
-    ("dataset", "kinet_re5e4_dev"),
-    ("dataset", "kinet_re5e4"),
-    ("dataset", "well_re5e4"),
-    ("dataset", "synthetic_ensemble"),
-    ("degradation", "default"),
-    ("degradation", "quick"),
-    ("degradation", "ensemble_miscalibration"),
-    ("report", "default"),
-    ("report", "none"),
-])
-def test_every_config_group_option_composes(group, option):
-    """Every file offered as a group option must actually work when selected."""
-    cfg = build(f"{group}={option}")
-    assert OmegaConf.select(cfg, group) is not None
-
-
 #: Directories under `configs/` that Hydra never composes, so their files are not group
 #: options and cannot be checked by composing them.
 #:
@@ -69,21 +56,19 @@ def test_every_config_group_option_composes(group, option):
 #: through Hydra at all.
 NOT_HYDRA_GROUPS = {"dataset_family", "cards"}
 
+#: Every group option on disk, so a new config file is composed without editing this file.
+GROUP_OPTIONS = sorted(
+    (d.name, f.stem)
+    for d in Path(CONFIGS).iterdir() if d.is_dir() and d.name not in NOT_HYDRA_GROUPS
+    for f in d.glob("*.yaml")
+)
 
-def test_every_group_option_on_disk_is_tested(group_files=None):
-    """A new config file must be added to the parametrisation above."""
-    tested = {("dataset", "kinet_re5e4_dev"), ("dataset", "kinet_re5e4"),
-              ("dataset", "well_re5e4"), ("dataset", "synthetic_ensemble"),
-              ("degradation", "default"), ("degradation", "quick"),
-              ("degradation", "ensemble_miscalibration"),
-              ("report", "default"), ("report", "none")}
-    on_disk = {
-        (d.name, f.stem)
-        for d in Path(CONFIGS).iterdir() if d.is_dir() and d.name not in NOT_HYDRA_GROUPS
-        for f in d.glob("*.yaml")
-    }
-    missing = sorted(on_disk - tested)
-    assert not missing, f"add these to test_every_config_group_option_composes: {missing}"
+
+@pytest.mark.parametrize("group,option", GROUP_OPTIONS)
+def test_every_config_group_option_composes(group, option):
+    """Every file offered as a group option must actually work when selected."""
+    cfg = build(f"{group}={option}")
+    assert OmegaConf.select(cfg, group) is not None
 
 
 # --- the override forms the documentation promises ------------------------------------
@@ -148,23 +133,18 @@ def test_every_ladder_entry_declares_enabled():
 
 
 def test_every_ladder_entry_names_a_registered_operator():
-    from degradations import registry as deg
-
-    deg.discover()
+    registered = deg_registry.available()
     for option in ("default", "quick"):
         ladder = build(f"degradation={option}").degradation.ladder
         for label, entry in ladder.items():
             op = entry.get("op", label)
-            assert op in deg.REGISTRY, (
+            assert op in registered, (
                 f"degradation/{option}.yaml entry {label!r} names operator {op!r}, "
                 f"which is not registered"
             )
 
 
 def test_every_dataset_names_a_registered_reader():
-    from fmeval.data import kinet_raw, well  # noqa: F401  (register the formats)
-    from fmeval.data.base import READERS
-
     for option in ("kinet_re5e4_dev", "kinet_re5e4", "well_re5e4"):
         cfg = build(f"dataset={option}")
         assert cfg.dataset.format in READERS, (
@@ -180,9 +160,8 @@ def test_every_dataset_names_a_registered_reader():
 def test_every_option_defines_the_keys_evaluate_reads_without_a_default(group, keys):
     """`evaluate.py` reads these with no fallback, so each option of the group must set them.
 
-    Each once had a second default in `evaluate.py`, which a missing key silently fell back
-    to; with the config the one source, a missing key would stop the run instead. This finds
-    it in the suite.
+    The config is their one source, so a missing key stops the run; this finds it in the
+    suite instead.
     """
     for option in sorted(p.stem for p in Path(CONFIGS, group).glob("*.yaml")):
         cfg = build(f"{group}={option}")[group]
@@ -191,10 +170,8 @@ def test_every_option_defines_the_keys_evaluate_reads_without_a_default(group, k
 
 
 def test_default_metrics_are_registered():
-    from metrics import registry as met
-
     for name in build().metrics:
-        met.get(name)  # raises KeyError with the available list if absent
+        metric_registry.get(name)  # raises KeyError with the available list if absent
 
 
 def test_the_card_settings_are_readable_without_hydra():
@@ -206,8 +183,6 @@ def test_the_card_settings_are_readable_without_hydra():
     crept in -- one would resolve under `evaluate.py` and fail under `python -m
     fmeval.cards`, which is the kind of difference that shows up only in the artifact.
     """
-    from omegaconf import OmegaConf
-
     raw = (Path(CONFIGS) / "cards" / "default.yaml").read_text()
     assert "${" not in raw, "card settings must not interpolate; nothing resolves them"
 
@@ -225,8 +200,6 @@ def test_every_evidence_dataset_is_a_real_config():
     An entry naming a dataset that no longer exists would let a card keep its numbers
     while the run behind them became unreproducible.
     """
-    from omegaconf import OmegaConf
-
     cfg = OmegaConf.load(Path(CONFIGS) / "cards" / "default.yaml")
     on_disk = {f.stem for f in (Path(CONFIGS) / "dataset").glob("*.yaml")}
     missing = [d for d in cfg.evidence_datasets if d not in on_disk]
@@ -243,8 +216,6 @@ def test_a_generated_dataset_declares_itself_non_physical():
     ladder. A generated dataset that ranked alongside the real ones could have its
     numbers quoted as evidence about turbulence.
     """
-    from omegaconf import OmegaConf
-
     cfg = OmegaConf.load(Path(CONFIGS) / "cards" / "default.yaml")
     for name in cfg.evidence_datasets:
         dataset = OmegaConf.load(Path(CONFIGS) / "dataset" / f"{name}.yaml")

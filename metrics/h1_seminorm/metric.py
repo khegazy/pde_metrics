@@ -21,6 +21,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from fmeval.context import FieldContext
+from fmeval.external.kinet_spectral import spectral_derivative
 from metrics.registry import REDUCTIONS, metric, pointwise_map
 
 
@@ -97,8 +98,6 @@ def squared_gradient(field: NDArray[np.floating], ctx: FieldContext) -> NDArray[
     Spectral derivatives on the analysis grid, the convention described in
     :func:`h1_seminorm`. Shared with ``palinstrophy``, which is half its mean on vorticity.
     """
-    from fmeval.external.kinet_spectral import spectral_derivative
-
     spacing = list(ctx.grid.spacing)
     out = np.zeros(field.shape[1:], dtype=np.float64)
     for channel in field:

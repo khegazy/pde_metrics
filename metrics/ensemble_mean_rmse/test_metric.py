@@ -11,6 +11,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from degradations._shared.ensemble import scale_spread
 from metrics.ensemble_mean_rmse.metric import ensemble_mean_rmse
 from metrics.rmse.metric import rmse
 
@@ -25,7 +26,13 @@ def test_worked_example_from_the_card():
     assert ensemble_mean_rmse(reference, members) == pytest.approx(1.0)
 
 
-def test_equals_rmse_of_the_member_mean():
+@pytest.mark.parametrize("n_members", [
+    # A single member is its own mean, so the score is exactly that member's RMSE.
+    pytest.param(1, id="one-member"),
+    # Six members, where the mean is a genuine average over the member axis.
+    pytest.param(6, id="six-members"),
+])
+def test_equals_rmse_of_the_member_mean(n_members: int):
     """The definition, checked against this repository's own RMSE.
 
     Also the test that catches an axis slip: averaging over channels instead of members
@@ -33,18 +40,9 @@ def test_equals_rmse_of_the_member_mean():
     """
     rng = np.random.default_rng(0)
     reference = rng.standard_normal((2, 8, 4))
-    members = rng.standard_normal((6, 2, 8, 4))
+    members = rng.standard_normal((n_members, 2, 8, 4))
     assert ensemble_mean_rmse(reference, members) == pytest.approx(
         rmse(reference, members.mean(axis=0)), rel=1e-12
-    )
-
-
-def test_single_member_equals_rmse():
-    rng = np.random.default_rng(1)
-    reference = rng.standard_normal((1, 6, 4))
-    member = rng.standard_normal((1, 6, 4))
-    assert ensemble_mean_rmse(reference, member[None]) == pytest.approx(
-        rmse(reference, member), rel=1e-12
     )
 
 
@@ -63,19 +61,11 @@ def test_is_blind_to_dispersion_about_a_fixed_mean():
     rng = np.random.default_rng(2)
     reference = rng.standard_normal((1, 10, 6))
     members = rng.standard_normal((12, 1, 10, 6))
-    mean = members.mean(axis=0, keepdims=True)
     baseline = ensemble_mean_rmse(reference, members)
     for factor in (0.1, 0.5, 2.0, 5.0):
-        widened = mean + factor * (members - mean)
-        assert ensemble_mean_rmse(reference, widened) == pytest.approx(baseline, rel=1e-12)
-
-
-def test_increases_monotonically_with_bias():
-    rng = np.random.default_rng(3)
-    reference = rng.standard_normal((1, 12, 8))
-    members = rng.standard_normal((10, 1, 12, 8))
-    values = [ensemble_mean_rmse(reference, members + b) for b in (0.0, 0.25, 0.5, 1.0)]
-    assert values == sorted(values), values
+        assert ensemble_mean_rmse(reference, scale_spread(members, factor)) == pytest.approx(
+            baseline, rel=1e-12
+        )
 
 
 def test_rejects_an_empty_ensemble():

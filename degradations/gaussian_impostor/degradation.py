@@ -37,9 +37,9 @@ def gaussian_impostor(
     *real* Gaussian field rather than drawing ``exp(i U(0, 2pi))`` directly. Hand-drawn
     phases violate Hermitian symmetry at the self-conjugate modes (k=0, the Nyquist
     row/column, and the Nyquist corners), so ``irfftn`` silently discards imaginary parts
-    and corrupts the very amplitude spectrum you were preserving. A first attempt that way
-    produced flatness 47.9 instead of 3. Deriving the phase from a real field gets all the
-    symmetry constraints right for free.
+    and corrupts the very amplitude spectrum you were preserving: drawn that way the field has
+    flatness 47.9 instead of 3. Deriving the phase from a real field gets all the symmetry
+    constraints right for free.
 
     ``ordinal=False``: this is excluded from every Spearman computation. Folding it into a
     family as "level 6" would silently corrupt every rank correlation it touched.
@@ -55,9 +55,10 @@ def gaussian_impostor(
     shape = x.shape[1:]
     out = np.empty_like(x)
     for c in range(x.shape[0]):
-        amplitude = np.abs(np.fft.rfftn(x[c], axes=tuple(range(len(shape)))))
-        noise = ctx.rng.standard_normal(shape)
-        noise_spectrum = np.fft.rfftn(noise, axes=tuple(range(len(shape))))
+        # Each transform runs over every axis of one channel. The inverse names its axes
+        # because NumPy deprecates `s` without `axes`.
+        amplitude = np.abs(np.fft.rfftn(x[c]))
+        noise_spectrum = np.fft.rfftn(ctx.rng.standard_normal(shape))
         phase = noise_spectrum / (np.abs(noise_spectrum) + 1e-300)
         y = np.fft.irfftn(amplitude * phase, s=shape, axes=tuple(range(len(shape))))
         if match_moments:

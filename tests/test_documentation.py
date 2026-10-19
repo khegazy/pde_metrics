@@ -7,12 +7,25 @@ file describes whatever the code looked like on the day someone last remembered 
 
 from __future__ import annotations
 
+import ast
+import inspect
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
-from tests.conftest import REPO
+from degradations import registry as deg_registry
+from fmeval import analysis as an
+from fmeval.io import RunFolder, copy_documentation
+from fmeval.pipeline import RESULT_DTYPES
+from fmeval.report import driver  # noqa: F401  (imports the renderer modules)
+from fmeval.report.latex import PACKAGES
+from fmeval.report.registry import PLOTS
+from metrics.registry import REDUCTIONS, metric
+from tests.conftest import REPO, make_frame
 
 DOC = REPO / "TEST_DESCRIPTION.md"
 
@@ -47,8 +60,6 @@ def documented_names(doc: str) -> set[str]:
 
 
 def test_every_result_column_is_documented(doc):
-    from fmeval.pipeline import RESULT_DTYPES
-
     documented = documented_names(doc) | _GROUPED_HEADINGS
     missing = sorted(set(RESULT_DTYPES) - documented)
     assert not missing, f"undocumented result columns: {missing}"
@@ -56,10 +67,6 @@ def test_every_result_column_is_documented(doc):
 
 def test_every_analysis_column_is_documented(doc):
     """Columns produced by summarise_axes, probe_summary and report_card."""
-
-    from fmeval import analysis as an
-    from tests.conftest import make_frame
-
     df = make_frame(axes={"a": [1.0, 2.0, 3.0], "gaussian_impostor": [9.0],
                           "uncorrelated": [10.0, 10.0]})
     norm = an.normalisation(df)
@@ -80,17 +87,12 @@ def test_every_analysis_column_is_documented(doc):
 
 
 def test_every_degradation_is_documented(doc):
-    from degradations import registry as deg
-
     documented = documented_names(doc)
-    missing = sorted(set(deg.available()) - documented)
+    missing = sorted(set(deg_registry.available()) - documented)
     assert not missing, f"undocumented degradations: {missing}"
 
 
 def test_every_renderer_is_documented(doc):
-    from fmeval.report import driver  # noqa: F401  (imports the renderer modules)
-    from fmeval.report.registry import PLOTS, TABLES  # noqa: F401
-
     documented = documented_names(doc)
     # Tables are described by the quantities they contain rather than by name; figures
     # are listed individually, since a reader meets them as pictures.
@@ -101,12 +103,9 @@ def test_every_renderer_is_documented(doc):
 def test_the_flags_column_is_documented_as_advisory(doc):
     """A reader meeting a populated ``flags`` cell must not read it as a verdict.
 
-    This used to assert a paragraph of framing near the top of the file -- "the suite
-    measures; it does not decide". That paragraph restated a rule for the people building
-    this repository rather than telling a reader anything about the numbers, so it was
-    removed from the published pages. The rule itself still binds, and is pinned in
-    AGENTS.md by ``test_agents_states_the_non_negotiables``. What has to survive *here* is
-    the factual half: that a flag is advisory.
+    The rule that the suite measures and does not decide is for the people building this
+    repository, and is pinned in AGENTS.md through ``PINNED_PHRASES``. What a reader of the
+    numbers needs *here* is the factual half: that a flag is advisory.
     """
     assert "`flags`" in doc
     section = doc.split("### `flags`", 1)[1].split("\n### ", 1)[0]
@@ -114,15 +113,12 @@ def test_the_flags_column_is_documented_as_advisory(doc):
     assert "not** that the metric is approved" in section
 
 
-def test_a_copy_is_placed_in_every_run_folder(tmp_path):
+def test_a_copy_is_placed_in_every_run_folder(tmp_path, doc):
     """A results directory must explain its own numbers after being sent to someone else."""
-    import shutil
-
-    from fmeval.io import RunFolder
-
     folder = RunFolder(tmp_path / "m_1").create()
-    shutil.copy(DOC, folder.root / DOC.name)
-    assert (folder.root / "TEST_DESCRIPTION.md").exists()
+    copied = copy_documentation(folder)
+    assert copied == folder.root / DOC.name
+    assert copied.read_text() == doc
 
 
 # --- AGENTS.md ---------------------------------------------------------------------------
@@ -144,31 +140,16 @@ def test_agents_file_exists_where_other_tools_look():
         )
 
 
-def test_agents_documents_every_extension_point():
-    """Each registry a contributor might extend must have instructions."""
-    text = AGENTS.read_text()
-    for topic in ("Adding a metric", "Adding a degradation", "Adding a data source",
-                  "Adding a figure or table", "Writing tests",
-                  "How to treat the LaTeX output"):
-        assert topic in text, f"AGENTS.md has no section on {topic!r}"
-
-
 def test_agents_api_claims_match_the_code():
     """Signatures quoted in the instructions must still exist.
 
     An instruction file that describes an API the code no longer has is worse than none,
     because it is followed confidently.
     """
-    import inspect
-
-    from degradations.registry import degradation
-    from fmeval.report.latex import PACKAGES
-    from metrics.registry import REDUCTIONS, metric
-
     text = AGENTS.read_text()
     for name in inspect.signature(metric).parameters:
         assert name in text, f"metric() parameter {name!r} is undocumented in AGENTS.md"
-    for name in inspect.signature(degradation).parameters:
+    for name in inspect.signature(deg_registry.degradation).parameters:
         assert name in text, f"degradation() parameter {name!r} is undocumented in AGENTS.md"
     for name in REDUCTIONS:
         assert name in text, f"reduction {name!r} is undocumented in AGENTS.md"
@@ -176,28 +157,8 @@ def test_agents_api_claims_match_the_code():
         assert package in text, f"LaTeX package {package!r} is undocumented in AGENTS.md"
 
 
-def test_agents_states_the_non_negotiables():
-    """The rules whose violation silently corrupts results."""
-    text = AGENTS.read_text()
-    for rule in (
-        "exit code" if "exit code" in text else "RC=$?",   # verify before claiming
-        "Never hand-edit",                                  # generated LaTeX
-        "Never slice the time axis",                        # the multi-GB read
-        "non-square",                                       # the transpose trap
-        "severity_direction",                               # the inverted ladder
-        "does not decide",                                  # no verdicts
-        "Define every value once",                          # one source of truth
-        "Grep before you write",                            # reuse before writing
-        "never import from another `test_*.py` module",     # shared test helpers
-    ):
-        assert rule in text, f"AGENTS.md does not state the rule about {rule!r}"
-
-
 def test_setup_check_runs_and_reports():
     """`check_setup.py` must work in the environment it is meant to diagnose."""
-    import subprocess
-    import sys
-
     result = subprocess.run([sys.executable, str(REPO / "check_setup.py")],
                             capture_output=True, text=True, timeout=180, cwd=REPO)
     assert result.returncode == 0, result.stdout + result.stderr
@@ -222,18 +183,15 @@ def test_mathjax_is_configured_for_the_delimiters_arithmatex_emits():
     configuration naming the dollar forms silently drops the backslash forms, matches
     nothing, and leaves the raw LaTeX on the page.
 
-    That is exactly what shipped, and nothing caught it: the build succeeded, ``--strict``
-    was satisfied, no console error appeared, and every equation on the site rendered as
-    its own source. This test closes the gap by asking arithmatex what it actually emits
-    for the configuration in ``mkdocs.yml``, then checking the MathJax config declares
-    those same delimiters.
+    Nothing else catches that: the build succeeds, ``--strict`` is satisfied, no console
+    error appears, and every equation on the site renders as its own source. This test asks
+    arithmatex what it actually emits for the configuration in ``mkdocs.yml``, then checks
+    the MathJax config declares those same delimiters.
 
     Skipped where the docs toolchain is not installed, so the fast suite stays
     dependency-free; it runs in the docs job, where the toolchain is present by
     definition.
     """
-    import yaml
-
     markdown = pytest.importorskip(
         "markdown", reason="the docs toolchain is not installed in this environment"
     )
@@ -277,77 +235,70 @@ def test_mathjax_is_configured_for_the_delimiters_arithmatex_emits():
 GUIDE = REPO / "docs" / "working-with-the-repo.md"
 
 
-def test_the_file_guide_covers_every_file_of_the_bundle_contract():
-    """A guide that has fallen behind the contract sends a reader to a file that is gone.
-
-    This checks coverage, not quality: every file a contributor is expected to create or
-    to leave alone must be named somewhere in the guide.
-    """
-    text = GUIDE.read_text()
-    required = [
-        "metric.py", "degradation.py", "card.yaml", "card.md", "refs.bib",
-        "test_metric.py", "_generated/", "AGENTS.md", "TEST_DESCRIPTION.md",
-        "configs/", "issues/",
-    ]
-    missing = [name for name in required if name not in text]
-    assert not missing, f"docs/working-with-the-repo.md does not mention: {missing}"
-
-
-def test_the_file_guide_names_the_card_commands():
-    """The guide's job is to make the workflow runnable without a second document."""
-    text = GUIDE.read_text()
-    for command in ("fmeval.cards new", "fmeval.cards check", "fmeval.cards sign"):
-        assert command in text, f"the file guide does not mention `{command}`"
-
-
 def test_the_file_guide_starts_with_a_summary_table():
     """A reader looking up one file should not have to read the whole document."""
     head = GUIDE.read_text().split("## The bundle files in detail")[0]
     assert "| File | What it is | Who edits it | When |" in head
 
 
-def test_agents_documents_the_card_workflow(doc_agents=None):
-    """AGENTS.md must describe the bundle workflow, not the one it replaced.
-
-    An agent follows this file. When cards became mandatory, a file that still said "a
-    metric goes in any module under metrics/" would have produced a metric that does not
-    import, and the agent would have had no way to know why from here.
-    """
-    text = (REPO / "AGENTS.md").read_text()
-    for required in ("python -m fmeval.cards new",
-                     "python -m fmeval.cards check",
-                     "python -m fmeval.cards evidence",
-                     "python -m fmeval.cards exemplars",
-                     "card.yaml",
-                     "card.md",
-                     "docs/catalog.json",
-                     "GENERATED"):
-        assert required in text, f"AGENTS.md never mentions {required!r}"
-
-
-def test_agents_states_the_card_prohibitions():
-    """The rules that exist because breaking them produces plausible, wrong documentation."""
-    text = (REPO / "AGENTS.md").read_text()
-    for rule in ("Never invent a number",
-                 "Never state expected behaviour",
-                 "never edit `_generated/`",
-                 "never sign a card"):
-        assert rule.lower() in text.lower(), f"AGENTS.md does not say: {rule}"
-
-
 # --------------------------------------------------------------------------------------
-# The recipes: canonical instructions, each pinned by its own check
+# The instruction files, each pinned by the phrases it must keep
 # --------------------------------------------------------------------------------------
-#
-# The recipes in docs/recipes/ are the canonical instructions for extending the
-# repository; AGENTS.md summarises and points at them. They are separate files, each
-# asserted here by name, precisely so that no single careless edit can destroy the
-# instructions: an agent that overwrites AGENTS.md loses a summary, and an edit that guts
-# a recipe fails CI naming that recipe. Destroying the instructions would require
-# deliberately editing several named files and this test together.
 
-RECIPES = {
-    "index.md": (
+#: Phrases each instruction file must still contain, keyed by its path in the repository.
+PINNED_PHRASES = {
+    # AGENTS.md is what an agent follows, so it must carry:
+    #   - a section for each registry a contributor might extend, and for tests and LaTeX;
+    #   - the rules whose violation silently corrupts results: check the exit status before
+    #     claiming success (RC=$?), never hand-edit generated LaTeX, never slice the time
+    #     axis (the multi-gigabyte read), non-square fixtures (the transpose trap),
+    #     severity_direction (the inverted ladder), no verdicts, one source of truth, reuse
+    #     before writing, imports at the top, rules stated without their history, and shared
+    #     test helpers;
+    #   - the bundle workflow and no other: a metric outside a bundle does not import, and
+    #     an agent would have no way to learn why from this file;
+    #   - the card prohibitions, which exist because breaking them produces plausible, wrong
+    #     documentation;
+    #   - a pointer to the recipes, so an agent reading only the summary is sent onward.
+    "AGENTS.md": (
+        "Adding a metric", "Adding a degradation", "Adding a data source",
+        "Adding a figure or table", "Writing tests", "How to treat the LaTeX output",
+        "RC=$?", "Never hand-edit", "Never slice the time axis", "non-square",
+        "severity_direction", "does not decide", "Define every value once",
+        "Grep before you write", "Imports at the top of the file",
+        "State the rule, not its history", "never import from another `test_*.py` module",
+        "python -m fmeval.cards new", "python -m fmeval.cards check",
+        "python -m fmeval.cards evidence", "python -m fmeval.cards exemplars",
+        "card.yaml", "card.md", "docs/catalog.json", "<!-- GENERATED",
+        "Never invent a number", "Never state expected behaviour",
+        "never edit `_generated/`", "never sign a card",
+        "docs/recipes/",
+    ),
+    # docs/decisions.md stops an agent from "fixing" a deliberate absence. Each entry
+    # corresponds to an enforced decision; if one is removed here it will be rediscovered
+    # as a mysterious test failure by whoever trips over it next.
+    "docs/decisions.md": (
+        "no predictions", "no pass or fail", "no word counts", "no metric IDs",
+        "<!-- GENERATED", "never sign", "at `get()`, not at import", "stops the run",
+        "docs/recipes/",
+    ),
+    # The human file guide. A guide that has fallen behind the bundle contract sends a
+    # reader to a file that is gone, so every file a contributor is expected to create or
+    # to leave alone is named in it (coverage, not quality); and its job is to make the
+    # workflow runnable without a second document, so it names the card commands.
+    "docs/working-with-the-repo.md": (
+        "metric.py", "degradation.py", "card.yaml", "card.md", "refs.bib",
+        "test_metric.py", "_generated/", "AGENTS.md", "TEST_DESCRIPTION.md",
+        "configs/", "issues/",
+        "fmeval.cards new", "fmeval.cards check", "fmeval.cards sign",
+    ),
+    # The recipes in docs/recipes/ are the canonical instructions for extending the
+    # repository; AGENTS.md summarises and points at them. They are separate files, each
+    # asserted here by name, precisely so that no single careless edit can destroy the
+    # instructions: an agent that overwrites AGENTS.md loses a summary, and an edit that
+    # guts a recipe fails CI naming that recipe. Destroying the instructions would require
+    # deliberately editing several named files and this test together.
+    "docs/recipes/index.md": (
         "Never invent a number",
         "Never invent a citation",
         "Never state expected behaviour",
@@ -356,7 +307,7 @@ RECIPES = {
         "Reuse before you write",
         "Prove that a refactor changes no number",
     ),
-    "add-a-metric.md": (
+    "docs/recipes/add-a-metric.md": (
         "python -m fmeval.cards new <name>",
         "python -m fmeval.cards check",
         "test_metric.py",
@@ -366,7 +317,7 @@ RECIPES = {
         "equation number",
         "worked example",
     ),
-    "add-a-degradation.md": (
+    "docs/recipes/add-a-degradation.md": (
         "--kind degradation",
         "severity_direction",
         "configs/degradation/default.yaml",
@@ -376,25 +327,25 @@ RECIPES = {
         "python -m fmeval.cards exemplars <name>",
         "mode: draws",
     ),
-    "add-a-dataset.md": (
+    "docs/recipes/add-a-dataset.md": (
         "configs/dataset/",
         "fmeval/data/base.py",
-        "Never slice the time axis".lower(),
+        "Never slice the time axis",
         "calibration.csv",
         "severity_degenerate",
         "evidence_datasets",
         "configs/cards/default.yaml",
         "developed",
     ),
-    "add-a-diagnostic.md": (
+    "docs/recipes/add-a-diagnostic.md": (
         "fmeval/cards/diagnostics.py",
         "@diagnostic",
         "ctx.limits",
         "show_field",
         "numbers behind the picture",
-        "fmeval/cards/schema.py",
+        "exemplar_panel",
     ),
-    "verify-a-refactor.md": (
+    "docs/recipes/verify-a-refactor.md": (
         "any difference beyond the stated tolerance is a bug you introduced",
         "every column is compared except",
         "docs/recipes/compare_runs.py",
@@ -404,7 +355,7 @@ RECIPES = {
         "Rows are missing",
         "Values differ",
     ),
-    "refresh-the-evidence.md": (
+    "docs/recipes/refresh-the-evidence.md": (
         "evidence --all",
         "python -m fmeval.cards catalog",
         "typed into sentences do not",
@@ -414,46 +365,23 @@ RECIPES = {
 }
 
 
-@pytest.mark.parametrize("recipe", sorted(RECIPES))
-def test_each_recipe_still_carries_its_instructions(recipe):
-    path = REPO / "docs" / "recipes" / recipe
-    assert path.is_file(), f"docs/recipes/{recipe} is missing"
-    # Prose wraps at the margin, so a pinned phrase may be split across lines.
-    # Comparing with whitespace collapsed keeps the pins about content, not layout.
-    text = " ".join(path.read_text().split())
-    for required in RECIPES[recipe]:
-        assert " ".join(required.split()).lower() in text.lower(), (
-            f"docs/recipes/{recipe} no longer says {required!r}. These files are the "
-            "canonical instructions; if this changed deliberately, update this test in "
-            "the same commit and say why in its message."
-        )
+@pytest.mark.parametrize("name", sorted(PINNED_PHRASES))
+def test_each_instruction_file_still_carries_its_pinned_phrases(name):
+    """Each instruction file still says what ``PINNED_PHRASES`` records for it.
 
-
-def test_the_decisions_ledger_still_lists_the_deliberate_absences():
-    """docs/decisions.md stops an agent from "fixing" a deliberate absence.
-
-    Each entry corresponds to an enforced decision; if one is removed here it will be
-    rediscovered as a mysterious test failure by whoever trips over it next.
+    Prose wraps at the margin, so a pinned phrase may be split across lines; comparing with
+    whitespace collapsed and case folded keeps the pins about content, not layout. Each
+    phrase is chosen to stay specific under that folding.
     """
-    text = (REPO / "docs" / "decisions.md").read_text()
-    for absence in ("no predictions",
-                    "no pass or fail",
-                    "no word counts",
-                    "no metric IDs",
-                    "GENERATED",
-                    "never sign",
-                    "at `get()`, not at import",
-                    "stops the run",
-                    "docs/recipes/"):
-        assert absence.lower() in text.lower(), (
-            f"docs/decisions.md no longer covers: {absence!r}"
+    path = REPO / name
+    assert path.is_file(), f"{name} is missing"
+    text = " ".join(path.read_text().split()).lower()
+    for required in PINNED_PHRASES[name]:
+        assert " ".join(required.split()).lower() in text, (
+            f"{name} no longer says {required!r}. These files are the canonical "
+            "instructions; if this changed deliberately, update this test in the same "
+            "commit and say why in its message."
         )
-
-
-def test_agents_points_at_the_recipes():
-    """AGENTS.md is the summary; an agent reading only it must be sent to the recipes."""
-    text = (REPO / "AGENTS.md").read_text()
-    assert "docs/recipes/" in text, "AGENTS.md never mentions the recipes directory"
 
 
 # --------------------------------------------------------------------------------------
@@ -469,10 +397,8 @@ def _python_sources(*roots: str) -> list[Path]:
 def test_no_test_module_imports_from_another_test_module():
     """Shared test helpers live in ``tests/conftest.py``, never in a ``test_*`` module.
 
-    A test module is collected by pytest, not a library. Helpers imported out of one were
-    copied into a second file whenever the import felt awkward, and the copies drifted: the
-    capability tests carried their own radial spectrum, rounding shells down where the
-    registered metric rounds to the nearest shell.
+    A test module is collected by pytest, not a library: a helper imported out of one gets
+    copied into the next file whenever the import feels awkward, and the copies drift.
     """
     # Any module path with a `test_` component: `tests.test_x`, or another bundle's
     # `..mse.test_metric`. A bundle test importing its own `.metric` does not match.
@@ -488,13 +414,10 @@ def test_no_test_module_imports_from_another_test_module():
 def test_no_module_level_alias():
     """A module-level ``NAME = other_name`` is a second name for one thing; import the original.
 
-    Every alias found when this test was written had a reason beside it and was still a copy a
-    reader had to resolve: ``MetricContext = FieldContext``, ``FAMILY_HEADINGS = FAMILY_LABELS``
-    and three more. Only an assignment whose value is a bare name or attribute chain counts, so a
-    value computed by a call is untouched.
+    An alias is a copy a reader has to resolve, whatever reason is written beside it. Only an
+    assignment whose value is a bare name or attribute chain counts, so a value computed by a
+    call is untouched.
     """
-    import ast
-
     aliases = []
     for path in _python_sources("fmeval", "metrics", "degradations", "tests", "docs"):
         for node in ast.parse(path.read_text()).body:
@@ -511,17 +434,32 @@ def test_no_module_level_alias():
     assert not aliases, f"module-level aliases; import the original instead: {aliases}"
 
 
+def test_imports_sit_at_the_top_of_the_file():
+    """An import inside a function hides a dependency from the reader of the module's head.
+
+    Only an import guarded by ``if``/``else`` or ``try``/``except`` (an optional dependency) may
+    sit elsewhere. The vendored ``fmeval/external`` code is left as it was published.
+    """
+    sources = [p for p in _python_sources("fmeval", "metrics", "degradations", "tests", "docs")
+               if "external" not in p.parts] + sorted(REPO.glob("*.py"))
+    local = []
+    for path in sources:
+        tree = ast.parse(path.read_text())
+        guarded = {id(n) for g in ast.walk(tree) if isinstance(g, (ast.If, ast.Try))
+                   for n in ast.walk(g)}
+        local += [f"{path.relative_to(REPO)}:{n.lineno}"
+                  for f in ast.walk(tree) if isinstance(f, (ast.FunctionDef, ast.AsyncFunctionDef))
+                  for n in ast.walk(f)
+                  if isinstance(n, (ast.Import, ast.ImportFrom)) and id(n) not in guarded]
+    assert not local, f"imports inside a function; move them to the top of the file: {local}"
+
+
 def test_the_degradation_families_are_listed_once():
     """Only the registry enumerates the families, and only the vocabulary describes them.
 
-    A literal holding five or more family names anywhere else is a second list of them. Three
-    such lists -- figure labels, colours and site wording -- each had to be kept in step with the
-    registry by hand, and a test, before they became one table.
+    A literal holding five or more family names anywhere else is a second list of them, which
+    would have to be kept in step with the registry by hand.
     """
-    import ast
-
-    from degradations.registry import FAMILIES
-
     allowed = {REPO / "degradations" / "registry.py", REPO / "fmeval" / "report" / "vocabulary.py",
                Path(__file__)}
     copies = []
@@ -531,7 +469,8 @@ def test_the_degradation_families_are_listed_once():
         for node in ast.walk(ast.parse(path.read_text())):
             items = (node.keys if isinstance(node, ast.Dict)
                      else node.elts if isinstance(node, (ast.List, ast.Tuple, ast.Set)) else [])
-            named = {i.value for i in items if isinstance(i, ast.Constant)} & set(FAMILIES)
+            named = ({i.value for i in items if isinstance(i, ast.Constant)}
+                     & set(deg_registry.FAMILIES))
             if len(named) >= 5:
                 copies.append(f"{path.relative_to(REPO)}:{node.lineno}")
     assert not copies, f"a second list of the degradation families at {copies}"

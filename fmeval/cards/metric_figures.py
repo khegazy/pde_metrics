@@ -38,7 +38,7 @@ from matplotlib import rc_context
 from fmeval.report import plots as _plots  # noqa: F401  (importing registers the renderers)
 from fmeval.report import style as report_style
 from fmeval.report.context import ReportContext
-from fmeval.report.registry import PLOTS, check_preconditions, draw, iter_scope
+from fmeval.report.registry import PLOTS, RendererSpec, check_preconditions, draw, iter_scope
 
 from .loader import write_strict_json
 
@@ -76,6 +76,7 @@ ALT_TEXT: dict[str, str] = {
                               "degradation and field",
 }
 
+
 @dataclass(frozen=True)
 class CardFigure:
     """One figure written beside a card, and the numbers written beside it."""
@@ -85,17 +86,6 @@ class CardFigure:
     numbers: Path
     caption: str
     alt: str
-
-
-def report_context(run: Run, *, theme: str = report_style.DEFAULT_THEME) -> ReportContext:
-    """The renderers' view of an evidence run.
-
-    The same frames :func:`fmeval.report.driver.build_context` would build from the folder,
-    taken from the :class:`Run` the card generator already analysed, so the numbers a figure
-    draws are the numbers the tables beside it print. The card frame is unflagged: cards
-    carry no flags.
-    """
-    return ReportContext.from_analysis(run, meta=run.meta, theme=theme)
 
 
 def _panels(data: pd.DataFrame | None, key: str) -> dict[str, list[dict]]:
@@ -111,21 +101,41 @@ def _panels(data: pd.DataFrame | None, key: str) -> dict[str, list[dict]]:
     return dict(sorted(panels.items()))
 
 
-def svg_rc(style: report_style.Style) -> dict:
-    """The rcParams a committed SVG is drawn and saved under: the theme plus the fixed salt."""
-    return {**style.rc, "svg.hashsalt": SVG_HASHSALT}
+def render_figure(spec: RendererSpec, ctx: ReportContext, subset: pd.DataFrame, out_dir: Path,
+                  stem: str, *, alt: str, record: dict,
+                  panel_key: str) -> tuple[CardFigure | None, str]:
+    """Draw one renderer, save it as a byte-stable SVG and its numbers as strict JSON.
 
+    Drawing and saving share one ``rc_context`` holding the theme and the fixed
+    :data:`SVG_HASHSALT`: the salt is read when the SVG is written, so a save outside the
+    context would get a fresh uuid every time (rule 1).
 
-def write_figure(item, path: Path, numbers: Path, *, record: dict, panel_key: str) -> None:
-    """Save one rendered figure as a byte-stable SVG and its numbers as strict JSON.
+    Args:
+        spec: The registered renderer.
+        ctx: The renderers' view of the run.
+        subset: The rows of ``ctx.df`` this figure draws.
+        out_dir: Where ``<stem>.svg`` and ``<stem>.json`` are written.
+        stem: The file stem, and the returned figure's name.
+        alt: The image's alt text.
+        record: The provenance the JSON carries beside ``caption`` and ``panels``.
+        panel_key: The column of the renderer's data the JSON's panels are split by.
 
-    Must be called inside the same ``rc_context`` the figure was drawn in (see
-    :func:`svg_rc`): the hashsalt is read when the SVG is written. ``record`` is the
-    provenance the JSON carries beside ``caption`` and ``panels``.
+    Returns:
+        The figure written, or ``None`` and the renderer's reason for declining.
     """
-    item.fig.savefig(path, format="svg", metadata={"Date": None, "Creator": None})
-    record = {**record, "caption": item.caption, "panels": _panels(item.data, panel_key)}
-    write_strict_json(numbers, record)
+    with rc_context({**ctx.style.rc, "svg.hashsalt": SVG_HASHSALT}):
+        result, why = draw(spec, ctx, subset)
+        if result is None:
+            plt.close("all")
+            return None, why
+        item = result.figures[0]
+        caption = item.caption or spec.title
+        path, numbers = out_dir / f"{stem}.svg", out_dir / f"{stem}.json"
+        item.fig.savefig(path, format="svg", metadata={"Date": None, "Creator": None})
+        plt.close("all")
+    write_strict_json(numbers, {**record, "caption": caption,
+                                "panels": _panels(item.data, panel_key)})
+    return CardFigure(name=stem, path=path, numbers=numbers, caption=caption, alt=alt), why
 
 
 def remove_stale(out_dir: Path, keep: set[str]) -> None:
@@ -158,11 +168,12 @@ def metric_figures(
         generator of committed files must instead stop, because a half-written
         ``_generated/`` directory would be committed as if it were complete.
     """
-    ctx = report_context(run, theme=theme)
+    # The same frames the report builds from the folder, taken from the run the card
+    # generator already analysed, so a figure draws the numbers the tables beside it print.
+    ctx = ReportContext.from_analysis(run, meta=run.meta, theme=theme)
     out_dir.mkdir(parents=True, exist_ok=True)
     written: list[CardFigure] = []
     reasons: dict[str, str] = {}
-    rc = svg_rc(ctx.style)
 
     for name in METRIC_FIGURES:
         spec = PLOTS[name]
@@ -177,24 +188,14 @@ def metric_figures(
         if subset is None:
             reasons[name] = f"{metric} is not in the run"
             continue
-        path = out_dir / f"{name}.svg"
-        numbers = out_dir / f"{name}.json"
-        # Drawing and saving share one rc_context: the hashsalt is read when the SVG is
-        # written, so a save outside the context would get a fresh uuid every time.
-        with rc_context(rc):
-            result, why = draw(spec, ctx, subset)
-            if result is None:
-                reasons[name] = why
-                plt.close("all")
-                continue
-            item = result.figures[0]
-            item.caption = item.caption or spec.title
-            write_figure(item, path, numbers, panel_key="field",
-                         record={"metric": metric, "run": run.folder.name,
-                                 "dataset": str(run.rows["dataset"].iloc[0]), "figure": name})
-            plt.close("all")
-        written.append(CardFigure(name=name, path=path, numbers=numbers,
-                                  caption=item.caption, alt=ALT_TEXT[name]))
+        figure, why = render_figure(
+            spec, ctx, subset, out_dir, name, alt=ALT_TEXT[name], panel_key="field",
+            record={"metric": metric, "run": run.folder.name,
+                    "dataset": str(run.rows["dataset"].iloc[0]), "figure": name})
+        if figure is None:
+            reasons[name] = why
+        else:
+            written.append(figure)
 
     # Rule 3: nothing this generation did not write survives beside the card.
     remove_stale(out_dir, {f.path.name for f in written})

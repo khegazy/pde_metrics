@@ -45,13 +45,28 @@ def check_new(registry: Mapping[str, Any], key: str, kind: str, module: str) -> 
         raise ValueError(f"duplicate {kind} {key!r}: {registry[key].module} vs {module}")
 
 
-def discover_package(package: str, errors: dict[str, Exception]) -> None:
+#: Packages already walked by :func:`discover_package`, so a second call is free.
+_WALKED: set[str] = set()
+
+
+def discover_package(package: str, errors: dict[str, Exception],
+                     force: bool = False) -> dict[str, Exception]:
     """Import every module under ``package`` so its decorators fire, collecting failures.
 
     Import failures are collected rather than raised: one colleague's broken work-in-progress
     file must not abort everyone's run. The collected errors surface in :func:`lookup`'s message
     when a lookup actually misses.
+
+    Args:
+        package: Top-level package to walk, ``"metrics"`` or ``"degradations"``.
+        errors: The registry's own record of import failures, filled in place.
+        force: Walk again even if this package has already been walked.
+
+    Returns:
+        ``errors``: module name to the exception it raised, empty if all imported.
     """
+    if package in _WALKED and not force:
+        return errors
     root = importlib.import_module(package)
     for mod in pkgutil.walk_packages(root.__path__, prefix=f"{package}."):
         # Every component after the package name is checked, not just the last one: a bundle
@@ -66,6 +81,8 @@ def discover_package(package: str, errors: dict[str, Exception]) -> None:
             importlib.import_module(mod.name)
         except Exception as exc:  # noqa: BLE001 - deliberately broad, see docstring
             errors[mod.name] = exc
+    _WALKED.add(package)
+    return errors
 
 
 def lookup(name: str, registry: Mapping[str, Any], kind: str,

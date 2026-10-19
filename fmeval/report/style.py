@@ -198,13 +198,11 @@ def show_field(ax, data: np.ndarray, grid=None, **kwargs):
 
     extent = None
     if grid is not None:
-        lx, ly = grid.length[0], grid.length[1]
-        extent = (0.0, lx, 0.0, ly)
-    kwargs.setdefault("interpolation", "nearest")
-    image = ax.imshow(array.T, origin="lower", extent=extent, aspect="equal", **kwargs)
-    if grid is not None:
+        extent = (0.0, grid.length[0], 0.0, grid.length[1])
         ax.set_xlabel(grid.dims[0])
         ax.set_ylabel(grid.dims[1])
+    kwargs.setdefault("interpolation", "nearest")
+    image = ax.imshow(array.T, origin="lower", extent=extent, aspect="equal", **kwargs)
     ax.grid(False)
     return image
 

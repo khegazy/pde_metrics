@@ -17,32 +17,16 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from fmeval import pipeline
 from fmeval.data.synthetic_ensemble import SyntheticEnsembleTrajectory
 from fmeval.ladder import build_ladder
-from fmeval.pipeline import DatasetInfo
-from metrics import registry
+from metrics.mae.metric import mae
+from tests.conftest import run_metrics
 
 
-@pytest.fixture
-def traj():
-    return SyntheticEnsembleTrajectory(
-        grid=(16, 16), n_members=8, n_frames=3, fields=("density",), sigma=0.2, seed=0
-    )
-
-
-def _run(traj, names, levels):
-    specs = [registry.get(n) for n in names]
-    return pipeline.run(
-        traj, specs, levels, fields=["density"],
-        dataset=DatasetInfo(name="synthetic_ensemble_test"), seed=0,
-    )
-
-
-def test_a_pairwise_metric_does_not_report_all_zeros(traj):
+def test_a_pairwise_metric_does_not_report_all_zeros(ensemble_traj):
     """The failure this exists to prevent: a column that looks like a perfect score."""
     levels = build_ladder({"bias": {"severities": [0.0, 0.5]}}, include_reference=True)
-    rows = _run(traj, ["mae"], levels).rows
+    rows = run_metrics(ensemble_traj, ["mae"], levels).rows
     values = rows["value"].to_numpy()
     assert not np.allclose(values, 0.0), (
         "mae returned zero everywhere: it was handed the reference twice, so it compared "
@@ -50,23 +34,21 @@ def test_a_pairwise_metric_does_not_report_all_zeros(traj):
     )
 
 
-def test_a_pairwise_metric_scores_the_ensemble_mean(traj):
+def test_a_pairwise_metric_scores_the_ensemble_mean(ensemble_traj):
     """Explicitly: the candidate is the member mean, the ensemble's point prediction."""
-    from metrics.mae.metric import mae
-
     levels = build_ladder({}, include_reference=True)
-    rows = _run(traj, ["mae"], levels).rows
+    rows = run_metrics(ensemble_traj, ["mae"], levels).rows
 
-    frame = traj.frame(0, ["density"])
+    frame = ensemble_traj.frame(0, ["density"])
     want = mae(frame.fields["density"], frame.members["density"].mean(axis=0))
     got = rows[rows["frame_index"] == 0]["value"].iloc[0]
     assert got == pytest.approx(want, rel=1e-12)
 
 
-def test_it_agrees_with_the_ensemble_mean_metric(traj):
-    """`mae` and `ensemble_mean_rmse` now measure the same prediction, differing only in norm."""
+def test_it_agrees_with_the_ensemble_mean_metric(ensemble_traj):
+    """`mae` and `ensemble_mean_rmse` measure the same prediction, differing only in norm."""
     levels = build_ladder({}, include_reference=True)
-    rows = _run(traj, ["mae", "ensemble_mean_rmse"], levels).rows
+    rows = run_metrics(ensemble_traj, ["mae", "ensemble_mean_rmse"], levels).rows
     by_metric = rows.groupby("metric", observed=True)["value"].mean()
     # Both are errors of the same field against the same reference, so the L1 mean is
     # bounded above by the L2 root-mean-square. A gross disagreement means they are not
@@ -74,18 +56,18 @@ def test_it_agrees_with_the_ensemble_mean_metric(traj):
     assert 0 < by_metric["mae"] <= by_metric["ensemble_mean_rmse"]
 
 
-def test_a_pairwise_metric_responds_to_the_bias_axis(traj):
+def test_a_pairwise_metric_responds_to_the_bias_axis(ensemble_traj):
     """Biasing the members moves their mean, so a pairwise metric must see it."""
     levels = build_ladder(
         {"bias": {"severities": [0.0, 0.2, 0.5, 1.0]}}, include_reference=True
     )
-    rows = _run(traj, ["mae"], levels).rows
+    rows = run_metrics(ensemble_traj, ["mae"], levels).rows
     axis = rows[rows["degradation"] == "bias"]
     by_level = axis.groupby("level", observed=True)["value"].mean().sort_index()
     assert list(by_level) == sorted(by_level), list(by_level)
 
 
-def test_a_pairwise_metric_is_flat_on_a_dispersion_axis(traj):
+def test_a_pairwise_metric_is_flat_on_a_dispersion_axis(ensemble_traj):
     """Scaling the members about their mean leaves that mean, so a pairwise metric is blind.
 
     Correct, and worth pinning: it is the same blindness `ensemble_mean_rmse` has, and it
@@ -94,7 +76,7 @@ def test_a_pairwise_metric_is_flat_on_a_dispersion_axis(traj):
     levels = build_ladder(
         {"spread_inflate": {"severities": [0.0, 1.0, 3.0]}}, include_reference=True
     )
-    rows = _run(traj, ["mae"], levels).rows
+    rows = run_metrics(ensemble_traj, ["mae"], levels).rows
     axis = rows[rows["degradation"] == "spread_inflate"]
     by_level = axis.groupby("level", observed=True)["value"].mean()
     assert by_level.std() == pytest.approx(0.0, abs=1e-12)
@@ -110,11 +92,7 @@ def test_a_single_field_metric_characterises_the_prediction():
         grid=(16, 16), n_members=8, n_frames=3, fields=("velocity",), sigma=0.2, seed=0
     )
     levels = build_ladder({"bias": {"severities": [0.0, 1.0]}}, include_reference=True)
-    specs = [registry.get("kinetic_energy")]
-    rows = pipeline.run(
-        traj, specs, levels, fields=["velocity"],
-        dataset=DatasetInfo(name="synthetic_ensemble_test"), seed=0,
-    ).rows
+    rows = run_metrics(traj, ["kinetic_energy"], levels, fields=["velocity"]).rows
 
     axis = rows[rows["degradation"] == "bias"]
     assert not axis.empty, "no rows: the metric never ran on this field"

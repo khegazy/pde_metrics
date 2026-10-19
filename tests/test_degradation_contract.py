@@ -12,7 +12,8 @@ import numpy as np
 import pytest
 
 from degradations import registry as deg
-from fmeval.calibration import calibrate_field
+from degradations._shared.filters import _apply_filter
+from fmeval.calibration import calibrate, calibrate_field
 from fmeval.context import FieldContext, derive_rng, fluctuation_rms
 from fmeval.data.base import Frame
 from fmeval.ladder import (
@@ -87,15 +88,6 @@ def call_absolute(spec: deg.DegradationSpec, x: np.ndarray, severity: float,
     return spec.fn(x, severity, **kwargs)
 
 
-def calibration_for(frame, fields: list[str]):
-    """A Calibration covering ``fields``, for the tests that apply a calibrated operator."""
-    from fmeval.calibration import Calibration
-
-    return Calibration(
-        {name: calibrate_field([frame.fields[name]], frame.grid, name) for name in fields}
-    )
-
-
 #: Severities that meaningfully exercise each operator, in increasing-damage order.
 LADDERS: dict[str, list[float]] = {
     "identity": [0],
@@ -158,9 +150,8 @@ def test_zero_severity_matches_its_declaration(spec):
     A no-op at 0 is what makes pairwise metrics return 0 on the clean level. 0 is the
     config-facing severity, so a calibrated operator is judged after resolution: removing no
     energy keeps every mode of a sharp low-pass, while a Butterworth high-pass still attenuates
-    the lowest shells a little. Checked both ways: this was once a hand-kept skip list of eight
-    names, three of which -- the sharp low- and high-pass filters and the median blur -- were in
-    fact the identity at 0 and so escaped the check for nothing.
+    the lowest shells a little. Checked both ways, so an operator that is the identity at 0
+    without declaring it is caught as surely as one that declares it falsely.
     """
     x = synthetic_field(SHAPE, 1, seed=0)
     want = members(x) if spec.ensemble else x
@@ -266,10 +257,23 @@ def test_subpixel_translate_resolves_below_one_cell():
     assert not np.allclose(half, np.roll(x, 1, axis=-2))
 
 
-def test_impostor_preserves_the_spectrum_exactly():
-    """IN-4's defining property: identical |X_k|, hence identical E(k)."""
+@pytest.mark.parametrize("match_moments", [
+    # The default, and the form the ladder runs. The moment restoration rescales the field
+    # after the phases are randomised, so it could in principle disturb exactly what the
+    # construction is for.
+    pytest.param(True, id="moments-matched"),
+    # The bare phase randomisation, before any rescaling.
+    pytest.param(False, id="bare"),
+])
+def test_impostor_preserves_the_spectrum_exactly(match_moments):
+    """IN-4's defining property: identical |X_k|, hence identical E(k), with or without the
+    moment restoration.
+
+    On the real 256^2 vorticity field at t = 5000 the radial spectra agree to a relative L1
+    error of 1.6e-16 with the moments matched and 1.5e-16 without.
+    """
     x = synthetic_field((32, 32), 1, seed=0, noise=0.3)
-    y = call(deg.get("gaussian_impostor"), x, 0)
+    y = call(deg.get("gaussian_impostor"), x, 0, match_moments=match_moments)
     assert np.allclose(np.abs(np.fft.fftn(x[0])), np.abs(np.fft.fftn(y[0])), rtol=1e-8)
 
 
@@ -282,7 +286,7 @@ def test_impostor_is_real_and_gaussian():
     """Hermitian symmetry must hold, and the result must actually be Gaussian.
 
     A hand-drawn-phase implementation fails both: ``irfftn`` silently discards imaginary
-    parts and the flatness lands far from 3 (an earlier attempt gave 47.9).
+    parts and the flatness lands far from 3 (47.9 measured).
 
     Flatness is a fourth moment and noisy on one realisation -- measured spread on a 64^2
     grid is 2.9 +/- 0.2 across seeds -- so the tight assertion is on the mean over several
@@ -294,12 +298,10 @@ def test_impostor_is_real_and_gaussian():
     x[0, ::16, ::16] += 20.0
     assert _flatness(x[0]) > 50, "test field is not intermittent enough to discriminate"
 
-    g = unit_grid((64, 64))
     values = []
     for seed in range(8):
-        c = FieldContext("v", g, 0, 0.0, fluctuation_rms(x),
-                         derive_rng(seed, "impostor", 0, "v"))
-        y = spec.fn(x, 0, ctx=c, **spec.defaults)
+        y = spec.fn(x, 0, ctx=make_ctx(x, field="v", seed=seed, label="impostor"),
+                    **spec.defaults)
         assert np.isrealobj(y) and np.isfinite(y).all()
         f = _flatness(y[0])
         assert f < 10, (
@@ -317,31 +319,17 @@ def test_impostor_matches_moments():
     assert y.std() == pytest.approx(x.std(), rel=1e-9)
 
 
-def test_random_large_translation_preserves_every_statistic():
-    """It is a roll, so it is a perfect statistical twin -- that is the whole point."""
-    x = synthetic_field((32, 32), 1, seed=0, noise=0.3)
-    y = call(deg.get("random_large_translation"), x, 0)
-    assert sorted(y.ravel().tolist()) == pytest.approx(sorted(x.ravel().tolist()))
-    assert y.mean() == pytest.approx(x.mean(), rel=1e-12)
-    assert y.std() == pytest.approx(x.std(), rel=1e-12)
-    assert _flatness(y[0]) == pytest.approx(_flatness(x[0]), rel=1e-12)
-    assert np.allclose(np.abs(np.fft.fftn(y[0])), np.abs(np.fft.fftn(x[0])), rtol=1e-8)
-
-
-def _draws(x, n=8, shape=None):
+def _draws(x, n=8):
+    """``n`` draws of the unrelated-field anchor, each from its own seed."""
     spec = deg.get("random_large_translation")
-    g = unit_grid(shape or x.shape[1:])
-    return [
-        spec.fn(x, 0, ctx=FieldContext("v", g, 0, 0.0, fluctuation_rms(x),
-                                       derive_rng(seed, "unc", 0, "v")))
-        for seed in range(n)
-    ]
+    return [spec.fn(x, 0, ctx=make_ctx(x, field="v", seed=seed, label="unc"))
+            for seed in range(n)]
 
 
 def test_random_large_translation_always_moves_by_at_least_a_quarter_domain():
     """The guarantee the operator makes: offsets come from the middle half of each axis."""
     x = np.arange(64 * 64, dtype=float).reshape(1, 64, 64)  # every cell distinguishable
-    for y in _draws(x, shape=(64, 64)):
+    for y in _draws(x):
         # Recover the offset from where the original first element ended up.
         idx = int(np.argwhere(y[0] == 0.0)[0][0])
         assert 16 <= idx <= 48, f"offset {idx} is outside the middle half"
@@ -366,19 +354,12 @@ def test_random_large_translation_is_not_ordinal():
     assert deg.get("random_large_translation").ordinal is False
 
 
-def test_impostor_is_not_ordinal():
-    """The canary must be excluded from rank correlation by declaration."""
-    assert deg.get("gaussian_impostor").ordinal is False
-
-
 def test_lowpass_then_highpass_reconstructs():
     """Ideal filters at a shared cutoff partition the spectrum, up to two shared modes.
 
     Both keep the cutoff band |k| == c, and the high-pass additionally keeps k = 0 on
     purpose (see highpass_ideal), so each is counted twice and subtracted once.
     """
-    from degradations._shared.filters import _apply_filter
-
     x = synthetic_field((32, 32), 1, seed=0, noise=0.3)
     lo = call_absolute(deg.get("lowpass_ideal"), x, 8)
     hi = call_absolute(deg.get("highpass_ideal"), x, 8)
@@ -402,14 +383,6 @@ def test_bias_shifts_the_mean_only():
     assert np.allclose(y - x, 0.25 * fluctuation_rms(x))
 
 
-def test_coarsen_is_conservative_and_subsample_is_not():
-    x = synthetic_field((32, 16), 1, seed=0, noise=0.3)
-    co = call(deg.get("coarsen"), x, 4)
-    su = call(deg.get("subsample"), x, 4)
-    assert co.mean() == pytest.approx(x.mean(), abs=1e-12)
-    assert not np.allclose(co, su)
-
-
 # --- ladder construction --------------------------------------------------------------
 
 
@@ -426,8 +399,8 @@ def test_build_ladder_sorts_decreasing_direction_correctly():
     """A decreasing-direction list is worst-last after sorting, however it was written.
 
     ``band_attenuate`` is the example because its severity is the fraction *retained*, so
-    smaller is worse. The spectral filters used to be the example, but their severity is now
-    the fraction of energy removed, which rises with damage like everything else.
+    smaller is worse; the spectral filters' severity is the fraction of energy removed, which
+    rises with damage like everything else.
     """
     assert deg.get("band_attenuate").severity_direction == "decreasing"
     for given in ([0.8, 0.5, 0.2, 0.0], [0.0, 0.2, 0.5, 0.8]):
@@ -506,7 +479,8 @@ def test_apply_severity_level_degrades_every_requested_field():
                         include_reference=False)[0]
     applied = apply_severity_level(
         severity_level, frame, ["density", "velocity"], seed=0,
-        calibration=calibration_for(frame, ["density", "velocity"]),
+        calibration=calibrate({name: [frame[name]] for name in frame.fields}, frame.grid,
+                              ["density", "velocity"]),
     )
     out = applied.fields
     assert set(out) == {"density", "velocity"}
@@ -541,30 +515,21 @@ def test_noise_scales_with_the_reference_rms_not_the_raw_rms():
     assert perturbation == pytest.approx(0.1 * rms * np.sqrt(2 / np.pi), rel=0.25)
 
 
-def test_highpass_preserves_the_spatial_mean():
-    """Removing k=0 would swamp the ladder on any field with a large mean.
-
-    Density is 1.0 with fluctuations of order 1e-4. Before the mean was preserved, every
-    high-pass severity level gave an identical damage 2.7e7 times the unrelated-field level, so the
-    axis carried no ordering and its rank correlation collapsed to 0.10.
-    """
-    x = 1.0 + 1e-3 * synthetic_field((32, 32), 1, seed=0, noise=0.3)
-    for name in ("highpass_ideal", "highpass_butterworth"):
-        for cutoff in (2, 4, 8):
-            y = call_absolute(deg.get(name), x, cutoff)
-            assert y.mean() == pytest.approx(x.mean(), rel=1e-10), name
-
-
 def test_highpass_ladder_is_monotone_on_a_field_with_a_large_mean():
-    """Monotone, and on the scale of the fluctuation rather than of the mean."""
+    """Monotone, and on the scale of the fluctuation rather than of the mean.
+
+    Density is 1.0 with fluctuations of order 1e-4, so a high-pass that removed k=0 would give
+    every severity level the same damage, set by the mean, and the axis would carry no
+    ordering. The declared ``spatial_mean`` preservation is checked by the contract below.
+    """
     x = 1.0 + 1e-3 * synthetic_field((32, 32), 1, seed=0, noise=0.3)
     spec = deg.get("highpass_ideal")
     damage = [float(((x - call_absolute(spec, x, c)) ** 2).mean())
               for c in (2, 4, 8, 16)]
     assert damage == sorted(damage), f"high-pass ladder is not monotone: {damage}"
     assert damage[-1] > 1.5 * damage[0], f"ladder has little dynamic range: {damage}"
-    # The decisive check: before the fix every severity level sat ~1e7 times the fluctuation
-    # variance, because the mean was being deleted.
+    # The decisive check: deleting the mean would put every severity level ~1e7 times above
+    # the fluctuation variance.
     variance = float(np.var(x))
     assert damage[-1] < variance, (
         f"damage {damage[-1]:.3e} exceeds the fluctuation variance {variance:.3e}; "

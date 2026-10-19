@@ -19,7 +19,9 @@ from pathlib import Path
 import h5py
 import numpy as np
 
-from tests.conftest import synthetic_field
+# Imported as a module because conftest imports this one: ``conftest.synthetic_field`` is
+# looked up when a writer runs, after both modules have finished importing.
+from tests import conftest
 
 #: Non-square on purpose. See the module docstring.
 SHAPE: tuple[int, int] = (16, 8)
@@ -77,7 +79,7 @@ def write_kinet_raw(path: Path, shape: tuple[int, ...] = SHAPE,
         density = {}
 
         def gen_density(t: int) -> np.ndarray:
-            arr = 1.0 + 1e-3 * synthetic_field(shape, 1, seed=100 + t)
+            arr = 1.0 + 1e-3 * conftest.synthetic_field(shape, 1, seed=100 + t)
             density[t] = arr
             return arr
 
@@ -93,11 +95,11 @@ def write_kinet_raw(path: Path, shape: tuple[int, ...] = SHAPE,
                 for c in range(n_spatial):
                     v[c] = float(c + 1)  # u=1, v=2: catches channel swap and transpose
                 return v
-            return 0.04 * synthetic_field(shape, n_spatial, seed=200 + t)
+            return 0.04 * conftest.synthetic_field(shape, n_spatial, seed=200 + t)
 
         make("velocity", n_spatial, gen_velocity)
-        make("vorticity", 1, lambda t: 0.01 * synthetic_field(shape, 1, seed=300 + t))
-        make("F", 9, lambda t: np.abs(synthetic_field(shape, 9, seed=400 + t)) + 0.1)
+        make("vorticity", 1, lambda t: 0.01 * conftest.synthetic_field(shape, 1, seed=300 + t))
+        make("F", 9, lambda t: np.abs(conftest.synthetic_field(shape, 9, seed=400 + t)) + 0.1)
 
         # All-NaN at t=0, finite after -- exactly as the real solver writes them.
         def gen_stability(t: int) -> np.ndarray:
@@ -147,13 +149,13 @@ def write_well(path: Path, shape: tuple[int, int] = SHAPE,
         t0 = f.create_group("t0_fields")
         t0.attrs["field_names"] = ["density", "pressure", "vorticity"]
         dens = np.stack(
-            [1.0 + 1e-3 * synthetic_field(shape, 1, seed=100 + t)[0]
+            [1.0 + 1e-3 * conftest.synthetic_field(shape, 1, seed=100 + t)[0]
              for t in range(n_frames)]
         )[None]
         t0.create_dataset("density", data=dens.astype(np.float32))
         t0.create_dataset("pressure", data=(dens / 3.0).astype(np.float32))
         vort = np.stack(
-            [0.01 * synthetic_field(shape, 1, seed=300 + t)[0] for t in range(n_frames)]
+            [0.01 * conftest.synthetic_field(shape, 1, seed=300 + t)[0] for t in range(n_frames)]
         )[None]
         t0.create_dataset("vorticity", data=vort.astype(np.float32))
 
@@ -165,7 +167,7 @@ def write_well(path: Path, shape: tuple[int, int] = SHAPE,
                 for c in range(len(shape)):
                     vel[0, t, ..., c] = float(c + 1)
             else:
-                v = 0.04 * synthetic_field(shape, len(shape), seed=200 + t)
+                v = 0.04 * conftest.synthetic_field(shape, len(shape), seed=200 + t)
                 vel[0, t] = np.moveaxis(v, 0, -1)
         t1.create_dataset("velocity", data=vel)
 

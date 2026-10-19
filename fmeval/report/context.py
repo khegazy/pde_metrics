@@ -21,6 +21,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from degradations import registry as deg_registry
 from fmeval.analysis import PROBE_LABELS, UNCORRELATED_LABEL, Analysis
 
 from .registry import RendererUnavailable
@@ -144,8 +145,6 @@ class ReportContext:
         entry = (self.meta.get("registries", {}).get("degradations", {}) or {}).get(op, {})
         if "preserves" in entry:
             return tuple(entry["preserves"])
-        from degradations import registry as deg_registry
-
         spec = deg_registry.REGISTRY.get(op)
         return spec.preserves if spec is not None else ()
 

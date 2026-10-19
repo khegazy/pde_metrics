@@ -1,16 +1,11 @@
 """The one definition of wavenumber magnitude, shared by the filters and the calibration.
 
-There were two, and they disagreed. The spectral operators compared a *continuous* ``|k|``
-against their cutoff while the calibration binned energy into shells of ``rint(|k|)``, so the
-diagonal modes fell on opposite sides of the same number: on a 256 grid the mode ``(1, 1)`` has
-``|k| = 1.414`` and belongs to shell 1, and a cutoff of 1.06 therefore kept the whole shell
-according to the calibration and dropped most of it in fact.
-
-That is not a rounding nuisance. Measured on density, whose fluctuation energy is concentrated in
-the lowest shells, a low-pass asked to remove 30% removed 99.997% -- the two mildest requests came
-out as near-total destruction, and every number in between looked plausible. Both sides now use
-this module, so the energy a cutoff removes according to the calibration is the energy it actually
-removes.
+Both sides must compare a cutoff against the same ``|k|``, or the energy a cutoff removes
+according to the calibration is not the energy it actually removes. Binning into shells of
+``rint(|k|)`` on one side while comparing the continuous magnitude on the other puts the diagonal
+modes on opposite sides of one cutoff -- ``(1, 1)`` has ``|k| = 1.414`` -- and on density, whose
+fluctuation energy sits in the lowest shells, that turned a low-pass asked to remove 30% into one
+removing 99.997%, with every number in between looking plausible.
 """
 
 from __future__ import annotations

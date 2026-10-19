@@ -17,25 +17,24 @@ are not on the grid and why, rather than leaving a reader to notice the gap.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from matplotlib import pyplot as plt
-from matplotlib import rc_context
-
+from fmeval.report.context import ReportContext
 from fmeval.report.latex import slug
-from fmeval.report.registry import PLOTS, check_preconditions, draw, iter_scope
+from fmeval.report.registry import PLOTS, check_preconditions, iter_scope
 from fmeval.report.style import DEFAULT_THEME
 
-from .exemplars import REPO
-from .metric_figures import CardFigure, remove_stale, report_context, svg_rc, write_figure
+from .loader import repo_root
+from .metric_figures import CardFigure, remove_stale, render_figure
 
 if TYPE_CHECKING:
     from .evidence import Run
 
 #: Where the overview figures live, one subdirectory per run. Tracked, unlike the pages
 #: ``docs/gen_pages.py`` generates, because the figures are committed artifacts.
-FIGURES_ROOT: Path = REPO / "docs" / "figures"
+FIGURES_ROOT: Path = repo_root() / "docs" / "figures"
 
 #: The renderers the overview page shows, in page order. Both already exist for the report.
 OVERVIEW_FIGURES: tuple[str, ...] = ("response_sparklines", "response_portrait")
@@ -64,7 +63,7 @@ def overview_figures(run: Run, out_dir: Path, *,
     :class:`RendererUnavailable` propagates: a half-written figure directory would be
     committed as if it were complete.
     """
-    ctx = report_context(run, theme=theme)
+    ctx = ReportContext.from_analysis(run, meta=run.meta, theme=theme)
     out_dir.mkdir(parents=True, exist_ok=True)
     written: list[CardFigure] = []
     reasons: dict[str, str] = {}
@@ -78,20 +77,13 @@ def overview_figures(run: Run, out_dir: Path, *,
             continue
         for keys, subset in iter_scope(spec.scope, ctx.df):
             stem = slug(name, **keys)
-            with rc_context(svg_rc(ctx.style)):
-                result, why = draw(spec, ctx, subset)
-                if result is None:
-                    reasons[stem] = why
-                    plt.close("all")
-                    continue
-                item = result.figures[0]
-                item.caption = item.caption or spec.title
-                path, numbers = out_dir / f"{stem}.svg", out_dir / f"{stem}.json"
-                write_figure(item, path, numbers, panel_key="metric",
-                             record={**provenance, "figure": name, "keys": keys})
-                plt.close("all")
-            written.append(CardFigure(name=stem, path=path, numbers=numbers,
-                                      caption=item.caption, alt=ALT_TEXT[name]))
+            figure, why = render_figure(spec, ctx, subset, out_dir, stem, alt=ALT_TEXT[name],
+                                        panel_key="metric",
+                                        record={**provenance, "figure": name, "keys": keys})
+            if figure is None:
+                reasons[stem] = why
+            else:
+                written.append(figure)
     remove_stale(out_dir, {f.path.name for f in written})
     return written, reasons
 
@@ -120,8 +112,6 @@ def page_markdown(figures_root: Path = FIGURES_ROOT, catalog: dict | None = None
     with the caption its renderer wrote and a link to its numbers. If the catalog is given,
     the page ends by naming every measured metric that is not on the grid and why.
     """
-    import json
-
     lines = [_INTRO]
     runs = sorted((d for d in figures_root.iterdir() if d.is_dir()), reverse=True) \
         if figures_root.is_dir() else []

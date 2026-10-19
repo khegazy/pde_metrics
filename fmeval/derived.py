@@ -45,8 +45,8 @@ import numpy as np
 from .data.base import DERIVED_FIELDS, Frame, GridSpec, Trajectory
 from .external.kinet_spectral import spectral_vorticity
 
-#: Isothermal D2Q9 lattice sound speed squared. The solver writes ``pressure = rho * c_s^2``
-#: (bitwise, verified at t = 1, 5000, 10000), which differs from ``rho / 3`` by one ulp.
+#: Isothermal D2Q9 lattice sound speed squared, as a float64 so ``rho * CS2`` reproduces the
+#: solver's stored pressure bitwise (see :mod:`fmeval.data.kinet_raw`).
 CS2: float = float(np.float64(1.0) / np.float64(3.0))
 
 #: Derived field -> the primitives it is computed from.
@@ -141,8 +141,8 @@ class RecomputingTrajectory:
 
     Without this the native grid would carry the solver's lattice-stencil vorticity while
     every coarse grid carries a spectral one, and a grid-independence comparison would be
-    measuring the difference between two discretisations rather than between two grids --
-    8.1% rms on vorticity (module docstring). ``evaluate.py`` wraps every dataset that sets
+    measuring the difference between two discretisations rather than between two grids (see the
+    module docstring). ``evaluate.py`` wraps every dataset that sets
     ``recompute_derived``; the pipeline reads frames only through :meth:`frame`.
     """
 

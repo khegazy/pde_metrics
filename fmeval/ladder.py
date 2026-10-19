@@ -25,7 +25,7 @@ import numpy as np
 from degradations import registry as deg_registry
 from degradations.registry import DegradationSpec
 
-from .calibration import Calibration, FieldCalibration
+from .calibration import Calibration
 from .context import FieldContext, derive_rng, fluctuation_energy, fluctuation_rms
 from .data.base import Frame
 
@@ -154,13 +154,13 @@ def resolve_severity(severity_level: SeverityLevel, field: str,
     """
     if severity_level.calibration is None:
         return severity_level.severity
-    if calibration is None or field not in calibration:
+    measured = calibration.fields.get(field) if calibration is not None else None
+    if measured is None:
         raise KeyError(
             f"{severity_level.op!r} declares calibration={severity_level.calibration!r} "
             f"but no calibration was measured for field {field!r}. Its severity is a "
             "relative quantity and cannot be applied as an absolute one."
         )
-    measured: FieldCalibration = calibration[field]
     if severity_level.calibration in ("energy_above", "energy_below"):
         side = "above" if severity_level.calibration == "energy_above" else "below"
         return measured.cutoff_removing_energy(severity_level.severity, side)
@@ -207,8 +207,8 @@ class SeverityLevelApplication:
     """The degraded ensemble members, or None on a deterministic frame.
 
     What a probabilistic metric is scored on. The ladder damages the *prediction*, so on
-    an ensemble frame this is what the operator acted upon and ``fields`` still holds the
-    undamaged reference.
+    an ensemble frame this is what the operator acted upon, ``fields`` holds its member mean,
+    and the frame's own ``fields`` still hold the undamaged reference.
     """
 
 
@@ -220,15 +220,31 @@ def apply_severity_level(
     seed: int,
     reference_rms: Mapping[str, float] | None = None,
     calibration: Calibration | None = None,
-) -> tuple[dict[str, np.ndarray], dict[str, float]]:
+) -> SeverityLevelApplication:
     """Apply one severity level to the requested fields of a frame.
 
     Each field gets its own RNG derived from ``(seed, label, frame_index, field)``, so
     stochastic operators draw independently per field while deterministic ones stay
     automatically consistent, and nothing depends on iteration order.
 
+    On an ensemble frame the ladder damages the *prediction*, never the reference: degrading
+    the reference would measure the ladder's effect on the truth. ``fields`` then holds the
+    degraded **ensemble mean** -- the prediction's single best guess, which a pairwise or
+    single-field metric is scored on -- and ``members`` the degraded ensemble a probabilistic
+    metric needs. Handing such a metric the undamaged reference instead would have it compare
+    the truth with itself and return exact zeros at every severity, indistinguishable in the
+    report from a metric that ran and found nothing wrong. An operator declaring
+    ``ensemble=True`` receives the whole ``(N, C, *spatial)`` stack, because what it changes --
+    dispersion -- is not a property any single member has; every other operator is applied to
+    each member independently, which is what lets ``bias``, ``additive_noise`` and the
+    smoothing family work on an ensemble unchanged. Energy bookkeeping is measured on the
+    ensemble mean, on the same footing as the deterministic case.
+
+    A field the operator does not accept is passed through with no resolved severity and no
+    energy entries: nothing was applied to it, so its result rows record NaN there.
+
     Args:
-        severity level: The severity level to apply.
+        severity_level: The severity level to apply.
         frame: Source frame; its arrays are not modified.
         fields: Which fields to degrade.
         seed: Run-level seed.
@@ -246,192 +262,90 @@ def apply_severity_level(
         which the operator does nothing, and such a severity level is not an experiment.
         Measured: a mild high-pass request on density floors at the lowest usable cutoff
         |k| = 1, and since the axis modes there hold only 3e-5 of the energy -- with the
-        k=0 mean deliberately preserved -- the filter passes essentially everything. Left
-        unflagged such a severity level contributes an exactly-zero damage that makes the
-        axis appear to span eleven orders of magnitude.
+        k=0 mean deliberately preserved -- the filter passes essentially everything.
     """
+    ensemble = frame.has_members
     if severity_level.is_reference:
         # On an ensemble frame the undamaged *prediction* is the ensemble mean, not the
-        # reference: a pairwise metric handed the reference twice would return exactly
-        # zero here and at every other severity level alike.
+        # reference, for the reason given above.
         return SeverityLevelApplication(
-            fields={
-                name: (
-                    frame.members[name].mean(axis=0) if frame.has_members
-                    else frame.fields[name]
-                )
-                for name in fields
-            },
+            fields={name: frame.members[name].mean(axis=0) if ensemble else frame.fields[name]
+                    for name in fields},
             resolved={}, unchanged=set(),
             energy_removed={name: 0.0 for name in fields},
             energy_changed={name: 0.0 for name in fields},
-            members=(
-                {name: frame.members[name] for name in fields}
-                if frame.has_members else None
-            ),
+            members={name: frame.members[name] for name in fields} if ensemble else None,
         )
 
     spec = deg_registry.get(severity_level.op)
-
-    if frame.has_members:
-        return _apply_to_ensemble(
-            spec, severity_level, frame, fields, seed=seed,
-            reference_rms=reference_rms, calibration=calibration,
-        )
-    if spec.ensemble:
+    if spec.ensemble and not ensemble:
         raise ValueError(
             f"{severity_level.op} acts on ensemble members, but this frame has none. "
             "Ensemble degradations need a dataset whose reader is_ensemble."
         )
-    out: dict[str, np.ndarray] = {}
-    resolved: dict[str, float] = {}
-    unchanged: set[str] = set()
-    removed: dict[str, float] = {}
-    changed: dict[str, float] = {}
-
-    if spec.whole_frame:
-        out = _apply_whole_frame(spec, severity_level, frame, fields, seed=seed,
-                                 reference_rms=reference_rms, calibration=calibration,
-                                 resolved=resolved)
+    applied = SeverityLevelApplication(fields={}, resolved={}, unchanged=set(), energy_removed={},
+                                       energy_changed={}, members={} if ensemble else None)
+    whole_frame = spec.whole_frame and not ensemble
+    if whole_frame:
+        whole = _apply_whole_frame(spec, severity_level, frame, fields, seed=seed,
+                                   reference_rms=reference_rms, calibration=calibration,
+                                   resolved=applied.resolved)
     for name in fields:
-        source = frame.fields[name]
-        if spec.whole_frame:
-            # Already produced above, in one call over the whole frame. Only the per-field
-            # bookkeeping below still has to happen.
-            rms = _rms_for(name, source, reference_rms)
-            if _is_noop(source, out[name], rms):
-                unchanged.add(name)
-            removed[name], changed[name] = _energy_effect(source, out[name])
+        source = frame.members[name] if ensemble else frame.fields[name]
+        if not (whole_frame or spec.ensemble or spec.accepts(name)):
+            applied.fields[name] = source.mean(axis=0) if ensemble else source
+            if ensemble:
+                applied.members[name] = source
             continue
-        if not spec.accepts(name):
-            out[name] = source
-            continue
-        severity = resolve_severity(severity_level, name, calibration)
-        resolved[name] = severity
-        rms = _rms_for(name, source, reference_rms)
-        kwargs = dict(severity_level.options)
-        if spec.takes_ctx:
-            kwargs["ctx"] = _context(frame, name, rms, seed=seed,
-                                     label=severity_level.variant_label)
-        result = np.asarray(spec.fn(source, severity, **kwargs), dtype=np.float64)
-        if result.shape != source.shape:
-            raise ValueError(
-                f"{severity_level.op} changed the shape of {name}: {source.shape} -> {result.shape}"
-            )
-        out[name] = result
-        if _is_noop(source, result, rms):
-            unchanged.add(name)
-        removed[name], changed[name] = _energy_effect(source, result)
-    return SeverityLevelApplication(fields=out, resolved=resolved, unchanged=unchanged,
-                           energy_removed=removed, energy_changed=changed)
-
-
-def _apply_to_ensemble(
-    spec: DegradationSpec,
-    severity_level: SeverityLevel,
-    frame: Frame,
-    fields: Sequence[str],
-    *,
-    seed: int,
-    reference_rms: Mapping[str, float] | None,
-    calibration: Calibration | None,
-) -> SeverityLevelApplication:
-    """Apply one severity level to a frame's ensemble members, leaving the reference alone.
-
-    The ladder damages the *prediction*. On a deterministic frame the prediction and the
-    degraded field are the same array, so the distinction never arises; on an ensemble
-    frame it is the whole point, and degrading the reference instead would measure the
-    ladder's effect on the truth.
-
-    The returned ``fields`` therefore hold the degraded **ensemble mean** -- the
-    prediction's single best guess, which is what a pairwise or single-field metric is
-    scored on -- and ``members`` holds the degraded ensemble a probabilistic metric needs.
-    The undamaged reference stays on the frame, where the pipeline reads it.
-
-    Two lanes:
-
-    * an operator declaring ``ensemble=True`` receives the whole ``(N, C, *spatial)``
-      stack, because what it changes -- dispersion -- is not a property any single member
-      has;
-    * every other operator is applied to each member independently, which is what makes
-      ``bias``, ``additive_noise`` and the smoothing family work on an ensemble without
-      any change to those bundles. Stochastic operators get a per-member RNG, so the
-      members do not all receive the same noise field and collapse into a rigid
-      translation of each other.
-
-    Energy bookkeeping is measured on the ensemble mean, which keeps the reported numbers
-    on the same footing as the deterministic case.
-    """
-    out: dict[str, np.ndarray] = {}
-    members_out: dict[str, np.ndarray] = {}
-    resolved: dict[str, float] = {}
-    unchanged: set[str] = set()
-    removed: dict[str, float] = {}
-    changed: dict[str, float] = {}
-
-    for name in fields:
-        reference = frame.fields[name]
-        source = frame.members[name]
-
-        if not spec.ensemble and not spec.accepts(name):
-            members_out[name] = source
-            out[name] = source.mean(axis=0)
-            removed[name], changed[name] = 0.0, 0.0
-            continue
-
-        severity = resolve_severity(severity_level, name, calibration)
-        resolved[name] = severity
-        rms = _rms_for(name, reference, reference_rms)
-
-        options = dict(severity_level.options)
-        if spec.ensemble:
-            kwargs = dict(options)
-            if spec.takes_ctx:
-                kwargs["ctx"] = _context(frame, name, rms, seed=seed,
-                                         label=severity_level.variant_label)
-            result = np.asarray(spec.fn(source, severity, **kwargs), dtype=np.float64)
+        rms = _rms_for(name, frame.fields[name], reference_rms)
+        if whole_frame:
+            result = whole[name]
         else:
-            per_member = []
-            for i, member in enumerate(source):
-                kwargs = dict(options)
-                if spec.takes_ctx:
-                    # A stochastic operator must draw independently per member: one shared
-                    # noise field would shift every member alike, which is a translation of
-                    # the ensemble rather than noise on it, and would leave the spread
-                    # untouched.
-                    label = (
-                        f"{severity_level.variant_label}__member{i}"
-                        if spec.stochastic else severity_level.variant_label
-                    )
-                    kwargs["ctx"] = _context(frame, name, rms, seed=seed, label=label)
-                per_member.append(
-                    np.asarray(spec.fn(member, severity, **kwargs), dtype=np.float64)
-                )
-            result = np.stack(per_member)
-
-        if result.shape != source.shape:
-            raise ValueError(
-                f"{severity_level.op} changed the shape of {name} members: "
-                f"{source.shape} -> {result.shape}"
-            )
-        members_out[name] = result
-        # The ensemble's point prediction, and what a pairwise or single-field metric is
-        # given as the candidate. Handing such a metric the undamaged reference instead
-        # would have it compare the truth with itself and return a column of exact zeros
-        # at every severity -- indistinguishable, in the report, from a metric that ran
-        # and found nothing wrong.
-        out[name] = result.mean(axis=0)
-
+            severity = resolve_severity(severity_level, name, calibration)
+            applied.resolved[name] = severity
+            if ensemble and not spec.ensemble:
+                # A stochastic operator draws independently per member: one shared noise
+                # field would shift every member alike, which is a translation of the
+                # ensemble rather than noise on it, and would leave the spread untouched.
+                result = np.stack([
+                    _call(spec, severity_level, member, severity, frame, name, rms, seed=seed,
+                          label=f"{severity_level.variant_label}__member{i}"
+                          if spec.stochastic else severity_level.variant_label)
+                    for i, member in enumerate(source)
+                ])
+            else:
+                result = _call(spec, severity_level, source, severity, frame, name, rms,
+                               seed=seed, label=severity_level.variant_label)
         if _is_noop(source, result, rms):
-            unchanged.add(name)
-        removed[name], changed[name] = _energy_effect(
-            source.mean(axis=0), result.mean(axis=0)
-        )
+            applied.unchanged.add(name)
+        if ensemble:
+            applied.members[name] = result
+            applied.fields[name] = result.mean(axis=0)
+            effect = _energy_effect(source.mean(axis=0), applied.fields[name])
+        else:
+            applied.fields[name] = result
+            effect = _energy_effect(source, result)
+        applied.energy_removed[name], applied.energy_changed[name] = effect
+    return applied
 
-    return SeverityLevelApplication(
-        fields=out, resolved=resolved, unchanged=unchanged,
-        energy_removed=removed, energy_changed=changed, members=members_out,
-    )
+
+def _call(spec: DegradationSpec, severity_level: SeverityLevel, source: np.ndarray,
+          severity: float, frame: Frame, name: str, rms: float, *, seed: int,
+          label: str) -> np.ndarray:
+    """Call a per-field operator once with its options and context, as float64.
+
+    Raises:
+        ValueError: If the operator changed the array's shape.
+    """
+    kwargs = dict(severity_level.options)
+    if spec.takes_ctx:
+        kwargs["ctx"] = _context(frame, name, rms, seed=seed, label=label)
+    result = np.asarray(spec.fn(source, severity, **kwargs), dtype=np.float64)
+    if result.shape != source.shape:
+        raise ValueError(
+            f"{severity_level.op} changed the shape of {name}: {source.shape} -> {result.shape}"
+        )
+    return result
 
 
 def _rms_for(name: str, field: np.ndarray, reference_rms: Mapping[str, float] | None) -> float:
@@ -478,33 +392,25 @@ def _apply_whole_frame(
     density-weighted remap -- cannot work one array at a time. It receives the field mapping and
     returns one, and its context describes the frame rather than any single field.
 
-    This was declared, defaulted and documented in two places for a long time while
-    :func:`apply_severity_level` never read it, so such an operator would have received a
-    bare array where it expected a mapping and failed with a message pointing at numpy
-    rather than at the ignored declaration.
-
     Args:
         resolved: Filled in with the severity applied to each field, in place.
 
     Raises:
         TypeError: If the operator does not return a mapping.
         KeyError: If it drops a requested field.
-        ValueError: If it changes a field's shape.
+        ValueError: If a calibrated severity resolves differently per field, or the operator
+            changes a field's shape.
     """
-    severity = (
-        resolve_severity(severity_level, fields[0], calibration)
-        if fields
-        else severity_level.severity
-    )
     for name in fields:
         resolved[name] = resolve_severity(severity_level, name, calibration)
-    if len({resolved[name] for name in fields}) > 1:
+    if len(set(resolved.values())) > 1:
         raise ValueError(
             f"{severity_level.op!r} declares whole_frame=True and "
             f"calibration={severity_level.calibration!r}, but a calibrated severity "
             "resolves per field and a whole-frame operator gets one call for "
             "all of them. Use per-field application, or an absolute severity."
         )
+    severity = resolved[fields[0]] if fields else severity_level.severity
 
     rms = float(np.mean([_rms_for(name, frame.fields[name], reference_rms)
                          for name in fields])) if fields else 0.0
@@ -542,9 +448,8 @@ def _apply_whole_frame(
 def _energy_effect(source: np.ndarray, result: np.ndarray) -> tuple[float, float]:
     """Fraction of the reference fluctuation energy removed, and the fraction changed.
 
-    Both are about the *fluctuation*, with the spatial mean removed, for the same reason the
-    calibration is: on density the mean is four orders of magnitude larger than the fluctuation, so
-    energies computed about zero would say every operator changed nothing.
+    Both are about the *fluctuation*, with the spatial mean removed; see
+    :func:`fmeval.context.fluctuation` for why.
     """
     total = float(fluctuation_energy(source))
     if total <= 0:

@@ -9,8 +9,8 @@ configured high-pass cutoffs saturated by the second severity level on density, 
 severity levels the same experiment, while the configured blur reached only 1.2% of the
 unrelated-field level there, making that axis carry no signal at all.
 
-The fix is to express those severities relative to a property of the field and resolve them
-against a measurement. This module is that measurement. An operator declares which property
+So those severities are expressed relative to a property of the field and resolved against a
+measurement. This module is that measurement. An operator declares which property
 it scales with (see ``DegradationSpec.calibration``) and the ladder resolves its nominal
 severities per field.
 
@@ -151,9 +151,8 @@ class FieldCalibration:
 def _binned_energy(field: np.ndarray, inverse: np.ndarray, n_bins: int) -> np.ndarray:
     """Energy of the *fluctuation*, grouped by exact wavevector magnitude.
 
-    The spatial mean is removed first. Leaving it in would put an overwhelming spike at k=0 for a
-    field like density, which is 1.0 with fluctuations of order 1e-4, and every energy fraction
-    would then resolve to the same wavenumber.
+    The spatial mean is removed first (:func:`fmeval.context.fluctuation`): left in, it would put
+    an overwhelming spike at k=0 and every energy fraction would resolve to the same wavenumber.
 
     Args:
         field: ``(C, *spatial)``.
@@ -195,11 +194,10 @@ def calibrate_field(frames: Sequence[np.ndarray], grid: GridSpec,
         raise ValueError(f"cannot calibrate {field!r} without any frames")
 
     shells, inverse = _magnitude_bins(grid)
-    n_bins = len(shells)
 
     energies, scales = [], []
     for frame in frames:
-        energy = _binned_energy(frame, inverse, n_bins)
+        energy = _binned_energy(frame, inverse, len(shells))
         total = energy.sum()
         if total <= 0:
             continue
@@ -247,17 +245,6 @@ class Calibration:
 
     fields: dict[str, FieldCalibration] = dc_field(default_factory=dict)
 
-    def __getitem__(self, field: str) -> FieldCalibration:
-        if field not in self.fields:
-            raise KeyError(
-                f"no calibration for {field!r}; it was not measured. Fields calibrated: "
-                f"{sorted(self.fields)}"
-            )
-        return self.fields[field]
-
-    def __contains__(self, field: str) -> bool:
-        return field in self.fields
-
     def summary(self) -> list[dict[str, float | int | str]]:
         return [c.summary() for c in self.fields.values()]
 
@@ -269,15 +256,9 @@ class Calibration:
         is 69% in the four diagonal modes at |k| = sqrt(2) and only 3e-5 in the axis modes just
         below them, so consecutive available cutoffs there differ by most of the field.
         """
-        rows = []
-        for cal in self.fields.values():
-            for k, fraction in zip(cal.wavenumbers, cal.cumulative_energy):
-                rows.append({
-                    "field": cal.field,
-                    "wavenumber": float(k),
-                    "cumulative_energy_below": float(fraction),
-                })
-        return rows
+        return [{"field": cal.field, "wavenumber": float(k), "cumulative_energy_below": float(f)}
+                for cal in self.fields.values()
+                for k, f in zip(cal.wavenumbers, cal.cumulative_energy)]
 
 
 def calibrate(frames_by_field: dict[str, list[np.ndarray]], grid: GridSpec,

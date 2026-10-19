@@ -31,7 +31,10 @@ from typing import Any
 
 import yaml
 
-from .schema import Card, CardError, parse_card
+from degradations import registry as deg_registry
+from metrics import registry as metric_registry
+
+from .schema import KINDS, Card, CardError, parse_card
 
 CARD_YAML = "card.yaml"
 """The typed record that marks a directory as a bundle."""
@@ -87,7 +90,7 @@ def repo_root() -> Path:
 
 def bundle_root(kind: str) -> Path:
     """The directory holding all bundles of one kind."""
-    if kind not in ("metric", "degradation"):
+    if kind not in KINDS:
         raise ValueError(f"unknown bundle kind {kind!r}")
     return repo_root() / ("metrics" if kind == "metric" else "degradations")
 
@@ -105,7 +108,7 @@ def iter_bundles(kind: str | None = None) -> list[Bundle]:
     Returns:
         The bundles found, sorted by (kind, name).
     """
-    kinds = ("metric", "degradation") if kind is None else (kind,)
+    kinds = KINDS if kind is None else (kind,)
     found: list[Bundle] = []
     for k in kinds:
         root = bundle_root(k)
@@ -121,34 +124,7 @@ def iter_bundles(kind: str | None = None) -> list[Bundle]:
 
 def find_bundle(name: str, kind: str | None = None) -> Bundle | None:
     """The bundle registered under ``name``, or ``None`` if there is no such directory."""
-    for bundle in iter_bundles(kind):
-        if bundle.name == name:
-            return bundle
-    return None
-
-
-def bundle_for_module(module: str, kind: str) -> Bundle | None:
-    """Locate the bundle that defines an already-imported module.
-
-    The registries record ``fn.__module__`` rather than a path, so the file is recovered
-    from :data:`sys.modules`. This is what lets card validation work for a bundle that was
-    imported from an installed copy of the package rather than from the checkout.
-
-    Args:
-        module: Dotted module name, as recorded on the spec.
-        kind: ``"metric"`` or ``"degradation"``.
-
-    Returns:
-        The bundle, or ``None`` if the module does not live in one.
-    """
-    mod = sys.modules.get(module)
-    file = getattr(mod, "__file__", None)
-    if file is None:
-        return None
-    directory = Path(file).resolve().parent
-    if not (directory / CARD_YAML).is_file():
-        return None
-    return Bundle(name=directory.name, kind=kind, path=directory)
+    return next((bundle for bundle in iter_bundles(kind) if bundle.name == name), None)
 
 
 def load_card(bundle: Bundle) -> Card:
@@ -205,13 +181,8 @@ def check_bundle_files(bundle: Bundle) -> list[str]:
     Returns:
         Problems as human-readable sentences; empty when the bundle is complete.
     """
-    problems = []
-    for filename in BUNDLE_FILES:
-        if not (bundle.path / filename).is_file():
-            problems.append(f"{filename} is missing")
-    if not bundle.implementation.is_file():
-        problems.append(f"{bundle.implementation.name} is missing")
-    return problems
+    paths = [bundle.path / filename for filename in BUNDLE_FILES] + [bundle.implementation]
+    return [f"{path.name} is missing" for path in paths if not path.is_file()]
 
 
 # --------------------------------------------------------------------------------------
@@ -226,39 +197,36 @@ def _validate_spec(spec: Any, kind: str) -> None:
     the harness to run something whose documentation is missing or wrong should fail
     immediately, with the command that fixes it, rather than producing numbers nobody can
     interpret later.
+
+    The bundle is found from the module the spec records, through :data:`sys.modules`, so
+    validation works for a bundle imported from an installed copy of the package as well as
+    from the checkout. A module outside any bundle is not an error: tests register throwaway
+    metrics that way on purpose, and so does anyone experimenting in a notebook.
+
+    A degradation's exemplar severities must also run weakest first. That is checked here
+    rather than in the schema because "weakest" is not a numeric fact: ``band_attenuate``
+    states a *retained* fraction, so its severity_direction is ``decreasing`` and its
+    correct ordering runs downward. The order is the spec's own ``sort_severities``.
     """
     if os.environ.get(SKIP_ENV) == "1":
         return
-    bundle = bundle_for_module(spec.module, kind)
-    if bundle is None:
-        # Not in a bundle at all. Tests register throwaway metrics this way on purpose,
-        # and so does anyone experimenting in a notebook, so this is not an error.
+    file = getattr(sys.modules.get(spec.module), "__file__", None)
+    directory = None if file is None else Path(file).resolve().parent
+    if directory is None or not (directory / CARD_YAML).is_file():
         return
+    bundle = Bundle(name=directory.name, kind=kind, path=directory)
     card = load_card(bundle)
-    _check_exemplar_order(card, spec, bundle)
-
-
-def _check_exemplar_order(card: Any, spec: Any, bundle: Any) -> None:
-    """Check the exemplar severities run weakest-first, per the operator's direction.
-
-    Not done in the schema because "weakest" is not a numeric fact. Most operators grow
-    more damaging as the severity rises, but ``band_attenuate`` states a *retained*
-    fraction, so its severity_direction is ``decreasing`` and its correct ordering runs
-    downward. Sorting numerically would call that wrong and would call a genuinely
-    inverted list right.
-    """
-    exemplars = getattr(card, "exemplars", None)
-    if exemplars is None or exemplars.mode != "severity" or not exemplars.levels:
+    exemplars = card.exemplars
+    if kind != "degradation" or exemplars is None or exemplars.mode != "severity":
         return
-    descending = getattr(spec, "severity_direction", "increasing") == "decreasing"
-    expected = sorted(exemplars.levels, reverse=descending)
+    expected = spec.sort_severities(exemplars.levels)
     if list(exemplars.levels) != expected:
-        direction = "largest first" if descending else "smallest first"
+        descending = spec.severity_direction == "decreasing"
         raise CardError(
             str(bundle.card_yaml),
             f"exemplars.levels must run weakest to strongest. This operator declares "
-            f"severity_direction={'decreasing' if descending else 'increasing'}, so that "
-            f"means {direction}: {expected}.",
+            f"severity_direction={spec.severity_direction}, so that means "
+            f"{'largest first' if descending else 'smallest first'}: {expected}.",
             f"reorder the list, then run  python -m fmeval.cards check {card.name}",
         )
 
@@ -269,9 +237,6 @@ def install() -> None:
     Called from :mod:`fmeval` so that every path through the harness enforces cards,
     while ``import metrics`` on its own stays free of this package and its dependencies.
     """
-    from degradations import registry as deg_registry
-    from metrics import registry as metric_registry
-
     metric_registry.CARD_VALIDATOR = lambda spec: _validate_spec(spec, "metric")
     deg_registry.CARD_VALIDATOR = lambda spec: _validate_spec(spec, "degradation")
 
@@ -280,9 +245,8 @@ def sanitize_json(value: Any) -> Any:
     """Replace NaN and infinities with None, recursively, before serialising.
 
     ``json.dumps`` writes float('nan') as a bare ``NaN`` token, which is not JSON: a
-    strict parser refuses the whole file. These files exist precisely for machine
-    readers, and thirteen committed fingerprints were unreadable to them before this.
-    "Not a number" here always means "not measured", and null is how JSON says that.
+    strict parser refuses the whole file, and these files exist precisely for machine
+    readers. "Not a number" here always means "not measured", and null is how JSON says that.
     """
     if isinstance(value, dict):
         return {k: sanitize_json(v) for k, v in value.items()}

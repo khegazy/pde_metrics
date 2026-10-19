@@ -9,23 +9,6 @@ import numpy as np
 from scipy.ndimage import convolve
 
 
-def _odd_width(severity: float) -> int:
-    """Round a calibrated width to the nearest ODD number of cells, at least 1.
-
-    A window of even width has no centre cell, so ``uniform_filter`` and ``median_filter``
-    place it asymmetrically and the output is displaced by half a cell. For a project whose
-    central concern is that metrics over-punish displacement, that shift dominates: measured on
-    vorticity, calibrated widths that rounded to 2, 3, 6, 13 gave damage 0.0121, 0.0041,
-    0.0338, 0.0880 -- non-monotone, because the even severity level carried a half-cell
-    shift the odd one
-    did not. Rounding to odd removes the artefact and the axis becomes monotone.
-    """
-    width = int(round(severity))
-    if width <= 1:
-        return 1
-    return width if width % 2 == 1 else width + 1
-
-
 def _radial_kernel(radius: float, n_spatial: int, profile: str) -> np.ndarray:
     """Build a normalised isotropic kernel of the given profile."""
     r = int(np.ceil(radius))
@@ -45,23 +28,24 @@ def _radial_kernel(radius: float, n_spatial: int, profile: str) -> np.ndarray:
     return k / total
 
 
-def _convolve_spatial(x: np.ndarray, kernel: np.ndarray) -> np.ndarray:
-    """Convolve each channel with a spatial kernel, wrapping at the boundary."""
-    out = np.empty_like(x)
-    for c in range(x.shape[0]):
-        out[c] = convolve(x[c], kernel, mode="wrap")
-    return out
-
-
 def _window_filter(x: np.ndarray, severity: float, ctx, filt) -> np.ndarray:
     """Apply a ``scipy.ndimage`` window filter of odd width over the spatial axes, wrapping.
 
-    ``filt`` is ``uniform_filter`` or ``median_filter``; the width is :func:`_odd_width` of the
-    severity, and a width of one is the identity.
+    ``filt`` is ``uniform_filter`` or ``median_filter``. The calibrated width ``severity`` is
+    rounded to the nearest integer and an even result is raised by one, so the window is always
+    odd; a width of one or less is the identity.
+
+    A window of even width has no centre cell, so ``uniform_filter`` and ``median_filter``
+    place it asymmetrically and the output is displaced by half a cell. For a project whose
+    central concern is that metrics over-punish displacement, that shift dominates: measured on
+    vorticity, windows of 2, 3, 6 and 13 cells give damage 0.0121, 0.0041, 0.0338, 0.0880 --
+    non-monotone, because each even window carries a half-cell shift the odd ones do not.
+    Rounding to odd removes the artefact and the axis is monotone.
     """
-    width = _odd_width(severity)
+    width = int(round(severity))
     if width <= 1:
         return x
+    width += 1 - width % 2
     size = [1] * x.ndim
     for axis in ctx.spatial_axes:
         size[axis] = width
@@ -69,7 +53,10 @@ def _window_filter(x: np.ndarray, severity: float, ctx, filt) -> np.ndarray:
 
 
 def _radial_blur(x: np.ndarray, severity: float, ctx, profile: str) -> np.ndarray:
-    """Convolve with a normalised isotropic kernel of radius ``severity``; identity below 1."""
+    """Convolve with a normalised isotropic kernel of radius ``severity``; identity below 1.
+
+    The kernel gets a leading axis of length one, so channels never mix; the boundary wraps.
+    """
     if severity < 1:
         return x
-    return _convolve_spatial(x, _radial_kernel(severity, ctx.grid.n_spatial, profile))
+    return convolve(x, _radial_kernel(severity, ctx.grid.n_spatial, profile)[None], mode="wrap")

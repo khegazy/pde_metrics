@@ -9,11 +9,22 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from scipy.ndimage import gaussian_filter
 from scipy.stats import spearmanr
 
-from fmeval.data.base import CANONICAL_FIELDS
+from fmeval.data.base import FIELDS
 from metrics import registry
-from tests.conftest import GRID, N_MEMBERS, make_ctx, members, synthetic_field
+from tests.conftest import (
+    GRID,
+    N_MEMBERS,
+    SQUARE_REFERENCE,
+    SQUARE_SHIFTED,
+    cosine_mode,
+    exchangeable_ensemble,
+    make_ctx,
+    members,
+    synthetic_field,
+)
 
 
 def all_specs() -> list[registry.MetricSpec]:
@@ -32,8 +43,6 @@ def _channels_for(spec: registry.MetricSpec) -> int:
     if "velocity" in spec.fields:
         return 2
     return 1
-
-
 
 
 def _members(shape: tuple[int, ...], n_channels: int, *, seed: int = 1) -> np.ndarray:
@@ -111,7 +120,7 @@ def test_name_is_wellformed(spec):
 
 
 def test_declared_fields_are_canonical(spec):
-    unknown = set(spec.fields) - CANONICAL_FIELDS - {"*"}
+    unknown = set(spec.fields) - set(FIELDS) - {"*"}
     assert not unknown, f"{spec.name} declares unknown fields {sorted(unknown)}"
 
 
@@ -126,9 +135,7 @@ def test_pairwise_identity_is_zero(spec):
 def test_symmetry(spec):
     if spec.arity != "pairwise" or not spec.symmetric:
         pytest.skip("not declared symmetric")
-    c = _channels_for(spec)
-    a = synthetic_field(GRID, c, seed=0)
-    b = synthetic_field(GRID, c, seed=1)
+    a, b = _args_for(spec)
     assert _call(spec, a, b) == pytest.approx(_call(spec, b, a), rel=1e-12)
 
 
@@ -168,8 +175,6 @@ def test_monotone_on_synthetic_blur_ladder(spec):
     A metric that cannot rank a synthetic blur ladder will never rank a real degradation
     ladder, and this finds out in milliseconds instead of after a full run.
     """
-    from scipy.ndimage import gaussian_filter
-
     c = _channels_for(spec)
     ref = synthetic_field(GRID, c, seed=0, noise=0.0)
     sigmas = [0.0, 0.5, 1.0, 2.0, 4.0]
@@ -276,11 +281,9 @@ def test_declared_target_is_consistent_with_direction(spec):
 
 
 def test_pointwise_map_shape(spec):
-    if not spec.has_pointwise:
+    if not spec.has_pointwise_map:
         pytest.skip("no pointwise decomposition declared")
-    c = _channels_for(spec)
-    a, b = synthetic_field(GRID, c, seed=0), synthetic_field(GRID, c, seed=1)
-    m = _call_map(spec, a, b) if spec.arity == "pairwise" else _call_map(spec, a)
+    m = _call_map(spec, *_args_for(spec))
     assert m.shape == GRID, f"{spec.name}: map is {m.shape}, expected {GRID}"
     assert np.isfinite(m).all()
 
@@ -292,14 +295,11 @@ def test_pointwise_map_reduces_to_metric(spec):
     of. It catches the two easy mistakes: forgetting that channel-summed maps reduce as
     mean/C, and assuming rmse's map averages to rmse when it averages to mse.
     """
-    if not spec.has_pointwise:
+    if not spec.has_pointwise_map:
         pytest.skip("no pointwise decomposition declared")
-    c = _channels_for(spec)
-    a, b = synthetic_field(GRID, c, seed=0), synthetic_field(GRID, c, seed=1)
-    if spec.arity == "pairwise":
-        m, want = _call_map(spec, a, b), _call(spec, a, b)
-    else:
-        m, want = _call_map(spec, a), _call(spec, a)
+    args = _args_for(spec)
+    c = args[0].shape[0]
+    m, want = _call_map(spec, *args), _call(spec, *args)
     assert spec.reduce(m, c) == pytest.approx(want, rel=1e-12), (
         f"{spec.name}: reduction {spec.reduction!r} of the map gives "
         f"{spec.reduce(m, c)}, but the metric gives {want}"
@@ -346,3 +346,120 @@ def test_unknown_reduction_raises():
         @registry.metric(name="_bad_reduction", reduction="nope")
         def _bad(a, b):
             return 0.0
+
+
+# --- properties shared by named metrics --------------------------------------------
+#
+# Each test below states one property that several bundles claim in their cards, with one
+# case per metric. They are not registry-wide: each holds for the metrics listed and is not
+# expected of the others.
+
+
+@pytest.mark.parametrize("name", [
+    # MAE's map is |difference|: 1 in each lobe and 0 where the two squares overlap.
+    pytest.param("mae", id="mae"),
+    # MSE's map is the squared difference, and squaring 1 and 0 changes neither, so the
+    # picture is the same: the double penalty is a property of pointwise error, not of the
+    # power it is raised to.
+    pytest.param("mse", id="mse"),
+])
+def test_the_error_map_shows_two_lobes_for_a_displaced_feature(name: str):
+    """The double penalty as a picture: error where the feature is not, and where it is."""
+    error = registry.get(name).pointwise(SQUARE_REFERENCE, SQUARE_SHIFTED)
+    assert np.all(error[1:3, 1] == 1.0), "where the feature should be and is not"
+    assert np.all(error[1:3, 3] == 1.0), "where it is and should not be"
+    assert np.all(error[1:3, 2] == 0.0), "the overlapping column should carry no error at all"
+
+
+@pytest.mark.parametrize("name", [
+    # The sentence in MAE's card about what it ignores.
+    pytest.param("mae", id="mae"),
+    # The sentence in MSE's card about what it ignores: the metric sees a bag of per-cell
+    # differences and nothing about their arrangement, which is exactly the information a
+    # displaced shock lives in.
+    pytest.param("mse", id="mse"),
+])
+def test_a_pointwise_metric_is_blind_to_where_the_error_sits(name: str):
+    """Two candidates wrong by the same amount in different places score identically."""
+    reference = np.zeros((1, 4, 4))
+    corner = reference.copy()
+    corner[0, 0, 0] = 1.0
+    middle = reference.copy()
+    middle[0, 2, 2] = 1.0
+    fn = registry.get(name).fn
+    assert fn(reference, corner) == fn(reference, middle)
+
+
+@pytest.mark.parametrize(("name", "ratio"), [
+    # MAE ~ delta <|df/dx|>: linear, so halving the displacement halves the error.
+    pytest.param("mae", 2.0, id="mae-linear"),
+    # MSE ~ delta^2 <(df/dx)^2>: quadratic, so halving the displacement quarters it. This is
+    # the expansion in MSE's Definition, and what makes MSE tolerant of small shifts and
+    # severe about larger ones.
+    pytest.param("mse", 4.0, id="mse-quadratic"),
+])
+def test_response_to_a_small_displacement_has_the_declared_power(name: str, ratio: float):
+    """Halving a displacement below the scale of variation divides the error by ``ratio``.
+
+    Checked on a smooth sinusoid, where the sub-cell displacement is exact rather than
+    approximated by a shift, and where the derivative is bounded so the small-displacement
+    expansion in each card's Definition holds.
+    """
+    x = np.linspace(0.0, 2.0 * np.pi, 256, endpoint=False)
+    reference = np.sin(x)[None, :]
+    fn = registry.get(name).fn
+    errors = [fn(reference, np.sin(x + d)[None, :]) for d in (0.02, 0.01, 0.005)]
+    ratios = [errors[i] / errors[i + 1] for i in range(len(errors) - 1)]
+    assert all(abs(r - ratio) < 0.05 for r in ratios), ratios
+
+
+@pytest.mark.parametrize(("name", "factor"), [
+    # The H^-1 seminorm carries a length: same field, same mode index, twice the spacing
+    # means twice the domain and half the wavenumber, so 1 / |k| doubles.
+    pytest.param("h_minus_one", 2.0, id="h_minus_one-length"),
+    # The H^1 seminorm carries an inverse length, the opposite power: doubling the cell
+    # size halves the wavenumber and so halves the value.
+    pytest.param("h1_seminorm", 0.5, id="h1_seminorm-inverse-length"),
+    # Palinstrophy carries an inverse length squared: doubling the cell size halves every
+    # wavenumber, so it falls by four. On a grid coarsened by a factor, using the native
+    # spacing would inflate the result by exactly the square of that factor.
+    pytest.param("palinstrophy", 0.25, id="palinstrophy-inverse-length-squared"),
+])
+def test_doubling_the_spacing_scales_the_value_by_its_power_of_length(name: str, factor: float):
+    """A metric carrying a length to some power scales by ``2^power`` when the spacing doubles.
+
+    This is why these metrics must read the *analysis* grid's spacing rather than assume unit
+    cells. Each is evaluated on a mode-1 cosine along x on an 8x8 grid: a pairwise metric as
+    the error against a zero field, a single-field one on the cosine itself.
+    """
+    spec = registry.get(name)
+    shape = (8, 8)
+    fields = (cosine_mode(shape, mode=1),)
+    if spec.arity == "pairwise":
+        fields = (np.zeros((1, *shape)), *fields)
+    unit = spec.fn(*fields, ctx=make_ctx(shape, spacing=1.0))
+    doubled = spec.fn(*fields, ctx=make_ctx(shape, spacing=2.0))
+    assert doubled == pytest.approx(factor * unit)
+
+
+@pytest.mark.parametrize("name", [
+    # CRPS's skill term E|X - y| grows as the members move away from the reference, and the
+    # spread term does not move, so the score rises.
+    pytest.param("crps", id="crps"),
+    # The error of the ensemble mean is the bias itself once it dominates the noise.
+    pytest.param("ensemble_mean_rmse", id="ensemble_mean_rmse"),
+    # A biased ensemble pushes the reference toward one end of the member ranks: the
+    # histogram slopes, and the reliability index rises with the slope.
+    pytest.param("rank_histogram", id="rank_histogram"),
+])
+def test_an_ensemble_metric_rises_with_bias(name: str):
+    """Shifting every member by a growing constant never improves the score.
+
+    The ensemble starts calibrated -- the reference is exchangeable with the members -- so
+    every shift moves it away from the truth.
+    """
+    spec = registry.get(name)
+    reference, ensemble = exchangeable_ensemble(3, (1, 48, 48), 8)
+    values = [_call(spec, reference, ensemble + b) for b in (0.0, 0.25, 0.5, 1.0, 2.0)]
+    assert values == sorted(values), values
+    assert values[-1] > values[0], values

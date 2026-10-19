@@ -36,6 +36,7 @@ from typing import Literal
 import numpy as np
 
 from .data.base import FIELDS, Frame, GridSpec
+from .derived import recomputable, recompute
 
 RemapMethod = Literal["block_mean", "subsample"]
 
@@ -117,8 +118,6 @@ def coarsen_factor(grid: GridSpec, target_resolution: int | None) -> int:
     if target_resolution is None:
         return 1
     native = grid.shape[0]
-    if target_resolution == native:
-        return 1
     if target_resolution > native:
         raise ValueError(
             f"analysis grid {target_resolution} is finer than the data ({native}); "
@@ -157,8 +156,6 @@ def remap_frame(
     """
     if factor == 1:
         return frame
-    from .derived import recomputable, recompute
-
     op = _METHODS[method]
     grid = frame.grid.coarsened(factor)
 

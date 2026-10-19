@@ -21,10 +21,15 @@ from typing import Any
 
 import hydra
 import pandas as pd
+from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 
-from degradations import registry as deg_registry
 from fmeval import io as fio
+from fmeval.data import (  # noqa: F401  (register the formats)
+    kinet_raw,
+    synthetic_ensemble,
+    well,
+)
 from fmeval.data.base import READERS, TimeSelection, Trajectory
 from fmeval.data.locate import resolve_dataset_path, trajectory_provenance
 from fmeval.derived import RecomputingTrajectory
@@ -38,15 +43,10 @@ log = logging.getLogger(__name__)
 def open_trajectory(cfg: DictConfig) -> Trajectory:
     """Construct the reader named by ``dataset.format``.
 
-    Explicit imports rather than a package walk: readers are a small closed set maintained
-    with the harness, unlike metrics and degradations which are open contributor sets.
+    Explicit imports (at the top of this file) rather than a package walk: readers are a small
+    closed set maintained with the harness, unlike metrics and degradations which are open
+    contributor sets.
     """
-    from fmeval.data import (  # noqa: F401  (register the formats)
-        kinet_raw,
-        synthetic_ensemble,
-        well,
-    )
-
     fmt = cfg.dataset.format
     if fmt not in READERS:
         raise KeyError(f"unknown dataset format {fmt!r}; available: {sorted(READERS)}")
@@ -71,21 +71,14 @@ def select_fields(cfg: DictConfig, trajectory: Trajectory,
     """Fields to read: the config list if given, else what the metrics actually accept."""
     requested = cfg.get("fields") or cfg.dataset.get("fields")
     available = list(trajectory.fields)
-    if requested:
-        missing = [f for f in requested if f not in available]
-        if missing:
-            raise ValueError(
-                f"dataset {cfg.dataset.name!r} does not provide {missing}; "
-                f"it has {available}"
-            )
-        candidates = list(requested)
-    else:
-        candidates = available
-
-    wanted: list[str] = []
-    for field in candidates:
-        if any(s.accepts(field) for s in specs):
-            wanted.append(field)
+    missing = [f for f in requested or () if f not in available]
+    if missing:
+        raise ValueError(
+            f"dataset {cfg.dataset.name!r} does not provide {missing}; "
+            f"it has {available}"
+        )
+    candidates = list(requested) if requested else available
+    wanted = [field for field in candidates if any(s.accepts(field) for s in specs)]
     if not wanted:
         raise ValueError(
             f"no field in {candidates} is accepted by any of "
@@ -115,7 +108,6 @@ def main(cfg: DictConfig) -> None:
     stamp = int(time.time())     # stamps every folder this invocation writes
 
     specs = [metric_registry.get(name) for name in cfg.metrics]
-    deg_registry.discover()
     severity_levels = build_ladder(
         OmegaConf.to_container(cfg.degradation.ladder, resolve=True),
         include_reference=bool(cfg.degradation.include_reference),
@@ -140,12 +132,9 @@ def main(cfg: DictConfig) -> None:
         fields = select_fields(cfg, trajectory, specs)
         selection = TimeSelection(**OmegaConf.to_container(cfg.dataset.time, resolve=True))
         n_frames = len(selection.resolve(len(trajectory)))
-        resolution = cfg.analysis_grid.get("resolution")
-        analysis_grid = resolution or trajectory.grid.shape[0]
         log.info(
-            "dataset %s: %d of %d frames (reduction %d), fields %s, analysis grid %s",
+            "dataset %s: %d of %d frames (reduction %d), fields %s",
             cfg.dataset.name, n_frames, len(trajectory), selection.reduction, fields,
-            analysis_grid,
         )
 
         if cfg.dataset.recompute_derived:
@@ -161,7 +150,7 @@ def main(cfg: DictConfig) -> None:
             selection=selection,
             dataset=dataset_info(cfg),
             seed=int(cfg.seed),
-            analysis_resolution=resolution,
+            analysis_resolution=cfg.analysis_grid.get("resolution"),
             remap_method=cfg.analysis_grid.method,
             maps=maps,
         )
@@ -173,9 +162,9 @@ def main(cfg: DictConfig) -> None:
 
     elapsed = time.perf_counter() - started
     log.info(
-        "%d rows in %.1fs (io %.1fs, degrade %.1fs, metrics %.1fs)",
-        len(result.rows), elapsed, result.io_seconds, result.degrade_seconds,
-        result.metric_seconds,
+        "%d rows on a %d-cell analysis grid in %.1fs (io %.1fs, degrade %.1fs, metrics %.1fs)",
+        len(result.rows), result.analysis_grid, elapsed, result.io_seconds,
+        result.degrade_seconds, result.metric_seconds,
     )
 
     # The severity calibration is part of a run's identity: a calibrated axis means nothing
@@ -207,7 +196,7 @@ def main(cfg: DictConfig) -> None:
             n_frames=result.n_frames,
             n_rows=len(rows),
             fields=fields,
-            analysis_grid=analysis_grid,
+            analysis_grid=result.analysis_grid,
             ladder_axes=axes,
             n_severity_levels=len(severity_levels),
             anchor_label=anchor,
@@ -239,8 +228,6 @@ def main(cfg: DictConfig) -> None:
 
 def _overrides() -> list[str]:
     try:
-        from hydra.core.hydra_config import HydraConfig
-
         return list(HydraConfig.get().overrides.task)
     except Exception:  # noqa: BLE001  # pragma: no cover - outside a Hydra run
         return []

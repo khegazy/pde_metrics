@@ -21,17 +21,23 @@ noticing.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
+from hydra import compose, initialize_config_dir
+from hydra.core.hydra_config import HydraConfig
 
 from degradations import registry as deg_registry
+from fmeval import pipeline
 from fmeval.context import FieldContext, derive_rng, fluctuation_rms
 from fmeval.data.base import GridSpec, Trajectory
-from fmeval.pipeline import RESULT_DTYPES
+from fmeval.data.synthetic_ensemble import SyntheticEnsembleTrajectory
+from fmeval.ladder import SeverityLevel
 from metrics import registry as metric_registry
+from tests import fixtures_h5
 
 #: The repository root, for tests that read committed files.
 REPO = Path(__file__).resolve().parent.parent
@@ -165,6 +171,23 @@ def members(x: np.ndarray, *, n_members: int = N_MEMBERS, seed: int = 0,
     return x[None] + scale * rng.standard_normal((n_members, *x.shape))
 
 
+@pytest.fixture
+def ensemble_traj() -> SyntheticEnsembleTrajectory:
+    """A four-frame synthetic density ensemble of ``N_MEMBERS`` members."""
+    return SyntheticEnsembleTrajectory(
+        grid=(16, 16), n_members=N_MEMBERS, n_frames=4, fields=("density",), sigma=0.2, seed=0
+    )
+
+
+def run_metrics(traj: Trajectory, names: Sequence[str], levels: Sequence[SeverityLevel],
+                fields: Sequence[str] = ("density",)) -> pipeline.PipelineResult:
+    """Run the named metrics over the severity levels of ``traj`` through the pipeline."""
+    return pipeline.run(
+        traj, [metric_registry.get(n) for n in names], levels, fields=list(fields),
+        dataset=pipeline.DatasetInfo(name="synthetic_ensemble_test", trajectory="test"), seed=0,
+    )
+
+
 class SyntheticTrajectory(Trajectory):
     """A four-frame in-memory trajectory, so pipeline tests need no files and no CFS."""
 
@@ -235,9 +258,7 @@ def temporary_degradation():
 @pytest.fixture
 def kinet_file(tmp_path):
     """A small raw-kinet HDF5 file reproducing the format's quirks; see ``fixtures_h5``."""
-    from tests.fixtures_h5 import write_kinet_raw  # imports this module, so not at the top
-
-    return write_kinet_raw(tmp_path / "kinet_raw.h5")
+    return fixtures_h5.write_kinet_raw(tmp_path / "kinet_raw.h5")
 
 
 # --- result frames with known answers ---------------------------------------------------
@@ -251,44 +272,40 @@ def make_frame(
     n_frames: int = 12,
     noise: float = 0.0,
     seed: int = 0,
+    reference: float = 0.0,
 ) -> pd.DataFrame:
-    """A result frame whose values are a known function of level.
+    """A result frame over the full result schema whose values are a known function of level.
 
     ``axes`` maps a ladder label to the per-level values; level 0 (the reference) is added
-    automatically with value 0.
+    automatically with value ``reference``. Every other column carries what the pipeline
+    writes for a deterministic, uncalibrated, pairwise error metric, except that
+    ``energy_removed`` and ``energy_changed`` are NaN, unmeasured, for a test to set.
     """
     axes = axes or {"a": [1.0, 2.0, 3.0, 4.0]}
     rng = np.random.default_rng(seed)
     rows = []
     for frame in range(n_frames):
-        rows.append(result_row(metric, field, "identity", "identity", 0, 0.0, 0.0, frame))
+        levels = [("identity", "identity", 0, reference)]
         for label, values in axes.items():
             family = "geometric" if "translate" in label or label == "uncorrelated" \
                 else "stochastic"
-            for level, value in enumerate(values, start=1):
-                v = value + noise * rng.standard_normal()
-                rows.append(
-                    result_row(metric, field, label, family, level, float(level), v, frame)
-                )
-    df = pd.DataFrame(rows)
-    for column, dtype in RESULT_DTYPES.items():
-        if column in df.columns:
-            df[column] = df[column].astype(dtype)
-    return df
-
-
-def result_row(metric, field, label, family, level, severity, value, frame):
-    return {
-        "dataset": "d", "dataset_family": "", "complexity_rank": 0,
-        "param_reynolds": np.nan, "param_mach": np.nan, "param_resolution": 16,
-        "trajectory": "t", "frame_index": frame, "time": float(frame),
-        "field": field, "analysis_grid": 16, "remap_op": "block_mean",
-        "metric": metric, "arity": "pairwise",
-        "degradation": label, "degradation_op": label, "degradation_family": family,
-        "level": level, "severity": severity, "severity_name": "s",
-        "variant_label": f"{label}_l{level}" if level else "reference",
-        "component": "", "value": value, "seed": 0, "wall_time_s": 1e-4,
-    }
+            levels += [(label, family, level, value + noise * rng.standard_normal())
+                       for level, value in enumerate(values, start=1)]
+        rows += [{
+            "dataset": "d", "dataset_family": "", "complexity_rank": 0,
+            "param_reynolds": np.nan, "param_mach": np.nan, "param_resolution": 16,
+            "trajectory": "t", "frame_index": frame, "time": float(frame),
+            "field": field, "analysis_grid": 16, "remap_op": "block_mean",
+            "metric": metric, "arity": "pairwise", "higher_is_better": False,
+            "degradation": label, "degradation_op": label, "degradation_family": family,
+            "level": level, "severity": float(level), "severity_nominal": float(level),
+            "calibration": "", "severity_degenerate": False,
+            "energy_removed": np.nan, "energy_changed": np.nan, "severity_name": "s",
+            "variant_label": f"{label}_l{level}" if level else "reference",
+            "component": "", "value": value, "seed": 0, "wall_time_s": 1e-4,
+            "n_members": np.nan, "target_value": np.nan,
+        } for label, family, level, value in levels]
+    return pd.DataFrame(rows, columns=list(pipeline.RESULT_DTYPES)).astype(pipeline.RESULT_DTYPES)
 
 
 #: The synthetic ladder every report test renders: an axis of each length the real runs have
@@ -331,7 +348,7 @@ def synthetic_rows(metrics=("mse", "mae", "rmse", "flat")) -> pd.DataFrame:
 
 # --- configuration ------------------------------------------------------------------------
 
-CONFIGS = str(Path(__file__).resolve().parent.parent / "configs")
+CONFIGS = str(REPO / "configs")
 
 
 def build(*overrides: str):
@@ -342,11 +359,54 @@ def build(*overrides: str):
     "HydraConfig was not set". Composing without it would test a configuration that never
     actually runs.
     """
-    from hydra import compose, initialize_config_dir
-    from hydra.core.hydra_config import HydraConfig
-
     with initialize_config_dir(config_dir=CONFIGS, version_base=None):
         cfg = compose(config_name="config", overrides=list(overrides),
                       return_hydra_config=True)
         HydraConfig.instance().set_config(cfg)
         return cfg
+
+
+# --- bundle-test fields and ensembles (shared by metric bundles' test_metric.py) ----------
+
+
+def step_field(shape: tuple[int, int] = (4, 4)) -> np.ndarray:
+    """Zero on the first row, one on the rest, ``(1, *shape)``: one jump along x, flat along y.
+
+    The increment metrics' worked example: ``increment_flatness`` and ``increment_w1`` each
+    derive their card's value on it.
+    """
+    out = np.ones((1, *shape))
+    out[0, 0, :] = 0.0
+    return out
+
+
+def alternating_field(shape: tuple[int, int] = (4, 4)) -> np.ndarray:
+    """Zero and one on alternate rows, ``(1, *shape)``: a jump at every step along x."""
+    out = np.zeros((1, *shape))
+    out[0, 1::2, :] = 1.0
+    return out
+
+
+def exchangeable_ensemble(
+    seed: int | np.random.Generator, shape: tuple[int, ...], n_members: int
+) -> tuple[np.ndarray, np.ndarray]:
+    """A reference and an ensemble drawn from one process: the calibrated case.
+
+    A shared base field plus independent unit noise, drawn once for the reference and once per
+    member, so the reference is exchangeable with the members. Calibration and propriety are
+    statements about the true predictive distribution, so the reference must be such an
+    independent draw: built the other way round (members scattered about the reference), the
+    reference is the ensemble mean, and shrinking the members toward it improves every score.
+
+    Args:
+        seed: A seed, or a generator to continue drawing from.
+        shape: ``(C, *spatial)`` of the reference.
+        n_members: Ensemble size.
+
+    Returns:
+        ``(reference, members)``, shaped ``(C, *spatial)`` and ``(n_members, C, *spatial)``.
+    """
+    rng = np.random.default_rng(seed)
+    base = rng.standard_normal(shape)
+    reference = base + rng.standard_normal(shape)
+    return reference, base[None] + rng.standard_normal((n_members, *shape))

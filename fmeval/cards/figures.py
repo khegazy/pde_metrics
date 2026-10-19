@@ -31,7 +31,7 @@ from matplotlib import rc_context
 
 from fmeval.report import style
 
-from .diagnostics import DIAGNOSTICS, RowContext
+from .diagnostics import DIAGNOSTICS, RowContext, _radial_spectrum
 
 
 @dataclass(frozen=True)
@@ -56,7 +56,7 @@ def _row_limits(name: str, columns: list[Column], reference: np.ndarray) -> tupl
 
     Rules 1 and 2 live here. A field row takes its limits from the original, so the eye
     compares like with like; a signed row takes them from the largest departure anywhere
-    in the row, which is the strongest severity, so weaker columns stay faint.
+    in the row.
     """
     spec = DIAGNOSTICS[name]
     if name == "difference":
@@ -65,8 +65,6 @@ def _row_limits(name: str, columns: list[Column], reference: np.ndarray) -> tupl
     if name == "spectral_phase":
         return (-np.pi, np.pi)
     if name == "radial_spectrum":
-        from .diagnostics import _radial_spectrum
-
         values = [p[1:] for _, p in (_radial_spectrum(c.data) for c in columns)]
         finite = np.concatenate([v[np.isfinite(v) & (v > 0)] for v in values])
         return (float(finite.min()) * 0.5, float(finite.max()) * 2.0)
@@ -133,7 +131,7 @@ def exemplar_panel(
             spec = DIAGNOSTICS[row_name]
             limits = _row_limits(row_name, columns, reference)
             ctx = RowContext(reference=reference, grid=grid, limits=limits,
-                             extra={"nyquist": reference.shape[-1] // 2})
+                             nyquist=reference.shape[-1] // 2)
             statistics[row_name] = {}
             for c, column in enumerate(columns):
                 ax = axes[r][c]

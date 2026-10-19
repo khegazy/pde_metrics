@@ -52,10 +52,10 @@ def palinstrophy(x: NDArray[np.floating], *, ctx: FieldContext) -> float:
     Derivatives are spectral, taken with the repository's existing
     ``k_j = 2 pi fftfreq(N_j, dx_j)`` routine (Pope 2000, "Turbulent Flows", Cambridge
     University Press, DOI 10.1017/CBO9780511840531, for the convention), so this and the
-    vorticity it consumes are
-    differentiated the same way. That matters here beyond consistency: ``fmeval.derived``
-    records that mixing the solver's lattice-stencil vorticity with a spectral one differs
-    by 8.1% rms, and a second derivative convention would add a second such discrepancy.
+    vorticity it consumes are differentiated the same way. That matters here beyond
+    consistency: ``fmeval.derived`` records that mixing the solver's lattice-stencil
+    vorticity with a spectral one differs by 8.1% rms, and a second derivative convention
+    would add a second such discrepancy.
 
     Args:
         x: Vorticity on the analysis grid, shape ``(C, *spatial)``. One component in 2D,

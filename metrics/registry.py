@@ -78,12 +78,7 @@ class MetricSpec(Accepts):
     cost: Cost
     higher_is_better: bool
     symmetric: bool
-    #: Whether this quantity is expected to move monotonically as a field is
-    #: smoothed. True for an error metric and for an energy-like single-field
-    #: quantity. False for a statistic of distribution *shape*, which has no such
-    #: guarantee -- see ``increment_flatness``. Declared, never inferred, and the
-    #: contract test verifies the declaration in both directions rather than
-    #: letting False be an escape from the check.
+    #: Declared, never inferred; see the ``monotone_under_smoothing`` argument of :func:`metric`.
     monotone_under_smoothing: bool
     units: str
     doc: str
@@ -109,7 +104,7 @@ class MetricSpec(Accepts):
     """
 
     @property
-    def has_pointwise(self) -> bool:
+    def has_pointwise_map(self) -> bool:
         return self.pointwise is not None
 
     def reduce(self, map_: np.ndarray, n_channels: int) -> float:
@@ -123,7 +118,7 @@ class MetricSpec(Accepts):
             "units": self.units, "cost": self.cost, "differentiable": self.differentiable,
             "symmetric": self.symmetric, "higher_is_better": self.higher_is_better,
             "target": self.target, "measures": self.measures, "reduction": self.reduction,
-            "has_pointwise_map": self.has_pointwise,
+            "has_pointwise_map": self.has_pointwise_map,
         }
 
 
@@ -140,7 +135,6 @@ cannot break an unrelated run. See ``fmeval/cards/loader.py``.
 """
 
 _IMPORT_ERRORS: dict[str, Exception] = {}
-_DISCOVERED = False
 
 
 def metric(
@@ -272,7 +266,7 @@ def pointwise_map(*, of: str) -> Callable[[Callable], Callable]:
                 "after the metric it belongs to"
             )
         spec = REGISTRY[of]
-        if spec.has_pointwise:
+        if spec.has_pointwise_map:
             raise ValueError(f"metric {of!r} already has a pointwise map")
         REGISTRY[of] = dataclasses.replace(spec, pointwise=fn)
         return fn
@@ -281,21 +275,9 @@ def pointwise_map(*, of: str) -> Callable[[Callable], Callable]:
 
 
 def discover(force: bool = False) -> dict[str, Exception]:
-    """Import every module under ``metrics/`` so the decorators fire.
-
-    Args:
-        force: Re-run discovery even if it has already been done.
-
-    Returns:
-        Mapping of module name to the exception it raised, empty if all imported. See
-        :func:`metrics._registry_core.discover_package` for why failures are collected.
-    """
-    global _DISCOVERED
-    if _DISCOVERED and not force:
-        return _IMPORT_ERRORS
-    discover_package("metrics", _IMPORT_ERRORS)
-    _DISCOVERED = True
-    return _IMPORT_ERRORS
+    """Import every module under ``metrics/`` so the decorators fire; returns the import
+    failures. See :func:`metrics._registry_core.discover_package`."""
+    return discover_package("metrics", _IMPORT_ERRORS, force)
 
 
 def get(name: str) -> MetricSpec:
@@ -319,7 +301,7 @@ def _main() -> None:
             ",".join(s.fields),
             s.units,
             s.cost,
-            "yes" if s.has_pointwise else "-",
+            "yes" if s.has_pointwise_map else "-",
             "yes" if s.differentiable else "-",
         )
         for s in sorted(REGISTRY.values(), key=lambda s: s.name)

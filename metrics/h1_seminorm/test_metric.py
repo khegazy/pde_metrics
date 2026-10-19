@@ -1,9 +1,10 @@
 """Tests for the H^1 seminorm.
 
-The registry-wide contract lives in ``tests/test_metric_contract.py``. What is tested here
+The registry-wide contract lives in ``tests/test_metric_contract.py``, with the scaling
+with grid spacing this shares with ``h_minus_one`` and ``palinstrophy``. What is tested here
 is the closed-form value for a single mode, the ``k`` scaling that is the mirror image of
-``h_minus_one``'s ``1/k``, and the displacement behaviour that is the reason the tracker
-rates this Low.
+``h_minus_one``'s ``1/k``, and the displacement behaviour -- of both seminorms against
+rmse -- that is the reason the tracker rates this Low.
 """
 
 from __future__ import annotations
@@ -58,18 +59,6 @@ def test_it_is_the_exact_mirror_of_h_minus_one(mode: int):
     assert product == pytest.approx(mse(reference, candidate))
 
 
-def test_value_scales_with_the_inverse_of_the_spacing():
-    """Doubling the cell size halves the wavenumber and so halves the value.
-
-    The opposite of h_minus_one, which doubles -- the two carry a length to opposite powers.
-    """
-    shape = (8, 8)
-    reference, candidate = np.zeros((1, *shape)), cosine_mode(shape, mode=1)
-    unit = h1_seminorm(reference, candidate, ctx=make_ctx(shape, spacing=1.0))
-    doubled = h1_seminorm(reference, candidate, ctx=make_ctx(shape, spacing=2.0))
-    assert doubled == pytest.approx(unit / 2.0)
-
-
 def test_a_constant_offset_is_invisible():
     """A gradient annihilates constants, so a uniform bias costs nothing.
 
@@ -86,7 +75,8 @@ def test_displacement_costs_more_than_it_does_under_rmse():
 
     Each metric's value for a one-cell shift is taken as a fraction of its own value for an
     unrelated field, which removes the units and leaves the comparison the repository cares
-    about. Where h_minus_one pays a smaller fraction than rmse, this pays a larger one.
+    about. Where h_minus_one pays a smaller fraction than rmse, this pays a larger one; the
+    one assertion pins both halves, so it is also ``h_minus_one``'s displacement test.
     """
     shape = (16, 16)
     ctx = make_ctx(shape)

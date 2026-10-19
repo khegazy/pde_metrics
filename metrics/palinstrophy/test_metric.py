@@ -1,8 +1,8 @@
 """Tests for palinstrophy.
 
-The registry-wide contract lives in ``tests/test_metric_contract.py``. What is tested here
-is the closed-form value for a single Fourier mode, the k^2 weighting that distinguishes
-this from enstrophy, and the dependence on grid spacing that makes the ctx necessary.
+The registry-wide contract lives in ``tests/test_metric_contract.py``, with the dependence
+on grid spacing that makes the ctx necessary. What is tested here is the closed-form value
+for a single Fourier mode and the k^2 weighting that distinguishes this from enstrophy.
 """
 
 from __future__ import annotations
@@ -47,20 +47,6 @@ def test_it_weights_a_mode_by_k_squared_where_enstrophy_does_not(mode: int):
 
     assert palinstrophy(field, ctx=make_ctx(shape)) == pytest.approx(k**2 / 4.0)
     assert enstrophy(field) == pytest.approx(0.25)
-
-
-def test_value_scales_with_the_inverse_square_of_the_spacing():
-    """Doubling the cell size halves every wavenumber, so palinstrophy falls by four.
-
-    This is why the metric must read the analysis grid rather than assume unit cells: on a
-    grid coarsened by a factor, using the native spacing would inflate the result by exactly
-    the square of that factor.
-    """
-    shape = (8, 8)
-    field = cosine_mode(shape, mode=1)
-    unit = palinstrophy(field, ctx=make_ctx(shape, spacing=1.0))
-    doubled = palinstrophy(field, ctx=make_ctx(shape, spacing=2.0))
-    assert doubled == pytest.approx(unit / 4.0)
 
 
 def test_a_constant_field_has_no_palinstrophy():

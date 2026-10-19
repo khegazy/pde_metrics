@@ -40,7 +40,7 @@ import threading
 import time
 import urllib.parse
 from collections import OrderedDict
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from typing import Any
 
 import h5py
@@ -63,7 +63,12 @@ DEFAULT_CACHE_BLOCKS = DEFAULT_CHUNK_CACHE_MB * 2**20 // DEFAULT_BLOCK_BYTES
 #: No legitimate read here approaches this. A runaway guard, not a tuning knob.
 MAX_REQUEST_BYTES = 64 * 1024 * 1024
 
-#: Transient failures worth retrying the same range on. A bad status is never in here.
+#: Redirects the opening HEAD follows before giving up.
+MAX_REDIRECTS = 3
+
+#: Transient failures worth retrying the same range on. A bad status, and the
+#: :class:`RangeUnsupported` / :class:`RemoteFileChanged` decisions a server makes, are never
+#: in here, so they are never retried.
 TRANSIENT = (
     http.client.BadStatusLine,
     http.client.IncompleteRead,
@@ -97,15 +102,6 @@ class Validator:
     etag: str | None = None
     last_modified: str | None = None
     size_bytes: int = 0
-
-    def if_range(self) -> str | None:
-        return self.etag or self.last_modified
-
-
-@dataclass
-class _Redirects:
-    limit: int = 3
-    seen: list[str] = field(default_factory=list)
 
 
 class HTTPRangeFile:
@@ -215,12 +211,6 @@ class HTTPRangeFile:
         record["wall_seconds"] = round(record["wall_seconds"], 3)
         return record
 
-    def __enter__(self) -> HTTPRangeFile:
-        return self
-
-    def __exit__(self, *exc: object) -> None:
-        self.close()
-
     # --- transport -------------------------------------------------------------------
 
     def _connect(self) -> http.client.HTTPConnection:
@@ -241,7 +231,7 @@ class HTTPRangeFile:
 
     def _head(self) -> Validator:
         """One HEAD, following a bounded number of redirects, pinning the final URL."""
-        redirects = _Redirects()
+        redirects: list[str] = []
         while True:
             response = self._request("HEAD", {})
             status = response.status
@@ -250,26 +240,22 @@ class HTTPRangeFile:
 
             if status in (301, 302, 303, 307, 308):
                 location = headers.get("Location")
-                if not location or len(redirects.seen) >= redirects.limit:
-                    self._drop_connection()
-                    raise RangeUnsupported(
-                        f"{self.url}: {len(redirects.seen)} redirects without a final "
-                        "resource"
-                    )
-                redirects.seen.append(location)
-                self.url = urllib.parse.urljoin(self.url, location)
                 self._drop_connection()
+                if not location or len(redirects) >= MAX_REDIRECTS:
+                    raise RangeUnsupported(
+                        f"{self.url}: {len(redirects)} redirects without a final resource"
+                    )
+                redirects.append(location)
+                self.url = urllib.parse.urljoin(self.url, location)
                 self._host, self._target, self._https = _split(self.url)
                 continue
 
-            if status == 404:
-                self._drop_connection()
-                raise FileNotFoundError(f"{self.url} returned 404")
-            if status in (401, 403):
-                self._drop_connection()
-                raise PermissionError(f"{self.url} returned {status}")
             if status != 200:
                 self._drop_connection()
+                if status == 404:
+                    raise FileNotFoundError(f"{self.url} returned 404")
+                if status in (401, 403):
+                    raise PermissionError(f"{self.url} returned {status}")
                 raise RangeUnsupported(f"{self.url}: HEAD returned {status}")
 
             length = headers.get("Content-Length")
@@ -306,14 +292,10 @@ class HTTPRangeFile:
                 self.stats.retries += 1
                 if attempt:
                     raise
-        raise AssertionError("unreachable")
 
     def _fetch(self, start: int, stop: int) -> bytes:
-        """GET exactly one byte range, inclusive of both ends.
-
-        One range per request, always. Measured: this server answers *any* multi-range
-        header -- even two ranges -- with 200 and the whole 166 GiB body.
-        """
+        """GET exactly one byte range, inclusive of both ends; never more than one range per
+        request (finding 1 of the module docstring)."""
         if stop < start:
             return b""
         span = stop - start + 1
@@ -324,7 +306,7 @@ class HTTPRangeFile:
             )
 
         headers = {"Range": f"bytes={start}-{stop}"}
-        if_range = self.validator.if_range()
+        if_range = self.validator.etag or self.validator.last_modified
         if if_range:
             # If the file is replaced mid-read the server answers 200 rather than 206,
             # which trips the check below -- instead of splicing bytes from two different
@@ -353,8 +335,6 @@ class HTTPRangeFile:
                 self._check_validator(response.headers)
                 if len(data) != span:
                     raise http.client.IncompleteRead(data, span - len(data))
-            except (RangeUnsupported, RemoteFileChanged):
-                raise  # decisions by the server, not accidents. Never retried.
             except TRANSIENT as exc:
                 last = exc
                 self._drop_connection()
@@ -390,31 +370,29 @@ class HTTPRangeFile:
             )
 
     def _check_validator(self, headers) -> None:
-        etag = headers.get("ETag")
-        modified = headers.get("Last-Modified")
-        if self.validator.etag and etag and etag != self.validator.etag:
-            raise RemoteFileChanged(
-                f"{self.url}: ETag changed from {self.validator.etag} to {etag} "
-                "mid-read. The file was replaced; the bytes read so far are from a "
-                "different version and cannot be combined with these."
-            )
-        if (
-            self.validator.last_modified
-            and modified
-            and modified != self.validator.last_modified
-        ):
-            raise RemoteFileChanged(
-                f"{self.url}: Last-Modified changed from {self.validator.last_modified} "
-                f"to {modified} mid-read."
-            )
+        """Raise if the response names a different version of the file than the HEAD did.
+
+        Raises:
+            RemoteFileChanged: If the ETag or the Last-Modified header differs from the value
+                recorded at open, naming the header.
+        """
+        for header, at_open in (("ETag", self.validator.etag),
+                                ("Last-Modified", self.validator.last_modified)):
+            now = headers.get(header)
+            if at_open and now and now != at_open:
+                raise RemoteFileChanged(
+                    f"{self.url}: {header} changed from {at_open} to {now} mid-read. The file "
+                    "was replaced; the bytes read so far are from a different version and "
+                    "cannot be combined with these."
+                )
 
     # --- block cache -----------------------------------------------------------------
 
     def _block(self, index: int) -> bytes:
+        """One block, from the cache when present. Hits are counted by :meth:`_prefetch`."""
         cached = self._blocks.get(index)
         if cached is not None:
             self._blocks.move_to_end(index)
-            self.stats.cache_hits += 1
             return cached
         start = index * self.block_size
         data = self._fetch(start, min(start + self.block_size, self.size) - 1)
@@ -428,30 +406,23 @@ class HTTPRangeFile:
             self._blocks.popitem(last=False)
 
     def _prefetch(self, first: int, last_index: int) -> None:
-        """Fetch a run of consecutive missing blocks as ONE range, then split it.
+        """Fetch each run of consecutive missing blocks as ONE range, then split it.
 
         The alternative -- one request per block -- is what makes a naive implementation
-        slow, and a multi-range header is not an option here at all.
+        slow, and a multi-range header is not an option here at all. A block already cached
+        when the read starts is counted as a cache hit; one fetched here is not.
         """
-        runs: list[tuple[int, int]] = []
-        run: list[int] = []
+        runs: list[list[int]] = []  # [lo, hi] of each run, inclusive
         for index in range(first, last_index + 1):
             if index in self._blocks:
-                if run:
-                    runs.append((run[0], run[-1]))
-                    run = []
-                continue
-            if run and (index - run[0] + 1) * self.block_size > MAX_REQUEST_BYTES:
-                runs.append((run[0], run[-1]))
-                run = []
-            run.append(index)
-        if run:
-            runs.append((run[0], run[-1]))
+                self.stats.cache_hits += 1
+            elif (runs and runs[-1][1] == index - 1
+                  and (index - runs[-1][0] + 1) * self.block_size <= MAX_REQUEST_BYTES):
+                runs[-1][1] = index
+            else:
+                runs.append([index, index])
 
         for lo, hi in runs:
-            if lo == hi:
-                self._block(lo)
-                continue
             start = lo * self.block_size
             stop = min((hi + 1) * self.block_size, self.size) - 1
             data = self._fetch(start, stop)

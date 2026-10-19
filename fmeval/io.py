@@ -20,15 +20,22 @@ import hashlib
 import json
 import logging
 import platform
+import shutil
 import subprocess
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
+import yaml
+from omegaconf import DictConfig, ListConfig, OmegaConf
+
+from degradations import registry as deg_registry
+from metrics import registry as metric_registry
 
 log = logging.getLogger(__name__)
 
@@ -85,8 +92,7 @@ class RunFolder:
 
 def make_run_folder(results_root: Path | str, name: str, stamp: int) -> RunFolder:
     """Create ``<results_root>/<name>_<stamp>/`` with its subdirectories."""
-    folder = RunFolder(Path(results_root) / f"{name}_{stamp}")
-    return folder.create()
+    return RunFolder(Path(results_root) / f"{name}_{stamp}").create()
 
 
 # --- writing ------------------------------------------------------------------------
@@ -128,13 +134,9 @@ def write_config(folder: RunFolder, resolved: Mapping[str, Any],
         Short blake2b hash of the resolved config. Two runs with the same hash used
         identical settings.
     """
-    import yaml
-
-    text = yaml.safe_dump(_plain(resolved), sort_keys=True, default_flow_style=False)
+    text = dump_yaml(_plain(resolved))
     folder.config_path.write_text(text)
-    (folder.data / "config_overrides.yaml").write_text(
-        yaml.safe_dump(list(overrides or []), default_flow_style=False)
-    )
+    (folder.data / "config_overrides.yaml").write_text(dump_yaml(list(overrides or [])))
     digest = hashlib.blake2b(text.encode(), digest_size=8).hexdigest()
     (folder.data / "config_hash.txt").write_text(digest + "\n")
     return digest
@@ -146,8 +148,6 @@ def copy_documentation(folder: RunFolder) -> Path | None:
     A results directory should explain its own numbers after being sent to a colleague or
     uploaded to Overleaf, without needing the repository alongside it.
     """
-    import shutil
-
     source = Path(__file__).resolve().parent.parent / "TEST_DESCRIPTION.md"
     if not source.exists():  # pragma: no cover - present in a checkout
         return None
@@ -201,10 +201,17 @@ def read_run_meta(folder: RunFolder | Path) -> dict[str, Any]:
 
 def read_config(folder: RunFolder | Path) -> dict[str, Any]:
     """A run's resolved configuration, or an empty mapping if the folder has none."""
-    import yaml
+    return read_yaml(_folder(folder).config_path)
 
-    path = _folder(folder).config_path
+
+def read_yaml(path: Path) -> dict[str, Any]:
+    """A YAML file's contents, or an empty mapping if the file does not exist."""
     return yaml.safe_load(path.read_text()) if path.exists() else {}
+
+
+def dump_yaml(data: Any) -> str:
+    """YAML text as every file here is written: block style, keys sorted."""
+    return yaml.safe_dump(data, sort_keys=True, default_flow_style=False)
 
 
 def load_runs(pattern: str, root: Path | str = "results") -> pd.DataFrame:
@@ -237,13 +244,8 @@ def load_runs(pattern: str, root: Path | str = "results") -> pd.DataFrame:
 
 def _plain(obj: Any) -> Any:
     """Convert OmegaConf containers and numpy scalars into plain YAML-safe Python."""
-    try:
-        from omegaconf import DictConfig, ListConfig, OmegaConf
-
-        if isinstance(obj, (DictConfig, ListConfig)):
-            return OmegaConf.to_container(obj, resolve=True)
-    except ImportError:  # pragma: no cover - omegaconf is a hard dependency
-        pass
+    if isinstance(obj, (DictConfig, ListConfig)):
+        return OmegaConf.to_container(obj, resolve=True)
     if isinstance(obj, Mapping):
         return {str(k): _plain(v) for k, v in obj.items()}
     if isinstance(obj, (list, tuple)):
@@ -273,8 +275,6 @@ def _git_state() -> dict[str, Any]:
 
 
 def _package_versions() -> dict[str, str]:
-    from importlib.metadata import PackageNotFoundError, version
-
     out = {}
     for name in ("numpy", "scipy", "h5py", "pandas", "matplotlib", "hydra-core",
                  "omegaconf"):
@@ -287,17 +287,14 @@ def _package_versions() -> dict[str, str]:
 
 def _registry_snapshot() -> dict[str, Any]:
     """What each registered metric and degradation meant at the time of the run."""
-    from degradations import registry as deg
-    from metrics import registry as met
-
-    met.discover()
-    deg.discover()
+    metric_registry.discover()
+    deg_registry.discover()
 
     def provenance(spec) -> dict[str, Any]:
         return {**spec.describe(), "module": spec.module,
                 "doc": spec.doc.splitlines()[0] if spec.doc else ""}
 
     return {
-        "metrics": {s.name: provenance(s) for s in met.REGISTRY.values()},
-        "degradations": {s.name: provenance(s) for s in deg.REGISTRY.values()},
+        "metrics": {s.name: provenance(s) for s in metric_registry.REGISTRY.values()},
+        "degradations": {s.name: provenance(s) for s in deg_registry.REGISTRY.values()},
     }

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from .._shared.filters import _apply_filter
 from .._shared.geometry import _axes_for
 from ..registry import degradation
 
@@ -36,17 +37,10 @@ def translate_subpixel(
     """
     if severity == 0:
         return x
-    axes = _axes_for(axis, ctx)
-    spatial = tuple(range(1, x.ndim))
-    spectrum = np.fft.fftn(x, axes=spatial)
-
-    for ax in axes:
-        n = x.shape[ax]
-        freq = np.fft.fftfreq(n)
+    transfer = np.ones(x.shape[1:], dtype=complex)
+    for ax in _axes_for(axis, ctx):          # negative, so it indexes the spatial grid too
         # Broadcast the phase ramp along this axis only.
-        shape = [1] * x.ndim
-        shape[ax] = n
-        phase = np.exp(-2j * np.pi * freq.reshape(shape) * severity)
-        spectrum = spectrum * phase
-
-    return np.real(np.fft.ifftn(spectrum, axes=spatial))
+        shape = [1] * transfer.ndim
+        shape[ax] = x.shape[ax]
+        transfer *= np.exp(-2j * np.pi * np.fft.fftfreq(x.shape[ax]).reshape(shape) * severity)
+    return _apply_filter(x, transfer)

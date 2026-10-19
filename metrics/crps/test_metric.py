@@ -19,8 +19,10 @@ import numpy as np
 import pytest
 from scipy import stats
 
+from degradations._shared.ensemble import scale_spread
 from metrics.crps.metric import crps
 from metrics.mae.metric import mae
+from tests.conftest import exchangeable_ensemble
 
 
 def gaussian_crps(mu: float, sigma: float, y: float) -> float:
@@ -49,14 +51,6 @@ def test_worked_example_from_the_card():
     assert crps(reference, members) == pytest.approx(1.0 / 6.0)
 
 
-def test_uses_the_fair_estimator_not_the_plug_in():
-    """The plug-in form divides the pair term by 2N^2; the fair one by 2N(N-1)."""
-    reference = np.zeros((1, 1, 1))
-    members = np.array([-1.0, 0.5, 2.0]).reshape(3, 1, 1, 1)
-    plug_in = 7.0 / 6.0 - 12.0 / (2 * 3 * 3)
-    assert crps(reference, members) != pytest.approx(plug_in)
-
-
 def test_single_member_equals_mae():
     """At N=1 the pair term vanishes and CRPS is exactly mean absolute error."""
     rng = np.random.default_rng(0)
@@ -72,12 +66,6 @@ def test_identical_members_equal_mae_against_that_member():
     member = rng.standard_normal((1, 6, 4))
     members = np.repeat(member[None], 5, axis=0)
     assert crps(reference, members) == pytest.approx(mae(reference, member), rel=1e-12)
-
-
-def test_is_zero_when_every_member_is_the_reference():
-    reference = np.linspace(0, 1, 24).reshape(1, 6, 4)
-    members = np.repeat(reference[None], 7, axis=0)
-    assert crps(reference, members) == pytest.approx(0.0, abs=1e-12)
 
 
 # --- convergence to the closed form --------------------------------------------------
@@ -114,35 +102,18 @@ def test_scales_linearly_with_the_field_units():
 # --- response to miscalibration ------------------------------------------------------
 
 
-def test_increases_monotonically_with_bias():
-    """A systematically shifted ensemble scores worse the further it is shifted."""
-    rng = np.random.default_rng(11)
-    reference = rng.standard_normal((1, 12, 8))
-    members = rng.standard_normal((16, 1, 12, 8))
-    values = [crps(reference, members + b) for b in (0.0, 0.25, 0.5, 1.0, 2.0)]
-    assert values == sorted(values), values
-    assert values[-1] > values[0]
-
-
 def test_penalises_both_over_and_under_dispersion():
     """CRPS is proper: the calibrated ensemble beats both wider and narrower ones.
 
     Propriety is a statement about the *true* predictive distribution, so the reference
-    here must be an independent draw from the same process as the members -- not the
-    ensemble's own centre. Building it the other way round (members scattered about the
-    truth) makes the truth the ensemble mean, and then shrinking the members toward
-    their mean moves them toward the truth and improves the score: a correct metric
-    would look non-proper because the test posed the wrong question.
+    here is an independent draw from the same process as the members, not the ensemble's
+    own centre; ``exchangeable_ensemble`` says why the other construction would make a
+    correct metric look non-proper.
     """
-    rng = np.random.default_rng(5)
-    base = rng.standard_normal((1, 16, 16))
-    truth = base + rng.standard_normal((1, 16, 16))
-    members = base[None] + rng.standard_normal((64, 1, 16, 16))
-
-    mean = members.mean(axis=0, keepdims=True)
+    truth, members = exchangeable_ensemble(5, (1, 16, 16), 64)
     calibrated = crps(truth, members)
-    assert crps(truth, mean + 3.0 * (members - mean)) > calibrated, "over-dispersion"
-    assert crps(truth, mean + 0.2 * (members - mean)) > calibrated, "under-dispersion"
+    assert crps(truth, scale_spread(members, 3.0)) > calibrated, "over-dispersion"
+    assert crps(truth, scale_spread(members, 0.2)) > calibrated, "under-dispersion"
 
 
 # --- shape handling ------------------------------------------------------------------

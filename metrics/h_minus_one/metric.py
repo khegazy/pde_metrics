@@ -21,7 +21,8 @@ import numpy as np
 from numpy.typing import NDArray
 
 from fmeval.context import FieldContext
-from metrics.registry import metric, pointwise_map
+from fmeval.external.kinet_spectral import physical_wavenumber_grid
+from metrics.registry import REDUCTIONS, metric, pointwise_map
 
 
 def riesz_potential(
@@ -52,10 +53,6 @@ def riesz_potential(
     Returns:
         Real array of shape ``(C, *spatial)``, in the field's units times a length.
     """
-    # Imported here rather than at module scope: every metric module is imported on every
-    # run, including runs that never call this one.
-    from fmeval.external.kinet_spectral import physical_wavenumber_grid
-
     spatial = d.shape[1:]
     axes = tuple(range(1, d.ndim))
     k_components = physical_wavenumber_grid(spatial, list(spacing))
@@ -113,8 +110,8 @@ def h_minus_one(
         The seminorm of the difference. Zero for identical fields, unbounded above, and
         also zero for two fields differing by a constant -- see the module docstring.
     """
-    d = reference - candidate
-    return float(np.sqrt(h_minus_one_map(reference, candidate, ctx=ctx).mean() / d.shape[0]))
+    return REDUCTIONS["sqrt_mean"](h_minus_one_map(reference, candidate, ctx=ctx),
+                                   reference.shape[0])
 
 
 @pointwise_map(of="h_minus_one")

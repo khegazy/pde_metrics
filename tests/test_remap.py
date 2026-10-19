@@ -9,7 +9,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from fmeval.data.base import GridSpec
+from fmeval.data.base import Frame, GridSpec
 from fmeval.derived import (
     CS2,
     pressure_from_density,
@@ -135,8 +135,6 @@ def test_pressure_equation_of_state():
 
 
 def _frame(shape=(32, 32), spacing=1.0):
-    from fmeval.data.base import Frame
-
     grid = unit_grid(shape, spacing)
     fields = {
         "density": 1.0 + 1e-3 * synthetic_field(shape, 1, seed=1),
@@ -186,8 +184,6 @@ def test_remap_factor_one_is_identity():
 
 def test_remap_falls_back_to_averaging_without_the_primitive():
     """Derived-without-inputs must degrade gracefully, not raise."""
-    from fmeval.data.base import Frame
-
     grid = unit_grid((16, 8))
     vort = synthetic_field((16, 8), 1, seed=3)
     frame = Frame(index=0, time=0.0, fields={"vorticity": vort}, grid=grid)
@@ -197,8 +193,6 @@ def test_remap_falls_back_to_averaging_without_the_primitive():
 
 def test_recompute_frame_puts_the_native_grid_on_the_same_operator():
     """Stored vorticity must be replaceable so native and coarse grids are comparable."""
-    from fmeval.data.base import Frame
-
     grid = unit_grid((32, 32))
     stored = synthetic_field((32, 32), 1, seed=9)  # pretend: a lattice-stencil vorticity
     vel = 0.04 * synthetic_field((32, 32), 2, seed=2)

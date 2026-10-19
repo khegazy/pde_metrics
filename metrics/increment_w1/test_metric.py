@@ -14,21 +14,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from tests.conftest import alternating_field, step_field
+
 from .metric import axis_w1, increment_w1
-
-
-def _step() -> np.ndarray:
-    """Zero on the first row, one on the rest: one jump down each column."""
-    out = np.ones((1, 4, 4))
-    out[0, 0, :] = 0.0
-    return out
-
-
-def _alternating() -> np.ndarray:
-    """Zero and one on alternate rows: a jump at every step down each column."""
-    out = np.zeros((1, 4, 4))
-    out[0, 1::2, :] = 1.0
-    return out
 
 
 def test_worked_example_from_the_card():
@@ -44,9 +32,10 @@ def test_worked_example_from_the_card():
     the two degenerate distributions coincide, and that axis contributes 0. The reported
     value averages the two axes: (0.5 + 0) / 2 = 0.25.
     """
-    assert axis_w1(_step()[0], _alternating()[0], axis=-2) == pytest.approx(0.5)
-    assert axis_w1(_step()[0], _alternating()[0], axis=-1) == pytest.approx(0.0)
-    assert increment_w1(_step(), _alternating()) == pytest.approx(0.25)
+    step, alternating = step_field(), alternating_field()
+    assert axis_w1(step[0], alternating[0], axis=-2) == pytest.approx(0.5)
+    assert axis_w1(step[0], alternating[0], axis=-1) == pytest.approx(0.0)
+    assert increment_w1(step, alternating) == pytest.approx(0.25)
 
 
 @pytest.mark.parametrize("shift", [1, 3, 7])
@@ -83,7 +72,7 @@ def test_doubling_the_field_costs_the_mean_absolute_increment():
     ``|2d - d| = |d|``. For the step field that is 2/4 = 0.5 along x and 0 along y, giving
     0.25 -- a closed-form value that does not depend on the sort order being guessed right.
     """
-    assert increment_w1(_step(), 2.0 * _step()) == pytest.approx(0.25)
+    assert increment_w1(step_field(), 2.0 * step_field()) == pytest.approx(0.25)
 
 
 def test_a_field_with_wider_increments_is_further_away():

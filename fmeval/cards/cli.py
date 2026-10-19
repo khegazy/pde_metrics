@@ -17,7 +17,7 @@ from pathlib import Path
 
 import yaml
 
-from . import review
+from . import catalog, evidence, exemplars, review
 from .loader import (
     Bundle,
     bundle_root,
@@ -26,14 +26,11 @@ from .loader import (
     iter_bundles,
     load_card,
 )
+from .overview import FIGURES_ROOT, overview_figures
 from .prose import check_prose
-from .schema import CardError
+from .schema import KINDS, CardError
 
 TEMPLATE_DIR = "_template"
-
-
-def _template(kind: str) -> Path:
-    return bundle_root(kind) / TEMPLATE_DIR
 
 
 def cmd_new(args: argparse.Namespace) -> int:
@@ -42,7 +39,7 @@ def cmd_new(args: argparse.Namespace) -> int:
     if find_bundle(name) is not None:
         print(f"a bundle named {name!r} already exists", file=sys.stderr)
         return 1
-    template = _template(kind)
+    template = bundle_root(kind) / TEMPLATE_DIR
     if not template.is_dir():
         print(f"no template at {template}", file=sys.stderr)
         return 1
@@ -200,21 +197,9 @@ def cmd_sign(args: argparse.Namespace) -> int:
     return 0
 
 
-
 def cmd_evidence(args: argparse.Namespace) -> int:
     """Fill in the measured half of one metric card, or of every one."""
-    from .evidence import generate as generate_evidence
-    from .evidence import load_run
-
-    try:
-        run = load_run(Path(args.results))
-    except (FileNotFoundError, ValueError) as exc:
-        print(str(exc), file=sys.stderr)
-        return 1
-
-    # `--all` is a real flag. It used to be recognised by comparing the positional name
-    # against the string "--all", which argparse never lets through: it rejected the
-    # option as unknown and the documented regeneration command did not parse.
+    run = evidence.load_run(Path(args.results))
     names = [b.name for b in iter_bundles("metric")] if args.all else [args.name]
     present = set(run.rows["metric"].astype(str).unique())
     for name in names:
@@ -224,44 +209,26 @@ def cmd_evidence(args: argparse.Namespace) -> int:
             # with empty axes -- erasing evidence from the run the card actually cites.
             print(f"skipped {name}: not in {run.folder.name}; regenerate it from its own run")
             continue
-        try:
-            generate_evidence(name, run)
-        except KeyError as exc:
-            print(str(exc), file=sys.stderr)
-            return 1
+        evidence.generate(name, run)
         print(f"wrote evidence for {name} from {run.folder.name}")
     return 0
 
 
 def cmd_exemplars(args: argparse.Namespace) -> int:
     """Render one degradation's exemplar panel, or every one."""
-    from .exemplars import generate as generate_panel
-
     names = [b.name for b in iter_bundles("degradation")] if args.all else [args.name]
     for name in names:
-        try:
-            path = generate_panel(name)
-        except (KeyError, FileNotFoundError) as exc:
-            print(str(exc), file=sys.stderr)
-            return 1
+        path = exemplars.generate(name)
         print(f"{name}: {'no panel (mode: none)' if path is None else path}")
     return 0
 
 
-
 def cmd_overview(args: argparse.Namespace) -> int:
     """Draw the cross-metric overview figures of one run into docs/figures/<run>/."""
-    from .evidence import load_run
-    from .exemplars import load_cards_config
-    from .overview import FIGURES_ROOT, overview_figures
-
-    try:
-        run = load_run(Path(args.results))
-    except (FileNotFoundError, ValueError) as exc:
-        print(str(exc), file=sys.stderr)
-        return 1
+    run = evidence.load_run(Path(args.results))
     out = Path(args.out) if args.out else FIGURES_ROOT / run.folder.name
-    figures, reasons = overview_figures(run, out, theme=str(load_cards_config().figures.theme))
+    theme = str(exemplars.load_cards_config().figures.theme)
+    figures, reasons = overview_figures(run, out, theme=theme)
     for figure in figures:
         print(f"wrote {figure.path}")
     for name, why in reasons.items():
@@ -271,9 +238,7 @@ def cmd_overview(args: argparse.Namespace) -> int:
 
 def cmd_catalog(args: argparse.Namespace) -> int:
     """Write docs/catalog.json, the structured surface agents read instead of prose."""
-    from .catalog import write
-
-    path = write(Path(args.out))
+    path = catalog.write(Path(args.out))
     counts = json.loads(path.read_text())["counts"]
     print(f"wrote {path}: {counts['metrics']} metrics, {counts['degradations']} "
           f"degradations, {counts['with_measurements']} with measurements, "
@@ -291,7 +256,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     new = sub.add_parser("new", help="scaffold a bundle from the template")
     new.add_argument("name", help="the registered name, lowercase with underscores")
-    new.add_argument("--kind", choices=("metric", "degradation"), default="metric")
+    new.add_argument("--kind", choices=KINDS, default="metric")
     new.set_defaults(func=cmd_new)
 
     check = sub.add_parser("check", help="validate a bundle and say how to fix it")
@@ -305,24 +270,24 @@ def build_parser() -> argparse.ArgumentParser:
     check.set_defaults(func=cmd_check)
 
     listing = sub.add_parser("list", help="print the bundles as a table")
-    listing.add_argument("--kind", choices=("metric", "degradation"), default=None)
+    listing.add_argument("--kind", choices=KINDS, default=None)
     listing.add_argument("--status", default=None)
     listing.set_defaults(func=cmd_list)
 
-    evidence = sub.add_parser(
+    evidence_cmd = sub.add_parser(
         "evidence", help="fill in a metric card's measurements from an evaluation run")
-    evidence.add_argument("name", nargs="?", help="the metric bundle; omit with --all")
-    evidence.add_argument("--all", action="store_true",
-                          help="every metric bundle the run contains")
-    evidence.add_argument("--results", required=True,
-                          help="a results/<name>_<stamp> folder on the canonical dataset")
-    evidence.set_defaults(func=cmd_evidence)
+    evidence_cmd.add_argument("name", nargs="?", help="the metric bundle; omit with --all")
+    evidence_cmd.add_argument("--all", action="store_true",
+                              help="every metric bundle the run contains")
+    evidence_cmd.add_argument("--results", required=True,
+                              help="a results/<name>_<stamp> folder on the canonical dataset")
+    evidence_cmd.set_defaults(func=cmd_evidence)
 
-    exemplars = sub.add_parser(
+    exemplars_cmd = sub.add_parser(
         "exemplars", help="render a degradation's exemplar panel from the canonical frame")
-    exemplars.add_argument("name", nargs="?", help="the degradation bundle; omit with --all")
-    exemplars.add_argument("--all", action="store_true", help="every degradation bundle")
-    exemplars.set_defaults(func=cmd_exemplars)
+    exemplars_cmd.add_argument("name", nargs="?", help="the degradation bundle; omit with --all")
+    exemplars_cmd.add_argument("--all", action="store_true", help="every degradation bundle")
+    exemplars_cmd.set_defaults(func=cmd_exemplars)
 
     overview = sub.add_parser(
         "overview", help="draw the cross-metric overview figures of a run for the site")
@@ -332,10 +297,10 @@ def build_parser() -> argparse.ArgumentParser:
                           help="where to write; default docs/figures/<run name>")
     overview.set_defaults(func=cmd_overview)
 
-    catalog = sub.add_parser(
+    catalog_cmd = sub.add_parser(
         "catalog", help="write the machine-readable index of every bundle")
-    catalog.add_argument("--out", default="docs/catalog.json")
-    catalog.set_defaults(func=cmd_catalog)
+    catalog_cmd.add_argument("--out", default="docs/catalog.json")
+    catalog_cmd.set_defaults(func=cmd_catalog)
 
     signer = sub.add_parser("sign", help="record that a human has read the prose")
     signer.add_argument("name")
@@ -346,8 +311,19 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run one subcommand and return its exit code.
+
+    A missing run or bundle, a run on a dataset cards may not cite, and a card that
+    disagrees with its generator surface as ``FileNotFoundError``, ``ValueError`` and
+    ``KeyError``. Each is the reader's to fix rather than a defect here, so every subcommand
+    reports it as its message alone and exits 1 instead of printing a traceback.
+    """
     args = build_parser().parse_args(argv)
     if args.command in ("check", "evidence", "exemplars") and not args.all and not args.name:
         print("give a bundle name, or --all", file=sys.stderr)
         return 1
-    return int(args.func(args))
+    try:
+        return int(args.func(args))
+    except (FileNotFoundError, ValueError, KeyError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 1

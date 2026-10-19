@@ -71,22 +71,20 @@ FIELDS: dict[str, FieldSpec] = {
     ),
     "pressure": FieldSpec(
         "derived", "1",
-        "Pressure. For the isothermal D2Q9 solver this is density * c_s^2 with "
-        "c_s^2 = 1/3, i.e. density/3 to within one ulp."
+        "Pressure. For the isothermal D2Q9 solver this is density * c_s^2 with c_s^2 = 1/3."
     ),
     "temperature": FieldSpec(
         "primitive", "1", "Temperature (degenerate for isothermal runs)."
     ),
 }
 
-CANONICAL_FIELDS: frozenset[str] = frozenset(FIELDS)
 DERIVED_FIELDS: frozenset[str] = frozenset(
     n for n, s in FIELDS.items() if s.kind == "derived"
 )
 
-#: Stored by some solvers but reconstructible from a primitive -- pressure is density * c_s^2 to
-#: within an ulp for the isothermal D2Q9 solver -- so readers exclude it unless asked. Carrying
-#: both doubles the I/O and injects a guaranteed rho = 1 pair into the cross-metric correlation.
+#: Stored by some solvers but reconstructible from a primitive (pressure from density, see
+#: :mod:`fmeval.data.kinet_raw`), so readers exclude it unless asked. Carrying both doubles the
+#: I/O and injects a guaranteed rho = 1 pair into the cross-metric correlation.
 REDUNDANT_FIELDS: frozenset[str] = frozenset({"pressure"})
 
 #: Stored but constant for an isothermal run, so it is a parameter rather than a field.
@@ -215,8 +213,8 @@ class TimeSelection:
     """Which frames of a trajectory to evaluate.
 
     Attributes:
-        start: First source index. Defaults to 1 for kinet data, where several fields are
-            all-NaN at t=0.
+        start: First source index. Defaults to 0; the kinet and Well dataset configs set 1,
+            because several kinet fields are all-NaN at t=0.
         stop: Exclusive upper bound, or None for the end.
         reduction: Evaluate every Nth frame. This is the temporal size knob: a 10001-frame
             trajectory at ``reduction=50`` is 201 frames.
@@ -259,9 +257,8 @@ class Trajectory(ABC):
     is_ensemble: bool = False
     """Whether :meth:`read_frame` also returns ``f"{name}__members"`` member stacks.
 
-    Defaults False, so every reader that predates ensembles takes exactly the code path
-    it took before: the validation below is skipped entirely and the frame it yields
-    carries ``members=None``.
+    When False the member validation below is skipped and every frame carries
+    ``members=None``.
     """
 
     # --- to implement -------------------------------------------------------------
@@ -309,7 +306,7 @@ class Trajectory(ABC):
                 "axis reads every chunk in the file; iterate frame by frame instead."
             )
         requested = tuple(fields)
-        unknown = set(requested) - CANONICAL_FIELDS
+        unknown = set(requested).difference(FIELDS)
         if unknown:
             raise ValueError(f"unknown canonical field(s): {sorted(unknown)}")
         missing = set(requested) - set(self.fields)

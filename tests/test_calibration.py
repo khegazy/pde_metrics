@@ -12,7 +12,8 @@ import numpy as np
 import pytest
 
 from fmeval.calibration import DRIFT_WARN, calibrate, calibrate_field
-from fmeval.ladder import build_ladder, resolve_severity
+from fmeval.data.base import Frame
+from fmeval.ladder import REFERENCE_LEVEL, apply_severity_level, build_ladder, resolve_severity
 from fmeval.wavenumbers import wavenumber_magnitude
 from tests.conftest import unit_grid
 
@@ -82,8 +83,8 @@ def test_calibrate_skips_a_field_it_cannot_measure_rather_than_aborting():
         {"density": [band_limited(4.0)], "temperature": [np.ones((1, *SHAPE))]},
         unit_grid(SHAPE), ["density", "temperature"],
     )
-    assert "density" in out
-    assert "temperature" not in out
+    assert "density" in out.fields
+    assert "temperature" not in out.fields
 
 
 def test_scale_spread_reports_drift_across_frames():
@@ -216,20 +217,15 @@ def test_a_cutoff_quantises_to_an_available_magnitude():
 # --- the realised effect of a severity level ------------------------------------------------------
 
 
-def _frame_of(field: str, array: np.ndarray):
-    from fmeval.data.base import Frame
-
+def _frame_of(field: str, array: np.ndarray) -> Frame:
     return Frame(index=0, time=0.0, grid=unit_grid(array.shape[1:]), fields={field: array})
 
 
 def apply(label: str, severities: list[float], field: str, array: np.ndarray):
     """Apply the first severity level of a one-entry ladder, calibrating from the array itself."""
-    from fmeval.calibration import Calibration
-    from fmeval.ladder import apply_severity_level
-
     frame = _frame_of(field, array)
     severity_level = build_ladder({label: {"severities": severities}}, include_reference=False)[0]
-    cal = Calibration({field: calibrate_field([array], frame.grid, field)})
+    cal = calibrate({field: [array]}, frame.grid, [field])
     return apply_severity_level(severity_level, frame, [field], seed=0, calibration=cal)
 
 
@@ -272,8 +268,6 @@ def test_a_steep_spectrum_makes_the_realised_removal_miss_the_request():
 
 def test_a_translation_relocates_energy_rather_than_removing_it():
     """energy_removed near zero with energy_changed large is the signature, not a defect."""
-    from fmeval.ladder import apply_severity_level
-
     x = band_limited(12.0, seed=5)
     frame = _frame_of("vorticity", x)
     severity_level = build_ladder({"translate_x": {"op": "translate", "severities": [6],
@@ -285,8 +279,6 @@ def test_a_translation_relocates_energy_rather_than_removing_it():
 
 
 def test_additive_noise_adds_energy_so_the_removed_fraction_is_negative():
-    from fmeval.ladder import apply_severity_level
-
     x = band_limited(12.0, seed=6)
     frame = _frame_of("vorticity", x)
     severity_level = build_ladder({"additive_noise": {"severities": [0.5]}},
@@ -297,8 +289,6 @@ def test_additive_noise_adds_energy_so_the_removed_fraction_is_negative():
 
 
 def test_the_reference_level_removes_and_changes_nothing():
-    from fmeval.ladder import REFERENCE_LEVEL, apply_severity_level
-
     x = band_limited(12.0, seed=7)
     applied = apply_severity_level(
         REFERENCE_LEVEL, _frame_of("vorticity", x), ["vorticity"], seed=0
@@ -309,19 +299,14 @@ def test_the_reference_level_removes_and_changes_nothing():
 
 def test_the_effect_is_measured_about_the_spatial_mean():
     """A large mean must not hide the effect, as it would if energies were taken about zero."""
-    from fmeval.ladder import apply_severity_level
-
     fluctuation = band_limited(12.0, seed=8)
     frame_small = _frame_of("density", fluctuation)
     frame_large = _frame_of("density", fluctuation + 1000.0)
     severity_level = build_ladder({"lowpass_butterworth": {"severities": [0.3]}},
                         include_reference=False)[0]
-    from fmeval.calibration import Calibration
 
     def removed(frame):
-        cal = Calibration(
-            {"density": calibrate_field([frame.fields["density"]], frame.grid, "density")}
-        )
+        cal = calibrate({"density": [frame["density"]]}, frame.grid, ["density"])
         return apply_severity_level(severity_level, frame, ["density"], seed=0,
                           calibration=cal).energy_removed["density"]
 

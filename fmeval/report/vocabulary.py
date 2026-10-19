@@ -33,7 +33,7 @@ class Family:
 #: Every degradation family a figure, card or page shows. The keys are
 #: ``degradations.registry.FAMILIES`` less ``identity``, which is the reference and is never
 #: drawn; a test holds the two equal. One table, so the label, colour and wording of a family
-#: cannot fall out of step -- they were three dictionaries in three modules.
+#: cannot fall out of step.
 FAMILY_INFO: dict[str, Family] = {
     "smoothing": Family("Smoothing", "blue", "smoothing away fine detail"),
     "spectral": Family("Spectral filtering", "purple", "filtering out chosen scales"),

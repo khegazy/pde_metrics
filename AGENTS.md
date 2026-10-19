@@ -90,6 +90,15 @@ test still passed.
   rank-correlation interval re-implemented `stats.block_bootstrap` beside it, and the
   capability tests carried their own radial spectrum that rounded shells down where the
   metric rounds to the nearest shell.
+- **Imports at the top of the file.** Every import, in production code and in tests, sits at
+  the top of its module. The one exception is an import guarded by `if`/`else`, or by
+  `try`/`except ImportError` for an optional dependency. A circular import is broken by
+  importing the module and using `module.attr`, which also keeps a test's `monkeypatch` of
+  that attribute in effect.
+- **State the rule, not its history.** A docstring or comment says what the code does now and
+  why that holds; the story of the bug that led to it belongs in the commit message or in
+  `issues/`. Repeat an explanation from elsewhere only where it helps the reader at that spot;
+  otherwise point to where it is stated.
 - **Consolidating numerics changes no number.** Move the arithmetic into the shared helper as
   it was, then prove the refactor with [`docs/recipes/verify-a-refactor.md`](docs/recipes/verify-a-refactor.md):
   every result agrees within the tolerance it states, and a larger difference is a bug.
@@ -105,9 +114,9 @@ Where the shared code already lives, so the search has somewhere to start:
 | Display words, colours and site wording for columns and degradation families (`FAMILY_INFO`) | `fmeval/report/vocabulary.py` |
 | LaTeX escaping, identifiers and numbers | `fmeval/report/latex.py` |
 | Running one renderer (`draw`), and the report and card view of a run (`ReportContext.from_analysis`) | `fmeval/report/registry.py`, `fmeval/report/context.py` |
-| Generated-block markers in `card.md` (`write_block`, `has_block`) | `fmeval/cards/prose.py` |
+| Generated-block markers and front matter in `card.md` (`write_block`, `has_block`, `FRONTMATTER`) | `fmeval/cards/prose.py` |
 | Bundle paths and strict JSON output (`Bundle`, `write_strict_json`) | `fmeval/cards/loader.py` |
-| Run-folder layout and readers (`RunFolder`, `read_results`, `read_run_meta`, `read_config`) | `fmeval/io.py` |
+| Run-folder layout, readers and YAML (`RunFolder`, `read_results`, `read_run_meta`, `read_config`, `read_yaml`, `dump_yaml`) | `fmeval/io.py` |
 | Error-map keys (`map_key`, `parse_map_key`) | `fmeval/pipeline.py` |
 | Opening an HDF5 file locally or over HTTP, and what the HDF5 readers share | `fmeval/data/hdf5.py`, `fmeval/data/remote.py` |
 | The field vocabulary and which fields readers exclude | `fmeval/data/base.py` |
@@ -733,8 +742,9 @@ way. A test enforces this.
 does, do not add it: two tests of one property drift apart, and only one gets updated.
 
 **Prefer a contract test parametrized over a registry** to a test of one implementation. The
-metric, degradation and loader contracts are each parametrized over their whole registry, so
-every future contribution inherits them. That is the single highest-leverage pattern here.
+metric and degradation contracts are each parametrized over their whole registry, and the
+loader contract over every HDF5 reader (`LAYOUTS` in `tests/test_loader_contract.py`), so every
+future contribution inherits them; a new reader adds one entry there. That is the single highest-leverage pattern here.
 
 **Test the property, not the current value.** `assert rho == 1.0` on a synthetic monotone ladder
 is a property. `assert value == 0.0037` pins an implementation detail and will be deleted by
