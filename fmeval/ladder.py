@@ -16,7 +16,7 @@ the same operator can appear twice with different options -- ``translate_x`` and
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from dataclasses import field as dc_field
 from typing import Any
 
@@ -103,10 +103,9 @@ def build_ladder(
     """Expand a config ladder into a flat, ordered list of severity levels.
 
     Args:
-        ladder: The ``degradation`` block, or just its ``ladder`` mapping with the other
-            fields of :class:`DegradationConfig` given as keywords.
-        **settings: ``include_reference``, ``only`` or ``skip``; any other name raises
-            ``TypeError``.
+        ladder: The ``degradation`` block, or just its ``ladder`` mapping.
+        **settings: ``include_reference``, ``only`` or ``skip``, set over the block's own or
+            :class:`DegradationConfig`'s defaults; any other name raises ``TypeError``.
 
     Returns:
         Severity levels in config order, severities within each entry sorted into
@@ -116,7 +115,7 @@ def build_ladder(
         KeyError: On an unknown operator name.
         ValueError: On a malformed entry.
     """
-    cfg = (ladder if isinstance(ladder, DegradationConfig)
+    cfg = (replace(ladder, **settings) if isinstance(ladder, DegradationConfig)
            else DegradationConfig(ladder=dict(ladder), **settings))
     severity_levels: list[SeverityLevel] = []
     if cfg.include_reference:

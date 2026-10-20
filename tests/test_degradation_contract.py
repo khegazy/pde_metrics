@@ -18,6 +18,7 @@ from fmeval.context import FieldContext, derive_rng, fluctuation_rms
 from fmeval.data.base import Frame
 from fmeval.ladder import (
     REFERENCE_LEVEL,
+    DegradationConfig,
     apply_severity_level,
     build_ladder,
     ladder_axes,
@@ -393,6 +394,19 @@ def test_build_ladder_expands_entries():
     ]
     assert [r.level for r in severity_levels] == [0, 1, 2]
     assert [r.severity for r in severity_levels] == [0.0, 1.0, 2.0]
+
+
+def test_build_ladder_applies_its_keywords_to_a_config_block_too():
+    """A keyword means the same whether the ladder comes as a mapping or as the config block."""
+    entries = {"gaussian_blur": {"severities": [1.0]}, "translate_x": {"op": "translate",
+                                                                      "severities": [1]}}
+    block = DegradationConfig(ladder=entries)
+    for ladder in (entries, block):
+        levels = build_ladder(ladder, include_reference=False, skip=["translate_x"])
+        assert [r.variant_label for r in levels] == ["gaussian_blur_l1"]
+        with pytest.raises(TypeError, match="bogus"):
+            build_ladder(ladder, bogus=1)
+    assert block.include_reference and not block.skip, "the caller's block was modified"
 
 
 def test_build_ladder_sorts_decreasing_direction_correctly():
