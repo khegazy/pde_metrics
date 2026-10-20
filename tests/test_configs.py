@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import ast
 import inspect
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +29,7 @@ from fmeval import CONFIGS, REPO
 from fmeval.config import Config, DatasetConfig, ReportConfig, build_job, compose_config
 from fmeval.data import kinet_raw, synthetic_ensemble, well  # noqa: F401  (register the formats)
 from fmeval.data.base import READERS, TimeSelection
+from fmeval.io import read_config, read_run_meta
 from fmeval.ladder import DegradationConfig
 from fmeval.pipeline import MapRequest
 from metrics import registry as metric_registry
@@ -301,6 +304,25 @@ def test_evaluate_reads_the_config_without_fallbacks():
                  if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
                  and n.func.attr == "get" and rooted_at_cfg(n.func.value)]
     assert not fallbacks, f"evaluate.py reads the config with a fallback at lines {fallbacks}"
+
+
+def test_a_run_records_the_reader_options_its_config_leaves_out(tmp_path):
+    """`config.yaml` holds only what a file or override states, so a reader's defaults, which
+    can change with the code, are recorded beside it in `run_meta.json`."""
+    subprocess.run(
+        [sys.executable, str(REPO / "evaluate.py"), "dataset=synthetic_ensemble",
+         "degradation=ensemble_miscalibration", "degradation.only=[bias]", "metrics=[crps]",
+         "+dataset.reader.sigma=0.2", f"paths.results={tmp_path}", f"hydra.run.dir={tmp_path}/h"],
+        check=True, capture_output=True, cwd=tmp_path,
+    )
+    (folder,) = tmp_path.glob("crps_*")
+    recorded = read_run_meta(folder)["reader_options"]
+    stated = read_config(folder)["dataset"]["reader"]
+    signature = inspect.signature(READERS["synthetic_ensemble"]).parameters
+    assert "omega" not in stated and recorded["omega"] == signature["omega"].default
+    assert stated["sigma"] == recorded["sigma"] == 0.2
+    assert recorded["n_members"] == stated["n_members"]
+    assert set(recorded) == set(signature) - {"path"}
 
 
 # --- the card settings, read without Hydra --------------------------------------------------

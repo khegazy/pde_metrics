@@ -125,14 +125,15 @@ def write_config(folder: RunFolder, resolved: Mapping[str, Any],
                  overrides: list[str] | None = None) -> str:
     """Write the config that produced the numbers, and return its hash.
 
-    ``config.yaml`` is the **fully resolved** tree -- every interpolation expanded and
-    every group default materialised -- so it records what actually ran rather than what
-    the defaults happened to be that day. ``config_overrides.yaml`` keeps just the
-    command-line overrides, which is what you read when diffing two runs.
+    ``config.yaml`` is the composed tree with every interpolation expanded: each key of the
+    schema (``fmeval/config.py``) and each key a config file or override states. Options a
+    reader or an operator leaves at its default are not in it; ``run_meta.json`` records those
+    as ``reader_options`` and ``registries.degradations.<op>.defaults``. ``config_overrides.yaml``
+    keeps just the command-line overrides, which is what you read when diffing two runs.
 
     Returns:
         Short blake2b hash of the resolved config. Two runs with the same hash used
-        identical settings.
+        identical settings, given the same code (``run_meta.json`` records its git state).
     """
     text = dump_yaml(_plain(resolved))
     folder.config_path.write_text(text)

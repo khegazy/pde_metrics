@@ -13,6 +13,7 @@ resolved config and full provenance, so they regenerate their own report without
 
 from __future__ import annotations
 
+import inspect
 import logging
 import sys
 import time
@@ -127,6 +128,10 @@ def main(cfg: DictConfig) -> None:
                     "its levels. Anchor on an entry whose operator is ordinal=False.", anchor)
 
     trajectory = open_trajectory(job)
+    # Every reader option the run used, defaults included. The recorded config states only what
+    # a file or an override changed, and a reader's defaults belong to its code, which can move.
+    reader = inspect.signature(READERS[job.dataset.format]).bind_partial(**job.dataset.reader)
+    reader.apply_defaults()
     try:
         fields = select_fields(job, trajectory, specs)
         selection = job.dataset.time
@@ -192,6 +197,7 @@ def main(cfg: DictConfig) -> None:
             data_source=data_source,
             n_frames=result.n_frames,
             trajectory_frames=trajectory_frames,
+            reader_options={k: v for k, v in reader.arguments.items() if k != "path"},
             n_rows=len(rows),
             fields=fields,
             analysis_grid=result.analysis_grid,
