@@ -81,7 +81,9 @@ test still passed.
   dataclass owns the default. Values several options of a group share live once in a
   `_`-prefixed fragment that each option inherits through `defaults:`, as the three datasets of
   one simulation inherit `configs/dataset/_re5e4_simulation.yaml`. `evaluate.py` builds the
-  whole config into its schema first and never writes `cfg.x.get(key, default)`.
+  whole config into its schema first (`build_job`, which also refuses a key no dataclass
+  declares, even one added with `+`), reads every value from that, and never writes
+  `cfg.x.get(key, default)`.
   `tests/test_configs.py` names any key a file restates.
 - **No aliases.** No `x = y` renames, no function that only forwards to another, no
   `__init__` re-export that nothing imports, no dataclass field copying another object's
@@ -122,7 +124,7 @@ Where the shared code already lives, so the search has somewhere to start:
 | Running one renderer (`draw`), and the report and card view of a run (`ReportContext.from_analysis`) | `fmeval/report/registry.py`, `fmeval/report/context.py` |
 | Generated-block markers and front matter in `card.md` (`write_block`, `has_block`, `FRONTMATTER`) | `fmeval/cards/prose.py` |
 | Bundle paths and strict JSON output (`Bundle`, `write_strict_json`) | `fmeval/cards/loader.py` |
-| The config schema, and composing the config outside `hydra.main` (`compose_config`) | `fmeval/config.py` |
+| The config schema, building a config into it (`build_job`), and composing the config outside `hydra.main` (`compose_config`) | `fmeval/config.py` |
 | The repository root and the configs directory (`REPO`, `CONFIGS`) | `fmeval/__init__.py` |
 | Run-folder layout, readers and YAML (`RunFolder`, `read_results`, `read_run_meta`, `read_config`, `read_yaml`, `dump_yaml`) | `fmeval/io.py` |
 | Error-map keys (`map_key`, `parse_map_key`) | `fmeval/pipeline.py` |

@@ -20,10 +20,11 @@ import pytest
 from hydra.core.hydra_config import HydraConfig
 from hydra.errors import ConfigCompositionException
 from omegaconf import MissingMandatoryValue, OmegaConf
+from omegaconf.errors import ConfigKeyError
 
 from degradations import registry as deg_registry
 from fmeval import CONFIGS, REPO
-from fmeval.config import Config, DatasetConfig, ReportConfig, compose_config
+from fmeval.config import Config, DatasetConfig, ReportConfig, build_job, compose_config
 from fmeval.data import kinet_raw, synthetic_ensemble, well  # noqa: F401  (register the formats)
 from fmeval.data.base import READERS, TimeSelection
 from fmeval.ladder import DegradationConfig
@@ -87,15 +88,15 @@ GROUP_OPTIONS = [(group, option) for group in GROUPS for option in _options(grou
 def test_every_option_composes_into_a_complete_schema(group, option):
     """Every option must compose, and building it into its schema must find every key set.
 
-    `OmegaConf.to_object` is what `evaluate.py` does first, so a key an option forgot fails
-    here, named, rather than when the run first reads it.
+    `build_job` is what `evaluate.py` does first, so a key an option forgot fails here, named,
+    rather than when the run first reads it.
     """
-    OmegaConf.to_object(compose_config(f"{group}={option}"))
+    build_job(compose_config(f"{group}={option}"))
 
 
 def test_default_config_builds_the_objects_the_code_takes():
     """Each block becomes the dataclass that owns its defaults, so the run reads no copy."""
-    job = OmegaConf.to_object(compose_config())
+    job = build_job(compose_config())
     assert isinstance(job, Config)
     assert isinstance(job.dataset.time, TimeSelection)
     assert isinstance(job.degradation, DegradationConfig)
@@ -110,12 +111,21 @@ def test_default_config_builds_the_objects_the_code_takes():
 ])
 def test_a_bad_value_is_refused_before_any_data_is_read(override, key):
     with pytest.raises((ValueError, MissingMandatoryValue), match=key):
-        OmegaConf.to_object(compose_config(override))
+        build_job(compose_config(override))
 
 
 def test_a_misspelt_key_is_refused_rather_than_ignored():
     with pytest.raises(ConfigCompositionException, match="maxframes"):
         compose_config("dataset.time.maxframes=3")
+
+
+@pytest.mark.parametrize("override", ["+dataset.time.max_frame=3", "+analysis_grid.resolutoin=64",
+                                      "+seeed=1", "+degradation.onl=[translate_x]"])
+def test_a_misspelt_key_added_with_plus_is_refused_too(override):
+    """`+` adds a key struct mode would refuse, so only the build can catch a misspelling."""
+    key = override.split("=")[0].rsplit(".", 1)[-1].lstrip("+")
+    with pytest.raises(ConfigKeyError, match=key):
+        build_job(compose_config(override))
 
 
 # --- the override forms the documentation promises ------------------------------------
@@ -284,7 +294,7 @@ def test_evaluate_reads_the_config_without_fallbacks():
     def rooted_at_cfg(node: ast.AST) -> bool:
         while isinstance(node, (ast.Attribute, ast.Subscript, ast.Call)):
             node = node.func if isinstance(node, ast.Call) else node.value
-        return isinstance(node, ast.Name) and node.id == "cfg"
+        return isinstance(node, ast.Name) and node.id in ("cfg", "job")
 
     tree = ast.parse((REPO / "evaluate.py").read_text())
     fallbacks = [n.lineno for n in ast.walk(tree)

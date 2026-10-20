@@ -22,10 +22,10 @@ from typing import Any
 import hydra
 import pandas as pd
 from hydra.core.hydra_config import HydraConfig
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 
-from fmeval import config as _config  # noqa: F401  (registers the config schema)
 from fmeval import io as fio
+from fmeval.config import Config, build_job
 from fmeval.data import (  # noqa: F401  (register the formats)
     kinet_raw,
     synthetic_ensemble,
@@ -41,41 +41,40 @@ from metrics import registry as metric_registry
 log = logging.getLogger(__name__)
 
 
-def open_trajectory(cfg: DictConfig) -> Trajectory:
+def open_trajectory(job: Config) -> Trajectory:
     """Construct the reader named by ``dataset.format``.
 
     Explicit imports (at the top of this file) rather than a package walk: readers are a small
     closed set maintained with the harness, unlike metrics and degradations which are open
     contributor sets.
     """
-    fmt = cfg.dataset.format
+    fmt = job.dataset.format
     if fmt not in READERS:
         raise KeyError(f"unknown dataset format {fmt!r}; available: {sorted(READERS)}")
 
-    reader_kwargs = OmegaConf.to_container(cfg.dataset.reader, resolve=True)
     if not READERS[fmt].reads_from_disk:
-        return READERS[fmt](Path(cfg.dataset.path), **reader_kwargs)
+        return READERS[fmt](Path(job.dataset.path), **job.dataset.reader)
 
     location = resolve_dataset_path(
-        cfg.dataset.path, cfg.paths.data, data_url=cfg.paths.data_url
+        job.dataset.path, job.paths.data, data_url=job.paths.data_url
     )
     if location.source == "url":
         log.info(
             "dataset %s is not on this filesystem; reading the published copy at %s",
-            cfg.dataset.name, location.url,
+            job.dataset.name, location.url,
         )
-    return READERS[fmt](location.target, **reader_kwargs)
+    return READERS[fmt](location.target, **job.dataset.reader)
 
 
-def select_fields(cfg: DictConfig, trajectory: Trajectory,
+def select_fields(job: Config, trajectory: Trajectory,
                   specs: list[metric_registry.MetricSpec]) -> list[str]:
     """Fields to read: the config list if given, else what the metrics actually accept."""
-    requested = cfg.fields or cfg.dataset.fields
+    requested = job.fields or job.dataset.fields
     available = list(trajectory.fields)
     missing = [f for f in requested or () if f not in available]
     if missing:
         raise ValueError(
-            f"dataset {cfg.dataset.name!r} does not provide {missing}; "
+            f"dataset {job.dataset.name!r} does not provide {missing}; "
             f"it has {available}"
         )
     candidates = list(requested) if requested else available
@@ -88,14 +87,14 @@ def select_fields(cfg: DictConfig, trajectory: Trajectory,
     return wanted
 
 
-def dataset_info(cfg: DictConfig) -> DatasetInfo:
-    complexity = cfg.dataset.complexity
+def dataset_info(job: Config) -> DatasetInfo:
+    complexity = job.dataset.complexity
     return DatasetInfo(
-        name=cfg.dataset.name,
-        trajectory=cfg.dataset.trajectory,
+        name=job.dataset.name,
+        trajectory=job.dataset.trajectory,
         family=complexity.family,
         rank=complexity.rank,
-        params=OmegaConf.to_container(complexity.params, resolve=True),
+        params=complexity.params,
     )
 
 
@@ -107,17 +106,18 @@ def main(cfg: DictConfig) -> None:
     )
     started = time.perf_counter()
     stamp = int(time.time())     # stamps every folder this invocation writes
-    # Builds every block into its schema dataclass (fmeval/config.py), so a missing key or a
-    # value its dataclass refuses stops the run here, before any data is read.
-    job = OmegaConf.to_object(cfg)
+    # Every value is read from `job`, the config built into its schema (fmeval/config.py), so a
+    # missing, misspelt or refused key stops the run here, before any data is read. `cfg` is
+    # kept only to record the composed config.
+    job = build_job(cfg)
 
-    specs = [metric_registry.get(name) for name in cfg.metrics]
+    specs = [metric_registry.get(name) for name in job.metrics]
     severity_levels = build_ladder(job.degradation)
     axes = sorted(ladder_axes(severity_levels))
     log.info("ladder: %d severity levels over %d axes", len(severity_levels), len(axes))
     # The analysis reads both back from run_meta.json: which entry defines D = 1, and which
     # entries are probes rather than monotone axes (declared ordinal=False by their operator).
-    anchor = str(cfg.analysis.anchor)
+    anchor = job.analysis.anchor
     probes = sorted({r.label for r in severity_levels if not r.ordinal})
     if anchor not in {r.label for r in severity_levels}:
         log.warning("analysis.anchor=%r is not an entry of this ladder; the analysis will fall "
@@ -126,18 +126,18 @@ def main(cfg: DictConfig) -> None:
         log.warning("analysis.anchor=%r is an ordinal axis: D = 1 would be the median over all "
                     "its levels. Anchor on an entry whose operator is ordinal=False.", anchor)
 
-    trajectory = open_trajectory(cfg)
+    trajectory = open_trajectory(job)
     try:
-        fields = select_fields(cfg, trajectory, specs)
+        fields = select_fields(job, trajectory, specs)
         selection = job.dataset.time
         trajectory_frames = len(trajectory)
         n_frames = len(selection.resolve(trajectory_frames))
         log.info(
             "dataset %s: %d of %d frames (reduction %d), fields %s",
-            cfg.dataset.name, n_frames, trajectory_frames, selection.reduction, fields,
+            job.dataset.name, n_frames, trajectory_frames, selection.reduction, fields,
         )
 
-        if cfg.dataset.recompute_derived:
+        if job.dataset.recompute_derived:
             trajectory = RecomputingTrajectory(trajectory)
 
         result = run(
@@ -146,10 +146,10 @@ def main(cfg: DictConfig) -> None:
             severity_levels,
             fields=fields,
             selection=selection,
-            dataset=dataset_info(cfg),
-            seed=int(cfg.seed),
-            analysis_resolution=cfg.analysis_grid.resolution,
-            remap_method=cfg.analysis_grid.method,
+            dataset=dataset_info(job),
+            seed=job.seed,
+            analysis_resolution=job.analysis_grid.resolution,
+            remap_method=job.analysis_grid.method,
             maps=job.report.error_map,
         )
         # Before the `finally`: the request counters live on the HTTP file object, which
@@ -175,7 +175,7 @@ def main(cfg: DictConfig) -> None:
 
     def write_folder(name: str, rows: pd.DataFrame, maps: dict, **meta: Any) -> Path:
         """One self-contained run folder: numbers, calibration, config, maps, provenance."""
-        folder = fio.make_run_folder(cfg.paths.results, name, stamp)
+        folder = fio.make_run_folder(job.paths.results, name, stamp)
         fio.write_results(folder, rows)
         fio.write_table(folder, calibration_table, "calibration")
         fio.write_table(folder, spectrum_table, "calibration_spectrum")
@@ -186,9 +186,9 @@ def main(cfg: DictConfig) -> None:
             folder,
             run_id=stamp,
             config_hash=digest,
-            dataset=cfg.dataset.name,
-            dataset_label=cfg.dataset.complexity.label,
-            dataset_notes=cfg.dataset.notes,
+            dataset=job.dataset.name,
+            dataset_label=job.dataset.complexity.label,
+            dataset_notes=job.dataset.notes,
             data_source=data_source,
             n_frames=result.n_frames,
             trajectory_frames=trajectory_frames,
@@ -199,7 +199,7 @@ def main(cfg: DictConfig) -> None:
             n_severity_levels=len(severity_levels),
             anchor_label=anchor,
             probe_labels=probes,
-            seed=int(cfg.seed),
+            seed=job.seed,
             command=" ".join(sys.argv),
             **meta,
         )

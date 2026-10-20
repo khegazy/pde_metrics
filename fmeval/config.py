@@ -20,7 +20,7 @@ from typing import Any
 from hydra import compose, initialize_config_dir
 from hydra.core.config_store import ConfigStore
 from hydra.core.hydra_config import HydraConfig
-from omegaconf import MISSING, DictConfig, open_dict
+from omegaconf import MISSING, DictConfig, OmegaConf, open_dict
 
 from fmeval import CONFIGS
 from fmeval.data.base import TimeSelection
@@ -110,6 +110,19 @@ class Config:
 
 
 ConfigStore.instance().store(name="_schema", node=Config)
+
+
+def build_job(cfg: DictConfig) -> Config:
+    """Build a composed config into the schema dataclasses, before any data is read.
+
+    A ``MISSING`` key, a value a dataclass refuses (``TimeSelection.__post_init__``) or a key
+    no dataclass declares raises here, naming the key. The last needs the merge into the bare
+    schema: ``+key=value`` adds a key that struct mode would otherwise refuse, and
+    ``OmegaConf.to_object`` would keep it as a stray attribute, so ``+dataset.time.max_frame=3``
+    would run with ``max_frames`` at its default. Keys inside an untyped mapping
+    (``dataset.reader``, a ladder entry's ``options``) are checked by the callable they feed.
+    """
+    return OmegaConf.to_object(OmegaConf.merge(Config, OmegaConf.to_container(cfg)))
 
 
 def compose_config(*overrides: str) -> DictConfig:
