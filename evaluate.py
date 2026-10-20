@@ -25,6 +25,7 @@ import pandas as pd
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig
 
+from fmeval import CONFIGS
 from fmeval import io as fio
 from fmeval.config import Config, build_job
 from fmeval.data import (  # noqa: F401  (register the formats)
@@ -99,7 +100,7 @@ def dataset_info(job: Config) -> DatasetInfo:
     )
 
 
-@hydra.main(version_base=None, config_path="configs", config_name="config")
+@hydra.main(version_base=None, config_path=str(CONFIGS), config_name="config")
 def main(cfg: DictConfig) -> None:
     logging.basicConfig(
         level=logging.INFO, format="%(levelname)s %(name)s: %(message)s",
