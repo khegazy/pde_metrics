@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -252,8 +253,9 @@ def test_a_config_states_a_key_only_to_change_it(path):
     """A key whose value equals what the file would inherit anyway is a second copy of it.
 
     The inherited value is the schema's default (`fmeval/config.py`), a fragment's value, a
-    reader constructor's keyword default, or an operator's keyword-only default. A second
-    copy is the one that goes stale when the first changes.
+    reader constructor's keyword default, an operator's keyword-only default, or the entry
+    label an `op` defaults to. A second copy is the one that goes stale when the first changes.
+    A fragment names no reader, so its reader options are checked in each option inheriting it.
     """
     group = path.parent.name
     body = _leaves(_body(path))
@@ -265,7 +267,7 @@ def test_a_config_states_a_key_only_to_change_it(path):
     fmt = body.get("format", inherited.get("format"))
     if fmt in READERS:
         reader = inspect.signature(READERS[fmt]).parameters
-        restated += [f"{k}: {v!r} (the reader's default)" for k, v in body.items()
+        restated += [f"{k}: {v!r} (the reader's default)" for k, v in {**inherited, **body}.items()
                      if k.startswith("reader.") and k.split(".")[1] in reader
                      and reader[k.split(".")[1]].default == v]
 
@@ -275,10 +277,33 @@ def test_a_config_states_a_key_only_to_change_it(path):
             op = body.get(f"ladder.{parts[1]}.op", parts[1])
             if deg_registry.get(op).defaults.get(parts[3], object()) == value:
                 restated.append(f"{key}: {value!r} (the operator's default)")
+        if parts[0] == "ladder" and parts[2:] == ["op"] and value == parts[1]:
+            restated.append(f"{key}: {value!r} (an entry's op defaults to its label)")
 
     assert not restated, (
         f"{path.relative_to(REPO)} restates values it would inherit; delete them: {restated}"
     )
+
+
+@pytest.mark.parametrize("edited,text,checked", [
+    ("dataset/kinet_re5e4.yaml", "time: {start: 1}\n", "dataset/kinet_re5e4.yaml"),
+    ("dataset/_re5e4_simulation.yaml", "reader: {chunk_cache_mb: 32}\n",
+     "dataset/kinet_re5e4.yaml"),
+    ("report/none.yaml", "  frames: [-1]\n", "report/none.yaml"),
+    ("degradation/quick.yaml", "  lowpass_butterworth: {enabled: true, severities: [0.3], "
+     "options: {order: 4}}\n", "degradation/quick.yaml"),
+    ("degradation/quick.yaml", "  lowpass_ideal: {enabled: true, op: lowpass_ideal, "
+     "severities: [0.3]}\n", "degradation/quick.yaml"),
+])
+def test_the_restatement_guard_catches_a_planted_copy(edited, text, checked, tmp_path,
+                                                      monkeypatch):
+    """The guard above passes on clean files; this proves it fails on a restated value."""
+    shutil.copytree(CONFIGS, tmp_path / "configs")
+    with open(tmp_path / "configs" / edited, "a") as f:
+        f.write(text)
+    monkeypatch.setitem(globals(), "REPO", tmp_path)
+    with pytest.raises(AssertionError, match="restates"):
+        test_a_config_states_a_key_only_to_change_it(tmp_path / "configs" / checked)
 
 
 @pytest.mark.parametrize("group", GROUPS)
