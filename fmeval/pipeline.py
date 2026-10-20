@@ -120,20 +120,19 @@ class DatasetInfo:
 
 @dataclass
 class MapRequest:
-    """Which pointwise metric maps to keep.
+    """Which pointwise metric maps to keep; also the schema of ``report.error_map``.
 
     Storing a map for every frame and variant would be gigabytes, so only the named
-    combinations are retained -- enough for the figure, not for the whole run. A run takes
-    its request from ``report.error_map`` in config; the defaults here keep nothing, for
-    callers that do not ask.
+    combinations are retained -- enough for the figure, not for the whole run. The defaults
+    here keep nothing, for callers that do not ask.
     """
 
     enabled: bool = False
-    frames: Sequence[int] = ()
+    frames: list[int] = dc_field(default_factory=list)
     """Positions within the *selected* frames; -1 is the last one."""
-    axes: Sequence[str] = ()
+    axes: list[str] = dc_field(default_factory=list)
     """Ladder-entry labels to keep. Empty means all of them."""
-    fields: Sequence[str] = ()
+    fields: list[str] = dc_field(default_factory=list)
     """Fields to keep. Empty means all of them."""
 
 

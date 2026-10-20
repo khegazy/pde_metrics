@@ -2,12 +2,12 @@
 # are `make_report.py` options, not settings of the run.
 
 # Pointwise metric maps: storing one per frame per variant would be gigabytes, so only
-# these combinations are kept.
+# these combinations are kept. `fmeval.pipeline.MapRequest` documents each key; an empty
+# `fields` (its default) keeps every field.
 error_map:
   enabled: true
   frames: [-1]                                        # positions in the selected frames
   axes: [translate_x, gaussian_blur, gaussian_impostor]
-  fields: []                                          # empty = all
 
 # Reference thresholds. ADVISORY ONLY: they populate a `flags` column so rows can be
 # found quickly. They never label a metric accepted or rejected -- that is the team's call.

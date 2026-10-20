@@ -22,13 +22,10 @@ noticing.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
-from hydra import compose, initialize_config_dir
-from hydra.core.hydra_config import HydraConfig
 
 from degradations import registry as deg_registry
 from fmeval import pipeline
@@ -38,9 +35,6 @@ from fmeval.data.synthetic_ensemble import SyntheticEnsembleTrajectory
 from fmeval.ladder import SeverityLevel
 from metrics import registry as metric_registry
 from tests import fixtures_h5
-
-#: The repository root, for tests that read committed files.
-REPO = Path(__file__).resolve().parent.parent
 
 #: Deliberately non-square. See the module docstring.
 GRID: tuple[int, int] = (16, 8)
@@ -344,26 +338,6 @@ def synthetic_rows(metrics=("mse", "mae", "rmse", "flat")) -> pd.DataFrame:
     df["degradation_op"] = df["degradation_op"].astype(str).replace(SYNTHETIC_OPERATORS)
     df["energy_changed"] = np.where(df["level"] > 0, (0.1 * df["severity"]) ** 2, 0.0)
     return df
-
-
-# --- configuration ------------------------------------------------------------------------
-
-CONFIGS = str(REPO / "configs")
-
-
-def build(*overrides: str):
-    """Compose the config the way `evaluate.py` does, with CLI-style overrides.
-
-    The HydraConfig singleton has to be installed explicitly. `hydra.main` does that for
-    you, and without it `${hydra:runtime.cwd}` -- which `paths.data` depends on -- raises
-    "HydraConfig was not set". Composing without it would test a configuration that never
-    actually runs.
-    """
-    with initialize_config_dir(config_dir=CONFIGS, version_base=None):
-        cfg = compose(config_name="config", overrides=list(overrides),
-                      return_hydra_config=True)
-        HydraConfig.instance().set_config(cfg)
-        return cfg
 
 
 # --- bundle-test fields and ensembles (shared by metric bundles' test_metric.py) ----------

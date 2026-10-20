@@ -72,11 +72,17 @@ Every rule below exists because a second copy of something drifted from the firs
 test still passed.
 
 - **Define every value once.** A constant, default, label, column name, file name or path
-  convention has exactly one definition, and everything else imports it. A value a user may
-  set lives in `configs/` and the code reads it; the code never carries a second default for
-  it. The one exception is an operator's options, whose defaults are its function signature's
-  and which `configs/` overrides per ladder entry (§4). Evidence: the report thresholds once lived in four places and only one was read; the
-  column labels lived in three vocabularies that used different words for the same column.
+  convention has exactly one definition, and everything else imports it. Evidence: the report
+  thresholds once lived in four places and only one was read; the column labels lived in three
+  vocabularies that used different words for the same column.
+- **A config file states a key only to change it.** Every block of `configs/` is the keyword
+  arguments of one callable -- a reader's constructor (`dataset.reader`), an operator's options
+  (§4) -- or the fields of one schema dataclass in `fmeval/config.py`, and that callable or
+  dataclass owns the default. Values several options of a group share live once in a
+  `_`-prefixed fragment that each option inherits through `defaults:`, as the three datasets of
+  one simulation inherit `configs/dataset/_re5e4_simulation.yaml`. `evaluate.py` builds the
+  whole config into its schema first and never writes `cfg.x.get(key, default)`.
+  `tests/test_configs.py` names any key a file restates.
 - **No aliases.** No `x = y` renames, no function that only forwards to another, no
   `__init__` re-export that nothing imports, no dataclass field copying another object's
   field. Import the original. A name forced by a collision is imported as its module
@@ -116,6 +122,8 @@ Where the shared code already lives, so the search has somewhere to start:
 | Running one renderer (`draw`), and the report and card view of a run (`ReportContext.from_analysis`) | `fmeval/report/registry.py`, `fmeval/report/context.py` |
 | Generated-block markers and front matter in `card.md` (`write_block`, `has_block`, `FRONTMATTER`) | `fmeval/cards/prose.py` |
 | Bundle paths and strict JSON output (`Bundle`, `write_strict_json`) | `fmeval/cards/loader.py` |
+| The config schema, and composing the config outside `hydra.main` (`compose_config`) | `fmeval/config.py` |
+| The repository root and the configs directory (`REPO`, `CONFIGS`) | `fmeval/__init__.py` |
 | Run-folder layout, readers and YAML (`RunFolder`, `read_results`, `read_run_meta`, `read_config`, `read_yaml`, `dump_yaml`) | `fmeval/io.py` |
 | Error-map keys (`map_key`, `parse_map_key`) | `fmeval/pipeline.py` |
 | Opening an HDF5 file locally or over HTTP, and what the HDF5 readers share | `fmeval/data/hdf5.py`, `fmeval/data/remote.py` |
@@ -558,7 +566,9 @@ class MyTrajectory(Trajectory):
 ```
 
 Then add the module to the import line in `evaluate.py::open_trajectory`, and write a dataset
-config under `configs/dataset/`.
+config under `configs/dataset/` stating `name`, `format`, `trajectory` and only what differs from
+the schema in `fmeval/config.py` or from a fragment it inherits; `pytest tests/test_configs.py`
+names any default it restates.
 
 **A reader takes a location, not a path.** It is handed either a `Path` or an `https://` URL,
 because a colleague with no CFS mount reads the copy published at `paths.data_url` instead.

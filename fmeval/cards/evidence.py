@@ -378,8 +378,7 @@ def generate(metric: str, run: Run) -> Path:
     command = f"python -m fmeval.cards evidence {metric} --results {run.folder}"
     # Figures first, so a figure that cannot be drawn is reported inside the block that
     # would have shown it rather than discovered as a missing file.
-    figures, reasons = metric_figures(run, metric, bundle.generated,
-                                      theme=str(load_cards_config().figures.theme))
+    figures, reasons = metric_figures(run, metric, bundle.generated)
     blocks = {
         "run": run_block(run),
         "performance": performance_block(run, metric, figures, reasons),

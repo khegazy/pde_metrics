@@ -35,4 +35,5 @@ numbers can be read from it.
 
 ## Related
 
-`configs/dataset/*.yaml`, where these values are currently duplicated by hand.
+`configs/dataset/*.yaml`, where these values are stated by hand: once per simulation, in a
+shared fragment such as `configs/dataset/_re5e4_simulation.yaml`.

@@ -227,8 +227,7 @@ def cmd_overview(args: argparse.Namespace) -> int:
     """Draw the cross-metric overview figures of one run into docs/figures/<run>/."""
     run = evidence.load_run(Path(args.results))
     out = Path(args.out) if args.out else FIGURES_ROOT / run.folder.name
-    theme = str(exemplars.load_cards_config().figures.theme)
-    figures, reasons = overview_figures(run, out, theme=theme)
+    figures, reasons = overview_figures(run, out)
     for figure in figures:
         print(f"wrote {figure.path}")
     for name, why in reasons.items():

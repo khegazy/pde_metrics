@@ -99,9 +99,10 @@ one option from each **config group**, and every value can be overridden from th
 
 ```
 configs/
-├── config.yaml            top level: metrics, fields, seed, analysis grid, paths
-├── dataset/               kinet_re5e4_dev · kinet_re5e4 · well_re5e4
-├── degradation/           default · quick
+├── config.yaml            top level: metrics, seed, paths, analysis anchor
+├── dataset/               kinet_re5e4_dev · kinet_re5e4 · well_re5e4 · synthetic_ensemble
+│                          (_re5e4_simulation.yaml: shared by the first three, not a choice)
+├── degradation/           default · quick · ensemble_miscalibration
 ├── report/                default · none
 └── dataset_family/        reynolds_ladder_2d   (not yet consumed; see issues/011)
 ```
@@ -136,7 +137,7 @@ here works.
 | Override | Effect |
 |---|---|
 | `metrics=[mse]` | Which metric(s) to test. **The usual override** |
-| `dataset=kinet_re5e4` | Which dataset. `ls configs/dataset/` for the choices |
+| `dataset=kinet_re5e4` | Which dataset. `ls configs/dataset/` for the choices; a file starting with `_` is a shared fragment, not a choice |
 | `dataset.time.reduction=100` | Evaluate every 100th frame |
 | `dataset.time.start=2000` | Skip the early, undeveloped part of the trajectory |
 | `dataset.time.max_frames=5` | Hard cap, applied after the reduction. Good for a smoke test |
@@ -147,6 +148,8 @@ here works.
 | `degradation.skip=[median_blur]` | Drop these ladder entries |
 | `degradation.ladder.<entry>.enabled=false` | Disable one entry |
 | `degradation.ladder.<entry>.severities=[1,2,4]` | Change one entry's severity levels |
+| `+degradation.ladder.<entry>.options.<key>=<value>` | Change an operator option the config leaves at its default (`+`, because the key is not in the file) |
+| `+dataset.reader.<key>=<value>` | Change a reader option the dataset config leaves at its default |
 | `report=none` | Store no pointwise error maps, for smaller run folders |
 | `seed=1` | Change the run seed |
 | `paths.data=/path/to/data` | Point at your own data instead of the `datasets` symlink |

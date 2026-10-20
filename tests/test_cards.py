@@ -26,7 +26,7 @@ import yaml
 from scipy.ndimage import gaussian_filter
 
 from degradations import registry as deg_registry
-from fmeval import analysis
+from fmeval import REPO, analysis
 from fmeval.cards import catalog, cli, evidence, loader, prose, review
 from fmeval.cards.exemplars import load_cards_config
 from fmeval.cards.figures import Column, _row_limits, exemplar_panel
@@ -36,7 +36,7 @@ from fmeval.cards.schema import CATEGORIES, SCHEMA_VERSION, STATUSES, CardError,
 from fmeval.report import vocabulary
 from fmeval.report.style import OKABE_ITO
 from metrics import registry as metric_registry
-from tests.conftest import REPO, make_frame, synthetic_rows
+from tests.conftest import make_frame, synthetic_rows
 
 # --------------------------------------------------------------------------------------
 # A minimal valid card, used as the base for the negative tests

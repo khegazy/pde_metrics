@@ -72,7 +72,9 @@ class WellTrajectory(HDF5Trajectory):
             nan_policy: ``"error"``, ``"warn"`` or ``"ignore"`` for non-finite values.
             include_redundant: Expose ``pressure``.
             include_degenerate: Expose ``temperature``, which is constant for an
-                isothermal run and therefore not a field in any useful sense.
+                isothermal run and therefore not a field in any useful sense. The Well writer
+                broadcasts it to the full grid, so unlike the raw format it cannot be excluded
+                by its shape.
             sim_index: Index along the leading trajectory axis.
             time_axis: How to read the clock. See ``fmeval.data._timeaxis``. This layout
                 stores it contiguously, so the default reads it directly either way.

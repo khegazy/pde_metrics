@@ -27,6 +27,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import rc_context
 
+from fmeval import CONFIGS
 from fmeval import analysis as an
 from fmeval.io import RunFolder, dump_yaml, read_config, read_results, read_run_meta, read_yaml
 
@@ -70,7 +71,7 @@ class Rendered:
 
 
 #: The repository's report settings, read only for a run folder that did not record its own.
-REPORT_DEFAULTS = Path(__file__).resolve().parents[2] / "configs" / "report" / "default.yaml"
+REPORT_DEFAULTS = CONFIGS / "report" / "default.yaml"
 
 
 def build_context(

@@ -147,7 +147,7 @@ def remove_stale(out_dir: Path, keep: set[str]) -> None:
 
 
 def metric_figures(
-    run: Run, metric: str, out_dir: Path, *, theme: str = report_style.DEFAULT_THEME,
+    run: Run, metric: str, out_dir: Path,
 ) -> tuple[list[CardFigure], dict[str, str]]:
     """Draw every card figure for one metric and write each with its numbers.
 
@@ -155,7 +155,6 @@ def metric_figures(
         run: The evidence run, already analysed.
         metric: The metric whose card is being generated.
         out_dir: The bundle's ``_generated/`` directory.
-        theme: A theme from :mod:`fmeval.report.style`, shared with the LaTeX report.
 
     Returns:
         The figures written, in card order, and the reason for each figure in
@@ -170,7 +169,7 @@ def metric_figures(
     """
     # The same frames the report builds from the folder, taken from the run the card
     # generator already analysed, so a figure draws the numbers the tables beside it print.
-    ctx = ReportContext.from_analysis(run, meta=run.meta, theme=theme)
+    ctx = ReportContext.from_analysis(run, meta=run.meta, theme=report_style.DEFAULT_THEME)
     out_dir.mkdir(parents=True, exist_ok=True)
     written: list[CardFigure] = []
     reasons: dict[str, str] = {}

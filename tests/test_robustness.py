@@ -19,6 +19,7 @@ import sys
 import numpy as np
 import pytest
 
+from fmeval import REPO
 from fmeval import analysis as an
 from fmeval.calibration import calibrate
 from fmeval.data.base import Frame, GridSpec
@@ -28,7 +29,7 @@ from fmeval.ladder import apply_severity_level, build_ladder
 from fmeval.pipeline import DatasetInfo, MapRequest, _runnable_levels, run
 from fmeval.report.driver import build_context, render
 from metrics import registry as metric_registry
-from tests.conftest import REPO, SyntheticTrajectory, make_frame
+from tests.conftest import SyntheticTrajectory, make_frame
 
 # --- the D = 1 anchor ------------------------------------------------------------------
 #

@@ -24,17 +24,18 @@ import pandas as pd
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 
+from fmeval import config as _config  # noqa: F401  (registers the config schema)
 from fmeval import io as fio
 from fmeval.data import (  # noqa: F401  (register the formats)
     kinet_raw,
     synthetic_ensemble,
     well,
 )
-from fmeval.data.base import READERS, TimeSelection, Trajectory
+from fmeval.data.base import READERS, Trajectory
 from fmeval.data.locate import resolve_dataset_path, trajectory_provenance
 from fmeval.derived import RecomputingTrajectory
 from fmeval.ladder import build_ladder, ladder_axes
-from fmeval.pipeline import DatasetInfo, MapRequest, parse_map_key, run
+from fmeval.pipeline import DatasetInfo, parse_map_key, run
 from metrics import registry as metric_registry
 
 log = logging.getLogger(__name__)
@@ -51,12 +52,12 @@ def open_trajectory(cfg: DictConfig) -> Trajectory:
     if fmt not in READERS:
         raise KeyError(f"unknown dataset format {fmt!r}; available: {sorted(READERS)}")
 
-    reader_kwargs = OmegaConf.to_container(cfg.dataset.get("reader", {}), resolve=True)
+    reader_kwargs = OmegaConf.to_container(cfg.dataset.reader, resolve=True)
     if not READERS[fmt].reads_from_disk:
         return READERS[fmt](Path(cfg.dataset.path), **reader_kwargs)
 
     location = resolve_dataset_path(
-        cfg.dataset.path, cfg.paths.data, data_url=cfg.paths.get("data_url")
+        cfg.dataset.path, cfg.paths.data, data_url=cfg.paths.data_url
     )
     if location.source == "url":
         log.info(
@@ -69,7 +70,7 @@ def open_trajectory(cfg: DictConfig) -> Trajectory:
 def select_fields(cfg: DictConfig, trajectory: Trajectory,
                   specs: list[metric_registry.MetricSpec]) -> list[str]:
     """Fields to read: the config list if given, else what the metrics actually accept."""
-    requested = cfg.get("fields") or cfg.dataset.get("fields")
+    requested = cfg.fields or cfg.dataset.fields
     available = list(trajectory.fields)
     missing = [f for f in requested or () if f not in available]
     if missing:
@@ -88,13 +89,13 @@ def select_fields(cfg: DictConfig, trajectory: Trajectory,
 
 
 def dataset_info(cfg: DictConfig) -> DatasetInfo:
-    complexity = cfg.dataset.get("complexity") or {}
+    complexity = cfg.dataset.complexity
     return DatasetInfo(
         name=cfg.dataset.name,
-        trajectory=cfg.dataset.get("trajectory", ""),
-        family=complexity.get("family", ""),
-        rank=complexity.get("rank"),
-        params=OmegaConf.to_container(complexity.get("params", {}), resolve=True) or {},
+        trajectory=cfg.dataset.trajectory,
+        family=complexity.family,
+        rank=complexity.rank,
+        params=OmegaConf.to_container(complexity.params, resolve=True),
     )
 
 
@@ -106,14 +107,12 @@ def main(cfg: DictConfig) -> None:
     )
     started = time.perf_counter()
     stamp = int(time.time())     # stamps every folder this invocation writes
+    # Builds every block into its schema dataclass (fmeval/config.py), so a missing key or a
+    # value its dataclass refuses stops the run here, before any data is read.
+    job = OmegaConf.to_object(cfg)
 
     specs = [metric_registry.get(name) for name in cfg.metrics]
-    severity_levels = build_ladder(
-        OmegaConf.to_container(cfg.degradation.ladder, resolve=True),
-        include_reference=bool(cfg.degradation.include_reference),
-        only=list(cfg.degradation.get("only") or []),
-        skip=list(cfg.degradation.get("skip") or []),
-    )
+    severity_levels = build_ladder(job.degradation)
     axes = sorted(ladder_axes(severity_levels))
     log.info("ladder: %d severity levels over %d axes", len(severity_levels), len(axes))
     # The analysis reads both back from run_meta.json: which entry defines D = 1, and which
@@ -130,7 +129,7 @@ def main(cfg: DictConfig) -> None:
     trajectory = open_trajectory(cfg)
     try:
         fields = select_fields(cfg, trajectory, specs)
-        selection = TimeSelection(**OmegaConf.to_container(cfg.dataset.time, resolve=True))
+        selection = job.dataset.time
         trajectory_frames = len(trajectory)
         n_frames = len(selection.resolve(trajectory_frames))
         log.info(
@@ -141,8 +140,6 @@ def main(cfg: DictConfig) -> None:
         if cfg.dataset.recompute_derived:
             trajectory = RecomputingTrajectory(trajectory)
 
-        maps = MapRequest(**OmegaConf.to_container(cfg.report.error_map, resolve=True))
-
         result = run(
             trajectory,
             specs,
@@ -151,9 +148,9 @@ def main(cfg: DictConfig) -> None:
             selection=selection,
             dataset=dataset_info(cfg),
             seed=int(cfg.seed),
-            analysis_resolution=cfg.analysis_grid.get("resolution"),
+            analysis_resolution=cfg.analysis_grid.resolution,
             remap_method=cfg.analysis_grid.method,
-            maps=maps,
+            maps=job.report.error_map,
         )
         # Before the `finally`: the request counters live on the HTTP file object, which
         # close() releases.
@@ -175,7 +172,6 @@ def main(cfg: DictConfig) -> None:
     spectrum_table = pd.DataFrame(result.calibration.spectrum_frame())
 
     overrides = _overrides()
-    complexity = cfg.dataset.get("complexity") or {}
 
     def write_folder(name: str, rows: pd.DataFrame, maps: dict, **meta: Any) -> Path:
         """One self-contained run folder: numbers, calibration, config, maps, provenance."""
@@ -191,8 +187,8 @@ def main(cfg: DictConfig) -> None:
             run_id=stamp,
             config_hash=digest,
             dataset=cfg.dataset.name,
-            dataset_label=str(complexity.get("label", "")),
-            dataset_notes=str(cfg.dataset.get("notes", "")),
+            dataset_label=cfg.dataset.complexity.label,
+            dataset_notes=cfg.dataset.notes,
             data_source=data_source,
             n_frames=result.n_frames,
             trajectory_frames=trajectory_frames,

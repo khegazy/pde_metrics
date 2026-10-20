@@ -208,13 +208,15 @@ class Frame:
         )
 
 
-@dataclass(frozen=True)
+@dataclass
 class TimeSelection:
-    """Which frames of a trajectory to evaluate.
+    """Which frames of a trajectory to evaluate; also the schema of a dataset's ``time`` block.
+
+    Not frozen, because Hydra composes a config into its schema in place.
 
     Attributes:
-        start: First source index. Defaults to 0; the kinet and Well dataset configs set 1,
-            because several kinet fields are all-NaN at t=0.
+        start: First source index. Defaults to 0; ``configs/dataset/_re5e4_simulation.yaml``
+            sets 1, because several kinet fields are all-NaN at t=0.
         stop: Exclusive upper bound, or None for the end.
         reduction: Evaluate every Nth frame. This is the temporal size knob: a 10001-frame
             trajectory at ``reduction=50`` is 201 frames.

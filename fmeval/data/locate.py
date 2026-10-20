@@ -9,8 +9,8 @@ Measured against the production trajectory on 2026-08-27: the portal's `Content-
 178271350284, exactly `os.path.getsize` of the CFS copy.
 
 This module is the *only* place that decision is made. It deliberately imports nothing to
-do with HTTP, so `fmeval.cards.exemplars` -- which resolves dataset paths without Hydra and
-has no business opening a socket -- can share it.
+do with HTTP, so `fmeval.cards.exemplars` -- which has no business opening a socket -- can
+share it.
 """
 
 from __future__ import annotations
@@ -19,15 +19,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import quote
-
-from omegaconf import OmegaConf
-
-#: The interpolation a dataset config writes. `evaluate.py` gets it already expanded by
-#: Hydra; `exemplars.py` loads configs unresolved and still has it as a literal.
-DATA_TOKEN = "${paths.data}"
-
-REPO = Path(__file__).resolve().parent.parent.parent
-CONFIG = REPO / "configs" / "config.yaml"
 
 
 def is_url(value: str | Path) -> bool:
@@ -64,7 +55,7 @@ def _relative_to(local: Path, data_root: Path) -> Path | None:
 
 
 def resolve_dataset_path(
-    raw_path: str | Path,
+    path: str | Path,
     data_root: str | Path,
     *,
     data_url: str | None = None,
@@ -77,8 +68,7 @@ def resolve_dataset_path(
     change what a run measured.
 
     Args:
-        raw_path: The dataset config's `path`, resolved by Hydra or still carrying the
-            literal `${paths.data}` token.
+        path: The dataset config's `path`, as the composed config resolves it.
         data_root: `paths.data`.
         data_url: `paths.data_url`, or None to refuse the network.
         allow_url: Whether the fallback may be taken at all.
@@ -92,13 +82,13 @@ def resolve_dataset_path(
             a new user hits first.
     """
     data_root = Path(str(data_root))
-    local = Path(str(raw_path).replace(DATA_TOKEN, str(data_root)))
+    local = Path(str(path))
 
     relative = _relative_to(local, data_root)
     url: str | None = None
     if data_url and relative is not None:
-        # Built from the relative path, never a second string substitution: `paths.data`
-        # is a documented override, so the token is not always what stands in front of it.
+        # Built from the path relative to `paths.data`, never by string substitution, so a
+        # `paths.data=/somewhere/else` override still derives the mirror.
         # Each segment is quoted -- a filename with a space or a `#` truncates a raw URL.
         url = data_url.rstrip("/") + "/" + "/".join(quote(p) for p in relative.parts)
 
@@ -150,16 +140,6 @@ def _why_unreachable(
             "Elsewhere, leave it absent and let `paths.data_url` serve the data.",
         ]
     return "\n".join(lines)
-
-
-def default_data_url() -> str | None:
-    """`paths.data_url` from configs/config.yaml, read without Hydra.
-
-    Safe because that key is a plain literal: `paths.data` interpolates
-    `${hydra:runtime.cwd}` and would raise here, but it is never touched.
-    """
-    cfg = OmegaConf.load(CONFIG)
-    return cfg.get("paths", {}).get("data_url")
 
 
 def trajectory_provenance(trajectory: Any) -> dict[str, Any]:

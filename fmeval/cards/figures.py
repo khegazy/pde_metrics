@@ -84,7 +84,6 @@ def exemplar_panel(
     title: str,
     grid: Any = None,
     dpi: int,
-    theme: str = style.DEFAULT_THEME,
 ) -> Panel:
     """Render one exemplar panel and return the numbers behind it.
 
@@ -95,7 +94,6 @@ def exemplar_panel(
         title: Figure title, naming the degradation and the field.
         grid: Optional grid for axis extents and labels.
         dpi: Fixed so regenerating an unchanged panel produces an unchanged file.
-        theme: A theme from :mod:`fmeval.report.style`, shared with the LaTeX report.
 
     Returns:
         The panel, with per-cell statistics keyed by row and column title.
@@ -119,7 +117,7 @@ def exemplar_panel(
         rows = ["field", *[r for r in rows if r != "field"]]
 
     reference = np.asarray(columns[0].data)
-    styling = style.Style.build(theme)
+    styling = style.Style.build(style.DEFAULT_THEME)
     statistics: dict[str, dict[str, dict[str, float]]] = {}
 
     with rc_context(styling.rc):

@@ -7,7 +7,7 @@ the same operator can appear twice with different options -- ``translate_x`` and
 
     ladder:
       gaussian_blur:      {severities: [0.5, 1, 2, 4, 8]}
-      translate_x:        {op: translate, severities: [1, 2, 4], options: {axis: x}}
+      translate_x:        {op: translate, severities: [1, 2, 4]}
       translate_y:        {op: translate, severities: [1, 2, 4], options: {axis: y}}
       lowpass_ideal:      {severities: [0.05, 0.15, 0.3]} # calibrated: energy fraction
       gaussian_impostor:  {severities: [0]}               # ordinal=False, excluded from rho
@@ -21,6 +21,7 @@ from dataclasses import field as dc_field
 from typing import Any
 
 import numpy as np
+from omegaconf import MISSING
 
 from degradations import registry as deg_registry
 from degradations.registry import DegradationSpec
@@ -80,21 +81,32 @@ REFERENCE_LEVEL = SeverityLevel(
 )
 
 
+@dataclass
+class DegradationConfig:
+    """The ``degradation`` config block, and the arguments of :func:`build_ladder`."""
+
+    ladder: dict[str, Any] = MISSING
+    """Entry label -> ``{op?, severities, options?, enabled?}``; ``op`` defaults to the label.
+    An entry's ``options`` default to its operator's keyword-only parameters."""
+    include_reference: bool = True
+    """Prepend the identity severity level, level 0 of the whole ladder: pairwise error
+    metrics must return exactly 0 there."""
+    only: list[str] = dc_field(default_factory=list)
+    """If non-empty, keep only these entry labels."""
+    skip: list[str] = dc_field(default_factory=list)
+    """Entry labels to drop, applied after ``only``."""
+
+
 def build_ladder(
-    ladder_cfg: Mapping[str, Mapping[str, Any]],
-    *,
-    include_reference: bool = True,
-    only: Sequence[str] = (),
-    skip: Sequence[str] = (),
+    ladder: Mapping[str, Mapping[str, Any]] | DegradationConfig, **settings: Any
 ) -> list[SeverityLevel]:
     """Expand a config ladder into a flat, ordered list of severity levels.
 
     Args:
-        ladder_cfg: Mapping of entry label -> ``{op?, severities, options?, enabled?}``.
-            ``op`` defaults to the label.
-        include_reference: Prepend the identity severity level (level 0 of the whole ladder).
-        only: If non-empty, keep only these entry labels.
-        skip: Entry labels to drop, applied after ``only``.
+        ladder: The ``degradation`` block, or just its ``ladder`` mapping with the other
+            fields of :class:`DegradationConfig` given as keywords.
+        **settings: ``include_reference``, ``only`` or ``skip``; any other name raises
+            ``TypeError``.
 
     Returns:
         Severity levels in config order, severities within each entry sorted into
@@ -104,17 +116,19 @@ def build_ladder(
         KeyError: On an unknown operator name.
         ValueError: On a malformed entry.
     """
+    cfg = (ladder if isinstance(ladder, DegradationConfig)
+           else DegradationConfig(ladder=dict(ladder), **settings))
     severity_levels: list[SeverityLevel] = []
-    if include_reference:
+    if cfg.include_reference:
         severity_levels.append(REFERENCE_LEVEL)
 
-    for label, raw in ladder_cfg.items():
+    for label, raw in cfg.ladder.items():
         entry = dict(raw or {})
         if not entry.pop("enabled", True):
             continue
-        if only and label not in only:
+        if cfg.only and label not in cfg.only:
             continue
-        if label in skip:
+        if label in cfg.skip:
             continue
 
         op_name = entry.pop("op", label)

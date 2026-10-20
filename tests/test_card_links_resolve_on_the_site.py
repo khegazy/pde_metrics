@@ -16,7 +16,7 @@ import re
 
 import pytest
 
-from tests.conftest import REPO
+from fmeval import REPO
 
 #: Every markdown link target in a card, excluding images.
 _LINK = re.compile(r"(?<!!)\[[^\]]*\]\(([^)]+)\)")

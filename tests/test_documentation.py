@@ -18,6 +18,7 @@ import pytest
 import yaml
 
 from degradations import registry as deg_registry
+from fmeval import REPO
 from fmeval import analysis as an
 from fmeval.io import RunFolder, copy_documentation
 from fmeval.pipeline import RESULT_DTYPES
@@ -25,7 +26,7 @@ from fmeval.report import driver  # noqa: F401  (imports the renderer modules)
 from fmeval.report.latex import PACKAGES
 from fmeval.report.registry import PLOTS
 from metrics.registry import REDUCTIONS, metric
-from tests.conftest import REPO, make_frame
+from tests.conftest import make_frame
 
 DOC = REPO / "TEST_DESCRIPTION.md"
 
@@ -252,9 +253,9 @@ PINNED_PHRASES = {
     #   - the rules whose violation silently corrupts results: check the exit status before
     #     claiming success (RC=$?), never hand-edit generated LaTeX, never slice the time
     #     axis (the multi-gigabyte read), non-square fixtures (the transpose trap),
-    #     severity_direction (the inverted ladder), no verdicts, one source of truth, reuse
-    #     before writing, imports at the top, rules stated without their history, and shared
-    #     test helpers;
+    #     severity_direction (the inverted ladder), no verdicts, one source of truth, a
+    #     config file stating a key only to change it, reuse before writing, imports at the
+    #     top, rules stated without their history, and shared test helpers;
     #   - the bundle workflow and no other: a metric outside a bundle does not import, and
     #     an agent would have no way to learn why from this file;
     #   - the card prohibitions, which exist because breaking them produces plausible, wrong
@@ -265,7 +266,8 @@ PINNED_PHRASES = {
         "Adding a figure or table", "Writing tests", "How to treat the LaTeX output",
         "RC=$?", "Never hand-edit", "Never slice the time axis", "non-square",
         "severity_direction", "does not decide", "Define every value once",
-        "Grep before you write", "Imports at the top of the file",
+        "Grep before you write", "states a key only to change it", "never writes `cfg",
+        "Imports at the top of the file",
         "State the rule, not its history", "never import from another `test_*.py` module",
         "python -m fmeval.cards new", "python -m fmeval.cards check",
         "python -m fmeval.cards evidence", "python -m fmeval.cards exemplars",
@@ -329,6 +331,8 @@ PINNED_PHRASES = {
     ),
     "docs/recipes/add-a-dataset.md": (
         "configs/dataset/",
+        "_re5e4_simulation",
+        "names the key an option forgot",
         "fmeval/data/base.py",
         "Never slice the time axis",
         "calibration.csv",

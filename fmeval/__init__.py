@@ -7,13 +7,22 @@ disagrees with the code. It is installed here, rather than inside the registries
 half-written card in one bundle cannot break a run of an unrelated metric. See
 ``fmeval/cards/loader.py`` for the reasoning in full.
 
-Nothing else is re-exported. Modules are imported by their full path, so that a reader
-following an import knows exactly which file to open.
+It also defines the two paths every module that reads a repository file starts from,
+``REPO`` and ``CONFIGS``. Nothing else is re-exported. Modules are imported by their full
+path, so that a reader following an import knows exactly which file to open.
 """
 
 from __future__ import annotations
 
 import logging
+from pathlib import Path
+
+#: The repository root, found from this file rather than the working directory: nothing here
+#: requires being run from the root. Defined before the card validator below is imported, so
+#: the modules it loads can already use it.
+REPO = Path(__file__).resolve().parent.parent
+#: The Hydra configuration directory.
+CONFIGS = REPO / "configs"
 
 # Wire up card enforcement, tolerating an incomplete checkout. A failure here must not stop the
 # harness importing: the validator is a guard rail, and a broken guard rail should be visible

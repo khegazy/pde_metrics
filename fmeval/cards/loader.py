@@ -32,6 +32,7 @@ from typing import Any
 import yaml
 
 from degradations import registry as deg_registry
+from fmeval import REPO
 from metrics import registry as metric_registry
 
 from .schema import KINDS, Card, CardError, parse_card
@@ -79,20 +80,11 @@ class Bundle:
         return self.path / ("metric.py" if self.kind == "metric" else "degradation.py")
 
 
-def repo_root() -> Path:
-    """The repository root, found from this file rather than the working directory.
-
-    Nothing in this repository requires being run from the root, so the root cannot be
-    inferred from ``cwd``.
-    """
-    return Path(__file__).resolve().parent.parent.parent
-
-
 def bundle_root(kind: str) -> Path:
     """The directory holding all bundles of one kind."""
     if kind not in KINDS:
         raise ValueError(f"unknown bundle kind {kind!r}")
-    return repo_root() / ("metrics" if kind == "metric" else "degradations")
+    return REPO / ("metrics" if kind == "metric" else "degradations")
 
 
 def iter_bundles(kind: str | None = None) -> list[Bundle]:

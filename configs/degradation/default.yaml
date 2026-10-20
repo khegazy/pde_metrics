@@ -5,11 +5,10 @@
 # axis. `op` defaults to the key. The label -- not the family -- is the unit of rank
 # correlation: gaussian_blur and median_blur are separate axes though both are "smoothing".
 #
-# `python -m degradations` lists every operator with its severity units.
-seed: ${seed}
-include_reference: true   # level 0; pairwise error metrics must return exactly 0 here
-only: []                  # if non-empty, run ONLY these labels
-skip: []                  # dropped after `only`
+# `python -m degradations` lists every operator with its severity units, and an entry's
+# `options` default to its operator's keyword-only parameters, so an entry states an option
+# only to change it. `include_reference`, `only` and `skip` are documented on
+# `fmeval.ladder.DegradationConfig`.
 
 ladder:
   # --- kernel smoothing ---------------------------------------------------------
@@ -57,19 +56,16 @@ ladder:
   # something a severity list can fix, and it is why the high-pass axis alone does not reach the
   # factor-five damage range the other axes do.
   lowpass_ideal:       {enabled: true,  severities: [0.05, 0.15, 0.30, 0.45]}
-  lowpass_butterworth: {enabled: true,  severities: [0.05, 0.15, 0.30, 0.45],
-                        options: {order: 4}}
+  lowpass_butterworth: {enabled: true,  severities: [0.05, 0.15, 0.30, 0.45]}
   highpass_ideal:      {enabled: true,  severities: [0.45, 0.70, 0.90, 0.97]}
-  highpass_butterworth: {enabled: true, severities: [0.45, 0.70, 0.90, 0.97],
-                        options: {order: 4}}
-  band_attenuate:      {enabled: false, severities: [0.8, 0.5, 0.2, 0.0],
-                        options: {k_lo: 16, k_hi: 64}}
+  highpass_butterworth: {enabled: true, severities: [0.45, 0.70, 0.90, 0.97]}
+  band_attenuate:      {enabled: false, severities: [0.8, 0.5, 0.2, 0.0]}
 
   # --- geometric: the double-penalty probe ----------------------------------------
-  translate_x:         {enabled: true, op: translate, severities: [1, 2, 4, 8, 16], options: {axis: x}}
+  translate_x:         {enabled: true, op: translate, severities: [1, 2, 4, 8, 16]}
   translate_y:         {op: translate, severities: [1, 2, 4, 8, 16],
                         options: {axis: y}, enabled: false}
-  translate_subpixel:  {enabled: true, severities: [0.125, 0.25, 0.5, 1.0, 2.0, 4.0], options: {axis: x}}
+  translate_subpixel:  {enabled: true, severities: [0.125, 0.25, 0.5, 1.0, 2.0, 4.0]}
 
   # --- resolution / stochastic / pointwise ------------------------------------------
   coarsen:             {enabled: true, severities: [2, 4, 8, 16]}

@@ -21,12 +21,12 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from fmeval import REPO
 from fmeval.report.context import ReportContext
 from fmeval.report.latex import slug
 from fmeval.report.registry import PLOTS, check_preconditions, iter_scope
 from fmeval.report.style import DEFAULT_THEME
 
-from .loader import repo_root
 from .metric_figures import CardFigure, remove_stale, render_figure
 
 if TYPE_CHECKING:
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
 #: Where the overview figures live, one subdirectory per run. Tracked, unlike the pages
 #: ``docs/gen_pages.py`` generates, because the figures are committed artifacts.
-FIGURES_ROOT: Path = repo_root() / "docs" / "figures"
+FIGURES_ROOT: Path = REPO / "docs" / "figures"
 
 #: The renderers the overview page shows, in page order. Both already exist for the report.
 OVERVIEW_FIGURES: tuple[str, ...] = ("response_sparklines", "response_portrait")
@@ -54,8 +54,7 @@ HEADINGS: dict[str, str] = {
 }
 
 
-def overview_figures(run: Run, out_dir: Path, *,
-                     theme: str = DEFAULT_THEME) -> tuple[list[CardFigure], dict[str, str]]:
+def overview_figures(run: Run, out_dir: Path) -> tuple[list[CardFigure], dict[str, str]]:
     """Draw the overview figures of one run into ``out_dir`` and write their numbers.
 
     Returns the figures written, in page order, and the reason for any that a renderer
@@ -63,7 +62,7 @@ def overview_figures(run: Run, out_dir: Path, *,
     :class:`RendererUnavailable` propagates: a half-written figure directory would be
     committed as if it were complete.
     """
-    ctx = ReportContext.from_analysis(run, meta=run.meta, theme=theme)
+    ctx = ReportContext.from_analysis(run, meta=run.meta, theme=DEFAULT_THEME)
     out_dir.mkdir(parents=True, exist_ok=True)
     written: list[CardFigure] = []
     reasons: dict[str, str] = {}

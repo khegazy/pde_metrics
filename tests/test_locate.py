@@ -12,12 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from fmeval.data.locate import (
-    DATA_TOKEN,
-    default_data_url,
-    is_url,
-    resolve_dataset_path,
-)
+from fmeval.data.locate import is_url, resolve_dataset_path
 
 URL = "https://portal.nersc.gov/project/m4790/Data"
 RELATIVE = "kinet/doubly_periodic/sys_Re-5e4/D2Q9_shape-256-256_T-10000_H-dc804f.h5"
@@ -34,7 +29,7 @@ def test_a_present_local_copy_wins(root):
     local.parent.mkdir(parents=True)
     local.write_bytes(b"")
 
-    found = resolve_dataset_path(f"{DATA_TOKEN}/{RELATIVE}", root, data_url=URL)
+    found = resolve_dataset_path(root / RELATIVE, root, data_url=URL)
 
     assert found.source == "local"
     assert found.target == local
@@ -42,22 +37,16 @@ def test_a_present_local_copy_wins(root):
 
 
 def test_a_missing_local_copy_falls_back_to_the_published_url(root):
-    found = resolve_dataset_path(f"{DATA_TOKEN}/{RELATIVE}", root, data_url=URL)
+    found = resolve_dataset_path(root / RELATIVE, root, data_url=URL)
 
     assert found.source == "url"
     assert found.target == f"{URL}/{RELATIVE}"
     assert is_url(found.target)
 
 
-def test_an_already_resolved_path_works_too(root):
-    """`evaluate.py` hands over a path Hydra has already expanded; `exemplars.py` does not."""
-    found = resolve_dataset_path(root / RELATIVE, root, data_url=URL)
-    assert found.target == f"{URL}/{RELATIVE}"
-
-
-def test_the_url_is_built_from_the_relative_path_not_the_token(tmp_path):
-    """`paths.data=/somewhere/else` is a documented override, so the token is not always
-    what stands in front of the file."""
+def test_the_url_is_built_from_the_path_relative_to_the_data_root(tmp_path):
+    """`paths.data=/somewhere/else` is a documented override, so the mirror is derived from
+    where the file sits under the data root, wherever that root is."""
     root = tmp_path / "elsewhere"
     found = resolve_dataset_path(root / RELATIVE, root, data_url=URL)
     assert found.target == f"{URL}/{RELATIVE}"
@@ -76,7 +65,7 @@ def test_a_symlinked_root_still_derives_the_mirror(tmp_path):
 
 def test_each_segment_is_quoted(root):
     """A filename with a space or a `#` truncates a raw URL."""
-    found = resolve_dataset_path(f"{DATA_TOKEN}/a b/c#d.h5", root, data_url=URL)
+    found = resolve_dataset_path(root / "a b" / "c#d.h5", root, data_url=URL)
     assert found.target == f"{URL}/a%20b/c%23d.h5"
 
 
@@ -88,23 +77,23 @@ def test_a_path_outside_the_data_root_refuses_to_guess_a_url(tmp_path):
 
 def test_a_null_data_url_restores_the_old_failure(root):
     with pytest.raises(FileNotFoundError, match=re.escape("`paths.data_url` is null")):
-        resolve_dataset_path(f"{DATA_TOKEN}/{RELATIVE}", root, data_url=None)
+        resolve_dataset_path(root / RELATIVE, root, data_url=None)
 
 
 def test_allow_url_false_never_reaches_the_network(root):
     with pytest.raises(FileNotFoundError, match="local copy only"):
-        resolve_dataset_path(f"{DATA_TOKEN}/{RELATIVE}", root, data_url=URL, allow_url=False)
+        resolve_dataset_path(root / RELATIVE, root, data_url=URL, allow_url=False)
 
 
 def test_a_missing_root_still_explains_the_symlink(root):
     """The first thing a new user hits, and the reason this message exists at all."""
     with pytest.raises(FileNotFoundError, match="ln -s /global/cfs/cdirs/m4790/Data datasets"):
-        resolve_dataset_path(f"{DATA_TOKEN}/{RELATIVE}", root, data_url=None)
+        resolve_dataset_path(root / RELATIVE, root, data_url=None)
 
 
 def test_the_message_names_the_file_and_the_local_path(root):
     with pytest.raises(FileNotFoundError) as excinfo:
-        resolve_dataset_path(f"{DATA_TOKEN}/{RELATIVE}", root, data_url=None)
+        resolve_dataset_path(root / RELATIVE, root, data_url=None)
     message = str(excinfo.value)
     assert "D2Q9_shape-256-256_T-10000_H-dc804f.h5" in message
     assert str(root / RELATIVE) in message
@@ -114,7 +103,3 @@ def test_is_url_rejects_a_path():
     assert not is_url(Path("/global/cfs/cdirs/m4790/Data/x.h5"))
     assert is_url("http://example.invalid/x.h5")
 
-
-def test_the_committed_default_url_is_readable_without_hydra():
-    """`paths.data` interpolates ${hydra:runtime.cwd} and would raise; this key must not."""
-    assert default_data_url() == URL

@@ -9,11 +9,8 @@
 # calibration at all.
 #
 # Only usable with a dataset whose reader provides an ensemble; see
-# configs/dataset/synthetic_ensemble.yaml.
-seed: ${seed}
-include_reference: true   # level 0; the ensemble is calibrated here, so spread_skill ~ 1
-only: []
-skip: []
+# configs/dataset/synthetic_ensemble.yaml. At the reference level the ensemble is
+# calibrated, so spread_skill is about 1 there.
 
 ladder:
   # --- ensemble dispersion ------------------------------------------------------

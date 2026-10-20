@@ -21,7 +21,9 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from degradations import registry as deg_registry
+from fmeval import CONFIGS, REPO
 from fmeval.calibration import calibrate
+from fmeval.config import compose_config
 from fmeval.context import FieldContext, derive_rng, fluctuation_rms
 from fmeval.data import kinet_raw, locate, well  # noqa: F401  (importing registers the formats)
 from fmeval.data.base import READERS
@@ -29,10 +31,10 @@ from fmeval.ladder import SeverityLevel, resolve_severity
 
 from . import loader
 from .figures import Column, exemplar_panel
-from .loader import load_card, repo_root, write_strict_json
+from .loader import load_card, write_strict_json
 from .prose import write_block
 
-CARDS_CONFIG = repo_root() / "configs" / "cards" / "default.yaml"
+CARDS_CONFIG = CONFIGS / "cards" / "default.yaml"
 
 
 @dataclass(frozen=True)
@@ -72,13 +74,11 @@ def load_canonical_frame(cfg: Any | None = None, *, allow_remote: bool = False) 
             the data lives rather than in CI.
     """
     cfg = cfg or load_cards_config()
-    # Read without resolving: the dataset configs interpolate ${paths.data}, which only
-    # Hydra supplies. Documentation generation is not a Hydra run, so the one key that
-    # matters is substituted directly below.
-    dataset_cfg = OmegaConf.load(
-        repo_root() / "configs" / "dataset" / f"{cfg.exemplar_frame.dataset}.yaml"
-    )
-    raw_path = OmegaConf.to_container(dataset_cfg, resolve=False)["path"]
+    # The dataset as `evaluate.py` would compose it, so a dataset config that inherits a
+    # fragment is read the same way here. Composing creates no run directory.
+    data_root = REPO / "datasets"
+    composed = compose_config(f"dataset={cfg.exemplar_frame.dataset}", f"paths.data={data_root}")
+    dataset = composed.dataset
 
     # The same resolver `evaluate.py` uses: two rules for where a dataset lives would
     # diverge the moment either one grows a case.
@@ -89,8 +89,7 @@ def load_canonical_frame(cfg: Any | None = None, *, allow_remote: bool = False) 
     # an improvement. Pass allow_remote=True to opt in deliberately.
     try:
         location = locate.resolve_dataset_path(
-            raw_path, repo_root() / "datasets", data_url=locate.default_data_url(),
-            allow_url=allow_remote,
+            dataset.path, data_root, data_url=composed.paths.data_url, allow_url=allow_remote,
         )
     except FileNotFoundError as exc:
         raise FileNotFoundError(
@@ -98,8 +97,8 @@ def load_canonical_frame(cfg: Any | None = None, *, allow_remote: bool = False) 
             "Exemplar panels are generated where the data lives (NERSC) and committed, "
             "rather than in CI."
         ) from None
-    reader_kwargs = OmegaConf.to_container(dataset_cfg.get("reader", {}), resolve=True)
-    trajectory = READERS[str(dataset_cfg.format)](location.target, **reader_kwargs)
+    reader_kwargs = OmegaConf.to_container(dataset.reader, resolve=True)
+    trajectory = READERS[dataset.format](location.target, **reader_kwargs)
 
     wanted = [f for f in cfg.exemplar_frame.fields if f in trajectory.fields]
     frame = trajectory.frame(int(cfg.exemplar_frame.index), wanted)
@@ -209,14 +208,14 @@ def generate(name: str, *, seed: int | None = None) -> Path | None:
     cfg = load_cards_config()
     frame = load_canonical_frame(cfg)
     if seed is None:
-        seed = int(OmegaConf.load(repo_root() / "configs" / "config.yaml").seed)
+        seed = int(compose_config().seed)
     columns, applied = build_columns(name, card, frame, seed=seed)
 
     out = bundle.generated
     panel = exemplar_panel(
         columns, list(card.exemplars.diagnostics), path=out / "exemplars.png",
         title=f"{name} on {card.exemplars.field_name}, frame {frame.index}",
-        grid=frame.grid, dpi=int(cfg.figures.dpi), theme=str(cfg.figures.theme),
+        grid=frame.grid, dpi=int(cfg.figures.dpi),
     )
 
     fingerprint = {

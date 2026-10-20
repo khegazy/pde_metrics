@@ -297,7 +297,9 @@ not a gap to fill in.
 
 Hydra configuration. Override a setting from the command line for a one-off (`python
 evaluate.py metrics=[mse] dataset.time.reduction=10`); edit the files when you are
-changing what the default run means for everyone.
+changing what the default run means for everyone. Every default lives once, in the schema in
+`fmeval/config.py` or in the function a block configures, so a file lists only what it
+changes; a file whose name starts with `_` holds values several options share.
 
 Two settings change how much work a run does, and both are recorded with the results.
 `dataset.time.reduction` evaluates every Nth snapshot in time, and

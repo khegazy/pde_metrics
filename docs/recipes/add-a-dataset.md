@@ -10,11 +10,16 @@ scratch data and the wrong one for a physical regime the pages ought to cover.
 
 ## 1. Make it readable
 
-Add `configs/dataset/<name>.yaml`, following an existing one: `format`, `path` (under
-`${paths.data}`), `fields` from the canonical vocabulary, `time` selection,
-`recompute_derived` (true unless the reader generates its fields), and the `complexity` block
-naming its family and parameters. `evaluate.py` reads every key it needs without a fallback,
-so a key left out fails at the start of the run rather than defaulting silently.
+Add `configs/dataset/<name>.yaml`. Another trajectory of a simulation that already has a
+shared fragment -- `_re5e4_simulation.yaml`, which the three Re = 5e4 configs inherit -- lists
+that fragment under `defaults:` and states its `name`, `format` and `trajectory`. A new
+simulation gets its own `_`-prefixed fragment holding what its configs share: `path` (under
+`${paths.data}`), `fields` from the canonical vocabulary, the `time` selection, the
+`complexity` block naming its family and parameters, and `notes`. State a key only to change
+it: the defaults of `time`, `recompute_derived` and every `reader` option belong to the schema
+in `fmeval/config.py` and to the reader's constructor, and `tests/test_configs.py` names any
+value a file restates. `evaluate.py` builds the config into that schema before it reads any
+data, so a run names the key an option forgot instead of defaulting silently.
 
 If the file layout is new, add a reader in `fmeval/data/` implementing the `Trajectory`
 contract in `fmeval/data/base.py`, and register it with `@register_reader`. Readers are a

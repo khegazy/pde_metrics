@@ -51,7 +51,7 @@ exemplar_frame:
 # file rather than a diff nobody can review.
 figures:
   dpi: 100          # exemplar panels (PNG): ~280 KB per panel; the cap is roughly 300 KB
-  theme: notebook   # matches fmeval/report/style.py, so the site and the LaTeX report agree
+  # The theme is fmeval/report/style.py's DEFAULT_THEME, so the site and the report agree.
   # The metric-card figures (fmeval/cards/metric_figures.py) are SVG, sharp at any zoom and
   # byte-stable with a fixed hashsalt and no creation date; measured on the pinned run, the
   # response-curve figure is 110-240 KB and the sensitivity profile 60-120 KB per metric.
