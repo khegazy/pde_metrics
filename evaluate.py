@@ -131,10 +131,11 @@ def main(cfg: DictConfig) -> None:
     try:
         fields = select_fields(cfg, trajectory, specs)
         selection = TimeSelection(**OmegaConf.to_container(cfg.dataset.time, resolve=True))
-        n_frames = len(selection.resolve(len(trajectory)))
+        trajectory_frames = len(trajectory)
+        n_frames = len(selection.resolve(trajectory_frames))
         log.info(
             "dataset %s: %d of %d frames (reduction %d), fields %s",
-            cfg.dataset.name, n_frames, len(trajectory), selection.reduction, fields,
+            cfg.dataset.name, n_frames, trajectory_frames, selection.reduction, fields,
         )
 
         if cfg.dataset.recompute_derived:
@@ -194,6 +195,7 @@ def main(cfg: DictConfig) -> None:
             dataset_notes=str(cfg.dataset.get("notes", "")),
             data_source=data_source,
             n_frames=result.n_frames,
+            trajectory_frames=trajectory_frames,
             n_rows=len(rows),
             fields=fields,
             analysis_grid=result.analysis_grid,

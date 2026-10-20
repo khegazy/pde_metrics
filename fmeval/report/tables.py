@@ -248,17 +248,17 @@ def damage_by_level_table(ctx, df, opts) -> TableResult:
     )
 
 
-#: The length of the full kinet trajectory the cost projection assumes, in frames.
-FULL_TRAJECTORY_FRAMES = 10001
-
-
 @table(
     section=10, order=10, scope="global",
     title="Cost",
     requires_columns=("wall_time_s",),
 )
 def cost_table(ctx, df, opts) -> TableResult:
-    """Wall clock per evaluation and its projection to a full trajectory."""
+    """Wall clock per evaluation and its projection to the dataset's full trajectory.
+
+    The trajectory length is the one the run recorded from its reader
+    (``trajectory_frames`` in ``run_meta.json``); a run folder without it gets no projection.
+    """
     stats = (
         df.groupby(["metric", "field"], observed=True)["wall_time_s"]
         .agg(median="median", p95=lambda s: s.quantile(0.95))
@@ -267,14 +267,17 @@ def cost_table(ctx, df, opts) -> TableResult:
     n_frames = int(ctx.meta.get("n_frames", 0)) or int(df["frame_index"].nunique())
     n_variants = int(df["variant_label"].nunique())
     stats["per_frame_s"] = stats["median"] * n_variants
-    stats["full_trajectory_s"] = stats["per_frame_s"] * FULL_TRAJECTORY_FRAMES
+    total = ctx.meta.get("trajectory_frames")
+    projection = ""
+    if total:
+        stats["full_trajectory_s"] = stats["per_frame_s"] * total
+        projection = (f" The projection covers the dataset's {total} frames at the present "
+                      f"ladder width ({n_variants} variants per frame), which is the number "
+                      "that decides whether a metric is usable on a full rollout.")
     stats["relative"] = an.relative_cost(stats["median"])
     return TableResult(
         frame=stats,
-        caption="Metric evaluation cost, excluding input and degradation. The projection "
-                f"assumes a {FULL_TRAJECTORY_FRAMES}-frame trajectory at the present ladder "
-                f"width ({n_variants} variants per frame), which is the number that decides "
-                "whether a metric is usable on a full rollout.",
+        caption="Metric evaluation cost, excluding input and degradation." + projection,
         headers={"median": "median [s]", "p95": "p95 [s]",
                  "per_frame_s": "per frame [s]",
                  "full_trajectory_s": "full trajectory [s]"},

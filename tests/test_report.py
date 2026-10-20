@@ -699,3 +699,20 @@ def test_a_renderer_gets_the_spec_defaults_and_an_unknown_option_is_refused():
             (), (), 1, 0, 1, 1, False, {})
     finally:
         PLOTS.pop("bare_renderer_probe", None)
+
+
+@pytest.mark.parametrize("recorded", [40, None], ids=["recorded", "not-recorded"])
+def test_the_cost_projection_uses_the_trajectory_length_the_run_recorded(run_folder, recorded):
+    """The full-trajectory projection scales by the length the reader reported for this
+    dataset, so a short synthetic run is not projected onto another dataset's frame count; a
+    run folder that did not record the length gets no projection rather than a guessed one."""
+    ctx = build_context(run_folder, bootstrap=0)
+    ctx.meta["trajectory_frames"] = recorded
+    spec = TABLES["cost_table"]
+    result = spec.fn(ctx, ctx.df, dict(spec.defaults))
+    if recorded is None:
+        assert "full_trajectory_s" not in result.frame.columns
+        assert "projection" not in result.caption
+    else:
+        assert np.allclose(result.frame["full_trajectory_s"], result.frame["per_frame_s"] * 40)
+        assert "40 frames" in result.caption

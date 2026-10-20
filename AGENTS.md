@@ -842,26 +842,20 @@ listed so nobody has to rediscover them.
 | **Averaging a derived field after a remap** | Block-averaged vorticity is not the curl of the velocity beside it: 5.6% / 18.3% / 25.9% at factors 2 / 4 / 8 | `fmeval/derived.py` |
 | **Mixing stored and recomputed derived fields** | The solver's lattice stencil and a spectral derivative differ by 8.1% rms, so grid-independence would measure the discretisation, not the grid | `fmeval/derived.py::recompute_frame` |
 | **Forgetting that spacing scales with the coarsening factor** | A spectral derivative at a coarse grid with fine spacing is inflated by exactly the factor | `GridSpec.coarsened` |
-| **Deleting k=0 in a high-pass filter** | On density that removes a component four orders of magnitude larger than the cutoff controls; every severity level returned an identical damage of 2.7e7 | `degradations/spectral.py` |
-| **Drawing impostor phases directly** | Violates Hermitian symmetry at the self-conjugate modes, so `irfftn` discards the imaginary part and corrupts the spectrum. Gives flatness 47.9 instead of 3 | `degradations/stochastic.py` |
+| **Deleting k=0 in a high-pass filter** | On density that removes a component four orders of magnitude larger than the cutoff controls; every severity level returned an identical damage of 2.7e7 | `keep_mean` in `degradations/_shared/filters.py` |
+| **Drawing impostor phases directly** | Violates Hermitian symmetry at the self-conjugate modes, so `irfftn` discards the imaginary part and corrupts the spectrum. Gives flatness 47.9 instead of 3 | `degradations/gaussian_impostor/degradation.py` |
 | **Scavenging the unrelated-field anchor from a ladder severity_level** | A 16-cell translation reaches only ~0.6 of the true value, inflating every damage score by ~1.6x | `analysis.py::normalisation` |
-| **Using a distant frame as a statistical twin** | The flow decays: 4000 steps away has 0.70 of the variance and a different flatness, and scores *closer* than a true twin | `degradations/geometric.py::random_large_translation` |
-| **Splitting a module without its private helpers** | Helpers defined above the first decorator are easy to drop; three operators once raised `NameError` and the run completed with 630 rows missing. A code defect in an operator now stops the run, but the trap when extracting code remains | `fmeval/pipeline.py::_runnable_levels`, and the row comparison in `docs/recipes/verify-a-refactor.md` |
+| **Using a distant frame as a statistical twin** | The flow decays: 4000 steps away has 0.70 of the variance and a different flatness, and scores *closer* than a true twin | `degradations/random_large_translation/degradation.py` |
 | **Writing maths or includes that render in only one reader** | `\begin{equation}` and include directives typeset on the site and appear as raw text on GitHub, with no error anywhere | the math checker in `fmeval/cards/prose.py`; generated blocks live in `card.md` between markers |
 | **Typing measured numbers into prose** | A sentence citing values from an earlier run looks exactly as authoritative as the generated table beside it; impostor damages 0.80/0.51 sat in a card while the pinned run measured 0.90/0.66/1.23 | `issues/032`, and step 3 of `docs/recipes/refresh-the-evidence.md` |
 | **Placing a `###` subsection mid-section** | Everything after it reads as belonging to it; a Boundary-handling subsection once swallowed the rest of the Definition | put required subsections at the end of their section |
 | **Expecting byte-identical PNGs across matplotlib versions** | They differ; only the JSON fingerprints are byte-stable, and a determinism test on pixels will flake in CI | `docs/decisions.md`, "Figures are committed" |
 | **Including the reference severity level in cross-metric correlation** | Every pairwise metric is 0 there, adding a shared point that pulls every correlation toward +1 | `analysis.py::cross_metric_correlation` |
 | **Reading a 1-D `time` dataset whole** | It is chunked `(1,)` and interleaved 17.8 MiB apart across the file: 9938 requests, 297 s and 2.5 GiB over HTTP to fetch 80 KB. The field-read spy cannot see it, because it filters `len(key) >= 3` | `fmeval/data/_timeaxis.py` |
-| **Reading the body of a non-206 range response** | A server that declines a `Range` answers `200` with the **entire** entity. Measured: any multi-range header on this portal returns all 166 GiB | `fmeval/data/remote.py` |
-| **Subclassing `io.RawIOBase` for an h5py file object** | Its inherited `readinto` raises a bare `NotImplementedError` from inside `h5fd.pyx`, naming nothing | `fmeval/data/remote.py` |
 | **A raw `imshow` on a spatial field** | Data is `(X, Y)`, so it transposes every picture — and looks fine on square data | `fmeval/report/style.py::show_field` |
-| **Assuming `pressure == density / 3` bitwise** | The solver writes `density * float64(1/3)`; the two differ by one ulp | `fmeval/data/kinet_raw.py` |
-| **Reading `time_scale` as a clock** | `time_scale[0]` is NaN and the values are ~0.5 constant. It is a solver stability quantity; use `time` | `fmeval/data/kinet_raw.py` |
 | **Trusting the dev dataset physically** | It is the first 100 solver steps, before the flow develops. A 16-cell translation costs 1e-4 of what an unrelated field costs, against 0.51 at t=5000 | `configs/dataset/kinet_re5e4_dev.yaml` |
-| **`git push` hanging** | X11 forwarding is attempted and stalls. Use `GIT_SSH_COMMAND="ssh -x" git push` | — |
 | **`import kinet`** | Pulls in `mpi4py`, which cannot load libmpi on a login node. The spectral diagnostics are vendored instead | `fmeval/external/kinet_spectral.py` |
-| **Two definitions of `\|k\|`** | The filters compared a continuous magnitude, the calibration binned into shells of `rint(\|k\|)`, so the diagonal modes fell on opposite sides of one cutoff. On density a low-pass asked to remove 30% removed 99.997% | `fmeval/wavenumbers.py` |
+| **Two definitions of `\|k\|`** | The filters and the calibration disagreed about the diagonal modes, so a low-pass asked to remove 30% of density's energy removed 99.997%; see §4, "If you write a spectral operator" | `fmeval/wavenumbers.py` |
 | **Ranking values that differ only in the last bits** | `np.roll` cannot change a translation-invariant quantity but does change the summation order in `np.mean`. The reported `rho` was 0.707 over a relative 1.6e-16 | `analysis.py::_is_round_off` |
 | **A median as the scale in a degeneracy guard** | When most severity levels are round-off the median collapses with them, so the guard compares noise against noise and passes — defeated in exactly the case it exists for. Use the largest value | `analysis.py::normalisation` |
 | **Two copies of one value that have already diverged** | The report thresholds were defined in four places and only one was read; three vocabularies named the same column differently; a test's radial spectrum rounded shells down where the metric rounds to nearest. Every test passed throughout | §1, "One source of truth" |
@@ -896,6 +890,9 @@ belongs in `configs/config.yaml` as `paths.data`.
 **Write commit messages that explain the reasoning.** State what changed, why, and what evidence
 supports it. If a measurement drove the change, quote it. If the change corrects something you
 previously asserted, say so — several commits here do, and that record is useful.
+
+Push with X11 forwarding switched off; a plain `git push` from a NERSC login node stalls trying
+to forward it:
 
 ```bash
 GIT_SSH_COMMAND="ssh -x -o BatchMode=yes" git push origin <branch>
