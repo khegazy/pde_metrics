@@ -330,6 +330,10 @@ def _write_nav(metrics: list, degradations: list) -> None:
         # value, so reaching this is a sign the two have come apart.
         for name, category, page in sorted(m for m in metrics if m[1] not in CATEGORIES):
             print(f"    - [{name}]({page})", file=f)
+        # Metrics nobody has built yet. The pages are hand-written under docs/ideas/, and
+        # literate-nav builds this group's sub-tree from that directory, so adding or removing
+        # an idea needs no change here. Last, so planned work never sits above real metrics.
+        print("    - [Ideas: not yet built](ideas/)", file=f)
         print("- Degradations", file=f)
         print("    - [Gallery: what each one does](degradations/gallery.md)", file=f)
         for name, _, page in sorted(degradations):

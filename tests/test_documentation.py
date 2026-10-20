@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import json
 import re
 import subprocess
 import sys
@@ -20,6 +21,7 @@ import yaml
 from degradations import registry as deg_registry
 from fmeval import REPO
 from fmeval import analysis as an
+from fmeval.cards.prose import check_math
 from fmeval.io import RunFolder, copy_documentation
 from fmeval.pipeline import RESULT_DTYPES
 from fmeval.report import driver  # noqa: F401  (imports the renderer modules)
@@ -392,6 +394,64 @@ def test_each_instruction_file_still_carries_its_pinned_phrases(name):
             "instructions; if this changed deliberately, update this test in the same "
             "commit and say why in its message."
         )
+
+
+# --------------------------------------------------------------------------------------
+# The ideas section: hand-written plans for metrics that are not built yet
+# --------------------------------------------------------------------------------------
+
+IDEAS = REPO / "docs" / "ideas"
+#: The tracker's two-letter identifiers (OT-1, NM-3, ...). Retired: an idea is named by its
+#: page, and a reader who was never told the scheme cannot decode a prefix.
+_RETIRED_ID = re.compile(r"\b(?:OT|SH|NM|CG|PH|PD|TD|BD|PS|IN)-\d")
+
+
+@pytest.mark.parametrize(
+    "page", sorted(p.relative_to(IDEAS).as_posix() for p in IDEAS.rglob("*.md"))
+)
+def test_an_idea_page_follows_the_site_conventions(page):
+    """Idea pages obey the rules the cards obey, since both render on GitHub and the site.
+
+    Equations use only the dollar forms both readers render; the retired tracker IDs and the
+    word "rung" (say "severity level") stay out.
+    """
+    text = (IDEAS / page).read_text()
+    assert check_math(text) == [], f"docs/ideas/{page}: {check_math(text)}"
+    assert not _RETIRED_ID.search(text), (
+        f"docs/ideas/{page} uses a retired tracker ID "
+        f"{_RETIRED_ID.search(text).group(0)!r}; name the idea instead"
+    )
+    assert not re.search(r"\brungs?\b", text, re.IGNORECASE), (
+        f"docs/ideas/{page} says 'rung'; say 'severity level'"
+    )
+
+
+def test_an_idea_is_removed_once_it_is_built():
+    """No idea page is named after a metric that exists.
+
+    Once a metric is built its card is the only record of it, and the idea's row and page
+    are deleted in the same change (docs/recipes/add-a-metric.md). This catches an idea built
+    under its own name; one built under a different name is caught only by that recipe step.
+    """
+    catalog = json.loads((REPO / "docs" / "catalog.json").read_text())
+    built = {e["name"] for e in catalog["entries"] if e["kind"] == "metric"}
+    stale = sorted({p.stem for p in IDEAS.rglob("*.md")} & built)
+    assert not stale, (
+        f"{stale} are built metrics but still have idea pages; delete each page, its row in "
+        "docs/ideas/README.md and its link on the theme page"
+    )
+
+
+def test_every_idea_has_a_row_and_every_row_a_page():
+    """The overview table and the idea pages correspond one to one."""
+    overview = (IDEAS / "README.md").read_text()
+    rows = set(re.findall(r"^\| \[[^]]+\]\(([a-z_]+/[a-z0-9_]+\.md)\)", overview, re.MULTILINE))
+    pages = {p.relative_to(IDEAS).as_posix() for p in IDEAS.glob("*/*.md")
+             if p.name != "README.md"}
+    assert rows == pages, (
+        f"rows without a page: {sorted(rows - pages)}; "
+        f"pages without a row in docs/ideas/README.md: {sorted(pages - rows)}"
+    )
 
 
 # --------------------------------------------------------------------------------------

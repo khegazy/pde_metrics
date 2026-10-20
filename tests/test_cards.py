@@ -882,6 +882,7 @@ def test_the_site_builds_without_the_dataset(tmp_path):
     assert (tmp_path / "llms.txt").is_file()
     assert (tmp_path / "metrics" / "mse" / "index.html").is_file()
     assert (tmp_path / "degradations" / "gallery" / "index.html").is_file()
+    assert (tmp_path / "ideas" / "index.html").is_file(), "the ideas overview is missing"
 
 
 # --------------------------------------------------------------------------------------

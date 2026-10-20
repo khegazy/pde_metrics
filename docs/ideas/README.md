@@ -1,0 +1,193 @@
+# Ideas: metrics not yet built
+
+This section is the team's plan for metrics that do not exist in the repository yet. Each
+idea has its own page saying what the metric would measure, where the idea comes from in the
+literature, what is known to go wrong with it, and why it is worth building. Nothing here has
+been implemented or measured. The [catalogue](../catalogue.md) is the record of every metric
+that has been built, and a metric's own page is the only place its behaviour is described.
+
+## How this section is kept
+
+- **This page lists only work that is not built.** Every row of the table below has a page,
+  and every page has a row.
+- **Built means removed.** Whoever implements an idea deletes its row here, its page, and its
+  link on the theme page, in the same change that adds the metric. If the metric covers only
+  part of an idea, the row and page are narrowed to what remains. A theme left with no ideas
+  is deleted.
+- **Owner** names whoever is working on an idea. An empty cell means nobody has started it.
+- **No measured numbers appear here.** A claim on an idea page is either a citation to
+  published work or labelled as the team's judgement.
+
+## Columns
+
+- **Gap** says what currently blocks the idea. *Math* means a mathematical question must be
+  settled first, such as how to compare signed fields with a transport distance.
+  *Implementation* means the mathematics is settled and only code is missing. *Both* means
+  both, and *none* means neither.
+- **Cost** is a rough estimate of the effort and compute needed to build and run it.
+- **Priority** is the team's decision about what to build next. It is a planning choice
+  rather than a judgement of the metric, and it is dropped once the idea is built.
+  - **High** means there is strong precedent in another field facing the same problem, mature
+    software exists, and the metric targets a failure that a pointwise norm provably misses.
+    Build these first.
+  - **Medium** means the idea is plausible, but the precedent is indirect, the implementation
+    is nontrivial, or it may duplicate what another metric already gives. Build these after
+    the high-priority ones.
+  - **Low** means the theory is immature, the tooling is research grade, or the quantity is
+    too indirect to serve as a routine diagnostic soon. Park these, and revisit one if a
+    built metric fails in a way it would explain.
+
+## All ideas
+
+| Idea | Theme | Gap | Cost | Priority | Owner |
+|---|---|---|---|---|---|
+| [Wasserstein distance for horizontal displacement](optimal_transport/wasserstein.md) | [Optimal transport](optimal_transport/README.md) | math | medium | high | |
+| [Transport between signed fields](optimal_transport/signed_field_transport.md) | [Optimal transport](optimal_transport/README.md) | math | medium | high | |
+| [Sliced Wasserstein distance](optimal_transport/sliced_wasserstein.md) | [Optimal transport](optimal_transport/README.md) | implementation | low | high | |
+| [Entropic relaxation and Sinkhorn divergences](optimal_transport/sinkhorn.md) | [Optimal transport](optimal_transport/README.md) | implementation | low | medium | |
+| [Wasserstein distance between gradient distributions](optimal_transport/gradient_pdf_w1.md) | [Optimal transport](optimal_transport/README.md) | implementation | low | high | |
+| [Shock detector](shock_geometry/shock_detector.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | high | |
+| [Distance between extracted shock sets](shock_geometry/shock_set_distance.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | high | |
+| [Overlap of shock masks](shock_geometry/shock_mask_overlap.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | medium | |
+| [Shock front position, speed and jump conditions](shock_geometry/shock_front_error.md) | [Shock geometry](shock_geometry/README.md) | both | medium | medium | |
+| [Negative Sobolev norms of general order](norms/negative_sobolev_hs.md) | [Norms](norms/README.md) | math | low | high | |
+| [Splitting a field into smooth and sharp parts](norms/mollification_split.md) | [Norms](norms/README.md) | math | low | high | |
+| [Curvature statistics of level sets](curvature/isosurface_curvature.md) | [Curvature](curvature/README.md) | implementation | low | medium | |
+| [Discrete differential geometry on meshes](curvature/discrete_differential_geometry.md) | [Curvature](curvature/README.md) | math | medium | low | |
+| [Curvature without smooth structure](curvature/metric_geometry_curvature.md) | [Curvature](curvature/README.md) | math | medium | low | |
+| [Riemann curvature of the flow's configuration space](curvature/riemann_curvature.md) | [Curvature](curvature/README.md) | math | high | low | |
+| [Signed entropy production](physics_invariants/entropy_production.md) | [Physics invariants](physics_invariants/README.md) | both | low | high | |
+| [Residual of the equations in weak form](physics_invariants/weak_residual.md) | [Physics invariants](physics_invariants/README.md) | implementation | low | high | |
+| [Consistency with one step of a trusted solver](physics_invariants/solver_consistency.md) | [Physics invariants](physics_invariants/README.md) | implementation | medium | high | |
+| [Helmholtz split into rotational and compressive parts](physics_invariants/helmholtz_split.md) | [Physics invariants](physics_invariants/README.md) | math | medium | high | |
+| [Hough transform for eddy size](pattern_detection/hough_transform.md) | [Pattern detection](pattern_detection/README.md) | implementation | medium | low | |
+| [Winding angle and Poincaré index](pattern_detection/winding_angle.md) | [Pattern detection](pattern_detection/README.md) | implementation | medium | high | |
+| [Eddy census](pattern_detection/eddy_census.md) | [Pattern detection](pattern_detection/README.md) | implementation | medium | medium | |
+| [Vortex criteria: Q, λ₂ and Okubo–Weiss](pattern_detection/vortex_criteria.md) | [Pattern detection](pattern_detection/README.md) | implementation | low | medium | |
+| [Persistence diagrams](topology/persistence_diagrams.md) | [Topology](topology/README.md) | implementation | low | high | |
+| [Multiparameter persistence](topology/multiparameter_persistence.md) | [Topology](topology/README.md) | math | high | low | |
+| [Well groups](topology/well_groups.md) | [Topology](topology/README.md) | math | high | low | |
+| [Reeb graphs and Morse–Smale complexes](topology/reeb_graphs.md) | [Topology](topology/README.md) | implementation | medium | medium | |
+| [Jacobi sets](topology/jacobi_sets.md) | [Topology](topology/README.md) | implementation | medium | medium | |
+| [Two-point correlation](basis_decompositions/two_point_correlation.md) | [Basis decompositions](basis_decompositions/README.md) | none | low | medium | |
+| [Wavelets and coherent vortex extraction](basis_decompositions/coherent_vortex_extraction.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | medium | high | |
+| [Wavelet scattering and phase harmonics](basis_decompositions/wavelet_scattering.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | medium | high | |
+| [Energy distance](distributional/energy_distance.md) | [Distributional](distributional/README.md) | implementation | low | medium | |
+| [Tail-index estimators](distributional/tail_index_estimators.md) | [Distributional](distributional/README.md) | implementation | low | high | |
+| [Pair-correlation function of features](distributional/pair_correlation.md) | [Distributional](distributional/README.md) | implementation | medium | medium | |
+| [Comparing refinement maps across meshes](infrastructure/refinement_map_comparison.md) | [Infrastructure](infrastructure/README.md) | implementation | medium | medium | |
+| [Reference and solver predictor for the degradation ladder](infrastructure/degradation_ladder_reference.md) | [Infrastructure](infrastructure/README.md) | implementation | medium | high | |
+
+## What to build next
+
+These are the high-priority ideas ordered by value per unit of effort. The order is the team's
+judgement.
+
+1. **[Persistence diagrams](topology/persistence_diagrams.md) on vorticity and density.**
+   Off-the-shelf software exists, the stability theory is settled, and there is precedent at
+   LBNL.
+2. **[Tail-index estimators](distributional/tail_index_estimators.md) and the
+   [Wasserstein distance between gradient distributions](optimal_transport/gradient_pdf_w1.md).**
+   Neither has a positivity problem to solve, and both measure intermittency directly.
+3. **The [shock detector](shock_geometry/shock_detector.md) with
+   [distances between shock sets](shock_geometry/shock_set_distance.md).** These close the
+   gap of measuring how far apart two shocks are, using distances imported from medical
+   imaging.
+4. **The [weak-form residual](physics_invariants/weak_residual.md) with
+   [solver consistency](physics_invariants/solver_consistency.md).** Both need no reference
+   field, and solver consistency is nearly free once a trusted solver is in the repository.
+
+After these come [wavelet scattering](basis_decompositions/wavelet_scattering.md), the
+[Helmholtz split](physics_invariants/helmholtz_split.md), the
+[winding angle](pattern_detection/winding_angle.md) in two dimensions, and the full
+[Wasserstein distance](optimal_transport/wasserstein.md) together with
+[transport between signed fields](optimal_transport/signed_field_transport.md).
+
+## What other fields have already solved
+
+Weather forecast verification has met this project's central problem, and its literature can
+be imported rather than reinvented.
+
+- **The double-penalty problem is stated in the literature.** Wernli et al. write that "the
+  classical example to illustrate the limitations of gridpoint-based error measures is the
+  'double penalty problem': a prediction of a precipitation structure that is correct in terms
+  of amplitude, size, and timing but (maybe only slightly) incorrect concerning position is
+  very poorly rated" (Wernli et al. 2008). Replace "precipitation structure" with "shock" and
+  that is this project's problem. Searching the term surfaces two decades of work on it.
+- **SAL** (structure, amplitude, location) splits forecast quality into three parts. The
+  location part combines the displacement of the field's centre of mass with the error in how
+  far features sit from that centre (Wernli et al. 2008). It follows the same philosophy as
+  [splitting a field into smooth and sharp parts](norms/mollification_split.md).
+- **MODE** (object-based verification) uses convolution, smoothing and thresholding to define
+  objects, then a matching algorithm to pair them between forecast and observation (Davis et
+  al. 2006a, 2006b, 2009). It is the closest existing analogue to extracting shocklets from
+  both fields and comparing the sets.
+- **CRA** (contiguous rain area verification) splits error into displacement, volume and
+  pattern parts (Ebert and McBride 2000).
+- **Intensity-scale verification** scores skill jointly by intensity threshold and spatial
+  scale, using a wavelet decomposition of the error field (Casati et al. 2004). It is the
+  verification-side ancestor of
+  [coherent vortex extraction](basis_decompositions/coherent_vortex_extraction.md).
+- **Threshold-free topological detection** of atmospheric rivers (Muszynski et al. 2019) is
+  discussed under [persistence diagrams](topology/persistence_diagrams.md).
+- **Diagnostics and training losses are separate artifacts.** A diagnostic may be
+  non-differentiable, expensive and discontinuous. A training loss may not.
+
+## The same mathematics in different clothes
+
+Several ideas are one idea seen from different communities, and recognising this reduces the
+total work. These groupings are the team's reading.
+
+- **The Hough transform, the Radon transform, and the sliced Wasserstein distance** are one
+  transform. Projecting a field onto planes and comparing the projections is the same idea
+  again, and is folded into [sliced Wasserstein](optimal_transport/sliced_wasserstein.md).
+- **Splitting a field into smooth and sharp parts, coherent vortex extraction, the Helmholtz
+  decomposition, and intensity-scale verification** share one principle: separate the smooth
+  from the sharp and compare each part with a metric suited to it.
+- **The Wasserstein distance, the negative Sobolev norm, and Ollivier–Ricci curvature** are
+  all built on transport. The first two are quantitatively equivalent under stated density
+  bounds (Peyre 2018), which makes the negative Sobolev norm the cheap proxy.
+- **The double penalty in weather, cycle skipping in seismic inversion, and the shock-shift
+  problem here** are one pathology under three names. Two of those names carry a mature
+  literature to import.
+- **Persistence diagrams, the eddy census, Ripley's K function, and MODE object matching** all
+  identify features and then compare their distributions. They differ in how a feature is
+  defined and whether features are matched pairwise before comparison.
+
+## Where this came from
+
+This section was converted from the team's LaTeX tracker, "Fluid Metrics Exploration
+Tracker" (August 2026), which is recoverable from the repository's git history as
+`Table_of_Ideas.tex`. The tracker's two-letter identifiers are retired; an idea is named by
+its page. Every citation was checked against its primary source when the
+tracker was written. One claim did not survive that check: no precedent was found for
+detecting eddies with the Hough transform, so that idea is recorded as untested and original.
+
+## References
+
+- Casati, B., Ross, G. & Stephenson, D. B. (2004). A new intensity-scale approach for the
+  verification of spatial precipitation forecasts. *Meteorological Applications* 11(2),
+  141–154. <https://doi.org/10.1017/S1350482704001239>
+- Davis, C., Brown, B. & Bullock, R. (2006a). Object-based verification of precipitation
+  forecasts. Part I: Methodology and application to mesoscale rain areas. *Monthly Weather
+  Review* 134(7), 1772–1784. <https://doi.org/10.1175/MWR3145.1>
+- Davis, C., Brown, B. & Bullock, R. (2006b). Object-based verification of precipitation
+  forecasts. Part II: Application to convective rain systems. *Monthly Weather Review* 134(7),
+  1785–1795. <https://doi.org/10.1175/MWR3146.1>
+- Davis, C. A., Brown, B. G., Bullock, R. & Halley Gotway, J. (2009). The Method for
+  Object-Based Diagnostic Evaluation (MODE) applied to numerical forecasts from the 2005
+  NSSL/SPC Spring Program. *Weather and Forecasting* 24(5), 1252–1267.
+  <https://doi.org/10.1175/2009WAF2222241.1>
+- Ebert, E. E. & McBride, J. L. (2000). Verification of precipitation in weather systems:
+  Determination of systematic errors. *Journal of Hydrology* 239(1–4), 179–202.
+  <https://doi.org/10.1016/S0022-1694(00)00343-7>
+- Muszynski, G., Kashinath, K., Kurlin, V., Wehner, M. & Prabhat (2019). Topological data
+  analysis and machine learning for recognizing atmospheric river patterns in large climate
+  datasets. *Geoscientific Model Development* 12(2), 613–628.
+  <https://doi.org/10.5194/gmd-12-613-2019>
+- Peyre, R. (2018). Comparison between $W_2$ distance and $\dot H^{-1}$ norm, and localization
+  of Wasserstein distance. *ESAIM: Control, Optimisation and Calculus of Variations* 24(4),
+  1489–1501. <https://doi.org/10.1051/cocv/2017050>
+- Wernli, H., Paulat, M., Hagen, M. & Frei, C. (2008). SAL — A novel quality measure for the
+  verification of quantitative precipitation forecasts. *Monthly Weather Review* 136(11),
+  4470–4487. <https://doi.org/10.1175/2008MWR2415.1>
