@@ -21,9 +21,8 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from degradations import registry as deg_registry
-from fmeval import CONFIGS
 from fmeval.calibration import calibrate
-from fmeval.config import compose_config
+from fmeval.config import CardsConfig, compose_config, load_cards_config
 from fmeval.context import FieldContext, derive_rng, fluctuation_rms
 from fmeval.data import kinet_raw, locate, well  # noqa: F401  (importing registers the formats)
 from fmeval.data.base import READERS
@@ -33,8 +32,6 @@ from . import loader
 from .figures import Column, exemplar_panel
 from .loader import load_card, write_strict_json
 from .prose import write_block
-
-CARDS_CONFIG = CONFIGS / "cards" / "default.yaml"
 
 
 @dataclass(frozen=True)
@@ -48,16 +45,8 @@ class CanonicalFrame:
     time: float
 
 
-def load_cards_config() -> Any:
-    """Load the card-generation settings.
-
-    Plain OmegaConf rather than Hydra: generating documentation is not an experiment and
-    should not create a run folder or a ``.hydra`` directory.
-    """
-    return OmegaConf.load(CARDS_CONFIG)
-
-
-def load_canonical_frame(cfg: Any | None = None, *, allow_remote: bool = False) -> CanonicalFrame:
+def load_canonical_frame(cfg: CardsConfig | None = None, *,
+                         allow_remote: bool = False) -> CanonicalFrame:
     """Read the canonical exemplar frame from the dataset it names.
 
     Args:
@@ -102,9 +91,9 @@ def load_canonical_frame(cfg: Any | None = None, *, allow_remote: bool = False) 
     trajectory = READERS[dataset.format](location.target, **reader_kwargs)
 
     wanted = [f for f in cfg.exemplar_frame.fields if f in trajectory.fields]
-    frame = trajectory.frame(int(cfg.exemplar_frame.index), wanted)
-    return CanonicalFrame(index=int(cfg.exemplar_frame.index),
-                          dataset=str(cfg.exemplar_frame.dataset),
+    frame = trajectory.frame(cfg.exemplar_frame.index, wanted)
+    return CanonicalFrame(index=cfg.exemplar_frame.index,
+                          dataset=cfg.exemplar_frame.dataset,
                           fields=dict(frame.fields), grid=frame.grid, time=float(frame.time))
 
 
@@ -216,7 +205,7 @@ def generate(name: str, *, seed: int | None = None) -> Path | None:
     panel = exemplar_panel(
         columns, list(card.exemplars.diagnostics), path=out / "exemplars.png",
         title=f"{name} on {card.exemplars.field_name}, frame {frame.index}",
-        grid=frame.grid, dpi=int(cfg.figures.dpi),
+        grid=frame.grid, dpi=cfg.figures.dpi,
     )
 
     fingerprint = {

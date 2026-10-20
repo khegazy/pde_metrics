@@ -1,9 +1,10 @@
 # Settings shared by every generated card artifact: the evidence a card may cite, and the
 # one snapshot every figure in this repository is drawn from.
 #
-# Read directly with OmegaConf by `python -m fmeval.cards`, not through Hydra's run-dir
+# Read by `fmeval.config.load_cards_config` into `CardsConfig`, not through Hydra's run-dir
 # machinery: generating documentation is not an experiment and should not create a run
-# folder or a .hydra directory.
+# folder or a .hydra directory. A key not in `CardsConfig` is refused, so a new setting
+# needs a field there too.
 
 # Which datasets a card's measurements may come from.
 #

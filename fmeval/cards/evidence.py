@@ -22,12 +22,12 @@ from typing import Any
 import pandas as pd
 
 from fmeval import analysis as an
+from fmeval.config import load_cards_config
 from fmeval.io import read_config, read_results, read_run_meta
 from fmeval.report.registry import PLOTS
 from fmeval.report.vocabulary import FAMILY_INFO, family_label, label
 
 from . import loader
-from .exemplars import load_cards_config
 from .loader import write_strict_json
 from .metric_figures import FIGURE_BLOCKS, METRIC_FIGURES, CardFigure, metric_figures
 from .prose import has_block, write_block

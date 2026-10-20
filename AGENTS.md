@@ -124,7 +124,7 @@ Where the shared code already lives, so the search has somewhere to start:
 | Running one renderer (`draw`), and the report and card view of a run (`ReportContext.from_analysis`) | `fmeval/report/registry.py`, `fmeval/report/context.py` |
 | Generated-block markers and front matter in `card.md` (`write_block`, `has_block`, `FRONTMATTER`) | `fmeval/cards/prose.py` |
 | Bundle paths and strict JSON output (`Bundle`, `write_strict_json`) | `fmeval/cards/loader.py` |
-| The config schema, building a config into it (`build_job`), and composing the config outside `hydra.main` (`compose_config`) | `fmeval/config.py` |
+| The config schema, building a config into it (`build_job`), composing the config outside `hydra.main` (`compose_config`), and the card settings (`load_cards_config`) | `fmeval/config.py` |
 | The repository root and the configs directory (`REPO`, `CONFIGS`) | `fmeval/__init__.py` |
 | Run-folder layout, readers and YAML (`RunFolder`, `read_results`, `read_run_meta`, `read_config`, `read_yaml`, `dump_yaml`) | `fmeval/io.py` |
 | Error-map keys (`map_key`, `parse_map_key`) | `fmeval/pipeline.py` |

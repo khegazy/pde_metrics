@@ -1,4 +1,4 @@
-"""The schema of the Hydra configuration, and the one way to compose it outside ``hydra.main``.
+"""The schemas of the configuration, and the one way to load each part of it.
 
 Every block of ``configs/`` is either the keyword arguments of one callable -- a reader's
 constructor (``dataset.reader``), an operator's options (``degradation.ladder.<entry>.options``)
@@ -6,6 +6,10 @@ constructor (``dataset.reader``), an operator's options (``degradation.ladder.<e
 defaults, so a YAML file states a key only to change it. The schema is what lets a YAML leave a
 key out without Hydra's struct mode demanding ``+`` to override it, and it names a misspelt or
 missing key when the run starts rather than when the value is first read.
+
+The card-generation settings, ``configs/cards/default.yaml``, are not a Hydra group:
+generating documentation is not an experiment and must not create a run folder, so
+:func:`load_cards_config` reads that file directly, into :class:`CardsConfig`.
 
 Registering the schema, and the ``${repo:}`` resolver that ``paths.data`` uses, is a side
 effect of importing this module: ``evaluate.py`` imports it before ``hydra.main`` composes
@@ -113,6 +117,47 @@ ConfigStore.instance().store(name="_schema", node=Config)
 # The repository root, so `paths.data` finds the `datasets` link beside the code from any
 # working directory.
 OmegaConf.register_new_resolver("repo", lambda: str(REPO))
+
+
+@dataclass
+class EvidenceWindow:
+    """The developed-flow window a run cited as evidence follows (``dataset.time.start`` and
+    ``reduction``). Nothing selects frames with it; a test checks the exemplar frame lies in it."""
+
+    start: int = MISSING
+    reduction: int = MISSING
+
+
+@dataclass
+class ExemplarFrame:
+    """The one snapshot every exemplar panel is drawn from."""
+
+    dataset: str = MISSING
+    index: int = MISSING
+    fields: list[str] = MISSING
+
+
+@dataclass
+class Figures:
+    dpi: int = MISSING
+    """Exemplar panels are PNG; fixed so regenerating an unchanged panel changes no byte."""
+
+
+@dataclass
+class CardsConfig:
+    """``configs/cards/default.yaml``, which is the only source of every value here."""
+
+    evidence_datasets: list[str] = MISSING
+    """The datasets a card's measurements may come from."""
+    evidence_window: EvidenceWindow = field(default_factory=EvidenceWindow)
+    exemplar_frame: ExemplarFrame = field(default_factory=ExemplarFrame)
+    figures: Figures = field(default_factory=Figures)
+
+
+def load_cards_config() -> CardsConfig:
+    """The card-generation settings, with an unknown, missing or mistyped key refused, named."""
+    return OmegaConf.to_object(
+        OmegaConf.merge(CardsConfig, OmegaConf.load(CONFIGS / "cards" / "default.yaml")))
 
 
 def build_job(cfg: DictConfig) -> Config:

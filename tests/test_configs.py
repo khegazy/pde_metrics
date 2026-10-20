@@ -22,12 +22,20 @@ from typing import Any
 import pytest
 from hydra.core.hydra_config import HydraConfig
 from hydra.errors import ConfigCompositionException
-from omegaconf import MissingMandatoryValue, OmegaConf
+from omegaconf import MissingMandatoryValue, OmegaConf, ValidationError
 from omegaconf.errors import ConfigKeyError
 
 from degradations import registry as deg_registry
 from fmeval import CONFIGS, REPO
-from fmeval.config import Config, DatasetConfig, ReportConfig, build_job, compose_config
+from fmeval import config as fmeval_config
+from fmeval.config import (
+    Config,
+    DatasetConfig,
+    ReportConfig,
+    build_job,
+    compose_config,
+    load_cards_config,
+)
 from fmeval.data import kinet_raw, synthetic_ensemble, well  # noqa: F401  (register the formats)
 from fmeval.data.base import READERS, TimeSelection
 from fmeval.io import read_config, read_run_meta
@@ -317,18 +325,72 @@ def test_every_fragment_is_inherited_by_an_option(group):
         f"configs/{group}/ has fragments no option inherits: {sorted(fragments - listed)}")
 
 
-def test_evaluate_reads_the_config_without_fallbacks():
-    """`cfg.x.get(key, default)` would be a second default for a key the schema declares."""
-    def rooted_at_cfg(node: ast.AST) -> bool:
+#: The errors a missing config key raises; a handler for one turns the key into an optional one.
+MISSING_KEY_ERRORS = {"KeyError", "AttributeError", "ConfigKeyError", "ConfigAttributeError",
+                      "MissingMandatoryValue"}
+
+
+def _config_fallbacks(source: str) -> list[str]:
+    """Every place `source` could supply a value for a config key the schema already declares.
+
+    `cfg` is the composed DictConfig and `job` the built schema. Caught: `.get(k, default)`,
+    `getattr(..., k, default)`, `hasattr`, `OmegaConf.select(..., default=)`, a key test
+    `k in cfg...`, and a `try` reading the config whose handler catches a missing-key error.
+    Not caught, because they are legitimate elsewhere: `x or default`, and `in` on `job`, whose
+    values include lists such as `job.metrics`.
+    """
+    def rooted(node: ast.AST, names: tuple[str, ...] = ("cfg", "job")) -> bool:
         while isinstance(node, (ast.Attribute, ast.Subscript, ast.Call)):
             node = node.func if isinstance(node, ast.Call) else node.value
-        return isinstance(node, ast.Name) and node.id in ("cfg", "job")
+        return isinstance(node, ast.Name) and node.id in names
 
-    tree = ast.parse((REPO / "evaluate.py").read_text())
-    fallbacks = [n.lineno for n in ast.walk(tree)
-                 if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
-                 and n.func.attr == "get" and rooted_at_cfg(n.func.value)]
-    assert not fallbacks, f"evaluate.py reads the config with a fallback at lines {fallbacks}"
+    found = []
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Call):
+            func, args = node.func, node.args
+            if ((isinstance(func, ast.Attribute) and func.attr == "get" and rooted(func.value))
+                    or (ast.unparse(func) == "getattr" and len(args) == 3 and rooted(args[0]))
+                    or (ast.unparse(func) == "hasattr" and args and rooted(args[0]))
+                    or (ast.unparse(func) == "OmegaConf.select" and args and rooted(args[0])
+                        and (len(args) > 2 or any(k.arg == "default" for k in node.keywords)))):
+                found.append(f"{node.lineno}: {ast.unparse(node)}")
+        elif isinstance(node, ast.Compare) and any(
+                isinstance(op, (ast.In, ast.NotIn)) and rooted(right, ("cfg",))
+                for op, right in zip(node.ops, node.comparators, strict=True)):
+            found.append(f"{node.lineno}: {ast.unparse(node)}")
+        elif isinstance(node, ast.Try) and any(rooted(n) for n in ast.walk(ast.Module(node.body))):
+            for handler in node.handlers:
+                caught = {ast.unparse(t).rsplit(".", 1)[-1] for t in (
+                    handler.type.elts if isinstance(handler.type, ast.Tuple) else [handler.type])
+                    if t is not None}
+                if caught & MISSING_KEY_ERRORS:
+                    found.append(f"{handler.lineno}: except {sorted(caught)}")
+    return found
+
+
+def test_evaluate_reads_the_config_without_fallbacks():
+    """A fallback in code would be a second default for a key the schema declares."""
+    fallbacks = _config_fallbacks((REPO / "evaluate.py").read_text())
+    assert not fallbacks, f"evaluate.py gives config keys a fallback: {fallbacks}"
+
+
+@pytest.mark.parametrize("source", [
+    'notes = cfg.dataset.get("notes", "")',
+    'notes = getattr(job.dataset, "notes", "")',
+    'notes = job.dataset.notes if hasattr(job.dataset, "notes") else ""',
+    'notes = OmegaConf.select(cfg, "dataset.notes", default="")',
+    'notes = cfg.dataset.notes if "notes" in cfg.dataset else ""',
+    'try:\n    notes = cfg.dataset.notes\nexcept (KeyError, ConfigAttributeError):\n    notes = ""',
+])
+def test_the_fallback_guard_catches_a_planted_fallback(source):
+    assert _config_fallbacks(source), f"the guard missed: {source}"
+
+
+def test_the_fallback_guard_leaves_ordinary_reads_alone():
+    source = ("requested = job.fields or job.dataset.fields\n"
+              "wanted = [m for m in names if m in job.metrics]\n"
+              "try:\n    entry = registry[name]\nexcept KeyError:\n    entry = None\n")
+    assert _config_fallbacks(source) == []
 
 
 def test_a_run_records_the_reader_options_its_config_leaves_out(tmp_path):
@@ -372,12 +434,32 @@ def test_the_card_settings_are_readable_without_hydra():
     raw = (CONFIGS / "cards" / "default.yaml").read_text()
     assert "${" not in raw, "card settings must not interpolate; nothing resolves them"
 
-    cfg = OmegaConf.load(CONFIGS / "cards" / "default.yaml")
+    cfg = load_cards_config()
     assert "kinet_re5e4_dev" not in list(cfg.evidence_datasets), (
         "the dev dataset must never be a source of card evidence: it is the first 100 "
         "solver steps, before the flow develops"
     )
     assert cfg.exemplar_frame.dataset in list(cfg.evidence_datasets)
+
+
+@pytest.mark.parametrize("old,new,error,key", [
+    # A key the code no longer reads, still in someone's copy of the file.
+    ("  dpi: 100", "  dpi: 100\n  theme: dark", ConfigKeyError, "theme"),
+    # A key the generators need, removed.
+    ("  index: 5000", "", MissingMandatoryValue, "index"),
+    # A value of the wrong type.
+    ("  dpi: 100", "  dpi: high", ValidationError, "dpi"),
+], ids=["stale-key", "missing-key", "wrong-type"])
+def test_the_card_settings_refuse_an_unknown_missing_or_mistyped_key(old, new, error, key,
+                                                                      tmp_path, monkeypatch):
+    """The file is the only source of these values, so a key it states must be one the code
+    reads, and one the code reads must be there."""
+    text = (CONFIGS / "cards" / "default.yaml").read_text()
+    (tmp_path / "cards").mkdir()
+    (tmp_path / "cards" / "default.yaml").write_text(text.replace(old, new, 1))
+    monkeypatch.setattr(fmeval_config, "CONFIGS", tmp_path)
+    with pytest.raises(error, match=key):
+        load_cards_config()
 
 
 def test_every_evidence_dataset_is_a_real_config():
@@ -386,7 +468,7 @@ def test_every_evidence_dataset_is_a_real_config():
     An entry naming a dataset that no longer exists would let a card keep its numbers
     while the run behind them became unreproducible.
     """
-    cfg = OmegaConf.load(CONFIGS / "cards" / "default.yaml")
+    cfg = load_cards_config()
     missing = [d for d in cfg.evidence_datasets if d not in _options("dataset")]
     assert not missing, f"evidence_datasets names datasets with no config: {missing}"
 
@@ -401,7 +483,7 @@ def test_a_generated_dataset_declares_itself_non_physical():
     ladder. A generated dataset that ranked alongside the real ones could have its
     numbers quoted as evidence about turbulence.
     """
-    cfg = OmegaConf.load(CONFIGS / "cards" / "default.yaml")
+    cfg = load_cards_config()
     for name in cfg.evidence_datasets:
         dataset = compose_config(f"dataset={name}").dataset
         if dataset.format != "synthetic_ensemble":

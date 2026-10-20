@@ -1429,7 +1429,7 @@ def test_exemplar_panels_are_byte_identical_within_one_environment(tmp_path):
     ]
     rows = ["difference", "radial_spectrum", "pdf"]
 
-    dpi = int(exemplars.load_cards_config().figures.dpi)
+    dpi = fmeval_config.load_cards_config().figures.dpi
     first = exemplar_panel(columns, rows, path=tmp_path / "a.png", title="determinism", dpi=dpi)
     second = exemplar_panel(columns, rows, path=tmp_path / "b.png", title="determinism", dpi=dpi)
 
