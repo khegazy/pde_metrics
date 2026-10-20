@@ -95,11 +95,11 @@ flatness statistic is not one of them.
 
 <!-- GENERATED exemplars: written by `python -m fmeval.cards exemplars gaussian_impostor`, do not edit -->
 
-![gaussian_impostor exemplar panel](_generated/exemplars.png)
+![gaussian_impostor: the same snapshot, undegraded and then degraded](_generated/exemplars.png)
 
 **gaussian_impostor** on vorticity, frame 5000 of `kinet_re5e4`. Three independent draws beside the original, because there is no severity to vary. The radial spectrum row is the whole argument: every draw lies exactly on the reference curve, so any metric built on that curve cannot distinguish them from the truth. The pdf row shows the moments matching too.
 
-3 independent draws, seeded from the run seed so they reproduce exactly.
+3 independent random draws, seeded from the run seed so that every draw reproduces exactly.
 
 <!-- END GENERATED exemplars -->
 

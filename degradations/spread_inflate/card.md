@@ -111,7 +111,7 @@ description.
 | strength requested in the config | strength actually applied to this field | RMS size of the change | fraction of the field's power kept |
 |---|---|---|---|
 | 0.25 | 0.25 | 0.0009396 | -- |
-| 1 | 1 | 0.001466 | -- |
+| 0.75 | 0.75 | 0.001289 | -- |
 | 3 | 3 | 0.002895 | -- |
 
 <!-- END GENERATED exemplars -->

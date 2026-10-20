@@ -80,11 +80,11 @@ is not how a real surrogate loses its small scales.
 
 <!-- GENERATED exemplars: written by `python -m fmeval.cards exemplars disk_blur`, do not edit -->
 
-![disk_blur exemplar panel](_generated/exemplars.png)
+![disk_blur: the same snapshot, undegraded and then degraded](_generated/exemplars.png)
 
 **disk_blur** on vorticity, frame 5000 of `kinet_re5e4`. Three radii spanning the range from barely visible to clearly resolution-losing. The radial spectrum row is what separates this kernel from the Gaussian at matched width, since the disk profile has a different roll-off and, unlike a Gaussian, does not attenuate every wavenumber monotonically.
 
-| configured | applied | difference RMS | power retained |
+| strength requested in the config | strength actually applied to this field | RMS size of the change | fraction of the field's power kept |
 |---|---|---|---|
 | 0.06 | 1.511 | 0.0002845 | 0.9896 |
 | 0.14 | 3.526 | 0.0007964 | 0.9664 |

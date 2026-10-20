@@ -81,11 +81,11 @@ is not how a real surrogate loses its small scales.
 
 <!-- GENERATED exemplars: written by `python -m fmeval.cards exemplars epanechnikov_blur`, do not edit -->
 
-![epanechnikov_blur exemplar panel](_generated/exemplars.png)
+![epanechnikov_blur: the same snapshot, undegraded and then degraded](_generated/exemplars.png)
 
 **epanechnikov_blur** on vorticity, frame 5000 of `kinet_re5e4`. Three radii spanning the range from barely visible to clearly resolution-losing. The radial spectrum row is what separates this kernel from the Gaussian at matched width, since the epanechnikov profile has a different roll-off and, unlike a Gaussian, does not attenuate every wavenumber monotonically.
 
-| configured | applied | difference RMS | power retained |
+| strength requested in the config | strength actually applied to this field | RMS size of the change | fraction of the field's power kept |
 |---|---|---|---|
 | 0.06 | 1.511 | 0.0001939 | 0.9929 |
 | 0.14 | 3.526 | 0.0006306 | 0.9738 |

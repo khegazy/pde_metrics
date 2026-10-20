@@ -113,7 +113,7 @@ means the usual energy-based description of what a severity level did carries no
 |---|---|---|---|
 | 0.25 | 0.25 | 0.0006037 | -- |
 | 0.5 | 0.5 | 0.0004502 | -- |
-| 0.9 | 0.9 | 0.0002809 | -- |
+| 0.8 | 0.8 | 0.000307 | -- |
 
 <!-- END GENERATED exemplars -->
 

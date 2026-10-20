@@ -92,11 +92,11 @@ low-pass provides.
 
 <!-- GENERATED exemplars: written by `python -m fmeval.cards exemplars gaussian_blur`, do not edit -->
 
-![gaussian_blur exemplar panel](_generated/exemplars.png)
+![gaussian_blur: the same snapshot, undegraded and then degraded](_generated/exemplars.png)
 
 **gaussian_blur** on vorticity, frame 5000 of `kinet_re5e4`. Weak is near the grid limit and barely visible by eye; medium removes the dissipation range; strong reaches into the energetic scales. The radial spectrum is the row that makes the cut-off explicit, since a smooth roll-off in real space looks like very little until the spectrum is drawn.
 
-| configured | applied | difference RMS | power retained |
+| strength requested in the config | strength actually applied to this field | RMS size of the change | fraction of the field's power kept |
 |---|---|---|---|
 | 0.02 | 0.5037 | 9.956e-05 | 0.9963 |
 | 0.1 | 2.518 | 0.0009608 | 0.9455 |

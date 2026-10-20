@@ -26,7 +26,7 @@ import yaml
 from scipy.ndimage import gaussian_filter
 
 from degradations import registry as deg_registry
-from fmeval import REPO, analysis
+from fmeval import CONFIGS, REPO, analysis
 from fmeval import config as fmeval_config
 from fmeval.cards import catalog, cli, evidence, exemplars, loader, prose, review
 from fmeval.cards.figures import Column, _row_limits, exemplar_panel
@@ -271,6 +271,25 @@ def test_exemplar_order_is_checked_against_the_declared_direction():
     inverted = dataclasses.replace(spec, severity_direction="increasing")
     with pytest.raises(CardError, match="weakest to strongest"):
         loader._validate_spec(inverted, "degradation")
+
+
+def test_every_exemplar_strength_is_one_a_ladder_runs():
+    """A degradation's panel shows strengths the evaluation really applies (``schema.py``,
+    ``Exemplars.levels``), so a reader can match each column to a row of the results."""
+    runs: dict[str, set[float]] = {}
+    for option in sorted(f.stem for f in (CONFIGS / "degradation").glob("*.yaml")
+                         if not f.name.startswith("_")):
+        ladder = fmeval_config.compose_config(f"degradation={option}").degradation.ladder
+        for label, entry in ladder.items():
+            runs.setdefault(entry.get("op", label), set()).update(entry.severities)
+    outside = {}
+    for bundle in (b for b in loader.iter_bundles() if b.kind == "degradation"):
+        exemplars = loader.load_card(bundle).exemplars
+        if exemplars is not None and exemplars.mode == "severity":
+            extra = sorted(set(exemplars.levels) - runs.get(bundle.name, set()))
+            if extra:
+                outside[bundle.name] = extra
+    assert not outside, f"card strengths no configs/degradation/ ladder runs: {outside}"
 
 
 def test_a_degradation_without_an_ordered_severity_uses_draws_instead():

@@ -4,12 +4,12 @@
     "resolved": [
       0.25,
       0.5,
-      0.9
+      0.8
     ],
     "severities": [
       0.25,
       0.5,
-      0.9
+      0.8
     ]
   },
   "dataset": "kinet_re5e4",
@@ -28,10 +28,10 @@
         "mean": 7.221047616736736e-07,
         "rms": 0.00045018180357921263
       },
-      "lost dispersion = 0.9 fraction of the calibrated spread": {
-        "max_abs": 0.0012610801504664426,
-        "mean": 4.256307628391993e-07,
-        "rms": 0.00028087282154906705
+      "lost dispersion = 0.8 fraction of the calibrated spread": {
+        "max_abs": 0.0013323109957557476,
+        "mean": 4.997492625478167e-07,
+        "rms": 0.0003069919386320215
       },
       "original": {
         "max_abs": 0.0,
@@ -52,11 +52,11 @@
         "min": -0.017002342697579054,
         "rms": 0.0026139137885511084
       },
-      "lost dispersion = 0.9 fraction of the calibrated spread": {
-        "max": 0.016721459473129193,
-        "mean": 4.2563076283917353e-07,
-        "min": -0.016770051208435312,
-        "rms": 0.002588777879583649
+      "lost dispersion = 0.8 fraction of the calibrated spread": {
+        "max": 0.01671122540398224,
+        "mean": 4.997492625477811e-07,
+        "min": -0.01682812408072125,
+        "rms": 0.002592079374896436
       },
       "original": {
         "max": 0.016398680732182837,

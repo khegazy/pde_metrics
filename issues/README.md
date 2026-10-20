@@ -55,7 +55,6 @@ Designed, hooks in place, not built.
 | [032](032-prose-numbers-can-go-stale.md) | Numbers written into card prose can go stale unnoticed | medium |
 | [033](033-link-rewriting-is-only-checked-for-deadness.md) | Site link rewriting is checked for dead links, not correct destinations | medium |
 | [036](036-increment-flatness-is-not-monotone-under-smoothing.md) | Increment flatness is not monotone under smoothing on any field, so it fails the stated acceptance rule; needs a decision, not a fix | medium |
-| [043](043-card-levels-outside-the-ladder-and-stale-exemplar-captions.md) | Four degradation cards illustrate strengths no ladder runs, and twenty exemplar captions predate their generator; needs a decision | low |
 | [022](022-sim-config-parsing.md) | Solver configs carry executable YAML tags | low |
 | [023](023-vendored-kinet-drift.md) | Vendored kinet code is pinned and may drift | low |
 
@@ -78,3 +77,4 @@ issue. Do not delete a marker without fixing the issue it names.
 | [038](038-spectrum-l2-bins-by-exact-wavenumber.md) | `spectrum_l2` binned by exact `\|k\|`, nearly a per-mode comparison | Integer shells, `rint(\|k\|)`, adopted 2026-09-28; evidence regenerated |
 | [035](035-no-generated-block-for-cross-metric-damage.md) | No generated block carried per-level damage beside the other metrics | `results_damage_by_level` block and `damage_by_level_table` added, 2026-09-30 |
 | [039](039-h1-seminorm-is-not-monotone-under-coarsening.md) | Under `coarsen`, derivative-based metrics measured the staircase, not the lost resolution | `h1_seminorm` kept; `coarsen_bandlimited` added and run beside `coarsen` on every kinet metric, 2026-09-28. A small per-frame disorder on density is recorded there, unexplained |
+| [043](043-card-levels-outside-the-ladder-and-stale-exemplar-captions.md) | Four degradation cards illustrated strengths no ladder runs, and twenty exemplar captions predated their generator | Cards moved onto ladder strengths, `multiplicative_noise` given a disabled ladder entry, every exemplar regenerated, 2026-10-19; a test enforces the rule |

@@ -26,8 +26,7 @@ tolerance says so; most refactors here come out bitwise identical.
 
 Three runs, because no single one exercises everything. The first is the six pointwise and
 energy metrics on the default ladder. The second is every metric, with the ladder entries
-that are off by default switched on (`multiplicative_noise` is in no ladder at all, so it
-needs the `+`). The third is the ensemble metrics on the synthetic ensemble, which the other
+that are off by default switched on. The third is the ensemble metrics on the synthetic ensemble, which the other
 two cannot reach. Put Hydra's own output inside the same directory, so that the comparison
 can replace that directory with one placeholder.
 
@@ -41,7 +40,7 @@ python evaluate.py "metrics=[$(python -c 'from metrics import registry; print(",
     degradation.ladder.disk_blur.enabled=true degradation.ladder.epanechnikov_blur.enabled=true \
     degradation.ladder.band_attenuate.enabled=true degradation.ladder.subsample.enabled=true \
     degradation.ladder.gain.enabled=true degradation.ladder.translate_y.enabled=true \
-    '+degradation.ladder.multiplicative_noise={enabled:true,severities:[0.01,0.1,0.5]}' \
+    degradation.ladder.multiplicative_noise.enabled=true \
     paths.results=$D/run2 hydra.run.dir=$D/run2/hydra
 python evaluate.py dataset=synthetic_ensemble degradation=ensemble_miscalibration \
     'metrics=[crps,spread_skill,ensemble_mean_rmse,rank_histogram]' \

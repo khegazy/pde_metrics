@@ -80,11 +80,11 @@ version.
 
 <!-- GENERATED exemplars: written by `python -m fmeval.cards exemplars gain`, do not edit -->
 
-![gain exemplar panel](_generated/exemplars.png)
+![gain: the same snapshot, undegraded and then degraded](_generated/exemplars.png)
 
 **gain** on vorticity, frame 5000 of `kinet_re5e4`. One percent is far below visibility; a half is a gross amplitude error. The pdf row is the direct view of the mechanism, since a gain change rescales the distribution of values about its centre without moving anything in space.
 
-| configured | applied | difference RMS | power retained |
+| strength requested in the config | strength actually applied to this field | RMS size of the change | fraction of the field's power kept |
 |---|---|---|---|
 | 0.01 | 0.01 | 2.573e-05 | -- |
 | 0.05 | 0.05 | 0.0001287 | -- |

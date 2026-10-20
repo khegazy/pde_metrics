@@ -91,11 +91,11 @@ degradations.
 
 <!-- GENERATED exemplars: written by `python -m fmeval.cards exemplars additive_noise`, do not edit -->
 
-![additive_noise exemplar panel](_generated/exemplars.png)
+![additive_noise: the same snapshot, undegraded and then degraded](_generated/exemplars.png)
 
 **additive_noise** on vorticity, frame 5000 of `kinet_re5e4`. A thousandth of the fluctuation is far below what any eye can see; a half is comparable to the field's own variation. The pdf row is the row that shows the mechanism, since noise broadens the distribution of values without moving anything, and the difference row confirms the error is uncorrelated between neighbouring cells rather than structured.
 
-| configured | applied | difference RMS | power retained |
+| strength requested in the config | strength actually applied to this field | RMS size of the change | fraction of the field's power kept |
 |---|---|---|---|
 | 0.001 | 0.001 | 2.565e-06 | -- |
 | 0.01 | 0.01 | 2.567e-05 | -- |

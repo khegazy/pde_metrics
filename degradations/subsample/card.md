@@ -84,11 +84,11 @@ register a change that has nothing to do with the resolution question.
 
 <!-- GENERATED exemplars: written by `python -m fmeval.cards exemplars subsample`, do not edit -->
 
-![subsample exemplar panel](_generated/exemplars.png)
+![subsample: the same snapshot, undegraded and then degraded](_generated/exemplars.png)
 
 **subsample** on vorticity, frame 5000 of `kinet_re5e4`. The same factors as the coarsening axis, so the two panels can be read against each other. The radial spectrum row is the one that shows aliasing: energy that should have been removed appears at low wavenumber instead, which is exactly what block averaging avoids.
 
-| configured | applied | difference RMS | power retained |
+| strength requested in the config | strength actually applied to this field | RMS size of the change | fraction of the field's power kept |
 |---|---|---|---|
 | 2 | 2 | 0.0006884 | 0.9968 |
 | 4 | 4 | 0.001465 | 0.9928 |
