@@ -7,27 +7,29 @@ disagrees with the code. It is installed here, rather than inside the registries
 half-written card in one bundle cannot break a run of an unrelated metric. See
 ``fmeval/cards/loader.py`` for the reasoning in full.
 
-Nothing else is re-exported. Modules are imported by their full path, so that a reader
-following an import knows exactly which file to open.
+It also defines the two paths every module that reads a repository file starts from,
+``REPO`` and ``CONFIGS``. Nothing else is re-exported. Modules are imported by their full
+path, so that a reader following an import knows exactly which file to open.
 """
 
 from __future__ import annotations
 
+import logging
+from pathlib import Path
 
-def _install_card_validator() -> None:
-    """Wire up card enforcement, tolerating an incomplete checkout.
+#: The repository root, found from this file rather than the working directory: nothing here
+#: requires being run from the root. Defined before the card validator below is imported, so
+#: the modules it loads can already use it.
+REPO = Path(__file__).resolve().parent.parent
+#: The Hydra configuration directory.
+CONFIGS = REPO / "configs"
 
-    A failure here must not stop the harness importing: the validator is a guard rail, and
-    a broken guard rail should be visible without also making the tool unusable.
-    """
-    try:
-        from .cards.loader import install
+# Wire up card enforcement, tolerating an incomplete checkout. A failure here must not stop the
+# harness importing: the validator is a guard rail, and a broken guard rail should be visible
+# without also making the tool unusable. Hence the guarded import.
+try:
+    from .cards.loader import install
 
-        install()
-    except Exception:  # deliberately broad - see docstring
-        import logging
-
-        logging.getLogger(__name__).debug("card validation unavailable", exc_info=True)
-
-
-_install_card_validator()
+    install()
+except Exception:  # deliberately broad, see the comment above
+    logging.getLogger(__name__).debug("card validation unavailable", exc_info=True)

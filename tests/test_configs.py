@@ -3,38 +3,49 @@
 These are cheap and they catch a class of failure the rest of the suite cannot: a config that
 only breaks when Hydra composes it, or an override form that a README promises and the config
 rejects. A wrong command in the documentation is worse than none.
+
+They also hold the rule that every setting has one source: a block's defaults belong to the
+schema dataclass or the callable it feeds (`fmeval/config.py`), shared values to a `_`-prefixed
+fragment, and a YAML file states a key only to change it.
 """
 
 from __future__ import annotations
 
+import ast
+import inspect
+import shutil
+import subprocess
+import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
-from hydra import compose, initialize_config_dir
-from omegaconf import OmegaConf
+from hydra.core.hydra_config import HydraConfig
+from hydra.errors import ConfigCompositionException
+from omegaconf import MissingMandatoryValue, OmegaConf, ValidationError
+from omegaconf.errors import ConfigKeyError
 
-CONFIGS = str(Path(__file__).resolve().parent.parent / "configs")
-
-
-def build(*overrides: str):
-    """Compose the config the way `evaluate.py` does, with CLI-style overrides.
-
-    The HydraConfig singleton has to be installed explicitly. `hydra.main` does that for
-    you, and without it `${hydra:runtime.cwd}` -- which `paths.data` depends on -- raises
-    "HydraConfig was not set". Composing without it would test a configuration that never
-    actually runs.
-    """
-    from hydra.core.hydra_config import HydraConfig
-
-    with initialize_config_dir(config_dir=CONFIGS, version_base=None):
-        cfg = compose(config_name="config", overrides=list(overrides),
-                      return_hydra_config=True)
-        HydraConfig.instance().set_config(cfg)
-        return cfg
+from degradations import registry as deg_registry
+from fmeval import CONFIGS, REPO
+from fmeval import config as fmeval_config
+from fmeval.config import (
+    Config,
+    DatasetConfig,
+    ReportConfig,
+    build_job,
+    compose_config,
+    load_cards_config,
+)
+from fmeval.data import kinet_raw, synthetic_ensemble, well  # noqa: F401  (register the formats)
+from fmeval.data.base import READERS, TimeSelection
+from fmeval.io import read_config, read_run_meta
+from fmeval.ladder import DegradationConfig
+from fmeval.pipeline import MapRequest
+from metrics import registry as metric_registry
 
 
 def test_default_config_composes():
-    cfg = build()
+    cfg = compose_config()
     assert cfg.metrics
     assert cfg.dataset.name and cfg.dataset.format and cfg.dataset.path
     assert cfg.degradation.ladder
@@ -43,7 +54,8 @@ def test_default_config_composes():
 
 def test_hydra_job_chdir_is_false():
     """With chdir=true the relative datasets symlink and the package imports both break."""
-    assert build().hydra.job.chdir is False
+    compose_config()
+    assert HydraConfig.get().job.chdir is False
 
 
 def test_hydra_output_dirs_resolve_without_a_live_hydra_context():
@@ -52,56 +64,80 @@ def test_hydra_output_dirs_resolve_without_a_live_hydra_context():
     Interpolating `${paths.results}` there reaches `${hydra:runtime.cwd}` and fails with
     "HydraConfig was not set", which breaks every multirun. Keep these plain and relative.
     """
-    cfg = build()
+    compose_config()
     for key in ("run.dir", "sweep.dir"):
-        value = OmegaConf.select(cfg.hydra, key)
+        value = OmegaConf.select(HydraConfig.get(), key)
         assert "${" not in str(value), f"hydra.{key} still contains an interpolation"
         assert not str(value).startswith("/"), f"hydra.{key} should be relative"
-
-
-@pytest.mark.parametrize("group,option", [
-    ("dataset", "kinet_re5e4_dev"),
-    ("dataset", "kinet_re5e4"),
-    ("dataset", "well_re5e4"),
-    ("dataset", "synthetic_ensemble"),
-    ("degradation", "default"),
-    ("degradation", "quick"),
-    ("degradation", "ensemble_miscalibration"),
-    ("report", "default"),
-    ("report", "none"),
-])
-def test_every_config_group_option_composes(group, option):
-    """Every file offered as a group option must actually work when selected."""
-    cfg = build(f"{group}={option}")
-    assert OmegaConf.select(cfg, group) is not None
 
 
 #: Directories under `configs/` that Hydra never composes, so their files are not group
 #: options and cannot be checked by composing them.
 #:
-#: `dataset_family` holds shared fragments referenced by dataset configs rather than
-#: selected on the command line. `cards` holds the settings for generating documentation
-#: -- the canonical exemplar frame, which datasets a card may cite, figure DPI -- read
-#: directly with OmegaConf by `python -m fmeval.cards`. Generating documentation is not an
-#: experiment: it must not create a run folder or a `.hydra` directory, so it does not go
-#: through Hydra at all.
+#: `dataset_family` is not yet consumed (issues/011). `cards` holds the settings for
+#: generating documentation -- the canonical exemplar frame, which datasets a card may cite,
+#: figure DPI -- read directly with OmegaConf by `python -m fmeval.cards`. Generating
+#: documentation is not an experiment: it must not create a run folder or a `.hydra`
+#: directory, so it does not go through `hydra.main`.
 NOT_HYDRA_GROUPS = {"dataset_family", "cards"}
 
+#: The Hydra groups on disk.
+GROUPS = sorted(d.name for d in CONFIGS.iterdir()
+                if d.is_dir() and d.name not in NOT_HYDRA_GROUPS)
 
-def test_every_group_option_on_disk_is_tested(group_files=None):
-    """A new config file must be added to the parametrisation above."""
-    tested = {("dataset", "kinet_re5e4_dev"), ("dataset", "kinet_re5e4"),
-              ("dataset", "well_re5e4"), ("dataset", "synthetic_ensemble"),
-              ("degradation", "default"), ("degradation", "quick"),
-              ("degradation", "ensemble_miscalibration"),
-              ("report", "default"), ("report", "none")}
-    on_disk = {
-        (d.name, f.stem)
-        for d in Path(CONFIGS).iterdir() if d.is_dir() and d.name not in NOT_HYDRA_GROUPS
-        for f in d.glob("*.yaml")
-    }
-    missing = sorted(on_disk - tested)
-    assert not missing, f"add these to test_every_config_group_option_composes: {missing}"
+
+def _options(group: str) -> list[str]:
+    """The selectable options of a group. A file starting with `_` is a fragment that options
+    inherit through `defaults:`, not an option."""
+    return sorted(f.stem for f in (CONFIGS / group).glob("*.yaml") if not f.name.startswith("_"))
+
+
+#: Every group option on disk, so a new config file is composed without editing this file.
+GROUP_OPTIONS = [(group, option) for group in GROUPS for option in _options(group)]
+
+
+@pytest.mark.parametrize("group,option", GROUP_OPTIONS)
+def test_every_option_composes_into_a_complete_schema(group, option):
+    """Every option must compose, and building it into its schema must find every key set.
+
+    `build_job` is what `evaluate.py` does first, so a key an option forgot fails here, named,
+    rather than when the run first reads it.
+    """
+    build_job(compose_config(f"{group}={option}"))
+
+
+def test_default_config_builds_the_objects_the_code_takes():
+    """Each block becomes the dataclass that owns its defaults, so the run reads no copy."""
+    job = build_job(compose_config())
+    assert isinstance(job, Config)
+    assert isinstance(job.dataset.time, TimeSelection)
+    assert isinstance(job.degradation, DegradationConfig)
+    assert isinstance(job.report.error_map, MapRequest)
+
+
+@pytest.mark.parametrize("override,key", [
+    # A value its dataclass refuses.
+    ("dataset.time.reduction=0", "reduction"),
+    # A fragment selected as if it were a dataset leaves the required keys unset.
+    ("dataset=_re5e4_simulation", "name"),
+])
+def test_a_bad_value_is_refused_before_any_data_is_read(override, key):
+    with pytest.raises((ValueError, MissingMandatoryValue), match=key):
+        build_job(compose_config(override))
+
+
+def test_a_misspelt_key_is_refused_rather_than_ignored():
+    with pytest.raises(ConfigCompositionException, match="maxframes"):
+        compose_config("dataset.time.maxframes=3")
+
+
+@pytest.mark.parametrize("override", ["+dataset.time.max_frame=3", "+analysis_grid.resolutoin=64",
+                                      "+seeed=1", "+degradation.onl=[translate_x]"])
+def test_a_misspelt_key_added_with_plus_is_refused_too(override):
+    """`+` adds a key struct mode would refuse, so only the build can catch a misspelling."""
+    key = override.split("=")[0].rsplit(".", 1)[-1].lstrip("+")
+    with pytest.raises(ConfigKeyError, match=key):
+        build_job(compose_config(override))
 
 
 # --- the override forms the documentation promises ------------------------------------
@@ -111,7 +147,7 @@ def test_every_group_option_on_disk_is_tested(group_files=None):
     # The headline case: choose the metric on the command line.
     ("metrics=[mse]", lambda c: list(c.metrics) == ["mse"]),
     ("metrics=[mae,mse,nrmse]", lambda c: len(c.metrics) == 3),
-    # Sizing knobs.
+    # Sizing knobs. No dataset file states `max_frames`; the schema declares it.
     ("dataset.time.reduction=100", lambda c: c.dataset.time.reduction == 100),
     ("dataset.time.start=2000", lambda c: c.dataset.time.start == 2000),
     ("dataset.time.max_frames=5", lambda c: c.dataset.time.max_frames == 5),
@@ -124,8 +160,15 @@ def test_every_group_option_on_disk_is_tested(group_files=None):
     # Ladder selection.
     ("degradation.only=[translate_x]", lambda c: list(c.degradation.only) == ["translate_x"]),
     ("degradation.skip=[median_blur]", lambda c: list(c.degradation.skip) == ["median_blur"]),
+    # Options of a reader or an operator that the YAML leaves at their default sit in an
+    # untyped mapping, so setting one adds a key and takes `+`.
+    ("+dataset.reader.chunk_cache_mb=8", lambda c: c.dataset.reader.chunk_cache_mb == 8),
+    ("+degradation.ladder.lowpass_butterworth.options.order=2",
+     lambda c: c.degradation.ladder.lowpass_butterworth.options.order == 2),
     # Reporting.
-    ("report.style.theme=paper", lambda c: c.report.style.theme == "paper"),
+    ("report.error_map.enabled=false", lambda c: c.report.error_map.enabled is False),
+    ("report=none", lambda c: c.report.error_map.enabled is False
+     and c.report.thresholds.spearman == 0.90),
     # Data root, for someone whose data is not where the symlink points.
     ("paths.data=/tmp/data", lambda c: str(c.paths.data) == "/tmp/data"),
     # Refusing the HTTP fallback, for a run that must read a local copy or fail.
@@ -134,7 +177,7 @@ def test_every_group_option_on_disk_is_tested(group_files=None):
      lambda c: c.paths.data_url == "http://example.invalid/d"),
 ])
 def test_documented_override_works(override, check):
-    assert check(build(override)), f"override {override!r} did not take effect"
+    assert check(compose_config(override)), f"override {override!r} did not take effect"
 
 
 def test_nested_ladder_overrides_need_no_plus_prefix():
@@ -144,56 +187,239 @@ def test_nested_ladder_overrides_need_no_plus_prefix():
     disabled with a `+` prefix while an entry that declares it cannot. Declaring it
     everywhere removes that asymmetry.
     """
-    cfg = build("degradation=default",
-                "degradation.ladder.gaussian_blur.enabled=false",
-                "degradation.ladder.disk_blur.enabled=true",
-                "degradation.ladder.gaussian_blur.severities=[1,2]")
+    cfg = compose_config("degradation=default",
+                         "degradation.ladder.gaussian_blur.enabled=false",
+                         "degradation.ladder.disk_blur.enabled=true",
+                         "degradation.ladder.gaussian_blur.severities=[1,2]")
     assert cfg.degradation.ladder.gaussian_blur.enabled is False
     assert cfg.degradation.ladder.disk_blur.enabled is True
     assert list(cfg.degradation.ladder.gaussian_blur.severities) == [1, 2]
 
 
-def test_every_ladder_entry_declares_enabled():
-    for option in ("default", "quick"):
-        ladder = build(f"degradation={option}").degradation.ladder
-        missing = [name for name, entry in ladder.items() if "enabled" not in entry]
-        assert not missing, (
-            f"degradation/{option}.yaml entries {missing} omit `enabled`, so a CLI override "
-            "of it would need a `+` prefix on those and not on the others"
-        )
+@pytest.mark.parametrize("option", _options("degradation"))
+def test_every_ladder_entry_declares_enabled_and_a_registered_operator(option):
+    registered = deg_registry.available()
+    ladder = compose_config(f"degradation={option}").degradation.ladder
+    missing = [name for name, entry in ladder.items() if "enabled" not in entry]
+    assert not missing, (
+        f"degradation/{option}.yaml entries {missing} omit `enabled`, so a CLI override "
+        "of it would need a `+` prefix on those and not on the others"
+    )
+    unknown = {label: entry.get("op", label) for label, entry in ladder.items()
+               if entry.get("op", label) not in registered}
+    assert not unknown, f"degradation/{option}.yaml names unregistered operators {unknown}"
 
 
-def test_every_ladder_entry_names_a_registered_operator():
-    from degradations import registry as deg
-
-    deg.discover()
-    for option in ("default", "quick"):
-        ladder = build(f"degradation={option}").degradation.ladder
-        for label, entry in ladder.items():
-            op = entry.get("op", label)
-            assert op in deg.REGISTRY, (
-                f"degradation/{option}.yaml entry {label!r} names operator {op!r}, "
-                f"which is not registered"
-            )
-
-
-def test_every_dataset_names_a_registered_reader():
-    from fmeval.data import kinet_raw, well  # noqa: F401  (register the formats)
-    from fmeval.data.base import READERS
-
-    for option in ("kinet_re5e4_dev", "kinet_re5e4", "well_re5e4"):
-        cfg = build(f"dataset={option}")
-        assert cfg.dataset.format in READERS, (
-            f"dataset/{option}.yaml declares format {cfg.dataset.format!r}, "
-            f"which has no reader"
-        )
+@pytest.mark.parametrize("option", _options("dataset"))
+def test_every_dataset_names_a_registered_reader(option):
+    fmt = compose_config(f"dataset={option}").dataset.format
+    assert fmt in READERS, f"dataset/{option}.yaml declares format {fmt!r}, which has no reader"
 
 
 def test_default_metrics_are_registered():
-    from metrics import registry as met
+    for name in compose_config().metrics:
+        metric_registry.get(name)  # raises KeyError with the available list if absent
 
-    for name in build().metrics:
-        met.get(name)  # raises KeyError with the available list if absent
+
+# --- one source for every setting ----------------------------------------------------------
+
+#: The schema each group's files are built into; `config.yaml` itself is `Config`.
+SCHEMAS = {"dataset": DatasetConfig, "degradation": DegradationConfig, "report": ReportConfig}
+
+
+def _body(path: Path) -> dict[str, Any]:
+    """A config file's own keys, unresolved, without its `defaults:` list."""
+    body = OmegaConf.to_container(OmegaConf.load(path), resolve=False)
+    body.pop("defaults", None)
+    return body
+
+
+def _inherited(path: Path, schema: type) -> Any:
+    """What a config file receives before its own keys: the schema, then each fragment it lists."""
+    node = OmegaConf.structured(schema)
+    for parent in OmegaConf.load(path).get("defaults", []):
+        if isinstance(parent, str) and parent not in ("_self_", "_schema"):
+            fragment = path.parent / f"{parent}.yaml"
+            node = OmegaConf.merge(node, _inherited(fragment, schema), _body(fragment))
+    return node
+
+
+def _leaves(tree: Any, prefix: str = "") -> dict[str, Any]:
+    """Dotted key -> value; a list or an empty mapping is one leaf."""
+    if isinstance(tree, dict) and tree:
+        return {k: v for key, sub in tree.items()
+                for k, v in _leaves(sub, f"{prefix}{key}.").items()}
+    return {prefix[:-1]: tree}
+
+
+CONFIG_FILES = [CONFIGS / "config.yaml",
+                *sorted(f for group in SCHEMAS for f in (CONFIGS / group).glob("*.yaml"))]
+
+
+@pytest.mark.parametrize("path", CONFIG_FILES, ids=lambda p: str(p.relative_to(CONFIGS)))
+def test_a_config_states_a_key_only_to_change_it(path):
+    """A key whose value equals what the file would inherit anyway is a second copy of it.
+
+    The inherited value is the schema's default (`fmeval/config.py`), a fragment's value, a
+    reader constructor's keyword default, an operator's keyword-only default, or the entry
+    label an `op` defaults to. A second copy is the one that goes stale when the first changes.
+    A fragment names no reader, so its reader options are checked in each option inheriting it.
+    """
+    group = path.parent.name
+    body = _leaves(_body(path))
+    inherited = _leaves(OmegaConf.to_container(
+        _inherited(path, SCHEMAS.get(group, Config)), resolve=False, throw_on_missing=False))
+    restated = [f"{k}: {v!r} (schema or fragment)" for k, v in body.items()
+                if k in inherited and inherited[k] == v]
+
+    fmt = body.get("format", inherited.get("format"))
+    if fmt in READERS:
+        reader = inspect.signature(READERS[fmt]).parameters
+        restated += [f"{k}: {v!r} (the reader's default)" for k, v in {**inherited, **body}.items()
+                     if k.startswith("reader.") and k.split(".")[1] in reader
+                     and reader[k.split(".")[1]].default == v]
+
+    for key, value in body.items():
+        parts = key.split(".")
+        if len(parts) == 4 and parts[0] == "ladder" and parts[2] == "options":
+            op = body.get(f"ladder.{parts[1]}.op", parts[1])
+            if deg_registry.get(op).defaults.get(parts[3], object()) == value:
+                restated.append(f"{key}: {value!r} (the operator's default)")
+        if parts[0] == "ladder" and parts[2:] == ["op"] and value == parts[1]:
+            restated.append(f"{key}: {value!r} (an entry's op defaults to its label)")
+
+    assert not restated, (
+        f"{path.relative_to(REPO)} restates values it would inherit; delete them: {restated}"
+    )
+
+
+@pytest.mark.parametrize("edited,text,checked", [
+    ("dataset/kinet_re5e4.yaml", "time: {start: 1}\n", "dataset/kinet_re5e4.yaml"),
+    ("dataset/_re5e4_simulation.yaml", "reader: {chunk_cache_mb: 32}\n",
+     "dataset/kinet_re5e4.yaml"),
+    ("report/none.yaml", "  frames: [-1]\n", "report/none.yaml"),
+    ("degradation/quick.yaml", "  lowpass_butterworth: {enabled: true, severities: [0.3], "
+     "options: {order: 4}}\n", "degradation/quick.yaml"),
+    ("degradation/quick.yaml", "  lowpass_ideal: {enabled: true, op: lowpass_ideal, "
+     "severities: [0.3]}\n", "degradation/quick.yaml"),
+])
+def test_the_restatement_guard_catches_a_planted_copy(edited, text, checked, tmp_path,
+                                                      monkeypatch):
+    """The guard above passes on clean files; this proves it fails on a restated value."""
+    shutil.copytree(CONFIGS, tmp_path / "configs")
+    with open(tmp_path / "configs" / edited, "a") as f:
+        f.write(text)
+    monkeypatch.setitem(globals(), "REPO", tmp_path)
+    with pytest.raises(AssertionError, match="restates"):
+        test_a_config_states_a_key_only_to_change_it(tmp_path / "configs" / checked)
+
+
+@pytest.mark.parametrize("group", GROUPS)
+def test_every_fragment_is_inherited_by_an_option(group):
+    """A fragment that no option lists is dead configuration."""
+    fragments = {f.stem for f in (CONFIGS / group).glob("_*.yaml")}
+    listed = {parent for option in _options(group)
+              for parent in OmegaConf.load(CONFIGS / group / f"{option}.yaml").get("defaults", [])
+              if isinstance(parent, str)}
+    assert fragments <= listed, (
+        f"configs/{group}/ has fragments no option inherits: {sorted(fragments - listed)}")
+
+
+#: The errors a missing config key raises; a handler for one turns the key into an optional one.
+MISSING_KEY_ERRORS = {"KeyError", "AttributeError", "ConfigKeyError", "ConfigAttributeError",
+                      "MissingMandatoryValue"}
+
+
+def _config_fallbacks(source: str) -> list[str]:
+    """Every place `source` could supply a value for a config key the schema already declares.
+
+    `cfg` is the composed DictConfig and `job` the built schema. Caught: `.get(k, default)`,
+    `getattr(..., k, default)`, `hasattr`, `OmegaConf.select(..., default=)`, a key test
+    `k in cfg...`, and a `try` reading the config whose handler catches a missing-key error.
+    Not caught, because they are legitimate elsewhere: `x or default`, and `in` on `job`, whose
+    values include lists such as `job.metrics`.
+    """
+    def rooted(node: ast.AST, names: tuple[str, ...] = ("cfg", "job")) -> bool:
+        while isinstance(node, (ast.Attribute, ast.Subscript, ast.Call)):
+            node = node.func if isinstance(node, ast.Call) else node.value
+        return isinstance(node, ast.Name) and node.id in names
+
+    found = []
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Call):
+            func, args = node.func, node.args
+            if ((isinstance(func, ast.Attribute) and func.attr == "get" and rooted(func.value))
+                    or (ast.unparse(func) == "getattr" and len(args) == 3 and rooted(args[0]))
+                    or (ast.unparse(func) == "hasattr" and args and rooted(args[0]))
+                    or (ast.unparse(func) == "OmegaConf.select" and args and rooted(args[0])
+                        and (len(args) > 2 or any(k.arg == "default" for k in node.keywords)))):
+                found.append(f"{node.lineno}: {ast.unparse(node)}")
+        elif isinstance(node, ast.Compare) and any(
+                isinstance(op, (ast.In, ast.NotIn)) and rooted(right, ("cfg",))
+                for op, right in zip(node.ops, node.comparators, strict=True)):
+            found.append(f"{node.lineno}: {ast.unparse(node)}")
+        elif isinstance(node, ast.Try) and any(rooted(n) for n in ast.walk(ast.Module(node.body))):
+            for handler in node.handlers:
+                caught = {ast.unparse(t).rsplit(".", 1)[-1] for t in (
+                    handler.type.elts if isinstance(handler.type, ast.Tuple) else [handler.type])
+                    if t is not None}
+                if caught & MISSING_KEY_ERRORS:
+                    found.append(f"{handler.lineno}: except {sorted(caught)}")
+    return found
+
+
+def test_evaluate_reads_the_config_without_fallbacks():
+    """A fallback in code would be a second default for a key the schema declares."""
+    fallbacks = _config_fallbacks((REPO / "evaluate.py").read_text())
+    assert not fallbacks, f"evaluate.py gives config keys a fallback: {fallbacks}"
+
+
+@pytest.mark.parametrize("source", [
+    'notes = cfg.dataset.get("notes", "")',
+    'notes = getattr(job.dataset, "notes", "")',
+    'notes = job.dataset.notes if hasattr(job.dataset, "notes") else ""',
+    'notes = OmegaConf.select(cfg, "dataset.notes", default="")',
+    'notes = cfg.dataset.notes if "notes" in cfg.dataset else ""',
+    'try:\n    notes = cfg.dataset.notes\nexcept (KeyError, ConfigAttributeError):\n    notes = ""',
+])
+def test_the_fallback_guard_catches_a_planted_fallback(source):
+    assert _config_fallbacks(source), f"the guard missed: {source}"
+
+
+def test_the_fallback_guard_leaves_ordinary_reads_alone():
+    source = ("requested = job.fields or job.dataset.fields\n"
+              "wanted = [m for m in names if m in job.metrics]\n"
+              "try:\n    entry = registry[name]\nexcept KeyError:\n    entry = None\n")
+    assert _config_fallbacks(source) == []
+
+
+def test_a_run_records_the_reader_options_its_config_leaves_out(tmp_path):
+    """`config.yaml` holds only what a file or override states, so a reader's defaults, which
+    can change with the code, are recorded beside it in `run_meta.json`."""
+    subprocess.run(
+        [sys.executable, str(REPO / "evaluate.py"), "dataset=synthetic_ensemble",
+         "degradation=ensemble_miscalibration", "degradation.only=[bias]", "metrics=[crps]",
+         "+dataset.reader.sigma=0.2", f"paths.results={tmp_path}", f"hydra.run.dir={tmp_path}/h"],
+        check=True, capture_output=True, cwd=tmp_path,
+    )
+    (folder,) = tmp_path.glob("crps_*")
+    recorded = read_run_meta(folder)["reader_options"]
+    stated = read_config(folder)["dataset"]["reader"]
+    signature = inspect.signature(READERS["synthetic_ensemble"]).parameters
+    assert "omega" not in stated and recorded["omega"] == signature["omega"].default
+    assert stated["sigma"] == recorded["sigma"] == 0.2
+    assert recorded["n_members"] == stated["n_members"]
+    assert set(recorded) == set(signature) - {"path"}
+
+
+def test_the_data_root_does_not_depend_on_the_working_directory(tmp_path, monkeypatch):
+    """The `datasets` link sits beside the code, so a run started elsewhere still reads the local
+    copy instead of falling back to the network."""
+    monkeypatch.chdir(tmp_path)
+    assert compose_config().paths.data == str(REPO / "datasets")
+
+
+# --- the card settings, read without Hydra --------------------------------------------------
 
 
 def test_the_card_settings_are_readable_without_hydra():
@@ -205,17 +431,35 @@ def test_the_card_settings_are_readable_without_hydra():
     crept in -- one would resolve under `evaluate.py` and fail under `python -m
     fmeval.cards`, which is the kind of difference that shows up only in the artifact.
     """
-    from omegaconf import OmegaConf
-
-    raw = (Path(CONFIGS) / "cards" / "default.yaml").read_text()
+    raw = (CONFIGS / "cards" / "default.yaml").read_text()
     assert "${" not in raw, "card settings must not interpolate; nothing resolves them"
 
-    cfg = OmegaConf.load(Path(CONFIGS) / "cards" / "default.yaml")
+    cfg = load_cards_config()
     assert "kinet_re5e4_dev" not in list(cfg.evidence_datasets), (
         "the dev dataset must never be a source of card evidence: it is the first 100 "
         "solver steps, before the flow develops"
     )
     assert cfg.exemplar_frame.dataset in list(cfg.evidence_datasets)
+
+
+@pytest.mark.parametrize("old,new,error,key", [
+    # A key the code no longer reads, still in someone's copy of the file.
+    ("  dpi: 100", "  dpi: 100\n  theme: dark", ConfigKeyError, "theme"),
+    # A key the generators need, removed.
+    ("  index: 5000", "", MissingMandatoryValue, "index"),
+    # A value of the wrong type.
+    ("  dpi: 100", "  dpi: high", ValidationError, "dpi"),
+], ids=["stale-key", "missing-key", "wrong-type"])
+def test_the_card_settings_refuse_an_unknown_missing_or_mistyped_key(old, new, error, key,
+                                                                      tmp_path, monkeypatch):
+    """The file is the only source of these values, so a key it states must be one the code
+    reads, and one the code reads must be there."""
+    text = (CONFIGS / "cards" / "default.yaml").read_text()
+    (tmp_path / "cards").mkdir()
+    (tmp_path / "cards" / "default.yaml").write_text(text.replace(old, new, 1))
+    monkeypatch.setattr(fmeval_config, "CONFIGS", tmp_path)
+    with pytest.raises(error, match=key):
+        load_cards_config()
 
 
 def test_every_evidence_dataset_is_a_real_config():
@@ -224,11 +468,8 @@ def test_every_evidence_dataset_is_a_real_config():
     An entry naming a dataset that no longer exists would let a card keep its numbers
     while the run behind them became unreproducible.
     """
-    from omegaconf import OmegaConf
-
-    cfg = OmegaConf.load(Path(CONFIGS) / "cards" / "default.yaml")
-    on_disk = {f.stem for f in (Path(CONFIGS) / "dataset").glob("*.yaml")}
-    missing = [d for d in cfg.evidence_datasets if d not in on_disk]
+    cfg = load_cards_config()
+    missing = [d for d in cfg.evidence_datasets if d not in _options("dataset")]
     assert not missing, f"evidence_datasets names datasets with no config: {missing}"
 
 
@@ -242,12 +483,10 @@ def test_a_generated_dataset_declares_itself_non_physical():
     ladder. A generated dataset that ranked alongside the real ones could have its
     numbers quoted as evidence about turbulence.
     """
-    from omegaconf import OmegaConf
-
-    cfg = OmegaConf.load(Path(CONFIGS) / "cards" / "default.yaml")
+    cfg = load_cards_config()
     for name in cfg.evidence_datasets:
-        dataset = OmegaConf.load(Path(CONFIGS) / "dataset" / f"{name}.yaml")
-        if dataset.get("format") != "synthetic_ensemble":
+        dataset = compose_config(f"dataset={name}").dataset
+        if dataset.format != "synthetic_ensemble":
             continue
         assert int(dataset.complexity.rank) < 0, (
             f"{name} is generated and cited as evidence, so its complexity rank must be "
@@ -261,24 +500,23 @@ def test_a_generated_dataset_declares_itself_non_physical():
 
 def test_the_published_data_url_is_configured():
     """Without it a colleague with no CFS mount gets a FileNotFoundError, not the data."""
-    cfg = build()
+    cfg = compose_config()
     assert cfg.paths.data_url, "paths.data_url is unset; the HTTP fallback cannot fire"
     assert str(cfg.paths.data_url).startswith("https://")
     assert not str(cfg.paths.data_url).endswith("/"), "a trailing slash doubles in the URL"
 
 
-def test_every_dataset_path_is_under_the_data_root():
+@pytest.mark.parametrize("name", _options("dataset"))
+def test_every_dataset_path_is_under_the_data_root(name):
     """The published tree mirrors `paths.data`, so a path outside it has no URL to derive.
 
     `fmeval.data.locate` refuses to guess one rather than fabricating a URL that 404s, so a
     dataset config that wandered outside the root would silently lose the fallback.
     """
-    cfg = build()
+    cfg = compose_config(f"dataset={name}")
     root = Path(str(cfg.paths.data))
-    for name in sorted(p.stem for p in Path(CONFIGS, "dataset").glob("*.yaml")):
-        dataset = build(f"dataset={name}").dataset
-        path = Path(str(dataset.path))
-        assert path == root or root in path.parents, (
-            f"{name} points at {path}, which is not under paths.data ({root}), "
-            "so no published URL can be derived for it"
-        )
+    path = Path(str(cfg.dataset.path))
+    assert path == root or root in path.parents, (
+        f"{name} points at {path}, which is not under paths.data ({root}), "
+        "so no published URL can be derived for it"
+    )

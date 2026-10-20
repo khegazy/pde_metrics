@@ -20,8 +20,9 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from fmeval.context import MetricContext
-from metrics.registry import metric, pointwise_map
+from fmeval.context import FieldContext
+from fmeval.external.kinet_spectral import spectral_derivative
+from metrics.registry import REDUCTIONS, metric, pointwise_map
 
 
 @metric(
@@ -40,7 +41,7 @@ def h1_seminorm(
     reference: NDArray[np.floating],
     candidate: NDArray[np.floating],
     *,
-    ctx: MetricContext,
+    ctx: FieldContext,
 ) -> float:
     """Root-mean-square gradient of the error, in the field's units per length.
 
@@ -63,8 +64,8 @@ def h1_seminorm(
         by a constant -- a gradient annihilates constants, exactly as the k = 0 exclusion
         does in ``h_minus_one``.
     """
-    d = reference - candidate
-    return float(np.sqrt(h1_seminorm_map(reference, candidate, ctx=ctx).mean() / d.shape[0]))
+    return REDUCTIONS["sqrt_mean"](h1_seminorm_map(reference, candidate, ctx=ctx),
+                                   reference.shape[0])
 
 
 @pointwise_map(of="h1_seminorm")
@@ -72,7 +73,7 @@ def h1_seminorm_map(
     reference: NDArray[np.floating],
     candidate: NDArray[np.floating],
     *,
-    ctx: MetricContext,
+    ctx: FieldContext,
 ) -> NDArray[np.floating]:
     """Per-cell squared error gradient, summed over channels and directions.
 
@@ -88,12 +89,18 @@ def h1_seminorm_map(
     Returns:
         An array of shape ``(*spatial)``: the channel axis is summed away.
     """
-    from fmeval.external.kinet_spectral import spectral_derivative
+    return squared_gradient(reference - candidate, ctx)
 
-    d = reference - candidate
+
+def squared_gradient(field: NDArray[np.floating], ctx: FieldContext) -> NDArray[np.floating]:
+    """``|grad f|^2`` per cell, summed over channels and directions; shape ``(*spatial)``.
+
+    Spectral derivatives on the analysis grid, the convention described in
+    :func:`h1_seminorm`. Shared with ``palinstrophy``, which is half its mean on vorticity.
+    """
     spacing = list(ctx.grid.spacing)
-    out = np.zeros(d.shape[1:], dtype=np.float64)
-    for channel in d:
+    out = np.zeros(field.shape[1:], dtype=np.float64)
+    for channel in field:
         for axis in range(channel.ndim):
             out += spectral_derivative(channel, axis, spacing=spacing) ** 2
     return out

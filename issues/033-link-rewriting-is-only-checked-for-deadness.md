@@ -81,6 +81,6 @@ Worth covering at the same time, since they share the mechanism:
   `_write_protocol`.
 - `tests/test_cards.py::test_the_site_builds_without_the_dataset` is the current coverage:
   it asserts the build succeeds under `--strict` and that a few expected pages exist.
-- `tests/test_cards.py::test_every_degradation_a_card_links_to_exists` checks the
+- `tests/test_card_links_resolve_on_the_site.py::test_relative_links_point_at_something_that_exists` checks the
   repository side of the same links, which is why the GitHub-facing direction is in better
   shape than the site-facing one.

@@ -86,11 +86,11 @@ Its purpose is discrimination between metrics, not realism.
 
 <!-- GENERATED exemplars: written by `python -m fmeval.cards exemplars box_blur`, do not edit -->
 
-![box_blur exemplar panel](_generated/exemplars.png)
+![box_blur: the same snapshot, undegraded and then degraded](_generated/exemplars.png)
 
 **box_blur** on vorticity, frame 5000 of `kinet_re5e4`. Weak is the narrowest width that clears the odd-cell rounding on both fields; strong reaches well into the energetic scales. The radial spectrum row is the one that matters here: unlike a Gaussian, a box kernel does not attenuate every scale, and the sidelobes it leaves are visible only in the spectrum.
 
-| configured | applied | difference RMS | power retained |
+| strength requested in the config | strength actually applied to this field | RMS size of the change | fraction of the field's power kept |
 |---|---|---|---|
 | 0.06 | 1.511 | 0.0002845 | 0.9896 |
 | 0.14 | 3.526 | 0.0006248 | 0.9746 |

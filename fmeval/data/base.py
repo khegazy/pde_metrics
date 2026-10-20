@@ -36,9 +36,8 @@ NanPolicy = Literal["error", "warn", "ignore"]
 
 @dataclass(frozen=True)
 class FieldSpec:
-    """One entry of the canonical field vocabulary."""
+    """One entry of the canonical field vocabulary; its name is its key in :data:`FIELDS`."""
 
-    name: str
     kind: FieldKind
     #: How many channels this field has on an ``n_spatial``-dimensional grid.
     channels: str  # "1" | "n_spatial" | "vorticity" | "9"
@@ -57,36 +56,39 @@ class FieldSpec:
 
 #: The canonical vocabulary. Readers map their own names onto these.
 FIELDS: dict[str, FieldSpec] = {
-    "density": FieldSpec("density", "primitive", "1", "Mass density."),
+    "density": FieldSpec("primitive", "1", "Mass density."),
     "velocity": FieldSpec(
-        "velocity", "primitive", "n_spatial",
+        "primitive", "n_spatial",
         "Velocity; channel i is the component along dims[i]."
     ),
     "distribution": FieldSpec(
-        "distribution", "primitive", "9", "Lattice-Boltzmann distribution (D2Q9)."
+        "primitive", "9", "Lattice-Boltzmann distribution (D2Q9)."
     ),
     "vorticity": FieldSpec(
-        "vorticity", "derived", "vorticity",
+        "derived", "vorticity",
         "Curl of the velocity. Recomputed from velocity on the analysis grid, never "
         "block-averaged -- see fmeval.derived."
     ),
     "pressure": FieldSpec(
-        "pressure", "derived", "1",
-        "Pressure. For the isothermal D2Q9 solver this is density * c_s^2 with "
-        "c_s^2 = 1/3, i.e. density/3 to within one ulp."
+        "derived", "1",
+        "Pressure. For the isothermal D2Q9 solver this is density * c_s^2 with c_s^2 = 1/3."
     ),
     "temperature": FieldSpec(
-        "temperature", "primitive", "1", "Temperature (degenerate for isothermal runs)."
+        "primitive", "1", "Temperature (degenerate for isothermal runs)."
     ),
 }
 
-CANONICAL_FIELDS: frozenset[str] = frozenset(FIELDS)
-PRIMITIVE_FIELDS: frozenset[str] = frozenset(
-    n for n, s in FIELDS.items() if s.kind == "primitive"
-)
 DERIVED_FIELDS: frozenset[str] = frozenset(
     n for n, s in FIELDS.items() if s.kind == "derived"
 )
+
+#: Stored by some solvers but reconstructible from a primitive (pressure from density, see
+#: :mod:`fmeval.data.kinet_raw`), so readers exclude it unless asked. Carrying both doubles the
+#: I/O and injects a guaranteed rho = 1 pair into the cross-metric correlation.
+REDUNDANT_FIELDS: frozenset[str] = frozenset({"pressure"})
+
+#: Stored but constant for an isothermal run, so it is a parameter rather than a field.
+DEGENERATE_FIELDS: frozenset[str] = frozenset({"temperature"})
 
 
 @dataclass(frozen=True)
@@ -206,13 +208,15 @@ class Frame:
         )
 
 
-@dataclass(frozen=True)
+@dataclass
 class TimeSelection:
-    """Which frames of a trajectory to evaluate.
+    """Which frames of a trajectory to evaluate; also the schema of a dataset's ``time`` block.
+
+    Not frozen, because Hydra composes a config into its schema in place.
 
     Attributes:
-        start: First source index. Defaults to 1 for kinet data, where several fields are
-            all-NaN at t=0.
+        start: First source index. Defaults to 0; ``configs/dataset/_re5e4_simulation.yaml``
+            sets 1, because several kinet fields are all-NaN at t=0.
         stop: Exclusive upper bound, or None for the end.
         reduction: Evaluate every Nth frame. This is the temporal size knob: a 10001-frame
             trajectory at ``reduction=50`` is 201 frames.
@@ -248,12 +252,15 @@ class Trajectory(ABC):
 
     nan_policy: NanPolicy = "error"
 
+    reads_from_disk: bool = True
+    """False for a reader whose frames are generated, so ``dataset.path`` names nothing on disk
+    and the harness must not insist that it exists."""
+
     is_ensemble: bool = False
     """Whether :meth:`read_frame` also returns ``f"{name}__members"`` member stacks.
 
-    Defaults False, so every reader that predates ensembles takes exactly the code path
-    it took before: the validation below is skipped entirely and the frame it yields
-    carries ``members=None``.
+    When False the member validation below is skipped and every frame carries
+    ``members=None``.
     """
 
     # --- to implement -------------------------------------------------------------
@@ -301,7 +308,7 @@ class Trajectory(ABC):
                 "axis reads every chunk in the file; iterate frame by frame instead."
             )
         requested = tuple(fields)
-        unknown = set(requested) - CANONICAL_FIELDS
+        unknown = set(requested).difference(FIELDS)
         if unknown:
             raise ValueError(f"unknown canonical field(s): {sorted(unknown)}")
         missing = set(requested) - set(self.fields)

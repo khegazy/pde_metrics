@@ -9,7 +9,7 @@ from __future__ import annotations
 import numpy as np
 from scipy.ndimage import median_filter
 
-from .._shared.kernels import _odd_width
+from .._shared.kernels import _window_filter
 from ..registry import degradation
 
 
@@ -27,10 +27,4 @@ def median_blur(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     smoothing the same at matched width is not seeing the sharp structure that the
     shock-oriented metrics are supposed to target.
     """
-    width = _odd_width(severity)
-    if width <= 1:
-        return x
-    size = [1] * x.ndim
-    for axis in ctx.spatial_axes:
-        size[axis] = width
-    return median_filter(x, size=size, mode="wrap")
+    return _window_filter(x, severity, ctx, median_filter)

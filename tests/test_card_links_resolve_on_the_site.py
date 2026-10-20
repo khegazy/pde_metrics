@@ -13,11 +13,10 @@ links to an issue by relative path breaks the build. Such a link has to be absol
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 import pytest
 
-REPO = Path(__file__).resolve().parent.parent
+from fmeval import REPO
 
 #: Every markdown link target in a card, excluding images.
 _LINK = re.compile(r"(?<!!)\[[^\]]*\]\(([^)]+)\)")

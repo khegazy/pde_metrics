@@ -16,33 +16,7 @@ order, so no dispatch list needs editing::
 Renderers arrange precomputed numbers and never write files; see ``context.py``.
 """
 
-from __future__ import annotations
-
-from .context import FigureItem, PlotResult, ReportContext, TableResult
-from .registry import (
-    PLOTS,
-    SECTIONS,
-    TABLES,
-    RendererSpec,
-    RendererUnavailable,
-    plot,
-    table,
-)
-from .style import Style, okabe, show_field
-
-__all__ = [
-    "PLOTS",
-    "SECTIONS",
-    "TABLES",
-    "FigureItem",
-    "PlotResult",
-    "RendererSpec",
-    "RendererUnavailable",
-    "ReportContext",
-    "Style",
-    "TableResult",
-    "okabe",
-    "plot",
-    "show_field",
-    "table",
-]
+# Imported for its side effect only: `style` selects matplotlib's non-interactive Agg
+# backend, and importing it here guarantees that happens before any module of this
+# package imports pyplot. Nothing is re-exported; import modules by their full path.
+from . import style  # noqa: F401

@@ -26,7 +26,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap, to_rgb
 
+from .vocabulary import FAMILY_INFO
+
 Theme = Literal["notebook", "paper"]
+
+#: The theme every report and card figure uses unless told otherwise.
+DEFAULT_THEME: Theme = "notebook"
 
 #: Okabe-Ito: colourblind-safe, and legible in greyscale when paired with line styles.
 OKABE_ITO: dict[str, str] = {
@@ -43,20 +48,6 @@ _CYCLE = ["blue", "vermillion", "green", "orange", "purple", "sky", "black", "ye
 
 #: Line styles carry the same information as hue, so a greyscale print stays readable.
 LINE_STYLES = ("-", "--", ":", "-.", (0, (3, 1, 1, 1)), (0, (5, 2)))
-
-#: One hue per degradation family, fixed here rather than assigned from whatever families a
-#: run happens to contain, so smoothing is the same colour on every card and in every report.
-#: Keys are ``degradations.registry.FAMILIES`` less ``identity``, which is the reference and
-#: is never drawn as a curve.
-FAMILY_COLOURS: dict[str, str] = {
-    "smoothing": "blue",
-    "spectral": "purple",
-    "geometric": "vermillion",
-    "resolution": "green",
-    "stochastic": "orange",
-    "pointwise": "sky",
-    "ensemble": "black",
-}
 
 #: Marker per physical field, in the order the sorted field names take, so a reader can tell
 #: density from vorticity on a greyscale print. Four is the most fields a run has had.
@@ -101,8 +92,9 @@ def okabe(name: str) -> str:
 
 
 def family_colour(family: str) -> str:
-    """The fixed hue of a degradation family; blue for a family the map does not know."""
-    return okabe(FAMILY_COLOURS.get(str(family), "blue"))
+    """The fixed hue of a degradation family (``vocabulary.FAMILY_INFO``); blue if unknown."""
+    known = FAMILY_INFO.get(str(family))
+    return okabe(known.colour if known else "blue")
 
 
 def field_marker(index: int) -> str:
@@ -114,7 +106,7 @@ def field_marker(index: int) -> str:
 class Style:
     """Palette, rcParams and figure sizing for one report."""
 
-    theme: Theme = "notebook"
+    theme: Theme = DEFAULT_THEME
     panel_w: float = 3.3
     panel_h: float = 2.5
     max_size: float = 20.0
@@ -126,7 +118,7 @@ class Style:
     cycle repeats, so two metrics never share both colour and line."""
 
     @classmethod
-    def build(cls, theme: Theme = "notebook", *, metrics=(), axes=()) -> Style:
+    def build(cls, theme: Theme = DEFAULT_THEME, *, metrics=(), axes=()) -> Style:
         """Assign colours once, from the sorted unique values, so reruns agree."""
         style = cls(theme=theme)
         if theme == "paper":
@@ -206,13 +198,11 @@ def show_field(ax, data: np.ndarray, grid=None, **kwargs):
 
     extent = None
     if grid is not None:
-        lx, ly = grid.length[0], grid.length[1]
-        extent = (0.0, lx, 0.0, ly)
-    kwargs.setdefault("interpolation", "nearest")
-    image = ax.imshow(array.T, origin="lower", extent=extent, aspect="equal", **kwargs)
-    if grid is not None:
+        extent = (0.0, grid.length[0], 0.0, grid.length[1])
         ax.set_xlabel(grid.dims[0])
         ax.set_ylabel(grid.dims[1])
+    kwargs.setdefault("interpolation", "nearest")
+    image = ax.imshow(array.T, origin="lower", extent=extent, aspect="equal", **kwargs)
     ax.grid(False)
     return image
 
@@ -224,10 +214,3 @@ def symmetric_limits(data: np.ndarray, quantile: float = 1.0) -> tuple[float, fl
         return (-1.0, 1.0)
     v = float(np.quantile(np.abs(finite), quantile))
     return (-v, v) if v > 0 else (-1.0, 1.0)
-
-
-def finish(fig, legend_handles=None, legend_labels=None, ncol: int = 4) -> None:
-    """Deduplicated figure-level legend, placed outside the axes."""
-    if legend_handles:
-        fig.legend(legend_handles, legend_labels, loc="lower center",
-                   ncol=ncol, frameon=False, bbox_to_anchor=(0.5, -0.02))

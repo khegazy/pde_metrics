@@ -61,8 +61,8 @@ jobs:
       # caught by a test that was never executed.
       #
       # This job is the one place the toolchain is present by definition, so it runs the
-      # whole suite. It duplicates ~25 s of the tests job, which is cheaper than the class
-      # of bug it catches, and it means no test in this repository is skipped everywhere.
+      # whole suite. It duplicates the tests job, which is cheaper than the class of bug it
+      # catches, and it means no test in this repository is skipped everywhere.
       - name: Run the tests that need the docs toolchain
         run: pytest -ra
 

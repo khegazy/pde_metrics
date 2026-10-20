@@ -21,7 +21,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from fmeval.analysis import PROBE_LABELS, UNCORRELATED_LABEL
+from degradations import registry as deg_registry
+from fmeval.analysis import PROBE_LABELS, UNCORRELATED_LABEL, Analysis
 
 from .registry import RendererUnavailable
 from .style import Style
@@ -55,7 +56,6 @@ class TableResult:
     note: str = ""
     formats: dict[str, str] = dc_field(default_factory=dict)
     headers: dict[str, str] = dc_field(default_factory=dict)
-    landscape: bool = False
     notes: list[str] = dc_field(default_factory=list)
     long: bool = False
     """Typeset as a ``longtable`` that breaks across pages, for one row per metric and axis."""
@@ -88,6 +88,23 @@ class ReportContext:
     probe_labels: frozenset[str] = PROBE_LABELS
     """Ladder entries that are probes or anchors rather than monotone axes, as the run declared."""
 
+    @classmethod
+    def from_analysis(cls, analysis: Analysis, *, meta: Mapping[str, Any], theme: str,
+                      card: pd.DataFrame | None = None, **extra: Any) -> ReportContext:
+        """The renderers' view of one analysed run, for the report and the cards alike.
+
+        Built in one place so a figure on a card and the same figure in the report draw the
+        same frames with the same colours. ``card`` defaults to the unflagged card; ``extra``
+        carries what only the report has (the spectrum, the maps, the thresholds).
+        """
+        scored = analysis.scored
+        return cls(df=scored, norm=analysis.norm, axes=analysis.axes, probes=analysis.probes,
+                   card=analysis.card if card is None else card, meta=dict(meta),
+                   style=Style.build(theme, metrics=scored["metric"].unique(),
+                                     axes=scored["degradation"].unique()),
+                   anchor_label=analysis.anchor_label, probe_labels=analysis.probe_labels,
+                   **extra)
+
     # --- graceful skip ---------------------------------------------------------------
 
     def require(self, condition: bool, message: str) -> None:
@@ -107,13 +124,9 @@ class ReportContext:
     def metrics(self) -> list[str]:
         return sorted(str(m) for m in self.df["metric"].unique())
 
-    @property
-    def fields(self) -> list[str]:
-        return sorted(str(f) for f in self.df["field"].unique())
-
-    def axis_rows(self, **filters: str) -> pd.DataFrame:
-        """Rows of the per-axis summary matching the given column values."""
-        out = self.axes
+    def ordinal_rows(self, **filters: str) -> pd.DataFrame:
+        """Rows of the per-axis summary on ordinal axes (no probe) matching the given values."""
+        out = self.axes[~self.axes["is_probe"]]
         for key, value in filters.items():
             out = out[out[key] == value]
         return out
@@ -132,8 +145,6 @@ class ReportContext:
         entry = (self.meta.get("registries", {}).get("degradations", {}) or {}).get(op, {})
         if "preserves" in entry:
             return tuple(entry["preserves"])
-        from degradations import registry as deg_registry
-
         spec = deg_registry.REGISTRY.get(op)
         return spec.preserves if spec is not None else ()
 

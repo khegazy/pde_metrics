@@ -62,9 +62,7 @@ def read_time_axis(
         NonUniformTimeAxis: If a reconstruction disagrees with the stored values.
     """
     n = int(ds.shape[0])  # object-header metadata: free, no data read
-    if mode == "read" or n == 0:
-        return np.asarray(ds[:], dtype=np.float64)
-    if mode == "auto" and not (remote and ds.chunks is not None):
+    if mode == "read" or n == 0 or (mode == "auto" and not (remote and ds.chunks is not None)):
         return np.asarray(ds[:], dtype=np.float64)
     return _affine_axis(ds, n, spot_checks)
 
@@ -82,13 +80,13 @@ def _affine_axis(ds, n: int, spot_checks: int) -> np.ndarray:
             "A trajectory's time axis must be strictly increasing."
         )
 
-    ramp = np.arange(n, dtype=np.float64) * step
-    # `first` is 0.0 in every file measured, and `arange*dt` reproduces those bitwise;
-    # adding a zero offset would not, in general, be a no-op for other files, so it is
-    # only applied when it is actually needed.
-    axis = ramp if first == 0.0 else first + ramp
+    axis = first + np.arange(n, dtype=np.float64) * step
 
-    for index in _sample_indices(n, spot_checks):
+    # Both endpoints, the second element, and an even interior spread. Deterministic.
+    checked = {0, 1, n - 1}
+    if spot_checks > 0:
+        checked.update(int(i) for i in np.linspace(0, n - 1, spot_checks + 2))
+    for index in sorted(checked):
         stored = float(ds[index])
         if stored != axis[index]:
             raise NonUniformTimeAxis(
@@ -100,11 +98,3 @@ def _affine_axis(ds, n: int, spot_checks: int) -> np.ndarray:
                 "`reader.time_axis=read` in the dataset config."
             )
     return axis
-
-
-def _sample_indices(n: int, spot_checks: int) -> list[int]:
-    """Both endpoints, the second element, and an even interior spread. Deterministic."""
-    wanted = {0, 1, n - 1}
-    if spot_checks > 0:
-        wanted.update(int(i) for i in np.linspace(0, n - 1, spot_checks + 2))
-    return sorted(i for i in wanted if 0 <= i < n)

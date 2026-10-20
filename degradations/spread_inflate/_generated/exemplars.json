@@ -3,12 +3,12 @@
     "mode": "severity",
     "resolved": [
       0.25,
-      1.0,
+      0.75,
       3.0
     ],
     "severities": [
       0.25,
-      1.0,
+      0.75,
       3.0
     ]
   },
@@ -23,10 +23,10 @@
         "mean": 1.2779935094883121e-06,
         "rms": 0.0009396405954113433
       },
-      "excess dispersion = 1 fraction of the calibrated spread": {
-        "max_abs": 0.006355345101646504,
-        "mean": 1.8338822573029539e-06,
-        "rms": 0.001465528401109248
+      "excess dispersion = 0.75 fraction of the calibrated spread": {
+        "max_abs": 0.005556377752571968,
+        "mean": 1.6485860080314076e-06,
+        "rms": 0.0012888766020902006
       },
       "excess dispersion = 3 fraction of the calibrated spread": {
         "max_abs": 0.01274708389424279,
@@ -46,11 +46,11 @@
         "min": -0.018685357613891018,
         "rms": 0.0027433431415085615
       },
-      "excess dispersion = 1 fraction of the calibrated spread": {
-        "max": 0.019697675810444036,
-        "mean": 1.8338822573029886e-06,
-        "min": -0.020493067355445028,
-        "rms": 0.0029671377021952003
+      "excess dispersion = 0.75 fraction of the calibrated spread": {
+        "max": 0.019270776304120014,
+        "mean": 1.6485860080313612e-06,
+        "min": -0.019890497441593692,
+        "rms": 0.002883220486910692
       },
       "excess dispersion = 3 fraction of the calibrated spread": {
         "max": 0.023112871861036208,

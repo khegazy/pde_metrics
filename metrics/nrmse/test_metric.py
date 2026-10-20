@@ -10,23 +10,16 @@ from __future__ import annotations
 
 import numpy as np
 
+from tests.conftest import SQUARE_REFERENCE, SQUARE_SHIFTED
+
+from ..rmse.metric import rmse
 from .metric import nrmse
-
-REFERENCE = np.array([[[0.0, 0.0, 0.0, 0.0],
-                       [0.0, 1.0, 1.0, 0.0],
-                       [0.0, 1.0, 1.0, 0.0],
-                       [0.0, 0.0, 0.0, 0.0]]])
-
-SHIFTED = np.array([[[0.0, 0.0, 0.0, 0.0],
-                     [0.0, 0.0, 1.0, 1.0],
-                     [0.0, 0.0, 1.0, 1.0],
-                     [0.0, 0.0, 0.0, 0.0]]])
 
 
 def test_worked_example_from_the_card():
     """RMSE is 0.5; the reference fluctuation RMS is sqrt(3)/4, so the ratio is 8/sqrt(3)."""
     expected = 0.5 / np.sqrt(3.0) * 4.0
-    assert np.isclose(nrmse(REFERENCE, SHIFTED), expected)
+    assert np.isclose(nrmse(SQUARE_REFERENCE, SQUARE_SHIFTED), expected)
 
 
 def test_worked_example_of_scale_invariance_from_the_card():
@@ -35,12 +28,10 @@ def test_worked_example_of_scale_invariance_from_the_card():
     The same displaced feature, scored as it stands and with both fields multiplied by a
     ten-thousandth. RMSE falls by four orders of magnitude; NRMSE does not move.
     """
-    from ..rmse.metric import rmse
-
-    assert rmse(REFERENCE, SHIFTED) == 0.5
-    assert np.isclose(rmse(REFERENCE * 1e-4, SHIFTED * 1e-4), 5e-05)
-    assert np.isclose(nrmse(REFERENCE, SHIFTED), 1.155, atol=5e-4)
-    assert np.isclose(nrmse(REFERENCE * 1e-4, SHIFTED * 1e-4), 1.155, atol=5e-4)
+    assert rmse(SQUARE_REFERENCE, SQUARE_SHIFTED) == 0.5
+    assert np.isclose(rmse(SQUARE_REFERENCE * 1e-4, SQUARE_SHIFTED * 1e-4), 5e-05)
+    assert np.isclose(nrmse(SQUARE_REFERENCE, SQUARE_SHIFTED), 1.155, atol=5e-4)
+    assert np.isclose(nrmse(SQUARE_REFERENCE * 1e-4, SQUARE_SHIFTED * 1e-4), 1.155, atol=5e-4)
 
 
 def test_scaling_both_fields_leaves_it_unchanged():
@@ -50,9 +41,9 @@ def test_scaling_both_fields_leaves_it_unchanged():
     normalising fluctuation equally, so the ratio does not move. This is what MSE, MAE
     and RMSE cannot do.
     """
-    plain = nrmse(REFERENCE, SHIFTED)
+    plain = nrmse(SQUARE_REFERENCE, SQUARE_SHIFTED)
     for factor in (1e-4, 1e3):
-        assert np.isclose(nrmse(REFERENCE * factor, SHIFTED * factor), plain)
+        assert np.isclose(nrmse(SQUARE_REFERENCE * factor, SQUARE_SHIFTED * factor), plain)
 
 
 def test_adding_a_constant_offset_to_the_reference_leaves_it_unchanged():
@@ -62,8 +53,8 @@ def test_adding_a_constant_offset_to_the_reference_leaves_it_unchanged():
     about one and hide four orders of magnitude of relative error; removing the spatial
     mean first is what keeps density and velocity on the same axis.
     """
-    plain = nrmse(REFERENCE, SHIFTED)
-    assert np.isclose(nrmse(REFERENCE + 1000.0, SHIFTED + 1000.0), plain)
+    plain = nrmse(SQUARE_REFERENCE, SQUARE_SHIFTED)
+    assert np.isclose(nrmse(SQUARE_REFERENCE + 1000.0, SQUARE_SHIFTED + 1000.0), plain)
 
 
 def test_a_uniform_reference_has_no_scale_to_normalise_by():
@@ -82,7 +73,7 @@ def test_it_is_not_symmetric():
     number and hides the asymmetry. Halving the amplitude halves the fluctuation, which
     is what makes the direction matter.
     """
-    damped = REFERENCE * 0.5
-    assert not np.isclose(nrmse(REFERENCE, damped), nrmse(damped, REFERENCE))
+    damped = SQUARE_REFERENCE * 0.5
+    assert not np.isclose(nrmse(SQUARE_REFERENCE, damped), nrmse(damped, SQUARE_REFERENCE))
     # The reference is the larger field, so normalising by it gives the smaller number.
-    assert nrmse(REFERENCE, damped) < nrmse(damped, REFERENCE)
+    assert nrmse(SQUARE_REFERENCE, damped) < nrmse(damped, SQUARE_REFERENCE)

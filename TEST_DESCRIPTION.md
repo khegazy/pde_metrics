@@ -527,7 +527,9 @@ against the projection below.
 ### `per_frame_s`, `full_trajectory_s` — that cost scaled up to a whole trajectory
 
 **What it is.** The cost scaled up: `per_frame_s` is one evaluation times the number of
-damaged copies the run produced, and `full_trajectory_s` projects that to all 10001 frames.
+damaged copies the run produced, and `full_trajectory_s` projects that to every frame of the
+dataset's trajectory, a length the run records from its reader (`trajectory_frames` in
+`run_meta.json`). A run folder without that record has no `full_trajectory_s` column.
 
 **Why we report it.** This is the number that decides usability. A metric that takes a second
 per evaluation is fine as an occasional diagnostic and impossible inside a training loop, and

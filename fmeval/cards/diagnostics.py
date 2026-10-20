@@ -7,9 +7,10 @@ spectral phase rather than amplitude, and its spectrum row would be four identic
 Choosing the wrong row makes a figure that says nothing, so the choice is declared per
 degradation in ``card.yaml`` and rendered here.
 
-Adding a diagnostic is one decorated function in this module and one entry in the card
-schema's vocabulary. The registry pattern is the same one the metric, degradation and
-report-renderer registries use, so there is no import list to update.
+Adding a diagnostic is one decorated function in this module; the registry is the
+vocabulary a card's ``exemplars.diagnostics`` is checked against. The registry pattern is the
+same one the metric, degradation and report-renderer registries use, so there is no import
+list to update.
 
 Every diagnostic returns the numbers behind what it drew. Figures are for people; the
 numbers are for agents, which cannot open a PNG, and both come from the same call so they
@@ -20,7 +21,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from dataclasses import field as dc_field
 from typing import Any
 
 import numpy as np
@@ -36,13 +36,11 @@ DIAGNOSTICS: dict[str, DiagnosticSpec] = {}
 class DiagnosticSpec:
     """One panel row: how to draw it, and what to record about it."""
 
-    name: str
     fn: Callable[..., dict[str, float]]
     label: str
     """Row label shown at the left of the panel."""
     signed: bool
     """True if the row draws a signed quantity on a diverging map centred on zero."""
-    doc: str = ""
 
 
 def diagnostic(*, name: str, label: str, signed: bool = False):
@@ -60,9 +58,7 @@ def diagnostic(*, name: str, label: str, signed: bool = False):
     def register(fn: Callable[..., dict[str, float]]) -> Callable[..., dict[str, float]]:
         if name in DIAGNOSTICS:
             raise ValueError(f"diagnostic {name!r} is already registered")
-        DIAGNOSTICS[name] = DiagnosticSpec(
-            name=name, fn=fn, label=label, signed=signed, doc=fn.__doc__ or ""
-        )
+        DIAGNOSTICS[name] = DiagnosticSpec(fn=fn, label=label, signed=signed)
         return fn
 
     return register
@@ -72,21 +68,27 @@ def diagnostic(*, name: str, label: str, signed: bool = False):
 class RowContext:
     """What a diagnostic needs to draw one row consistently across every column.
 
-    Limits are computed once for the whole row and passed to each column rather than
-    recomputed per panel. Per-panel autoscaling is the single most effective way to make a
-    strong degradation look identical to the original, and it does it silently.
+    ``limits`` are computed once for the whole row (:func:`fmeval.cards.figures._row_limits`,
+    rules 1 and 2 of :mod:`fmeval.cards.figures`) and passed to each column.
     """
 
     reference: np.ndarray
     """The undegraded field, for rows that draw a comparison."""
     grid: Any = None
     limits: tuple[float, float] | None = None
-    extra: dict[str, Any] = dc_field(default_factory=dict)
+    nyquist: int | None = None
+    """The Nyquist wavenumber, marked on spectral rows."""
 
 
 # --------------------------------------------------------------------------------------
 # Real-space rows
 # --------------------------------------------------------------------------------------
+
+
+def _plane(data: np.ndarray) -> np.ndarray:
+    """The 2-D plane a diagnostic draws: the first channel of a ``(C, X, Y)`` field."""
+    array = np.asarray(data)
+    return array[0] if array.ndim == 3 else array
 
 
 @diagnostic(name="field", label="field")
@@ -101,11 +103,8 @@ def draw_field(ax, data: np.ndarray, ctx: RowContext) -> dict[str, float]:
 
 @diagnostic(name="difference", label="difference", signed=True)
 def draw_difference(ax, data: np.ndarray, ctx: RowContext) -> dict[str, float]:
-    """Degraded minus original, on a diverging map centred on zero.
-
-    Limits come from the strongest severity so the weak column reads as legibly faint
-    rather than being rescaled until it looks severe.
-    """
+    """Degraded minus original, on a diverging map centred on zero (rule 2 of
+    :mod:`fmeval.cards.figures` sets the limits)."""
     delta = np.asarray(data) - ctx.reference
     style.show_field(ax, delta, grid=ctx.grid, cmap="RdBu_r",
                      vmin=ctx.limits[0], vmax=ctx.limits[1])
@@ -120,9 +119,7 @@ def draw_lineout(ax, data: np.ndarray, ctx: RowContext) -> dict[str, float]:
 
     The row that shows what happens to a sharp front, which a colour map flattens.
     """
-    array = np.asarray(data)
-    array = array[0] if array.ndim == 3 else array
-    reference = ctx.reference[0] if ctx.reference.ndim == 3 else ctx.reference
+    array, reference = _plane(data), _plane(ctx.reference)
     row = array.shape[1] // 2
     ax.plot(reference[:, row], color="0.7", lw=1.0)
     ax.plot(array[:, row], color=style.okabe("blue"), lw=1.0)
@@ -139,8 +136,7 @@ def draw_lineout(ax, data: np.ndarray, ctx: RowContext) -> dict[str, float]:
 
 def _radial_spectrum(data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Radially averaged power spectrum, using the repository's one |k| definition."""
-    array = np.asarray(data)
-    array = array[0] if array.ndim == 3 else array
+    array = _plane(data)
     power = np.abs(np.fft.fftn(array)) ** 2
     k = wavenumber_magnitude(array.shape)
     shells = np.rint(k).astype(int)
@@ -163,9 +159,8 @@ def draw_radial_spectrum(ax, data: np.ndarray, ctx: RowContext) -> dict[str, flo
     k, power = _radial_spectrum(data)
     ax.loglog(k_ref[1:], p_ref[1:], color="0.7", lw=1.0)
     ax.loglog(k[1:], power[1:], color=style.okabe("blue"), lw=1.0)
-    nyquist = ctx.extra.get("nyquist")
-    if nyquist:
-        ax.axvline(nyquist, color="0.5", ls=":", lw=0.8)
+    if ctx.nyquist:
+        ax.axvline(ctx.nyquist, color="0.5", ls=":", lw=0.8)
     ax.set_ylim(ctx.limits)
 
     # The wavenumber where this field has lost a tenth of the reference's power: a
@@ -188,12 +183,10 @@ def draw_spectral_phase(ax, data: np.ndarray, ctx: RowContext) -> dict[str, floa
     The row for degradations that move structure without changing how much of it there
     is. A translation leaves every amplitude untouched and shows up only here.
     """
-    array = np.asarray(data)
-    array = array[0] if array.ndim == 3 else array
-    reference = ctx.reference[0] if ctx.reference.ndim == 3 else ctx.reference
+    array, reference = _plane(data), _plane(ctx.reference)
     delta = np.angle(np.fft.fftn(array) * np.conj(np.fft.fftn(reference)))
     style.show_field(ax, np.fft.fftshift(delta), cmap="twilight_shifted",
-                     vmin=-np.pi, vmax=np.pi)
+                     vmin=ctx.limits[0], vmax=ctx.limits[1])
     weight = np.abs(np.fft.fftn(reference)) ** 2
     weighted = float(np.sum(np.abs(delta) * weight) / max(weight.sum(), 1e-300))
     return {"mean_abs_phase_shift": float(np.abs(delta).mean()),
@@ -234,7 +227,7 @@ def draw_autocorrelation(ax, data: np.ndarray, ctx: RowContext) -> dict[str, flo
     The row that shows a change in the size of structures rather than their amplitude.
     """
     def profile(array: np.ndarray) -> np.ndarray:
-        array = array[0] if array.ndim == 3 else array
+        array = _plane(array)
         centred = array - array.mean()
         power = np.abs(np.fft.fftn(centred)) ** 2
         correlation = np.real(np.fft.ifftn(power))
@@ -245,6 +238,6 @@ def draw_autocorrelation(ax, data: np.ndarray, ctx: RowContext) -> dict[str, flo
     current = profile(np.asarray(data))
     ax.plot(reference, color="0.7", lw=1.0)
     ax.plot(current, color=style.okabe("blue"), lw=1.0)
-    ax.set_ylim(-0.5, 1.05)
+    ax.set_ylim(ctx.limits)
     below = np.flatnonzero(current < 1.0 / np.e)
     return {"correlation_length": float(below[0]) if below.size else float("nan")}

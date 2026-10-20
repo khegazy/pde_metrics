@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from .._shared.filters import _apply_filter, _wavenumber_magnitude
+from fmeval.wavenumbers import wavenumber_magnitude
+
+from .._shared.filters import _apply_filter
 from ..registry import degradation
 
 
@@ -17,8 +19,8 @@ from ..registry import degradation
     severity_name="retained fraction",
     severity_units="",
     severity_direction="decreasing",  # retaining LESS is worse
-    defaults={"k_lo": 16.0, "k_hi": 64.0},
     preserves=("spatial_mean",),
+    zero_is_identity=False,
 )
 def band_attenuate(
     x: np.ndarray, severity: float, *, ctx, k_lo: float = 16.0, k_hi: float = 64.0
@@ -30,7 +32,7 @@ def band_attenuate(
     targets is the one damaged. A metric whose response is the same wherever the damage
     sits is measuring "badness in general".
     """
-    k = _wavenumber_magnitude(ctx.grid.shape)
+    k = wavenumber_magnitude(ctx.grid.shape)
     transfer = np.ones_like(k)
     transfer[(k >= k_lo) & (k <= k_hi)] = severity
     return _apply_filter(x, transfer)

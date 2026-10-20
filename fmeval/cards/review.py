@@ -1,7 +1,7 @@
 """The review ledger: a record of which prose a human has actually read.
 
 Every mechanical check in this repository can confirm that a section exists, that it is
-long enough, and that it contains no mathematical notation. None of them can tell correct
+not empty, and that it contains no mathematical notation. None of them can tell correct
 prose from prose that is fluent, plausible and wrong -- which is exactly what a language
 model produces when it is asked to describe a metric it has not measured. Only a person
 reading the text can catch that.
@@ -12,11 +12,9 @@ card is unreviewed again until someone signs it. That is a warning for a bundle 
 being worked on, and a hard failure for one marked ``validated`` -- because ``validated``
 is precisely the claim that a human checked it.
 
-The hash is taken over the prose alone -- generated blocks are stripped first, so
-regenerating evidence never invalidates a signature while editing prose always does --
-after normalising line endings and trailing
-whitespace. The generated sections of ``card.md`` contain only an include directive, not
-the generated text itself, so regenerating evidence never invalidates a review.
+The hash is taken over the prose alone, after normalising line endings and trailing
+whitespace: generated blocks are stripped first, so regenerating evidence never
+invalidates a signature while editing prose always does.
 """
 
 from __future__ import annotations
@@ -26,6 +24,7 @@ import hashlib
 import re
 
 from .loader import Bundle
+from .prose import strip_generated
 
 _TRAILING_WS = re.compile(r"[ \t]+$", re.MULTILINE)
 
@@ -45,8 +44,6 @@ def normalise(text: str) -> str:
     """
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     text = _TRAILING_WS.sub("", text)
-    from .prose import strip_generated
-
     text = strip_generated(text)
     return text.rstrip("\n") + "\n"
 

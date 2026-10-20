@@ -83,15 +83,10 @@ def slug(name: str, **keys: object) -> str:
 
     A single dot in the final filename matters: ``graphicx`` mis-parses paths with more.
     """
-    parts = [name]
-    for key in ("dataset", "metric", "field", "degradation", "t"):
-        if key in keys and keys[key] not in (None, ""):
-            parts.append(f"{key}-{_clean(keys[key])}")
-    for key, value in keys.items():
-        if (key not in ("dataset", "metric", "field", "degradation", "t")
-                and value not in (None, "")):
-            parts.append(f"{key}-{_clean(value)}")
-    return "__".join(parts)
+    first = ("dataset", "metric", "field", "degradation", "t")
+    ordered = [*(k for k in first if k in keys), *(k for k in keys if k not in first)]
+    return "__".join([name, *(f"{k}-{_clean(keys[k])}" for k in ordered
+                              if keys[k] not in (None, ""))])
 
 
 def _clean(value: object) -> str:
@@ -108,7 +103,6 @@ def booktabs_table(
     label: str,
     formats: Mapping[str, str] | None = None,
     headers: Mapping[str, str] | None = None,
-    align: str | None = None,
     note: str = "",
     landscape: bool = False,
     long: bool = False,
@@ -124,7 +118,6 @@ def booktabs_table(
         label: Label suffix, used as ``tab:<label>``.
         formats: Column name -> printf-style format, or "code" to typeset as an identifier.
         headers: Column name -> display header. Defaults to the column name.
-        align: Column alignment string. Defaults to left for text, right for numbers.
         note: Optional footnote below the table.
         landscape: Wrap in a smaller font for wide tables.
         long: Typeset as a ``longtable`` that breaks across pages and repeats its header, for
@@ -133,18 +126,18 @@ def booktabs_table(
     """
     formats = formats or {}
     headers = headers or {}
+    caption_tex = f"\\caption{{{escape(caption)}}}"
+    label_tex = f"\\label{{tab:{_clean(label)}}}"
     if df.empty:
         return (
             f"% generated {_stamp()}\n"
             "\\begin{table}[htbp]\n\\centering\n"
-            f"\\caption{{{escape(caption)}}}\n\\label{{tab:{_clean(label)}}}\n"
+            f"{caption_tex}\n{label_tex}\n"
             "\\emph{No data.}\n\\end{table}\n"
         )
 
-    if align is None:
-        align = "".join(
-            "r" if pd.api.types.is_numeric_dtype(df[c]) else "l" for c in df.columns
-        )
+    # Left for text, right for numbers.
+    align = "".join("r" if pd.api.types.is_numeric_dtype(df[c]) else "l" for c in df.columns)
 
     head = " & ".join(rf"\textbf{{{escape(headers.get(c, c))}}}" for c in df.columns)
     body = []
@@ -172,7 +165,7 @@ def booktabs_table(
             f"% generated {_stamp()}\n"
             f"\\begingroup\n{size}"
             f"\\begin{{longtable}}{{{align}}}\n"
-            f"\\caption{{{escape(caption)}}}\\label{{tab:{_clean(label)}}} \\\\\n"
+            f"{caption_tex}{label_tex} \\\\\n"
             f"{header}\\endfirsthead\n{header}\\endhead\n\\bottomrule\n\\endlastfoot\n"
             + "\n".join(body)
             + "\n\\end{longtable}"
@@ -183,8 +176,8 @@ def booktabs_table(
         f"% generated {_stamp()}\n"
         "\\begin{table}[htbp]\n\\centering\n"
         f"{size}"
-        f"\\caption{{{escape(caption)}}}\n"
-        f"\\label{{tab:{_clean(label)}}}\n"
+        f"{caption_tex}\n"
+        f"{label_tex}\n"
         f"\\begin{{tabular}}{{{align}}}\n"
         "\\toprule\n"
         f"{head} \\\\\n"
@@ -196,14 +189,14 @@ def booktabs_table(
     )
 
 
-def figure(path: str, *, caption: str, label: str, width: str = r"\linewidth") -> str:
+def figure(path: str, *, caption: str, label: str) -> str:
     """A ``figure`` float referencing ``plots/<stem>`` with the extension omitted.
 
     Omitting the extension lets LaTeX prefer the vector PDF and fall back to the PNG.
     """
     return (
         "\\begin{figure}[htbp]\n\\centering\n"
-        f"\\includegraphics[width={width}]{{{path}}}\n"
+        f"\\includegraphics[width=\\linewidth]{{{path}}}\n"
         f"\\caption{{{escape(caption)}}}\n"
         f"\\label{{fig:{_clean(label)}}}\n"
         "\\end{figure}\n"
@@ -252,7 +245,7 @@ def preamble(title: str, subtitle: str = "") -> str:
 """
 
 
-def document(section_files: Sequence[str], *, title: str, subtitle: str = "") -> str:
+def document(section_files: Sequence[str]) -> str:
     """``main.tex``: preamble, title, contents, and one ``\\input`` per section."""
     inputs = "\n".join(rf"\input{{sections/{name}}}" for name in section_files)
     return (

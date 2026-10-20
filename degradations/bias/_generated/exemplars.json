@@ -3,13 +3,13 @@
     "mode": "severity",
     "resolved": [
       0.05,
-      0.2,
-      0.5
+      0.15,
+      0.6
     ],
     "severities": [
       0.05,
-      0.2,
-      0.5
+      0.15,
+      0.6
     ]
   },
   "dataset": "kinet_re5e4",
@@ -23,15 +23,15 @@
         "mean": 0.00012866739288816244,
         "rms": 0.00012866739288816244
       },
-      "offset = 0.2 fraction of fluctuation rms": {
-        "max_abs": 0.0005146695715526513,
-        "mean": 0.0005146695715526495,
-        "rms": 0.0005146695715526497
+      "offset = 0.15 fraction of fluctuation rms": {
+        "max_abs": 0.0003860021786644876,
+        "mean": 0.0003860021786644874,
+        "rms": 0.00038600217866448727
       },
-      "offset = 0.5 fraction of fluctuation rms": {
-        "max_abs": 0.0012866739288816247,
-        "mean": 0.0012866739288816243,
-        "rms": 0.001286673928881624
+      "offset = 0.6 fraction of fluctuation rms": {
+        "max_abs": 0.0015440087146579504,
+        "mean": 0.001544008714657949,
+        "rms": 0.0015440087146579488
       },
       "original": {
         "max_abs": 0.0,
@@ -46,17 +46,17 @@
         "min": -0.016294345347318513,
         "rms": 0.002576562534666554
       },
-      "offset = 0.2 fraction of fluctuation rms": {
-        "max": 0.01691335030373549,
-        "mean": 0.0005146695715526498,
-        "min": -0.015908343168654023,
-        "rms": 0.002624310188399399
+      "offset = 0.15 fraction of fluctuation rms": {
+        "max": 0.016784682910847323,
+        "mean": 0.00038600217866448727,
+        "min": -0.01603701056154219,
+        "rms": 0.002602136983132985
       },
-      "offset = 0.5 fraction of fluctuation rms": {
-        "max": 0.01768535466106446,
-        "mean": 0.0012866739288816243,
-        "min": -0.01513633881132505,
-        "rms": 0.0028770903698560417
+      "offset = 0.6 fraction of fluctuation rms": {
+        "max": 0.017942689446840788,
+        "mean": 0.001544008714657949,
+        "min": -0.014879004025548726,
+        "rms": 0.0030010135134641417
       },
       "original": {
         "max": 0.016398680732182837,
@@ -71,14 +71,14 @@
         "mean": 0.00012866739288816239,
         "std": 0.0025733478577632486
       },
-      "offset = 0.2 fraction of fluctuation rms": {
+      "offset = 0.15 fraction of fluctuation rms": {
         "flatness": 17.057721889155673,
-        "mean": 0.0005146695715526498,
+        "mean": 0.00038600217866448727,
         "std": 0.0025733478577632486
       },
-      "offset = 0.5 fraction of fluctuation rms": {
-        "flatness": 17.057721889155673,
-        "mean": 0.0012866739288816243,
+      "offset = 0.6 fraction of fluctuation rms": {
+        "flatness": 17.057721889155676,
+        "mean": 0.001544008714657949,
         "std": 0.0025733478577632486
       },
       "original": {

@@ -87,9 +87,10 @@ split it. A single-element list needs no quoting.
 `python -m metrics` lists the names you can put there. An unknown name fails
 immediately with the available list, rather than part-way through a run.
 
-Results land in `results/<metric>_<time>/`, one folder per metric, each self-contained:
-`main.tex` (compiles standalone and renders on Overleaf), `plots/`, `tables/`, and `data/`
-holding every raw number behind the report plus the exact config that produced it.
+Results land in `results/<metric>_<time>/`, one folder per metric, each self-contained: `data/`
+holds every raw number plus the exact config that produced it. `evaluate.py` never draws a
+report; `python make_report.py <folder>` adds `main.tex` (compiles standalone and renders on
+Overleaf), `plots/` and `tables/` to the folder, from the saved numbers.
 
 ### How the configuration is organised
 
@@ -98,9 +99,10 @@ one option from each **config group**, and every value can be overridden from th
 
 ```
 configs/
-├── config.yaml            top level: metrics, fields, seed, analysis grid, paths
-├── dataset/               kinet_re5e4_dev · kinet_re5e4 · well_re5e4
-├── degradation/           default · quick
+├── config.yaml            top level: metrics, seed, paths, analysis anchor
+├── dataset/               kinet_re5e4_dev · kinet_re5e4 · well_re5e4 · synthetic_ensemble
+│                          (_re5e4_simulation.yaml: shared by the first three, not a choice)
+├── degradation/           default · quick · ensemble_miscalibration
 ├── report/                default · none
 └── dataset_family/        reynolds_ladder_2d   (not yet consumed; see issues/011)
 ```
@@ -112,7 +114,7 @@ There are two different ways to change something, and the distinction matters:
 ```bash
 python evaluate.py metrics=[mse] dataset=kinet_re5e4    # the 167 GiB trajectory
 python evaluate.py metrics=[mse] degradation=quick      # 3 axes instead of 14
-python evaluate.py metrics=[mse] report=none            # write data/ only
+python evaluate.py metrics=[mse] report=none            # store no pointwise error maps
 ```
 
 **Override a single value** with a dotted path. This reaches into whichever file was selected:
@@ -135,7 +137,7 @@ here works.
 | Override | Effect |
 |---|---|
 | `metrics=[mse]` | Which metric(s) to test. **The usual override** |
-| `dataset=kinet_re5e4` | Which dataset. `ls configs/dataset/` for the choices |
+| `dataset=kinet_re5e4` | Which dataset. `ls configs/dataset/` for the choices; a file starting with `_` is a shared fragment, not a choice |
 | `dataset.time.reduction=100` | Evaluate every 100th frame |
 | `dataset.time.start=2000` | Skip the early, undeveloped part of the trajectory |
 | `dataset.time.max_frames=5` | Hard cap, applied after the reduction. Good for a smoke test |
@@ -146,8 +148,9 @@ here works.
 | `degradation.skip=[median_blur]` | Drop these ladder entries |
 | `degradation.ladder.<entry>.enabled=false` | Disable one entry |
 | `degradation.ladder.<entry>.severities=[1,2,4]` | Change one entry's severity levels |
-| `report=none` | Skip figures and tables; render later with `make_report.py` |
-| `report.style.theme=paper` | Vector PDF, Type-42 fonts, journal column widths |
+| `+degradation.ladder.<entry>.options.<key>=<value>` | Change an operator option the config leaves at its default (`+`, because the key is not in the file) |
+| `+dataset.reader.<key>=<value>` | Change a reader option the dataset config leaves at its default |
+| `report=none` | Store no pointwise error maps, for smaller run folders |
 | `seed=1` | Change the run seed |
 | `paths.data=/path/to/data` | Point at your own data instead of the `datasets` symlink |
 | `paths.data_url=null` | Refuse the HTTP fallback; fail instead when there is no local copy |

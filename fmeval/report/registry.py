@@ -95,23 +95,27 @@ SECTIONS_BY_NUMBER: dict[int, Section] = {s.number: s for s in SECTIONS}
 
 @dataclass(frozen=True)
 class RendererSpec:
-    """Everything the driver knows about one plot or table."""
+    """Everything the driver knows about one plot or table.
+
+    The fields from ``order`` on are the options :func:`plot` and :func:`table` accept, with
+    their defaults; a registration naming any other key is refused with a ``TypeError``.
+    """
 
     name: str
     fn: Callable
     kind: Literal["plot", "table"]
     section: int
-    order: int
     title: str
     doc: str
-    scope: Scope
-    requires_columns: tuple[str, ...]
-    requires_degradations: tuple[str, ...]
-    min_metrics: int
-    min_axes: int
-    min_frames: int
-    min_datasets: int
-    requires_maps: bool
+    order: int = 100
+    scope: Scope = "global"
+    requires_columns: tuple[str, ...] = ()
+    requires_degradations: tuple[str, ...] = ()
+    min_metrics: int = 1
+    min_axes: int = 0
+    min_frames: int = 1
+    min_datasets: int = 1
+    requires_maps: bool = False
     defaults: dict[str, Any] = dc_field(default_factory=dict)
 
 
@@ -119,38 +123,31 @@ PLOTS: dict[str, RendererSpec] = {}
 TABLES: dict[str, RendererSpec] = {}
 
 
-def _register(bucket: dict[str, RendererSpec], kind: str, **kw):
+def _register(bucket: dict[str, RendererSpec], kind: str, *, section: int,
+              name: str | None = None, title: str | None = None, **kw: Any):
+    """Register a renderer under ``name`` (default: the function name) in ``bucket``.
+
+    ``title`` defaults to the name with underscores as spaces; ``kw`` are the remaining
+    :class:`RendererSpec` options.
+
+    Raises:
+        ValueError: On a duplicate name or a section that is not in :data:`SECTIONS`.
+        TypeError: On an option :class:`RendererSpec` does not have, naming it.
+    """
+
     def _decorate(fn: Callable) -> Callable:
-        name = kw.pop("name", None) or fn.__name__
-        if name in bucket:
+        key = name or fn.__name__
+        if key in bucket:
             raise ValueError(
-                f"duplicate {kind} {name!r}: {bucket[name].fn.__module__} vs {fn.__module__}"
+                f"duplicate {kind} {key!r}: {bucket[key].fn.__module__} vs {fn.__module__}"
             )
-        section = kw.pop("section")
         if section not in SECTIONS_BY_NUMBER:
             raise ValueError(
-                f"{name}: section {section} is not one of {sorted(SECTIONS_BY_NUMBER)}"
+                f"{key}: section {section} is not one of {sorted(SECTIONS_BY_NUMBER)}"
             )
-        bucket[name] = RendererSpec(
-            name=name,
-            fn=fn,
-            kind=kind,
-            section=section,
-            order=kw.pop("order", 100),
-            title=kw.pop("title", name.replace("_", " ")),
-            doc=(fn.__doc__ or "").strip(),
-            scope=kw.pop("scope", "global"),
-            requires_columns=tuple(kw.pop("requires_columns", ())),
-            requires_degradations=tuple(kw.pop("requires_degradations", ())),
-            min_metrics=kw.pop("min_metrics", 1),
-            min_axes=kw.pop("min_axes", 0),
-            min_frames=kw.pop("min_frames", 1),
-            min_datasets=kw.pop("min_datasets", 1),
-            requires_maps=kw.pop("requires_maps", False),
-            defaults=dict(kw.pop("defaults", {}) or {}),
-        )
-        if kw:
-            raise TypeError(f"{name}: unexpected registration keys {sorted(kw)}")
+        bucket[key] = RendererSpec(name=key, fn=fn, kind=kind, section=section,
+                                   title=title or key.replace("_", " "),
+                                   doc=(fn.__doc__ or "").strip(), **kw)
         return fn
 
     return _decorate
@@ -200,6 +197,20 @@ def check_preconditions(spec: RendererSpec, ctx) -> tuple[bool, str]:
     if spec.requires_maps and not ctx.maps:
         return False, "no pointwise metric maps were stored"
     return True, ""
+
+
+def draw(spec: RendererSpec, ctx, subset: pd.DataFrame) -> tuple[Any, str]:
+    """Run one renderer on one scope subset: ``(result, "")``, or ``(None, reason)``.
+
+    The reason is the renderer's own :class:`RendererUnavailable` message. Anything else it
+    raises propagates, and each caller decides what that means: the report records it and
+    carries on, card generation stops. Call inside the caller's ``rc_context``. The renderer
+    gets a fresh copy of its defaults, so one call cannot change the next.
+    """
+    try:
+        return spec.fn(ctx, subset, dict(spec.defaults)), ""
+    except RendererUnavailable as exc:
+        return None, str(exc)
 
 
 def iter_scope(scope: Scope, df: pd.DataFrame):

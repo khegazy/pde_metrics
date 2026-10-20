@@ -80,11 +80,11 @@ Being stochastic, single draws carry sampling variation.
 
 <!-- GENERATED exemplars: written by `python -m fmeval.cards exemplars multiplicative_noise`, do not edit -->
 
-![multiplicative_noise exemplar panel](_generated/exemplars.png)
+![multiplicative_noise: the same snapshot, undegraded and then degraded](_generated/exemplars.png)
 
 **multiplicative_noise** on vorticity, frame 5000 of `kinet_re5e4`. Three amplitudes spanning invisible to obvious. The difference row is the one that separates this from additive noise: the error is proportional to the local value, so it is large where the field is large and exactly zero where the field is zero.
 
-| configured | applied | difference RMS | power retained |
+| strength requested in the config | strength actually applied to this field | RMS size of the change | fraction of the field's power kept |
 |---|---|---|---|
 | 0.01 | 0.01 | 2.536e-05 | -- |
 | 0.1 | 0.1 | 0.000258 | -- |

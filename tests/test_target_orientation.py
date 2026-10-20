@@ -12,8 +12,8 @@ distance from that target. What is *reported* stays the ratio -- a reader still 
 and knows the ensemble is too narrow -- while what is *ranked* is how far from calibrated
 it is.
 
-Without this, a perfectly behaved calibration axis arrives in the report card flagged on
-three criteria at once, and the flag says the metric is broken when the analysis is.
+Without this, a perfectly behaved calibration axis would arrive in the report card flagged on
+three criteria at once, and the flag would say the metric is broken when the analysis is.
 """
 
 from __future__ import annotations
@@ -22,65 +22,21 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fmeval.analysis import summarise_axes
+from fmeval.analysis import add_damage, normalisation, summarise_axes
+from tests.conftest import make_frame
 
 
-def _frame(values_by_level: dict[int, list[float]], *, metric: str,
-           target: float | None, n_frames: int = 6) -> pd.DataFrame:
-    """A tidy result frame for one axis, with a value per level per frame.
+def _frame(values: list[float], *, metric: str = "spread_skill",
+           target: float | None = 1.0) -> pd.DataFrame:
+    """One ``spread_inflate`` axis whose levels take ``values``, level 0 first, in six frames.
 
-    Built by filling the real :data:`fmeval.pipeline.RESULT_DTYPES` schema rather than a
-    hand-listed subset, so a new required column cannot make this fixture quietly
-    diverge from what the pipeline actually emits.
+    ``target_value`` is set when the metric declares a target, as the pipeline writes it.
     """
-    from fmeval.pipeline import RESULT_DTYPES
-
-    defaults: dict[str, object] = {
-        "dataset": "d",
-        "dataset_family": "",
-        "complexity_rank": 0,
-        "param_reynolds": np.nan,
-        "param_mach": np.nan,
-        "param_resolution": 64,
-        "trajectory": "t",
-        "time": 0.0,
-        "field": "density",
-        "analysis_grid": 64,
-        "remap_op": "block_mean",
-        "metric": metric,
-        "arity": "ensemble",
-        "higher_is_better": False,
-        "degradation_op": "spread_inflate",
-        "degradation_family": "ensemble",
-        "severity": 0.0,
-        "severity_nominal": 0.0,
-        "calibration": "",
-        "severity_degenerate": False,
-        "energy_removed": 0.0,
-        "energy_changed": 0.0,
-        "severity_name": "excess dispersion",
-        "variant_label": "spread_inflate",
-        "component": "",
-        "seed": 0,
-        "wall_time_s": 0.0,
-        "n_members": 8,
-        "target_value": np.nan if target is None else target,
-    }
-
-    rows = []
-    for level, values in values_by_level.items():
-        for frame_index in range(n_frames):
-            row = dict(defaults)
-            row.update(
-                degradation="identity" if level == 0 else "spread_inflate",
-                level=level,
-                frame_index=frame_index,
-                value=values[frame_index % len(values)],
-                severity=float(level),
-                severity_nominal=float(level),
-            )
-            rows.append({key: row[key] for key in RESULT_DTYPES})
-    return pd.DataFrame(rows)
+    df = make_frame(metric=metric, field="density", n_frames=6, reference=values[0],
+                    axes={"spread_inflate": values[1:]})
+    if target is not None:
+        df["target_value"] = target
+    return df
 
 
 def _row(df: pd.DataFrame, axis: str = "spread_inflate") -> pd.Series:
@@ -95,11 +51,7 @@ def test_a_ratio_falling_away_from_its_target_is_ranked_as_worsening():
     against a statistic expecting a rise. Ranked by distance from the target it is what
     it actually is: monotonically worsening.
     """
-    df = _frame(
-        {0: [1.0], 1: [0.8], 2: [0.55], 3: [0.35], 4: [0.2]},
-        metric="spread_skill",
-        target=1.0,
-    )
+    df = _frame([1.0, 0.8, 0.55, 0.35, 0.2])
     row = _row(df)
     assert row["rho"] == pytest.approx(1.0)
     assert row["monotone_fraction"] == pytest.approx(1.0)
@@ -111,11 +63,7 @@ def test_a_ratio_rising_away_from_its_target_is_also_ranked_as_worsening():
     This is the half a sign convention cannot express. Whatever single direction were
     declared, one of these two tests would fail.
     """
-    df = _frame(
-        {0: [1.0], 1: [1.4], 2: [2.0], 3: [3.1], 4: [4.5]},
-        metric="spread_skill",
-        target=1.0,
-    )
+    df = _frame([1.0, 1.4, 2.0, 3.1, 4.5])
     row = _row(df)
     assert row["rho"] == pytest.approx(1.0)
     assert row["monotone_fraction"] == pytest.approx(1.0)
@@ -123,11 +71,7 @@ def test_a_ratio_rising_away_from_its_target_is_also_ranked_as_worsening():
 
 def test_the_reported_value_is_still_the_raw_ratio():
     """The orientation is internal to the ranking; the number a reader sees is unchanged."""
-    df = _frame(
-        {0: [1.0], 1: [0.8], 2: [0.55], 3: [0.35], 4: [0.2]},
-        metric="spread_skill",
-        target=1.0,
-    )
+    df = _frame([1.0, 0.8, 0.55, 0.35, 0.2])
     out = summarise_axes(df)
     row = out[out["degradation"] == "spread_inflate"].iloc[0]
     # Whatever summary columns carry the metric's own value, none of them may have been
@@ -136,12 +80,8 @@ def test_the_reported_value_is_still_the_raw_ratio():
 
 
 def test_a_metric_without_a_target_is_untouched():
-    """The ordinary error case must behave exactly as it did before targets existed."""
-    df = _frame(
-        {0: [0.0], 1: [0.2], 2: [0.5], 3: [0.9], 4: [1.6]},
-        metric="crps",
-        target=None,
-    )
+    """The ordinary error case, with no target, is ranked by the raw value."""
+    df = _frame([0.0, 0.2, 0.5, 0.9, 1.6], metric="crps", target=None)
     row = _row(df)
     assert row["rho"] == pytest.approx(1.0)
     assert row["monotone_fraction"] == pytest.approx(1.0)
@@ -153,11 +93,7 @@ def test_a_non_monotone_excursion_is_still_caught():
     Here the ratio jumps past the target and back, so its distance from the target is not
     monotone either, and the statistics must say so.
     """
-    df = _frame(
-        {0: [1.0], 1: [0.5], 2: [1.05], 3: [0.4], 4: [1.0]},
-        metric="spread_skill",
-        target=1.0,
-    )
+    df = _frame([1.0, 0.5, 1.05, 0.4, 1.0])
     row = _row(df)
     assert row["rho"] < 0.9
     assert row["monotone_fraction"] < 1.0
@@ -170,11 +106,7 @@ def test_a_value_at_or_below_zero_does_not_break_the_ranking():
     so it must be ranked as the worst point on the axis rather than dropped or turned
     into a NaN that silently shrinks the sample.
     """
-    df = _frame(
-        {0: [1.0], 1: [0.6], 2: [0.3], 3: [0.1], 4: [0.0]},
-        metric="spread_skill",
-        target=1.0,
-    )
+    df = _frame([1.0, 0.6, 0.3, 0.1, 0.0])
     row = _row(df)
     assert np.isfinite(row["rho"])
     assert row["rho"] == pytest.approx(1.0)
@@ -182,10 +114,7 @@ def test_a_value_at_or_below_zero_does_not_break_the_ranking():
 
 def test_response_statistics_run_on_the_distance_from_the_target():
     """Onset and resolution are read on |log(value / target)|, the scale the ordering runs on."""
-    from fmeval.analysis import add_damage, normalisation
-
-    df = _frame({0: [1.0], 1: [1.2], 2: [1.5], 3: [2.0], 4: [3.0]}, metric="spread_skill",
-                target=1.0)
+    df = _frame([1.0, 1.2, 1.5, 2.0, 3.0])
     row = summarise_axes(add_damage(df, normalisation(df)), norm=normalisation(df),
                          n_bootstrap=0).iloc[0]
     assert row["elasticity"] > 0, "the distance from calibration rises along the ladder"

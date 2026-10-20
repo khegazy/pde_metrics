@@ -31,7 +31,7 @@ output:
 
 exemplars:
   mode: severity
-  levels: [0.25, 1.0, 3.0]
+  levels: [0.25, 0.75, 3.0]
   field_name: vorticity
   diagnostics: [difference]
   rationale: >-

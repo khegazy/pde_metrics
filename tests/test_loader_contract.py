@@ -10,37 +10,47 @@ The two highest-value tests here are easy to overlook:
   5 GB of I/O, and no correctness test would notice.
 
 That second test has one blind spot, and it has a sibling elsewhere because of it: it
-filters keys with ``len(key) >= 3`` to reach the time position of a field read, so a read
-of the 1-D ``time`` dataset -- key ``(slice(None),)``, length one -- passes straight
-through it. Slicing *that* dataset whole is the most expensive read in this package over
-HTTP. ``test_opening_and_iterating_never_slices_a_chunked_clock`` in
-tests/test_remote_data.py covers it.
+records only keys long enough to reach the time position of a field read, so a read of the
+1-D ``time`` dataset -- key ``(slice(None),)``, length one -- passes straight through it.
+Slicing *that* dataset whole is the most expensive read in this package over HTTP.
+``test_opening_and_iterating_never_slices_a_chunked_clock`` in tests/test_remote_data.py
+covers it.
 """
 
 from __future__ import annotations
 
+import tracemalloc
+from pathlib import Path
+
+import h5py
 import numpy as np
 import pytest
 
-from fmeval.data.base import (
-    CANONICAL_FIELDS,
-    FIELDS,
-    GridSpec,
-    TimeSelection,
-    Trajectory,
-)
+from fmeval.data.base import FIELDS, READERS, GridSpec, TimeSelection, Trajectory
 from fmeval.data.kinet_raw import KinetRawTrajectory
-from tests.fixtures_h5 import N_FRAMES, SHAPE, write_kinet_raw
+from fmeval.data.well import WellTrajectory
+from tests.fixtures_h5 import N_FRAMES, SHAPE, write_kinet_raw, write_well
+
+#: Every reader the contract holds: the writer of its synthetic file, its class, and the
+#: position of the time axis in a field read's h5py key -- ``(sim, C, T, ...)`` in the raw
+#: kinet layout, ``(sim, T, ...)`` in the Well layout.
+LAYOUTS = {
+    "kinet_raw": (write_kinet_raw, KinetRawTrajectory, 2),
+    "well": (write_well, WellTrajectory, 1),
+}
+
+
+@pytest.fixture(params=sorted(LAYOUTS))
+def layout(request, tmp_path):
+    """``(format name, path to its synthetic file, reader class, time-axis position)``."""
+    write, cls, time_position = LAYOUTS[request.param]
+    return request.param, write(tmp_path / f"{request.param}.h5"), cls, time_position
 
 
 @pytest.fixture
-def kinet_file(tmp_path):
-    return write_kinet_raw(tmp_path / "kinet_raw.h5")
-
-
-@pytest.fixture
-def traj(kinet_file):
-    with KinetRawTrajectory(kinet_file, nan_policy="error") as t:
+def traj(layout):
+    _, path, cls, _ = layout
+    with cls(path, nan_policy="error") as t:
         yield t
 
 
@@ -52,12 +62,17 @@ def test_frame_shape_dtype_and_channels(traj):
     for name, arr in frame.fields.items():
         want_c = FIELDS[name].n_channels(traj.grid.n_spatial)
         assert arr.shape == (want_c, *SHAPE), f"{name} has shape {arr.shape}"
-        assert arr.dtype == np.float64
+        assert arr.dtype == np.float64, "float32 on disk must be cast to the contract"
         assert np.isfinite(arr).all()
 
 
 def test_axis_and_channel_order(traj):
-    """u=1, v=2 at t=0 on a non-square grid: catches a channel swap AND a transpose."""
+    """u=1, v=2 at t=0 on a non-square grid: catches a channel swap AND a transpose.
+
+    The Well file stores velocity channel-last, ``(X, Y, D)``, against the contract's
+    ``(D, X, Y)``, so this is also the check of that reader's ``moveaxis``: the one line that
+    would be invisible on a square grid.
+    """
     vel = traj.frame(0, ["velocity"])["velocity"]
     assert vel.shape == (2, *SHAPE), "spatial axes are transposed (grid is 16x8)"
     assert np.allclose(vel[0], 1.0), "velocity channel 0 is not the x component"
@@ -65,6 +80,8 @@ def test_axis_and_channel_order(traj):
 
 
 def test_grid_spec(traj):
+    """The Well reader builds the grid from coordinate arrays and reads periodicity from
+    ``boundary_conditions`` rather than assuming it; raw kinet reads its root attributes."""
     g = traj.grid
     assert g.shape == SHAPE
     assert g.dims == ("x", "y")
@@ -96,33 +113,31 @@ def test_grid_coarsened_scales_spacing():
 # --- times -------------------------------------------------------------------------
 
 
-def test_times_are_monotone_and_finite(traj):
+def test_times_are_monotone_finite_and_start_at_zero(traj):
+    """The clock is the ``time`` dataset. Raw kinet also stores ``time_scale``, whose first
+    entry is NaN in real files: read as a clock it would fail the finiteness check here."""
     times = traj.times
     assert len(times) == N_FRAMES == len(traj)
     assert np.isfinite(times).all()
+    assert times[0] == 0.0
     assert np.all(np.diff(times) > 0)
-
-
-def test_time_scale_is_not_used_as_a_clock(traj):
-    """`time_scale[0]` is NaN in real files; the reader must use `time` instead."""
-    assert np.isfinite(traj.times).all()
-    assert traj.times[0] == 0.0
 
 
 # --- field vocabulary --------------------------------------------------------------
 
 
 def test_fields_are_canonical(traj):
-    assert set(traj.fields) <= CANONICAL_FIELDS
+    assert set(traj.fields) <= set(FIELDS)
 
 
 def test_degenerate_and_redundant_fields_excluded(traj):
     assert "temperature" not in traj.fields, "spatially degenerate; not a field"
-    assert "pressure" not in traj.fields, "exactly density/3; excluded by default"
+    assert "pressure" not in traj.fields, "redundant with density; excluded by default"
 
 
-def test_redundant_field_available_on_request(kinet_file):
-    with KinetRawTrajectory(kinet_file, include_redundant=True) as t:
+def test_redundant_field_available_on_request(layout):
+    _, path, cls, _ = layout
+    with cls(path, include_redundant=True) as t:
         assert "pressure" in t.fields
         frame = t.frame(1, ["density", "pressure"])
         assert np.allclose(frame["pressure"], frame["density"] / 3.0)
@@ -149,10 +164,8 @@ def test_nan_policy_error_on_all_nan_frame(kinet_file):
         assert np.isfinite(frame["density"]).all()
 
 
-def test_nan_policy_warn_and_ignore(tmp_path, monkeypatch):
+def test_nan_policy_warn_and_ignore(tmp_path):
     path = write_kinet_raw(tmp_path / "nan.h5")
-    import h5py
-
     with h5py.File(path, "r+") as f:
         f["density"][0, 0, 0, 0, 0] = np.nan
 
@@ -210,14 +223,13 @@ def test_frame_rejects_non_integer_index(traj):
             traj.frame(bad, ["density"])
 
 
-def test_never_slices_the_time_axis(traj, monkeypatch):
+def test_never_slices_the_time_axis(layout, traj, monkeypatch):
     """Record every h5py key used and assert the time position is always an int.
 
     This is the only guard against a one-character edit turning a 1-second read into a
     multi-gigabyte one, and it is invisible to any correctness test.
     """
-    import h5py
-
+    _, _, _, time_position = layout
     seen: list[tuple] = []
     original = h5py.Dataset.__getitem__
 
@@ -226,11 +238,10 @@ def test_never_slices_the_time_axis(traj, monkeypatch):
         return original(self, key)
 
     monkeypatch.setattr(h5py.Dataset, "__getitem__", spy)
-    for _ in traj.iter_frames(["density", "velocity", "vorticity"]):
+    for _ in traj.iter_frames(traj.fields):
         pass
 
-    # (sim, channels, time, ...) -- position 2 is the time axis.
-    time_keys = [k[2] for k in seen if len(k) >= 3]
+    time_keys = [k[time_position] for k in seen if len(k) > time_position]
     assert time_keys, "no multi-axis reads recorded; the spy did not fire"
     for k in time_keys:
         assert isinstance(k, (int, np.integer)), (
@@ -240,8 +251,6 @@ def test_never_slices_the_time_axis(traj, monkeypatch):
 
 def test_memory_stays_bounded(traj):
     """Peak allocation over a full pass must stay near one frame, not the whole file."""
-    import tracemalloc
-
     tracemalloc.start()
     for _ in traj.iter_frames(["density", "velocity", "vorticity"]):
         pass
@@ -254,118 +263,41 @@ def test_memory_stays_bounded(traj):
 # --- provenance ---------------------------------------------------------------------
 
 
-def test_meta_carries_provenance(traj):
+def test_meta_carries_provenance(layout, traj):
+    name, _, _, _ = layout
     meta = traj.meta
-    assert meta["format"] == "kinet_raw"
+    assert meta["format"] == name
     assert meta["n_frames"] == N_FRAMES
     assert meta["path"].endswith(".h5")
-    # JSON-string attributes must come back parsed, not as raw strings.
-    assert meta["source_attrs"]["discretization"]["spatial"]["grid"] == list(SHAPE)
+    attrs = meta["source_attrs"]
+    if name == "kinet_raw":
+        # JSON-string attributes must come back parsed, not as raw strings.
+        assert attrs["discretization"]["spatial"]["grid"] == list(SHAPE)
+    else:
+        # NumPy scalar attributes must come back as Python scalars.
+        assert attrs["n_spatial_dims"] == 2 and type(attrs["n_spatial_dims"]) is int
 
 
-def test_reader_is_registered():
-    from fmeval.data.base import READERS
+def test_reader_is_registered(layout):
+    name, _, cls, _ = layout
+    assert READERS[name] is cls
+    assert issubclass(cls, Trajectory)
 
-    assert READERS["kinet_raw"] is KinetRawTrajectory
-    assert issubclass(KinetRawTrajectory, Trajectory)
 
-
-def test_close_is_idempotent(kinet_file):
-    t = KinetRawTrajectory(kinet_file)
+def test_close_is_idempotent(layout):
+    _, path, cls, _ = layout
+    t = cls(path)
     t.close()
     t.close()
-
-
-# --- the well reader: the test of whether the abstraction holds ----------------------
-
-
-@pytest.fixture
-def well_file(tmp_path):
-    from tests.fixtures_h5 import write_well
-
-    return write_well(tmp_path / "well.h5")
-
-
-@pytest.fixture
-def well_traj(well_file):
-    from fmeval.data.well import WellTrajectory
-
-    with WellTrajectory(well_file, nan_policy="error") as t:
-        yield t
-
-
-def test_well_frame_shape_dtype_and_channels(well_traj):
-    frame = well_traj.frame(1, well_traj.fields)
-    for name, arr in frame.fields.items():
-        want_c = FIELDS[name].n_channels(well_traj.grid.n_spatial)
-        assert arr.shape == (want_c, *SHAPE), f"{name} has shape {arr.shape}"
-        assert arr.dtype == np.float64, "float32 on disk must be cast to the contract"
-
-
-def test_well_velocity_channel_move(well_traj):
-    """The one line that would be invisible on a square grid.
-
-    The file stores (X, Y, D); the contract is (D, X, Y). u = 1 and v = 2 at t=0, and the
-    grid is non-square, so both a missed moveaxis and a transpose fail loudly.
-    """
-    vel = well_traj.frame(0, ["velocity"])["velocity"]
-    assert vel.shape == (2, *SHAPE)
-    assert np.allclose(vel[0], 1.0)
-    assert np.allclose(vel[1], 2.0)
-
-
-def test_well_grid_from_coordinate_arrays(well_traj):
-    g = well_traj.grid
-    assert g.shape == SHAPE
-    assert g.dims == ("x", "y")
-    assert g.spacing == (1.0, 1.0)
-    assert g.periodic == (True, True), "read from boundary_conditions, not assumed"
-
-
-def test_well_excludes_degenerate_and_redundant_fields(well_traj):
-    assert "pressure" not in well_traj.fields
-    assert "temperature" not in well_traj.fields
 
 
 def test_well_rejects_an_unexpected_spatial_order(tmp_path):
     """A different axis order would need a transpose, so it must fail rather than guess."""
-    import h5py
-
-    from fmeval.data.well import WellTrajectory
-    from tests.fixtures_h5 import write_well
-
     path = write_well(tmp_path / "swapped.h5")
     with h5py.File(path, "r+") as f:
         f["dimensions"].attrs["spatial_dims"] = ["y", "x"]
     with pytest.raises(ValueError, match="spatial_dims"):
         WellTrajectory(path)
-
-
-def test_well_reader_is_registered():
-    from fmeval.data.base import READERS
-    from fmeval.data.well import WellTrajectory
-
-    assert READERS["well"] is WellTrajectory
-
-
-def test_well_never_slices_the_time_axis(well_traj, monkeypatch):
-    import h5py
-
-    seen: list[tuple] = []
-    original = h5py.Dataset.__getitem__
-
-    def spy(self, key):
-        seen.append(key if isinstance(key, tuple) else (key,))
-        return original(self, key)
-
-    monkeypatch.setattr(h5py.Dataset, "__getitem__", spy)
-    for _ in well_traj.iter_frames(well_traj.fields):
-        pass
-    # (sim, time, ...) -- position 1 is the time axis for this layout.
-    time_keys = [k[1] for k in seen if len(k) >= 2]
-    assert time_keys
-    for k in time_keys:
-        assert isinstance(k, (int, np.integer)), f"time axis indexed with {k!r}"
 
 
 # --- the abstraction validated against ground truth ----------------------------------
@@ -381,13 +313,9 @@ def test_raw_and_well_readers_agree_on_the_same_simulation():
     """The same rollout in two containers must come back identical.
 
     This is what validates the whole data abstraction against ground truth rather than
-    against a fixture I wrote. The Well file stores float32, so the tolerance is
+    against a synthetic fixture. The Well file stores float32, so the tolerance is
     single-precision; the axis and channel conventions must match exactly.
     """
-    from pathlib import Path
-
-    from fmeval.data.well import WellTrajectory
-
     for path in (RAW, WELL):
         if not Path(path).exists():
             pytest.skip(f"{path} not available")

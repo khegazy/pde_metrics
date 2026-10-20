@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import numpy as np
 
+from fmeval.context import fluctuation_rms
+
 from ..registry import metric
 from ..rmse.metric import rmse
 
@@ -44,9 +46,7 @@ def nrmse(reference: np.ndarray, candidate: np.ndarray) -> float:
         Dimensionless error, or NaN for a spatially uniform reference, where no
         fluctuation scale exists to divide by.
     """
-    spatial = tuple(range(1, reference.ndim))
-    fluct = reference - reference.mean(axis=spatial, keepdims=True)
-    denom = float(np.sqrt((fluct**2).mean()))
+    denom = fluctuation_rms(reference)
     if denom == 0.0:
         return float("nan")
     return rmse(reference, candidate) / denom

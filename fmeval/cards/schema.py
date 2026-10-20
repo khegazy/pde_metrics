@@ -18,8 +18,10 @@ to tell which one is stale. The catalog merges the two sources at read time.
 
 from __future__ import annotations
 
+import dataclasses
 import datetime as _dt
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
@@ -36,22 +38,23 @@ See the module docstring of :mod:`fmeval.cards` for the versioning policy.
 
 KINDS = ("metric", "degradation")
 
-CATEGORIES = (
-    "pointwise",
-    "physical",
-    "spectral",
-    "statistical",
-    "probabilistic",
-    "transport",
-    "functional",
-    "geometric",
-    "topological",
-)
+CATEGORIES: dict[str, str] = {
+    "pointwise": "compares the fields cell by cell",
+    "physical": "a physical quantity of the flow",
+    "spectral": "compares the fields scale by scale",
+    "statistical": "compares distributions or moments of the field",
+    "probabilistic": "compares whole ensembles",
+    "transport": "the cost of moving one field onto the other",
+    "functional": "a norm that weights the scales differently",
+    "geometric": "where features are, and what shape they have",
+    "topological": "which features exist, and how they connect",
+}
 """What kind of measurement a metric makes. Set by whoever adds the metric.
 
 This is the primary way a reader browses: the navigation groups metrics by it, and it is
 the first row of every metric's header table. Each name answers "what does this thing
-look at?" rather than "how good is it" or "how far has the work got".
+look at?" rather than "how good is it" or "how far has the work got". Each value is the
+phrase the site shows a first-time reader beside the code; the codes are described below.
 
 ``pointwise``
     Compares the two fields cell by cell and never consults a neighbour. MAE, MSE, RMSE
@@ -102,11 +105,10 @@ STATUSES = ("candidate", "validated", "deprecated")
 ``deprecated``
     Superseded, kept so the record and any older results remain interpretable.
 
-There was once a ``control`` status for the familiar baselines that candidates are read
-against. It is gone, because it answered a different question from the other three and so
-made the field mean two things at once: MSE was ``control`` and therefore could not also
-say whether anyone had reviewed it. What kind of measurement a metric makes is now
-``category``, which is orthogonal and is what the navigation groups by.
+What kind of measurement a metric makes is a different question, answered by
+``category``, which is orthogonal to this and is what the navigation groups by; folding the
+two into one field would stop a familiar baseline such as MSE from also saying whether
+anyone had reviewed it.
 
 There is deliberately no ``rejected`` status, and nothing anywhere in this repository
 reduces a metric to pass or fail. A metric that misses one thing usually catches another:
@@ -128,13 +130,6 @@ EXEMPLAR_MODES = ("severity", "draws", "none")
     all, and the unrelated-field anchor is indexed by draw number.
 ``none``
     No panel. Only the identity operator, which by definition changes nothing.
-"""
-
-DATA_REQUIREMENTS = ("ensemble", "vector_field", "time_series")
-"""What a metric needs beyond a single pair of fields on the analysis grid.
-
-Fields are not listed here: the ``@metric`` decorator's ``fields`` argument already says
-which physical fields a metric accepts, and the card does not restate it.
 """
 
 _NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
@@ -319,7 +314,13 @@ def parse_card(data: Any, *, where: str) -> Card:
             "fields this code cannot interpret",
         )
     if version < SCHEMA_VERSION:
-        data = migrate(dict(data), from_version=version, where=where)
+        # No breaking change has happened yet, so no migration exists. When the first one
+        # lands, dispatch to a ``migrate_v1_to_v2`` here so an old card keeps loading.
+        raise CardError(
+            where,
+            f"card uses schema_version {version} and no migration to {SCHEMA_VERSION} exists.",
+            "add the migration to fmeval/cards/schema.py, or regenerate the card",
+        )
 
     name = str(_require(data, "name", where, fix))
     if not _NAME_RE.match(name):
@@ -332,13 +333,10 @@ def parse_card(data: Any, *, where: str) -> Card:
 
     kind = _one_of(_require(data, "kind", where, fix), KINDS, "kind", where, fix)
     category = str(_require(data, "category", where, fix))
-    if kind == "metric" and category not in CATEGORIES:
-        raise CardError(
-            where,
-            f"category is {category!r}; allowed values are {', '.join(CATEGORIES)}.",
-            "pick the closest category, or add a new one to CATEGORIES in "
-            "fmeval/cards/schema.py with a sentence saying what belongs in it",
-        )
+    if kind == "metric":
+        _one_of(category, tuple(CATEGORIES), "category", where,
+                "pick the closest category, or add a new one to CATEGORIES in "
+                "fmeval/cards/schema.py with a sentence saying what belongs in it")
 
     summary = str(_require(data, "summary", where, fix)).strip()
     if not 20 <= len(summary) <= 300:
@@ -380,31 +378,34 @@ def parse_card(data: Any, *, where: str) -> Card:
     if card.kind == "metric" and card.math is None:
         raise CardError(where, "a metric card needs a `math` block.", fix)
 
-    _check_unknown_keys(data, where)
+    _check_keys(data, dataclasses.fields(Card), "", where)
     return card
 
 
-_KNOWN_KEYS = frozenset(
-    {
-        "schema_version", "name", "kind", "category", "summary", "status", "owners",
-        "output", "math", "exemplars", "references",
-        "review", "failure_mode",
-    }
-)
-
-
-def _check_unknown_keys(data: dict[str, Any], where: str) -> None:
-    """Reject unrecognised top-level keys.
+def _check_keys(data: Any, allowed: Iterable[str | dataclasses.Field], prefix: str,
+                where: str) -> None:
+    """Reject keys of the mapping ``data`` that are not in ``allowed``.
 
     A typo in a key name would otherwise be silently ignored, and the card would claim
-    something no tool ever reads -- the exact failure this schema exists to prevent.
+    something no tool ever reads -- the exact failure this schema exists to prevent. Applied
+    to the top level and to every nested section, whose keys are reported with ``prefix``.
+
+    Args:
+        data: The mapping to check. A non-mapping is left for the section's parser to report.
+        allowed: The permitted key names, or the dataclass fields that name them.
+        prefix: ``""`` at the top level, else the section path ending in a dot, e.g.
+            ``"output."``.
+        where: Location used in error messages.
     """
-    unknown = sorted(set(data) - _KNOWN_KEYS)
+    if not isinstance(data, dict):
+        return
+    names = {getattr(a, "name", a) for a in allowed}
+    unknown = sorted(set(data) - names)
     if unknown:
         raise CardError(
             where,
-            f"unrecognised key(s): {', '.join(unknown)}. A key nothing reads is a claim "
-            "nothing checks.",
+            f"unrecognised key(s): {', '.join(f'{prefix}{k}' for k in unknown)}. A key nothing "
+            "reads is a claim nothing checks.",
             "remove the key, correct the spelling, or add it to the schema in "
             "fmeval/cards/schema.py",
         )
@@ -412,26 +413,25 @@ def _check_unknown_keys(data: dict[str, Any], where: str) -> None:
 
 def _parse_output(data: Any, where: str, fix: str) -> Output:
     description = str(_require(data, "description", where, fix)).strip()
+    _check_keys(data, ("description", "bounds"), "output.", where)
     if len(description) < 10:
         raise CardError(where, "output.description is too short to be useful.", fix)
     bounds = data.get("bounds") or {}
     if not isinstance(bounds, dict):
         raise CardError(where, "output.bounds must be a mapping.", fix)
-    lower, upper = bounds.get("lower"), bounds.get("upper")
-    if lower is not None and upper is not None and float(lower) >= float(upper):
+    _check_keys(bounds, ("lower", "upper"), "output.bounds.", where)
+    lower, upper = (None if bounds.get(k) is None else float(bounds[k]) for k in ("lower", "upper"))
+    if lower is not None and upper is not None and lower >= upper:
         raise CardError(
             where, f"output.bounds lower ({lower}) is not below upper ({upper}).", fix
         )
-    return Output(
-        description=description,
-        lower=None if lower is None else float(lower),
-        upper=None if upper is None else float(upper),
-    )
+    return Output(description=description, lower=lower, upper=upper)
 
 
 def _parse_math(data: Any, where: str, fix: str) -> MathProperties | None:
     if data is None:
         return None
+    _check_keys(data, dataclasses.fields(MathProperties), "math.", where)
     return MathProperties(
         triangle_inequality=bool(_require(data, "triangle_inequality", where, fix)),
         scale_dependent=bool(_require(data, "scale_dependent", where, fix)),
@@ -443,7 +443,10 @@ def _parse_math(data: Any, where: str, fix: str) -> MathProperties | None:
 def _parse_exemplars(data: Any, where: str, fix: str) -> Exemplars | None:
     if data is None:
         return None
-    mode = _one_of(data.get("mode", "severity"), EXEMPLAR_MODES, "exemplars.mode", where, fix)
+    _check_keys(data, dataclasses.fields(Exemplars), "exemplars.", where)
+    # Absent keys take the dataclass's own defaults, so each default is written once.
+    default = {f.name: f.default for f in dataclasses.fields(Exemplars)}
+    mode = _one_of(data.get("mode", default["mode"]), EXEMPLAR_MODES, "exemplars.mode", where, fix)
     levels = tuple(float(v) for v in (data.get("levels") or ()))
     if mode == "severity" and len(levels) != 3:
         raise CardError(
@@ -469,9 +472,9 @@ def _parse_exemplars(data: Any, where: str, fix: str) -> Exemplars | None:
     return Exemplars(
         mode=mode,
         levels=levels,
-        n_draws=int(data.get("n_draws", 3)),
+        n_draws=int(data.get("n_draws", default["n_draws"])),
         diagnostics=_str_tuple(data.get("diagnostics"), "exemplars.diagnostics", where, fix),
-        field_name=str(data.get("field_name", "vorticity")),
+        field_name=str(data.get("field_name", default["field_name"])),
         rationale=rationale,
     )
 
@@ -479,6 +482,7 @@ def _parse_exemplars(data: Any, where: str, fix: str) -> Exemplars | None:
 def _parse_review(data: Any, where: str, fix: str) -> Review | None:
     if data is None:
         return None
+    _check_keys(data, dataclasses.fields(Review), "review.", where)
     digest = str(_require(data, "prose_sha256", where, fix))
     if not re.fullmatch(r"[0-9a-f]{64}", digest):
         raise CardError(
@@ -487,9 +491,7 @@ def _parse_review(data: Any, where: str, fix: str) -> Review | None:
             "run  python -m fmeval.cards sign <name> --by <who>  rather than writing it "
             "by hand",
         )
-    date = _require(data, "reviewed_at", where, fix) if "reviewed_at" in data else _require(
-        data, "date", where, fix
-    )
+    date = _require(data, "date", where, fix)
     if isinstance(date, str):
         date = _dt.date.fromisoformat(date)
     if not isinstance(date, _dt.date):
@@ -500,28 +502,3 @@ def _parse_review(data: Any, where: str, fix: str) -> Review | None:
         date=date,
     )
 
-
-def migrate(data: dict[str, Any], *, from_version: int, where: str) -> dict[str, Any]:
-    """Bring a card written against an older schema up to :data:`SCHEMA_VERSION`.
-
-    There are no migrations yet, because there has been no breaking change yet. When the
-    first one lands, add a ``migrate_v1_to_v2`` function and dispatch to it here, so an
-    old card keeps loading with a warning rather than failing.
-
-    Args:
-        data: The raw card mapping.
-        from_version: The version recorded in the card.
-        where: Location used in error messages.
-
-    Returns:
-        The migrated mapping.
-
-    Raises:
-        CardError: If no migration path exists.
-    """
-    raise CardError(
-        where,
-        f"card uses schema_version {from_version} and no migration to "
-        f"{SCHEMA_VERSION} exists.",
-        "add the migration to fmeval/cards/schema.py, or regenerate the card",
-    )

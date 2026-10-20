@@ -7,7 +7,7 @@ two halves:
 
 ``card.yaml``
     The typed half. Anything a machine can check, compare, or filter on lives here:
-    the category, the status, the output's bounds, the predicted responses, the
+    the category, the status, the output's bounds, the mathematical properties, the
     reference keys, the review ledger. :mod:`fmeval.cards.schema` is the single
     definition of what is allowed, and nothing else may hard-code field names.
 
@@ -41,9 +41,3 @@ version. A change that would invalidate an existing card bumps
 function in :mod:`fmeval.cards.schema`, which the loader applies with a warning. The
 loader refuses a card written by a newer schema than it knows, rather than guessing.
 """
-
-from __future__ import annotations
-
-from .schema import SCHEMA_VERSION, Card, CardError
-
-__all__ = ["SCHEMA_VERSION", "Card", "CardError"]

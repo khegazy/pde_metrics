@@ -25,30 +25,21 @@ trajectory: synthetic_ensemble
 
 fields: [density]
 
-time:
-  start: 0
-  stop: null
-  reduction: 1
-  max_frames: null
-
 reader:
   n_members: 16     # large enough that the sampling floor of the rank histogram is not the
                     # dominant signal, small enough that a full run stays under a second
   n_frames: 12      # per-frame rank correlation needs several genuinely different frames
   grid: [64, 64]
-  sigma: 0.15       # dispersion of BOTH the members and the reference; equal by
-                    # construction, which is what makes them exchangeable
-  omega: 0.35       # temporal phase advance, so frames differ in more than their noise
-  nan_policy: error
+  # sigma (the dispersion of both the members and the reference, equal by construction) and
+  # omega (the phase advance between frames) keep the reader's defaults.
 
-# No velocity, so there is no vorticity to recompute. Stated rather than defaulted.
+# No velocity, so there is no vorticity to recompute.
 recompute_derived: false
 
 complexity:
   family: synthetic_ensemble
   rank: -1          # below every physical dataset: this exercises a code path and validates
                     # estimators, and must never be read as evidence about a flow
-  params: {}
   label: "Synthetic exchangeable ensemble"
 
 notes: "Generated, not measured. Reference and members are independent draws from one

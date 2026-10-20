@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from .._shared.filters import _apply_filter, _wavenumber_magnitude
+from fmeval.wavenumbers import wavenumber_magnitude
+
+from .._shared.filters import _apply_filter, butterworth
 from ..registry import degradation
 
 
@@ -18,12 +20,9 @@ from ..registry import degradation
     severity_units="fraction",
     severity_direction="increasing",
     calibration="energy_above",
-    defaults={"order": 4},
     preserves=("spatial_mean",),
+    zero_is_identity=False,
 )
 def lowpass_butterworth(x: np.ndarray, severity: float, *, ctx, order: int = 4) -> np.ndarray:
     """Smooth low-pass, ``1 / (1 + (k/k_c)^(2n))``. No ringing: the ideal filter's control."""
-    k = _wavenumber_magnitude(ctx.grid.shape)
-    with np.errstate(divide="ignore", over="ignore"):
-        transfer = 1.0 / (1.0 + (k / max(severity, 1e-12)) ** (2 * order))
-    return _apply_filter(x, transfer)
+    return _apply_filter(x, butterworth(wavenumber_magnitude(ctx.grid.shape), severity, order))

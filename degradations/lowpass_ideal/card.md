@@ -90,11 +90,11 @@ damage measured here is damage from an artefact.
 
 <!-- GENERATED exemplars: written by `python -m fmeval.cards exemplars lowpass_ideal`, do not edit -->
 
-![lowpass_ideal exemplar panel](_generated/exemplars.png)
+![lowpass_ideal: the same snapshot, undegraded and then degraded](_generated/exemplars.png)
 
 **lowpass_ideal** on vorticity, frame 5000 of `kinet_re5e4`. Three fractions spanning the usable range of this axis. The radial spectrum row is the one that shows the mechanism directly -- the cutoff is visible as the wavenumber where the curve departs from the reference -- and the difference row shows which structures in real space carried the removed energy.
 
-| configured | applied | difference RMS | power retained |
+| strength requested in the config | strength actually applied to this field | RMS size of the change | fraction of the field's power kept |
 |---|---|---|---|
 | 0.05 | 38.05 | 0.0005757 | 0.9968 |
 | 0.15 | 22.43 | 0.001002 | 0.9862 |

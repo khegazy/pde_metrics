@@ -53,25 +53,6 @@ def increments(x: NDArray[np.floating], axis: int) -> NDArray[np.floating]:
     return np.roll(x, -SEPARATION_CELLS, axis=axis) - x
 
 
-def axis_flatness(x: NDArray[np.floating], axis: int) -> float:
-    """Flatness of the one-cell increments of ``x`` along one spatial ``axis``.
-
-    Args:
-        x: One channel of a field, shape ``(*spatial)``, periodic along ``axis``.
-        axis: Which spatial axis to take the increment along, as a negative index.
-
-    Returns:
-        ``<d^4> / <d^2>^2`` for the increment ``d``, or NaN when the increments vanish
-        identically -- a field constant along this axis has no increment distribution to
-        have a shape, and returning 3 or 0 there would both be inventions.
-    """
-    d = increments(x, axis)
-    second = float(np.mean(d**2))
-    if second == 0.0:
-        return float("nan")
-    return float(np.mean(d**4) / second**2)
-
-
 @metric(
     name="increment_flatness",
     arity="single",
@@ -120,12 +101,16 @@ def increment_flatness(x: NDArray[np.floating]) -> float:
         Dimensionless and unbounded above. NaN if no axis of any channel has a non-zero
         increment, that is if the field is constant.
     """
-    n_spatial = x.ndim - 1
-    values = [
-        axis_flatness(channel, axis=axis)
-        for channel in x
-        for axis in range(-n_spatial, 0)
-    ]
+    values = []
+    for channel in x:
+        for axis in range(-(x.ndim - 1), 0):
+            d = increments(channel, axis)
+            second = float(np.mean(d**2))
+            # An axis along which the field is constant has no increment distribution to
+            # have a shape, and scoring it 3 or 0 would both be inventions: it is skipped,
+            # as is any non-finite flatness.
+            if second != 0.0:
+                values.append(float(np.mean(d**4) / second**2))
     finite = [v for v in values if np.isfinite(v)]
     if not finite:
         return float("nan")

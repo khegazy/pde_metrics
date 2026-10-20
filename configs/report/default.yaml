@@ -1,23 +1,18 @@
-# Which figures and tables to produce, and how.
-plots: []      # empty means every registered plot whose preconditions are met
-tables: []
-skip: []
-
-style:
-  theme: notebook        # notebook | paper
-  dpi: 150
-  formats: [pdf, png]
+# Settings `evaluate.py` records with every run. Figure selection, style and output formats
+# are `make_report.py` options, not settings of the run.
 
 # Pointwise metric maps: storing one per frame per variant would be gigabytes, so only
-# these combinations are kept.
+# these combinations are kept. `fmeval.pipeline.MapRequest` documents each key; an empty
+# `fields` (its default) keeps every field.
 error_map:
   enabled: true
   frames: [-1]                                        # positions in the selected frames
   axes: [translate_x, gaussian_blur, gaussian_impostor]
-  fields: []                                          # empty = all
 
 # Reference thresholds. ADVISORY ONLY: they populate a `flags` column so rows can be
 # found quickly. They never label a metric accepted or rejected -- that is the team's call.
+# A report reads them from the run folder's recorded config, so changing them here changes
+# reports of new runs only.
 thresholds:
   spearman: 0.90
   separability_auc: 0.80

@@ -34,13 +34,20 @@ say, beside a measured response, what that degradation left intact.
 
 from __future__ import annotations
 
-import importlib
 import inspect
-import pkgutil
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from dataclasses import field as dc_field
 from typing import Any, Literal
+
+from metrics._registry_core import (
+    Accepts,
+    check_new,
+    discover_package,
+    lookup,
+    positional_count,
+    print_table,
+)
 
 Direction = Literal["increasing", "decreasing"]
 
@@ -86,13 +93,20 @@ FAMILIES = (
 #: ``spatial_mean``             the mean of each channel (the zero wavenumber)
 #: ``shape``                    the pattern, up to a rigid displacement of any size and an
 #:                              increasing affine map of the values
+#: ``ensemble_mean``            the member mean of an ``(N, C, *spatial)`` stack, cell by cell;
+#:                              the one word an ``ensemble=True`` operator may declare
 PRESERVED: tuple[str, ...] = (
     "single_point_statistics", "amplitude_spectrum", "spatial_mean", "shape",
+    "ensemble_mean",
 )
+
+#: The one word of :data:`PRESERVED` that describes a member stack rather than a field, so the only
+#: one an ``ensemble=True`` operator may declare, and one a field operator may not.
+ENSEMBLE_WORDS: frozenset[str] = frozenset({"ensemble_mean"})
 
 
 @dataclass(frozen=True)
-class DegradationSpec:
+class DegradationSpec(Accepts):
     """Everything the harness knows about one degradation operator."""
 
     name: str
@@ -121,6 +135,14 @@ class DegradationSpec:
     """
     preserves: tuple[str, ...] = ()
     """What the operator provably leaves unchanged, from :data:`PRESERVED`."""
+    zero_is_identity: bool = True
+    """Whether severity 0 returns the input unchanged; verified both ways by a contract test."""
+
+    @property
+    def option_names(self) -> frozenset[str]:
+        """What a ladder entry's ``options`` may set: the keyword-only parameters but ``ctx``."""
+        return frozenset(p.name for p in inspect.signature(self.fn).parameters.values()
+                         if p.kind == p.KEYWORD_ONLY and p.name != "ctx")
 
     def sort_severities(self, severities: Sequence[float]) -> list[float]:
         """Order a severity list by increasing damage.
@@ -130,21 +152,24 @@ class DegradationSpec:
         """
         return sorted(severities, reverse=self.severity_direction == "decreasing")
 
+    def describe(self) -> dict[str, Any]:
+        """What the decorator declares, as plain data: the catalog entry and run provenance."""
+        return {
+            "family": self.family, "severity_name": self.severity_name,
+            "severity_units": self.severity_units, "severity_direction": self.severity_direction,
+            "calibration": self.calibration, "ordinal": self.ordinal,
+            "stochastic": self.stochastic, "ensemble": self.ensemble,
+            "fields": list(self.fields), "preserves": list(self.preserves),
+            "defaults": dict(self.defaults),
+        }
+
 
 REGISTRY: dict[str, DegradationSpec] = {}
 CARD_VALIDATOR: Callable[[Any], None] | None = None
-"""Optional check run when a degradation is requested by name.
-
-:mod:`fmeval.cards` installs a validator here that reads the degradation's card and refuses
-to hand back a spec whose documentation is missing or contradicts the code. It is a hook
-rather than a direct import for two reasons: this module would otherwise depend on the
-whole harness (and its pandas and matplotlib dependencies) when it needs only numpy, and
-validating at *lookup* rather than at *import* means a half-written card in one bundle
-cannot break an unrelated run. See ``fmeval/cards/loader.py``.
-"""
+"""Optional check run when a degradation is requested by name; installed by :mod:`fmeval.cards`.
+Why it is a hook rather than an import: see ``metrics.registry.CARD_VALIDATOR``."""
 
 _IMPORT_ERRORS: dict[str, Exception] = {}
-_DISCOVERED = False
 
 
 def degradation(
@@ -160,8 +185,8 @@ def degradation(
     fields: Sequence[str] = ("*",),
     whole_frame: bool = False,
     ensemble: bool = False,
-    defaults: dict[str, Any] | None = None,
     preserves: Sequence[str] = (),
+    zero_is_identity: bool = True,
 ) -> Callable[[Callable], Callable]:
     """Register a degradation operator.
 
@@ -189,10 +214,14 @@ def degradation(
             cannot be expressed member by member. Mutually exclusive with
             ``whole_frame``. Operators that do not declare it are applied to each member
             independently when the frame carries an ensemble.
-        defaults: Default keyword options, overridable per ladder entry in config.
         preserves: What the operator provably leaves unchanged, words from :data:`PRESERVED`.
             Verified by measurement at every test severity; declare only what holds on any
             field, never what you expect a metric to do.
+        zero_is_identity: Whether the config-facing severity 0 returns the input unchanged.
+            True for most operators; False where 0 still damages the field -- a Butterworth
+            filter's soft edge attenuates even at the mildest cutoff -- or carries no meaning,
+            as for the probes. Verified both ways by the contract test, so it cannot be used to
+            skip a check.
 
     Returns:
         The undecorated function.
@@ -200,10 +229,7 @@ def degradation(
 
     def _decorate(fn: Callable) -> Callable:
         key = name or fn.__name__
-        if key in REGISTRY:
-            raise ValueError(
-                f"duplicate degradation {key!r}: {REGISTRY[key].module} vs {fn.__module__}"
-            )
+        check_new(REGISTRY, key, "degradation", fn.__module__)
         if family not in FAMILIES:
             raise ValueError(
                 f"{key}: unknown family {family!r}; expected one of {FAMILIES}"
@@ -213,6 +239,14 @@ def degradation(
             raise ValueError(
                 f"{key}: preserves={unknown} is outside the vocabulary PRESERVED = {PRESERVED}"
             )
+        words = set(preserves)
+        misplaced = sorted(words - ENSEMBLE_WORDS if ensemble else words & ENSEMBLE_WORDS)
+        if misplaced:
+            raise ValueError(
+                f"{key}: preserves={misplaced} describes "
+                f"{'a field' if ensemble else 'a member stack'}, but the operator "
+                f"{'acts on the member stack' if ensemble else 'acts on one field'}"
+            )
         if ensemble and whole_frame:
             raise ValueError(
                 f"{key}: declares both ensemble and whole_frame; one receives the member "
@@ -220,10 +254,7 @@ def degradation(
             )
 
         params = inspect.signature(fn).parameters
-        n_pos = sum(
-            p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
-            for p in params.values()
-        )
+        n_pos = positional_count(fn)
         if n_pos != 2:
             raise TypeError(
                 f"{key}: a degradation takes 2 positional arguments (field, severity), "
@@ -245,9 +276,15 @@ def degradation(
             doc=(fn.__doc__ or "").strip(),
             module=fn.__module__,
             takes_ctx="ctx" in params,
-            defaults=dict(defaults or {}),
+            # Per-entry options are the operator's keyword-only parameters, and their defaults
+            # are the signature's, so each default is written once. A ladder entry overrides
+            # them with `options:` in config.
+            defaults={p.name: p.default for p in params.values()
+                      if p.kind == p.KEYWORD_ONLY and p.name != "ctx"
+                      and p.default is not p.empty},
             ensemble=ensemble,
             preserves=tuple(word for word in PRESERVED if word in preserves),
+            zero_is_identity=zero_is_identity,
         )
         return fn
 
@@ -255,50 +292,14 @@ def degradation(
 
 
 def discover(force: bool = False) -> dict[str, Exception]:
-    """Import every module under ``degradations/`` so the decorators fire.
-
-    Import errors are collected rather than raised, for the same reason as in the metric
-    registry: a broken work-in-progress file must not abort everyone's run.
-    """
-    global _DISCOVERED
-    if _DISCOVERED and not force:
-        return _IMPORT_ERRORS
-
-    import degradations as _pkg
-
-    for mod in pkgutil.walk_packages(_pkg.__path__, prefix=f"{_pkg.__name__}."):
-        # Every component after the package name is checked, not just the last one:
-        # a bundle directory named `_template` must not be entered even though the
-        # module inside it is called `metric`. Leading underscores mark templates and
-        # shared helpers; `test_` marks the tests that live inside each bundle, which
-        # would otherwise drag pytest into every evaluation run.
-        parts = mod.name.split(".")[1:]
-        if any(p.startswith(("_", "test_")) for p in parts) or parts[-1] == "registry":
-            continue
-        try:
-            importlib.import_module(mod.name)
-        except Exception as exc:  # noqa: BLE001 - deliberate, see docstring
-            _IMPORT_ERRORS[mod.name] = exc
-    _DISCOVERED = True
-    return _IMPORT_ERRORS
+    """Import every module under ``degradations/`` so the decorators fire; returns the import
+    failures. See :func:`metrics._registry_core.discover_package`."""
+    return discover_package("degradations", _IMPORT_ERRORS, force)
 
 
 def get(name: str) -> DegradationSpec:
-    """Look up a degradation by name, running discovery first if needed."""
-    if name not in REGISTRY:
-        errors = discover()
-        if name not in REGISTRY:
-            hint = ""
-            if errors:
-                broken = ", ".join(f"{m}: {e!r}" for m, e in errors.items())
-                hint = f"\n(modules that failed to import: {broken})"
-            raise KeyError(
-                f"unknown degradation {name!r}; available: {sorted(REGISTRY)}{hint}"
-            )
-    spec = REGISTRY[name]
-    if CARD_VALIDATOR is not None:
-        CARD_VALIDATOR(spec)
-    return spec
+    """Look up a degradation by name, running discovery first if needed, and validate it."""
+    return lookup(name, REGISTRY, "degradation", discover, CARD_VALIDATOR)
 
 
 def available() -> list[str]:
@@ -310,9 +311,6 @@ def available() -> list[str]:
 def _main() -> None:
     """Print the registry as a table. Entry point for ``python -m degradations``."""
     discover()
-    if not REGISTRY:
-        print("no degradations registered")
-        return
     rows = [
         (
             s.name,
@@ -328,13 +326,6 @@ def _main() -> None:
         )
         for s in sorted(REGISTRY.values(), key=lambda s: (s.family, s.name))
     ]
-    head = ("degradation", "family", "severity", "relative to", "direction", "ordinal",
-            "stoch", "fields", "preserves")
-    widths = [max(len(h), *(len(r[i]) for r in rows)) for i, h in enumerate(head)]
-    line = "  ".join(h.ljust(w) for h, w in zip(head, widths))
-    print(line)
-    print("-" * len(line))
-    for r in rows:
-        print("  ".join(c.ljust(w) for c, w in zip(r, widths)))
-    for mod, exc in _IMPORT_ERRORS.items():
-        print(f"\n!! {mod} failed to import: {exc!r}")
+    print_table(("degradation", "family", "severity", "relative to", "direction", "ordinal",
+                 "stoch", "fields", "preserves"), rows, _IMPORT_ERRORS,
+                "no degradations registered")

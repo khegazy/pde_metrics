@@ -20,16 +20,22 @@ import hashlib
 import json
 import logging
 import platform
+import shutil
 import subprocess
 import sys
-import time
 from collections.abc import Mapping
 from dataclasses import dataclass
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
+import yaml
+from omegaconf import DictConfig, ListConfig, OmegaConf
+
+from degradations import registry as deg_registry
+from metrics import registry as metric_registry
 
 log = logging.getLogger(__name__)
 
@@ -63,21 +69,30 @@ class RunFolder:
     def figure_data(self) -> Path:
         return self.data / "figure_data"
 
+    @property
+    def meta_path(self) -> Path:
+        """Provenance, written by :func:`write_run_meta`."""
+        return self.data / "run_meta.json"
+
+    @property
+    def config_path(self) -> Path:
+        """The fully resolved configuration, written by :func:`write_config`."""
+        return self.data / "config.yaml"
+
+    @property
+    def maps_path(self) -> Path:
+        """Stored pointwise metric maps, written by :func:`write_maps`."""
+        return self.data / "error_maps.npz"
+
     def create(self) -> RunFolder:
         for path in (self.data, self.plots, self.tables, self.sections, self.figure_data):
             path.mkdir(parents=True, exist_ok=True)
         return self
 
 
-def run_id() -> int:
-    """Integer seconds since the epoch, used to stamp every folder of one invocation."""
-    return int(time.time())
-
-
 def make_run_folder(results_root: Path | str, name: str, stamp: int) -> RunFolder:
     """Create ``<results_root>/<name>_<stamp>/`` with its subdirectories."""
-    folder = RunFolder(Path(results_root) / f"{name}_{stamp}")
-    return folder.create()
+    return RunFolder(Path(results_root) / f"{name}_{stamp}").create()
 
 
 # --- writing ------------------------------------------------------------------------
@@ -102,31 +117,27 @@ def write_maps(folder: RunFolder, maps: Mapping[str, np.ndarray]) -> Path | None
     """Write pointwise metric maps to a compressed npz, or nothing if there are none."""
     if not maps:
         return None
-    path = folder.data / "error_maps.npz"
-    np.savez_compressed(path, **maps)
-    return path
+    np.savez_compressed(folder.maps_path, **maps)
+    return folder.maps_path
 
 
 def write_config(folder: RunFolder, resolved: Mapping[str, Any],
                  overrides: list[str] | None = None) -> str:
     """Write the config that produced the numbers, and return its hash.
 
-    ``config.yaml`` is the **fully resolved** tree -- every interpolation expanded and
-    every group default materialised -- so it records what actually ran rather than what
-    the defaults happened to be that day. ``config_overrides.yaml`` keeps just the
-    command-line overrides, which is what you read when diffing two runs.
+    ``config.yaml`` is the composed tree with every interpolation expanded: each key of the
+    schema (``fmeval/config.py``) and each key a config file or override states. Options a
+    reader or an operator leaves at its default are not in it; ``run_meta.json`` records those
+    as ``reader_options`` and ``registries.degradations.<op>.defaults``. ``config_overrides.yaml``
+    keeps just the command-line overrides, which is what you read when diffing two runs.
 
     Returns:
         Short blake2b hash of the resolved config. Two runs with the same hash used
-        identical settings.
+        identical settings, given the same code (``run_meta.json`` records its git state).
     """
-    import yaml
-
-    text = yaml.safe_dump(_plain(resolved), sort_keys=True, default_flow_style=False)
-    (folder.data / "config.yaml").write_text(text)
-    (folder.data / "config_overrides.yaml").write_text(
-        yaml.safe_dump(list(overrides or []), default_flow_style=False)
-    )
+    text = dump_yaml(_plain(resolved))
+    folder.config_path.write_text(text)
+    (folder.data / "config_overrides.yaml").write_text(dump_yaml(list(overrides or [])))
     digest = hashlib.blake2b(text.encode(), digest_size=8).hexdigest()
     (folder.data / "config_hash.txt").write_text(digest + "\n")
     return digest
@@ -138,8 +149,6 @@ def copy_documentation(folder: RunFolder) -> Path | None:
     A results directory should explain its own numbers after being sent to a colleague or
     uploaded to Overleaf, without needing the repository alongside it.
     """
-    import shutil
-
     source = Path(__file__).resolve().parent.parent / "TEST_DESCRIPTION.md"
     if not source.exists():  # pragma: no cover - present in a checkout
         return None
@@ -164,22 +173,46 @@ def write_run_meta(folder: RunFolder, **extra: Any) -> Path:
         "registries": _registry_snapshot(),
         **extra,
     }
-    path = folder.data / "run_meta.json"
-    path.write_text(json.dumps(meta, indent=2, default=str) + "\n")
-    return path
+    folder.meta_path.write_text(json.dumps(meta, indent=2, default=str) + "\n")
+    return folder.meta_path
 
 
 # --- reading ------------------------------------------------------------------------
 
 
+def _folder(folder: RunFolder | Path) -> RunFolder:
+    return folder if isinstance(folder, RunFolder) else RunFolder(Path(folder))
+
+
 def read_results(folder: RunFolder | Path, name: str = "results") -> pd.DataFrame:
     """Read a tidy frame back, from either the plain or the gzipped form."""
-    data = folder.data if isinstance(folder, RunFolder) else Path(folder) / "data"
+    data = _folder(folder).data
     for suffix in (".csv", ".csv.gz"):
         path = data / f"{name}{suffix}"
         if path.exists():
             return pd.read_csv(path)
     raise FileNotFoundError(f"no {name}.csv or {name}.csv.gz in {data}")
+
+
+def read_run_meta(folder: RunFolder | Path) -> dict[str, Any]:
+    """A run's provenance, or an empty mapping for a folder written before it was recorded."""
+    path = _folder(folder).meta_path
+    return json.loads(path.read_text()) if path.exists() else {}
+
+
+def read_config(folder: RunFolder | Path) -> dict[str, Any]:
+    """A run's resolved configuration, or an empty mapping if the folder has none."""
+    return read_yaml(_folder(folder).config_path)
+
+
+def read_yaml(path: Path) -> dict[str, Any]:
+    """A YAML file's contents, or an empty mapping if the file does not exist."""
+    return yaml.safe_load(path.read_text()) if path.exists() else {}
+
+
+def dump_yaml(data: Any) -> str:
+    """YAML text as every file here is written: block style, keys sorted."""
+    return yaml.safe_dump(data, sort_keys=True, default_flow_style=False)
 
 
 def load_runs(pattern: str, root: Path | str = "results") -> pd.DataFrame:
@@ -212,13 +245,8 @@ def load_runs(pattern: str, root: Path | str = "results") -> pd.DataFrame:
 
 def _plain(obj: Any) -> Any:
     """Convert OmegaConf containers and numpy scalars into plain YAML-safe Python."""
-    try:
-        from omegaconf import DictConfig, ListConfig, OmegaConf
-
-        if isinstance(obj, (DictConfig, ListConfig)):
-            return OmegaConf.to_container(obj, resolve=True)
-    except ImportError:  # pragma: no cover - omegaconf is a hard dependency
-        pass
+    if isinstance(obj, (DictConfig, ListConfig)):
+        return OmegaConf.to_container(obj, resolve=True)
     if isinstance(obj, Mapping):
         return {str(k): _plain(v) for k, v in obj.items()}
     if isinstance(obj, (list, tuple)):
@@ -248,8 +276,6 @@ def _git_state() -> dict[str, Any]:
 
 
 def _package_versions() -> dict[str, str]:
-    from importlib.metadata import PackageNotFoundError, version
-
     out = {}
     for name in ("numpy", "scipy", "h5py", "pandas", "matplotlib", "hydra-core",
                  "omegaconf"):
@@ -262,40 +288,14 @@ def _package_versions() -> dict[str, str]:
 
 def _registry_snapshot() -> dict[str, Any]:
     """What each registered metric and degradation meant at the time of the run."""
-    from degradations import registry as deg
-    from metrics import registry as met
+    metric_registry.discover()
+    deg_registry.discover()
 
-    met.discover()
-    deg.discover()
+    def provenance(spec) -> dict[str, Any]:
+        return {**spec.describe(), "module": spec.module,
+                "doc": spec.doc.splitlines()[0] if spec.doc else ""}
+
     return {
-        "metrics": {
-            s.name: {
-                "arity": s.arity,
-                "units": s.units,
-                "reduction": s.reduction,
-                "has_pointwise": s.has_pointwise,
-                "differentiable": s.differentiable,
-                "module": s.module,
-                "doc": s.doc.splitlines()[0] if s.doc else "",
-            }
-            for s in met.REGISTRY.values()
-        },
-        "degradations": {
-            s.name: {
-                "family": s.family,
-                "severity_name": s.severity_name,
-                "severity_units": s.severity_units,
-                "severity_direction": s.severity_direction,
-                "ordinal": s.ordinal,
-                "stochastic": s.stochastic,
-                "calibration": s.calibration,
-                "ensemble": s.ensemble,
-                "defaults": s.defaults,
-                "fields": list(s.fields),
-                "preserves": list(s.preserves),
-                "module": s.module,
-                "doc": s.doc.splitlines()[0] if s.doc else "",
-            }
-            for s in deg.REGISTRY.values()
-        },
+        "metrics": {s.name: provenance(s) for s in metric_registry.REGISTRY.values()},
+        "degradations": {s.name: provenance(s) for s in deg_registry.REGISTRY.values()},
     }

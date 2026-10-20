@@ -12,39 +12,35 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from scipy.ndimage import gaussian_filter1d
+
+from tests.conftest import alternating_field, step_field
 
 from .metric import increment_flatness
 
 
-def _step_field(shape: tuple[int, int]) -> np.ndarray:
-    """Zero on the first row, one on the rest: a single jump along x, flat along y."""
-    out = np.ones((1, *shape))
-    out[0, 0, :] = 0.0
-    return out
-
-
-def test_worked_example_from_the_card():
-    """A single step across a periodic 4-cell axis scores 2.
+@pytest.mark.parametrize("n", [
+    # The worked example in the card: a single step across a periodic 4-cell axis scores 2.
+    pytest.param(4, id="card-4"),
+    pytest.param(8, id="8"),
+    pytest.param(16, id="16"),
+    pytest.param(32, id="32"),
+])
+def test_a_lone_step_scores_half_the_axis_length(n: int):
+    """A lone step along a periodic axis of N cells scores N/2.
 
     The increment field of a lone step is +1 at the rising edge, -1 where the periodic
     wrap closes it, and 0 at the other N - 2 places. So for a length-N axis
 
         <d^2> = 2/N,    <d^4> = 2/N,    flatness = (2/N) / (2/N)^2 = N/2
 
-    which is 2 at N = 4. The y axis is constant, so its increments vanish identically and
-    it contributes nothing -- the value is the x axis alone.
-    """
-    assert increment_flatness(_step_field((4, 4))) == pytest.approx(2.0)
-
-
-@pytest.mark.parametrize("n", [4, 8, 16, 32])
-def test_a_lone_step_scores_half_the_axis_length(n: int):
-    """The N/2 law derived above, across four axis lengths.
+    The y axis is constant, so its increments vanish identically and it contributes
+    nothing -- the value is the x axis alone.
 
     This is the metric's mechanism in closed form: the rarer a jump of given size is, the
     higher the flatness, growing without bound as the same jump is spread over more cells.
     """
-    assert increment_flatness(_step_field((n, 4))) == pytest.approx(n / 2.0)
+    assert increment_flatness(step_field((n, 4))) == pytest.approx(n / 2.0)
 
 
 def test_an_everywhere_alternating_field_scores_one():
@@ -53,9 +49,7 @@ def test_an_everywhere_alternating_field_scores_one():
     With d = +/-1 everywhere, <d^4> = <d^2>^2 = 1. Nothing is rare, so nothing is
     intermittent -- the opposite extreme from the lone step above.
     """
-    field = np.zeros((1, 4, 4))
-    field[0, 1::2, :] = 1.0
-    assert increment_flatness(field) == pytest.approx(1.0)
+    assert increment_flatness(alternating_field()) == pytest.approx(1.0)
 
 
 def test_a_constant_field_is_nan_rather_than_a_number():
@@ -97,8 +91,6 @@ def test_anisotropy_does_not_move_the_gaussian_anchor():
     which is 3 only at r = 1. The averaged value stays at 3; the pooled one does not, and
     this test pins both halves so the docstring's reasoning cannot quietly stop being true.
     """
-    from scipy.ndimage import gaussian_filter1d
-
     averaged, pooled = [], []
     for seed in range(8):
         noise = np.random.default_rng(seed).standard_normal((1, 64, 64))
@@ -124,9 +116,6 @@ def test_channels_are_averaged_not_concatenated():
     inflate the result, so a two-channel field of a lone step and an alternating pattern
     must score the mean of 2 and 1 rather than anything larger.
     """
-    step = _step_field((4, 4))[0]
-    alternating = np.zeros((4, 4))
-    alternating[1::2, :] = 1.0
-    field = np.stack([step, 3.0 * alternating])
+    field = np.concatenate([step_field(), 3.0 * alternating_field()])
 
     assert increment_flatness(field) == pytest.approx(1.5)

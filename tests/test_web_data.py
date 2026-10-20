@@ -16,16 +16,14 @@ import os
 
 import numpy as np
 import pytest
-from omegaconf import OmegaConf
 
 from evaluate import dataset_info, open_trajectory, select_fields
-from fmeval.data.base import TimeSelection
+from fmeval.config import build_job, compose_config
 from fmeval.data.kinet_raw import KinetRawTrajectory
-from fmeval.data.locate import default_data_url, resolve_dataset_path
+from fmeval.data.locate import resolve_dataset_path
 from fmeval.ladder import build_ladder
 from fmeval.pipeline import run
 from metrics import registry as metric_registry
-from tests.test_configs import build
 
 pytestmark = pytest.mark.web
 
@@ -45,7 +43,7 @@ def web_cfg(tmp_path):
     mounted, so without this the run reads it, passes, and proves nothing about the
     feature under test.
     """
-    return build(
+    return build_job(compose_config(
         f"dataset={DATASET}",
         "metrics=[mse]",
         "degradation=quick",
@@ -53,7 +51,7 @@ def web_cfg(tmp_path):
         "dataset.time.start=5000",
         "dataset.time.reduction=1",
         "dataset.time.max_frames=2",
-    )
+    ))
 
 
 def test_the_fallback_fires_when_there_is_no_local_copy(web_cfg):
@@ -73,11 +71,8 @@ def test_mse_evaluates_against_the_published_trajectory(web_cfg):
         assert trajectory.is_remote, "read the local copy; the fallback did not fire"
 
         fields = select_fields(web_cfg, trajectory, specs)
-        selection = TimeSelection(**dict(web_cfg.dataset.time))
-        severity_levels = build_ladder(
-            OmegaConf.to_container(web_cfg.degradation.ladder, resolve=True),
-            include_reference=True,
-        )
+        selection = web_cfg.dataset.time
+        severity_levels = build_ladder(web_cfg.degradation)
         result = run(
             trajectory,
             specs,
@@ -85,7 +80,7 @@ def test_mse_evaluates_against_the_published_trajectory(web_cfg):
             fields=fields,
             selection=selection,
             dataset=dataset_info(web_cfg),
-            seed=int(web_cfg.seed),
+            seed=web_cfg.seed,
         )
         stats = trajectory._remote.stats
     finally:
@@ -112,12 +107,12 @@ def test_the_dev_trajectory_is_published_too(tmp_path):
     """The documented inner loop must work on a machine with no CFS mount.
 
     `README.md`, `AGENTS.md` section 2, `evaluate.py`'s docstring and a pinned phrase in
-    docs/recipes/verify-a-refactor.md all start a newcomer on `kinet_re5e4_dev`. Until it
-    was published that command failed for anyone without CFS, which is the whole audience
-    this fallback exists for.
+    docs/recipes/verify-a-refactor.md all start a newcomer on `kinet_re5e4_dev`. Unpublished,
+    that command would fail for anyone without CFS, which is the whole audience this
+    fallback exists for.
     """
-    cfg = build("dataset=kinet_re5e4_dev", f"paths.data={tmp_path}")
-    trajectory = open_trajectory(cfg)
+    trajectory = open_trajectory(
+        build_job(compose_config("dataset=kinet_re5e4_dev", f"paths.data={tmp_path}")))
     try:
         assert trajectory.is_remote
         assert trajectory.source.endswith("D2Q9_shape-256-256_T-100_H-04a8a1.h5")
@@ -152,18 +147,16 @@ def test_the_remote_and_local_copies_are_the_same_bytes():
     `test_raw_and_well_readers_agree_on_the_same_simulation`, which legitimately allows a
     tolerance because the Well copy is float32.)
     """
-    cfg = build(f"dataset={DATASET}")
+    cfg = compose_config(f"dataset={DATASET}")
     local = resolve_dataset_path(
         cfg.dataset.path, cfg.paths.data, data_url=None, allow_url=False
     ).local
     if not local.exists():
         pytest.skip(f"the local copy is not mounted here: {local}")
 
-    url = f"{default_data_url()}/{local.relative_to(cfg.paths.data)}"
-    reader_kwargs = {"periodic": [True, True]}
+    url = f"{cfg.paths.data_url}/{local.relative_to(cfg.paths.data)}"
 
-    with KinetRawTrajectory(local, **reader_kwargs) as here, \
-            KinetRawTrajectory(url, **reader_kwargs) as there:
+    with KinetRawTrajectory(local) as here, KinetRawTrajectory(url) as there:
         assert there.is_remote and not here.is_remote
         assert there._remote.size == os.path.getsize(local), (
             "the published file is a different size from the local one"

@@ -86,11 +86,11 @@ the Butterworth one resolves levels.
 
 <!-- GENERATED exemplars: written by `python -m fmeval.cards exemplars lowpass_butterworth`, do not edit -->
 
-![lowpass_butterworth exemplar panel](_generated/exemplars.png)
+![lowpass_butterworth: the same snapshot, undegraded and then degraded](_generated/exemplars.png)
 
 **lowpass_butterworth** on vorticity, frame 5000 of `kinet_re5e4`. Three fractions spanning the usable range of this axis. The radial spectrum row is the one that shows the mechanism directly -- the cutoff is visible as the wavenumber where the curve departs from the reference -- and the difference row shows which structures in real space carried the removed energy.
 
-| configured | applied | difference RMS | power retained |
+| strength requested in the config | strength actually applied to this field | RMS size of the change | fraction of the field's power kept |
 |---|---|---|---|
 | 0.05 | 38.05 | 0.0004872 | 0.9947 |
 | 0.15 | 22.43 | 0.0009086 | 0.9813 |

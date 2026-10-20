@@ -36,8 +36,27 @@ from typing import Literal
 import numpy as np
 
 from .data.base import FIELDS, Frame, GridSpec
+from .derived import recomputable, recompute
 
 RemapMethod = Literal["block_mean", "subsample"]
+
+#: Conservative cell averaging (IN-2): the method a run uses unless its config says otherwise.
+DEFAULT_METHOD: RemapMethod = "block_mean"
+
+
+def _check_factor(x: np.ndarray, factor: int) -> bool:
+    """Whether coarsening ``x`` by ``factor`` does anything; raise if it cannot be done exactly.
+
+    Raises:
+        ValueError: If ``factor`` is below 1 or does not divide every spatial extent, rather
+            than silently truncating.
+    """
+    if factor < 1:
+        raise ValueError(f"factor must be >= 1, got {factor}")
+    spatial = x.shape[1:]
+    if factor > 1 and any(n % factor for n in spatial):
+        raise ValueError(f"factor {factor} does not divide grid {tuple(spatial)}")
+    return factor > 1
 
 
 def block_average(x: np.ndarray, factor: int) -> np.ndarray:
@@ -57,14 +76,9 @@ def block_average(x: np.ndarray, factor: int) -> np.ndarray:
         ValueError: If ``factor`` does not divide every spatial extent, rather than
             silently truncating.
     """
-    if factor < 1:
-        raise ValueError(f"factor must be >= 1, got {factor}")
-    if factor == 1:
+    if not _check_factor(x, factor):
         return x
     n_channels, *spatial = x.shape
-    if any(n % factor for n in spatial):
-        raise ValueError(f"factor {factor} does not divide grid {tuple(spatial)}")
-
     shape: list[int] = [n_channels]
     box_axes: list[int] = []
     for i, n in enumerate(spatial):
@@ -79,13 +93,9 @@ def subsample(x: np.ndarray, factor: int) -> np.ndarray:
     The control against which :func:`block_average` is judged. Aliases small scales into
     large ones, which is exactly the failure IN-2's "compare cell averages" rule avoids.
     """
-    if factor < 1:
-        raise ValueError(f"factor must be >= 1, got {factor}")
-    if factor == 1:
+    if not _check_factor(x, factor):
         return x
     _, *spatial = x.shape
-    if any(n % factor for n in spatial):
-        raise ValueError(f"factor {factor} does not divide grid {tuple(spatial)}")
     slicer = (slice(None), *(slice(None, None, factor) for _ in spatial))
     return x[slicer]
 
@@ -108,8 +118,6 @@ def coarsen_factor(grid: GridSpec, target_resolution: int | None) -> int:
     if target_resolution is None:
         return 1
     native = grid.shape[0]
-    if target_resolution == native:
-        return 1
     if target_resolution > native:
         raise ValueError(
             f"analysis grid {target_resolution} is finer than the data ({native}); "
@@ -126,7 +134,7 @@ def remap_frame(
     frame: Frame,
     factor: int,
     *,
-    method: RemapMethod = "block_mean",
+    method: RemapMethod = DEFAULT_METHOD,
     recompute_derived: bool = True,
 ) -> Frame:
     """Remap every field of a frame onto a coarser analysis grid.
@@ -148,8 +156,6 @@ def remap_frame(
     """
     if factor == 1:
         return frame
-    from .derived import recomputable, recompute
-
     op = _METHODS[method]
     grid = frame.grid.coarsened(factor)
 

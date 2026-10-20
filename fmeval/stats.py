@@ -265,8 +265,9 @@ def block_bootstrap(n_frames: int, block_length: int, n_draws: int,
     """Positional index arrays for a moving-block bootstrap (Künsch 1989, *Ann. Stat.* 17(3)).
 
     Each draw concatenates ``ceil(n_frames / L)`` blocks of ``L`` consecutive indices whose starts
-    are drawn uniformly with replacement. Overlapping blocks, no wrap, no truncation: the same
-    construction the rank-correlation interval in :mod:`fmeval.analysis` uses.
+    are drawn uniformly with replacement. Overlapping blocks, no wrap, no truncation. The
+    rank-correlation interval and the blindness bound in :mod:`fmeval.analysis` both resample
+    with it.
     """
     L = max(1, min(int(block_length), int(n_frames)))
     starts = np.arange(n_frames - L + 1)

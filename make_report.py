@@ -5,9 +5,10 @@
     python make_report.py results/mse_1786224531 --zip
     python make_report.py results/mse_1786224531 --only ladder_curves
 
-Re-rendering from saved numbers is what you do repeatedly while writing a paper, and it is
-also what keeps the generator honest: ``evaluate.py`` calls the same entry point, so there
-is one code path that produces a report and it is exercised every time.
+Re-rendering from saved numbers is what you do repeatedly while writing a paper. It is also
+the only way a report is made: ``evaluate.py`` writes the numbers and never a report, so there
+is one code path from a run folder to a report. ``--style paper`` gives vector PDF, Type-42
+fonts and journal column widths.
 """
 
 from __future__ import annotations
@@ -18,7 +19,9 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import get_args
 
+from fmeval import analysis as an
 from fmeval.io import RunFolder
 from fmeval.report.driver import (
     build_context,
@@ -28,35 +31,26 @@ from fmeval.report.driver import (
     write_manifest,
     write_summary_text,
 )
+from fmeval.report.style import DEFAULT_THEME, Theme
 
 log = logging.getLogger("make_report")
-
-DEFAULT_THRESHOLDS = {
-    "spearman": 0.90,
-    "separability_auc": 0.80,
-    "impostor_damage": 0.50,
-    "redundancy": 0.95,
-}
 
 
 def build(
     folder_path: Path | str,
     *,
-    theme: str = "notebook",
+    theme: str = DEFAULT_THEME,
     only: tuple[str, ...] = (),
     skip: tuple[str, ...] = (),
     formats: tuple[str, ...] = ("pdf", "png"),
-    thresholds: dict[str, float] | None = None,
-    bootstrap: int = 200,
+    bootstrap: int = an.N_BOOTSTRAP,
 ) -> Path:
     """Render one run folder. Returns the path to ``main.tex``."""
     folder = RunFolder(Path(folder_path))
     if not folder.data.is_dir():
         raise FileNotFoundError(f"{folder.root} has no data/ directory")
 
-    ctx = build_context(folder, theme=theme,
-                        thresholds=thresholds or DEFAULT_THRESHOLDS,
-                        bootstrap=bootstrap)
+    ctx = build_context(folder, theme=theme, bootstrap=bootstrap)
     rendered = render(folder, ctx, only=only, skip=skip, formats=formats)
     main = write_document(folder, ctx, rendered)
     write_manifest(folder, rendered)
@@ -86,8 +80,6 @@ def compile_pdf(main: Path) -> bool:
 def make_zip(folder: Path) -> Path:
     """Archive the folder for upload to Overleaf, which detects main.tex automatically."""
     archive = folder.parent / f"{folder.name}.zip"
-    if archive.exists():
-        archive.unlink()
     shutil.make_archive(str(archive.with_suffix("")), "zip",
                         root_dir=folder.parent, base_dir=folder.name)
     log.info("wrote %s", archive)
@@ -98,13 +90,13 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("folder", type=Path, help="a results/<metric>_<time>/ directory")
-    parser.add_argument("--style", choices=("notebook", "paper"), default="notebook",
+    parser.add_argument("--style", choices=get_args(Theme), default=DEFAULT_THEME,
                         help="paper uses vector PDF, Type 42 fonts and journal widths")
     parser.add_argument("--only", nargs="*", default=[],
                         help="render only these renderers, by name")
     parser.add_argument("--skip", nargs="*", default=[])
     parser.add_argument("--formats", nargs="*", default=["pdf", "png"])
-    parser.add_argument("--bootstrap", type=int, default=200,
+    parser.add_argument("--bootstrap", type=int, default=an.N_BOOTSTRAP,
                         help="bootstrap resamples for the correlation interval")
     parser.add_argument("--compile", action="store_true", help="also run latexmk")
     parser.add_argument("--zip", action="store_true",

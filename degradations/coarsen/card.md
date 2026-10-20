@@ -93,11 +93,11 @@ and 25.9% at factors of 2, 4 and 8.
 
 <!-- GENERATED exemplars: written by `python -m fmeval.cards exemplars coarsen`, do not edit -->
 
-![coarsen exemplar panel](_generated/exemplars.png)
+![coarsen: the same snapshot, undegraded and then degraded](_generated/exemplars.png)
 
 **coarsen** on vorticity, frame 5000 of `kinet_re5e4`. A factor of two is the mildest resolution loss expressible on a grid; sixteen removes almost everything but the largest structures. The radial spectrum row shows the hard cut-off the block average imposes, and the difference row shows the blockiness the nearest-neighbour expansion leaves behind.
 
-| configured | applied | difference RMS | power retained |
+| strength requested in the config | strength actually applied to this field | RMS size of the change | fraction of the field's power kept |
 |---|---|---|---|
 | 2 | 2 | 0.0004867 | 0.9928 |
 | 4 | 4 | 0.0009112 | 0.9741 |

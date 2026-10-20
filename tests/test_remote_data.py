@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import io
 
+import h5py
 import numpy as np
 import pytest
 
@@ -28,12 +29,6 @@ from fmeval.data.remote import (
 from fmeval.data.well import WellTrajectory
 from tests.fixtures_h5 import N_FRAMES, write_kinet_raw, write_well
 from tests.http_fixture import serve
-
-
-@pytest.fixture
-def kinet_file(tmp_path):
-    return write_kinet_raw(tmp_path / "kinet_raw.h5")
-
 
 # --- the reader over HTTP is the reader ---------------------------------------------
 
@@ -181,9 +176,7 @@ def test_the_clock_can_still_be_read_in_full_on_request(tmp_path):
 
 
 def test_a_local_clock_is_never_reconstructed(kinet_file):
-    """Local reads keep their previous behaviour exactly: the file is the authority."""
-    import h5py
-
+    """A local clock is read as stored: the file is the authority."""
     with h5py.File(kinet_file, "r") as handle:
         direct = read_time_axis(handle["time"], remote=False)
         np.testing.assert_array_equal(direct, handle["time"][:])
@@ -191,8 +184,6 @@ def test_a_local_clock_is_never_reconstructed(kinet_file):
 
 def test_a_contiguous_clock_is_read_directly_even_remotely(tmp_path):
     """The Well layout stores it contiguously, so one range GET fetches the whole axis."""
-    import h5py
-
     path = write_well(tmp_path / "well.h5")
     with h5py.File(path, "r") as handle:
         assert handle["dimensions/time"].chunks is None
@@ -203,16 +194,14 @@ def test_a_contiguous_clock_is_read_directly_even_remotely(tmp_path):
 def test_opening_and_iterating_never_slices_a_chunked_clock(kinet_file):
     """The guard the existing time-axis spy cannot see.
 
-    ``test_never_slices_the_time_axis`` in tests/test_loader_contract.py filters recorded
-    keys with ``len(key) >= 3`` to reach the time position of a ``(sim, C, T, *spatial)``
-    read. A 1-D ``time[:]`` arrives as the key ``(slice(None),)`` -- length one -- so it
-    is invisible there, and it is the single most expensive read in this package:
+    ``test_never_slices_the_time_axis`` in tests/test_loader_contract.py records only keys
+    long enough to reach the time position of a field read, ``(sim, C, T, *spatial)``. A
+    1-D ``time[:]`` arrives as the key ``(slice(None),)`` -- length one -- so it is
+    invisible there, and it is the single most expensive read in this package:
     ``time`` is chunked ``(1,)`` with its 10001 chunks interleaved 17.8 MiB apart across
     the 166 GiB production file, so slicing it whole is 9938 requests, 297 s and 2.5 GiB
     to fetch 80 KB. See fmeval/data/_timeaxis.py.
     """
-    import h5py
-
     seen: list[tuple[str, object]] = []
     original = h5py.Dataset.__getitem__
 
@@ -239,3 +228,29 @@ def test_opening_and_iterating_never_slices_a_chunked_clock(kinet_file):
             "dataset is chunked one element per chunk, so a full slice costs 9938 "
             "requests and 297 s on the production trajectory. See fmeval/data/_timeaxis.py."
         )
+
+
+# --- what the transport records -------------------------------------------------------
+
+
+@pytest.mark.parametrize("header", ["ETag", "Last-Modified"])
+def test_a_changed_validator_header_raises_naming_it(kinet_file, header):
+    """Either validator differing from the one seen at open means the file was replaced."""
+    with serve(kinet_file) as (url, _stats):
+        stream = HTTPRangeFile(url)
+        with pytest.raises(RemoteFileChanged, match=f"{header} changed"):
+            stream._check_validator({header: '"replaced"'})
+        stream._check_validator({})  # a response without validators is not a change
+        stream.close()
+
+
+def test_cache_hits_count_only_blocks_cached_before_the_read(kinet_file):
+    """A block fetched for this read is a miss, not a hit; reading it again is a hit."""
+    with serve(kinet_file) as (url, _stats):
+        stream = HTTPRangeFile(url, block_size=4096)
+        stream.read(3 * 4096)
+        assert stream.stats.cache_hits == 0
+        stream.seek(0)
+        stream.read(3 * 4096)
+        assert stream.stats.cache_hits == 3
+        stream.close()

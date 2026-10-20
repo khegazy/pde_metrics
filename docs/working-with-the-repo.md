@@ -297,7 +297,9 @@ not a gap to fill in.
 
 Hydra configuration. Override a setting from the command line for a one-off (`python
 evaluate.py metrics=[mse] dataset.time.reduction=10`); edit the files when you are
-changing what the default run means for everyone.
+changing what the default run means for everyone. Every default lives once, in the schema in
+`fmeval/config.py` or in the function a block configures, so a file lists only what it
+changes; a file whose name starts with `_` holds values several options share.
 
 Two settings change how much work a run does, and both are recorded with the results.
 `dataset.time.reduction` evaluates every Nth snapshot in time, and
@@ -312,9 +314,9 @@ reported against.
 ### `evaluate.py` and `make_report.py` — run them, don't edit them
 
 `evaluate.py` runs the metrics over every degradation and writes one self-contained folder
-per metric under `results/`, holding the raw numbers, the resolved configuration, a record
-of where the numbers came from, and a `main.tex` that compiles on its own.
-`make_report.py` re-renders one of those folders from the saved numbers without
+per metric under `results/`, holding the raw numbers, the resolved configuration and a record
+of where the numbers came from. It never draws a report: `make_report.py` renders one of those
+folders from the saved numbers, adding a `main.tex` that compiles on its own, without
 recomputing anything.
 
 To change what a run does, change the configuration or pass an override. Editing these two

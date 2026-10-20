@@ -24,7 +24,7 @@ directory.
 
 ```bash
 python check_setup.py                        # confirm the environment before anything expensive
-pytest                                       # ~20 s; skips the CFS-reading and LaTeX tests
+pytest                                       # skips the CFS-reading and LaTeX tests
 pytest -m data                               # reads the real files on CFS
 module load texlive/2024 && pytest -m slow   # compiles a report with latexmk
 pytest tests/test_analysis.py -q -k spearman # one file, one pattern
@@ -38,7 +38,8 @@ python make_report.py results/mse_<time> --compile --zip
 
 `evaluate.py` writes one `results/<metric>_<time>/` folder per metric plus a
 `comparison_<time>/` when several metrics run. Each is self-contained — raw numbers, resolved
-config, provenance, and a `main.tex` that compiles standalone and renders on Overleaf.
+config and provenance. `evaluate.py` never renders a report: `make_report.py <folder>` writes a
+`main.tex` into the folder that compiles standalone and renders on Overleaf.
 
 Two size knobs, both recorded with the results: `dataset.time.reduction` (evaluate every Nth
 frame) and `analysis_grid.resolution` (the IN-2 analysis grid). The full trajectory at
@@ -52,7 +53,7 @@ extra and nothing currently needs it. Weights & Biases is not wired in yet.
 | File | What it is |
 |---|---|
 | `TEST_DESCRIPTION.md` | Plain-language reference for every quantity the suite reports. A copy is placed in each run folder. A test fails if a reported column, degradation or figure is undocumented |
-| `issues/` | Open items, one file per item with its evidence. `issues/README.md` is the index |
+| `issues/` | Open items, one file per item with its evidence. `issues/README.md` is the index. Delete an issue once it is fully resolved (`AGENTS.md` §1) |
 | `README.md` | Setup and the NERSC specifics |
 
 ## Source of truth: the cards in this repository
@@ -100,6 +101,10 @@ First-wave priorities (in order of value per effort): IN-4, NM-2 (Ḣ⁻¹ norm)
 
 ## Implementation conventions
 
+- **One source of truth, least new code.** Define every value once, add no aliases, give a
+  helper two callers or a reason, and search for existing code before writing new code. The
+  rules and the table of where shared code lives are in `AGENTS.md` §1, and
+  `tests/test_documentation.py` pins them.
 - **Fix detector thresholds once in the evaluator and never tune them per model** — otherwise the metric becomes gameable. This applies to shock sensors (SH-1), vortex criteria (PD-4), and any thresholded quantity.
 - **Known-correct estimators matter**: e.g. ensemble spread must be computed as the square root of the average ensemble variance, not the average of spreads (Fortin et al. 2014, see PS-3 in the tracker). When the tracker records a computational gotcha, follow it.
 - **Cross-mesh comparison (IN-2)**: remap fields conservatively onto a common analysis grid, compare cell averages rather than point samples, and record the remapping operator as part of the metric definition.
@@ -107,63 +112,23 @@ First-wave priorities (in order of value per effort): IN-4, NM-2 (Ḣ⁻¹ norm)
 - Label new code as prototype or production quality; metric-evaluation code that feeds acceptance decisions should be production quality.
 - **`NM-0` is the accepted identifier for the pointwise baseline controls** (MAE, MSE, RMSE, NRMSE). It denotes the family the candidates must beat rather than a candidate itself. It is not yet in the master table; adding it there is the one open follow-up on `issues/021`.
 
-## What exists, and what building it corrected
+## What exists
 
 Three plugin registries, all discovered by name from config, all extended by one decorated
 function: **metrics** (`metrics/`), **degradations** (`degradations/`, 24 operators in 8
 families), and **report renderers** (`fmeval/report/`). Readers live in `fmeval/data/` and are
 a closed set with explicit imports, deliberately unlike the other two.
 
-Five findings from running this on the real data. Each is documented where the code lives, and
-each would have quietly corrupted results:
+The mistakes that quietly corrupt results here — pooling frames for a rank correlation,
+averaging a derived field after a remap, deleting k=0 in a high-pass filter, scavenging the
+unrelated-field anchor, two definitions of `|k|`, and the rest — are listed once, with where
+each fix lives, in `AGENTS.md` §9, "Traps that have already caught someone". Severities on the
+smoothing and spectral axes are calibrated per field against a measured spectrum; how, and what
+an operator author must do about it, is in `AGENTS.md` §4.
 
-1. **Rank correlation must be computed per frame, not pooled.** The density perturbation grows
-   six orders of magnitude along the trajectory, so pooling frames measures the flow's
-   evolution rather than the metric's response. Measured: every density axis perfectly ordered
-   within every frame while the pooled value read 0.10 to 0.91.
-2. **Derived fields must be recomputed after a remap, never averaged.** Block-averaging
-   vorticity gives a field that is not the curl of the velocity beside it; the difference is
-   5.6% / 18.3% / 25.9% at coarsening factors 2 / 4 / 8. Related: never mix the solver's
-   stored vorticity with a recomputed one — they differ by 8.1% rms because the solver used a
-   lattice stencil.
-3. **High-pass filters must preserve the spatial mean.** Deleting k=0 on density removes a
-   component four orders of magnitude larger than the cutoff controls; every severity level gave an
-   identical damage of 2.7e7 and the axis carried no ordering at all.
-4. **The unrelated-field anchor must be measured, not scavenged.** A 16-cell translation
-   reaches only ~0.6 of the true value, which inflated every damage score by ~1.6x. A distant
-   frame is also wrong: the flow decays, so it has 0.70 of the variance and a different
-   flatness.
-5. **Severity ranges must follow each field's spectrum.** Fixed cutoffs applied to every field
-   alike produce flags that point at the axis rather than the metric: the same blur list reached
-   1.2% of the unrelated-field level on density while working well on vorticity, and the same
-   filter cutoffs saturated by the second severity level on density. Fixed: severities on the
-   smoothing and spectral axes are now *relative* — a fraction of the field's characteristic
-   scale, or of the energy a filter removes — and resolved per field against a spectrum measured
-   from the data. Every calibrated axis is now monotone on both fields from one config that names
-   no field. Three further defects surfaced only when this was measured: a low-pass severity
-   mapped to the wrong side of its cutoff inverted that axis while leaving every number
-   plausible; rounding a calibrated width to an even window displaced the field by half a cell
-   and broke monotonicity; and a severity level can resolve onto a milder severity level's severity or onto a no-op,
-   which the rank correlation would otherwise score as agreement. Severity levels that are not distinct
-   experiments are now detected and excluded (`severity_degenerate`).
-
-   Two limits calibration does not remove, both properties of these fields rather than of the
-   config: 69% of density's fluctuation energy sits in the four diagonal modes at |k| = √2 and
-   only 3e-5 of it in the axis modes at |k| = 1, so the available cutoffs there are few and far
-   apart and a *sharp* filter cannot resolve four severity levels at all. The high-pass axis is squeezed
-   between a no-op below those diagonal modes and near-total damage above them, so it alone does
-   not reach the factor-five damage range the other axes do.
-
-   A related correction, found while reporting the realised energy removal: the calibration and
-   the filters had **two different definitions of |k|** — the filters compared a continuous
-   magnitude, the calibration binned into shells of `rint(|k|)` — which put the diagonal modes on
-   opposite sides of the same cutoff. On density that made a low-pass asked to remove 30% remove
-   99.997%, with every intermediate number looking plausible. There is now one definition, in
-   `fmeval/wavenumbers.py`, and the requested and realised fractions agree to within a few
-   percent wherever the spectrum can resolve the request.
-
-Also worth carrying forward: the IN-4 Gaussian field does **not** catch the L^p family — it
-catches metrics built only on the amplitude spectrum, and MSE rejects it firmly at 0.51–0.80.
-And a high cross-metric rank correlation does not mean two metrics agree in magnitude: MAE and
-MSE correlate at 0.995 across the ladder yet differ by 55x in displacement damage at an eighth
-of a cell, because one is linear and the other quadratic in the displacement.
+Two limits of the kinet data that calibration does not remove, because they are properties of
+the fields rather than of the config: 69% of density's fluctuation energy sits in the four
+diagonal modes at |k| = √2 and only 3e-5 of it in the axis modes at |k| = 1, so the cutoffs
+available there are few and far apart and a *sharp* filter cannot resolve four severity levels.
+The high-pass axis is squeezed between a no-op below those diagonal modes and near-total damage
+above them, so it alone does not reach the factor-five damage range the other axes do.

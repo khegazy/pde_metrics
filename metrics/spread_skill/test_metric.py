@@ -18,7 +18,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from degradations._shared.ensemble import scale_spread
 from metrics.spread_skill.metric import spread_skill
+from tests.conftest import exchangeable_ensemble
 
 
 def test_worked_example_from_the_card():
@@ -34,7 +36,6 @@ def test_worked_example_from_the_card():
     members = np.array([-1.0, 0.0, 1.0]).reshape(3, 1, 1, 1)
     expected = 1.0 * np.sqrt(4.0 / 3.0) / 2.0
     assert spread_skill(reference, members) == pytest.approx(expected)
-    assert spread_skill(reference, members) == pytest.approx(0.57735, abs=1e-5)
 
 
 def test_uses_the_fortin_estimator_not_the_mean_of_spreads():
@@ -43,8 +44,7 @@ def test_uses_the_fortin_estimator_not_the_mean_of_spreads():
     Two cells: one where the members agree exactly (variance 0) and one where they are
     -6, 0, 6 (variance 36). The correct spread is sqrt((0 + 36)/2) = 4.2426; the naive
     average of per-cell spreads is (0 + 6)/2 = 3, low by a factor of sqrt(2). Swapping
-    the implementation for the naive form turns this assertion red, which was checked by
-    doing exactly that while writing it.
+    the implementation for the naive form turns this assertion red.
     """
     members = np.zeros((3, 1, 2, 1))
     members[:, 0, 0, 0] = [0.0, 0.0, 0.0]
@@ -70,10 +70,7 @@ def test_uses_the_unbiased_variance():
     """
     reference = np.full((1, 1, 1), 1.0)
     members = np.array([-1.0, 1.0]).reshape(2, 1, 1, 1)
-    unbiased = np.sqrt(2.0) * np.sqrt(3.0 / 2.0)
-    population = np.sqrt(1.0) * np.sqrt(3.0 / 2.0)
-    assert spread_skill(reference, members) == pytest.approx(unbiased)
-    assert spread_skill(reference, members) != pytest.approx(population)
+    assert spread_skill(reference, members) == pytest.approx(np.sqrt(2.0) * np.sqrt(3.0 / 2.0))
 
 
 def test_is_one_for_an_exchangeable_ensemble():
@@ -87,41 +84,24 @@ def test_is_one_for_an_exchangeable_ensemble():
     """
     rng = np.random.default_rng(0)
     for n_members in (4, 40):
-        base = rng.standard_normal((1, 40, 40))
-        reference = base + rng.standard_normal((1, 40, 40))
-        members = base[None] + rng.standard_normal((n_members, 1, 40, 40))
+        reference, members = exchangeable_ensemble(rng, (1, 40, 40), n_members)
         assert spread_skill(reference, members) == pytest.approx(1.0, abs=0.08), n_members
 
 
 def test_underdispersion_reads_below_one():
-    rng = np.random.default_rng(1)
-    base = rng.standard_normal((1, 32, 32))
-    reference = base + rng.standard_normal((1, 32, 32))
-    members = base[None] + rng.standard_normal((24, 1, 32, 32))
-    mean = members.mean(axis=0, keepdims=True)
-    assert spread_skill(reference, mean + 0.3 * (members - mean)) < 0.6
+    reference, members = exchangeable_ensemble(1, (1, 32, 32), 24)
+    assert spread_skill(reference, scale_spread(members, 0.3)) < 0.6
 
 
 def test_overdispersion_reads_above_one():
-    rng = np.random.default_rng(2)
-    base = rng.standard_normal((1, 32, 32))
-    reference = base + rng.standard_normal((1, 32, 32))
-    members = base[None] + rng.standard_normal((24, 1, 32, 32))
-    mean = members.mean(axis=0, keepdims=True)
-    assert spread_skill(reference, mean + 3.0 * (members - mean)) > 1.8
+    reference, members = exchangeable_ensemble(2, (1, 32, 32), 24)
+    assert spread_skill(reference, scale_spread(members, 3.0)) > 1.8
 
 
 def test_is_monotone_in_the_inflation_factor():
     """The ratio itself is monotone in dispersion; it is *damage* that is U-shaped."""
-    rng = np.random.default_rng(3)
-    base = rng.standard_normal((1, 24, 24))
-    reference = base + rng.standard_normal((1, 24, 24))
-    members = base[None] + rng.standard_normal((16, 1, 24, 24))
-    mean = members.mean(axis=0, keepdims=True)
-    values = [
-        spread_skill(reference, mean + f * (members - mean))
-        for f in (0.25, 0.5, 1.0, 2.0, 4.0)
-    ]
+    reference, members = exchangeable_ensemble(3, (1, 24, 24), 16)
+    values = [spread_skill(reference, scale_spread(members, f)) for f in (0.25, 0.5, 1.0, 2.0, 4.0)]
     assert values == sorted(values), values
 
 
@@ -149,8 +129,3 @@ def test_needs_at_least_two_members():
     """A single member has no spread to speak of, and the ddof=1 variance is undefined."""
     with pytest.raises(ValueError, match="two"):
         spread_skill(np.zeros((1, 4, 4)), np.zeros((1, 1, 4, 4)))
-
-
-def test_rejects_members_without_a_member_axis():
-    with pytest.raises(ValueError):
-        spread_skill(np.zeros((1, 4, 4)), np.zeros((1, 4, 4)))

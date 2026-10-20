@@ -45,11 +45,10 @@ def main() -> int:
         from degradations import registry as deg
         from metrics import registry as met
 
-        met.discover()
-        deg.discover()
+        import_errors = {"metrics": met.discover(), "degradations": deg.discover()}
         record(OK, "metrics registry", f"{len(met.REGISTRY)} metrics")
         record(OK, "degradations registry", f"{len(deg.REGISTRY)} operators")
-        for name, errors in (("metrics", met.discover()), ("degradations", deg.discover())):
+        for name, errors in import_errors.items():
             if errors:
                 record(WARN, f"{name} import errors",
                        ", ".join(f"{m}: {e!r}" for m, e in errors.items()))
@@ -116,7 +115,7 @@ def main() -> int:
         return 1
     extra = f" {len(warnings)} optional item(s) missing." if warnings else ""
     print("Environment is usable." + extra)
-    print("Next: `pytest` (~20 s), then "
+    print("Next: `pytest`, then "
           "`python evaluate.py metrics=[mse] dataset=kinet_re5e4_dev`.")
     return 0
 

@@ -22,15 +22,20 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
 
-import h5py
 import numpy as np
 
 from . import remote as _remote
 from ._timeaxis import TimeAxisMode, read_time_axis
-from .base import FIELDS, GridSpec, NanPolicy, Trajectory, register_reader
-from .locate import is_url
+from .base import (
+    DEGENERATE_FIELDS,
+    FIELDS,
+    REDUNDANT_FIELDS,
+    GridSpec,
+    NanPolicy,
+    register_reader,
+)
+from .hdf5 import HDF5Trajectory
 
 #: Canonical name -> (group, dataset). Velocity lives in the rank-1 group.
 FIELD_MAP: dict[str, tuple[str, str]] = {
@@ -41,23 +46,18 @@ FIELD_MAP: dict[str, tuple[str, str]] = {
     "velocity": ("t1_fields", "velocity"),
 }
 
-#: Reconstructible from a primitive; excluded unless asked for, as in the raw reader.
-REDUNDANT: frozenset[str] = frozenset({"pressure"})
-
-#: Constant for an isothermal run, so it carries no information as a field. Unlike the raw
-#: format the Well writer broadcasts it to the full grid, so it cannot be detected by shape.
-DEGENERATE: frozenset[str] = frozenset({"temperature"})
-
 
 @register_reader("well")
-class WellTrajectory(Trajectory):
+class WellTrajectory(HDF5Trajectory):
     """One rollout from a Well-format HDF5 file."""
+
+    FORMAT = "well"
 
     def __init__(
         self,
         path: str | Path,
         *,
-        chunk_cache_mb: int = 32,
+        chunk_cache_mb: int = _remote.DEFAULT_CHUNK_CACHE_MB,
         nan_policy: NanPolicy = "error",
         include_redundant: bool = False,
         include_degenerate: bool = False,
@@ -72,30 +72,19 @@ class WellTrajectory(Trajectory):
             nan_policy: ``"error"``, ``"warn"`` or ``"ignore"`` for non-finite values.
             include_redundant: Expose ``pressure``.
             include_degenerate: Expose ``temperature``, which is constant for an
-                isothermal run and therefore not a field in any useful sense.
+                isothermal run and therefore not a field in any useful sense. The Well writer
+                broadcasts it to the full grid, so unlike the raw format it cannot be excluded
+                by its shape.
             sim_index: Index along the leading trajectory axis.
             time_axis: How to read the clock. See ``fmeval.data._timeaxis``. This layout
                 stores it contiguously, so the default reads it directly either way.
         """
-        self.source = str(path)
-        self.is_remote = is_url(path)
-        self.location_source = "url" if self.is_remote else "local"
-        self.nan_policy = nan_policy
-        self._sim = sim_index
-        self._remote: _remote.HTTPRangeFile | None = None
-        if self.is_remote:
-            self.path = None
-            self._file, self._remote = _remote.open_h5(
-                self.source, chunk_cache_mb=chunk_cache_mb
-            )
-        else:
-            self.path = Path(path)
-            self._file = h5py.File(
-                self.path, "r", rdcc_nbytes=chunk_cache_mb * 2**20, rdcc_nslots=10007
-            )
+        self._open(path, chunk_cache_mb=chunk_cache_mb, nan_policy=nan_policy,
+                   sim_index=sim_index)
 
         dims = self._file["dimensions"]
-        names = [_text(n) for n in dims.attrs.get("spatial_dims", ["x", "y"])]
+        names = [n.decode() if isinstance(n, bytes) else str(n)
+                 for n in dims.attrs.get("spatial_dims", ["x", "y"])]
         expected = ("x", "y", "z")[: len(names)]
         if tuple(names) != expected:
             raise ValueError(
@@ -124,9 +113,11 @@ class WellTrajectory(Trajectory):
 
         available = []
         for canonical, (group, dataset) in FIELD_MAP.items():
-            if canonical in DEGENERATE and not include_degenerate:
+            # Unlike the raw format, the Well writer broadcasts temperature to the full grid,
+            # so it cannot be detected by shape and is excluded by name.
+            if canonical in DEGENERATE_FIELDS and not include_degenerate:
                 continue
-            if canonical in REDUNDANT and not include_redundant:
+            if canonical in REDUNDANT_FIELDS and not include_redundant:
                 continue
             if group not in self._file or dataset not in self._file[group]:
                 continue
@@ -140,39 +131,6 @@ class WellTrajectory(Trajectory):
                 continue
             available.append(canonical)
         self._fields = tuple(available)
-
-    # --- Trajectory ---------------------------------------------------------------
-
-    @property
-    def fields(self) -> tuple[str, ...]:
-        return self._fields
-
-    @property
-    def times(self) -> np.ndarray:
-        return self._times
-
-    @property
-    def grid(self) -> GridSpec:
-        return self._grid
-
-    @property
-    def meta(self) -> dict[str, Any]:
-        attrs = {
-            key: _text(value) if isinstance(value, (bytes, str))
-            else value.item() if isinstance(value, np.generic) else value
-            for key, value in self._file.attrs.items()
-        }
-        meta: dict[str, Any] = {
-            "path": self.source,
-            "format": "well",
-            "n_frames": len(self._times),
-            "fields": list(self._fields),
-            "source": self.location_source,
-            "source_attrs": attrs,
-        }
-        if self._remote is not None:
-            meta["remote"] = self._remote.provenance()
-        return meta
 
     def read_frame(self, t: int, fields: Sequence[str]) -> dict[str, np.ndarray]:
         """Read one frame, normalising channel placement and dtype.
@@ -193,15 +151,3 @@ class WellTrajectory(Trajectory):
             else:
                 out[name] = np.asarray(ds[self._sim, t], dtype=np.float64)[np.newaxis]
         return out
-
-    def close(self) -> None:
-        if getattr(self, "_file", None) is not None:
-            self._file.close()
-            self._file = None  # type: ignore[assignment]
-        if getattr(self, "_remote", None) is not None:
-            self._remote.close()
-            self._remote = None
-
-
-def _text(value: object) -> str:
-    return value.decode() if isinstance(value, bytes) else str(value)

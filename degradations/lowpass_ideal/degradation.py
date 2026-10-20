@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from .._shared.filters import _apply_filter, _wavenumber_magnitude
+from fmeval.wavenumbers import wavenumber_magnitude
+
+from .._shared.filters import _apply_filter
 from ..registry import degradation
 
 
@@ -29,5 +31,5 @@ def lowpass_ideal(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     ``severity`` reaches this function already resolved to a cutoff wavenumber by the ladder,
     from the requested fraction of energy to remove.
     """
-    k = _wavenumber_magnitude(ctx.grid.shape)
+    k = wavenumber_magnitude(ctx.grid.shape)
     return _apply_filter(x, (k <= severity).astype(float))

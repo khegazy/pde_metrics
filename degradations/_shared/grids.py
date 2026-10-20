@@ -1,16 +1,11 @@
-"""Grid coarsening and expansion, shared by the resolution operators."""
+"""Grid expansion, shared by the resolution operators. Coarsening lives in `fmeval.remap`."""
 
 from __future__ import annotations
 
 import numpy as np
 
-from fmeval.remap import block_average
-from fmeval.remap import subsample as _subsample_kernel
 
-__all__ = ["_subsample_kernel", "_upsample", "block_average"]
-
-
-def _upsample(x: np.ndarray, factor: int, shape: tuple[int, ...]) -> np.ndarray:
+def _upsample(x: np.ndarray, factor: int) -> np.ndarray:
     """Nearest-neighbour expansion back to the original grid.
 
     Nearest rather than bilinear on purpose: it reintroduces no information and no new

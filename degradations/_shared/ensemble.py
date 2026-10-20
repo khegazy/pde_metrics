@@ -1,7 +1,7 @@
 """Shared implementation of the dispersion-scaling operators.
 
-Leading underscore so :func:`degradations.registry.discover` skips it: this is a helper
-shared by the ``spread_inflate`` and ``spread_deflate`` bundles, not a bundle of its own.
+It lives in ``_shared/``, which :func:`degradations.registry.discover` skips: this is a
+helper shared by the ``spread_inflate`` and ``spread_deflate`` bundles, not a bundle.
 """
 
 from __future__ import annotations

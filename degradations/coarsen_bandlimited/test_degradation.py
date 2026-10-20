@@ -1,7 +1,8 @@
 """Tests for ``coarsen_bandlimited``.
 
 The registry-wide contract (shape and dtype preserved, passthrough, declared direction,
-seed reproducibility) lives in ``tests/test_degradation_contract.py``. What is tested here is
+declared preservation of the spatial mean, seed reproducibility) lives in
+``tests/test_degradation_contract.py``. What is tested here is
 what makes this operator the companion of ``coarsen`` rather than just another smoothing:
 it keeps the same block means, it adds nothing above the coarse band, and it therefore does
 not create the edges ``issues/039`` is about.
@@ -113,15 +114,3 @@ def test_a_step_rings_where_coarsen_steps(factor: int, low: float, high: float):
 
     assert low < band.max() - 1.0 < high
     assert stair.max() <= 1.0 and stair.min() >= 0.0
-
-
-def test_the_spatial_mean_is_preserved_exactly():
-    """The zero mode passes through the inversion with gain one."""
-    x = _random() + 3.0
-    np.testing.assert_allclose(coarsen_bandlimited(x, 4, ctx=None).mean(axis=(1, 2)),
-                               x.mean(axis=(1, 2)), atol=1e-12)
-
-
-def test_a_factor_of_one_is_the_identity():
-    x = _random()
-    assert coarsen_bandlimited(x, 1, ctx=None) is x

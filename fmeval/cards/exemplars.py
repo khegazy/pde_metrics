@@ -13,8 +13,6 @@ metric, so it needs no evaluation to have been performed.
 
 from __future__ import annotations
 
-import json
-import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -24,28 +22,16 @@ from omegaconf import OmegaConf
 
 from degradations import registry as deg_registry
 from fmeval.calibration import calibrate
-from fmeval.context import FieldContext, derive_rng
+from fmeval.config import CardsConfig, compose_config, load_cards_config
+from fmeval.context import FieldContext, derive_rng, fluctuation_rms
+from fmeval.data import kinet_raw, locate, well  # noqa: F401  (importing registers the formats)
+from fmeval.data.base import READERS
 from fmeval.ladder import SeverityLevel, resolve_severity
 
-REPO = Path(__file__).resolve().parent.parent.parent
-
-
-def sanitize_json(value: Any) -> Any:
-    """Replace NaN and infinities with None, recursively, before serialising.
-
-    ``json.dumps`` writes float('nan') as a bare ``NaN`` token, which is not JSON: a
-    strict parser refuses the whole file. These files exist precisely for machine
-    readers, and thirteen committed fingerprints were unreadable to them before this.
-    "Not a number" here always means "not measured", and null is how JSON says that.
-    """
-    if isinstance(value, dict):
-        return {k: sanitize_json(v) for k, v in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [sanitize_json(v) for v in value]
-    if isinstance(value, float) and (value != value or value in (float("inf"), float("-inf"))):
-        return None
-    return value
-CARDS_CONFIG = REPO / "configs" / "cards" / "default.yaml"
+from . import loader
+from .figures import Column, exemplar_panel
+from .loader import load_card, write_strict_json
+from .prose import write_block
 
 
 @dataclass(frozen=True)
@@ -59,16 +45,8 @@ class CanonicalFrame:
     time: float
 
 
-def load_cards_config() -> Any:
-    """Load the card-generation settings.
-
-    Plain OmegaConf rather than Hydra: generating documentation is not an experiment and
-    should not create a run folder or a ``.hydra`` directory.
-    """
-    return OmegaConf.load(CARDS_CONFIG)
-
-
-def load_canonical_frame(cfg: Any | None = None, *, allow_remote: bool = False) -> CanonicalFrame:
+def load_canonical_frame(cfg: CardsConfig | None = None, *,
+                         allow_remote: bool = False) -> CanonicalFrame:
     """Read the canonical exemplar frame from the dataset it names.
 
     Args:
@@ -85,29 +63,22 @@ def load_canonical_frame(cfg: Any | None = None, *, allow_remote: bool = False) 
             the data lives rather than in CI.
     """
     cfg = cfg or load_cards_config()
-    # Read without resolving: the dataset configs interpolate ${paths.data}, which only
-    # Hydra supplies. Documentation generation is not a Hydra run, so the one key that
-    # matters is substituted directly below.
-    dataset_cfg = OmegaConf.load(
-        REPO / "configs" / "dataset" / f"{cfg.exemplar_frame.dataset}.yaml"
-    )
-    raw_path = OmegaConf.to_container(dataset_cfg, resolve=False)["path"]
+    # The dataset as `evaluate.py` would compose it, so a dataset config that inherits a
+    # fragment, and the data root, are read the same way here. Composing creates no run
+    # directory.
+    composed = compose_config(f"dataset={cfg.exemplar_frame.dataset}")
+    dataset = composed.dataset
 
-    from fmeval.data import kinet_raw, locate, well  # noqa: F401  (register the formats)
-    from fmeval.data.base import READERS
-    from fmeval.data.locate import resolve_dataset_path
-
-    # The same resolver `evaluate.py` uses. Sharing it matters more than it looks: this
-    # function used to carry its own substitution rule, and two rules for where a dataset
-    # lives diverge the moment either one grows a case.
+    # The same resolver `evaluate.py` uses: two rules for where a dataset lives would
+    # diverge the moment either one grows a case.
     #
     # `allow_url=False` on purpose. Exemplar panels are committed artifacts generated
     # where the data lives, and the documentation build must keep working on a runner with
     # no data at all; silently fetching 166 GiB worth of ranges during a docs build is not
     # an improvement. Pass allow_remote=True to opt in deliberately.
     try:
-        location = resolve_dataset_path(
-            raw_path, REPO / "datasets", data_url=locate.default_data_url(),
+        location = locate.resolve_dataset_path(
+            dataset.path, composed.paths.data, data_url=composed.paths.data_url,
             allow_url=allow_remote,
         )
     except FileNotFoundError as exc:
@@ -116,13 +87,13 @@ def load_canonical_frame(cfg: Any | None = None, *, allow_remote: bool = False) 
             "Exemplar panels are generated where the data lives (NERSC) and committed, "
             "rather than in CI."
         ) from None
-    reader_kwargs = OmegaConf.to_container(dataset_cfg.get("reader", {}), resolve=True)
-    trajectory = READERS[str(dataset_cfg.format)](location.target, **reader_kwargs)
+    reader_kwargs = OmegaConf.to_container(dataset.reader, resolve=True)
+    trajectory = READERS[dataset.format](location.target, **reader_kwargs)
 
     wanted = [f for f in cfg.exemplar_frame.fields if f in trajectory.fields]
-    frame = trajectory.frame(int(cfg.exemplar_frame.index), wanted)
-    return CanonicalFrame(index=int(cfg.exemplar_frame.index),
-                          dataset=str(cfg.exemplar_frame.dataset),
+    frame = trajectory.frame(cfg.exemplar_frame.index, wanted)
+    return CanonicalFrame(index=cfg.exemplar_frame.index,
+                          dataset=cfg.exemplar_frame.dataset,
                           fields=dict(frame.fields), grid=frame.grid, time=float(frame.time))
 
 
@@ -137,8 +108,6 @@ def build_columns(name: str, card: Any, frame: CanonicalFrame, *, seed: int) -> 
     Returns:
         The columns, and a record of what was applied for the fingerprint.
     """
-    from .figures import Column
-
     spec = deg_registry.get(name)
     field_name = card.exemplars.field_name
     data = frame.fields[field_name]
@@ -157,19 +126,16 @@ def build_columns(name: str, card: Any, frame: CanonicalFrame, *, seed: int) -> 
         return columns, applied
 
     for severity in card.exemplars.levels:
-        level = SeverityLevel(
-            label=name, op=name, family=spec.family, level=1, severity=float(severity),
-            calibration=spec.calibration, severity_name=spec.severity_name,
-            severity_units=spec.severity_units, ordinal=spec.ordinal,
-            stochastic=spec.stochastic, options={},
-        )
+        level = SeverityLevel.from_spec(spec, label=name, level=1, severity=severity, options={})
         resolved = resolve_severity(level, field_name, calibration)
         ctx = _context(field_name, frame, data, seed=seed, label=f"{name}_{severity}")
         if spec.ensemble:
             shown = _ensemble_member(spec, data, resolved, seed=seed)
         else:
             shown = spec.fn(data, resolved, ctx=ctx)
-        columns.append(Column(title=_title(spec, resolved), data=shown))
+        # The title is the severity that was applied, with its units.
+        units = f" {spec.severity_units}" if spec.severity_units else ""
+        columns.append(Column(title=f"{spec.severity_name} = {resolved:.3g}{units}", data=shown))
         applied["severities"].append(float(severity))
         applied["resolved"].append(float(resolved))
     return columns, applied
@@ -194,43 +160,35 @@ def _ensemble_member(spec: Any, data: np.ndarray, severity: float, *, seed: int
     member strays from it, which is exactly the quantity these operators scale.
     """
     rng = np.random.default_rng(seed)
-    fluctuation = data - data.mean(axis=tuple(range(1, data.ndim)), keepdims=True)
-    scale = 0.3 * float(np.sqrt((fluctuation**2).mean()))
+    scale = 0.3 * fluctuation_rms(data)
     members = data[None] + scale * rng.standard_normal((EXEMPLAR_MEMBERS, *data.shape))
     return np.asarray(spec.fn(members, severity))[0]
-
-
-def _title(spec: Any, resolved: float) -> str:
-    """Panel title: the severity that was applied, with its units."""
-    units = f" {spec.severity_units}" if spec.severity_units else ""
-    return f"{spec.severity_name} = {resolved:.3g}{units}"
 
 
 def _context(field_name: str, frame: CanonicalFrame, data: np.ndarray, *,
              seed: int, label: str) -> FieldContext:
     """A field context matching the one the pipeline builds, so panels match runs."""
-    fluctuation = data - data.mean(axis=tuple(range(1, data.ndim)), keepdims=True)
     return FieldContext(
         field=field_name, grid=frame.grid, frame_index=frame.index, time=frame.time,
-        fluctuation_rms=float(np.sqrt((fluctuation**2).mean())),
+        fluctuation_rms=fluctuation_rms(data),
         rng=derive_rng(seed, label, frame.index, field_name),
     )
 
 
-def generate(name: str, *, seed: int = 20260807) -> Path | None:
+def generate(name: str, *, seed: int | None = None) -> Path | None:
     """Render one degradation's exemplar panel and write its caption and numbers.
 
     Args:
         name: The degradation bundle to illustrate.
-        seed: Run seed, so a stochastic operator's draws reproduce.
+        seed: Run seed, so a stochastic operator's draws reproduce. Defaults to ``seed`` in
+            ``configs/config.yaml``, the one place the run seed is set.
 
     Returns:
         The path to the written panel, or ``None`` if the card declares ``mode: none``.
     """
-    from .figures import exemplar_panel
-    from .loader import find_bundle, load_card
-
-    bundle = find_bundle(name)
+    # Looked up through the module, so a test that substitutes `loader.find_bundle` with a
+    # throwaway copy keeps the generator away from the tracked bundle.
+    bundle = loader.find_bundle(name)
     if bundle is None:
         raise KeyError(f"no degradation bundle named {name!r}")
     card = load_card(bundle)
@@ -239,13 +197,15 @@ def generate(name: str, *, seed: int = 20260807) -> Path | None:
 
     cfg = load_cards_config()
     frame = load_canonical_frame(cfg)
+    if seed is None:
+        seed = int(compose_config().seed)
     columns, applied = build_columns(name, card, frame, seed=seed)
 
-    out = bundle.path / "_generated"
+    out = bundle.generated
     panel = exemplar_panel(
         columns, list(card.exemplars.diagnostics), path=out / "exemplars.png",
         title=f"{name} on {card.exemplars.field_name}, frame {frame.index}",
-        grid=frame.grid, dpi=int(cfg.figures.dpi), theme=str(cfg.figures.theme),
+        grid=frame.grid, dpi=cfg.figures.dpi,
     )
 
     fingerprint = {
@@ -258,53 +218,11 @@ def generate(name: str, *, seed: int = 20260807) -> Path | None:
         "applied": applied,
         "panels": panel.statistics,
     }
-    (out / "exemplars.json").write_text(
-        json.dumps(sanitize_json(fingerprint), indent=2, sort_keys=True, allow_nan=False)
-        + "\n"
-    )
+    write_strict_json(out / "exemplars.json", fingerprint)
     write_block(bundle.card_md, "exemplars",
                 _caption(name, card, frame, applied, panel.statistics),
                 command=f"python -m fmeval.cards exemplars {name}")
     return panel.path
-
-
-def write_block(card_md: Path, block: str, body: str, *, command: str) -> None:
-    """Replace one generated block in a card, leaving every other byte alone.
-
-    The generated content lives in ``card.md`` itself rather than in a file included at
-    build time, because GitHub does not resolve includes: a figure that appears on the
-    documentation site and shows as a literal include line in the repository fails the
-    reader who never leaves the repository. The markers keep the boundary explicit, so the
-    checker can still refuse hand-written numbers and the review ledger can hash the prose
-    alone.
-
-    Args:
-        card_md: The card to rewrite.
-        block: The block name, matching the marker.
-        body: The generated markdown to place between the markers.
-        command: The command that regenerates it, named in the marker for a reader who
-            wonders where the content came from.
-
-    Raises:
-        KeyError: If the card has no block by that name, which means the card and the
-            generator disagree about what is generated.
-    """
-    from .prose import GENERATED_CLOSE, GENERATED_OPEN
-
-    text = card_md.read_text()
-    opener = GENERATED_OPEN.format(name=block, command=command)
-    closer = GENERATED_CLOSE.format(name=block)
-    pattern = re.compile(
-        rf"^<!-- GENERATED {block}:.*?-->$.*?^<!-- END GENERATED {block} -->$",
-        re.MULTILINE | re.DOTALL,
-    )
-    replacement = f"{opener}\n\n{body.strip()}\n\n{closer}"
-    if not pattern.search(text):
-        raise KeyError(
-            f"{card_md} has no '{block}' generated block. The card and the generator "
-            f"disagree about what is generated; add the markers or run  {command}"
-        )
-    card_md.write_text(pattern.sub(lambda _: replacement, text, count=1))
 
 
 def _caption(name: str, card: Any, frame: CanonicalFrame, applied: dict,

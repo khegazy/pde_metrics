@@ -9,7 +9,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from fmeval.data.base import GridSpec
+from fmeval.data.base import Frame, GridSpec
 from fmeval.derived import (
     CS2,
     pressure_from_density,
@@ -18,19 +18,7 @@ from fmeval.derived import (
 )
 from fmeval.external.kinet_spectral import spectral_vorticity
 from fmeval.remap import block_average, coarsen_factor, remap_frame, subsample
-from tests.conftest import synthetic_field
-
-
-def grid_for(shape, spacing=1.0) -> GridSpec:
-    n = len(shape)
-    return GridSpec(
-        shape=tuple(shape),
-        spacing=(spacing,) * n,
-        periodic=(True,) * n,
-        dims=("x", "y", "z")[:n],
-        origin=(0.0,) * n,
-    )
-
+from tests.conftest import synthetic_field, unit_grid
 
 # --- block_average ------------------------------------------------------------------
 
@@ -90,7 +78,7 @@ def test_block_average_differs_from_subsample_on_structured_data():
 
 
 def test_coarsen_factor():
-    g = grid_for((256, 256))
+    g = unit_grid((256, 256))
     assert coarsen_factor(g, None) == 1
     assert coarsen_factor(g, 256) == 1
     assert coarsen_factor(g, 64) == 4
@@ -110,7 +98,7 @@ def test_taylor_green_vorticity_is_analytic():
     x = np.arange(n) * dx
     xx, yy = np.meshgrid(x, x, indexing="ij")  # axis 0 == x, axis 1 == y
     u = np.stack([np.sin(xx) * np.cos(yy), -np.cos(xx) * np.sin(yy)])
-    omega = vorticity_from_velocity(u, grid_for((n, n), dx))
+    omega = vorticity_from_velocity(u, unit_grid((n, n), dx))
     assert omega.shape == (1, n, n), "2D vorticity must be lifted to a channel axis"
     assert np.abs(omega[0] - 2 * np.sin(xx) * np.sin(yy)).max() < 1e-12
 
@@ -127,7 +115,7 @@ def test_vorticity_spacing_scales_the_result_by_exactly_the_factor():
 def test_vorticity_rejects_a_mismatched_grid():
     u = synthetic_field((16, 8), 2, seed=0)
     with pytest.raises(ValueError, match="does not match grid"):
-        vorticity_from_velocity(u, grid_for((8, 8)))
+        vorticity_from_velocity(u, unit_grid((8, 8)))
 
 
 def test_vorticity_rejects_a_nonperiodic_grid():
@@ -147,9 +135,7 @@ def test_pressure_equation_of_state():
 
 
 def _frame(shape=(32, 32), spacing=1.0):
-    from fmeval.data.base import Frame
-
-    grid = grid_for(shape, spacing)
+    grid = unit_grid(shape, spacing)
     fields = {
         "density": 1.0 + 1e-3 * synthetic_field(shape, 1, seed=1),
         "velocity": 0.04 * synthetic_field(shape, 2, seed=2),
@@ -198,9 +184,7 @@ def test_remap_factor_one_is_identity():
 
 def test_remap_falls_back_to_averaging_without_the_primitive():
     """Derived-without-inputs must degrade gracefully, not raise."""
-    from fmeval.data.base import Frame
-
-    grid = grid_for((16, 8))
+    grid = unit_grid((16, 8))
     vort = synthetic_field((16, 8), 1, seed=3)
     frame = Frame(index=0, time=0.0, fields={"vorticity": vort}, grid=grid)
     out = remap_frame(frame, 2)
@@ -209,9 +193,7 @@ def test_remap_falls_back_to_averaging_without_the_primitive():
 
 def test_recompute_frame_puts_the_native_grid_on_the_same_operator():
     """Stored vorticity must be replaceable so native and coarse grids are comparable."""
-    from fmeval.data.base import Frame
-
-    grid = grid_for((32, 32))
+    grid = unit_grid((32, 32))
     stored = synthetic_field((32, 32), 1, seed=9)  # pretend: a lattice-stencil vorticity
     vel = 0.04 * synthetic_field((32, 32), 2, seed=2)
     frame = Frame(0, 0.0, {"velocity": vel, "vorticity": stored}, grid)

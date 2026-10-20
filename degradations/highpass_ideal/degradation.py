@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from .._shared.filters import _apply_filter, _wavenumber_magnitude
+from fmeval.wavenumbers import wavenumber_magnitude
+
+from .._shared.filters import _apply_filter
 from ..registry import degradation
 
 
@@ -28,11 +30,11 @@ def highpass_ideal(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
 
     **The k=0 mode is preserved deliberately.** Deleting it removes the spatial mean, which
     for a field like density (1.0 with fluctuations of 2e-4) is a change four orders of
-    magnitude larger than anything the cutoff controls. Measured before this was fixed:
-    every severity level gave an identical damage of 2.7e7 relative to the unrelated-field level, so
-    the axis carried no ordering at all and its rank correlation collapsed to 0.10. Keeping
+    magnitude larger than anything the cutoff controls. Measured with k=0 deleted: every
+    severity level gives an identical damage of 2.7e7 relative to the unrelated-field level, so
+    the axis carries no ordering at all and its rank correlation collapses to 0.10. Keeping
     the mean makes the operator measure what it is named for -- removal of large-scale
-    structure -- and restores a monotone ladder on every field.
+    structure -- and gives a monotone ladder on every field.
     """
-    k = _wavenumber_magnitude(ctx.grid.shape)
+    k = wavenumber_magnitude(ctx.grid.shape)
     return _apply_filter(x, (k >= severity).astype(float), keep_mean=True)

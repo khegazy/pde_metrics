@@ -4,8 +4,10 @@ The contract tests every metric must satisfy -- symmetry, zero on identical fiel
 pointwise map reducing to the scalar, float32/float64 agreement -- live in
 ``tests/test_metric_contract.py`` and run over the whole registry. What is tested here is
 what only this metric claims: the worked example printed in the card, the ``1 / k`` scaling
-that is the entire point of a negative-order norm, the proportionality to domain size, and
-the blindness to a constant offset that the homogeneous seminorm implies.
+that is the entire point of a negative-order norm, and the blindness to a constant offset
+that the homogeneous seminorm implies. The proportionality to domain size is checked in the
+contract file beside the other spacing-dependent metrics, and the gentler response to
+displacement than rmse in ``h1_seminorm``'s tests, beside its mirror image.
 
 Every expected value in this file is derived in closed form in the docstring beside it, not
 copied from a run.
@@ -16,38 +18,10 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from fmeval.context import FieldContext
-from fmeval.data.base import GridSpec
+from tests.conftest import cosine_mode, make_ctx
 
 from ..rmse.metric import rmse
 from .metric import h_minus_one
-
-
-def _ctx(shape: tuple[int, ...], spacing: float = 1.0) -> FieldContext:
-    """A minimal context; this metric uses only the grid's spacing and shape."""
-    return FieldContext(
-        field="density",
-        grid=GridSpec(
-            shape=shape,
-            spacing=(spacing,) * len(shape),
-            periodic=(True,) * len(shape),
-        ),
-        frame_index=0,
-        time=0.0,
-        fluctuation_rms=1.0,
-        rng=np.random.default_rng(0),
-    )
-
-
-def _cosine_mode(shape: tuple[int, int], mode: int, spacing: float = 1.0) -> np.ndarray:
-    """``cos(2 pi m x / L)``, constant along y, as a single-channel ``(1, *shape)`` field.
-
-    x is the first *spatial* axis, per the canonical trailing-axes layout.
-    """
-    x = np.arange(shape[0]) * spacing
-    length = shape[0] * spacing
-    profile = np.cos(2.0 * np.pi * mode * x / length)
-    return np.broadcast_to(profile[:, None], shape).copy()[np.newaxis, ...]
 
 
 def test_worked_example_from_the_card():
@@ -68,9 +42,9 @@ def test_worked_example_from_the_card():
     1 / |k| that this metric applies and rmse does not.
     """
     reference = np.zeros((1, 4, 4))
-    candidate = _cosine_mode((4, 4), mode=1)
+    candidate = cosine_mode((4, 4), mode=1)
 
-    assert h_minus_one(reference, candidate, ctx=_ctx((4, 4))) == pytest.approx(
+    assert h_minus_one(reference, candidate, ctx=make_ctx((4, 4))) == pytest.approx(
         np.sqrt(2.0) / np.pi
     )
     assert rmse(reference, candidate) == pytest.approx(1.0 / np.sqrt(2.0))
@@ -87,9 +61,9 @@ def test_the_nyquist_mode_is_the_other_half_of_the_worked_example():
     2/pi -- a factor of exactly two for a doubling of the wavenumber.
     """
     reference = np.zeros((1, 4, 4))
-    candidate = _cosine_mode((4, 4), mode=2)
+    candidate = cosine_mode((4, 4), mode=2)
 
-    assert h_minus_one(reference, candidate, ctx=_ctx((4, 4))) == pytest.approx(
+    assert h_minus_one(reference, candidate, ctx=make_ctx((4, 4))) == pytest.approx(
         1.0 / np.pi
     )
     assert rmse(reference, candidate) == pytest.approx(1.0)
@@ -105,26 +79,10 @@ def test_error_at_mode_m_falls_as_one_over_m(mode: int):
     """
     shape = (8, 8)
     reference = np.zeros((1, *shape))
-    candidate = _cosine_mode(shape, mode=mode)
+    candidate = cosine_mode(shape, mode=mode)
 
     expected = (1.0 / np.sqrt(2.0)) * shape[0] / (2.0 * np.pi * mode)
-    assert h_minus_one(reference, candidate, ctx=_ctx(shape)) == pytest.approx(expected)
-
-
-def test_value_scales_with_the_physical_domain_size():
-    """Doubling the cell spacing doubles the value: the norm carries a length.
-
-    Same field, same mode index, twice the spacing means twice the domain and half the
-    wavenumber, so 1 / |k| doubles. This is why the metric must read the *analysis* grid's
-    spacing rather than assuming unit cells.
-    """
-    shape = (8, 8)
-    reference = np.zeros((1, *shape))
-    candidate = _cosine_mode(shape, mode=1)
-
-    unit = h_minus_one(reference, candidate, ctx=_ctx(shape, spacing=1.0))
-    doubled = h_minus_one(reference, candidate, ctx=_ctx(shape, spacing=2.0))
-    assert doubled == pytest.approx(2.0 * unit)
+    assert h_minus_one(reference, candidate, ctx=make_ctx(shape)) == pytest.approx(expected)
 
 
 def test_a_constant_offset_is_invisible():
@@ -134,28 +92,8 @@ def test_a_constant_offset_is_invisible():
     prediction offset by any constant scores zero. Stated in the card's Limitations.
     """
     shape = (8, 8)
-    reference = _cosine_mode(shape, mode=1)
+    reference = cosine_mode(shape, mode=1)
     candidate = reference + 17.0
 
-    assert h_minus_one(reference, candidate, ctx=_ctx(shape)) == pytest.approx(0.0)
+    assert h_minus_one(reference, candidate, ctx=make_ctx(shape)) == pytest.approx(0.0)
     assert rmse(reference, candidate) == pytest.approx(17.0)
-
-
-def test_displacement_costs_less_than_it_does_under_rmse():
-    """Shifting a field by one cell: H^-1 pays a smaller fraction of the unrelated level.
-
-    Both metrics are anchored against the same pair of fields, so comparing each shifted
-    value to that metric's own value for an unrelated field removes the units and leaves
-    the property the repository cares about -- tolerance of displacement.
-    """
-    shape = (16, 16)
-    ctx = _ctx(shape)
-    reference = _cosine_mode(shape, mode=1) + 0.3 * _cosine_mode(shape, mode=5)
-    shifted = np.roll(reference, 1, axis=1)
-    unrelated = np.roll(reference, shape[0] // 2, axis=1)
-
-    h_fraction = h_minus_one(reference, shifted, ctx=ctx) / h_minus_one(
-        reference, unrelated, ctx=ctx
-    )
-    rmse_fraction = rmse(reference, shifted) / rmse(reference, unrelated)
-    assert h_fraction < rmse_fraction

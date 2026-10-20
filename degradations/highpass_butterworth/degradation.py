@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from .._shared.filters import _apply_filter, _wavenumber_magnitude
+from fmeval.wavenumbers import wavenumber_magnitude
+
+from .._shared.filters import _apply_filter, butterworth
 from ..registry import degradation
 
 
@@ -18,8 +20,8 @@ from ..registry import degradation
     severity_units="fraction",
     severity_direction="increasing",
     calibration="energy_below",
-    defaults={"order": 4},
     preserves=("spatial_mean",),
+    zero_is_identity=False,
 )
 def highpass_butterworth(
     x: np.ndarray, severity: float, *, ctx, order: int = 4
@@ -28,7 +30,5 @@ def highpass_butterworth(
 
     The k=0 mode is preserved for the same reason as in :func:`highpass_ideal`.
     """
-    k = _wavenumber_magnitude(ctx.grid.shape)
-    with np.errstate(divide="ignore", over="ignore"):
-        transfer = 1.0 - 1.0 / (1.0 + (k / max(severity, 1e-12)) ** (2 * order))
+    transfer = 1.0 - butterworth(wavenumber_magnitude(ctx.grid.shape), severity, order)
     return _apply_filter(x, transfer, keep_mean=True)

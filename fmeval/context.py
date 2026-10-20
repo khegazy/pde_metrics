@@ -40,9 +40,23 @@ class FieldContext:
         return self.grid.axis(dim)
 
 
-# Alias: metrics and degradations receive the same object, but the two registries talk
-# about it in their own vocabulary.
-MetricContext = FieldContext
+def fluctuation(x: np.ndarray) -> np.ndarray:
+    """``x`` with each channel's spatial mean removed; ``x`` is ``(C, *spatial)``.
+
+    Every energy and RMS in this repository is taken about the mean, because on density the
+    mean is four orders of magnitude larger than the fluctuation: an energy measured about zero
+    would say every operator changed nothing.
+    """
+    return x - x.mean(axis=tuple(range(1, x.ndim)), keepdims=True)
+
+
+def fluctuation_energy(x: np.ndarray) -> np.floating:
+    """Mean squared fluctuation of ``x`` about its spatial mean, per channel then pooled.
+
+    Returned as the NumPy scalar of ``x``'s dtype, so a float32 input is not silently
+    promoted; callers cast where they need a Python float.
+    """
+    return (fluctuation(x) ** 2).mean()
 
 
 def fluctuation_rms(x: np.ndarray) -> float:
@@ -51,9 +65,7 @@ def fluctuation_rms(x: np.ndarray) -> float:
     The scale that noise and gain severities are expressed in. Zero for a uniform field,
     which callers must handle.
     """
-    spatial = tuple(range(1, x.ndim))
-    fluct = x - x.mean(axis=spatial, keepdims=True)
-    return float(np.sqrt((fluct**2).mean()))
+    return float(np.sqrt(fluctuation_energy(x)))
 
 
 def derive_rng(seed: int, label: str, frame_index: int, field: str) -> np.random.Generator:

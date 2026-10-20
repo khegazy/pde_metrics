@@ -12,6 +12,7 @@ report of the same run cannot disagree.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -21,44 +22,31 @@ from typing import Any
 import pandas as pd
 
 from fmeval import analysis as an
+from fmeval.config import load_cards_config
+from fmeval.io import read_config, read_results, read_run_meta
+from fmeval.report.registry import PLOTS
+from fmeval.report.vocabulary import FAMILY_INFO, family_label, label
 
-from .exemplars import load_cards_config, write_block
-from .metric_figures import CardFigure, metric_figures
-from .prose import FAMILY_HEADINGS
+from . import loader
+from .loader import write_strict_json
+from .metric_figures import FIGURE_BLOCKS, METRIC_FIGURES, CardFigure, metric_figures
+from .prose import has_block, write_block
 
-#: Which generated block each degradation family's results go into.
-#:
-#: Derived from :data:`FAMILY_HEADINGS` rather than written out again: these were two
-#: hand-maintained lists of the same families, and adding a family to one and not the
-#: other left its results silently ungenerated -- the card kept its "Not generated yet"
-#: placeholder while `cards evidence` reported success.
-FAMILY_BLOCKS = {family: f"results_{family}" for family in FAMILY_HEADINGS}
+#: Which generated block each degradation family's results go into. Derived from
+#: :data:`fmeval.report.vocabulary.FAMILY_INFO` rather than written out again, so a family
+#: added there cannot be left with its results silently ungenerated.
+FAMILY_BLOCKS = {family: f"results_{family}" for family in FAMILY_INFO}
 
 NOT_MEASURED = "No measurements for this test in the recorded run."
 
-#: Which families and which controls the damage table reports. Defined in the analysis so the
-#: report's figure of the same numbers reads them without importing the cards layer; kept
-#: under their old names here because this is where readers of the card generator look.
-DAMAGE_BLOCK_FAMILIES = an.DAMAGE_BLOCK_FAMILIES
-DAMAGE_BLOCK_CONTROLS = an.DAMAGE_BLOCK_CONTROLS
 
-
-@dataclass(frozen=True)
-class Run:
-    """One evaluation run, with the statistics derived from it."""
+@dataclass(frozen=True, kw_only=True)
+class Run(an.Analysis):
+    """One evaluation run: where it came from, plus every statistic :func:`an.analyse` derives."""
 
     folder: Path
     rows: pd.DataFrame
     meta: dict
-    axes: pd.DataFrame
-    probes: pd.DataFrame
-    norm: pd.DataFrame
-    scored: pd.DataFrame
-    """The rows with ``damage`` attached."""
-    card: pd.DataFrame
-    """One row per metric and field, unflagged: cards never carry flags."""
-    anchor_label: str = an.UNCORRELATED_LABEL
-    probe_labels: frozenset[str] = an.PROBE_LABELS
 
 
 def load_run(folder: Path) -> Run:
@@ -76,13 +64,7 @@ def load_run(folder: Path) -> Run:
             the first 100 solver steps, before the flow develops, and its numbers would be
             indistinguishable once written into a card from ones that mean something.
     """
-    results = folder / "data" / "results.csv"
-    if not results.is_file():
-        results = folder / "data" / "results.csv.gz"
-    if not results.is_file():
-        raise FileNotFoundError(f"{folder} has no data/results.csv")
-
-    rows = pd.read_csv(results)
+    rows = read_results(folder)
     allowed = list(load_cards_config().evidence_datasets)
     used = sorted(rows["dataset"].unique())
     forbidden = [d for d in used if d not in allowed]
@@ -92,12 +74,15 @@ def load_run(folder: Path) -> Run:
             "Evidence must come from a developed-flow run, not a smoke test."
         )
 
-    meta_path = folder / "data" / "run_meta.json"
-    meta = json.loads(meta_path.read_text()) if meta_path.is_file() else {}
-    analysis = an.analyse(rows, meta=meta)
-    return Run(folder=folder, rows=rows, meta=meta, norm=analysis.norm, axes=analysis.axes,
-               probes=analysis.probes, scored=analysis.scored, card=analysis.card,
-               anchor_label=analysis.anchor_label, probe_labels=analysis.probe_labels)
+    meta = read_run_meta(folder)
+    analysis = an.analyse(rows, meta=meta, config=read_config(folder))
+    return Run(folder=folder, rows=rows, meta=meta,
+               **{f.name: getattr(analysis, f.name) for f in dataclasses.fields(analysis)})
+
+
+def _header(*columns: str) -> list[str]:
+    """The header and separator rows of a markdown table, with the separator's width matched."""
+    return ["| " + " | ".join(columns) + " |", "|" + "---|" * len(columns)]
 
 
 def _cell(row: Any, column: str) -> Any:
@@ -105,9 +90,8 @@ def _cell(row: Any, column: str) -> Any:
 
     `probe_summary` only emits columns for the probes the ladder actually ran. A run whose
     ladder skipped the impostor -- `degradation.skip=[gaussian_impostor]`, or a custom
-    ladder -- legitimately lacks those columns, and indexing them raised a bare KeyError
-    that named a column instead of the situation. Absent means not measured, which
-    `_fmt` renders as an em dash.
+    ladder -- legitimately lacks those columns. Absent means not measured, which `_fmt`
+    renders as an em dash.
     """
     return row[column] if column in row.index else None
 
@@ -126,7 +110,7 @@ def run_block(run: Run) -> str:
     meta, rows = run.meta, run.rows
     frames = sorted(rows["frame_index"].unique())
     git = meta.get("git", {})
-    sha = str(git.get("sha") or git.get("commit") or "not recorded")[:12]
+    sha = str(git.get("sha") or "not recorded")[:12]
     dirty = " (working tree dirty)" if git.get("dirty") else ""
     return (
         f"Measured on `{rows['dataset'].iloc[0]}`, frames {frames[0]} to {frames[-1]} "
@@ -138,7 +122,7 @@ def run_block(run: Run) -> str:
     )
 
 
-def figure_lines(figures: Sequence[CardFigure], reasons: Mapping[str, str],
+def figure_lines(figures: Sequence[CardFigure] | None, reasons: Mapping[str, str] | None,
                  block: str = "performance") -> list[str]:
     """The image and caption for each figure of one block, or one sentence saying why it is absent.
 
@@ -148,12 +132,11 @@ def figure_lines(figures: Sequence[CardFigure], reasons: Mapping[str, str],
     caption its reading, both from the renderer, so a reader of the repository on GitHub and
     a reader of the site see the same figure with the same words.
     """
-    from fmeval.report.registry import PLOTS
-
-    from .metric_figures import FIGURE_BLOCKS, METRIC_FIGURES
-
+    if not (figures or reasons):
+        return []      # drawn without figures, e.g. from a test: no figure lines at all
+    reasons = reasons or {}
     lines: list[str] = []
-    by_name = {f.name: f for f in figures}
+    by_name = {f.name: f for f in figures or ()}
     for name in METRIC_FIGURES:
         if FIGURE_BLOCKS[name] != block:
             continue
@@ -173,15 +156,13 @@ def performance_block(run: Run, metric: str, figures: Sequence[CardFigure] = (),
     if axes.empty:
         return NOT_MEASURED
 
-    lines = (figure_lines(figures, reasons or {}, "performance")
-             if (figures or reasons) else [])
-    lines += ["| test family | field | degradations | rank correlation | weakest gap "
-              "between neighbouring strengths | first strength detected |",
-              "|---|---|---|---|---|---|"]
+    lines = figure_lines(figures, reasons, "performance")
+    lines += _header("test family", "field", "degradations", "rank correlation",
+                     "weakest gap between neighbouring strengths", "first strength detected")
     for family, group in axes[~axes["is_probe"]].groupby("degradation_family"):
         # The same readable name the matching '### ' subsection uses, so a reader moving
         # between the summary and the detail is not asked to learn two vocabularies.
-        named = FAMILY_HEADINGS.get(family, family)
+        named = family_label(family)
         for field, sub in group.groupby("field"):
             lines.append(
                 f"| {named} | {field} | {len(sub)} | "
@@ -225,18 +206,16 @@ def _profile_lines(run: Run, metric: str, axes: pd.DataFrame) -> list[str]:
     card = run.card[run.card["metric"] == metric].sort_values("field")
     if card.empty or "selectivity" not in card.columns:
         return []
-    translation = axes[axes["degradation"] == "translate_subpixel"]
+    translation = axes[axes["degradation"] == an.DISPLACEMENT_AXIS]
     against = ", ".join(sorted(str(x) for x in translation["elasticity_x"].dropna().unique()))
     margin, confidence = an.BLINDNESS_MARGIN, an.BLINDNESS_CONFIDENCE
-    lines = [
-        "", "**Profile.**", "",
-        "| field | selectivity | charges most for | charges least for | response provably below "
-        f"{margin:g} at {confidence:.0%} on | elasticity to a sub-pixel shift"
-        f"{f', against {against}' if against else ''} | compute cost (x cheapest in this run) |",
-        "|---|---|---|---|---|---|---|",
-    ]
+    lines = ["", "**Profile.**", "", *_header(
+        "field", "selectivity", label("most_sensitive_axis"), label("least_sensitive_axis"),
+        f"response provably below {margin:g} at {confidence:.0%} on",
+        f"{label('elasticity_displacement')}{f', against {against}' if against else ''}",
+        "compute cost (x cheapest in this run)")]
     for _, row in card.iterrows():
-        blind = " ".join(f"`{a}`" for a in str(row.get("blind_axes") or "").split("; ") if a)
+        blind = " ".join(f"`{a}`" for a in an.split_blind(row.get("blind_axes")))
         most, least = row.get("most_sensitive_axis"), row.get("least_sensitive_axis")
         lines.append(
             f"| {row['field']} | {_fmt(row.get('selectivity'))} | "
@@ -263,19 +242,18 @@ def _profile_lines(run: Run, metric: str, axes: pd.DataFrame) -> list[str]:
 
 def damage_by_level_block(run: Run, metric: str, figures: Sequence[CardFigure] = (),
                           reasons: Mapping[str, str] | None = None) -> str:
-    """Per-strength damage for this metric beside the pointwise controls (issues/035).
+    """Per-strength damage for this metric beside the pointwise controls.
 
     The figure of those numbers first, then one table per field and translation degradation,
     one row per metric -- this one first -- and one column per strength, so the magnitude
     claims a card makes have a generated source.
     """
     present = set(run.rows["metric"].astype(str).unique())
-    others = [m for m in DAMAGE_BLOCK_CONTROLS if m in present and m != metric]
+    others = [m for m in an.DAMAGE_BLOCK_CONTROLS if m in present and m != metric]
     if not others:
         return "Only one metric in the recorded run; there is nothing to place this one beside."
-    lines: list[str] = (figure_lines(figures, reasons or {}, "results_damage_by_level")
-                        if (figures or reasons) else [])
-    for family in DAMAGE_BLOCK_FAMILIES:
+    lines = figure_lines(figures, reasons, "results_damage_by_level")
+    for family in an.DAMAGE_BLOCK_FAMILIES:
         for field in sorted(run.scored["field"].astype(str).unique()):
             wide = an.damage_by_level(run.scored, field=field, family=family,
                                       probe_labels=run.probe_labels)
@@ -284,10 +262,9 @@ def damage_by_level_block(run: Run, metric: str, figures: Sequence[CardFigure] =
                 strengths = [f"{s:g}" for s in block["severity"]]
                 name = str(run.rows.loc[run.rows["degradation"] == degradation,
                                         "severity_name"].iloc[0])
-                lines += [f"**{FAMILY_HEADINGS.get(family, family)}, {field}, "
+                lines += [f"**{family_label(family)}, {field}, "
                           f"`{degradation}`** (strength: {name}).", "",
-                          "| metric | " + " | ".join(strengths) + " |",
-                          "|---" * (len(strengths) + 1) + "|"]
+                          *_header("metric", *strengths)]
                 for m in (metric, *others):
                     cells = (block[m].to_numpy(float) if m in block.columns
                              else [float("nan")] * len(strengths))
@@ -313,10 +290,9 @@ def family_block(run: Run, metric: str, family: str) -> str:
                     & (~run.axes["is_probe"])]
     if axes.empty:
         return NOT_MEASURED
-    lines = ["| degradation | field | strengths | rank correlation | "
-             "fraction of frames in the right order | weakest gap between neighbouring "
-             "strengths |",
-             "|---|---|---|---|---|---|"]
+    lines = _header("degradation", "field", "strengths", "rank correlation",
+                    "fraction of frames in the right order",
+                    "weakest gap between neighbouring strengths")
     for _, row in axes.sort_values(["degradation", "field"]).iterrows():
         lines.append(
             f"| `{row['degradation']}` | {row['field']} | {int(row['n_levels'])} | "
@@ -331,9 +307,8 @@ def canaries_block(run: Run, metric: str) -> str:
     probes = run.probes[run.probes["metric"] == metric]
     if probes.empty:
         return NOT_MEASURED
-    lines = ["| field | damage assigned to the fake prediction | closest real degradation "
-             "| value on an unrelated field |",
-             "|---|---|---|---|"]
+    lines = _header("field", "damage assigned to the fake prediction",
+                    "closest real degradation", "value on an unrelated field")
     for _, row in probes.sort_values("field").iterrows():
         nearest = _cell(row, "gaussian_impostor_nearest_level")
         lines.append(
@@ -364,7 +339,7 @@ def summary_block(run: Run, metric: str) -> str:
         return NOT_MEASURED
 
     row = matrix.loc[metric].drop(labels=[metric], errors="ignore").sort_values(ascending=False)
-    lines = ["| compared with | rank correlation over every degradation |", "|---|---|"]
+    lines = _header("compared with", "rank correlation over every degradation")
     for other, value in row.items():
         lines.append(f"| `{other}` | {_fmt(float(value))} |")
     lines += [
@@ -394,18 +369,16 @@ def generate(metric: str, run: Run) -> Path:
             writes -- which means the card and the generator disagree about what is
             generated.
     """
-    from .loader import find_bundle
-
-    bundle = find_bundle(metric)
+    # Looked up through the module, so a test that substitutes `loader.find_bundle` with a
+    # throwaway copy keeps the generator away from the tracked bundle.
+    bundle = loader.find_bundle(metric)
     if bundle is None:
         raise KeyError(f"no metric bundle named {metric!r}")
 
     command = f"python -m fmeval.cards evidence {metric} --results {run.folder}"
     # Figures first, so a figure that cannot be drawn is reported inside the block that
     # would have shown it rather than discovered as a missing file.
-    cfg = load_cards_config()
-    figures, reasons = metric_figures(run, metric, bundle.path / "_generated",
-                                      theme=str(cfg.figures.theme))
+    figures, reasons = metric_figures(run, metric, bundle.generated)
     blocks = {
         "run": run_block(run),
         "performance": performance_block(run, metric, figures, reasons),
@@ -418,7 +391,7 @@ def generate(metric: str, run: Run) -> Path:
 
     text = bundle.card_md.read_text()
     for name, body in blocks.items():
-        if f"<!-- GENERATED {name}:" in text:
+        if has_block(text, name):
             write_block(bundle.card_md, name, body, command=command)
 
     axes = run.axes[run.axes["metric"] == metric]
@@ -435,16 +408,5 @@ def generate(metric: str, run: Run) -> Path:
         "probes": json.loads(probes.to_json(orient="records")),
         "profile": json.loads(run.card[run.card["metric"] == metric].to_json(orient="records")),
     }
-    out = bundle.path / "_generated" / "fingerprint.json"
-    from .exemplars import sanitize_json
-
-    out.write_text(
-        json.dumps(sanitize_json(fingerprint), indent=2, sort_keys=True, allow_nan=False)
-        + "\n"
-    )
-    for stale in bundle.path.glob("_generated/results_*.md"):
-        stale.unlink()
-    for stale in (bundle.path / "_generated" / "performance.md",
-                  bundle.path / "_generated" / "run.md"):
-        stale.unlink(missing_ok=True)
-    return out
+    write_strict_json(bundle.fingerprint, fingerprint)
+    return bundle.fingerprint

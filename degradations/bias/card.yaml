@@ -25,14 +25,14 @@ output:
 
 exemplars:
   mode: severity
-  levels: [0.05, 0.2, 0.5]
+  levels: [0.05, 0.15, 0.6]
   field_name: vorticity
   diagnostics: [difference, pdf]
   rationale: >-
-    Three offsets spanning a small fraction of the field's variation to half of it. The
-    pdf row shows the mechanism exactly -- the whole distribution slides without changing
-    shape -- and the difference row shows a flat, featureless offset, which is unlike
-    every other degradation in the gallery.
+    Three offsets spanning a small fraction of the field's variation to more than half of
+    it. The pdf row shows the mechanism exactly -- the whole distribution slides without
+    changing shape -- and the difference row shows a flat, featureless offset, which is
+    unlike every other degradation in the gallery.
 
 references: []
 review: null

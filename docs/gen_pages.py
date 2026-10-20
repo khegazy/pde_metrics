@@ -30,7 +30,10 @@ sys.path.insert(0, str(REPO))
 
 from fmeval.cards.catalog import build as build_catalog  # noqa: E402
 from fmeval.cards.loader import iter_bundles  # noqa: E402
+from fmeval.cards.overview import page_markdown  # noqa: E402
+from fmeval.cards.prose import FRONTMATTER  # noqa: E402
 from fmeval.cards.schema import CATEGORIES  # noqa: E402
+from fmeval.report.vocabulary import FAMILY_INFO  # noqa: E402
 
 #: Cards link to each other by repository-relative path so GitHub resolves them. On the
 #: site, pages are flat under metrics/ and degradations/, so those links are rewritten.
@@ -43,37 +46,6 @@ _ROOT_CARD_LINK = re.compile(r"\]\((metrics|degradations)/([a-z0-9_]+)/card\.md\
 
 #: What a degradation's severity number is measured against, said in words. The card
 #: stores a short code; a first-time reader needs the sentence, not the code.
-#: A metric's type -- what kind of measurement it makes -- said in words. The card stores
-#: a short code and `catalog.json` carries it; a reader needs the sentence. Keys are
-#: `fmeval.cards.schema.CATEGORIES`, and a test holds the two in step.
-_METRIC_CATEGORY = {
-    "pointwise": "compares the fields cell by cell",
-    "physical": "a physical quantity of the flow",
-    "spectral": "compares the fields scale by scale",
-    "statistical": "compares distributions or moments of the field",
-    "probabilistic": "compares whole ensembles",
-    "transport": "the cost of moving one field onto the other",
-    "functional": "a norm that weights the scales differently",
-    "geometric": "where features are, and what shape they have",
-    "topological": "which features exist, and how they connect",
-}
-
-#: A degradation reuses the `family` its registry entry declares rather than the metric
-#: vocabulary above. The two overlap in spelling and not in meaning -- `pointwise` is
-#: cell-by-cell *comparison* for a metric and cell-by-cell *distortion* for a degradation,
-#: and `spectral` and `geometric` diverge the same way -- so they are separate maps and the
-#: kind of the bundle chooses between them. One shared map silently mislabelled whichever
-#: sense was written second.
-_DEGRADATION_FAMILY = {
-    "smoothing": "smoothing away fine detail",
-    "spectral": "filtering out chosen scales",
-    "geometric": "moving features to the wrong place",
-    "resolution": "losing grid resolution",
-    "stochastic": "adding noise",
-    "pointwise": "distorting each cell's value",
-    "ensemble": "making the ensemble the wrong width",
-}
-
 _CALIBRATION = {
     None: "a fixed number, the same on every field",
     "scale": "a fraction of the field's own characteristic length",
@@ -96,11 +68,15 @@ def _for_site(text: str, name: str) -> str:
     return _ASSET.sub(lambda m: f"](_generated/{name}_{m.group(1)})", text)
 
 
-def _front_matter_stripped(text: str) -> str:
-    """A card without its YAML front matter, which the site header replaces."""
-    if text.startswith("---"):
-        return text.split("---", 2)[2].lstrip("\n")
-    return text
+def _strength(declared: dict) -> str:
+    """What a degradation's strength number is, with its units, in words."""
+    units = f", in {declared['severity_units']}" if declared["severity_units"] else ""
+    return f"{declared['severity_name']}{units}"
+
+
+def _measured_against(declared: dict) -> str:
+    """What a degradation's strength is relative to, in words."""
+    return _CALIBRATION.get(declared["calibration"], declared["calibration"])
 
 
 def _header(entry: dict) -> str:
@@ -135,11 +111,8 @@ def _header(entry: dict) -> str:
             rows.append(f"| **cost as the grid grows** | `{entry['math']['complexity']}` |")
     else:
         rows += [
-            f"| **what its strength setting means** | {declared['severity_name']}"
-            + (f", in {declared['severity_units']}" if declared["severity_units"] else "")
-            + " |",
-            f"| **that strength is measured against** | "
-            f"{_CALIBRATION.get(declared['calibration'], declared['calibration'])} |",
+            f"| **what its strength setting means** | {_strength(declared)} |",
+            f"| **that strength is measured against** | {_measured_against(declared)} |",
             f"| **strengths run mildest to worst** | "
             f"{'yes' if declared['ordinal'] else 'no: this is a trap test, not a ladder'} |",
             f"| **uses randomness** | {'yes' if declared['stochastic'] else 'no'} |",
@@ -181,18 +154,17 @@ def _category(entry: dict) -> str:
 
     Both are shown: the words are for a reader, and the code is what a contributor types
     into ``card.yaml`` and what ``catalog.json`` carries. Which vocabulary applies depends
-    on the kind of bundle -- see the note on ``_DEGRADATION_FAMILY``.
+    on the kind of bundle. A degradation reuses the ``family`` its registry entry declares,
+    which overlaps the metric vocabulary in spelling and not in meaning -- ``pointwise`` is
+    cell-by-cell *comparison* for a metric and cell-by-cell *distortion* for a degradation --
+    so the kind chooses the vocabulary; one shared map would mislabel one of the two senses.
     """
     code = entry["category"]
-    words = _METRIC_CATEGORY if entry["kind"] == "metric" else _DEGRADATION_FAMILY
-    said = words.get(code)
+    if entry["kind"] == "metric":
+        said = CATEGORIES.get(code)
+    else:
+        said = FAMILY_INFO[code].description if code in FAMILY_INFO else None
     return f"{said} (`{code}`)" if said else str(code)
-
-
-def _api(bundle) -> str:
-    """The implementation's API, pulled from its docstrings by mkdocstrings."""
-    module = f"{bundle.path.parent.name}.{bundle.name}.{bundle.implementation.stem}"
-    return f"## Implementation\n\n::: {module}\n"
 
 
 def main() -> None:
@@ -202,32 +174,39 @@ def main() -> None:
 
     for bundle in iter_bundles():
         entry = by_name[bundle.name]
-        card = _front_matter_stripped(bundle.card_md.read_text())
+        # The front matter is replaced by the header table drawn from the typed record.
+        card = FRONTMATTER.sub("", bundle.card_md.read_text()).lstrip("\n")
         page = f"{bundle.path.parent.name}/{bundle.name}.md"
+        # The implementation's API, pulled from its docstrings by mkdocstrings.
+        module = f"{bundle.path.parent.name}.{bundle.name}.{bundle.implementation.stem}"
         with mkdocs_gen_files.open(page, "w") as f:
             print(f"# {bundle.name}\n", file=f)
             print(f"{entry['summary']}\n", file=f)
             print(_ORIENTATION[bundle.kind] + "\n", file=f)
             print(_header(entry) + "\n", file=f)
             print(_for_site(card, bundle.name), file=f)
-            print("\n" + _api(bundle), file=f)
+            print(f"\n## Implementation\n\n::: {module}\n", file=f)
         mkdocs_gen_files.set_edit_path(page, f"{bundle.path.parent.name}/{bundle.name}/card.md")
 
         # Figures are served from beside the page, with the JSON of the numbers behind each
         # one so an agent reading the site can read what a person sees.
         for pattern in ("*.png", "*.svg", "*.json"):
-            for asset in sorted((bundle.path / "_generated").glob(pattern)):
+            for asset in sorted(bundle.generated.glob(pattern)):
                 target = f"{bundle.path.parent.name}/_generated/{bundle.name}_{asset.name}"
                 with mkdocs_gen_files.open(target, "wb") as f:
                     f.write(asset.read_bytes())
 
         # Metrics are grouped in the navigation by type, degradations by nothing.
         (nav_metrics if bundle.kind == "metric" else nav_degradations).append(
-            (bundle.name, entry["category"], f"{bundle.path.parent.name}/{bundle.name}.md")
+            (bundle.name, entry["category"], page)
         )
 
     _write_catalogue_page(catalog)
-    _write_sensitivity_page(catalog)
+    # Every metric on the same response figures. The figures are committed under
+    # docs/figures/<run>/; only this page is generated, from their JSON, so the captions on
+    # the page are the captions the renderer wrote.
+    with mkdocs_gen_files.open("sensitivity.md", "w") as f:
+        print(page_markdown(catalog=catalog), file=f)
     _write_gallery(catalog)
     _write_protocol()
     _write_nav(nav_metrics, nav_degradations)
@@ -265,23 +244,9 @@ def _write_catalogue_page(catalog: dict) -> None:
             if e["kind"] != "degradation":
                 continue
             d = e["declared"]
-            units = f", in {d['severity_units']}" if d["severity_units"] else ""
-            against = _CALIBRATION.get(d["calibration"], d["calibration"])
             print(f"| [{e['name']}](degradations/{e['name']}.md) | {_category(e)} "
-                  f"| {d['severity_name']}{units} | {against} "
+                  f"| {_strength(d)} | {_measured_against(d)} "
                   f"| {'yes' if d['ordinal'] else 'no: a trap test'} |", file=f)
-
-
-def _write_sensitivity_page(catalog: dict) -> None:
-    """Every metric on the same response figures, from the committed overview figures.
-
-    The figures live in `docs/figures/<run>/` and are tracked; only this page is generated,
-    from their JSON, so the captions on the page are the captions the renderer wrote.
-    """
-    from fmeval.cards.overview import page_markdown
-
-    with mkdocs_gen_files.open("sensitivity.md", "w") as f:
-        print(page_markdown(catalog=catalog), file=f)
 
 
 def _write_gallery(catalog: dict) -> None:
@@ -332,11 +297,10 @@ def _write_protocol() -> None:
 def _write_nav(metrics: list, degradations: list) -> None:
     """The navigation tree, with the metrics grouped by what kind of measurement they make.
 
-    Grouping used to be by ``status``, which answered "how far has the work got" -- a
-    question about this repository's progress rather than about metrics, and one that gave
-    a reader scanning the sidebar no way to find the metric they wanted. Type answers
-    "what does this thing look at", which is the question someone browsing actually has.
-    The group label is the type said in words for the same reason.
+    Type answers "what does this thing look at", which is the question someone browsing
+    actually has; ``status`` answers how far the work has got, which says nothing about the
+    metric and gives a reader scanning the sidebar no way to find the one they want. The
+    group label is the type said in words for the same reason.
 
     Groups follow the order of ``CATEGORIES`` rather than the alphabet, so the ordering is
     declared in one place and adding a type does not silently reshuffle the sidebar. A type
@@ -357,7 +321,7 @@ def _write_nav(metrics: list, degradations: list) -> None:
         for category in CATEGORIES:
             named = [m for m in metrics if m[1] == category]
             if named:
-                said = _METRIC_CATEGORY.get(category, category)
+                said = CATEGORIES[category]
                 print(f"    - {category} — {said}", file=f)
                 for name, _, page in sorted(named):
                     print(f"        - [{name}]({page})", file=f)

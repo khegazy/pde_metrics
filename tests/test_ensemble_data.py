@@ -8,9 +8,8 @@ enough to test directly:
   reader that returns the member axis in the wrong place must fail loudly, because a
   ``(C, N, *spatial)`` stack would silently make every probabilistic metric average over
   the wrong axis and still return a plausible number;
-* the deterministic path is untouched. Every existing reader declares
-  ``is_ensemble = False``, and a frame it produces must be indistinguishable from what it
-  produced before ensembles existed.
+* the deterministic path is untouched. Every deterministic reader declares
+  ``is_ensemble = False``, and a frame it produces carries no members at all.
 """
 
 from __future__ import annotations
@@ -24,42 +23,8 @@ SHAPE = (16, 8)
 N_MEMBERS = 5
 
 
-class _EnsembleStub(Trajectory):
-    """Minimal in-memory ensemble reader, for exercising the base-class contract."""
-
-    is_ensemble = True
-
-    def __init__(self, *, members_shape: tuple[int, ...] | None = None) -> None:
-        self._members_shape = members_shape or (N_MEMBERS, 1, *SHAPE)
-
-    @property
-    def fields(self) -> tuple[str, ...]:
-        return ("density",)
-
-    @property
-    def times(self) -> np.ndarray:
-        return np.arange(3, dtype=float)
-
-    @property
-    def grid(self) -> GridSpec:
-        return GridSpec(shape=SHAPE, spacing=(1.0, 1.0), periodic=(True, True))
-
-    @property
-    def meta(self) -> dict:
-        return {"format": "stub"}
-
-    def read_frame(self, t, fields):
-        out = {}
-        for name in fields:
-            out[name] = np.full((1, *SHAPE), float(t))
-            out[f"{name}__members"] = np.arange(
-                int(np.prod(self._members_shape)), dtype=float
-            ).reshape(self._members_shape)
-        return out
-
-
 class _DeterministicStub(Trajectory):
-    """The same stub without members: pins that the old path still works."""
+    """Minimal in-memory deterministic reader, for exercising the base-class contract."""
 
     @property
     def fields(self) -> tuple[str, ...]:
@@ -79,6 +44,23 @@ class _DeterministicStub(Trajectory):
 
     def read_frame(self, t, fields):
         return {name: np.full((1, *SHAPE), float(t)) for name in fields}
+
+
+class _EnsembleStub(_DeterministicStub):
+    """The same reader with a member stack of ``members_shape`` beside every field."""
+
+    is_ensemble = True
+
+    def __init__(self, *, members_shape: tuple[int, ...] = (N_MEMBERS, 1, *SHAPE)) -> None:
+        self._members_shape = members_shape
+
+    def read_frame(self, t, fields):
+        out = super().read_frame(t, fields)
+        for name in fields:
+            out[f"{name}__members"] = np.arange(
+                int(np.prod(self._members_shape)), dtype=float
+            ).reshape(self._members_shape)
+        return out
 
 
 # --- the deterministic path is unchanged -------------------------------------------
@@ -121,23 +103,19 @@ def test_members_do_not_leak_into_fields():
     assert set(frame.fields) == {"density"}
 
 
-def test_rejects_members_with_a_transposed_member_axis():
-    """``(C, N, *spatial)`` must raise: it is the silent-wrong-answer shape."""
-    traj = _EnsembleStub(members_shape=(1, N_MEMBERS, *SHAPE))
+@pytest.mark.parametrize("members_shape", [
+    # ``(C, N, *spatial)`` must raise: it is the silent-wrong-answer shape, on which every
+    # probabilistic metric would average over the channel axis and still return a number.
+    pytest.param((1, N_MEMBERS, *SHAPE), id="transposed-member-axis"),
+    # A member stack on a different grid from its field.
+    pytest.param((N_MEMBERS, 1, SHAPE[0], SHAPE[1] + 2), id="wrong-grid"),
+    # A stack with no member axis at all, shaped like the field itself.
+    pytest.param((1, *SHAPE), id="no-member-axis"),
+])
+def test_rejects_a_misshapen_member_stack(members_shape):
+    """A member stack must be ``(N, C, *spatial)`` on the field's grid, or the frame fails."""
     with pytest.raises(ValueError, match="members"):
-        traj.frame(1, ["density"])
-
-
-def test_rejects_members_with_a_wrong_grid():
-    traj = _EnsembleStub(members_shape=(N_MEMBERS, 1, SHAPE[0], SHAPE[1] + 2))
-    with pytest.raises(ValueError, match="members"):
-        traj.frame(1, ["density"])
-
-
-def test_rejects_members_without_a_member_axis():
-    traj = _EnsembleStub(members_shape=(1, *SHAPE))
-    with pytest.raises(ValueError, match="members"):
-        traj.frame(1, ["density"])
+        _EnsembleStub(members_shape=members_shape).frame(1, ["density"])
 
 
 def test_rejects_non_finite_members():

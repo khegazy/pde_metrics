@@ -38,9 +38,9 @@ from matplotlib import rc_context
 from fmeval.report import plots as _plots  # noqa: F401  (importing registers the renderers)
 from fmeval.report import style as report_style
 from fmeval.report.context import ReportContext
-from fmeval.report.registry import PLOTS, RendererUnavailable, check_preconditions, iter_scope
+from fmeval.report.registry import PLOTS, RendererSpec, check_preconditions, draw, iter_scope
 
-from .exemplars import sanitize_json
+from .loader import write_strict_json
 
 if TYPE_CHECKING:
     from .evidence import Run
@@ -76,10 +76,6 @@ ALT_TEXT: dict[str, str] = {
                               "degradation and field",
 }
 
-#: The column whose values key ``panels`` in the figure's JSON, per figure.
-_PANEL_KEY: dict[str, str] = {"response_curves": "field", "sensitivity_profile": "field",
-                              "damage_beside_controls": "field"}
-
 
 @dataclass(frozen=True)
 class CardFigure:
@@ -90,24 +86,6 @@ class CardFigure:
     numbers: Path
     caption: str
     alt: str
-
-
-def report_context(run: Run, *, theme: str = "notebook") -> ReportContext:
-    """The renderers' view of an evidence run.
-
-    The same frames :func:`fmeval.report.driver.build_context` would build from the folder,
-    taken from the :class:`Run` the card generator already analysed, so the numbers a figure
-    draws are the numbers the tables beside it print. The card frame is unflagged: cards
-    carry no flags.
-    """
-    scored = run.scored
-    return ReportContext(
-        df=scored, norm=run.norm, axes=run.axes, probes=run.probes, card=run.card,
-        meta=run.meta,
-        style=report_style.Style.build(theme, metrics=scored["metric"].unique(),
-                                       axes=scored["degradation"].unique()),
-        anchor_label=run.anchor_label, probe_labels=run.probe_labels,
-    )
 
 
 def _panels(data: pd.DataFrame | None, key: str) -> dict[str, list[dict]]:
@@ -123,23 +101,41 @@ def _panels(data: pd.DataFrame | None, key: str) -> dict[str, list[dict]]:
     return dict(sorted(panels.items()))
 
 
-def svg_rc(style: report_style.Style) -> dict:
-    """The rcParams a committed SVG is drawn and saved under: the theme plus the fixed salt."""
-    return {**style.rc, "svg.hashsalt": SVG_HASHSALT}
+def render_figure(spec: RendererSpec, ctx: ReportContext, subset: pd.DataFrame, out_dir: Path,
+                  stem: str, *, alt: str, record: dict,
+                  panel_key: str) -> tuple[CardFigure | None, str]:
+    """Draw one renderer, save it as a byte-stable SVG and its numbers as strict JSON.
 
+    Drawing and saving share one ``rc_context`` holding the theme and the fixed
+    :data:`SVG_HASHSALT`: the salt is read when the SVG is written, so a save outside the
+    context would get a fresh uuid every time (rule 1).
 
-def write_figure(item, path: Path, numbers: Path, *, record: dict, panel_key: str) -> None:
-    """Save one rendered figure as a byte-stable SVG and its numbers as strict JSON.
+    Args:
+        spec: The registered renderer.
+        ctx: The renderers' view of the run.
+        subset: The rows of ``ctx.df`` this figure draws.
+        out_dir: Where ``<stem>.svg`` and ``<stem>.json`` are written.
+        stem: The file stem, and the returned figure's name.
+        alt: The image's alt text.
+        record: The provenance the JSON carries beside ``caption`` and ``panels``.
+        panel_key: The column of the renderer's data the JSON's panels are split by.
 
-    Must be called inside the same ``rc_context`` the figure was drawn in (see
-    :func:`svg_rc`): the hashsalt is read when the SVG is written. ``record`` is the
-    provenance the JSON carries beside ``caption`` and ``panels``.
+    Returns:
+        The figure written, or ``None`` and the renderer's reason for declining.
     """
-    item.fig.savefig(path, format="svg", metadata={"Date": None, "Creator": None})
-    record = {**record, "caption": item.caption, "panels": _panels(item.data, panel_key)}
-    numbers.write_text(
-        json.dumps(sanitize_json(record), indent=2, sort_keys=True, allow_nan=False) + "\n"
-    )
+    with rc_context({**ctx.style.rc, "svg.hashsalt": SVG_HASHSALT}):
+        result, why = draw(spec, ctx, subset)
+        if result is None:
+            plt.close("all")
+            return None, why
+        item = result.figures[0]
+        caption = item.caption or spec.title
+        path, numbers = out_dir / f"{stem}.svg", out_dir / f"{stem}.json"
+        item.fig.savefig(path, format="svg", metadata={"Date": None, "Creator": None})
+        plt.close("all")
+    write_strict_json(numbers, {**record, "caption": caption,
+                                "panels": _panels(item.data, panel_key)})
+    return CardFigure(name=stem, path=path, numbers=numbers, caption=caption, alt=alt), why
 
 
 def remove_stale(out_dir: Path, keep: set[str]) -> None:
@@ -150,15 +146,15 @@ def remove_stale(out_dir: Path, keep: set[str]) -> None:
             stale.with_suffix(".json").unlink(missing_ok=True)
 
 
-def metric_figures(run: Run, metric: str, out_dir: Path, *,
-                   theme: str = "notebook") -> tuple[list[CardFigure], dict[str, str]]:
+def metric_figures(
+    run: Run, metric: str, out_dir: Path,
+) -> tuple[list[CardFigure], dict[str, str]]:
     """Draw every card figure for one metric and write each with its numbers.
 
     Args:
         run: The evidence run, already analysed.
         metric: The metric whose card is being generated.
         out_dir: The bundle's ``_generated/`` directory.
-        theme: A theme from :mod:`fmeval.report.style`, shared with the LaTeX report.
 
     Returns:
         The figures written, in card order, and the reason for each figure in
@@ -171,11 +167,12 @@ def metric_figures(run: Run, metric: str, out_dir: Path, *,
         generator of committed files must instead stop, because a half-written
         ``_generated/`` directory would be committed as if it were complete.
     """
-    ctx = report_context(run, theme=theme)
+    # The same frames the report builds from the folder, taken from the run the card
+    # generator already analysed, so a figure draws the numbers the tables beside it print.
+    ctx = ReportContext.from_analysis(run, meta=run.meta, theme=report_style.DEFAULT_THEME)
     out_dir.mkdir(parents=True, exist_ok=True)
     written: list[CardFigure] = []
     reasons: dict[str, str] = {}
-    rc = svg_rc(ctx.style)
 
     for name in METRIC_FIGURES:
         spec = PLOTS[name]
@@ -190,25 +187,14 @@ def metric_figures(run: Run, metric: str, out_dir: Path, *,
         if subset is None:
             reasons[name] = f"{metric} is not in the run"
             continue
-        path = out_dir / f"{name}.svg"
-        numbers = out_dir / f"{name}.json"
-        # Drawing and saving share one rc_context: the hashsalt is read when the SVG is
-        # written, so a save outside the context would get a fresh uuid every time.
-        with rc_context(rc):
-            try:
-                result = spec.fn(ctx, subset, dict(spec.defaults))
-            except RendererUnavailable as exc:
-                reasons[name] = str(exc)
-                plt.close("all")
-                continue
-            item = result.figures[0]
-            item.caption = item.caption or spec.title
-            write_figure(item, path, numbers, panel_key=_PANEL_KEY.get(name, "field"),
-                         record={"metric": metric, "run": run.folder.name,
-                                 "dataset": str(run.rows["dataset"].iloc[0]), "figure": name})
-            plt.close("all")
-        written.append(CardFigure(name=name, path=path, numbers=numbers,
-                                  caption=item.caption, alt=ALT_TEXT[name]))
+        figure, why = render_figure(
+            spec, ctx, subset, out_dir, name, alt=ALT_TEXT[name], panel_key="field",
+            record={"metric": metric, "run": run.folder.name,
+                    "dataset": str(run.rows["dataset"].iloc[0]), "figure": name})
+        if figure is None:
+            reasons[name] = why
+        else:
+            written.append(figure)
 
     # Rule 3: nothing this generation did not write survives beside the card.
     remove_stale(out_dir, {f.path.name for f in written})
