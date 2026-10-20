@@ -27,8 +27,7 @@ from scipy.ndimage import gaussian_filter
 
 from degradations import registry as deg_registry
 from fmeval import REPO, analysis
-from fmeval.cards import catalog, cli, evidence, loader, prose, review
-from fmeval.cards.exemplars import load_cards_config
+from fmeval.cards import catalog, cli, evidence, exemplars, loader, prose, review
 from fmeval.cards.figures import Column, _row_limits, exemplar_panel
 from fmeval.cards.metric_figures import ALT_TEXT, METRIC_FIGURES, metric_figures
 from fmeval.cards.overview import overview_figures, page_markdown
@@ -1406,6 +1405,13 @@ def test_every_committed_overview_figure_has_its_numbers_beside_it():
         assert record["run"] == svg.parent.name, "a figure sits in the directory of its run"
 
 
+def test_the_exemplar_loader_accepts_any_checkout_path(tmp_path, monkeypatch):
+    """A checkout under `fluid_metrics (copy)` must reach the data check, not a parse error."""
+    monkeypatch.setattr(exemplars, "REPO", tmp_path / "fluid_metrics (copy), v=2")
+    with pytest.raises(FileNotFoundError, match="not readable here"):
+        exemplars.load_canonical_frame()
+
+
 def test_exemplar_panels_are_byte_identical_within_one_environment(tmp_path):
     """Rendering the same panel twice must produce the same bytes.
 
@@ -1422,7 +1428,7 @@ def test_exemplar_panels_are_byte_identical_within_one_environment(tmp_path):
     ]
     rows = ["difference", "radial_spectrum", "pdf"]
 
-    dpi = int(load_cards_config().figures.dpi)
+    dpi = int(exemplars.load_cards_config().figures.dpi)
     first = exemplar_panel(columns, rows, path=tmp_path / "a.png", title="determinism", dpi=dpi)
     second = exemplar_panel(columns, rows, path=tmp_path / "b.png", title="determinism", dpi=dpi)
 

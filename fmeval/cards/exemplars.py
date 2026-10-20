@@ -75,9 +75,12 @@ def load_canonical_frame(cfg: Any | None = None, *, allow_remote: bool = False) 
     """
     cfg = cfg or load_cards_config()
     # The dataset as `evaluate.py` would compose it, so a dataset config that inherits a
-    # fragment is read the same way here. Composing creates no run directory.
+    # fragment is read the same way here. Composing creates no run directory. The data root is
+    # assigned rather than passed as an override, whose grammar refuses a path holding `(`,
+    # `,`, `=` or `~`.
     data_root = REPO / "datasets"
-    composed = compose_config(f"dataset={cfg.exemplar_frame.dataset}", f"paths.data={data_root}")
+    composed = compose_config(f"dataset={cfg.exemplar_frame.dataset}")
+    composed.paths.data = str(data_root)
     dataset = composed.dataset
 
     # The same resolver `evaluate.py` uses: two rules for where a dataset lives would
