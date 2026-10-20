@@ -8,7 +8,7 @@ It covers how to add a metric, a degradation, a data source, and a figure or tab
 write tests here; how to treat the generated LaTeX; and a table of traps that have already
 caught someone, each of which would quietly corrupt results.
 
-Three rules worth repeating because they are easy to violate by accident:
+Four rules worth repeating because they are easy to violate by accident:
 
 - **Verify before claiming.** `pytest | tail` masks the exit code, so a `&&` chain passes with
   failing tests. Use
@@ -17,3 +17,5 @@ Three rules worth repeating because they are easy to violate by accident:
   `make_report.py`.
 - **Define every value once.** Before writing a function or constant, search for the one that
   already exists and extend it (`AGENTS.md` §1).
+- **Delete an issue once it is fully resolved.** `issues/` holds only open items: remove the
+  file and its row in `issues/README.md`, and rewrite every reference to it (`AGENTS.md` §1).

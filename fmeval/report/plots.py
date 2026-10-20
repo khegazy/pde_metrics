@@ -1100,7 +1100,7 @@ def displacement_response(ctx, df, opts) -> PlotResult:
 def damage_beside_controls(ctx, df, opts) -> PlotResult:
     """One metric's damage against applied strength beside the pointwise controls, log-log.
 
-    The magnitude comparison the rank correlation cannot make (issues/035): two metrics can
+    The magnitude comparison the rank correlation cannot make: two metrics can
     order every strength identically and still charge amounts that differ by an order of
     magnitude for the same shift. MAE and MSE correlate at 0.986 on the pinned run and differ
     by 47x in damage at an eighth of a cell, because one is linear and the other quadratic in

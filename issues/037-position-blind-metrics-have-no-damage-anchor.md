@@ -60,8 +60,8 @@ The two causes are different but the missing scale is the same.
 
 `metrics/spectrum_l2` was added as the kind of quantity the Gaussian impostor exists to
 catch — a function of the Fourier amplitudes alone. Measured on `comparison_1790633480`
-(`kinet_re5e4`, start 2000, reduction 50, 161 frames, grid 256, integer shells after
-`issues/038`), medians over frames and strengths:
+(`kinet_re5e4`, start 2000, reduction 50, 161 frames, grid 256, integer shells `rint(|k|)`),
+medians over frames and strengths:
 
 | degradation | density | velocity | vorticity |
 |---|---|---|---|
@@ -122,5 +122,3 @@ number is no longer comparable across metrics.
 ## Related
 
 - `issues/004-independent-realizations.md` — the data that would fix this.
-- `issues/035-no-generated-block-for-cross-metric-damage.md` — the other place the
-  normalisation layer does not carry what a reader needs.

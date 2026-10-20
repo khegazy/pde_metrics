@@ -53,7 +53,7 @@ extra and nothing currently needs it. Weights & Biases is not wired in yet.
 | File | What it is |
 |---|---|
 | `TEST_DESCRIPTION.md` | Plain-language reference for every quantity the suite reports. A copy is placed in each run folder. A test fails if a reported column, degradation or figure is undocumented |
-| `issues/` | Open items, one file per item with its evidence. `issues/README.md` is the index |
+| `issues/` | Open items, one file per item with its evidence. `issues/README.md` is the index. Delete an issue once it is fully resolved (`AGENTS.md` §1) |
 | `README.md` | Setup and the NERSC specifics |
 
 ## Source of truth: the cards in this repository

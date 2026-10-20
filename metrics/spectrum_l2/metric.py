@@ -49,7 +49,6 @@ def radial_energy_spectrum(
     give 5924 shells of a median 8 modes on 256 x 256, against 182 here, which would make the
     comparison close to a mode-by-mode one: two realisations of the same flow would differ
     through the scatter of individual mode amplitudes rather than through their spectra.
-    ``issues/038`` records the measurement.
 
     Every mode is kept, including the corners beyond ``|k| = N/2``, whose shells are only
     partly populated by the square grid. Nothing is dropped, so the total energy in the

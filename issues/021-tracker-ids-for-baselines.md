@@ -2,7 +2,8 @@
 
 **Category:** technical debt
 **Priority:** —
-**Status:** RESOLVED (2026-08-07) — accepted
+**Status:** open outside this repository — `NM-0` was accepted on 2026-08-07; adding it to the
+metrics tracker's master table is the one step left
 
 ## Decision
 

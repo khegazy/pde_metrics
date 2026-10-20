@@ -2,8 +2,8 @@
 
 **Category:** acceptance criteria / degradation design
 **Priority:** —
-**Status:** RESOLVED (2026-09-28) — both decisions made and acted on; one observation left
-unexplained, recorded under "Outcome"
+**Status:** open — one observation is unexplained, recorded under "Left unexplained" in Outcome;
+both decisions were made and acted on 2026-09-28
 
 ## Decisions (2026-09-28, by the maintainer)
 

@@ -242,7 +242,7 @@ def _profile_lines(run: Run, metric: str, axes: pd.DataFrame) -> list[str]:
 
 def damage_by_level_block(run: Run, metric: str, figures: Sequence[CardFigure] = (),
                           reasons: Mapping[str, str] | None = None) -> str:
-    """Per-strength damage for this metric beside the pointwise controls (issues/035).
+    """Per-strength damage for this metric beside the pointwise controls.
 
     The figure of those numbers first, then one table per field and translation degradation,
     one row per metric -- this one first -- and one column per strength, so the magnitude

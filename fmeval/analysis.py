@@ -1134,7 +1134,7 @@ def cross_metric_correlation(df: pd.DataFrame, *, field: str | None = None) -> p
 LEVEL_KEYS: tuple[str, ...] = ("field", "degradation", "level", "severity")
 
 #: The degradation families whose per-strength damage a card sets beside the other metrics: the
-#: ones where magnitude, not order, is the claim (issues/035).
+#: ones where magnitude, not order, is the claim.
 DAMAGE_BLOCK_FAMILIES: tuple[str, ...] = ("geometric",)
 
 #: The metrics a card's damage table and figure place beside its own: the pointwise controls
@@ -1221,8 +1221,8 @@ def damage_by_level(scored: pd.DataFrame, *, field: str | None = None,
                     probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
     """Median damage over frames at every strength of every degradation, one column per metric.
 
-    The table issues/035 asks for: two metrics can order every degradation identically and still
-    charge very different amounts for the same one, and this is where that shows. The reference
+    Two metrics can order every degradation identically and still charge very different amounts
+    for the same one; this is where that shows. The reference
     level, the probes and severity levels that repeat a milder one are excluded; a metric whose
     damage is undefined everywhere (a degenerate anchor, issues/037) has no column.
 

@@ -219,8 +219,8 @@ def profile_table(ctx, df, opts) -> TableResult:
 def damage_by_level_table(ctx, df, opts) -> TableResult:
     """Median damage at every strength of the chosen families, one column per metric.
 
-    The table issues/035 asks for: the rank correlations say whether two metrics put the
-    strengths in the same order, this says how much each charges for the same strength.
+    The rank correlations say whether two metrics put the strengths in the same order; this
+    says how much each charges for the same strength.
     """
     field = str(df["field"].iloc[0])
     families = list(opts["families"])

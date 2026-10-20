@@ -2,7 +2,8 @@
 
 **Category:** data generation
 **Priority:** low
-**Status:** resolved for the estimators; open for physical ensemble data (see 004)
+**Status:** open for physical ensemble data (see 004); the estimators are built and validated on
+a synthetic ensemble
 
 ## Context
 

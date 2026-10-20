@@ -45,7 +45,7 @@ diagonal modes fell on, and on density a low-pass asked to remove 30% of the ene
 99.997%; grouping a shared magnitude into shells cannot recreate that disagreement. The first
 version of this metric grouped modes by their exact magnitude instead, which gives 5924 shells
 of a median 8 modes on this grid and made Equation (2) nearly a mode-by-mode comparison.
-`issues/038` records why it was changed. Every mode is kept, including the corners beyond
+Every mode is kept, including the corners beyond
 $|\mathbf{m}| = 128$, whose shells the square grid only partly fills, so the shell energies sum
 to the field's fluctuation energy exactly.
 

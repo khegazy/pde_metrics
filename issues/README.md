@@ -8,6 +8,13 @@ measurement that showed why.
 Write an issue while the evidence is in front of you. One written from memory later is worth
 much less.
 
+**Delete an issue once it is fully resolved.** This folder holds only what is open, so there is
+no resolved list: remove the file and its row below, say in the resolving commit's message what
+was done and on what evidence, and rewrite every reference to the issue so it states the reason
+itself where the code or document needs it. `git log --diff-filter=D --stat -- issues/` lists
+the closed issues and the commits that closed them. An issue resolved only in part stays, and
+its status says first what is still open.
+
 ## Data generation required
 
 These block criteria that are designed and implemented but cannot be exercised.
@@ -16,7 +23,7 @@ These block criteria that are designed and implemented but cannot be exercised.
 |---|---|---|
 | [001](001-low-reynolds-reference.md) | The protocol specifies Re ~ 500; no such dataset exists | medium |
 | [002](002-shocklet-dataset.md) | No shocklet-populated compressible turbulence | accepted, scheduled |
-| [003](003-ensemble-data.md) | CRPS and spread-to-skill need ensembles — estimators built and validated on a synthetic ensemble; physical data is [004](004-independent-realizations.md) | resolved for the estimators |
+| [003](003-ensemble-data.md) | CRPS and spread-to-skill need ensembles — estimators built and validated on a synthetic ensemble; physical data is [004](004-independent-realizations.md) | low |
 | [004](004-independent-realizations.md) | Only one seed per configuration | medium |
 | [037](037-position-blind-metrics-have-no-damage-anchor.md) | A translation-invariant metric scores the unrelated-field anchor at zero, so a whole family of candidates has no damage scale until [004](004-independent-realizations.md) lands | high |
 | [005](005-3d-and-cost-extrapolation.md) | All data is two-dimensional | low |
@@ -44,6 +51,7 @@ Designed, hooks in place, not built.
 | [031](031-saturation-never-reached.md) | No ladder severity level reaches the unrelated-field level | medium |
 | [040](040-mean-field-anchor.md) | A mean-field anchor for metrics that cannot see the translated one | medium |
 | [042](042-rank-interval-block-length-is-half-the-estimate.md) | The rank-correlation interval's fixed 10-frame blocks are half the estimated decorrelation, and its generator is shared across groups | medium |
+| [039](039-h1-seminorm-is-not-monotone-under-coarsening.md) | Under `coarsen_bandlimited`, density is out of order in some frames for several metrics, unexplained; the `coarsen` decisions themselves are acted on | low |
 | [041](041-subpixel-shift-drops-the-nyquist-mode.md) | A fractional Fourier shift drops the Nyquist mode of an even grid; negligible on the production data | low |
 | [044](044-synthetic-ensemble-ignores-the-run-seed.md) | The synthetic ensemble is generated from its own seed, so `seed=` does not change a synthetic run and the ensemble cards cite a seed that had no effect; needs a decision | low |
 
@@ -57,24 +65,10 @@ Designed, hooks in place, not built.
 | [036](036-increment-flatness-is-not-monotone-under-smoothing.md) | Increment flatness is not monotone under smoothing on any field, so it fails the stated acceptance rule; needs a decision, not a fix | medium |
 | [022](022-sim-config-parsing.md) | Solver configs carry executable YAML tags | low |
 | [023](023-vendored-kinet-drift.md) | Vendored kinet code is pinned and may drift | low |
-
-**When a defect is fixed, delete its file.** This folder holds what is *open*; the write-up,
-its measurements and the fix all stay together in the commit that closed it, which is where they
-are useful. `git log --diff-filter=D --stat -- issues/` lists what has been closed and points at
-those commits.
+| [021](021-tracker-ids-for-baselines.md) | `NM-0` is accepted for the pointwise baselines; it is still to be added to the metrics tracker's master table, outside this repository | low |
 
 **The pattern for a new defect**: reproduce it, write the test, mark it `xfail(strict=True)`
 naming the issue file, and write the issue with the measurement in front of you. Strict mode is
 what makes the loop close — fixing the defect makes the test pass, strict mode turns an
 unexpected pass into a failure, and whoever fixed it is sent back to remove the marker and the
 issue. Do not delete a marker without fixing the issue it names.
-
-## Resolved
-
-| ID | Title | Outcome |
-|---|---|---|
-| [021](021-tracker-ids-for-baselines.md) | Identifier for the L^p baselines | `NM-0` accepted 2026-08-07. One follow-up: add it to the master table in the metrics tracker |
-| [038](038-spectrum-l2-bins-by-exact-wavenumber.md) | `spectrum_l2` binned by exact `\|k\|`, nearly a per-mode comparison | Integer shells, `rint(\|k\|)`, adopted 2026-09-28; evidence regenerated |
-| [035](035-no-generated-block-for-cross-metric-damage.md) | No generated block carried per-level damage beside the other metrics | `results_damage_by_level` block and `damage_by_level_table` added, 2026-09-30 |
-| [039](039-h1-seminorm-is-not-monotone-under-coarsening.md) | Under `coarsen`, derivative-based metrics measured the staircase, not the lost resolution | `h1_seminorm` kept; `coarsen_bandlimited` added and run beside `coarsen` on every kinet metric, 2026-09-28. A small per-frame disorder on density is recorded there, unexplained |
-| [043](043-card-levels-outside-the-ladder-and-stale-exemplar-captions.md) | Four degradation cards illustrated strengths no ladder runs, and twenty exemplar captions predated their generator | Cards moved onto ladder strengths, `multiplicative_noise` given a disabled ladder entry, every exemplar regenerated, 2026-10-19; a test enforces the rule |

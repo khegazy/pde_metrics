@@ -66,6 +66,12 @@ than the cutoff controls and flattened the whole axis".
 **Write an issue while the evidence is in front of you.** `issues/` holds one file per open
 item with its measurements. An issue written later from memory is worth much less.
 
+**Delete an issue once it is fully resolved.** `issues/` holds only open items; there is no
+resolved list. Remove the file and its row in `issues/README.md`, put what was done and on what
+evidence in the resolving commit's message, and rewrite every reference to the issue
+(`git grep issues/<id>`) so it states the reason itself. An issue resolved only in part stays,
+and its status says first what is still open.
+
 ### One source of truth, least new code
 
 Every rule below exists because a second copy of something drifted from the first while every

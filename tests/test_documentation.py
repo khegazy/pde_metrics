@@ -274,8 +274,14 @@ PINNED_PHRASES = {
         "card.yaml", "card.md", "docs/catalog.json", "<!-- GENERATED",
         "Never invent a number", "Never state expected behaviour",
         "never edit `_generated/`", "never sign a card",
-        "docs/recipes/",
+        "docs/recipes/", "Delete an issue once it is fully resolved",
     ),
+    # Every agent profile, and the issues index itself, says that `issues/` holds only open
+    # items: an issue left in place after it is fully resolved reads as work still to do.
+    "CLAUDE.md": ("Delete an issue once it is fully resolved",),
+    ".github/copilot-instructions.md": ("Delete an issue once it is fully resolved",),
+    ".cursor/rules/repository.mdc": ("Delete an issue once it is fully resolved",),
+    "issues/README.md": ("Delete an issue once it is fully resolved", "there is no resolved list"),
     # docs/decisions.md stops an agent from "fixing" a deliberate absence. Each entry
     # corresponds to an enforced decision; if one is removed here it will be rediscovered
     # as a mysterious test failure by whoever trips over it next.
@@ -396,6 +402,21 @@ def test_each_instruction_file_still_carries_its_pinned_phrases(name):
 def _python_sources(*roots: str) -> list[Path]:
     return [p for root in roots for p in sorted((REPO / root).rglob("*.py"))
             if "_template" not in p.parts and "__pycache__" not in p.parts]
+
+
+def test_the_issues_folder_holds_only_open_items():
+    """A fully resolved issue is deleted, so no status may begin by calling it resolved, and the
+    index and the files must list the same issues."""
+    issues = sorted((REPO / "issues").glob("[0-9]*.md"))
+    resolved = [p.name for p in issues
+                if re.search(r"^\*\*Status:\*\*\s*resolved", p.read_text(), re.I | re.M)]
+    assert not resolved, f"delete these resolved issues (issues/README.md): {resolved}"
+    index = (REPO / "issues" / "README.md").read_text()
+    indexed = set(re.findall(r"\]\((\d{3}-[^)]+\.md)\)", index))
+    on_disk = {p.name for p in issues}
+    assert indexed == on_disk, (
+        f"issues/README.md and issues/ disagree: indexed only {sorted(indexed - on_disk)}, "
+        f"on disk only {sorted(on_disk - indexed)}")
 
 
 def test_no_test_module_imports_from_another_test_module():
