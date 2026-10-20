@@ -45,6 +45,7 @@ Designed, hooks in place, not built.
 | [040](040-mean-field-anchor.md) | A mean-field anchor for metrics that cannot see the translated one | medium |
 | [042](042-rank-interval-block-length-is-half-the-estimate.md) | The rank-correlation interval's fixed 10-frame blocks are half the estimated decorrelation, and its generator is shared across groups | medium |
 | [041](041-subpixel-shift-drops-the-nyquist-mode.md) | A fractional Fourier shift drops the Nyquist mode of an even grid; negligible on the production data | low |
+| [044](044-synthetic-ensemble-ignores-the-run-seed.md) | The synthetic ensemble is generated from its own seed, so `seed=` does not change a synthetic run and the ensemble cards cite a seed that had no effect; needs a decision | low |
 
 ## Technical debt
 
