@@ -277,6 +277,8 @@ PINNED_PHRASES = {
         "Never invent a number", "Never state expected behaviour",
         "never edit `_generated/`", "never sign a card",
         "docs/recipes/", "Delete an issue once it is fully resolved",
+        # A built metric left in the plan reads as work still to do.
+        "docs/ideas/README.md",
     ),
     # Every agent profile, and the issues index itself, says that `issues/` holds only open
     # items: an issue left in place after it is fully resolved reads as work still to do.
@@ -326,6 +328,7 @@ PINNED_PHRASES = {
         "python -m fmeval.cards catalog",
         "equation number",
         "worked example",
+        "docs/ideas/README.md",
     ),
     "docs/recipes/add-a-degradation.md": (
         "--kind degradation",

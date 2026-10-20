@@ -392,9 +392,10 @@ touch your metric.
    map-reduces-to-metric identity. You do not write any of that.
 3. **Add an entry to `TEST_DESCRIPTION.md`** if your metric introduces a new reported quantity.
    A test fails otherwise.
-4. Report the result back to the metrics tracker, so its `Status` column reflects what has
-   actually been measured. Ask the maintainer where the tracker currently lives; do not assume
-   a file in this repository.
+4. **Remove the idea from `docs/ideas/README.md`.** Once a metric is built, its card is the only
+   record of it: in the same change, delete the idea's row from that table, its page, and its
+   link on the theme page, or narrow them to what remains if the metric covers only part of the
+   idea. Step 7 of `docs/recipes/add-a-metric.md` has the details.
 
 ---
 

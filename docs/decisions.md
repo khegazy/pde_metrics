@@ -54,9 +54,27 @@ number will reach that number by padding. Say what the section needs to say, the
 
 A metric's name — which is its directory name, and exactly what users type in
 `metrics=[...]` — is its only identity. You may find two-letter prefixes such as `NM-0` or
-`OT-1` in old documents like `Table_of_Ideas.tex`. Those prefixes are retired. Do not
-introduce IDs, and do not use those prefixes in new work. Each metric's `category` field
-carries the classification instead.
+`OT-1` in old documents such as the retired tracker `Table_of_Ideas.tex`, which is
+recoverable from git history. Those prefixes are retired. Do not introduce IDs, and do not
+use those prefixes in new work. Each metric's `category` field carries the classification
+instead, and an idea in `docs/ideas/` is named by its page.
+
+## Ideas are plans, not evidence
+
+`docs/ideas/` holds the plan for metrics that are not built. It is the one place a metric that
+does not exist may be described, and the one place a ranking appears: each idea carries a
+**priority**, which is the team's decision about what to build next. A priority judges the
+order of work, not the metric. It is dropped when the idea is built.
+
+An idea page never describes something that exists. When a metric is built, its row, its
+page and its link on the theme page are deleted in the same change, or narrowed to what
+remains, and the metric's card becomes the only record of it. An idea page carries no
+measured number: every claim on it is a citation to published work or is labelled as the
+team's judgement.
+
+Why: a plan and a measurement must never be confused. Keeping the plan to unbuilt work, with
+no numbers, means nothing on an idea page can be mistaken for a finding about a metric in the
+repository.
 
 ## A page never repeats what the code already declares
 

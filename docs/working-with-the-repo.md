@@ -40,6 +40,7 @@ elsewhere needs editing.
 | `fmeval/data/remote.py` | A seekable file object over HTTP byte ranges, so h5py can read a published trajectory without downloading it | Rarely; see docs/decisions.md | Almost never |
 | `metrics/_template/`, `degradations/_template/` | What the `new` command copies | Whoever changes the contract | Never by hand for one bundle |
 | `issues/` | One file per open item, with the evidence for it | You | When you find a defect you are not fixing now |
+| `docs/ideas/` | The plan for metrics not yet built: one table of every idea, a page per theme, a page per idea | You | When you plan a metric, and when you build one (delete its row and page) |
 
 ### The commands
 
@@ -347,6 +348,16 @@ written down where a colleague will find it rather than living in someone's priv
 document. When a defect is fixed its file is deleted; `git log --diff-filter=D -- issues/`
 recovers what was closed.
 
+### `docs/ideas/` — metrics not yet built
+
+The team's plan: what each idea would measure, its precedent in the literature, its
+references, and the order the team intends to build them in. `docs/ideas/README.md` holds the
+one table of every idea, and each idea has its own page under a theme directory. The section
+lists only work that is not built. When you build a metric that was planned there, delete its
+row, its page and its link on the theme page in the same change; if the metric covers only part
+of the idea, narrow them to what remains. An idea page carries citations and labelled
+judgement, never a measured number.
+
 ---
 
 ## Adding a metric, start to finish
@@ -361,6 +372,7 @@ pytest metrics/my_metric                     # 4. get it passing
 python -m fmeval.cards check my_metric       # 7. it names exactly what is missing
 python evaluate.py metrics=[my_metric] dataset=kinet_re5e4_dev   # 8. does it run?
 pytest                                       # 9. the whole suite
+# 10. if it was planned in docs/ideas/, delete its row, its page and its theme-page link
 ```
 
 Then ask a person to read the description and run `python -m fmeval.cards sign my_metric

@@ -21,8 +21,7 @@ of a cell. Those three ratios and that factor are hand-carried. Nothing checks t
 
 This is not hypothetical. Before the canonical run existed, the same paragraphs cited
 0.80 and 0.51 for impostor damage, 55x for the MAE/MSE ratio, and 0.995 for the MAE-MSE
-correlation. Those came from a 15-frame run at a different time window, recorded in
-`issues/021`. They sat in the card looking exactly as authoritative as the generated
+correlation. Those came from an earlier 15-frame run at a different time window. They sat in the card looking exactly as authoritative as the generated
 tables and describing a different experiment. They were caught only because generating the
 evidence happened to put the correct values directly beside them, and the corrected values
 are 0.90/0.66/1.23, 47x and 0.987.
@@ -89,4 +88,3 @@ longer known to agree.
 - `fmeval/cards/evidence.py` writes the fingerprint and the generated blocks.
 - `fmeval/cards/prose.py` `strip_generated` already separates prose from generated content
   for the review hash, and is the same separation this check needs.
-- `issues/021` records the earlier run these stale numbers came from.

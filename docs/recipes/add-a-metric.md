@@ -119,5 +119,21 @@ pytest
 python -m fmeval.cards catalog          # the committed catalog must match the bundles
 ```
 
+If the metric was planned under `docs/ideas/`, take it out of the plan in the same change. The
+ideas section lists only work that is not built, and once the metric exists its card is the
+only record of it:
+
+1. Delete the idea's row from the table in `docs/ideas/README.md`, and any mention of it under
+   "What to build next".
+2. Delete the idea's page, `docs/ideas/<theme>/<idea>.md`, and its bullet on the theme page,
+   `docs/ideas/<theme>/README.md`. Fix any link to it from another idea page.
+3. If the metric covers only part of the idea, narrow the row and the page to what remains
+   instead, and say in one sentence on the page which metric covers the rest.
+4. If the theme is left with no ideas, delete its directory.
+
+`mkdocs build --strict` fails on a link left pointing at a deleted page, and
+`tests/test_documentation.py` fails if an idea page is named after a built metric or if the
+table and the pages stop matching.
+
 Do not sign the description and do not touch `status`. Report what you added, every
 `TODO(cite)` marker you left, and anything the checker flagged that you could not resolve.

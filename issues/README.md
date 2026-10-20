@@ -65,7 +65,7 @@ Designed, hooks in place, not built.
 | [036](036-increment-flatness-is-not-monotone-under-smoothing.md) | Increment flatness is not monotone under smoothing on any field, so it fails the stated acceptance rule; needs a decision, not a fix | medium |
 | [022](022-sim-config-parsing.md) | Solver configs carry executable YAML tags | low |
 | [023](023-vendored-kinet-drift.md) | Vendored kinet code is pinned and may drift | low |
-| [021](021-tracker-ids-for-baselines.md) | `NM-0` is accepted for the pointwise baselines; it is still to be added to the metrics tracker's master table, outside this repository | low |
+| [045](045-retired-tracker-ids-in-code.md) | Retired tracker IDs remain in code comments, tests and six issues | low |
 
 **The pattern for a new defect**: reproduce it, write the test, mark it `xfail(strict=True)`
 naming the issue file, and write the issue with the measurement in front of you. Strict mode is

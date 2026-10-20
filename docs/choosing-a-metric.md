@@ -4,7 +4,8 @@ This page is honest about its own limits. Everything implemented so far is eithe
 familiar error norm that compares the fields cell by cell, or a physical quantity of the
 flow — no position-tolerant metric exists here yet. So this page can tell you how those
 familiar measures differ from one another and what all of them miss, and not much more.
-The page will grow as new metrics land.
+The page will grow as new metrics land; the position-tolerant metrics that are planned are
+listed under [ideas not yet built](ideas/README.md).
 
 ## Start from the failure you care about
 
