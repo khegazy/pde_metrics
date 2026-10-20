@@ -29,7 +29,8 @@ yet in place, and this idea is those two pieces.
 
 The same solver would also make
 [consistency with one step of a trusted solver](../physics_invariants/solver_consistency.md)
-available at no extra cost.
+available at no extra cost. Run at three resolutions, it would also quantify the reference's
+own discretisation uncertainty through [grid convergence](grid_convergence.md).
 
 ## Rationale
 

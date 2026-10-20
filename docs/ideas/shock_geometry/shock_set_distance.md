@@ -20,6 +20,10 @@ values. Two distances do this well.
 Both measure how far apart two shocks lie, which is the quantity a pointwise norm cannot
 report.
 
+The same distances apply to any thin surface extracted from both fields, not only to shocks.
+Ridges of the finite-time Lyapunov exponent, used to describe the geometry of
+[variable-density mixing](../regime_specific/variable_density_mixing.md), are one example.
+
 ## Precedent
 
 Medical imaging solved the problem of deciding whether two thin surfaces occupy the same place

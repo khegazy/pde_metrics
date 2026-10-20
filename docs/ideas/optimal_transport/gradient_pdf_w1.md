@@ -13,7 +13,12 @@ prediction and of the reference into two probability distributions, and compare 
 one-dimensional distributions with the 1-Wasserstein distance $W_1$. The idea is stated for
 velocity increments $\delta_\ell u = u(\mathbf{x} + \boldsymbol{\ell}) - u(\mathbf{x})$ at a
 separation $\boldsymbol{\ell}$, or for gradients, so increments at separations larger than one
-cell are also part of what remains.
+cell are also part of what remains. Computing $W_1$ separately at each separation $\ell$
+gives a curve rather than one number, so the scale at which the prediction's statistics
+depart from the reference is visible. The gradient version differs from the built one-cell
+increment by its derivative stencil, and so belongs beside the
+[velocity-derivative skewness](../turbulence_statistics/derivative_skewness.md), which uses
+the same gradients.
 
 In one dimension $W_1$ has a quantile form. If $F^{-1}$ and $G^{-1}$ are the quantile functions
 (inverse cumulative distribution functions) of the two distributions, then
@@ -27,7 +32,9 @@ comparison is cheap. It has no positivity problem, because a probability distrib
 already the nonnegative, unit-total object that transport requires (contrast
 [transport between signed fields](signed_field_transport.md)). It is also sensitive to heavy
 tails, meaning extreme values that are far more probable than a Gaussian distribution would
-allow.
+allow. The Kolmogorov–Smirnov distance, the largest gap between the two cumulative
+distribution functions, is a weaker alternative: the cumulative functions differ little in
+the tails, so it is insensitive to exactly the extreme values that $W_1$ weighs.
 
 ## Precedent
 
@@ -39,6 +46,13 @@ Gallucci 2024). Flatness is the normalised fourth moment, a measure of how heavy
 are; intermittency is the tendency of turbulence to concentrate its activity in rare, intense
 events. The same paper reports that plain GAN and Wasserstein-GAN baselines do not generate
 fields with turbulent velocity statistics, which gives a ready-made negative control.
+
+## Pitfalls
+
+- A single value pooled over separations hides which scale failed; the per-separation curve
+  is what localises it.
+- The tails that make $W_1$ useful are, by definition, sparsely sampled, so many samples are
+  needed for a stable value.
 
 ## Rationale
 

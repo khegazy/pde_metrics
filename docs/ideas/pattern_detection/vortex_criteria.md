@@ -17,11 +17,20 @@ dominates strain by its own measure.
   $S^2 + \Omega^2$ is negative.
 - The *Okubo–Weiss parameter*, used for two-dimensional flows, compares the squared strain with
   the squared vorticity and marks points where the vorticity dominates.
+- The *swirling strength* $\lambda_{ci}$ is the imaginary part of the complex-conjugate pair of
+  eigenvalues of the velocity gradient, where such a pair exists; it marks points where it is
+  positive, or above a threshold, and its size measures how fast the local flow spirals
+  (Zhou et al. 1999).
+
+$Q$ is also one of the two invariants whose joint distribution is the subject of
+[the Q and R invariants page](../turbulence_statistics/qr_invariants.md).
 
 ## Precedent
 
 These criteria are the established tools of the vortex-identification literature, and
-$\lambda_2$ in particular is due to Jeong and Hussain (1995).
+$\lambda_2$ in particular is due to Jeong and Hussain (1995). Chakraborty, Balachandar and
+Adrian (2005) compare the local criteria, including swirling strength, and set out the
+relationships between them.
 
 ## Pitfalls
 
@@ -29,6 +38,10 @@ $\lambda_2$ in particular is due to Jeong and Hussain (1995).
   a chosen cut.
 - None of them is frame invariant, meaning that the answer can change when the flow is viewed
   from a rotating or accelerating frame of reference.
+- Together, the arbitrary threshold and the frame dependence make a comparison between
+  models fragile: two predictions can differ in their vortex counts because of the cut
+  rather than the flow, which is why the threshold must be fixed by the evaluator and never
+  tuned per model.
 
 ## Rationale
 
@@ -38,5 +51,11 @@ anything.
 
 ## References
 
+- Chakraborty, P., Balachandar, S. & Adrian, R. J. (2005). On the relationships between
+  local vortex identification schemes. *Journal of Fluid Mechanics* 535, 189–214.
+  <https://doi.org/10.1017/s0022112005004726>
 - Jeong, J. & Hussain, F. (1995). On the identification of a vortex. *Journal of Fluid
   Mechanics* 285, 69–94. <https://doi.org/10.1017/S0022112095000462>
+- Zhou, J., Adrian, R. J., Balachandar, S. & Kendall, T. M. (1999). Mechanisms for generating
+  coherent packets of hairpin vortices in channel flow. *Journal of Fluid Mechanics* 387,
+  353–396. <https://doi.org/10.1017/s002211209900467x>

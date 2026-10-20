@@ -21,3 +21,5 @@ Built already, and so not listed here: the $H^1$ seminorm
   distance.
 - [Splitting a field into smooth and sharp parts](mollification_split.md): smooth the field,
   keep the remainder as its sharp part, and compare the two parts with different metrics.
+- [Maximum pointwise error](maximum_error.md): the largest error in any single cell, reported
+  only as a worst-case stability diagnostic beside the averaged pointwise norms.

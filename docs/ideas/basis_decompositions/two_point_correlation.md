@@ -18,7 +18,10 @@ information. The energy spectrum is already compared by
 [spectrum_l2](../../metrics/spectrum_l2.md), and computing both does not make two
 independent checks. More importantly, both discard all Fourier *phase*, the part of each
 mode that records where structures sit relative to one another, and phase is where structure
-resides. Matching a two-point correlation is therefore a weak constraint.
+resides. Matching a two-point correlation is therefore a weak constraint. Its physical-space
+counterpart is the second-order structure function, a linear function of it, and the
+[structure functions](../turbulence_statistics/structure_functions.md) of higher order are
+where physical-space statistics go beyond it.
 
 ## Pitfalls
 

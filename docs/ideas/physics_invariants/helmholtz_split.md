@@ -22,6 +22,17 @@ Curl-based diagnostics, such as [enstrophy](../../metrics/enstrophy.md), are the
 $\mathbf{u}_{\text{sol}}$ alone, and shock diagnostics, such as the
 [shock detector](../shock_geometry/shock_detector.md), on $\mathbf{u}_{\text{dil}}$.
 
+In compressible turbulence the same split is applied to the energy spectrum. The spectra of
+the solenoidal and dilatational parts, computed from density-weighted (Favre) quantities as
+defined on [one-point statistics](../turbulence_statistics/one_point_statistics.md), are
+compared separately with the reference's. A prediction can match the total spectrum while
+putting too much energy into compression or too little, and only the split spectra show it.
+The dilatational energy is also one of the quantities amplified across a shock, compared on
+[shock–turbulence interaction statistics](../shock_geometry/shock_turbulence_interaction.md),
+and pressure dilatation, which exchanges kinetic and internal energy and involves only the
+dilatational part because $\nabla \cdot \mathbf{u}_{\text{sol}} = 0$, is one of the transfer
+terms on [spectral energy flux](../turbulence_statistics/spectral_energy_flux.md).
+
 ## Precedent
 
 The Ducros family of shock sensors embodies the same logic point by point. They gate on the
@@ -40,7 +51,7 @@ split is defined by physics rather than by an arbitrary smoothing scale.
 ## Keywords
 
 Helmholtz decomposition, solenoidal dilatational split, compressible turbulence
-decomposition, eddy shocklets.
+decomposition, eddy shocklets, solenoidal and dilatational spectra, Favre average.
 
 ## References
 

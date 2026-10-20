@@ -23,11 +23,17 @@ planes and so produces exactly these projections. The
 transform, so the Hough transform, the sliced distance and projecting onto planes are the same
 mathematical object viewed from different angles.
 
+The distributions compared need not be the raw field values. Applied to physically meaningful
+features, such as samples of velocity increments, gradients or energy fluxes, the sliced
+distance compares distributions whose discrepancies can be traced to a physical cause.
+
 ## Pitfalls
 
 - Slicing discards information in a way that is difficult to characterise, so it introduces
   errors of its own. Use it for screening and for studies of how cost scales with grid size,
   and validate it against the exact Wasserstein distance on small cases.
+- A single number for a whole field hides which physics failed unless it is computed on
+  interpretable features.
 
 ## Rationale
 

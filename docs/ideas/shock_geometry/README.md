@@ -19,3 +19,6 @@ shocks, called shocklets. Each page says which of the two it suits.
   shock regions, and why thin shocks make most of them misleading.
 - [Shock front position, speed and jump conditions](shock_front_error.md): position and speed
   errors of a tracked front, and a check that the jump across it obeys conservation.
+- [Shock–turbulence interaction statistics](shock_turbulence_interaction.md): statistics
+  conditioned on distance from a shock, amplification across it, wrinkling of its surface,
+  and the census of shocklets.

@@ -22,3 +22,10 @@ and palinstrophy ([palinstrophy](../../metrics/palinstrophy.md)).
 - [Helmholtz split into rotational and compressive parts](helmholtz_split.md): separate the
   velocity into a rotational and a compressive part, so that rotation diagnostics are not
   contaminated by shocks.
+- [Admissibility checks](admissibility_checks.md): positivity, finite values, conservation
+  drift, divergence, realizability and species bounds, each necessary for a physical
+  prediction and none sufficient.
+- [Galilean and rotational equivariance](equivariance_tests.md): whether the model's output
+  transforms correctly when its input is boosted to a moving frame or rotated.
+- [Goal-oriented error estimates](goal_oriented_error.md): an adjoint-weighted residual that
+  estimates, and locates, the error in one output quantity without a reference field.

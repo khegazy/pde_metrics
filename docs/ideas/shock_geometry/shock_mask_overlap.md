@@ -15,6 +15,15 @@ boundaries of the two masks, counting a boundary point as matched when the other
 lies within a small tolerance of it. It is the variant aware of thin structures, and the one
 to prefer.
 
+## Precedent
+
+All three measures come from fields that compare sets. Intersection-over-union is Jaccard's
+index, introduced to compare the plant species found in different regions (Jaccard 1912).
+The Dice coefficient was introduced to measure how strongly two species associate (Dice
+1945). The boundary F-score comes from the evaluation of boundary detectors in natural
+images, where a detected boundary is scored by its precision and recall against boundaries
+drawn by people (Martin et al. 2004).
+
 ## Pitfalls
 
 - Overlap measures degrade badly for *thin* objects. A one-cell shift of a shock two cells
@@ -26,3 +35,13 @@ to prefer.
 
 *The team's judgement.* Medium priority rather than high, because the
 [distance between extracted shock sets](shock_set_distance.md) dominates it for this purpose.
+
+## References
+
+- Dice, L. R. (1945). Measures of the amount of ecologic association between species.
+  *Ecology* 26, 297–302. <https://doi.org/10.2307/1932409>
+- Jaccard, P. (1912). The distribution of the flora in the alpine zone. *New Phytologist* 11,
+  37–50. <https://doi.org/10.1111/j.1469-8137.1912.tb05611.x>
+- Martin, D. R., Fowlkes, C. C. & Malik, J. (2004). Learning to detect natural image boundaries
+  using local brightness, color, and texture cues. *IEEE Transactions on Pattern Analysis and
+  Machine Intelligence* 26, 530–549. <https://doi.org/10.1109/TPAMI.2004.1273918>

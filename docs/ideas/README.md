@@ -6,6 +6,12 @@ literature, what is known to go wrong with it, and why it is worth building. Not
 been implemented or measured. The [catalogue](../catalogue.md) is the record of every metric
 that has been built, and a metric's own page is the only place its behaviour is described.
 
+Two pages explain the reasoning behind the ideas rather than any one idea:
+[why single metrics are not enough](background.md) covers the ways a pointwise or spectral
+metric can rate a physically wrong prediction well, and
+[designing an evaluation](evaluation_design.md) covers how metrics are described, grouped by
+regime, protected from data leakage and combined.
+
 ## How this section is kept
 
 - **This page lists only work that is not built.** Every row of the table below has a page,
@@ -36,6 +42,8 @@ that has been built, and a metric's own page is the only place its behaviour is 
   - **Low** means the theory is immature, the tooling is research grade, or the quantity is
     too indirect to serve as a routine diagnostic soon. Park these, and revisit one if a
     built metric fails in a way it would explain.
+  - **Unset** means the team has not decided yet. Ideas added from the field guide (see
+    [where this came from](#where-this-came-from)) start here.
 
 ## All ideas
 
@@ -50,8 +58,10 @@ that has been built, and a metric's own page is the only place its behaviour is 
 | [Distance between extracted shock sets](shock_geometry/shock_set_distance.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | high | |
 | [Overlap of shock masks](shock_geometry/shock_mask_overlap.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | medium | |
 | [Shock front position, speed and jump conditions](shock_geometry/shock_front_error.md) | [Shock geometry](shock_geometry/README.md) | both | medium | medium | |
+| [Shock–turbulence interaction statistics](shock_geometry/shock_turbulence_interaction.md) | [Shock geometry](shock_geometry/README.md) | implementation | medium | unset | |
 | [Negative Sobolev norms of general order](norms/negative_sobolev_hs.md) | [Norms](norms/README.md) | math | low | high | |
 | [Splitting a field into smooth and sharp parts](norms/mollification_split.md) | [Norms](norms/README.md) | math | low | high | |
+| [Maximum pointwise error](norms/maximum_error.md) | [Norms](norms/README.md) | implementation | low | unset | |
 | [Curvature statistics of level sets](curvature/isosurface_curvature.md) | [Curvature](curvature/README.md) | implementation | low | medium | |
 | [Discrete differential geometry on meshes](curvature/discrete_differential_geometry.md) | [Curvature](curvature/README.md) | math | medium | low | |
 | [Curvature without smooth structure](curvature/metric_geometry_curvature.md) | [Curvature](curvature/README.md) | math | medium | low | |
@@ -60,6 +70,17 @@ that has been built, and a metric's own page is the only place its behaviour is 
 | [Residual of the equations in weak form](physics_invariants/weak_residual.md) | [Physics invariants](physics_invariants/README.md) | implementation | low | high | |
 | [Consistency with one step of a trusted solver](physics_invariants/solver_consistency.md) | [Physics invariants](physics_invariants/README.md) | implementation | medium | high | |
 | [Helmholtz split into rotational and compressive parts](physics_invariants/helmholtz_split.md) | [Physics invariants](physics_invariants/README.md) | math | medium | high | |
+| [Admissibility checks](physics_invariants/admissibility_checks.md) | [Physics invariants](physics_invariants/README.md) | implementation | low | unset | |
+| [Galilean and rotational equivariance](physics_invariants/equivariance_tests.md) | [Physics invariants](physics_invariants/README.md) | implementation | low | unset | |
+| [Goal-oriented error estimates](physics_invariants/goal_oriented_error.md) | [Physics invariants](physics_invariants/README.md) | implementation | high | unset | |
+| [Four-fifths law and the third-order structure function](turbulence_statistics/four_fifths_law.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | low | unset | |
+| [Structure functions and scaling exponents](turbulence_statistics/structure_functions.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | low | unset | |
+| [Velocity-derivative skewness](turbulence_statistics/derivative_skewness.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | low | unset | |
+| [Spectral energy flux](turbulence_statistics/spectral_energy_flux.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | medium | unset | |
+| [Vortex stretching and energy budgets](turbulence_statistics/vortex_stretching.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | medium | unset | |
+| [Joint distribution of the velocity-gradient invariants Q and R](turbulence_statistics/qr_invariants.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | low | unset | |
+| [Helicity, potential vorticity and information transfer across scales](turbulence_statistics/inviscid_invariants.md) | [Turbulence statistics](turbulence_statistics/README.md) | both | medium | unset | |
+| [One-point statistics and characteristic scales](turbulence_statistics/one_point_statistics.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | low | unset | |
 | [Hough transform for eddy size](pattern_detection/hough_transform.md) | [Pattern detection](pattern_detection/README.md) | implementation | medium | low | |
 | [Winding angle and Poincaré index](pattern_detection/winding_angle.md) | [Pattern detection](pattern_detection/README.md) | implementation | medium | high | |
 | [Eddy census](pattern_detection/eddy_census.md) | [Pattern detection](pattern_detection/README.md) | implementation | medium | medium | |
@@ -69,14 +90,35 @@ that has been built, and a metric's own page is the only place its behaviour is 
 | [Well groups](topology/well_groups.md) | [Topology](topology/README.md) | math | high | low | |
 | [Reeb graphs and Morse–Smale complexes](topology/reeb_graphs.md) | [Topology](topology/README.md) | implementation | medium | medium | |
 | [Jacobi sets](topology/jacobi_sets.md) | [Topology](topology/README.md) | implementation | medium | medium | |
+| [Minkowski functionals and tensors](topology/minkowski_functionals.md) | [Topology](topology/README.md) | implementation | low | unset | |
 | [Two-point correlation](basis_decompositions/two_point_correlation.md) | [Basis decompositions](basis_decompositions/README.md) | none | low | medium | |
 | [Wavelets and coherent vortex extraction](basis_decompositions/coherent_vortex_extraction.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | medium | high | |
 | [Wavelet scattering and phase harmonics](basis_decompositions/wavelet_scattering.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | medium | high | |
+| [Bispectrum and bicoherence](basis_decompositions/bispectrum.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | medium | unset | |
+| [Error by wavenumber band](basis_decompositions/spectral_band_error.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | low | unset | |
+| [Spectral coherence and phase error](basis_decompositions/spectral_coherence.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | low | unset | |
+| [Delta-variance spectral slope](basis_decompositions/delta_variance.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | low | unset | |
+| [Velocity channel analysis](basis_decompositions/velocity_channel_analysis.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | medium | unset | |
+| [Valid prediction time](dynamics/valid_prediction_time.md) | [Dynamics](dynamics/README.md) | implementation | medium | unset | |
+| [Temporal autocorrelation](dynamics/temporal_autocorrelation.md) | [Dynamics](dynamics/README.md) | implementation | low | unset | |
+| [Invariant measure and attractor comparison](dynamics/invariant_measure.md) | [Dynamics](dynamics/README.md) | both | high | unset | |
+| [Modal decompositions and radiated sound](dynamics/modal_decompositions.md) | [Dynamics](dynamics/README.md) | implementation | medium | unset | |
 | [Energy distance](distributional/energy_distance.md) | [Distributional](distributional/README.md) | implementation | low | medium | |
 | [Tail-index estimators](distributional/tail_index_estimators.md) | [Distributional](distributional/README.md) | implementation | low | high | |
 | [Pair-correlation function of features](distributional/pair_correlation.md) | [Distributional](distributional/README.md) | implementation | medium | medium | |
+| [Energy score, variogram score and calibration](distributional/multivariate_proper_scores.md) | [Distributional](distributional/README.md) | implementation | low | unset | |
+| [Width of the log-density distribution](distributional/density_log_pdf.md) | [Distributional](distributional/README.md) | implementation | low | unset | |
+| [Quality of predictive uncertainty](distributional/predictive_uncertainty.md) | [Distributional](distributional/README.md) | implementation | low | unset | |
+| [Wall-bounded flow diagnostics](regime_specific/wall_bounded_flows.md) | [Regime-specific](regime_specific/README.md) | implementation | low | unset | |
+| [Variable-density mixing](regime_specific/variable_density_mixing.md) | [Regime-specific](regime_specific/README.md) | implementation | medium | unset | |
+| [Reacting-flow and scalar-mixing diagnostics](regime_specific/reacting_flows.md) | [Regime-specific](regime_specific/README.md) | implementation | low | unset | |
 | [Comparing refinement maps across meshes](infrastructure/refinement_map_comparison.md) | [Infrastructure](infrastructure/README.md) | implementation | medium | medium | |
 | [Reference and solver predictor for the degradation ladder](infrastructure/degradation_ladder_reference.md) | [Infrastructure](infrastructure/README.md) | implementation | medium | high | |
+| [Uncertainty on every metric value](infrastructure/metric_uncertainty.md) | [Infrastructure](infrastructure/README.md) | implementation | low | unset | |
+| [Selecting checkpoints by rollout](infrastructure/checkpoint_selection.md) | [Infrastructure](infrastructure/README.md) | implementation | high | unset | |
+| [Baseline predictors](infrastructure/baseline_predictors.md) | [Infrastructure](infrastructure/README.md) | implementation | medium | unset | |
+| [Grid convergence of the reference](infrastructure/grid_convergence.md) | [Infrastructure](infrastructure/README.md) | implementation | high | unset | |
+| [Robustness against the equations' own sensitivity](infrastructure/robustness.md) | [Infrastructure](infrastructure/README.md) | both | medium | unset | |
 
 ## What to build next
 
@@ -156,12 +198,23 @@ total work. These groupings are the team's reading.
 
 ## Where this came from
 
-This section was converted from the team's LaTeX tracker, "Fluid Metrics Exploration
-Tracker" (August 2026), which is recoverable from the repository's git history as
-`Table_of_Ideas.tex`. The tracker's two-letter identifiers are retired; an idea is named by
-its page. Every citation was checked against its primary source when the
-tracker was written. One claim did not survive that check: no precedent was found for
-detecting eddies with the Hough transform, so that idea is recorded as untested and original.
+This section merges two documents.
+
+- **The team's tracker**, "Fluid Metrics Exploration Tracker" (August 2026), recoverable from
+  the repository's git history as `Table_of_Ideas.tex`. Its two-letter identifiers are
+  retired; an idea is named by its page. Every citation was checked against its primary
+  source when the tracker was written. One claim did not survive that check: no precedent was
+  found for detecting eddies with the Hough transform, so that idea is recorded as untested
+  and original. Ideas from the tracker carry the team's priority.
+- **A field guide**, "Measuring, Categorizing, and Comparing Fluid Flows and Their
+  Simulations: A Ranked, Annotated Field Guide" (August 2026), a survey written with an AI
+  assistant. Its ideas were merged into the existing pages where they overlap, and added as
+  new pages where they do not; their priority is unset until the team decides. The guide's
+  ranking into tiers was not carried over, because this site does not rank metrics. The guide
+  attributes part of its framework to an unpublished 2026 benchmarking document that could
+  not be identified, so that attribution is not repeated here. Every reference taken from the
+  guide was checked against its registered record in Crossref or arXiv; two titles the guide
+  gave wrongly were corrected, and citations that could not be confirmed were dropped.
 
 ## References
 

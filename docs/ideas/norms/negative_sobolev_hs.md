@@ -44,6 +44,11 @@ where $\dot H^{-1}(dx)$ is the unweighted norm (Peyre 2018). The two distances a
 equivalent up to constants set by the density bounds $a$ and $b$. The bound concerns order
 $-1$ specifically.
 
+Dual norms such as $\dot H^{-1}$ are also proposed as training losses for rough solutions,
+where a positive-order Sobolev loss is undefined at discontinuities; the training
+counterparts of evaluation metrics are collected in
+[designing an evaluation](../evaluation_design.md).
+
 ## Pitfalls
 
 - Equation (2) degrades as $a \to 0$, that is, when the field has near-vacuum regions. The

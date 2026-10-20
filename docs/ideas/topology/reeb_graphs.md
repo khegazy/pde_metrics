@@ -14,9 +14,16 @@ every path of steepest ascent starts at the same minimum and ends at the same ma
 say more than a [persistence diagram](persistence_diagrams.md) about *where* structures are
 located.
 
+Two simpler skeletons are closely related. A *merge tree* records only how the connected
+pieces of the sublevel sets (the regions below a threshold) appear and merge as the threshold
+rises, and so tracks the same events as the zero-dimensional part of a persistence diagram
+while keeping which pieces merge into which. A *contour tree* is the Reeb graph of a field
+on a simply connected domain, one with no tunnels through it, where the graph has no loops
+and becomes a tree.
+
 ## Precedent
 
-Both are implemented in the Topology ToolKit, TTK (Tierny et al. 2018).
+All four are implemented in the Topology ToolKit, TTK (Tierny et al. 2018).
 
 ## Pitfalls
 

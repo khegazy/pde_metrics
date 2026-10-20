@@ -17,7 +17,11 @@ than a minimisation over transport plans, belongs to the same item.
 
 Sinkhorn divergences are differentiable. That matters if optimal transport later moves from a
 diagnostic to a training loss, since a diagnostic may be non-differentiable but a training loss
-may not.
+may not. Sinkhorn divergences are proposed as distributional training losses alongside the
+maximum mean discrepancy of the [energy distance](../distributional/energy_distance.md) page.
+A quantity used as a loss then ceases to be an independent validation metric, so a Sinkhorn
+loss must be checked by metrics it was not trained on; the training counterparts of
+evaluation metrics are collected in [designing an evaluation](../evaluation_design.md).
 
 ## Rationale
 
