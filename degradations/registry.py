@@ -138,6 +138,12 @@ class DegradationSpec(Accepts):
     zero_is_identity: bool = True
     """Whether severity 0 returns the input unchanged; verified both ways by a contract test."""
 
+    @property
+    def option_names(self) -> frozenset[str]:
+        """What a ladder entry's ``options`` may set: the keyword-only parameters but ``ctx``."""
+        return frozenset(p.name for p in inspect.signature(self.fn).parameters.values()
+                         if p.kind == p.KEYWORD_ONLY and p.name != "ctx")
+
     def sort_severities(self, severities: Sequence[float]) -> list[float]:
         """Order a severity list by increasing damage.
 

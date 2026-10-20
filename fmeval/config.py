@@ -7,9 +7,9 @@ defaults, so a YAML file states a key only to change it. The schema is what lets
 key out without Hydra's struct mode demanding ``+`` to override it, and it names a misspelt or
 missing key when the run starts rather than when the value is first read.
 
-Registering the schema is a side effect of importing this module: ``evaluate.py`` imports it
-before ``hydra.main`` composes ``configs/config.yaml``, whose defaults list starts with
-``_schema``.
+Registering the schema, and the ``${repo:}`` resolver that ``paths.data`` uses, is a side
+effect of importing this module: ``evaluate.py`` imports it before ``hydra.main`` composes
+``configs/config.yaml``, whose defaults list starts with ``_schema``.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from hydra.core.config_store import ConfigStore
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import MISSING, DictConfig, OmegaConf, open_dict
 
-from fmeval import CONFIGS
+from fmeval import CONFIGS, REPO
 from fmeval.data.base import TimeSelection
 from fmeval.ladder import DegradationConfig
 from fmeval.pipeline import MapRequest
@@ -110,6 +110,9 @@ class Config:
 
 
 ConfigStore.instance().store(name="_schema", node=Config)
+# The repository root, so `paths.data` finds the `datasets` link beside the code from any
+# working directory.
+OmegaConf.register_new_resolver("repo", lambda: str(REPO))
 
 
 def build_job(cfg: DictConfig) -> Config:

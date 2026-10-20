@@ -350,6 +350,13 @@ def test_a_run_records_the_reader_options_its_config_leaves_out(tmp_path):
     assert set(recorded) == set(signature) - {"path"}
 
 
+def test_the_data_root_does_not_depend_on_the_working_directory(tmp_path, monkeypatch):
+    """The `datasets` link sits beside the code, so a run started elsewhere still reads the local
+    copy instead of falling back to the network."""
+    monkeypatch.chdir(tmp_path)
+    assert compose_config().paths.data == str(REPO / "datasets")
+
+
 # --- the card settings, read without Hydra --------------------------------------------------
 
 

@@ -15,7 +15,9 @@ defaults:
   - _self_
 
 paths:
-  data: ${hydra:runtime.cwd}/datasets
+  # The `datasets` link in the repository root, found from the code rather than the working
+  # directory, so a run started anywhere reads the local copy. Results go where you are.
+  data: ${repo:}/datasets
   results: ${hydra:runtime.cwd}/results
   # Where the same tree is published, for colleagues with no CFS mount. The URL tree
   # mirrors `paths.data` one directory for one -- `datasets` points at

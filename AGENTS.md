@@ -449,7 +449,8 @@ def my_blur(x, severity, *, ctx, order: int = 4):
 
 **Per-entry options are the operator's keyword-only parameters**, such as `order` above. Their
 defaults are the signature's and are recorded with every run; a ladder entry overrides one with
-`options: {order: 2}` in config. There is no separate list of defaults to keep in step.
+`options: {order: 2}` in config, and an option the operator does not take is refused when the
+ladder is built. There is no separate list of defaults to keep in step.
 
 **`preserves` is a measured fact, not an expectation.** Declare only what the operator leaves
 unchanged on every field: the multiset of values, the fluctuation's amplitude spectrum, the

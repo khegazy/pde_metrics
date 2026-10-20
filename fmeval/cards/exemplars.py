@@ -21,7 +21,7 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from degradations import registry as deg_registry
-from fmeval import CONFIGS, REPO
+from fmeval import CONFIGS
 from fmeval.calibration import calibrate
 from fmeval.config import compose_config
 from fmeval.context import FieldContext, derive_rng, fluctuation_rms
@@ -75,12 +75,9 @@ def load_canonical_frame(cfg: Any | None = None, *, allow_remote: bool = False) 
     """
     cfg = cfg or load_cards_config()
     # The dataset as `evaluate.py` would compose it, so a dataset config that inherits a
-    # fragment is read the same way here. Composing creates no run directory. The data root is
-    # assigned rather than passed as an override, whose grammar refuses a path holding `(`,
-    # `,`, `=` or `~`.
-    data_root = REPO / "datasets"
+    # fragment, and the data root, are read the same way here. Composing creates no run
+    # directory.
     composed = compose_config(f"dataset={cfg.exemplar_frame.dataset}")
-    composed.paths.data = str(data_root)
     dataset = composed.dataset
 
     # The same resolver `evaluate.py` uses: two rules for where a dataset lives would
@@ -92,7 +89,8 @@ def load_canonical_frame(cfg: Any | None = None, *, allow_remote: bool = False) 
     # an improvement. Pass allow_remote=True to opt in deliberately.
     try:
         location = locate.resolve_dataset_path(
-            dataset.path, data_root, data_url=composed.paths.data_url, allow_url=allow_remote,
+            dataset.path, composed.paths.data, data_url=composed.paths.data_url,
+            allow_url=allow_remote,
         )
     except FileNotFoundError as exc:
         raise FileNotFoundError(

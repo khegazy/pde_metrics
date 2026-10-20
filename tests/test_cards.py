@@ -27,6 +27,7 @@ from scipy.ndimage import gaussian_filter
 
 from degradations import registry as deg_registry
 from fmeval import REPO, analysis
+from fmeval import config as fmeval_config
 from fmeval.cards import catalog, cli, evidence, exemplars, loader, prose, review
 from fmeval.cards.figures import Column, _row_limits, exemplar_panel
 from fmeval.cards.metric_figures import ALT_TEXT, METRIC_FIGURES, metric_figures
@@ -1407,7 +1408,7 @@ def test_every_committed_overview_figure_has_its_numbers_beside_it():
 
 def test_the_exemplar_loader_accepts_any_checkout_path(tmp_path, monkeypatch):
     """A checkout under `fluid_metrics (copy)` must reach the data check, not a parse error."""
-    monkeypatch.setattr(exemplars, "REPO", tmp_path / "fluid_metrics (copy), v=2")
+    monkeypatch.setattr(fmeval_config, "REPO", tmp_path / "fluid_metrics (copy), v=2")
     with pytest.raises(FileNotFoundError, match="not readable here"):
         exemplars.load_canonical_frame()
 

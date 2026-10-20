@@ -135,8 +135,14 @@ def build_ladder(
         severities = entry.pop("severities", None)
         if severities is None:
             raise ValueError(f"ladder entry {label!r} has no 'severities'")
-        options = dict(spec.defaults)
-        options.update(entry.pop("options", None) or {})
+        chosen = entry.pop("options", None) or {}
+        unknown = sorted(set(chosen) - spec.option_names)
+        if unknown:
+            raise ValueError(
+                f"ladder entry {label!r} sets options {unknown}, which {op_name} does not "
+                f"take; it takes {sorted(spec.option_names)}"
+            )
+        options = {**spec.defaults, **chosen}
         if entry:
             raise ValueError(
                 f"ladder entry {label!r} has unexpected keys {sorted(entry)}; "

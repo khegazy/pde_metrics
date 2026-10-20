@@ -409,6 +409,16 @@ def test_build_ladder_applies_its_keywords_to_a_config_block_too():
     assert block.include_reference and not block.skip, "the caller's block was modified"
 
 
+def test_build_ladder_refuses_an_option_its_operator_does_not_take():
+    """A misspelt option is refused when the ladder is built, before any data is read, rather
+    than when the operator is first called."""
+    with pytest.raises(ValueError, match=r"\['ordr'\].*it takes \['order'\]"):
+        build_ladder({"lowpass_butterworth": {"severities": [0.3], "options": {"ordr": 2}}})
+    (level,) = build_ladder({"lowpass_butterworth": {"severities": [0.3], "options": {"order": 2}}},
+                            include_reference=False)
+    assert level.options == {"order": 2}
+
+
 def test_build_ladder_sorts_decreasing_direction_correctly():
     """A decreasing-direction list is worst-last after sorting, however it was written.
 
