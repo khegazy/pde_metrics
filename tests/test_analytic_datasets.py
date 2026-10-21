@@ -71,15 +71,27 @@ def test_the_analytic_datasets_are_among_the_generated_ones():
 # --- Sod shock tube -------------------------------------------------------------------
 
 
-@pytest.fixture(scope="module")
-def sod() -> SodShockTube:
-    return SodShockTube()
+#: Sod's data (the reader's defaults), and the states of the kinet runs with gamma = 2 that
+#: ``docs/datasets/sod_shock_tube.md`` lists, read from their initial conditions: there the
+#: denser gas is on the right and the fan head, not the shock, reaches a wall first. A formula
+#: that hard-codes gamma = 1.4 or one of Sod's states passes the first case and fails the
+#: second. The finer grid resolves that case's narrower fan (146 cells at t = 0.2).
+SOD_CASES = {
+    "sod": {},
+    "kinet_gamma_2": {"gamma": 2.0, "left": (0.5, 0.1), "right": (2.0, 0.05), "grid": (8192,)},
+}
 
 
-def test_sod_star_state_matches_the_published_exact_solution(sod):
+@pytest.fixture(scope="module", params=list(SOD_CASES))
+def sod(request) -> SodShockTube:
+    return SodShockTube(**SOD_CASES[request.param])
+
+
+def test_sod_star_state_matches_the_published_exact_solution():
     """Toro (2009), Table 4.3, Test 1 (Sod's data, Table 4.1): p*, u*, rho*_L, rho*_R to the
     five decimals printed. Marzouk (2020), Table 2: the fan head and tail and the shock
     speed, to the five decimals printed."""
+    sod = SodShockTube()
     assert sod.star["pressure"] == pytest.approx(0.30313, abs=5e-6)
     assert sod.star["velocity"] == pytest.approx(0.92745, abs=5e-6)
     assert sod.star["density_left"] == pytest.approx(0.42632, abs=5e-6)
@@ -93,7 +105,8 @@ def test_sod_shock_satisfies_the_rankine_hugoniot_conditions(sod):
     """Mass, momentum and energy fluxes balance across the right shock in the frame moving
     with it: Toro (2009), Sect. 3.1.3, eqs. (3.42)-(3.44), written here in the lab frame as
     ``F(W*) - S W* = F(W_R) - S W_R``."""
-    g, s = 1.4, sod.speeds["shock"]
+    g, s = sod.meta["gamma"], sod.speeds["shock"]
+    rho_r, p_r = sod.meta["right"]
 
     def balance(rho, u, p):
         energy = p / (g - 1) + 0.5 * rho * u**2
@@ -102,22 +115,23 @@ def test_sod_shock_satisfies_the_rankine_hugoniot_conditions(sod):
                          (energy + p) * u - s * energy])
 
     star = balance(sod.star["density_right"], sod.star["velocity"], sod.star["pressure"])
-    assert star == pytest.approx(balance(0.125, 0.0, 0.1), rel=1e-12, abs=1e-12)
+    assert star == pytest.approx(balance(rho_r, 0.0, p_r), rel=1e-12, abs=1e-12)
 
 
 def test_sod_rarefaction_keeps_its_invariants(sod):
     """Across the left rarefaction the flow is isentropic and the Riemann invariant
     ``u + 2a/(gamma - 1)`` is carried unchanged from the left state: the relations behind
     Toro (2009) eqs. (4.53)-(4.56), Sects. 4.4-4.5. Checked cell by cell inside the fan."""
-    g = 1.4
+    g, (rho_l, p_l) = sod.meta["gamma"], sod.meta["left"]
     frame = sod.frame(len(sod) - 1, ["density", "velocity", "pressure"])
     xi = (sod.centres[0] - sod.DIAPHRAGM) / frame.time
     fan = (xi > sod.speeds["head"]) & (xi < sod.speeds["tail"])
     rho, u, p = (frame[name][0][fan] for name in ("density", "velocity", "pressure"))
     a = np.sqrt(g * p / rho)
     assert fan.sum() > 100, "the fan is barely resolved, so this checks little"
-    assert u + 2 * a / (g - 1) == pytest.approx(2 * np.sqrt(g) / (g - 1), rel=1e-12)
-    assert p / rho**g == pytest.approx(1.0, rel=1e-12)
+    a_l = np.sqrt(g * p_l / rho_l)
+    assert u + 2 * a / (g - 1) == pytest.approx(2 * a_l / (g - 1), rel=1e-12)
+    assert p / rho**g == pytest.approx(p_l / rho_l**g, rel=1e-12)
 
 
 def test_sod_waves_sit_where_their_speeds_put_them(sod):
@@ -128,9 +142,10 @@ def test_sod_waves_sit_where_their_speeds_put_them(sod):
     x, t, s = sod.centres[0], frame.time, sod.speeds
     edges = [sod.DIAPHRAGM + t * s[k] for k in ("head", "tail", "contact", "shock")]
     far = np.min([np.abs(x - e) for e in edges], axis=0) > sod.grid.spacing[0]
+    (rho_l, p_l), (rho_r, p_r) = sod.meta["left"], sod.meta["right"]
     expected = {
-        "density": (1.0, None, sod.star["density_left"], sod.star["density_right"], 0.125),
-        "pressure": (1.0, None, sod.star["pressure"], sod.star["pressure"], 0.1),
+        "density": (rho_l, None, sod.star["density_left"], sod.star["density_right"], rho_r),
+        "pressure": (p_l, None, sod.star["pressure"], sod.star["pressure"], p_r),
         "velocity": (0.0, None, sod.star["velocity"], sod.star["velocity"], 0.0),
     }
     region = np.searchsorted(edges, x)
@@ -142,31 +157,37 @@ def test_sod_waves_sit_where_their_speeds_put_them(sod):
                 assert np.allclose(frame[name][0][cells], value, rtol=0, atol=1e-15), (name, r)
 
 
-def test_sod_conserves_mass_and_energy_and_gains_momentum_from_the_pressure_difference():
+@pytest.mark.parametrize("case", list(SOD_CASES))
+def test_sod_conserves_mass_and_energy_and_gains_momentum_from_the_pressure_difference(case):
     """The Euler equations in conservation form (Toro (2009), Sect. 3.1): with both ends at
     rest, no mass or energy crosses them, while the momentum grows at ``p_L - p_R`` per unit
     time. Integrated on 32768 cells, where point sampling misplaces each of the two
     discontinuities (the contact and the shock; the fan is continuous) by at most half a
-    cell, 1.5e-5. Every jump is below 0.9, which bounds the error at 2.7e-5, inside the
-    tolerance of 1e-4."""
-    fine = SodShockTube(grid=(32768,), n_frames=5)
-    g, length = 1.4, 1.0
+    cell, 1.5e-5. The error is then at most that times the sum of a quantity's two jumps;
+    the largest sum, density's in the gamma = 2 case, is 2.66, which bounds the error at
+    4.1e-5, inside the tolerance of 1e-4."""
+    fine = SodShockTube(**{**SOD_CASES[case], "grid": (32768,), "n_frames": 5})
+    g, (rho_l, p_l), (rho_r, p_r) = fine.meta["gamma"], fine.meta["left"], fine.meta["right"]
+    length = 1.0
     totals = []
     for t in range(len(fine)):
         f = fine.frame(t, ["density", "velocity", "pressure"])
         rho, u, p = f["density"][0], f["velocity"][0], f["pressure"][0]
         totals.append([rho.mean() * length, (rho * u).mean() * length,
                        (p / (g - 1) + 0.5 * rho * u**2).mean() * length, f.time])
-    mass0 = 0.5 * (1.0 + 0.125)
-    energy0 = 0.5 * (1.0 + 0.1) / (g - 1)
+    mass0 = 0.5 * (rho_l + rho_r)
+    energy0 = 0.5 * (p_l + p_r) / (g - 1)
     for mass, momentum, energy, time in totals:
         assert mass == pytest.approx(mass0, abs=1e-4)
         assert energy == pytest.approx(energy0, abs=1e-4)
-        assert momentum == pytest.approx((1.0 - 0.1) * time, abs=1e-4)
+        assert momentum == pytest.approx((p_l - p_r) * time, abs=1e-4)
 
 
 @pytest.mark.parametrize("kwargs, match", [
     ({"t_end": 0.29}, "reaches a boundary"),
+    # The fan head reaches x = 0 first, at t = 0.5 / a_L = 0.79: the other branch of the check.
+    ({"gamma": 2.0, "left": (0.5, 0.1), "right": (2.0, 0.05), "t_end": 0.8},
+     "reaches a boundary"),
     ({"left": (1.0, 0.1), "right": (0.125, 1.0)}, "must exceed"),
     ({"t_start": 0.0}, "positive"),
     ({"gamma": 1.0}, "gamma"),
