@@ -188,8 +188,15 @@ def main(cfg: DictConfig) -> None:
                "degrade_s": result.degrade_seconds, "metric_s": result.metric_seconds}
     # A metric the pipeline did not run on this dataset -- an ensemble metric on one
     # realization, a periodic-only metric on a bounded domain -- has no rows, and a folder
-    # without rows is not a run: its report would fail. The pipeline logged why.
+    # without rows is not a run: its report would fail. The pipeline logged why. A run in which
+    # no metric produced a row wrote nothing, so it fails rather than exiting as a success.
     ran = [spec.name for spec in specs if (result.rows["metric"] == spec.name).any()]
+    if not ran:
+        raise ValueError(
+            f"no metric produced a row on dataset {job.dataset.name!r} "
+            f"({', '.join(spec.name for spec in specs)}), so no run folder was written; "
+            "the log above says why"
+        )
     written = [
         write_folder(name, result.rows[result.rows["metric"] == name],
                      {k: v for k, v in result.maps.items() if parse_map_key(k)[0] == name},

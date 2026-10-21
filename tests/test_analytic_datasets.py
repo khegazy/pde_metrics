@@ -229,6 +229,22 @@ def test_evaluate_writes_no_folder_for_a_metric_it_did_not_run(tmp_path):
     assert [p.name.split("_")[0] for p in folders] == ["mse"]
     assert read_run_meta(folders[0])["boundary"] == ["neumann"]
 
+
+def test_evaluate_fails_when_no_metric_produced_a_row(tmp_path):
+    """An ensemble metric on the deterministic Sod dataset produces no rows, so nothing is
+    written; the run must say so and exit non-zero rather than succeed with no output."""
+    done = subprocess.run(
+        [sys.executable, str(REPO / "evaluate.py"), "dataset=sod_shock_tube",
+         "degradation=quick", "metrics=[crps]", "+dataset.reader.grid=[64]",
+         "+dataset.reader.n_frames=3", f"paths.results={tmp_path}",
+         f"hydra.run.dir={tmp_path}/h"],
+        capture_output=True, text=True, cwd=tmp_path,
+    )
+    assert done.returncode != 0, done.stderr[-2000:]
+    assert "no metric produced a row" in done.stderr, done.stderr[-2000:]
+    assert not [p for p in tmp_path.glob("crps_*")]
+
+
 # --- Taylor-Green vortex ---------------------------------------------------------------
 
 
