@@ -566,6 +566,8 @@ def field_gallery(ctx, df, opts) -> PlotResult:
     field = str(df["field"].iloc[0])
     stored = {k: v for k, v in ctx.maps.items() if parse_map_key(k)[1] == field}
     ctx.require(bool(stored), f"no stored maps for {field}")
+    ctx.require(all(m.ndim == 2 for m in stored.values()),
+                f"the gallery draws two-dimensional maps and the maps of {field} are not")
 
     panels = sorted(stored)[:12]
     ncols = min(4, len(panels))

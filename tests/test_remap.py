@@ -9,6 +9,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from fmeval.data.analytic import TaylorGreen2D
 from fmeval.data.base import Frame, GridSpec
 from fmeval.derived import recompute_frame, vorticity_from_velocity
 from fmeval.external.kinet_spectral import spectral_vorticity
@@ -87,15 +88,14 @@ def test_coarsen_factor():
 
 
 def test_taylor_green_vorticity_is_analytic():
-    """kinet's own acceptance test, ported: omega = 2 sin x sin y."""
-    n, length = 64, 2 * np.pi
-    dx = length / n
-    x = np.arange(n) * dx
-    xx, yy = np.meshgrid(x, x, indexing="ij")  # axis 0 == x, axis 1 == y
-    u = np.stack([np.sin(xx) * np.cos(yy), -np.cos(xx) * np.sin(yy)])
-    omega = vorticity_from_velocity(u, unit_grid((n, n), dx))
-    assert omega.shape == (1, n, n), "2D vorticity must be lifted to a channel axis"
-    assert np.abs(omega[0] - 2 * np.sin(xx) * np.sin(yy)).max() < 1e-12
+    """kinet's own acceptance test, on the Taylor-Green dataset: the curl of its velocity is its
+    closed-form vorticity, 2 sin x sin y e^(-2 nu t). A non-square grid with unequal spacing, at
+    a time after the start, so a swapped axis or a dropped decay factor fails."""
+    tg = TaylorGreen2D(grid=(64, 48), n_frames=3)
+    frame = tg.frame(2, ["velocity", "vorticity"])
+    omega = vorticity_from_velocity(frame["velocity"], frame.grid)
+    assert omega.shape == (1, 64, 48), "2D vorticity must be lifted to a channel axis"
+    assert np.abs(omega - frame["vorticity"]).max() < 1e-12
 
 
 def test_vorticity_spacing_scales_the_result_by_exactly_the_factor():

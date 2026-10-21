@@ -578,7 +578,7 @@ class MyTrajectory(Trajectory):
         """Return {name: (C, *spatial)}. `t` is an int index, never a slice."""
 ```
 
-Then add the module to the import line in `evaluate.py::open_trajectory`, and write a dataset
+Then add the module to the import line in `fmeval/data/readers.py`, and write a dataset
 config under `configs/dataset/` stating `name`, `format`, `trajectory` and only what differs from
 the schema in `fmeval/config.py` or from a fragment it inherits; `pytest tests/test_configs.py`
 names any default it restates.

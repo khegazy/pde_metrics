@@ -23,7 +23,7 @@ data, so a run names the key an option forgot instead of defaulting silently.
 
 If the file layout is new, add a reader in `fmeval/data/` implementing the `Trajectory`
 contract in `fmeval/data/base.py`, and register it with `@register_reader`. Readers are a
-deliberately closed set with explicit imports in `evaluate.py` — unlike metrics and
+deliberately closed set with explicit imports in `fmeval/data/readers.py` — unlike metrics and
 degradations, there is no discovery walk. Three rules are not negotiable: channel-first
 arrays with trailing `(x, y, z)`; the fixed field vocabulary, tagged primitive or derived;
 never slice the time axis. Test against the shared reader contract in

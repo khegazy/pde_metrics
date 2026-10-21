@@ -101,6 +101,7 @@ one option from each **config group**, and every value can be overridden from th
 configs/
 ├── config.yaml            top level: metrics, seed, paths, analysis anchor
 ├── dataset/               kinet_re5e4_dev · kinet_re5e4 · well_re5e4 · synthetic_ensemble
+│                          · sod_shock_tube · taylor_green_2d (computed from exact solutions)
 │                          (_re5e4_simulation.yaml: shared by the first three, not a choice)
 ├── degradation/           default · quick · ensemble_miscalibration
 ├── report/                default · none

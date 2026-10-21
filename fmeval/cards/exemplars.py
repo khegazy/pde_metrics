@@ -18,14 +18,12 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from omegaconf import OmegaConf
 
 from degradations import registry as deg_registry
 from fmeval.calibration import calibrate
-from fmeval.config import CardsConfig, compose_config, load_cards_config
+from fmeval.config import CardsConfig, build_job, compose_config, load_cards_config
 from fmeval.context import FieldContext, derive_rng, fluctuation_rms
-from fmeval.data import kinet_raw, locate, well  # noqa: F401  (importing registers the formats)
-from fmeval.data.base import READERS
+from fmeval.data.readers import open_trajectory
 from fmeval.ladder import SeverityLevel, resolve_severity
 
 from . import loader
@@ -63,35 +61,26 @@ def load_canonical_frame(cfg: CardsConfig | None = None, *,
             the data lives rather than in CI.
     """
     cfg = cfg or load_cards_config()
-    # The dataset as `evaluate.py` would compose it, so a dataset config that inherits a
-    # fragment, and the data root, are read the same way here. Composing creates no run
-    # directory.
-    composed = compose_config(f"dataset={cfg.exemplar_frame.dataset}")
-    dataset = composed.dataset
-
-    # The same resolver `evaluate.py` uses: two rules for where a dataset lives would
-    # diverge the moment either one grows a case.
+    # The dataset as `evaluate.py` composes and opens it, so a config that inherits a fragment,
+    # the data root and the reader options are read the same way here. Composing creates no
+    # run directory.
     #
-    # `allow_url=False` on purpose. Exemplar panels are committed artifacts generated
-    # where the data lives, and the documentation build must keep working on a runner with
-    # no data at all; silently fetching 166 GiB worth of ranges during a docs build is not
-    # an improvement. Pass allow_remote=True to opt in deliberately.
+    # `allow_url=False` unless asked. Exemplar panels are committed artifacts generated where
+    # the data lives, and the documentation build must keep working on a runner with no data
+    # at all; silently fetching 166 GiB worth of ranges during a docs build is not an
+    # improvement. Pass allow_remote=True to opt in deliberately.
+    job = build_job(compose_config(f"dataset={cfg.exemplar_frame.dataset}"))
     try:
-        location = locate.resolve_dataset_path(
-            dataset.path, composed.paths.data, data_url=composed.paths.data_url,
-            allow_url=allow_remote,
-        )
+        trajectory = open_trajectory(job.dataset, job.paths, allow_url=allow_remote)
     except FileNotFoundError as exc:
         raise FileNotFoundError(
             f"the canonical exemplar frame is not readable here.\n{exc}\n"
             "Exemplar panels are generated where the data lives (NERSC) and committed, "
             "rather than in CI."
         ) from None
-    reader_kwargs = OmegaConf.to_container(dataset.reader, resolve=True)
-    trajectory = READERS[dataset.format](location.target, **reader_kwargs)
-
-    wanted = [f for f in cfg.exemplar_frame.fields if f in trajectory.fields]
-    frame = trajectory.frame(cfg.exemplar_frame.index, wanted)
+    with trajectory:
+        wanted = [f for f in cfg.exemplar_frame.fields if f in trajectory.fields]
+        frame = trajectory.frame(cfg.exemplar_frame.index, wanted)
     return CanonicalFrame(index=cfg.exemplar_frame.index,
                           dataset=cfg.exemplar_frame.dataset,
                           fields=dict(frame.fields), grid=frame.grid, time=float(frame.time))
