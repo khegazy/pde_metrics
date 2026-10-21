@@ -40,5 +40,8 @@ then read [mse](metrics/mse.md) as the worked example.
 **[Choose a metric](choosing-a-metric.md)** if you came here to pick one for your own
 project.
 
+**[See the datasets](datasets/README.md)** to find out what the metrics are tested on: the
+simulation the evidence comes from, and the exact solutions that check the harness itself.
+
 **[See what is planned](ideas/README.md)** for the metrics that are not built yet: what each
 would measure, where the idea comes from, and the order the team intends to build them in.

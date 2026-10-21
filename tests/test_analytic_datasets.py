@@ -19,6 +19,7 @@ Sources cited below:
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 
@@ -26,6 +27,7 @@ import numpy as np
 import pytest
 
 from fmeval import CONFIGS, REPO
+from fmeval.cards import dataset_figures
 from fmeval.config import build_job, compose_config
 from fmeval.data.analytic import SodShockTube, TaylorGreen2D
 from fmeval.data.base import READERS
@@ -256,3 +258,20 @@ def test_taylor_green_grid_is_periodic_and_frames_decay_together():
     first, last = (tg.frame(i, ["velocity"])["velocity"] for i in (0, len(tg) - 1))
     ratio = np.exp(-2 * 0.01 * (tg.times[-1] - tg.times[0]))
     assert last == pytest.approx(ratio * first, rel=1e-12, abs=1e-15)
+
+
+
+@pytest.mark.parametrize("name, figures", [
+    ("sod_shock_tube", ["sod_shock_tube"]),
+    ("taylor_green_2d", [f"taylor_green_2d_{f}" for f in
+                         ("velocity_x", "velocity_y", "pressure", "vorticity")]),
+])
+def test_the_dynamics_figures_are_drawn_with_their_numbers(name, figures, tmp_path):
+    """`python -m fmeval.cards dynamics` draws one figure per field (per component of a
+    vector), or one for every field of a 1D dataset, each with its numbers beside it."""
+    written = dataset_figures.generate(name, out=tmp_path)
+    assert sorted(p.stem for p in written) == sorted(figures)
+    for path in written:
+        record = json.loads(path.with_suffix(".json").read_text())
+        assert record["dataset"] == name and record["panels"]
+        assert len(record["time"]) == dataset_figures.N_SNAPSHOTS

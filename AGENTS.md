@@ -136,6 +136,8 @@ Where the shared code already lives, so the search has somewhere to start:
 | Error-map keys (`map_key`, `parse_map_key`) | `fmeval/pipeline.py` |
 | Opening an HDF5 file locally or over HTTP, and what the HDF5 readers share | `fmeval/data/hdf5.py`, `fmeval/data/remote.py` |
 | The field vocabulary, which fields readers exclude, and the boundary types (`BOUNDARIES`, `GridSpec.extend`) | `fmeval/data/base.py` |
+| Registering every reader and opening a dataset from its config (`open_trajectory`) | `fmeval/data/readers.py` |
+| Datasets computed from a closed form (`ClosedFormTrajectory`) | `fmeval/data/analytic.py` |
 | Discovery, lookup and listing shared by both plugin registries | `metrics/_registry_core.py` |
 | Degradation kernels, filters (`butterworth`), grid expansion, ensemble scaling | `degradations/_shared/` |
 | Ensemble input validation for metrics | `metrics/_ensemble.py` |
@@ -582,6 +584,13 @@ Then add the module to the import line in `fmeval/data/readers.py`, and write a 
 config under `configs/dataset/` stating `name`, `format`, `trajectory` and only what differs from
 the schema in `fmeval/config.py` or from a fragment it inherits; `pytest tests/test_configs.py`
 names any default it restates.
+
+Every reader declares the boundary of each axis (`GridSpec.boundary`, from `BOUNDARIES`). On a
+non-periodic axis the degradations act on the field extended by that boundary's rule, and a
+metric declaring `requires_periodic` is not run. A dataset computed from a closed form
+subclasses `ClosedFormTrajectory` in `fmeval/data/analytic.py`. Every dataset has a page under
+`docs/datasets/`. Steps 1 and 6 of
+[`docs/recipes/add-a-dataset.md`](docs/recipes/add-a-dataset.md) have the details.
 
 **A reader takes a location, not a path.** It is handed either a `Path` or an `https://` URL,
 because a colleague with no CFS mount reads the copy published at `paths.data_url` instead.

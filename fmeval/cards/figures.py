@@ -51,12 +51,14 @@ class Panel:
     """``{row: {column: {statistic: value}}}``, written into the fingerprint."""
 
 
-def _row_limits(name: str, columns: list[Column], reference: np.ndarray) -> tuple[float, float]:
+def _row_limits(name: str, columns: list[Column], reference: np.ndarray, *,
+                from_every_column: bool = False) -> tuple[float, float]:
     """Colour or axis limits for one row, computed once from every column in it.
 
     Rules 1 and 2 live here. A field row takes its limits from the original, so the eye
     compares like with like; a signed row takes them from the largest departure anywhere
-    in the row.
+    in the row. ``from_every_column`` takes a field row's limits from all columns instead, for
+    a time series, whose first frame need not span the later ones.
     """
     spec = DIAGNOSTICS[name]
     if name == "difference":
@@ -73,7 +75,8 @@ def _row_limits(name: str, columns: list[Column], reference: np.ndarray) -> tupl
     pooled = np.concatenate([np.asarray(c.data).ravel() for c in columns])
     if spec.signed:
         return style.symmetric_limits(pooled)
-    return (float(np.asarray(reference).min()), float(np.asarray(reference).max()))
+    source = pooled if from_every_column else np.asarray(reference)
+    return (float(source.min()), float(source.max()))
 
 
 def exemplar_panel(
@@ -84,6 +87,7 @@ def exemplar_panel(
     title: str,
     grid: Any = None,
     dpi: int,
+    limits_from_every_column: bool = False,
 ) -> Panel:
     """Render one exemplar panel and return the numbers behind it.
 
@@ -94,6 +98,9 @@ def exemplar_panel(
         title: Figure title, naming the degradation and the field.
         grid: Optional grid for axis extents and labels.
         dpi: Fixed so regenerating an unchanged panel produces an unchanged file.
+        limits_from_every_column: Take an unsigned row's colour limits from every column
+            rather than from the first. The degradation panels keep the default, so a damaged
+            field is judged on the original's scale; a time series sets it.
 
     Returns:
         The panel, with per-cell statistics keyed by row and column title.
@@ -127,7 +134,8 @@ def exemplar_panel(
         )
         for r, row_name in enumerate(rows):
             spec = DIAGNOSTICS[row_name]
-            limits = _row_limits(row_name, columns, reference)
+            limits = _row_limits(row_name, columns, reference,
+                                 from_every_column=limits_from_every_column)
             ctx = RowContext(reference=reference, grid=grid, limits=limits,
                              nyquist=reference.shape[-1] // 2)
             statistics[row_name] = {}

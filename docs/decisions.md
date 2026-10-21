@@ -140,8 +140,10 @@ would, without a prediction.
 ## Analytic fields are fixtures, not evidence
 
 The fields in `tests/analytic_fields.py` — a Gaussian bump, a stripe, a single mode — have metric
-responses known in closed form and exist to test the statistics. They are not a registered dataset
-and nothing measured on them may appear on a metric's page.
+responses known in closed form and exist to test the statistics. The datasets computed from
+exact solutions, `sod_shock_tube` and `taylor_green_2d`, are registered so that the harness can
+be run on them, but they are not in `evidence_datasets`. Nothing measured on either kind may
+appear on a metric's page.
 
 Why: a closed form says what a metric does to an idealised feature, not to turbulence. Numbers
 from a fixture, once written into a page, would read exactly like numbers from a flow.

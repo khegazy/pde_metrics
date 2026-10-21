@@ -17,7 +17,7 @@ from pathlib import Path
 
 import yaml
 
-from . import catalog, evidence, exemplars, review
+from . import catalog, dataset_figures, evidence, exemplars, review
 from .loader import (
     Bundle,
     bundle_root,
@@ -223,6 +223,13 @@ def cmd_exemplars(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_dynamics(args: argparse.Namespace) -> int:
+    """Draw one dataset's dynamics for its page in docs/datasets/."""
+    for path in dataset_figures.generate(args.dataset):
+        print(f"wrote {path}")
+    return 0
+
+
 def cmd_overview(args: argparse.Namespace) -> int:
     """Draw the cross-metric overview figures of one run into docs/figures/<run>/."""
     run = evidence.load_run(Path(args.results))
@@ -287,6 +294,11 @@ def build_parser() -> argparse.ArgumentParser:
     exemplars_cmd.add_argument("name", nargs="?", help="the degradation bundle; omit with --all")
     exemplars_cmd.add_argument("--all", action="store_true", help="every degradation bundle")
     exemplars_cmd.set_defaults(func=cmd_exemplars)
+
+    dynamics = sub.add_parser(
+        "dynamics", help="draw a dataset's fields over time for its page in docs/datasets/")
+    dynamics.add_argument("dataset", help="a configs/dataset/ option, e.g. sod_shock_tube")
+    dynamics.set_defaults(func=cmd_dynamics)
 
     overview = sub.add_parser(
         "overview", help="draw the cross-metric overview figures of a run for the site")
