@@ -28,7 +28,7 @@ so the root-mean-square error saturates at $\sqrt{2}\,\sigma_u$ whatever the mod
 After a few Lyapunov times a pointwise error carries no information about the model.
 
 The *valid prediction time* is the time at which the normalised error of a rollout first
-exceeds a declared threshold $\theta$ (Pathak et al. 2018):
+exceeds a declared threshold $\theta$:
 
 $$
 t_{\mathrm{VPT}}=\min\big\{\,t \;:\; \|\hat u(t)-u(t)\|\,/\,\|u(t)\|>\theta\,\big\}, \tag{3}
@@ -40,9 +40,10 @@ first drops below a declared threshold (Kochkov et al. 2021; Lippe et al. 2023).
 
 ## Precedent
 
-Pathak et al. defined the valid prediction time for reservoir computers and report that they
-predicted the Kuramoto–Sivashinsky equation for about eight Lyapunov times (Pathak et al.
-2018). Kochkov et al. evaluate their machine-learning-accelerated solver by its vorticity
+Pathak et al. report that reservoir computers predicted the Kuramoto–Sivashinsky equation for
+about eight Lyapunov times (Pathak et al. 2018). Whether that paper states the threshold
+definition (3) itself has not been checked against its full text; its abstract does not.
+Kochkov et al. evaluate their machine-learning-accelerated solver by its vorticity
 correlation with the reference and note that decorrelation within a few Lyapunov times is
 expected from chaos alone (Kochkov et al. 2021). PDE-Refiner's headline result is the time
 until the correlation between rollout and reference drops below 0.8 (Lippe et al. 2023).

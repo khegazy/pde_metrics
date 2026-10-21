@@ -85,5 +85,6 @@ attractor collapse, climate of a surrogate, Markov neural operator.
   learning–accelerated computational fluid dynamics. *Proceedings of the National Academy of
   Sciences* 118, e2101784118. <https://doi.org/10.1073/pnas.2101784118>
 - Li, Z., Liu-Schiaffini, M., Kovachki, N., Azizzadenesheli, K., Liu, B., Bhattacharya, K.,
-  Stuart, A. & Anandkumar, A. (2022). Learning dissipative dynamics in chaotic systems.
-  *NeurIPS* 35. <https://arxiv.org/abs/2106.06898>
+  Stuart, A. & Anandkumar, A. (2022). Learning chaotic dynamics in dissipative systems.
+  *NeurIPS* 35. Preprint titled "Learning dissipative dynamics in chaotic systems":
+  <https://arxiv.org/abs/2106.06898>

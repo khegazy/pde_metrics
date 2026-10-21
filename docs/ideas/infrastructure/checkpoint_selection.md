@@ -8,9 +8,9 @@
 
 A neural surrogate is usually validated *a priori*, one step ahead from a true input, but
 deployed *a posteriori*, stepping forward autoregressively on its own outputs. The two see
-different input distributions. This is the *exposure bias* first named for autoregressive
-sequence models, where training on true prefixes while inferring on the model's own outputs
-lets errors compound (Bengio et al. 2015). Continued training can therefore lower the
+different input distributions. Autoregressive sequence models have the same mismatch, called
+*exposure bias*: training on true prefixes while inferring on the model's own outputs lets
+errors compound, and scheduled sampling was introduced to close the gap (Bengio et al. 2015). Continued training can therefore lower the
 one-step validation loss while the stability of the autoregressive rollout gets worse,
 because the loss never sees the model's own outputs as inputs. The neural-PDE literature
 documents the mechanism and its remedies: solver-in-the-loop training, which places the
@@ -42,7 +42,7 @@ rollouts instead of from the one-step validation loss.
      inertial range;
    - the deviation from the
      [four-fifths law](../turbulence_statistics/four_fifths_law.md);
-   - the [Wasserstein distance between gradient distributions](../optimal_transport/gradient_pdf_w1.md),
+   - the [Wasserstein distance between increment distributions at every separation](../optimal_transport/gradient_pdf_w1.md),
      or the [velocity-derivative skewness](../turbulence_statistics/derivative_skewness.md)
      with the gradient flatness;
    - the long-time spectrum error, restricted to the
