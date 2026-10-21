@@ -44,10 +44,14 @@ and the residual is computed by a fixed procedure:
       to extract the surface;
     - high on both: neither surface carries a jump consistent with conservation.
 
-How to normalise the residual is not settled. A field that has no jump at the sampled location
-gives $[U] = 0$ and $[F\cdot\mathbf{n}] = 0$, and so a zero residual, so the reference-surface
-score registers a missing or displaced shock only if the residual is normalised, for instance
-by the size of the reference jump.
+How the reference-surface score should register a missing or displaced shock is not settled.
+A field that has no jump at the sampled location gives $[U] = 0$ and $[F\cdot\mathbf{n}] = 0$,
+and so a zero residual. Normalising the residual by the size of the reference jump does not
+change this, because zero divided by any jump is still zero. The residual alone therefore
+scores a missing shock as low, and the second reading in the list holds only if the residual
+is paired with a quantity that sees the missing jump, for instance the mismatch between the
+predicted and reference jumps $[U]$ sampled on the reference surface. Which such quantity to
+use is an open question (*added in review, not from the field guide or the team*).
 
 ## Precedent
 

@@ -22,8 +22,9 @@ be compared with a reference on the physics of the interaction rather than cell 
   vorticity, the energy of the dilatational part of the velocity from the
   [Helmholtz split](../physics_invariants/helmholtz_split.md), and the density variance. Lee,
   Lele and Moin (1997) found that the amplification of turbulent kinetic energy saturates once
-  the upstream Mach number exceeds about 3, and Donzis (2012) quantified how the amplification
-  factors depend on the thickness of the shock.
+  the upstream Mach number exceeds about 3, and Donzis (2012) proposed the ratio of the
+  laminar shock thickness to the Kolmogorov length as the parameter that organises the
+  amplification of the streamwise velocity fluctuations in simulations and experiments.
 - **Corrugation spectrum.** The wrinkled shock surface, described by its displacement from its
   mean position as a function of position along the surface, has a spectrum $E_s(k_\perp)$
   over the wavenumber $k_\perp$ along the surface. It records at which scales the turbulence

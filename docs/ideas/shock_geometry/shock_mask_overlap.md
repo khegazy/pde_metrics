@@ -26,8 +26,9 @@ drawn by people (Martin et al. 2004).
 
 ## Pitfalls
 
-- Overlap measures degrade badly for *thin* objects. A one-cell shift of a shock two cells
-  thick can drive the intersection-over-union close to zero, which brings back the
+- Overlap measures degrade badly for *thin* objects. Across a shock two cells thick, a
+  one-cell shift leaves one cell shared out of three covered, an intersection-over-union of
+  one third, and a two-cell shift drives it to zero. That brings back the
   double-penalty problem (a correct feature in a slightly wrong place scored as two errors) in
   a new form.
 

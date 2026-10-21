@@ -3,9 +3,10 @@
 These ideas test a prediction against the physics it is supposed to obey rather than only
 against a reference field. Shocks set the hardest constraints. Derivatives do not exist at a
 discontinuity, so the governing equations must be checked in a form that stays valid there;
-physical shocks must produce entropy, and a prediction that smears them produces too little;
-and near a shock the velocity gradient is dominated by compression, which contaminates any
-diagnostic built on rotation. Several of these ideas need no reference at all, so they stay
+physical shocks must produce entropy, and the team's tracker reads a prediction that smears
+them as producing too little (the [entropy page](entropy_production.md) records a conflicting
+reading that is not yet settled); and near a shock the velocity gradient is dominated by
+compression, which contaminates any diagnostic built on rotation. Several of these ideas need no reference at all, so they stay
 meaningful after a prediction has decorrelated from every reference trajectory.
 
 Built already, and so not listed here: enstrophy ([enstrophy](../../metrics/enstrophy.md))

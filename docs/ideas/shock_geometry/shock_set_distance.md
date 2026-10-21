@@ -58,7 +58,7 @@ metrics, boundary F-score.
 - Davis, C., Brown, B. & Bullock, R. (2006b). Object-based verification of precipitation
   forecasts. Part II: Application to convective rain systems. *Monthly Weather Review* 134(7),
   1785–1795. <https://doi.org/10.1175/MWR3146.1>
-- Davis, C. A., Brown, B. G., Bullock, R. & Halley Gotway, J. (2009). The Method for
+- Davis, C. A., Brown, B. G., Bullock, R. & Halley-Gotway, J. (2009). The Method for
   Object-Based Diagnostic Evaluation (MODE) applied to numerical forecasts from the 2005
   NSSL/SPC Spring Program. *Weather and Forecasting* 24(5), 1252–1267.
   <https://doi.org/10.1175/2009WAF2222241.1>

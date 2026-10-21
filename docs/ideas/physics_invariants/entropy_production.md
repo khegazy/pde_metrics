@@ -17,15 +17,16 @@
 
 Entropy production is the rate at which entropy is generated locally in the flow. In a
 shocked flow, physical shocks *must* produce entropy; spurious numerical oscillations
-produce negative entropy; and over-smeared learned shocks produce too *little*.
+produce negative entropy production, destroying physical entropy; and over-smeared learned
+shocks produce too *little*.
 
 Mathematically, the condition is stated with an entropy pair $(\eta, q)$: a convex function
 $\eta(U)$ of the conserved variables and a matching entropy flux $q(U)$. Admissible solutions
 satisfy $\partial_t \eta + \nabla\cdot q \le 0$ in the weak sense. This mathematical entropy
 $\eta$ decreases where physical entropy is produced; for the Euler equations it is a negative
 multiple of $\rho s$, with $s$ the specific physical entropy. The discrete production on cell
-$K$ is computed with a *declared* numerical entropy flux $\hat q_f$ through each face $f$.
-Written in the same form as the
+$K$ is computed with a *declared* numerical entropy flux $\hat q_f$ leaving the cell through
+each face $f$. Written in the same form as the
 [residual of the equations in weak form](weak_residual.md), it reads as follows (*added during
 conversion, not from the field guide or the team:* neither source gives this formula)
 
@@ -34,13 +35,15 @@ P_{\eta,K} = \frac{|K|}{\Delta t}\big(\eta^{n+1}_K - \eta^n_K\big) + \sum_f |f|\
 \tag{1}
 $$
 
-and admissibility requires $P_{\eta,K} \le 0$. Three cases must be told apart: nonphysical
-entropy creation ($P_{\eta,K} > 0$), admissible production at shocks, and excessive
-dissipation, which an over-smeared shock can produce while passing a one-sided check. Three
-separate numbers should therefore be reported:
+and admissibility requires $P_{\eta,K} \le 0$. Because $\eta$ decreases where physical
+entropy is produced, $P_{\eta,K} > 0$ is a cell that destroys physical entropy. Three cases
+must be told apart: that nonphysical destruction ($P_{\eta,K} > 0$), admissible production at
+shocks, and excessive dissipation, which an over-smeared shock can produce while passing a
+one-sided check. Three separate numbers should therefore be reported:
 
-1. **An entropy-violation score** $E^{+}_\eta$, capturing unphysical negative production: it
-   collects the cells where $P_{\eta,K} > 0$.
+1. **An entropy-violation score** $E^{+}_\eta$, capturing unphysical negative production of
+   physical entropy: it collects the cells where $P_{\eta,K} > 0$, where the mathematical
+   entropy $\eta$ grows.
 2. **A signed mismatch** $E^{\text{signed}}_\eta$ against the entropy production of the
    reference, keeping the sign so that too much and too little production are distinguished.
 3. **An excess-dissipation score.**
@@ -80,8 +83,8 @@ in weak form, against test functions, rather than pointwise (De Ryck et al. 2024
 ## Rationale
 
 *The team's judgement.* High priority: the diagnostic is reference-free, it is the
-physically correct admissibility condition for shocked flow (the condition that singles out
-the physical solution among the many that satisfy the equations in weak form), and the
+physically correct admissibility condition for shocked flow (the condition used to rule out
+non-physical solutions of the equations in weak form, such as expansion shocks), and the
 three-way split directly detects the over-smoothing failure most expected from a
 machine-learned surrogate.
 

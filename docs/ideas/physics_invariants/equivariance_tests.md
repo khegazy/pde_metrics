@@ -79,8 +79,9 @@ transformations (Ling et al. 2016; Wu et al. 2018).
 ## Pitfalls
 
 - An equivariant model is not an accurate one. The identity map, which returns its input
-  unchanged, is exactly equivariant, and so is a model whose architecture is equivariant by
-  construction, for which the test checks only the implementation.
+  unchanged, is exactly equivariant under rotations (it is not under a boost, whose $T'$
+  includes the shift by $\mathbf{c}t$), and so is a model whose architecture is equivariant
+  by construction, for which the test checks only the implementation.
 - The symmetries hold only where the boundary conditions share them. Walls, inflow and outflow
   boundaries, and forcing fixed to the grid break Galilean invariance, and a non-square domain
   breaks the 90-degree rotations.
