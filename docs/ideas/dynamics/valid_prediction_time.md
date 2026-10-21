@@ -40,9 +40,11 @@ first drops below a declared threshold (Kochkov et al. 2021; Lippe et al. 2023).
 
 ## Precedent
 
-Pathak et al. report that reservoir computers predicted the Kuramoto–Sivashinsky equation for
-about eight Lyapunov times (Pathak et al. 2018). Whether that paper states the threshold
-definition (3) itself has not been checked against its full text; its abstract does not.
+Pathak et al. use reservoir computers for model-free prediction of large spatiotemporally
+chaotic systems, with the Kuramoto–Sivashinsky equation as their example (Pathak et al.
+2018). How long their predictions stay valid, and whether the paper uses the threshold
+definition (3), has not been checked: the paper is not openly available and its abstract
+states neither.
 Kochkov et al. evaluate their machine-learning-accelerated solver by its vorticity
 correlation with the reference and note that decorrelation within a few Lyapunov times is
 expected from chaos alone (Kochkov et al. 2021). PDE-Refiner's headline result is the time

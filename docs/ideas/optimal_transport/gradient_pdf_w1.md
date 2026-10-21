@@ -47,7 +47,7 @@ the tails, so it is insensitive to exactly the extreme values that $W_1$ weighs.
 Physics-based generative models of turbulence are built on exactly these criteria. A
 multiscale generative adversarial network uses "the variance, skewness and flatness of the
 increments of the generated field that retrieve respectively the turbulent energy
-distribution, energy cascade and intermittency across scales" (Granero-Belinchón and Cabeza
+distribution, energy cascade and intermittency across scales" (Granero Belinchon and Cabeza
 Gallucci 2024). Flatness is the normalised fourth moment, a measure of how heavy the tails
 are; intermittency is the tendency of turbulence to concentrate its activity in rare, intense
 events. The same paper reports that plain GAN and Wasserstein-GAN baselines do not generate
@@ -69,6 +69,6 @@ with [tail-index estimators](../distributional/tail_index_estimators.md).
 
 ## References
 
-- Granero-Belinchón, C. & Cabeza Gallucci, M. (2024). A multiscale and multicriteria
+- Granero Belinchon, C. & Cabeza Gallucci, M. (2024). A multiscale and multicriteria
   generative adversarial network to synthesize 1-dimensional turbulent fields. *Machine
   Learning: Science and Technology* 5(2), 025032. <https://doi.org/10.1088/2632-2153/ad43b3>

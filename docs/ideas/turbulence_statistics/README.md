@@ -26,7 +26,7 @@ kinetic energy ([kinetic_energy](../../metrics/kinetic_energy.md)).
 - [Structure functions and scaling exponents](structure_functions.md): moments of velocity
   increments at every separation and order, and the exponents that measure intermittency.
 - [Velocity-derivative skewness](derivative_skewness.md): a single cheap number that is zero
-  for a Gaussian field and close to $-0.5$ in real turbulence.
+  for a Gaussian field and between about $-0.5$ and $-0.7$ in real turbulence.
 - [Spectral energy flux](spectral_energy_flux.md): the rate at which energy passes from large
   to small scales, which a correct spectrum does not guarantee.
 - [Vortex stretching and energy budgets](vortex_stretching.md): the sign of mean enstrophy

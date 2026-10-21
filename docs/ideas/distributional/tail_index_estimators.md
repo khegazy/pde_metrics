@@ -26,7 +26,7 @@ tiers.
 ## Precedent
 
 The flatness tier is one of the three physics-based criteria used to train and evaluate a
-generative adversarial network for turbulent fields (Granero-Belinchón & Cabeza Gallucci
+generative adversarial network for turbulent fields (Granero Belinchon & Cabeza Gallucci
 2024). The two tiers here are the more sophisticated steps of the same measurement.
 
 ## Rationale
@@ -44,7 +44,7 @@ peaks over threshold generalized Pareto.
 
 ## References
 
-- Granero-Belinchón, C. & Cabeza Gallucci, M. (2024). A multiscale and multicriteria
+- Granero Belinchon, C. & Cabeza Gallucci, M. (2024). A multiscale and multicriteria
   generative adversarial network to synthesize 1-dimensional turbulent fields. *Machine
   Learning: Science and Technology* 5(2), 025032.
   <https://doi.org/10.1088/2632-2153/ad43b3>

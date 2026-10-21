@@ -110,8 +110,9 @@ score says nothing about either.
 Two consequences follow. Rollout horizons are better reported in Lyapunov times, and the
 time at which a normalised error first crosses a threshold, the
 [valid prediction time](dynamics/valid_prediction_time.md), becomes a metric in its own
-right; reservoir computers predicted Kuramoto–Sivashinsky dynamics for roughly eight
-Lyapunov times (Pathak et al. 2018). After the horizon, the meaningful
+right. Reservoir computers have been used for model-free prediction of spatiotemporally
+chaotic systems such as the Kuramoto–Sivashinsky equation (Pathak et al. 2018). After the
+horizon, the meaningful
 comparisons are between long-time statistics: Lyapunov exponents, attractor dimension, and
 the [invariant measure](dynamics/invariant_measure.md) through long-time distributions and
 spectra (Boffetta et al. 2002). Kochkov et al. (2021) compare energy spectra in exactly
@@ -133,11 +134,11 @@ spectrum.
 
 A statistically homogeneous Gaussian random field is completely specified by its mean and its
 two-point covariance, and the covariance is the Fourier transform of the energy spectrum.
-So for any prescribed spectrum there is a Gaussian field that realises it exactly. Pope
-(2000, Ch. 3) uses this to show a measured turbulent velocity signal beside a Gaussian
-process with the same spectrum: they agree in autocorrelation and spectrum and disagree
-sharply in their derivative and increment statistics. A matched spectrum,
-and even a matched one-point distribution, does not imply a matched flow.
+So for any prescribed spectrum there is a Gaussian field that realises it exactly. Such a
+field agrees with the turbulent field in autocorrelation and spectrum, yet, as the next
+section shows, every odd-order statistic of its increments and derivatives vanishes where the
+turbulent field's does not. A matched spectrum, and even a matched one-point distribution,
+does not imply a matched flow.
 
 The repository's [gaussian_impostor](../degradations/gaussian_impostor.md) degradation is
 a field of this kind. It keeps every Fourier amplitude of the reference and draws the phases
@@ -175,8 +176,8 @@ quantities separates the two.
   immediately.
 - **The velocity-derivative skewness vanishes.** The skewness
   $\langle(\partial_x u)^3\rangle / \langle(\partial_x u)^2\rangle^{3/2}$ is zero for a
-  Gaussian field and close to $-0.5$ in turbulence, with a weak dependence on Reynolds number
-  (Ishihara et al. 2007). See
+  Gaussian field and in turbulence between about $-0.5$ and $-0.7$, growing slowly in
+  magnitude with Reynolds number (Ishihara et al. 2007). See
   [velocity-derivative skewness](turbulence_statistics/derivative_skewness.md).
 - **The mean vortex stretching vanishes.** The mean enstrophy production
   $\langle \omega_i S_{ij}\omega_j\rangle$, where $\boldsymbol\omega$ is the vorticity and
@@ -264,7 +265,7 @@ the cited literature uses against it. The table is the field guide's synthesis.
 |---|---|---|
 | Small scales collapse, so the field blurs | [Error by wavenumber band](basis_decompositions/spectral_band_error.md); [spectral coherence](basis_decompositions/spectral_coherence.md); built [spectrum_l2](../metrics/spectrum_l2.md) and [h1_seminorm](../metrics/h1_seminorm.md) | Spectral or Sobolev losses; refinement-style objectives (Lippe et al. 2023) |
 | Phases decohere while the spectrum stays intact | [Bispectrum and bicoherence](basis_decompositions/bispectrum.md); [spectral energy flux](turbulence_statistics/spectral_energy_flux.md); [spectral coherence](basis_decompositions/spectral_coherence.md) | Unrolled or solver-in-the-loop training (Um et al. 2020; List et al. 2022) |
-| The field becomes Gaussian: fluctuations decay and extremes disappear | [Velocity-derivative skewness](turbulence_statistics/derivative_skewness.md); [four-fifths law](turbulence_statistics/four_fifths_law.md); [spectral energy flux](turbulence_statistics/spectral_energy_flux.md) near zero; built [increment_flatness](../metrics/increment_flatness.md) | Distributional or adversarial losses (Gretton et al. 2012; Granero-Belinchon & Cabeza Gallucci 2024) |
+| The field becomes Gaussian: fluctuations decay and extremes disappear | [Velocity-derivative skewness](turbulence_statistics/derivative_skewness.md); [four-fifths law](turbulence_statistics/four_fifths_law.md); [spectral energy flux](turbulence_statistics/spectral_energy_flux.md) near zero; built [increment_flatness](../metrics/increment_flatness.md) | Distributional or adversarial losses (Gretton et al. 2012; Granero Belinchon & Cabeza Gallucci 2024) |
 | Energy or mass drifts over the rollout | [Admissibility checks](physics_invariants/admissibility_checks.md); [weak residual](physics_invariants/weak_residual.md) | Architectures that conserve by construction; projection steps |
 | The rollout blows up or produces NaN | [Admissibility checks](physics_invariants/admissibility_checks.md); [valid prediction time](dynamics/valid_prediction_time.md) | Pushforward training; noise injection (Brandstetter et al. 2022) |
 
@@ -312,7 +313,7 @@ on cases where a reference does exist.
   Cambridge University Press. <https://arxiv.org/abs/1011.2383>
 - Frisch, U. (1995). *Turbulence: The Legacy of A. N. Kolmogorov*. Cambridge University
   Press. <https://doi.org/10.1017/CBO9781139170666>
-- Granero-Belinchon, C. & Cabeza Gallucci, M. (2024). A multiscale and multicriteria
+- Granero Belinchon, C. & Cabeza Gallucci, M. (2024). A multiscale and multicriteria
   Generative Adversarial Network to synthesize 1-dimensional turbulent fields. *Machine
   Learning: Science and Technology* 5(2), 025032. <https://doi.org/10.1088/2632-2153/ad43b3>
 - Gretton, A. et al. (2012). A kernel two-sample test. *Journal of Machine Learning
@@ -344,8 +345,6 @@ on cases where a reference does exist.
 - Pathak, J., Hunt, B., Girvan, M., Lu, Z. & Ott, E. (2018). Model-free prediction of large
   spatiotemporally chaotic systems from data: a reservoir computing approach. *Physical
   Review Letters* 120, 024102. <https://doi.org/10.1103/PhysRevLett.120.024102>
-- Pope, S. B. (2000). *Turbulent Flows*. Cambridge University Press.
-  <https://doi.org/10.1017/CBO9780511840531>
 - Sreenivasan, K. R. & Antonia, R. A. (1997). The phenomenology of small-scale turbulence.
   *Annual Review of Fluid Mechanics* 29, 435–472.
   <https://doi.org/10.1146/annurev.fluid.29.1.435>

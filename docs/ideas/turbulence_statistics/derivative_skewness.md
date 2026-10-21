@@ -17,9 +17,10 @@ $$
 It is the small-separation limit of the skewness of the longitudinal increment, and so the
 gradient-scale counterpart of the [four-fifths law](four_fifths_law.md). For a Gaussian field
 its expected value is zero, because every odd moment of a zero-mean Gaussian variable
-vanishes. In real turbulence it is close to $-0.5$ and depends only weakly on the Reynolds
-number, with a fit $-S \sim 0.32\, \mathrm{Re}_\lambda^{0.11}$ to direct numerical
-simulations (Ishihara et al. 2007), where $\mathrm{Re}_\lambda$ is the Reynolds number built
+vanishes. In real turbulence it is negative and its magnitude grows slowly with the Reynolds
+number: the fit $-S \sim 0.32\, \mathrm{Re}_\lambda^{0.11}$ to direct numerical simulations
+(Ishihara et al. 2007) gives $S \approx -0.53$ at $\mathrm{Re}_\lambda = 100$ and
+$S \approx -0.68$ at $\mathrm{Re}_\lambda = 1000$, where $\mathrm{Re}_\lambda$ is the Reynolds number built
 on the Taylor microscale (defined on
 [one-point statistics and characteristic scales](one_point_statistics.md)).
 

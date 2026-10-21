@@ -245,7 +245,7 @@ training loss.
   [entropic relaxation and Sinkhorn divergences](optimal_transport/sinkhorn.md), or the
   maximum mean discrepancy (Gretton et al. 2012).
 - **Adversarial losses** train a second network to tell predicted fields from true ones, which
-  acts as a learned test of statistical realism (Granero-Belinchon & Cabeza Gallucci 2024
+  acts as a learned test of statistical realism (Granero Belinchon & Cabeza Gallucci 2024
   apply this to turbulent fields).
 - **Proper scoring rules** such as the built [crps](../metrics/crps.md) and the
   [energy score](distributional/multivariate_proper_scores.md) train calibrated ensembles
@@ -299,7 +299,7 @@ artifacts with separate requirements.
 - Gneiting, T. & Raftery, A. E. (2007). Strictly proper scoring rules, prediction, and
   estimation. *Journal of the American Statistical Association* 102, 359–378.
   <https://doi.org/10.1198/016214506000001437>
-- Granero-Belinchon, C. & Cabeza Gallucci, M. (2024). A multiscale and multicriteria
+- Granero Belinchon, C. & Cabeza Gallucci, M. (2024). A multiscale and multicriteria
   Generative Adversarial Network to synthesize 1-dimensional turbulent fields. *Machine
   Learning: Science and Technology* 5(2), 025032. <https://doi.org/10.1088/2632-2153/ad43b3>
 - Gretton, A. et al. (2012). A kernel two-sample test. *Journal of Machine Learning

@@ -21,7 +21,9 @@ Repeating this over a range of filter sizes gives a curve that plays the role of
 in real space. For a two-dimensional map whose power spectrum is a power law,
 $P(|\mathbf{k}|)\propto|\mathbf{k}|^{-\zeta}$, the Δ-variance is also a power law,
 $\sigma_\Delta^2\propto l^{\alpha}$ with $\alpha=\zeta-2$, valid for $0\le\zeta<6$
-(Ossenkopf, Krips & Stutzki 2008, following Eq. 10). The metric compares the predicted and
+(Ossenkopf, Krips & Stutzki 2008, following Eq. 10). Here $\zeta$ is the index of the
+two-dimensional power spectrum $P(\mathbf{k})$; the angle-integrated energy spectrum $E(k)$
+has index $\zeta - 1$ (their footnote 2). The metric compares the predicted and
 reference Δ-variance curves, or the slopes fitted to them.
 
 What it adds over a Fourier spectrum is robustness on maps that are bounded, irregular or

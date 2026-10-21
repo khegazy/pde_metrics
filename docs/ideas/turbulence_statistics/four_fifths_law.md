@@ -81,7 +81,7 @@ It is what makes the right-hand side of Equation (1) independent of how small $\
 The four-fifths law is the standard calibration of the inertial range in turbulence theory
 (Frisch 1995). In machine learning, a multiscale generative adversarial network for turbulent
 fields builds the skewness of velocity increments across scales into its training and
-evaluation, as the criterion that retrieves the energy cascade (Granero-Belinchón and Cabeza
+evaluation, as the criterion that retrieves the energy cascade (Granero Belinchon and Cabeza
 Gallucci 2024).
 
 ## Pitfalls
@@ -131,7 +131,7 @@ structure function, dissipation anomaly, energy cascade, Wick–Isserlis theorem
   <https://doi.org/10.1088/0951-7715/13/1/312>
 - Frisch, U. (1995). Turbulence: The Legacy of A. N. Kolmogorov. *Cambridge University
   Press*. <https://doi.org/10.1017/CBO9781139170666>
-- Granero-Belinchón, C. & Cabeza Gallucci, M. (2024). A multiscale and multicriteria
+- Granero Belinchon, C. & Cabeza Gallucci, M. (2024). A multiscale and multicriteria
   generative adversarial network to synthesize 1-dimensional turbulent fields. *Machine
   Learning: Science and Technology* 5(2), 025032. <https://doi.org/10.1088/2632-2153/ad43b3>
 - Kraichnan, R. H. (1967). Inertial ranges in two-dimensional turbulence. *Physics of

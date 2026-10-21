@@ -45,9 +45,10 @@ shock capturing tool able to treat turbulence with minimum dissipation out of th
 large-eddy simulation, in which the large turbulent eddies are resolved on the grid and the
 effect of the small ones is modelled (Ducros et al. 1999). That is the same design
 requirement here: detect the shock without contaminating the surrounding turbulence.
-Hendrickson, Kartha and Candler show that a Ducros-type sensor, which gates on the ratio of
-dilatation to dilatation plus vorticity, misclassifies regions of the flow when used alone,
-and propose an improved form (Hendrickson et al. 2018). The design consequence is to tie the
+A Ducros-type sensor gates on the ratio of dilatation to dilatation plus vorticity.
+Hendrickson, Kartha and Candler propose an improved form of it (Hendrickson et al. 2018);
+which shortcoming of the original they address has not been checked, because neither the
+paper nor its abstract is openly available. The design consequence drawn here is to tie the
 sensor to compression, as $S_{\text{comp}}$ does, and to the jump physics checked under
 [shock front position, speed and jump conditions](shock_front_error.md).
 
