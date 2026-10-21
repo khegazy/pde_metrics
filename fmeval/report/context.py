@@ -131,15 +131,27 @@ class ReportContext:
             out = out[out[key] == value]
         return out
 
+    @property
+    def periodic(self) -> bool:
+        """Whether every axis of the run's dataset wraps, from the ``boundary`` it recorded.
+
+        A folder that recorded no boundary is read as periodic.
+        """
+        return all(b == "periodic" for b in self.meta.get("boundary", ()))
+
     def preserved_by(self, axis: str) -> tuple[str, ...]:
         """What the operator behind a ladder axis is declared, and test-verified, to preserve.
 
         Read from the run's own registry snapshot, so an old folder reports what its operators
         declared then; the live registry answers for a folder written before the snapshot had it.
+        Nothing on a dataset with a non-periodic axis: the declarations are verified on periodic
+        grids, and at a wall the operator acts on the mirrored field, where a translation
+        reflects and keeps neither the values nor the spectrum (TEST_DESCRIPTION.md,
+        "Boundaries").
         """
         rows = self.df.loc[self.df["degradation"] == axis, "degradation_op"] \
             if "degradation_op" in self.df.columns else []
-        if len(rows) == 0:
+        if len(rows) == 0 or not self.periodic:
             return ()
         op = str(rows.iloc[0])
         entry = (self.meta.get("registries", {}).get("degradations", {}) or {}).get(op, {})

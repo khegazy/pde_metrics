@@ -325,11 +325,17 @@ def test_context_reads_the_declared_anchor(tmp_path):
         [(r.name, r.reason) for r in rendered if r.status == "error"]
 
 
-def test_displacement_prose_names_what_each_geometric_axis_leaves_unchanged(tmp_path):
+@pytest.mark.parametrize("boundary", [None, ["periodic", "periodic"], ["neumann", "periodic"]])
+def test_displacement_prose_names_what_each_geometric_axis_leaves_unchanged(tmp_path, boundary):
     """The report states, beside a measured response, what that degradation provably preserved.
 
     The rows name the operator as the pipeline does -- translate_x is an entry of the operator
     translate -- because that is what the accessor looks up in the run's registry snapshot.
+
+    Only on a periodic domain, which a folder recording no boundary is read as. Across a wall
+    the operator acts on the extended field, and on the Sod shock tube a 16-cell translation
+    moved the spatial mean by 0.019 of the standard deviation and the unrelated field moved it
+    by 0.89, so quoting the periodic invariants there would be false.
     """
     df = pd.concat([make_frame(metric=m, field="vorticity", n_frames=8,
                                axes={"translate_x": [1.0, 3.0, 6.0], "uncorrelated": [10.0] * 2})
@@ -341,14 +347,19 @@ def test_displacement_prose_names_what_each_geometric_axis_leaves_unchanged(tmp_
     digest = write_config(folder, {"metrics": ["mse"]}, [])
     write_run_meta(folder, run_id=3, config_hash=digest, metric="mse", dataset="synthetic_d",
                    n_frames=8, fields=["vorticity"], analysis_grid=16,
-                   ladder_axes=["translate_x"], n_severity_levels=6, seed=1)
+                   ladder_axes=["translate_x"], n_severity_levels=6, seed=1,
+                   **({} if boundary is None else {"boundary": boundary}))
     ctx = build_context(folder, bootstrap=0)
-    assert ctx.preserved_by("translate_x") == ("single_point_statistics", "amplitude_spectrum",
-                                               "spatial_mean", "shape")
+    periodic = boundary is None or "neumann" not in boundary
+    assert ctx.preserved_by("translate_x") == (
+        ("single_point_statistics", "amplitude_spectrum", "spatial_mean", "shape")
+        if periodic else ())
     assert ctx.preserved_by("no_such_axis") == ()
     write_document(folder, ctx, render(folder, ctx, formats=("png",)))
     text = (folder.sections / "09_displacement.tex").read_text()
-    assert "amplitude spectrum" in text and "test-verified" in text
+    robustness = (folder.sections / "08_robustness.tex").read_text()
+    assert ("amplitude spectrum" in text and "test-verified" in text) == periodic, text
+    assert ("neumann" in text and "neumann" in robustness) == (not periodic), (text, robustness)
 
 
 # --- plumbing --------------------------------------------------------------------------------

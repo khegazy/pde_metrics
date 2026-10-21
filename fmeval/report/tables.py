@@ -166,7 +166,8 @@ def deception_table(ctx, df, opts) -> TableResult:
         caption="Response to fields built to mislead. The spectrum-matched Gaussian field "
                 "preserves the energy spectrum and two-point correlation exactly while "
                 "removing all phase information. The unrelated field preserves every "
-                "statistic while removing alignment, and therefore defines a damage of 1.",
+                "statistic while removing alignment, and therefore defines a damage of 1. "
+                "Both hold exactly on a periodic domain only.",
         headers={"gaussian_impostor_value": "Gaussian value",
                  "gaussian_impostor_damage": "impostor damage (1 = unrelated field)",
                  "gaussian_impostor_nearest_level": "equivalent severity level",

@@ -952,6 +952,7 @@ def deception_panel(ctx, df, opts) -> PlotResult:
     correlation exactly while destroying all phase information, so a metric built only on
     second-order statistics scores it as perfect. The positionally unrelated field
     preserves every statistic while destroying alignment, so it defines a damage of 1.
+    Both hold exactly on a periodic domain only.
     """
     field = str(df["field"].iloc[0])
     metrics = sorted(df["metric"].unique())

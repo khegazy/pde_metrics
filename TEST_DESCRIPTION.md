@@ -985,7 +985,10 @@ operator to the field extended across the boundary by that type's rule, then cro
 Neumann (zero-gradient) wall is extended by its mirror image. There a translation reflects at
 the wall instead of bringing in the far end of the domain, and a blur sees a mirrored neighbour.
 For the same reason the `preserves` declarations above hold on periodic axes and need not hold
-at a wall: a reflected translation does not keep the amplitude spectrum. The severity
+at a wall: a reflected translation does not keep the amplitude spectrum. `run_meta.json` records
+each axis's boundary as `boundary`, and on a dataset with a wall the report quotes no operator's
+declarations and says that the impostor and the unrelated field do not keep the reference's
+statistics exactly. The severity
 calibration is measured on the same extended field. Metrics are never extended: a metric that
 needs a periodic domain is not run on a dataset that lacks one.
 

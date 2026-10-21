@@ -170,6 +170,7 @@ def main(cfg: DictConfig) -> None:
             n_frames=result.n_frames,
             trajectory_frames=trajectory_frames,
             reader_options={k: v for k, v in reader.arguments.items() if k != "path"},
+            boundary=list(trajectory.grid.boundary),
             n_rows=len(rows),
             fields=fields,
             analysis_grid=result.analysis_grid,

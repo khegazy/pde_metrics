@@ -34,6 +34,7 @@ from fmeval.data.base import READERS
 from fmeval.data.readers import open_trajectory
 from fmeval.derived import RecomputingTrajectory
 from fmeval.external.kinet_spectral import divergence, spectral_derivative
+from fmeval.io import read_run_meta
 from fmeval.ladder import build_ladder
 from fmeval.pipeline import DatasetInfo, run
 from metrics import registry as metric_registry
@@ -215,7 +216,8 @@ def test_sod_runs_through_the_pipeline_without_its_periodic_only_metrics():
 def test_evaluate_writes_no_folder_for_a_metric_it_did_not_run(tmp_path):
     """End to end through ``evaluate.py``: on the bounded Sod domain the periodic-only metric is
     not run, so it gets no run folder -- a folder without rows would fail its report -- and with
-    one metric left there is no comparison folder either."""
+    one metric left there is no comparison folder either. The folder records the dataset's
+    boundaries, which the report reads before quoting any operator's invariants."""
     subprocess.run(
         [sys.executable, str(REPO / "evaluate.py"), "dataset=sod_shock_tube",
          "degradation=quick", "metrics=[mse,h1_seminorm]", "+dataset.reader.grid=[64]",
@@ -223,7 +225,9 @@ def test_evaluate_writes_no_folder_for_a_metric_it_did_not_run(tmp_path):
          f"hydra.run.dir={tmp_path}/h"],
         check=True, capture_output=True, cwd=tmp_path,
     )
-    assert [p.name.split("_")[0] for p in tmp_path.glob("*_*") if p.is_dir()] == ["mse"]
+    folders = [p for p in tmp_path.glob("*_*") if p.is_dir()]
+    assert [p.name.split("_")[0] for p in folders] == ["mse"]
+    assert read_run_meta(folders[0])["boundary"] == ["neumann"]
 
 # --- Taylor-Green vortex ---------------------------------------------------------------
 
