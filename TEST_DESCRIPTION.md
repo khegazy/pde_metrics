@@ -1158,6 +1158,6 @@ output among its inputs; that method is not used here.
 **Selectivity.** How concentrated a metric's response is on a few degradations rather than spread
 over all of them, per unit of field change. See `selectivity`.
 
-**Primitive and derived fields.** Density and velocity are stored and are remapped directly.
-Vorticity and pressure are computed from them, and are recomputed after any remap rather than
-averaged.
+**Primitive and derived fields.** Density, velocity and pressure are stored and are remapped
+directly; pressure is never computed, so a dataset that does not store it does not provide it.
+Vorticity is computed from velocity, and is recomputed after any remap rather than averaged.

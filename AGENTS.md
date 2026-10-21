@@ -607,8 +607,8 @@ in order", which is also what makes 3D a non-event.
 assert the time position is always an `int`. That test is the only thing standing between a
 one-character edit and a hundredfold slowdown, and no correctness test would catch it.
 
-**3. Tag fields primitive or derived.** Density and velocity are stored and are remapped
-directly. Vorticity and pressure are computed from them and must be **recomputed** after any
+**3. Tag fields primitive or derived.** Density, velocity and pressure are stored and are
+remapped directly. Vorticity is computed from velocity and must be **recomputed** after any
 remap, never averaged — block-averaging vorticity gives a field that is not the curl of the
 velocity beside it, by 5.6% / 18.3% / 25.9% at coarsening factors 2 / 4 / 8.
 

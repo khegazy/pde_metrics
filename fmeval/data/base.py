@@ -70,8 +70,9 @@ FIELDS: dict[str, FieldSpec] = {
         "block-averaged -- see fmeval.derived."
     ),
     "pressure": FieldSpec(
-        "derived", "1",
-        "Pressure. For the isothermal D2Q9 solver this is density * c_s^2 with c_s^2 = 1/3."
+        "primitive", "1",
+        "Pressure, as the dataset stores it. Never computed here: the equation of state is a "
+        "property of the solver, and a dataset without pressure simply does not provide it."
     ),
     "temperature": FieldSpec(
         "primitive", "1", "Temperature (degenerate for isothermal runs)."
@@ -82,9 +83,10 @@ DERIVED_FIELDS: frozenset[str] = frozenset(
     n for n, s in FIELDS.items() if s.kind == "derived"
 )
 
-#: Stored by some solvers but reconstructible from a primitive (pressure from density, see
-#: :mod:`fmeval.data.kinet_raw`), so readers exclude it unless asked. Carrying both doubles the
-#: I/O and injects a guaranteed rho = 1 pair into the cross-metric correlation.
+#: Stored by some solvers but carrying no information beyond another stored field -- the
+#: isothermal kinet solver writes pressure as exactly density / 3 (see
+#: :mod:`fmeval.data.kinet_raw`) -- so those readers exclude it unless asked. Carrying both
+#: doubles the I/O and injects a guaranteed rho = 1 pair into the cross-metric correlation.
 REDUNDANT_FIELDS: frozenset[str] = frozenset({"pressure"})
 
 #: Stored but constant for an isothermal run, so it is a parameter rather than a field.

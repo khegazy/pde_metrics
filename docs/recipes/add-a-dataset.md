@@ -47,7 +47,9 @@ of a remote smoke run. Verify a new reader against the real published file with 
 If the data carries fields outside the canonical vocabulary — a magnetic field, say —
 extend `FIELDS` in `fmeval/data/base.py` first, tagged primitive or derived. Derived
 fields need a recompute rule in `fmeval/derived.py`, because they are recomputed on the
-analysis grid, never block-averaged.
+analysis grid, never block-averaged. A recompute rule may use kinematics only. Never add one
+that needs an equation of state, such as pressure from density: that relation belongs to the
+solver, so a dataset that does not store a quantity does not provide it.
 
 ## 2. Check the calibration
 

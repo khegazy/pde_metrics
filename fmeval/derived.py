@@ -45,14 +45,11 @@ import numpy as np
 from .data.base import DERIVED_FIELDS, Frame, GridSpec, Trajectory
 from .external.kinet_spectral import spectral_vorticity
 
-#: Isothermal D2Q9 lattice sound speed squared, as a float64 so ``rho * CS2`` reproduces the
-#: solver's stored pressure bitwise (see :mod:`fmeval.data.kinet_raw`).
-CS2: float = float(np.float64(1.0) / np.float64(3.0))
-
-#: Derived field -> the primitives it is computed from.
+#: Derived field -> the primitives it is computed from. Only kinematic quantities belong
+#: here: anything that needs an equation of state, such as pressure, is a property of the
+#: solver and is read from the dataset or not at all.
 RECIPES: dict[str, tuple[str, ...]] = {
     "vorticity": ("velocity",),
-    "pressure": ("density",),
 }
 
 
@@ -95,11 +92,6 @@ def vorticity_from_velocity(velocity: np.ndarray, grid: GridSpec) -> np.ndarray:
     return omega[np.newaxis, ...] if omega.ndim == grid.n_spatial else omega
 
 
-def pressure_from_density(density: np.ndarray) -> np.ndarray:
-    """Equation of state for the isothermal D2Q9 solver: ``p = rho * c_s^2``."""
-    return density * CS2
-
-
 def recompute(
     name: str, fields: Mapping[str, np.ndarray], grid: GridSpec
 ) -> np.ndarray:
@@ -115,8 +107,6 @@ def recompute(
         raise KeyError(f"cannot recompute {name!r}: missing {missing}")
     if name == "vorticity":
         return vorticity_from_velocity(fields["velocity"], grid)
-    if name == "pressure":
-        return pressure_from_density(fields["density"])
     raise KeyError(f"no implementation for derived field {name!r}")
 
 

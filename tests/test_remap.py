@@ -10,12 +10,7 @@ import numpy as np
 import pytest
 
 from fmeval.data.base import Frame, GridSpec
-from fmeval.derived import (
-    CS2,
-    pressure_from_density,
-    recompute_frame,
-    vorticity_from_velocity,
-)
+from fmeval.derived import recompute_frame, vorticity_from_velocity
 from fmeval.external.kinet_spectral import spectral_vorticity
 from fmeval.remap import block_average, coarsen_factor, remap_frame, subsample
 from tests.conftest import synthetic_field, unit_grid
@@ -125,12 +120,6 @@ def test_vorticity_rejects_a_nonperiodic_grid():
         vorticity_from_velocity(u, g)
 
 
-def test_pressure_equation_of_state():
-    rho = 1.0 + 1e-3 * synthetic_field((16, 8), 1, seed=0)
-    assert np.array_equal(pressure_from_density(rho), rho * CS2)
-    assert CS2 == pytest.approx(1 / 3)
-
-
 # --- the primitive / derived split ---------------------------------------------------
 
 
@@ -139,6 +128,7 @@ def _frame(shape=(32, 32), spacing=1.0):
     fields = {
         "density": 1.0 + 1e-3 * synthetic_field(shape, 1, seed=1),
         "velocity": 0.04 * synthetic_field(shape, 2, seed=2),
+        "pressure": 0.3 + 1e-3 * synthetic_field(shape, 1, seed=3),
     }
     fields["vorticity"] = vorticity_from_velocity(fields["velocity"], grid)
     return Frame(index=0, time=0.0, fields=fields, grid=grid)
@@ -175,6 +165,8 @@ def test_remap_averages_primitives():
     remapped = remap_frame(frame, 2)
     assert np.array_equal(remapped["density"], block_average(frame["density"], 2))
     assert np.array_equal(remapped["velocity"], block_average(frame["velocity"], 2))
+    # Pressure is stored, never computed: it is averaged like any other primitive.
+    assert np.array_equal(remapped["pressure"], block_average(frame["pressure"], 2))
 
 
 def test_remap_factor_one_is_identity():
