@@ -976,7 +976,18 @@ Every operator also declares what it provably leaves unchanged — the multiset 
 fluctuation's amplitude spectrum, the spatial mean, or the shape up to a rigid displacement — and
 a test measures each declaration at every strength. `python -m degradations` lists it in the
 `preserves` column, and the displacement section of a report quotes it beside the measured
-response. It is a fact about the degradation, never an expectation about a metric.
+response. It is a fact about the degradation, never an expectation about a metric. The
+declarations are measured on periodic grids.
+
+**Boundaries.** Every operator wraps at the edge of the array. Each dataset declares the
+boundary type of each axis, and on an axis that is not periodic the harness applies the
+operator to the field extended across the boundary by that type's rule, then crops back. A
+Neumann (zero-gradient) wall is extended by its mirror image. There a translation reflects at
+the wall instead of bringing in the far end of the domain, and a blur sees a mirrored neighbour.
+For the same reason the `preserves` declarations above hold on periodic axes and need not hold
+at a wall: a reflected translation does not keep the amplitude spectrum. The severity
+calibration is measured on the same extended field. Metrics are never extended: a metric that
+needs a periodic domain is not run on a dataset that lacks one.
 
 Twenty-four operators in eight families. `python -m degradations` lists them with their
 severity units. Which failure modes you test for determines what the measurements mean, so

@@ -115,7 +115,7 @@ def test_vorticity_rejects_a_mismatched_grid():
 
 def test_vorticity_rejects_a_nonperiodic_grid():
     u = synthetic_field((16, 8), 2, seed=0)
-    g = GridSpec((16, 8), (1.0, 1.0), (True, False), ("x", "y"), (0.0, 0.0))
+    g = GridSpec((16, 8), (1.0, 1.0), ("periodic", "neumann"), ("x", "y"), (0.0, 0.0))
     with pytest.raises(ValueError, match="periodic"):
         vorticity_from_velocity(u, g)
 

@@ -54,7 +54,7 @@ class KinetRawTrajectory(HDF5Trajectory):
         chunk_cache_mb: int = _remote.DEFAULT_CHUNK_CACHE_MB,
         nan_policy: NanPolicy = "error",
         include_redundant: bool = False,
-        periodic: Sequence[bool] | None = None,
+        boundary: Sequence[str] | None = None,
         sim_index: int = 0,
         time_axis: TimeAxisMode = "auto",
     ) -> None:
@@ -65,9 +65,9 @@ class KinetRawTrajectory(HDF5Trajectory):
             chunk_cache_mb: h5py chunk cache; see :meth:`HDF5Trajectory._open`.
             nan_policy: ``"error"``, ``"warn"`` or ``"ignore"`` for non-finite values.
             include_redundant: Expose ``pressure`` even though it is ``density * c_s^2``.
-            periodic: Per-axis periodicity. Raw kinet files do not record it, so it comes
-                from the dataset config; defaults to fully periodic, which is correct for
-                the doubly-periodic case family.
+            boundary: Boundary type of each axis (``fmeval.data.base.BOUNDARIES``). Raw kinet
+                files do not record it, so it comes from the dataset config; defaults to
+                periodic on every axis, which is correct for the doubly-periodic case family.
             sim_index: Index along the leading simulation axis.
             time_axis: How to read the clock. See ``fmeval.data._timeaxis``; the default
                 only changes behaviour for a remote file whose clock is chunked per frame.
@@ -79,14 +79,14 @@ class KinetRawTrajectory(HDF5Trajectory):
         length = tuple(float(v) for v in disc["spatial"]["length"])
         spacing = tuple(l / n for l, n in zip(length, shape))
         n_spatial = len(shape)
-        periodic_t = (
-            tuple(bool(p) for p in periodic) if periodic is not None
-            else (True,) * n_spatial
+        boundary_t = (
+            tuple(str(b) for b in boundary) if boundary is not None
+            else ("periodic",) * n_spatial
         )
         self._grid = GridSpec(
             shape=shape,
             spacing=spacing,
-            periodic=periodic_t,
+            boundary=boundary_t,
             dims=("x", "y", "z")[:n_spatial],
             origin=(0.0,) * n_spatial,
         )

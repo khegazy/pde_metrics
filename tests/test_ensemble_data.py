@@ -36,7 +36,7 @@ class _DeterministicStub(Trajectory):
 
     @property
     def grid(self) -> GridSpec:
-        return GridSpec(shape=SHAPE, spacing=(1.0, 1.0), periodic=(True, True))
+        return GridSpec(shape=SHAPE, spacing=(1.0, 1.0), boundary=("periodic", "periodic"))
 
     @property
     def meta(self) -> dict:
@@ -80,7 +80,7 @@ def test_deterministic_frame_has_no_members():
 
 def test_frame_members_default_to_none():
     """Every existing Frame construction site omits members and must keep working."""
-    grid = GridSpec(shape=SHAPE, spacing=(1.0, 1.0), periodic=(True, True))
+    grid = GridSpec(shape=SHAPE, spacing=(1.0, 1.0), boundary=("periodic", "periodic"))
     frame = Frame(index=0, time=0.0, fields={"density": np.zeros((1, *SHAPE))}, grid=grid)
     assert frame.members is None
     assert frame.has_members is False

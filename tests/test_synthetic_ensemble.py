@@ -57,7 +57,7 @@ def test_length_and_times(traj):
 
 def test_grid_is_periodic_and_non_square(traj):
     assert traj.grid.shape == GRID
-    assert traj.grid.periodic == (True, True)
+    assert traj.grid.boundary == ("periodic", "periodic")
 
 
 def test_meta_records_ensemble_size(traj):

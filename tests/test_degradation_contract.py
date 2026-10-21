@@ -8,6 +8,8 @@ axis, and nothing else in the pipeline would notice.
 
 from __future__ import annotations
 
+import dataclasses
+
 import numpy as np
 import pytest
 
@@ -15,10 +17,11 @@ from degradations import registry as deg
 from degradations._shared.filters import _apply_filter
 from fmeval.calibration import calibrate, calibrate_field
 from fmeval.context import FieldContext, derive_rng, fluctuation_rms
-from fmeval.data.base import Frame
+from fmeval.data.base import Frame, GridSpec
 from fmeval.ladder import (
     REFERENCE_LEVEL,
     DegradationConfig,
+    SeverityLevel,
     apply_severity_level,
     build_ladder,
     ladder_axes,
@@ -222,6 +225,62 @@ def test_stochastic_operators_are_seed_reproducible(spec):
     assert not np.array_equal(run(7, 0, "vorticity"), run(7, 1, "vorticity"))
     assert not np.array_equal(run(7, 0, "vorticity"), run(7, 0, "density"))
     assert not np.array_equal(run(7, 0, "vorticity"), run(8, 0, "vorticity"))
+
+
+#: Absolute severities for the boundary test, which bypasses calibration: a calibrated cutoff
+#: is in cycles across the domain, and the extended domain is twice as long, so resolving the
+#: same fraction on both grids would compare two different experiments.
+BOUNDARY_SEVERITY = {"scale": 6.0, "energy_above": 16.0, "energy_below": 4.0}
+
+#: Operators that act within a few cells, so across a Neumann boundary they must not see the far
+#: end of the domain at all. Measured: each moves the left end by 0.2-0.5 on a periodic grid.
+LOCAL_OPERATORS = ("gaussian_blur", "box_blur", "disk_blur", "epanechnikov_blur", "translate",
+                   "translate_subpixel")
+
+
+def _left_end_response(spec: deg.DegradationSpec, boundary: str) -> float:
+    """How far the first 16 cells of the output move when only the last 32 of the input do."""
+    n = 256
+    step = np.where(np.arange(n) < n // 2, 1.0, 0.125)[None]
+    bumped = step.copy()
+    bumped[0, -32:] += 0.5
+    severity = (BOUNDARY_SEVERITY[spec.calibration] if spec.calibration
+                else LADDERS[spec.name][-1])
+    level = dataclasses.replace(
+        SeverityLevel.from_spec(spec, label=spec.name, level=1, severity=severity, options={}),
+        calibration=None)
+    grid = GridSpec((n,), (1.0,), (boundary,), ("x",), (0.0,))
+    left = [apply_severity_level(level, Frame(0, 0.0, {"density": f}, grid), ["density"],
+                                 seed=0).fields["density"][0, :16] for f in (step, bumped)]
+    return float(np.abs(left[0] - left[1]).max())
+
+
+def test_the_far_end_does_not_reach_across_a_neumann_boundary(spec):
+    """Every operator wraps, so on a non-periodic axis the driver extends the field across the
+    boundary by its rule before applying it (``fmeval.ladder._call``).
+
+    Measured as the response of the left end to a change confined to the right end. On a
+    periodic grid the two ends are neighbours; across a Neumann wall the even extension puts
+    them half the extended domain apart. So no operator may respond more there than on the
+    periodic grid, and a local one -- a blur or a translation -- must not respond at all.
+    Pointwise operators still respond a little on both, because their amplitude is relative to
+    the field's fluctuation RMS, which the bump changes; that is not a leak, and it is equal on
+    both grids. (Extension of a zero-gradient wall: LeVeque (2002), Finite Volume Methods for
+    Hyperbolic Problems, Cambridge, Sect. 7.3.3, ghost cells eq. (7.17) for the even fields.)
+    """
+    if spec.ensemble:
+        pytest.skip("acts on a member stack, not across space")
+    periodic, neumann = (_left_end_response(spec, b) for b in ("periodic", "neumann"))
+    assert neumann <= periodic + 1e-12, (
+        f"{spec.name}: the left end moves by {neumann:.3g} across a Neumann boundary but only "
+        f"{periodic:.3g} across a periodic one; the extension is not reaching this operator"
+    )
+    if spec.name in LOCAL_OPERATORS:
+        assert periodic > 0.1, f"{spec.name}: no wrap-around on a periodic grid, test is vacuous"
+        assert neumann < 1e-12, (
+            f"{spec.name}: a local operator moved the left end by {neumann:.3g} when only the "
+            "right end changed, so it still sees across the boundary"
+        )
 
 
 # --- operator-specific properties ---------------------------------------------------

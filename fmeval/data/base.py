@@ -93,6 +93,25 @@ REDUNDANT_FIELDS: frozenset[str] = frozenset({"pressure"})
 DEGENERATE_FIELDS: frozenset[str] = frozenset({"temperature"})
 
 
+#: The boundary types an axis may declare, each mapped to the ``numpy.pad`` mode that extends
+#: a field across it into a periodic one (None for an axis that already wraps).
+#:
+#: * ``"periodic"`` -- the axis wraps: the cell after the last is the first.
+#: * ``"neumann"`` -- a zero-gradient wall. Its ghost cells mirror the interior about the
+#:   wall, ``q_0 = q_1, q_-1 = q_2, ...``: the rule LeVeque (2002), *Finite Volume Methods for
+#:   Hyperbolic Problems*, Cambridge University Press, https://doi.org/10.1017/CBO9780511791253,
+#:   Sect. 7.3.3, eqs. (7.16)-(7.17), gives for the pressure at a solid wall. Appending the
+#:   axis reversed (``mode="symmetric"``) gives a field that is continuous across both seams and
+#:   periodic over twice the length: the even extension behind the cosine transform. It is
+#:   applied to every field alike, velocity included, so it is not a solid wall for the
+#:   velocity, whose normal component is odd there (the same eq. (7.17)); no dataset here has
+#:   a velocity reaching its wall.
+#:
+#: A new type needs an entry here whose extension is continuous across its seam; an extension
+#: that leaves a jump there would bring back exactly the wrap-around artefact this removes.
+BOUNDARIES: dict[str, str | None] = {"periodic": None, "neumann": "symmetric"}
+
+
 @dataclass(frozen=True)
 class GridSpec:
     """Geometry of one analysis grid.
@@ -100,14 +119,14 @@ class GridSpec:
     Attributes:
         shape: Spatial extents in ``dims`` order, e.g. ``(256, 256)`` for ``("x", "y")``.
         spacing: Cell size along each axis, same order.
-        periodic: Whether each axis wraps.
+        boundary: Boundary type of each axis, a key of :data:`BOUNDARIES`.
         dims: Axis names, always a prefix of ``("x", "y", "z")``.
         origin: Coordinate of the first cell along each axis.
     """
 
     shape: tuple[int, ...]
     spacing: tuple[float, ...]
-    periodic: tuple[bool, ...]
+    boundary: tuple[str, ...]
     dims: tuple[str, ...] = ("x", "y")
     origin: tuple[float, ...] = (0.0, 0.0)
 
@@ -115,7 +134,7 @@ class GridSpec:
         n = len(self.shape)
         for name, val in (
             ("spacing", self.spacing),
-            ("periodic", self.periodic),
+            ("boundary", self.boundary),
             ("dims", self.dims),
         ):
             if len(val) != n:
@@ -126,10 +145,62 @@ class GridSpec:
             raise ValueError(
                 f"GridSpec.dims must be a prefix of ('x','y','z'); got {self.dims}"
             )
+        unknown = [b for b in self.boundary if b not in BOUNDARIES]
+        if unknown:
+            raise ValueError(
+                f"unknown boundary type(s) {unknown}; expected one of {sorted(BOUNDARIES)}"
+            )
 
     @property
     def n_spatial(self) -> int:
         return len(self.shape)
+
+    @property
+    def is_periodic(self) -> bool:
+        """Whether every axis wraps."""
+        return all(b == "periodic" for b in self.boundary)
+
+    @property
+    def extended(self) -> GridSpec:
+        """The fully periodic grid :meth:`extend` maps a field onto.
+
+        Every non-periodic axis has twice its cells and the same spacing. ``self`` when the grid
+        is already periodic.
+        """
+        if self.is_periodic:
+            return self
+        return GridSpec(
+            shape=tuple(n if b == "periodic" else 2 * n for n, b in zip(self.shape, self.boundary)),
+            spacing=self.spacing,
+            boundary=("periodic",) * self.n_spatial,
+            dims=self.dims,
+            origin=self.origin,
+        )
+
+    def extend(self, x: np.ndarray) -> np.ndarray:
+        """Extend ``x`` across every non-periodic axis, by that axis's boundary rule.
+
+        The result is periodic, so an operator that wraps -- every FFT, roll and
+        ``mode="wrap"`` kernel in the degradations -- sees across the boundary what the boundary
+        condition says is there, not the opposite end of the domain. Cropping
+        ``[..., :n]`` on each axis recovers the original. Leading axes (channels, ensemble
+        members) are left alone; ``x`` is returned unchanged on a periodic grid.
+
+        Args:
+            x: Array whose trailing ``n_spatial`` axes are this grid, in order.
+        """
+        if self.is_periodic:
+            return x
+        if x.shape[x.ndim - self.n_spatial:] != self.shape:
+            raise ValueError(f"array of shape {x.shape} does not end in this grid's {self.shape}")
+        lead = x.ndim - self.n_spatial
+        out = x
+        for axis, (n, b) in enumerate(zip(self.shape, self.boundary)):
+            if b != "periodic":
+                width = [(0, 0)] * out.ndim
+                width[lead + axis] = (0, n)
+                out = np.pad(out, width, mode=BOUNDARIES[b])
+        return out
 
     @property
     def length(self) -> tuple[float, ...]:
@@ -159,7 +230,7 @@ class GridSpec:
         return GridSpec(
             shape=tuple(n // factor for n in self.shape),
             spacing=tuple(dx * factor for dx in self.spacing),
-            periodic=self.periodic,
+            boundary=self.boundary,
             dims=self.dims,
             origin=self.origin,
         )

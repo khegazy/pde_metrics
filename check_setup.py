@@ -68,7 +68,7 @@ def main() -> int:
         x = np.arange(n) * dx
         xx, yy = np.meshgrid(x, x, indexing="ij")
         u = np.stack([np.sin(xx) * np.cos(yy), -np.cos(xx) * np.sin(yy)])
-        grid = GridSpec((n, n), (dx, dx), (True, True), ("x", "y"), (0.0, 0.0))
+        grid = GridSpec((n, n), (dx, dx), ("periodic", "periodic"), ("x", "y"), (0.0, 0.0))
         error = float(np.abs(vorticity_from_velocity(u, grid)[0]
                              - 2 * np.sin(xx) * np.sin(yy)).max())
         if error < 1e-10:

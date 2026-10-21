@@ -116,7 +116,8 @@ class AnalyticTrajectory(Trajectory):
         _check(kind)
         self._kind, self._seed, self._n = kind, seed, n_frames
         self._canonical = canonical_field(kind, grid, **field_params)
-        self._grid = GridSpec(tuple(grid), (1.0, 1.0), (True, True), ("x", "y"), (0.0, 0.0))
+        self._grid = GridSpec(tuple(grid), (1.0, 1.0), ("periodic", "periodic"), ("x", "y"),
+                              (0.0, 0.0))
 
     @property
     def fields(self) -> tuple[str, ...]:

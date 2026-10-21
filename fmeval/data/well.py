@@ -96,14 +96,19 @@ class WellTrajectory(HDF5Trajectory):
         spacing = tuple(
             float(c[1] - c[0]) if len(c) > 1 else 1.0 for c in coords
         )
-        periodic = tuple(
-            f"{name}_periodic" in self._file.get("boundary_conditions", {})
-            for name in names
-        )
+        # The Well records a periodic axis as a `<dim>_periodic` group. Other boundary types
+        # are not mapped yet, so an axis without that group is refused rather than guessed.
+        open_axes = [name for name in names
+                     if f"{name}_periodic" not in self._file.get("boundary_conditions", {})]
+        if open_axes:
+            raise ValueError(
+                f"{self.source}: axes {open_axes} are not periodic, and no Well boundary type "
+                "is mapped to a fmeval.data.base.BOUNDARIES entry yet"
+            )
         self._grid = GridSpec(
             shape=shape,
             spacing=spacing,
-            periodic=periodic,
+            boundary=("periodic",) * len(names),
             dims=tuple(names),
             origin=tuple(float(c[0]) for c in coords),
         )

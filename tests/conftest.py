@@ -128,7 +128,7 @@ SQUARE_HALF_AMPLITUDE = np.array([[[0.0, 0.0, 0.0, 0.0],
 def unit_grid(shape: tuple[int, ...], spacing: float = 1.0) -> GridSpec:
     """A periodic grid with the same spacing on every axis, axes named ``x, y[, z]``."""
     n = len(shape)
-    return GridSpec(tuple(shape), (float(spacing),) * n, (True,) * n, ("x", "y", "z")[:n],
+    return GridSpec(tuple(shape), (float(spacing),) * n, ("periodic",) * n, ("x", "y", "z")[:n],
                     (0.0,) * n)
 
 

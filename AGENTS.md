@@ -135,7 +135,7 @@ Where the shared code already lives, so the search has somewhere to start:
 | Run-folder layout, readers and YAML (`RunFolder`, `read_results`, `read_run_meta`, `read_config`, `read_yaml`, `dump_yaml`) | `fmeval/io.py` |
 | Error-map keys (`map_key`, `parse_map_key`) | `fmeval/pipeline.py` |
 | Opening an HDF5 file locally or over HTTP, and what the HDF5 readers share | `fmeval/data/hdf5.py`, `fmeval/data/remote.py` |
-| The field vocabulary and which fields readers exclude | `fmeval/data/base.py` |
+| The field vocabulary, which fields readers exclude, and the boundary types (`BOUNDARIES`, `GridSpec.extend`) | `fmeval/data/base.py` |
 | Discovery, lookup and listing shared by both plugin registries | `metrics/_registry_core.py` |
 | Degradation kernels, filters (`butterworth`), grid expansion, ensemble scaling | `degradations/_shared/` |
 | Ensemble input validation for metrics | `metrics/_ensemble.py` |

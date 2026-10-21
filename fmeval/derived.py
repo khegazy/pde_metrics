@@ -81,10 +81,10 @@ def vorticity_from_velocity(velocity: np.ndarray, grid: GridSpec) -> np.ndarray:
         raise ValueError(
             f"velocity spatial shape {velocity.shape[1:]} does not match grid {grid.shape}"
         )
-    if not all(grid.periodic):
+    if not grid.is_periodic:
         raise ValueError(
-            "spectral vorticity assumes a fully periodic domain; this grid is "
-            f"periodic={grid.periodic}"
+            "spectral vorticity assumes a fully periodic domain; this grid's boundaries are "
+            f"{grid.boundary}"
         )
     # spacing=grid.spacing is the whole point: at a coarse grid the fine spacing would
     # scale the result by the coarsening factor.

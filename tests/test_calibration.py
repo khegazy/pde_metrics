@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 
 from fmeval.calibration import DRIFT_WARN, calibrate, calibrate_field
-from fmeval.data.base import Frame
+from fmeval.data.base import Frame, GridSpec
 from fmeval.ladder import REFERENCE_LEVEL, apply_severity_level, build_ladder, resolve_severity
 from fmeval.wavenumbers import wavenumber_magnitude
 from tests.conftest import unit_grid
@@ -311,3 +311,24 @@ def test_the_effect_is_measured_about_the_spatial_mean():
                           calibration=cal).energy_removed["density"]
 
     assert removed(frame_large) == pytest.approx(removed(frame_small), rel=1e-6)
+
+
+def test_a_non_periodic_axis_is_calibrated_on_its_extension():
+    """The calibration measures the field the operators act on: on a Neumann axis that is the
+    even extension (``GridSpec.extend``), whose spectrum holds no wrap-around jump.
+
+    Measured on a 2048-cell step between two constant states: the energy above 90% of the
+    largest wavenumber falls from 9.8e-5 of the total on the wrapped field to 4.9e-5 on the
+    extended one, because the jump at the domain edge is gone. The equality below pins that the
+    calibration takes the extended route and not the wrapped one.
+    """
+    n = 64
+    step = np.where(np.arange(n) < n // 2, 1.0, 0.125)[None] + 0.01 * np.sin(np.arange(n))
+    neumann = GridSpec((n,), (1.0,), ("neumann",), ("x",), (0.0,))
+    on_neumann = calibrate_field([step], neumann, "density")
+    on_extension = calibrate_field([neumann.extend(step)], neumann.extended, "density")
+    on_wrapped = calibrate_field([step], GridSpec((n,), (1.0,), ("periodic",), ("x",), (0.0,)),
+                                 "density")
+    assert on_neumann.characteristic_scale == on_extension.characteristic_scale
+    assert np.array_equal(on_neumann.cumulative_energy, on_extension.cumulative_energy)
+    assert on_neumann.characteristic_scale != on_wrapped.characteristic_scale
