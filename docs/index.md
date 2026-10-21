@@ -39,3 +39,6 @@ then read [mse](metrics/mse.md) as the worked example.
 
 **[Choose a metric](choosing-a-metric.md)** if you came here to pick one for your own
 project.
+
+**[See what is planned](ideas/README.md)** for the metrics that are not built yet: what each
+would measure, where the idea comes from, and the order the team intends to build them in.

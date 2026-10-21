@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import json
 import re
 import subprocess
 import sys
@@ -20,6 +21,7 @@ import yaml
 from degradations import registry as deg_registry
 from fmeval import REPO
 from fmeval import analysis as an
+from fmeval.cards.prose import check_math
 from fmeval.io import RunFolder, copy_documentation
 from fmeval.pipeline import RESULT_DTYPES
 from fmeval.report import driver  # noqa: F401  (imports the renderer modules)
@@ -275,6 +277,8 @@ PINNED_PHRASES = {
         "Never invent a number", "Never state expected behaviour",
         "never edit `_generated/`", "never sign a card",
         "docs/recipes/", "Delete an issue once it is fully resolved",
+        # A built metric left in the plan reads as work still to do.
+        "docs/ideas/README.md",
     ),
     # Every agent profile, and the issues index itself, says that `issues/` holds only open
     # items: an issue left in place after it is fully resolved reads as work still to do.
@@ -324,6 +328,7 @@ PINNED_PHRASES = {
         "python -m fmeval.cards catalog",
         "equation number",
         "worked example",
+        "docs/ideas/README.md",
     ),
     "docs/recipes/add-a-degradation.md": (
         "--kind degradation",
@@ -392,6 +397,81 @@ def test_each_instruction_file_still_carries_its_pinned_phrases(name):
             "instructions; if this changed deliberately, update this test in the same "
             "commit and say why in its message."
         )
+
+
+# --------------------------------------------------------------------------------------
+# The ideas section: hand-written plans for metrics that are not built yet
+# --------------------------------------------------------------------------------------
+
+IDEAS = REPO / "docs" / "ideas"
+#: The tracker's two-letter identifiers (OT-1, NM-3, ...). Retired: an idea is named by its
+#: page, and a reader who was never told the scheme cannot decode a prefix.
+_RETIRED_ID = re.compile(r"\b(?:OT|SH|NM|CG|PH|PD|TD|BD|PS|IN)-\d")
+
+
+@pytest.mark.parametrize(
+    "page", sorted(p.relative_to(IDEAS).as_posix() for p in IDEAS.rglob("*.md"))
+)
+def test_an_idea_page_follows_the_site_conventions(page):
+    """Idea pages obey the rules the cards obey, since both render on GitHub and the site.
+
+    Equations use only the dollar forms both readers render; the retired tracker IDs and the
+    word "rung" (say "severity level") stay out.
+    """
+    text = (IDEAS / page).read_text()
+    assert check_math(text) == [], f"docs/ideas/{page}: {check_math(text)}"
+    assert not _RETIRED_ID.search(text), (
+        f"docs/ideas/{page} uses a retired tracker ID "
+        f"{_RETIRED_ID.search(text).group(0)!r}; name the idea instead"
+    )
+    assert not re.search(r"\brungs?\b", text, re.IGNORECASE), (
+        f"docs/ideas/{page} says 'rung'; say 'severity level'"
+    )
+
+
+def test_an_idea_is_removed_once_it_is_built():
+    """No idea page is named after a metric that exists.
+
+    Once a metric is built its card is the only record of it, and the idea's row and page
+    are deleted in the same change (docs/recipes/add-a-metric.md). This catches an idea built
+    under its own name; one built under a different name is caught only by that recipe step.
+    """
+    catalog = json.loads((REPO / "docs" / "catalog.json").read_text())
+    built = {e["name"] for e in catalog["entries"] if e["kind"] == "metric"}
+    idea_stems = {p.stem for p in IDEAS.rglob("*.md")}
+    # Either set coming back empty would make the intersection below pass for no reason.
+    assert built, "docs/catalog.json lists no metrics; the catalog format has changed"
+    assert idea_stems, f"no idea pages under {IDEAS}; the ideas section has moved"
+    stale = sorted(idea_stems & built)
+    assert not stale, (
+        f"{stale} are built metrics but still have idea pages; delete each page, its row in "
+        "docs/ideas/README.md and its link on the theme page"
+    )
+
+
+def test_every_idea_has_a_row_and_every_row_a_page():
+    """The overview table and the idea pages correspond one to one."""
+    overview = (IDEAS / "README.md").read_text()
+    # A row's page is the first link to a page inside a theme directory, wherever it sits in
+    # the row's first cell, so a title containing brackets or a cell not starting with the
+    # link is still read. Theme links point at a README and are excluded by the pattern.
+    linked = [
+        m.group(1)
+        for line in overview.splitlines() if line.startswith("|")
+        for m in [re.search(r"\]\(([a-z0-9_]+/(?!README)[a-z0-9_]+\.md)\)", line.split("|")[1])]
+        if m
+    ]
+    rows = set(linked)
+    pages = {p.relative_to(IDEAS).as_posix() for p in IDEAS.glob("*/*.md")
+             if p.name != "README.md"}
+    assert pages, f"no idea pages under {IDEAS}; the ideas section has moved"
+    assert len(linked) == len(rows), (
+        f"pages with more than one row: {sorted(r for r in rows if linked.count(r) > 1)}"
+    )
+    assert rows == pages, (
+        f"rows without a page: {sorted(rows - pages)}; "
+        f"pages without a row in docs/ideas/README.md: {sorted(pages - rows)}"
+    )
 
 
 # --------------------------------------------------------------------------------------
