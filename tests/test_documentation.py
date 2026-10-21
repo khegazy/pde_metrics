@@ -438,7 +438,11 @@ def test_an_idea_is_removed_once_it_is_built():
     """
     catalog = json.loads((REPO / "docs" / "catalog.json").read_text())
     built = {e["name"] for e in catalog["entries"] if e["kind"] == "metric"}
-    stale = sorted({p.stem for p in IDEAS.rglob("*.md")} & built)
+    idea_stems = {p.stem for p in IDEAS.rglob("*.md")}
+    # Either set coming back empty would make the intersection below pass for no reason.
+    assert built, "docs/catalog.json lists no metrics; the catalog format has changed"
+    assert idea_stems, f"no idea pages under {IDEAS}; the ideas section has moved"
+    stale = sorted(idea_stems & built)
     assert not stale, (
         f"{stale} are built metrics but still have idea pages; delete each page, its row in "
         "docs/ideas/README.md and its link on the theme page"
@@ -448,9 +452,22 @@ def test_an_idea_is_removed_once_it_is_built():
 def test_every_idea_has_a_row_and_every_row_a_page():
     """The overview table and the idea pages correspond one to one."""
     overview = (IDEAS / "README.md").read_text()
-    rows = set(re.findall(r"^\| \[[^]]+\]\(([a-z_]+/[a-z0-9_]+\.md)\)", overview, re.MULTILINE))
+    # A row's page is the first link to a page inside a theme directory, wherever it sits in
+    # the row's first cell, so a title containing brackets or a cell not starting with the
+    # link is still read. Theme links point at a README and are excluded by the pattern.
+    linked = [
+        m.group(1)
+        for line in overview.splitlines() if line.startswith("|")
+        for m in [re.search(r"\]\(([a-z0-9_]+/(?!README)[a-z0-9_]+\.md)\)", line.split("|")[1])]
+        if m
+    ]
+    rows = set(linked)
     pages = {p.relative_to(IDEAS).as_posix() for p in IDEAS.glob("*/*.md")
              if p.name != "README.md"}
+    assert pages, f"no idea pages under {IDEAS}; the ideas section has moved"
+    assert len(linked) == len(rows), (
+        f"pages with more than one row: {sorted(r for r in rows if linked.count(r) > 1)}"
+    )
     assert rows == pages, (
         f"rows without a page: {sorted(rows - pages)}; "
         f"pages without a row in docs/ideas/README.md: {sorted(pages - rows)}"
