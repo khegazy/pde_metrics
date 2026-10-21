@@ -16,7 +16,11 @@ dominates strain by its own measure.
 - The *$\lambda_2$ criterion* marks points where the middle eigenvalue $\lambda_2$ of
   $S^2 + \Omega^2$ is negative.
 - The *Okubo–Weiss parameter*, used for two-dimensional flows, compares the squared strain with
-  the squared vorticity and marks points where the vorticity dominates.
+  the squared vorticity and marks points where the vorticity dominates. For a planar velocity
+  $(u, v)$ it is $W = s_n^2 + s_s^2 - \omega^2$, with normal strain
+  $s_n = \partial_x u - \partial_y v$, shear strain $s_s = \partial_x v + \partial_y u$ and
+  vorticity $\omega = \partial_x v - \partial_y u$, and vortices are where $W < 0$. In
+  two dimensions $W = -4Q$, so this criterion and the $Q$-criterion mark the same points.
 - The *swirling strength* $\lambda_{ci}$ is the imaginary part of the complex-conjugate pair of
   eigenvalues of the velocity gradient, where such a pair exists; it marks points where it is
   positive, or above a threshold, and its size measures how fast the local flow spirals
@@ -37,7 +41,9 @@ relationships between them.
 - All of them are threshold dependent: a point counts as inside a vortex only above or below
   a chosen cut.
 - None of them is frame invariant, meaning that the answer can change when the flow is viewed
-  from a rotating or accelerating frame of reference.
+  from a rotating frame of reference. A frame that translates, even with acceleration, adds
+  the same velocity everywhere, which leaves the velocity gradient and so every criterion
+  here unchanged; rotation of the frame is what changes them.
 - Together, the arbitrary threshold and the frame dependence make a comparison between
   models fragile: two predictions can differ in their vortex counts because of the cut
   rather than the flow, which is why the threshold must be fixed by the evaluator and never

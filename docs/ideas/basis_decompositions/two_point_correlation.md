@@ -14,9 +14,13 @@ scales.
 
 It must be read for what it is not. The two-point correlation and the power spectrum (the
 energy in each Fourier mode) are Fourier transforms of one another, so they carry the same
-information. The energy spectrum is already compared by
-[spectrum_l2](../../metrics/spectrum_l2.md), and computing both does not make two
-independent checks. More importantly, both discard all Fourier *phase*, the part of each
+information, and computing both does not make two independent checks. The built
+[spectrum_l2](../../metrics/spectrum_l2.md) compares the radial spectrum, summed over shells
+of $|\mathbf{k}|$ and over channels, which is the Fourier counterpart of the correlation
+averaged over directions. A correlation kept as a function of the separation *vector*, or
+kept per field, also records how the variation depends on direction (anisotropy) and on the
+field, which the radial spectrum discards; that is what this idea would add. More
+importantly, both discard all Fourier *phase*, the part of each
 mode that records where structures sit relative to one another, and phase is where structure
 resides. Matching a two-point correlation is therefore a weak constraint. Its physical-space
 counterpart is the second-order structure function, a linear function of it, and the
@@ -37,4 +41,5 @@ where physical-space statistics go beyond it.
 
 *The team's judgement.* Medium priority: the two-point correlation is standard and cheap, and
 it is worth including as a baseline, but it carries the same information as the energy
-spectrum, which is already built, so it adds no independent check.
+spectrum, so beyond the direction dependence that the built radial spectrum averages away it
+adds no independent check.

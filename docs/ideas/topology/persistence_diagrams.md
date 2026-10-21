@@ -26,8 +26,12 @@ of forgetting which birth is paired with which death.
 ## Precedent
 
 The stability theorem guarantees that a small perturbation of the field produces a
-correspondingly small change in the diagram (Cohen-Steiner et al. 2007), so the distance
-cannot blow up in the way $L^2$ does under a spatial shift. Off-the-shelf software
+correspondingly small change in the diagram: the bottleneck distance between two diagrams is
+at most the largest pointwise difference between the two fields (Cohen-Steiner et al. 2007).
+That bound does not by itself protect against a spatial shift, which can make the pointwise
+difference large. The protection comes from a different property, noted under the pitfalls:
+a diagram does not record where a feature sits, so a rigid shift of the field on a periodic
+domain leaves the diagram unchanged, where $L^2$ penalises it twice. Off-the-shelf software
 exists, including GUDHI, Ripser.py, giotto-tda and TTK (Tierny et al. 2018), so building it
 is a pure implementation task.
 
