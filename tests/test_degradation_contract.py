@@ -238,17 +238,22 @@ LOCAL_OPERATORS = ("gaussian_blur", "box_blur", "disk_blur", "epanechnikov_blur"
                    "translate_subpixel")
 
 
+def _absolute_level(spec: deg.DegradationSpec) -> SeverityLevel:
+    """The operator's harshest test severity as a ladder level, in absolute units."""
+    severity = (BOUNDARY_SEVERITY[spec.calibration] if spec.calibration
+                else LADDERS[spec.name][-1])
+    return dataclasses.replace(
+        SeverityLevel.from_spec(spec, label=spec.name, level=1, severity=severity, options={}),
+        calibration=None)
+
+
 def _left_end_response(spec: deg.DegradationSpec, boundary: str) -> float:
     """How far the first 16 cells of the output move when only the last 32 of the input do."""
     n = 256
     step = np.where(np.arange(n) < n // 2, 1.0, 0.125)[None]
     bumped = step.copy()
     bumped[0, -32:] += 0.5
-    severity = (BOUNDARY_SEVERITY[spec.calibration] if spec.calibration
-                else LADDERS[spec.name][-1])
-    level = dataclasses.replace(
-        SeverityLevel.from_spec(spec, label=spec.name, level=1, severity=severity, options={}),
-        calibration=None)
+    level = _absolute_level(spec)
     grid = GridSpec((n,), (1.0,), (boundary,), ("x",), (0.0,))
     left = [apply_severity_level(level, Frame(0, 0.0, {"density": f}, grid), ["density"],
                                  seed=0).fields["density"][0, :16] for f in (step, bumped)]
@@ -281,6 +286,54 @@ def test_the_far_end_does_not_reach_across_a_neumann_boundary(spec):
             f"{spec.name}: a local operator moved the left end by {neumann:.3g} when only the "
             "right end changed, so it still sees across the boundary"
         )
+
+
+def test_a_walled_ensemble_is_degraded_member_by_member(spec):
+    """An ensemble frame on a grid with a Neumann x-axis and a periodic y-axis goes through the
+    same extension and crop (``fmeval.ladder._call``) with the member axis leading.
+
+    A deterministic per-member operator gives each member exactly what it gives that member
+    alone on the same grid, so the member axis survives the extension and the crop and the
+    periodic axis is not extended. An ensemble operator returns the stack's shape, and keeps
+    the member mean where it declares so. A stochastic operator draws per member, so only its
+    shape is checked.
+    """
+    grid = GridSpec(SHAPE, (1.0, 1.0), ("neumann", "periodic"), ("x", "y"), (0.0, 0.0))
+    x = synthetic_field(SHAPE, 2, seed=3)
+    stack = members(x)
+    rms = {"velocity": fluctuation_rms(x)}
+    level = _absolute_level(spec)
+    out = apply_severity_level(level, Frame(0, 0.0, {"velocity": x}, grid,
+                                            members={"velocity": stack}),
+                               ["velocity"], seed=0, reference_rms=rms).members["velocity"]
+    assert out.shape == stack.shape, f"{spec.name}: {stack.shape} -> {out.shape}"
+    if spec.ensemble:
+        if "ensemble_mean" in spec.preserves:
+            np.testing.assert_allclose(out.mean(axis=0), stack.mean(axis=0), atol=1e-12)
+    elif not spec.stochastic:
+        alone = [apply_severity_level(level, Frame(0, 0.0, {"velocity": m}, grid), ["velocity"],
+                                      seed=0, reference_rms=rms).fields["velocity"]
+                 for m in stack]
+        np.testing.assert_array_equal(out, np.stack(alone), err_msg=spec.name)
+
+
+@pytest.mark.xfail(strict=True, reason="issues/046: |k| counts cycles across each axis's own "
+                   "length, and the extension doubles only the walled axis")
+def test_a_low_pass_treats_both_axes_of_a_walled_square_grid_alike():
+    """A wave of one wavelength is filtered alike along x and y on a square grid, whichever
+    axis has the wall. Measured: with a Neumann x-axis and an absolute cutoff of 6, the
+    16-cell wave along x is removed and the same wave along y is kept."""
+    n = 64
+    grid = GridSpec((n, n), (1.0, 1.0), ("neumann", "periodic"), ("x", "y"), (0.0, 0.0))
+    wave = np.cos(2 * np.pi * (np.arange(n) + 0.5) / 16)
+    level = dataclasses.replace(
+        SeverityLevel.from_spec(deg.get("lowpass_ideal"), label="lowpass_ideal", level=1,
+                                severity=6.0, options={}),
+        calibration=None)
+    kept = [float(apply_severity_level(level, Frame(0, 0.0, {"density": f[None]}, grid),
+                                       ["density"], seed=0).fields["density"].std() / f.std())
+            for f in (np.broadcast_to(wave[:, None], (n, n)), np.broadcast_to(wave, (n, n)))]
+    assert kept[0] == pytest.approx(kept[1], abs=1e-6), f"kept along x, y: {kept}"
 
 
 # --- operator-specific properties ---------------------------------------------------
