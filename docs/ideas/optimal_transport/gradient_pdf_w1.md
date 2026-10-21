@@ -1,4 +1,4 @@
-# Wasserstein distance between gradient distributions
+# Wasserstein distance between increment distributions at every separation
 
 !!! note "Planned, not built"
     The idea on this page is not built yet. Its gap, cost, priority and owner are in the
@@ -6,19 +6,25 @@
 
 ## What it is
 
-The Wasserstein distance between the distributions of one-cell increments already exists as
-[increment_w1](../../metrics/increment_w1.md). This idea is the remaining part of the same
-comparison: rather than transporting the field itself, collect the gradients of the
-prediction and of the reference into two probability distributions, and compare those
-one-dimensional distributions with the 1-Wasserstein distance $W_1$. The idea is stated for
-velocity increments $\delta_\ell u = u(\mathbf{x} + \boldsymbol{\ell}) - u(\mathbf{x})$ at a
-separation $\boldsymbol{\ell}$, or for gradients, so increments at separations larger than one
-cell are also part of what remains. Computing $W_1$ separately at each separation $\ell$
-gives a curve rather than one number, so the scale at which the prediction's statistics
-depart from the reference is visible. The gradient version differs from the built one-cell
-increment by its derivative stencil, and so belongs beside the
-[velocity-derivative skewness](../turbulence_statistics/derivative_skewness.md), which uses
-the same gradients.
+The idea as first planned compares the distributions of velocity increments, or of
+gradients, in the prediction and the reference with the 1-Wasserstein distance $W_1$, rather
+than transporting the fields themselves. Most of the gradient part is built. The
+[increment_w1](../../metrics/increment_w1.md) metric compares the distributions of one-cell
+increments along each axis. On the common analysis grid, a forward-difference gradient is
+that one-cell increment divided by the grid spacing, and $W_1$ scales in proportion to its
+argument, so $W_1$ between forward-difference gradient distributions is `increment_w1`
+divided by the grid spacing.
+
+What remains is the same comparison at separations larger than one cell. With
+$\delta_\ell u = u(\mathbf{x} + \boldsymbol{\ell}) - u(\mathbf{x})$ the increment at a
+separation $\boldsymbol{\ell}$, collect the increments of the prediction and of the reference
+into two one-dimensional distributions and compare them with $W_1$ separately at each
+separation $\ell$. The result is a curve rather than one number, so the scale at which the
+prediction's statistics depart from the reference is visible. Two smaller remainders are
+gradients from another derivative stencil, such as the one used for the
+[velocity-derivative skewness](../turbulence_statistics/derivative_skewness.md), and
+reporting longitudinal increments (a velocity component along its own direction) separately
+from transverse ones, which `increment_w1` averages together.
 
 In one dimension $W_1$ has a quantile form. If $F^{-1}$ and $G^{-1}$ are the quantile functions
 (inverse cumulative distribution functions) of the two distributions, then

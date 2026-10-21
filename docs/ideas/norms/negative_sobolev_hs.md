@@ -8,14 +8,24 @@
 
 The homogeneous Sobolev norm of order $-1$, written $\dot H^{-1}$, is built already as
 [h_minus_one](../../metrics/h_minus_one.md). This idea is the part that remains: Sobolev
-norms $H^{-s}$ of general negative order $-s$, and dual norms. A Sobolev norm of order $s$
-weights each Fourier coefficient of a field by $|\mathbf{k}|^{s}$, where $\mathbf{k}$ is the
-wavevector, so a negative order suppresses fine scales instead of emphasising them. A dual
-norm measures a field by the largest correlation it can have with any test function of unit
-size in a chosen smooth norm; $H^{-s}$ is the dual of $H^{s}$ in this sense.
+norms $H^{-s}$ of general negative order $-s$, and dual norms. A homogeneous Sobolev norm of
+order $s$ weights each Fourier coefficient of a field by $|\mathbf{k}|^{s}$, where
+$\mathbf{k}$ is the wavevector, and the inhomogeneous norm $H^{s}$ weights it by
+$(1 + |\mathbf{k}|^2)^{s/2}$; a negative order suppresses fine scales instead of emphasising
+them. A dual norm measures a field by the largest correlation it can have with any test
+function of unit size in a chosen smooth norm; on a periodic domain or the whole space,
+$H^{-s}$ is the dual of $H^{s}$ in this sense.
 
-Negative-order norms are the opposite of the $H^1$ norm. They are *weaker* than $L^2$: they
-metrize weak convergence, meaning that a sequence of fields converges in such a norm when its
+Concretely, what is not yet built is: orders other than $-1$, which shift the weighting
+between large and small scales; and the inhomogeneous norm, which keeps the $\mathbf{k} = 0$
+mode and so sees a uniform offset between two fields, to which the homogeneous
+`h_minus_one` is blind by definition. Much of the material below, the fast Fourier transform
+recipe and the bound relating the norm to a transport distance, concerns the order $-1$ that
+is already built, and is kept because it is the reason the family is planned.
+
+Negative-order norms are the opposite of the $H^1$ norm. They are *weaker* than $L^2$: for
+sequences of fields with bounded $L^2$ norm on a bounded domain, they metrize weak
+convergence, meaning that such a sequence converges in a negative-order norm exactly when its
 averages against every smooth test function converge, even if the fields themselves keep
 oscillating. They remain finite for rough and discontinuous fields. Most importantly, they
 are quantitatively close to the [Wasserstein distance](../optimal_transport/wasserstein.md),

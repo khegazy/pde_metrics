@@ -47,7 +47,7 @@ probability metric remains well behaved there. The two classes are not interchan
   meaning extreme values that occur far more often than a Gaussian distribution would
   predict. This is exactly why a Wasserstein distance is preferred for comparing
   distributions here, as in [increment_w1](../../metrics/increment_w1.md) and the
-  [Wasserstein distance between gradient distributions](../optimal_transport/gradient_pdf_w1.md).
+  [Wasserstein distance between increment distributions at every separation](../optimal_transport/gradient_pdf_w1.md).
 - The maximum mean discrepancy depends on the choice of kernel and its bandwidth, which must
   be fixed once and declared.
 - A single number for a whole field hides which physics failed. Computed on interpretable

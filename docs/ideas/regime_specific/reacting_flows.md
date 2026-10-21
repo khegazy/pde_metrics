@@ -20,9 +20,8 @@ The standard diagnostics are built on a few scalar fields.
   measures how fast the mixture fraction is being mixed at small scales. It controls
   micromixing and, where it is large, local extinction of the flame. Its distribution is
   heavy-tailed, so a prediction is compared with a reference through a distance between
-  distributions, such as the
-  [Wasserstein distance between gradient distributions](../optimal_transport/gradient_pdf_w1.md),
-  rather than through its mean.
+  distributions, such as the one-dimensional 1-Wasserstein distance that
+  [increment_w1](../../metrics/increment_w1.md) computes, rather than through its mean.
 - **Flame surface density and turbulent flame speed.** With $c$ a progress variable that runs
   from 0 in unburnt to 1 in burnt gas, the flame surface density
   $\Sigma = \langle|\nabla c|\rangle$ measures the flame area per unit volume. Together with the turbulent flame speed, the speed
