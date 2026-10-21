@@ -21,8 +21,9 @@ regime, protected from data leakage and combined.
   part of an idea, the row and page are narrowed to what remains. A theme left with no ideas
   is deleted.
 - **Owner** names whoever is working on an idea. An empty cell means nobody has started it.
-- **No measured numbers appear here.** A claim on an idea page is either a citation to
-  published work or labelled as the team's judgement.
+- **No measured numbers appear here.** A claim on an idea page is a citation to published
+  work, a derivation shown on the page, or labelled with where it came from: the team's
+  judgement, the field guide, or an addition made during conversion or review.
 
 ## Columns
 
@@ -53,7 +54,7 @@ regime, protected from data leakage and combined.
 | [Transport between signed fields](optimal_transport/signed_field_transport.md) | [Optimal transport](optimal_transport/README.md) | math | medium | high | |
 | [Sliced Wasserstein distance](optimal_transport/sliced_wasserstein.md) | [Optimal transport](optimal_transport/README.md) | implementation | low | high | |
 | [Entropic relaxation and Sinkhorn divergences](optimal_transport/sinkhorn.md) | [Optimal transport](optimal_transport/README.md) | implementation | low | medium | |
-| [Wasserstein distance between gradient distributions](optimal_transport/gradient_pdf_w1.md) | [Optimal transport](optimal_transport/README.md) | implementation | low | high | |
+| [Wasserstein distance between increment distributions at every separation](optimal_transport/gradient_pdf_w1.md) | [Optimal transport](optimal_transport/README.md) | implementation | low | high | |
 | [Shock detector](shock_geometry/shock_detector.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | high | |
 | [Distance between extracted shock sets](shock_geometry/shock_set_distance.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | high | |
 | [Overlap of shock masks](shock_geometry/shock_mask_overlap.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | medium | |
@@ -62,7 +63,7 @@ regime, protected from data leakage and combined.
 | [Negative Sobolev norms of general order](norms/negative_sobolev_hs.md) | [Norms](norms/README.md) | math | low | high | |
 | [Splitting a field into smooth and sharp parts](norms/mollification_split.md) | [Norms](norms/README.md) | math | low | high | |
 | [Maximum pointwise error](norms/maximum_error.md) | [Norms](norms/README.md) | implementation | low | unset | |
-| [Curvature statistics of level sets](curvature/isosurface_curvature.md) | [Curvature](curvature/README.md) | implementation | low | medium | |
+| [Curvature statistics of level sets](curvature/isosurface_curvature.md) | [Curvature](curvature/README.md) | implementation | medium | medium | |
 | [Discrete differential geometry on meshes](curvature/discrete_differential_geometry.md) | [Curvature](curvature/README.md) | math | medium | low | |
 | [Curvature without smooth structure](curvature/metric_geometry_curvature.md) | [Curvature](curvature/README.md) | math | medium | low | |
 | [Riemann curvature of the flow's configuration space](curvature/riemann_curvature.md) | [Curvature](curvature/README.md) | math | high | low | |
@@ -129,7 +130,7 @@ judgement.
    Off-the-shelf software exists, the stability theory is settled, and there is precedent at
    LBNL.
 2. **[Tail-index estimators](distributional/tail_index_estimators.md) and the
-   [Wasserstein distance between gradient distributions](optimal_transport/gradient_pdf_w1.md).**
+   [Wasserstein distance between increment distributions at every separation](optimal_transport/gradient_pdf_w1.md).**
    Neither has a positivity problem to solve, and both measure intermittency directly.
 3. **The [shock detector](shock_geometry/shock_detector.md) with
    [distances between shock sets](shock_geometry/shock_set_distance.md).** These close the
@@ -227,7 +228,7 @@ This section merges two documents.
 - Davis, C., Brown, B. & Bullock, R. (2006b). Object-based verification of precipitation
   forecasts. Part II: Application to convective rain systems. *Monthly Weather Review* 134(7),
   1785–1795. <https://doi.org/10.1175/MWR3146.1>
-- Davis, C. A., Brown, B. G., Bullock, R. & Halley Gotway, J. (2009). The Method for
+- Davis, C. A., Brown, B. G., Bullock, R. & Halley-Gotway, J. (2009). The Method for
   Object-Based Diagnostic Evaluation (MODE) applied to numerical forecasts from the 2005
   NSSL/SPC Spring Program. *Weather and Forecasting* 24(5), 1252–1267.
   <https://doi.org/10.1175/2009WAF2222241.1>

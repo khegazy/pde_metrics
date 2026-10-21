@@ -69,8 +69,9 @@ order of work, not the metric. It is dropped when the idea is built.
 An idea page never describes something that exists. When a metric is built, its row, its
 page and its link on the theme page are deleted in the same change, or narrowed to what
 remains, and the metric's card becomes the only record of it. An idea page carries no
-measured number: every claim on it is a citation to published work or is labelled as the
-team's judgement.
+measured number: every claim on it is a citation to published work, a derivation shown on the
+page, or labelled with where it came from (the team's judgement, the field guide the section
+was merged from, or an addition made during conversion or review).
 
 Why: a plan and a measurement must never be confused. Keeping the plan to unbuilt work, with
 no numbers, means nothing on an idea page can be mistaken for a finding about a metric in the

@@ -69,7 +69,8 @@ The plan for metrics that do not exist yet lives in **`docs/ideas/`**: what each
 would measure, its literature precedent and references, and the team's build priority.
 `docs/ideas/README.md` holds the one table of every idea. It lists only work that is not
 built: when a metric is implemented, delete its row, its page and its link on the theme page
-in the same change (`docs/recipes/add-a-metric.md`, step 7). The LaTeX tracker it was
+in the same change, or narrow them to what remains if the metric covers only part of the idea
+(`docs/recipes/add-a-metric.md`, step 7). The LaTeX tracker it was
 converted from, `Table_of_Ideas.tex`, is retired and recoverable from git history.
 
 The two-letter ID prefixes (OT-, NM-, TD-, …) are **retired**. They were invented before the
