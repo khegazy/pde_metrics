@@ -297,6 +297,9 @@ from metrics.registry import metric, pointwise_map
     reduction="mean",            # how a pointwise map reduces; see below
     target=None,                 # the value a calibrated prediction attains, if not zero
     measures="error",            # "error" | "calibration"; see below
+    requires_periodic=False,     # True if it takes an FFT, a spectral derivative or a rolled
+                                 # difference: it is then not run on a dataset with a
+                                 # non-periodic axis. Declared, and checked against the source
 )
 def h_minus_one(reference, candidate, *, ctx):
     """One-line summary; it becomes the caption fallback and the registry listing.

@@ -106,6 +106,8 @@ def _header(entry: dict) -> str:
             f"| **usable as a training loss (differentiable)** | "
             f"{'yes' if declared['differentiable'] else 'no'} |",
             f"| **cost to evaluate** | {declared['cost']} |",
+            f"| **needs a periodic domain** | "
+            f"{'yes: not run on a bounded domain' if declared['requires_periodic'] else 'no'} |",
         ]
         if entry["math"]:
             rows.append(f"| **cost as the grid grows** | `{entry['math']['complexity']}` |")

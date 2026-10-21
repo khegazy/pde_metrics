@@ -13,7 +13,7 @@ import pandas as pd
 import pytest
 
 from fmeval import io as fio
-from fmeval.data.base import TimeSelection
+from fmeval.data.base import GridSpec, TimeSelection
 from fmeval.data.kinet_raw import KinetRawTrajectory
 from fmeval.derived import RecomputingTrajectory, recompute_frame
 from fmeval.ladder import build_ladder
@@ -27,6 +27,7 @@ from fmeval.pipeline import (
     run,
 )
 from metrics import registry as metric_registry
+from tests.conftest import GRID, SyntheticTrajectory
 from tests.fixtures_h5 import SHAPE, write_kinet_raw
 
 LADDER = {
@@ -291,3 +292,27 @@ def test_the_recomputing_wrapper_recomputes_on_iteration_too(tmp_path):
                 np.testing.assert_array_equal(frame.fields[name], expected.fields[name])
     finally:
         trajectory.close()
+
+
+class _WalledTrajectory(SyntheticTrajectory):
+    """The synthetic trajectory with a Neumann wall across x: the smallest bounded dataset."""
+
+    @property
+    def grid(self) -> GridSpec:
+        return GridSpec(GRID, (1.0, 1.0), ("neumann", "periodic"), ("x", "y"), (0.0, 0.0))
+
+
+def test_a_periodic_only_metric_is_not_run_on_a_bounded_domain(caplog):
+    """It produces no rows, and the log says why; the other metrics still run."""
+    specs = [metric_registry.get(n) for n in ("mse", "spectrum_l2")]
+    with caplog.at_level("WARNING"):
+        result = run(_WalledTrajectory(), specs, build_ladder(LADDER), fields=["density"],
+                     dataset=INFO)
+    assert set(result.rows["metric"].astype(str)) == {"mse"}
+    assert "spectrum_l2 need a periodic domain" in caplog.text
+
+
+def test_a_run_with_only_periodic_metrics_on_a_bounded_domain_is_refused():
+    with pytest.raises(ValueError, match="needs a periodic domain"):
+        run(_WalledTrajectory(), [metric_registry.get("h1_seminorm")], build_ladder(LADDER),
+            fields=["density"], dataset=INFO)

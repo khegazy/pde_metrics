@@ -37,6 +37,7 @@ from ..h1_seminorm.metric import squared_gradient
                               # what is read, exactly as for enstrophy
     symmetric=False,
     units="field^2/length^2",
+    requires_periodic=True,  # h1_seminorm's spectral gradient
 )
 def palinstrophy(x: NDArray[np.floating], *, ctx: FieldContext) -> float:
     """Mean palinstrophy, one half the mean squared vorticity gradient.

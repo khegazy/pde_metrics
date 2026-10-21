@@ -73,6 +73,7 @@ def increments(x: NDArray[np.floating], axis: int) -> NDArray[np.floating]:
     # dangerous for model selection, so this is a property a reader has to be told about
     # rather than one to engineer away; issues/036 carries the argument.
     monotone_under_smoothing=False,
+    requires_periodic=True,  # one-cell increments taken with np.roll
 )
 def increment_flatness(x: NDArray[np.floating]) -> float:
     """Flatness of one-cell increments, averaged over spatial axes and channels.

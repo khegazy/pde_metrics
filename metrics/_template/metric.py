@@ -25,6 +25,7 @@ from metrics.registry import metric
     higher_is_better=False,
     symmetric=True,          # enables an automatic symmetry check
     units="field",           # e.g. "field", "field^2", "dimensionless"
+    requires_periodic=False,  # True if it takes an FFT, a spectral derivative or np.roll
 )
 def template_metric(
     reference: NDArray[np.floating],

@@ -36,6 +36,7 @@ from metrics.registry import REDUCTIONS, metric, pointwise_map
     symmetric=True,
     units="field/length",
     reduction="sqrt_mean",
+    requires_periodic=True,  # a spectral derivative
 )
 def h1_seminorm(
     reference: NDArray[np.floating],

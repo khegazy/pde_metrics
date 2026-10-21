@@ -7,6 +7,10 @@ a synthetic ladder is caught in 50 ms rather than after a ten-minute run.
 
 from __future__ import annotations
 
+import re
+import sys
+from pathlib import Path
+
 import numpy as np
 import pytest
 from scipy.ndimage import gaussian_filter
@@ -463,3 +467,29 @@ def test_an_ensemble_metric_rises_with_bias(name: str):
     values = [_call(spec, reference, ensemble + b) for b in (0.0, 0.25, 0.5, 1.0, 2.0)]
     assert values == sorted(values), values
     assert values[-1] > values[0], values
+
+
+#: What in a metric's source makes it assume every axis wraps.
+_WRAPS = re.compile(r"np\.fft|numpy\.fft|scipy\.fft|np\.roll|fmeval\.wavenumbers|kinet_spectral")
+#: Another bundle's module imported by this one, e.g. ``from ..h1_seminorm.metric import``.
+_BUNDLE_IMPORT = re.compile(r"from (?:\.\.|metrics\.)(\w+)\.metric import")
+
+
+def test_a_metric_that_wraps_declares_requires_periodic(spec):
+    """``requires_periodic`` is declared, so it is checked against the source.
+
+    A metric whose module takes a Fourier transform, a spectral derivative or a rolled
+    difference -- or imports a bundle that is itself periodic-only -- reads a domain edge as a
+    jump, and must declare it so the pipeline does not run it on a bounded dataset. A hand-made
+    wrap written some other way escapes this check; the declaration then rests on review.
+    """
+    source = Path(sys.modules[spec.module].__file__).read_text()
+    inherited = [b for b in _BUNDLE_IMPORT.findall(source)
+                 if b in registry.REGISTRY and registry.REGISTRY[b].requires_periodic]
+    if _WRAPS.search(source) or inherited:
+        assert spec.requires_periodic, (
+            f"{spec.name} uses {_WRAPS.search(source).group(0) if _WRAPS.search(source) else ''}"
+            f"{' and ' if _WRAPS.search(source) and inherited else ''}"
+            f"{'periodic-only ' + ', '.join(inherited) if inherited else ''}, so it assumes a "
+            "periodic domain; declare requires_periodic=True in its @metric decorator"
+        )
