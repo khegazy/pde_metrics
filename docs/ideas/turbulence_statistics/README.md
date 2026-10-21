@@ -20,7 +20,7 @@ kinetic energy ([kinetic_energy](../../metrics/kinetic_energy.md)).
 
 ## Ideas in this theme
 
-- [Four-fifths law and the third-order structure function](four_fifths_law.md): the one
+- [Four-fifths law and the third-order structure function](four_fifths_law.md): an
   exact law of the inertial range, scored against a reference or against the prediction's
   own dissipation, with the scale-by-scale energy budget it comes from.
 - [Structure functions and scaling exponents](structure_functions.md): moments of velocity

@@ -21,8 +21,9 @@ $$
 for separations in the inertial range, meaning much smaller than the energy-containing scale
 and much larger than the scale at which viscosity acts (Frisch 1995, Eq. (6.5)). Here
 $\varepsilon$ is the mean rate of energy dissipation per unit mass. The law has no adjustable
-constant, and it is the one exact result of inertial-range theory (Frisch 1995, Chapter 6).
-Its negative sign records that energy flows on average from large scales to small ones.
+constant, and it is one of the very few exact results of inertial-range theory (Frisch 1995,
+Chapter 6). Its negative sign records that energy flows on average from large scales to small
+ones.
 
 **Why a Gaussian field fails it.** An increment of a zero-mean Gaussian field is a linear
 combination of Gaussian variables, so it is itself zero-mean and Gaussian. By the
@@ -106,9 +107,9 @@ Gallucci 2024).
 
 ## Rationale
 
-*From the field guide; the team has not yet set a priority.* The four-fifths law is the
-only parameter-free exact law of the inertial range, and it fixes both the amplitude and the
-slope of $S_3$. A Gaussian field with the correct spectrum fails it, and so does a constant,
+*From the field guide; the team has not yet set a priority.* The four-fifths law is one of
+the very few parameter-free exact laws of the inertial range, and it fixes both the amplitude
+and the slope of $S_3$. A Gaussian field with the correct spectrum fails it, and so does a constant,
 laminar or over-dissipated field. Those degenerate fields can pass every
 [admissibility check](../physics_invariants/admissibility_checks.md), which tests only for
 non-physical states, so the law constrains exactly what the admissibility checks leave open.

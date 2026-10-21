@@ -16,7 +16,7 @@ $$
 H = \int \mathbf{u} \cdot \boldsymbol{\omega} \, d\mathbf{x} \tag{1}
 $$
 
-is conserved by inviscid flow and measures the linkage and knottedness of vortex lines
+is conserved by inviscid barotropic flow and measures the linkage and knottedness of vortex lines
 (Moffatt 1969; reviewed by Moffatt and Tsinober 1992). Its local form is the relative
 helicity density $h_r = \mathbf{u} \cdot \boldsymbol{\omega} / (|\mathbf{u}|
 |\boldsymbol{\omega}|) \in [-1, 1]$, the cosine of the angle between velocity and vorticity,
@@ -71,9 +71,13 @@ tests whether the prediction couples its scales in the same direction.
 
 - Helicity is identically zero in planar two-dimensional flow, where velocity and vorticity
   are perpendicular.
-- Helicity is conserved only for suitable boundary conditions, such as a periodic domain or
-  vorticity with no component normal to the boundary (Moffatt 1969), so its drift along a
-  rollout is meaningful only under those conditions.
+- Moffatt (1969) establishes the invariance of helicity for a localised vorticity
+  distribution in barotropic inviscid flow under conservative body forces, where the
+  pressure is a function of the density alone. Shocked or variable-density flow, in which
+  density and pressure gradients are misaligned, is not barotropic, and its helicity can
+  change without any error in the prediction. The invariance also needs boundaries that
+  vorticity does not cross, which a periodic domain satisfies. Drift along a rollout is
+  meaningful only under these conditions.
 - Regimes of mixed dimensionality, such as rotating or stratified turbulence, need care in
   deciding which invariants and which cascade directions apply.
 - Mutual information and transfer entropy require estimating probability densities from

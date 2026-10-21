@@ -45,9 +45,10 @@ d\mathbf{x}
 $$
 
 where $\mathbf{k}$ is a wavevector and $\tilde u_{\mathbf{k}}$ is the Fourier coefficient
-of $u$ at that wavevector. Each mode contributes its own squared error, and the error a
-mode can carry is bounded by its own energy. A prediction that sets every mode above some
-cutoff $k_c$ to zero therefore pays exactly the reference energy above $k_c$. In an
+of $u$ at that wavevector. Each mode contributes its own squared error, and setting a mode
+to zero costs exactly that mode's energy, $\lvert \tilde u_{\mathbf{k}} \rvert^2$. A prediction
+that sets every mode above some cutoff $k_c$ to zero therefore pays exactly the reference
+energy above $k_c$. In an
 inertial range, where the energy spectrum falls as $E(k)\propto k^{-5/3}$ (Kolmogorov's
 scaling), that energy is $\int_{k_c}^{\infty} E(k)\,dk \propto k_c^{-2/3}$, which is a
 small fraction of the total once $k_c$ is well inside the inertial range. The penalty for
@@ -110,7 +111,7 @@ Two consequences follow. Rollout horizons are better reported in Lyapunov times,
 time at which a normalised error first crosses a threshold, the
 [valid prediction time](dynamics/valid_prediction_time.md), becomes a metric in its own
 right; reservoir computers predicted Kuramoto–Sivashinsky dynamics for roughly eight
-Lyapunov times by this measure (Pathak et al. 2018). After the horizon, the meaningful
+Lyapunov times (Pathak et al. 2018). After the horizon, the meaningful
 comparisons are between long-time statistics: Lyapunov exponents, attractor dimension, and
 the [invariant measure](dynamics/invariant_measure.md) through long-time distributions and
 spectra (Boffetta et al. 2002). Kochkov et al. (2021) compare energy spectra in exactly
@@ -180,9 +181,9 @@ quantities separates the two.
 - **The mean vortex stretching vanishes.** The mean enstrophy production
   $\langle \omega_i S_{ij}\omega_j\rangle$, where $\boldsymbol\omega$ is the vorticity and
   $S_{ij}$ the strain-rate tensor, is a third-order moment of the velocity gradients and is
-  zero on average for a Gaussian field. In three-dimensional turbulence it is strictly
-  positive, because vorticity aligns preferentially with stretching directions of the strain
-  (Buaria et al. 2020). See [vortex stretching](turbulence_statistics/vortex_stretching.md).
+  zero on average for a Gaussian field. In three-dimensional turbulence it is positive, with
+  the dominant contribution to producing large enstrophy coming from the most extensive
+  direction of the strain (Buaria et al. 2020). See [vortex stretching](turbulence_statistics/vortex_stretching.md).
 - **The bispectrum vanishes.** A Gaussian field has independent, uniformly distributed
   Fourier phases, so every statistic of phase coupling between triads is zero (Burkhart et
   al. 2009). See [bispectrum and bicoherence](basis_decompositions/bispectrum.md).
@@ -298,7 +299,7 @@ on cases where a reference does exist.
   <https://doi.org/10.1016/S0370-1573(01)00025-4>
 - Brandstetter, J., Worrall, D. & Welling, M. (2022). Message passing neural PDE solvers.
   *ICLR*. <https://arxiv.org/abs/2202.03376>
-- Buaria, D., Pumir, A. & Bodenschatz, E. (2020). Vortex stretching and enstrophy production
+- Buaria, D., Bodenschatz, E. & Pumir, A. (2020). Vortex stretching and enstrophy production
   in high Reynolds number turbulence. *Physical Review Fluids* 5, 104602.
   <https://arxiv.org/abs/2006.01312>
 - Burkhart, B., Falceta-Gonçalves, D., Kowal, G. & Lazarian, A. (2009). Density studies of

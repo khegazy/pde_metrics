@@ -18,9 +18,12 @@ $$
 P_\omega = \bigl\langle \omega_i S_{ij} \omega_j \bigr\rangle . \tag{1}
 $$
 
-In three-dimensional turbulence $P_\omega$ is strictly positive, because vorticity aligns
-preferentially with the stretching directions of the strain (Buaria, Pumir and Bodenschatz
-2020). For a Gaussian field it is zero in expectation, since it is a third moment of the
+In three-dimensional turbulence $P_\omega$ is positive: on average vortex lines are stretched
+rather than compressed. The alignment behind this is not the simple one. Vorticity aligns
+preferentially with the *intermediate* eigenvector of the strain-rate tensor, and in intense
+vorticity it tends to be weakly orthogonal to the most extensive one; yet the dominant
+contribution to producing large enstrophy still comes from the most extensive eigendirection
+(Buaria, Bodenschatz and Pumir 2020). For a Gaussian field it is zero in expectation, since it is a third moment of the
 velocity gradient. The idea's first part is a sign test on the prediction: $P_\omega > 0$,
 with no reference needed, and where a reference exists a comparison of the two values.
 
@@ -68,6 +71,6 @@ budget, palinstrophy.
 
 ## References
 
-- Buaria, D., Pumir, A. & Bodenschatz, E. (2020). Vortex stretching and enstrophy production
+- Buaria, D., Bodenschatz, E. & Pumir, A. (2020). Vortex stretching and enstrophy production
   in high Reynolds number turbulence. *Physical Review Fluids* 5, 104602.
   <https://arxiv.org/abs/2006.01312>

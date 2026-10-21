@@ -46,18 +46,22 @@ The idea has three forms.
    a flux at every point rather than one number per wavenumber. The distributions of that
    local flux in the prediction and the reference can then be compared with the 1-Wasserstein
    distance, as on
-   [Wasserstein distance between gradient distributions](../optimal_transport/gradient_pdf_w1.md).
+   [Wasserstein distance between increment distributions at every separation](../optimal_transport/gradient_pdf_w1.md).
 
 **Compressible and variable-density flow.** When density varies, the pressure does work and
 kinetic energy can be exchanged with internal energy, so Equation (1) is incomplete. The
-coarse-graining approach of Aluie splits the transfer across scale $\ell$ into three terms:
-the deformation work $\Pi_\ell$, done by the large-scale strain on the small-scale stress; the
+coarse-graining approach of Aluie writes the budget of the kinetic energy at scales larger
+than $\ell$ with three exchange terms. Two of them move energy across scale $\ell$: the
+deformation work $\Pi_\ell$, done by the large-scale strain on the small-scale stress, and the
 baropycnal work $\Lambda_\ell$, which couples large-scale pressure gradients with small-scale
-mass flux; and the pressure dilatation $PD_\ell$, which exchanges kinetic and internal energy
-(Aluie 2011; Aluie 2013). Aluie, Li and Li (2012) show in simulations that the kinetic-energy
-cascade defined this way is conservative across the inertial range, which is what allows a
-flux-constancy check to be carried over to compressible turbulence. Comparing the three terms
-separately shows whether a prediction moves energy by the right mechanism.
+mass flux. The third, the large-scale pressure dilatation $PD_\ell$, does not move energy
+between scales; it converts kinetic into internal energy (Aluie 2011; Aluie 2013). In
+subsonic and transonic simulations, Aluie, Li and Li (2012) find that mean pressure
+dilatation acts mainly at large scales, so that beyond a transitional range of scales the
+kinetic-energy cascade is conservative. That is what allows a flux-constancy check to be
+carried over to compressible turbulence; their simulations do not establish it for the
+supersonic, shocklet-populated regime. Comparing the three terms separately shows whether a
+prediction moves energy by the right mechanism.
 
 **Learned closures.** For a surrogate that predicts a filtered field with a learned
 subgrid closure, the Germano identity gives an exact consistency condition. If $\tau_{ij}$ is

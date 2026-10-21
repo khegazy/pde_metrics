@@ -30,7 +30,7 @@ putting too much energy into compression or too little, and only the split spect
 The dilatational energy is also one of the quantities amplified across a shock, compared on
 [shock–turbulence interaction statistics](../shock_geometry/shock_turbulence_interaction.md),
 and pressure dilatation, which exchanges kinetic and internal energy and involves only the
-dilatational part because $\nabla \cdot \mathbf{u}_{\text{sol}} = 0$, is one of the transfer
+dilatational part because $\nabla \cdot \mathbf{u}_{\text{sol}} = 0$, is one of the exchange
 terms on [spectral energy flux](../turbulence_statistics/spectral_energy_flux.md).
 
 ## Precedent
