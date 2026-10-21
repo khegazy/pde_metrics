@@ -4,6 +4,15 @@
     The idea on this page is not built yet. Its gap, cost, priority and owner are in the
     [table of all ideas](../README.md).
 
+!!! warning "Unresolved: settle this before implementing"
+    The two sources this page draws on disagree about what an over-smeared shock does. The
+    team's tracker says it produces too *little* entropy; the field guide says it shows
+    *excessive* dissipation. Both statements appear below, and they cannot both describe the
+    same error. Whoever implements this metric must look at this carefully and determine which
+    is correct, from the entropy-stability references below and a direct check on a smeared
+    shock, before the excess-dissipation score and the sign convention of the signed mismatch
+    are fixed. Then correct this page, or state the answer in the metric's card.
+
 ## What it is
 
 Entropy production is the rate at which entropy is generated locally in the flow. In a
