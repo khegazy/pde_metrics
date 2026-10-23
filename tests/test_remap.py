@@ -9,13 +9,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from fmeval.data.analytic import TaylorGreen2D
 from fmeval.data.base import Frame, GridSpec
-from fmeval.derived import (
-    CS2,
-    pressure_from_density,
-    recompute_frame,
-    vorticity_from_velocity,
-)
+from fmeval.derived import recompute_frame, vorticity_from_velocity
 from fmeval.external.kinet_spectral import spectral_vorticity
 from fmeval.remap import block_average, coarsen_factor, remap_frame, subsample
 from tests.conftest import synthetic_field, unit_grid
@@ -92,15 +88,14 @@ def test_coarsen_factor():
 
 
 def test_taylor_green_vorticity_is_analytic():
-    """kinet's own acceptance test, ported: omega = 2 sin x sin y."""
-    n, length = 64, 2 * np.pi
-    dx = length / n
-    x = np.arange(n) * dx
-    xx, yy = np.meshgrid(x, x, indexing="ij")  # axis 0 == x, axis 1 == y
-    u = np.stack([np.sin(xx) * np.cos(yy), -np.cos(xx) * np.sin(yy)])
-    omega = vorticity_from_velocity(u, unit_grid((n, n), dx))
-    assert omega.shape == (1, n, n), "2D vorticity must be lifted to a channel axis"
-    assert np.abs(omega[0] - 2 * np.sin(xx) * np.sin(yy)).max() < 1e-12
+    """kinet's own acceptance test, on the Taylor-Green dataset: the curl of its velocity is its
+    closed-form vorticity, 2 sin x sin y e^(-2 nu t). A non-square grid with unequal spacing, at
+    a time after the start, so a swapped axis or a dropped decay factor fails."""
+    tg = TaylorGreen2D(grid=(64, 48), n_frames=3)
+    frame = tg.frame(2, ["velocity", "vorticity"])
+    omega = vorticity_from_velocity(frame["velocity"], frame.grid)
+    assert omega.shape == (1, 64, 48), "2D vorticity must be lifted to a channel axis"
+    assert np.abs(omega - frame["vorticity"]).max() < 1e-12
 
 
 def test_vorticity_spacing_scales_the_result_by_exactly_the_factor():
@@ -120,15 +115,9 @@ def test_vorticity_rejects_a_mismatched_grid():
 
 def test_vorticity_rejects_a_nonperiodic_grid():
     u = synthetic_field((16, 8), 2, seed=0)
-    g = GridSpec((16, 8), (1.0, 1.0), (True, False), ("x", "y"), (0.0, 0.0))
+    g = GridSpec((16, 8), (1.0, 1.0), ("periodic", "neumann"), ("x", "y"), (0.0, 0.0))
     with pytest.raises(ValueError, match="periodic"):
         vorticity_from_velocity(u, g)
-
-
-def test_pressure_equation_of_state():
-    rho = 1.0 + 1e-3 * synthetic_field((16, 8), 1, seed=0)
-    assert np.array_equal(pressure_from_density(rho), rho * CS2)
-    assert CS2 == pytest.approx(1 / 3)
 
 
 # --- the primitive / derived split ---------------------------------------------------
@@ -139,6 +128,7 @@ def _frame(shape=(32, 32), spacing=1.0):
     fields = {
         "density": 1.0 + 1e-3 * synthetic_field(shape, 1, seed=1),
         "velocity": 0.04 * synthetic_field(shape, 2, seed=2),
+        "pressure": 0.3 + 1e-3 * synthetic_field(shape, 1, seed=3),
     }
     fields["vorticity"] = vorticity_from_velocity(fields["velocity"], grid)
     return Frame(index=0, time=0.0, fields=fields, grid=grid)
@@ -175,6 +165,8 @@ def test_remap_averages_primitives():
     remapped = remap_frame(frame, 2)
     assert np.array_equal(remapped["density"], block_average(frame["density"], 2))
     assert np.array_equal(remapped["velocity"], block_average(frame["velocity"], 2))
+    # Pressure is stored, never computed: it is averaged like any other primitive.
+    assert np.array_equal(remapped["pressure"], block_average(frame["pressure"], 2))
 
 
 def test_remap_factor_one_is_identity():

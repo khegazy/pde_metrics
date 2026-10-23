@@ -102,6 +102,10 @@ class MetricSpec(Accepts):
     calibration metric is right to score it badly. The contract tests use this to decide
     which generic assumptions apply.
     """
+    requires_periodic: bool = False
+    """Whether the metric assumes every axis wraps -- a Fourier transform, a spectral
+    derivative, a wrap-around increment. Such a metric is not run on a dataset with a
+    non-periodic axis (:func:`fmeval.pipeline.run`)."""
 
     @property
     def has_pointwise_map(self) -> bool:
@@ -119,6 +123,7 @@ class MetricSpec(Accepts):
             "symmetric": self.symmetric, "higher_is_better": self.higher_is_better,
             "target": self.target, "measures": self.measures, "reduction": self.reduction,
             "has_pointwise_map": self.has_pointwise_map,
+            "requires_periodic": self.requires_periodic,
         }
 
 
@@ -152,6 +157,7 @@ def metric(
     reduction: str = "mean",
     target: float | None = None,
     measures: Measures = "error",
+    requires_periodic: bool = False,
 ) -> Callable[[Callable], Callable]:
     """Register a metric function under ``name`` (defaults to the function name).
 
@@ -185,6 +191,10 @@ def metric(
             approaches the reference, ``"calibration"`` if it judges the honesty of an
             ensemble's dispersion instead, where a collapsed ensemble is the worst case
             rather than the best.
+        requires_periodic: Whether the metric assumes every spatial axis wraps: it takes a
+            Fourier transform, a spectral derivative or a wrap-around difference. Declared,
+            never inferred, and checked against the source by a contract test. Such a metric
+            is not run on a dataset with a non-periodic axis.
 
     Returns:
         The undecorated function, so it stays a plain callable.
@@ -241,6 +251,7 @@ def metric(
             reduction=reduction,
             target=None if target is None else float(target),
             measures=measures,
+            requires_periodic=requires_periodic,
         )
         return fn
 

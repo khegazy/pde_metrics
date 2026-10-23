@@ -1359,7 +1359,8 @@ def test_committed_figures_fit_the_size_budget():
     which Git LFS is the answer. Fails naming the three largest files."""
     files = [p for b in BUNDLES for p in (b.path / "_generated").iterdir()
              if p.is_file() and p.name != ".gitkeep"]
-    files += [p for p in (REPO / "docs" / "figures").rglob("*") if p.is_file()]
+    files += [p for d in ("figures", "datasets/_generated")
+              for p in (REPO / "docs" / d).rglob("*") if p.is_file()]
     total = sum(p.stat().st_size for p in files)
     largest = sorted(files, key=lambda p: p.stat().st_size, reverse=True)[:3]
     assert total < 25_000_000, (
@@ -1477,6 +1478,16 @@ def test_every_panel_row_shares_one_set_of_limits(tmp_path):
     assert high == 10.0 and low == -10.0, (
         "difference limits must span the strongest severity, not each panel's own range"
     )
+
+
+def test_a_field_row_takes_its_limits_from_the_original_unless_told_otherwise():
+    """A degradation panel judges every column on the original's scale (rule 1); a time series,
+    whose first frame need not span the later ones, asks for limits from every column."""
+    first, later = np.zeros((4, 4)), np.zeros((4, 4))
+    first[0, 0], later[0, 0] = 1.0, 5.0
+    columns = [Column("t = 0", first), Column("t = 1", later)]
+    assert _row_limits("field", columns, first) == (0.0, 1.0)
+    assert _row_limits("field", columns, first, from_every_column=True) == (0.0, 5.0)
 
 
 @pytest.mark.parametrize("bundle", BUNDLES, ids=IDS)

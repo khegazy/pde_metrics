@@ -106,6 +106,8 @@ def _header(entry: dict) -> str:
             f"| **usable as a training loss (differentiable)** | "
             f"{'yes' if declared['differentiable'] else 'no'} |",
             f"| **cost to evaluate** | {declared['cost']} |",
+            f"| **needs a periodic domain** | "
+            f"{'yes: not run on a bounded domain' if declared['requires_periodic'] else 'no'} |",
         ]
         if entry["math"]:
             rows.append(f"| **cost as the grid grows** | `{entry['math']['complexity']}` |")
@@ -316,6 +318,9 @@ def _write_nav(metrics: list, degradations: list) -> None:
         print("- [Choosing a metric](choosing-a-metric.md)", file=f)
         print("- [Working in the repository](working-with-the-repo.md)", file=f)
         print("- [Catalogue](catalogue.md)", file=f)
+        # One hand-written page per physical problem under docs/datasets/; literate-nav builds
+        # the sub-tree from the directory, as for the ideas.
+        print("- [Datasets](datasets/)", file=f)
         print("- [Sensitivity at a glance](sensitivity.md)", file=f)
         print("- Metrics", file=f)
         for category in CATEGORIES:

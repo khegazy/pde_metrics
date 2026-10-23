@@ -36,7 +36,7 @@ from fmeval.config import (
     compose_config,
     load_cards_config,
 )
-from fmeval.data import kinet_raw, synthetic_ensemble, well  # noqa: F401  (register the formats)
+from fmeval.data import readers  # noqa: F401  (registers every format)
 from fmeval.data.base import READERS, TimeSelection
 from fmeval.io import read_config, read_run_meta
 from fmeval.ladder import DegradationConfig
@@ -474,23 +474,23 @@ def test_every_evidence_dataset_is_a_real_config():
 
 
 def test_a_generated_dataset_declares_itself_non_physical():
-    """Any generated dataset admitted as evidence must rank below every physical one.
+    """Every generated dataset must rank below every physical one.
 
-    `synthetic_ensemble` is allowed as card evidence because it validates estimators
-    against closed-form answers, which is a claim about arithmetic rather than about a
-    flow. That is only safe while the dataset says so about itself: a negative complexity
-    rank is what keeps it from being read, or plotted, as if it sat on the physical
-    ladder. A generated dataset that ranked alongside the real ones could have its
-    numbers quoted as evidence about turbulence.
+    A generated dataset -- the synthetic ensemble, a closed-form solution -- validates code
+    against an answer known in advance, which is a claim about arithmetic rather than about a
+    flow. `synthetic_ensemble` is even allowed as card evidence on that basis. That is only
+    safe while the dataset says so about itself: a negative complexity rank is what keeps it
+    from being read, or plotted, as if it sat on the physical ladder. A generated dataset that
+    ranked alongside the real ones could have its numbers quoted as evidence about a flow.
     """
     cfg = load_cards_config()
-    for name in cfg.evidence_datasets:
+    for name in _options("dataset"):
         dataset = compose_config(f"dataset={name}").dataset
-        if dataset.format != "synthetic_ensemble":
+        if READERS[dataset.format].reads_from_disk:
             continue
         assert int(dataset.complexity.rank) < 0, (
-            f"{name} is generated and cited as evidence, so its complexity rank must be "
-            "negative to keep it off the physical ladder"
+            f"{name} is generated, so its complexity rank must be negative to keep it off "
+            "the physical ladder"
         )
     assert int(cfg.exemplar_frame.index) >= int(cfg.evidence_window.start), (
         "the exemplar frame must lie inside the developed-flow window"

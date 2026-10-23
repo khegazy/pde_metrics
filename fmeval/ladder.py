@@ -353,18 +353,28 @@ def _call(spec: DegradationSpec, severity_level: SeverityLevel, source: np.ndarr
           label: str) -> np.ndarray:
     """Call a per-field operator once with its options and context, as float64.
 
+    Every operator wraps at the edge of the array -- FFTs, rolls, ``mode="wrap"`` kernels -- so
+    on a grid with a non-periodic axis it is run on the field extended across that axis by the
+    axis's boundary rule (:meth:`GridSpec.extend`), with a context on the extended grid, and the
+    result is cropped back. A periodic grid is passed through untouched. This is what makes
+    each degradation honour the dataset's own boundaries without any operator knowing about
+    them.
+
     Raises:
         ValueError: If the operator changed the array's shape.
     """
+    grid = frame.grid
+    work = grid.extend(source)
     kwargs = dict(severity_level.options)
     if spec.takes_ctx:
-        kwargs["ctx"] = _context(frame, name, rms, seed=seed, label=label)
-    result = np.asarray(spec.fn(source, severity, **kwargs), dtype=np.float64)
-    if result.shape != source.shape:
+        kwargs["ctx"] = replace(_context(frame, name, rms, seed=seed, label=label),
+                                grid=grid.extended)
+    result = np.asarray(spec.fn(work, severity, **kwargs), dtype=np.float64)
+    if result.shape != work.shape:
         raise ValueError(
-            f"{severity_level.op} changed the shape of {name}: {source.shape} -> {result.shape}"
+            f"{severity_level.op} changed the shape of {name}: {work.shape} -> {result.shape}"
         )
-    return result
+    return result[(..., *(slice(0, n) for n in grid.shape))]
 
 
 def _rms_for(name: str, field: np.ndarray, reference_rms: Mapping[str, float] | None) -> float:
@@ -417,9 +427,16 @@ def _apply_whole_frame(
     Raises:
         TypeError: If the operator does not return a mapping.
         KeyError: If it drops a requested field.
-        ValueError: If a calibrated severity resolves differently per field, or the operator
-            changes a field's shape.
+        ValueError: If a calibrated severity resolves differently per field, the operator
+            changes a field's shape, or the grid has a non-periodic axis: per-field
+            operators are extended across it in :func:`_call`, and no whole-frame operator
+            exists yet to decide how a mapping of fields should be.
     """
+    if not frame.grid.is_periodic:
+        raise ValueError(
+            f"{severity_level.op!r} is a whole-frame operator and the grid's boundaries are "
+            f"{frame.grid.boundary}; whole-frame operators are not boundary-aware yet"
+        )
     for name in fields:
         resolved[name] = resolve_severity(severity_level, name, calibration)
     if len(set(resolved.values())) > 1:

@@ -77,7 +77,7 @@ SECTIONS: tuple[Section, ...] = (
             "Fields constructed to be misleading: the spectrum-matched Gaussian field, "
             "which preserves the energy spectrum exactly while destroying all phase "
             "information, and the positionally unrelated field, which preserves every "
-            "statistic while destroying alignment."),
+            "statistic while destroying alignment; both exactly only on a periodic domain."),
     Section(9, "displacement", "Displacement",
             "The central pathology this project exists to address: a feature that is "
             "correct in shape and amplitude but slightly displaced."),

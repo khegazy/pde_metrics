@@ -28,44 +28,15 @@ from omegaconf import DictConfig
 from fmeval import CONFIGS
 from fmeval import io as fio
 from fmeval.config import Config, build_job
-from fmeval.data import (  # noqa: F401  (register the formats)
-    kinet_raw,
-    synthetic_ensemble,
-    well,
-)
 from fmeval.data.base import READERS, Trajectory
-from fmeval.data.locate import resolve_dataset_path, trajectory_provenance
+from fmeval.data.locate import trajectory_provenance
+from fmeval.data.readers import open_trajectory
 from fmeval.derived import RecomputingTrajectory
 from fmeval.ladder import build_ladder, ladder_axes
 from fmeval.pipeline import DatasetInfo, parse_map_key, run
 from metrics import registry as metric_registry
 
 log = logging.getLogger(__name__)
-
-
-def open_trajectory(job: Config) -> Trajectory:
-    """Construct the reader named by ``dataset.format``.
-
-    Explicit imports (at the top of this file) rather than a package walk: readers are a small
-    closed set maintained with the harness, unlike metrics and degradations which are open
-    contributor sets.
-    """
-    fmt = job.dataset.format
-    if fmt not in READERS:
-        raise KeyError(f"unknown dataset format {fmt!r}; available: {sorted(READERS)}")
-
-    if not READERS[fmt].reads_from_disk:
-        return READERS[fmt](Path(job.dataset.path), **job.dataset.reader)
-
-    location = resolve_dataset_path(
-        job.dataset.path, job.paths.data, data_url=job.paths.data_url
-    )
-    if location.source == "url":
-        log.info(
-            "dataset %s is not on this filesystem; reading the published copy at %s",
-            job.dataset.name, location.url,
-        )
-    return READERS[fmt](location.target, **job.dataset.reader)
 
 
 def select_fields(job: Config, trajectory: Trajectory,
@@ -128,7 +99,7 @@ def main(cfg: DictConfig) -> None:
         log.warning("analysis.anchor=%r is an ordinal axis: D = 1 would be the median over all "
                     "its levels. Anchor on an entry whose operator is ordinal=False.", anchor)
 
-    trajectory = open_trajectory(job)
+    trajectory = open_trajectory(job.dataset, job.paths)
     # Every reader option the run used, defaults included. The recorded config states only what
     # a file or an override changed, and a reader's defaults belong to its code, which can move.
     reader = inspect.signature(READERS[job.dataset.format]).bind_partial(**job.dataset.reader)
@@ -199,6 +170,7 @@ def main(cfg: DictConfig) -> None:
             n_frames=result.n_frames,
             trajectory_frames=trajectory_frames,
             reader_options={k: v for k, v in reader.arguments.items() if k != "path"},
+            boundary=list(trajectory.grid.boundary),
             n_rows=len(rows),
             fields=fields,
             analysis_grid=result.analysis_grid,
@@ -214,18 +186,29 @@ def main(cfg: DictConfig) -> None:
 
     timings = {"total_s": elapsed, "io_s": result.io_seconds,
                "degrade_s": result.degrade_seconds, "metric_s": result.metric_seconds}
+    # A metric the pipeline did not run on this dataset -- an ensemble metric on one
+    # realization, a periodic-only metric on a bounded domain -- has no rows, and a folder
+    # without rows is not a run: its report would fail. The pipeline logged why. A run in which
+    # no metric produced a row wrote nothing, so it fails rather than exiting as a success.
+    ran = [spec.name for spec in specs if (result.rows["metric"] == spec.name).any()]
+    if not ran:
+        raise ValueError(
+            f"no metric produced a row on dataset {job.dataset.name!r} "
+            f"({', '.join(spec.name for spec in specs)}), so no run folder was written; "
+            "the log above says why"
+        )
     written = [
-        write_folder(spec.name, result.rows[result.rows["metric"] == spec.name],
-                     {k: v for k, v in result.maps.items() if parse_map_key(k)[0] == spec.name},
-                     metric=spec.name, timings=timings)
-        for spec in specs
+        write_folder(name, result.rows[result.rows["metric"] == name],
+                     {k: v for k, v in result.maps.items() if parse_map_key(k)[0] == name},
+                     metric=name, timings=timings)
+        for name in ran
     ]
     # Cross-metric figures -- redundancy, the selectivity comparison, the cost frontier --
     # are meaningless inside a single-metric folder and are skipped there by their own
     # preconditions. They live in one comparison folder holding every metric's rows.
-    if len(specs) > 1:
+    if len(ran) > 1:
         written.append(write_folder("comparison", result.rows, result.maps,
-                                    metric=", ".join(s.name for s in specs), comparison=True))
+                                    metric=", ".join(ran), comparison=True))
 
     for path in written:
         log.info("wrote %s", path)

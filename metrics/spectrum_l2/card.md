@@ -67,6 +67,9 @@ shells depend only on the grid's shape and not on its spacing, so unlike
 [h_minus_one](../../metrics/h_minus_one/card.md) this metric reads no length from the analysis grid and
 its value is unchanged by a rescaling of the cell size.
 
+It therefore declares `requires_periodic`, and the harness does not run it on a dataset with a
+non-periodic axis, such as the Sod shock tube; it reports why in the run log.
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1790639359`, do not edit -->

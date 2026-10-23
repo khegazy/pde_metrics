@@ -135,7 +135,9 @@ Where the shared code already lives, so the search has somewhere to start:
 | Run-folder layout, readers and YAML (`RunFolder`, `read_results`, `read_run_meta`, `read_config`, `read_yaml`, `dump_yaml`) | `fmeval/io.py` |
 | Error-map keys (`map_key`, `parse_map_key`) | `fmeval/pipeline.py` |
 | Opening an HDF5 file locally or over HTTP, and what the HDF5 readers share | `fmeval/data/hdf5.py`, `fmeval/data/remote.py` |
-| The field vocabulary and which fields readers exclude | `fmeval/data/base.py` |
+| The field vocabulary, which fields readers exclude, and the boundary types (`BOUNDARIES`, `GridSpec.extend`) | `fmeval/data/base.py` |
+| Registering every reader and opening a dataset from its config (`open_trajectory`) | `fmeval/data/readers.py` |
+| Datasets computed from a closed form (`ClosedFormTrajectory`) | `fmeval/data/analytic.py` |
 | Discovery, lookup and listing shared by both plugin registries | `metrics/_registry_core.py` |
 | Degradation kernels, filters (`butterworth`), grid expansion, ensemble scaling | `degradations/_shared/` |
 | Ensemble input validation for metrics | `metrics/_ensemble.py` |
@@ -297,6 +299,9 @@ from metrics.registry import metric, pointwise_map
     reduction="mean",            # how a pointwise map reduces; see below
     target=None,                 # the value a calibrated prediction attains, if not zero
     measures="error",            # "error" | "calibration"; see below
+    requires_periodic=False,     # True if it takes an FFT, a spectral derivative or a rolled
+                                 # difference: it is then not run on a dataset with a
+                                 # non-periodic axis. Declared, and checked against the source
 )
 def h_minus_one(reference, candidate, *, ctx):
     """One-line summary; it becomes the caption fallback and the registry listing.
@@ -575,10 +580,17 @@ class MyTrajectory(Trajectory):
         """Return {name: (C, *spatial)}. `t` is an int index, never a slice."""
 ```
 
-Then add the module to the import line in `evaluate.py::open_trajectory`, and write a dataset
+Then add the module to the import line in `fmeval/data/readers.py`, and write a dataset
 config under `configs/dataset/` stating `name`, `format`, `trajectory` and only what differs from
 the schema in `fmeval/config.py` or from a fragment it inherits; `pytest tests/test_configs.py`
 names any default it restates.
+
+Every reader declares the boundary of each axis (`GridSpec.boundary`, from `BOUNDARIES`). On a
+non-periodic axis the degradations act on the field extended by that boundary's rule, and a
+metric declaring `requires_periodic` is not run. A dataset computed from a closed form
+subclasses `ClosedFormTrajectory` in `fmeval/data/analytic.py`. Every dataset has a page under
+`docs/datasets/`. Steps 1 and 6 of
+[`docs/recipes/add-a-dataset.md`](docs/recipes/add-a-dataset.md) have the details.
 
 **A reader takes a location, not a path.** It is handed either a `Path` or an `https://` URL,
 because a colleague with no CFS mount reads the copy published at `paths.data_url` instead.
@@ -607,8 +619,8 @@ in order", which is also what makes 3D a non-event.
 assert the time position is always an `int`. That test is the only thing standing between a
 one-character edit and a hundredfold slowdown, and no correctness test would catch it.
 
-**3. Tag fields primitive or derived.** Density and velocity are stored and are remapped
-directly. Vorticity and pressure are computed from them and must be **recomputed** after any
+**3. Tag fields primitive or derived.** Density, velocity and pressure are stored and are
+remapped directly. Vorticity is computed from velocity and must be **recomputed** after any
 remap, never averaged — block-averaging vorticity gives a field that is not the curl of the
 velocity beside it, by 5.6% / 18.3% / 25.9% at coarsening factors 2 / 4 / 8.
 

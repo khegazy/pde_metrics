@@ -61,16 +61,12 @@ def main() -> int:
     try:
         import numpy as np
 
-        from fmeval.data.base import GridSpec
+        from fmeval.data.analytic import TaylorGreen2D
         from fmeval.derived import vorticity_from_velocity
 
-        n, dx = 32, 2 * np.pi / 32
-        x = np.arange(n) * dx
-        xx, yy = np.meshgrid(x, x, indexing="ij")
-        u = np.stack([np.sin(xx) * np.cos(yy), -np.cos(xx) * np.sin(yy)])
-        grid = GridSpec((n, n), (dx, dx), (True, True), ("x", "y"), (0.0, 0.0))
-        error = float(np.abs(vorticity_from_velocity(u, grid)[0]
-                             - 2 * np.sin(xx) * np.sin(yy)).max())
+        frame = TaylorGreen2D(grid=(32, 32), n_frames=1).frame(0, ["velocity", "vorticity"])
+        error = float(np.abs(vorticity_from_velocity(frame["velocity"], frame.grid)
+                             - frame["vorticity"]).max())
         if error < 1e-10:
             record(OK, "spectral vorticity", f"Taylor-Green error {error:.1e}")
         else:

@@ -23,7 +23,7 @@ data, so a run names the key an option forgot instead of defaulting silently.
 
 If the file layout is new, add a reader in `fmeval/data/` implementing the `Trajectory`
 contract in `fmeval/data/base.py`, and register it with `@register_reader`. Readers are a
-deliberately closed set with explicit imports in `evaluate.py` — unlike metrics and
+deliberately closed set with explicit imports in `fmeval/data/readers.py` — unlike metrics and
 degradations, there is no discovery walk. Three rules are not negotiable: channel-first
 arrays with trailing `(x, y, z)`; the fixed field vocabulary, tagged primitive or derived;
 never slice the time axis. Test against the shared reader contract in
@@ -47,7 +47,22 @@ of a remote smoke run. Verify a new reader against the real published file with 
 If the data carries fields outside the canonical vocabulary — a magnetic field, say —
 extend `FIELDS` in `fmeval/data/base.py` first, tagged primitive or derived. Derived
 fields need a recompute rule in `fmeval/derived.py`, because they are recomputed on the
-analysis grid, never block-averaged.
+analysis grid, never block-averaged. A recompute rule may use kinematics only. Never add one
+that needs an equation of state, such as pressure from density: that relation belongs to the
+solver, so a dataset that does not store a quantity does not provide it.
+
+**Declare the boundary of every axis.** A reader's `GridSpec.boundary` names one entry of
+`BOUNDARIES` in `fmeval/data/base.py` per axis: `"periodic"`, or `"neumann"` for a
+zero-gradient wall. Never call an axis periodic because the operators want one. On a
+non-periodic axis the degradations act on the field extended by that boundary's rule, and a
+metric declaring `requires_periodic` is not run at all. A boundary type the vocabulary lacks
+is a new entry there, with an extension that is continuous across its seam.
+
+**A dataset computed from a closed form** needs no file. Subclass `ClosedFormTrajectory` in
+`fmeval/data/analytic.py`: build what the solution needs once in the constructor, implement
+`solution(time)`, and cite the source and equation number of every formula beside it. Test it
+against an independent statement of the physics, as `tests/test_analytic_datasets.py` does,
+rather than against a copy of its own formula. Its config ranks below every simulated dataset.
 
 ## 2. Check the calibration
 
@@ -106,7 +121,23 @@ dataset replaces the tables that were shown before. If you want two regimes show
 side, that is an extension to `evidence.py` to propose — never a reason to hand-edit
 anything.
 
-## 6. Finish
+## 6. Write its page and draw its dynamics
+
+Every dataset config appears on the page of its physical problem, `docs/datasets/<family>.md`,
+named by the config's `complexity.family`; a test enforces it. A new variation of an existing
+problem joins that page's table. A new problem gets a page of its own, linked from
+`docs/datasets/README.md`. Say what the problem is and what the evaluation measurably sees on
+it. A computed dataset also gives its equations, each cited to its source with the equation
+number. Draw its fields over time with
+
+```bash
+python -m fmeval.cards dynamics <name>
+```
+
+which writes the figures, and the numbers behind them, to `docs/datasets/_generated/`. Commit
+both. Never draw or edit them by hand.
+
+## 7. Finish
 
 ```bash
 pytest                      # includes the reader contract and card checks

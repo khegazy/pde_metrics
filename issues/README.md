@@ -54,6 +54,7 @@ Designed, hooks in place, not built.
 | [039](039-h1-seminorm-is-not-monotone-under-coarsening.md) | Under `coarsen_bandlimited`, density is out of order in some frames for several metrics, unexplained; the `coarsen` decisions themselves are acted on | low |
 | [041](041-subpixel-shift-drops-the-nyquist-mode.md) | A fractional Fourier shift drops the Nyquist mode of an even grid; negligible on the production data | low |
 | [044](044-synthetic-ensemble-ignores-the-run-seed.md) | The synthetic ensemble is generated from its own seed, so `seed=` does not change a synthetic run and the ensemble cards cite a seed that had no effect; needs a decision | low |
+| [046](046-wavenumber-magnitude-is-anisotropic-on-non-square-domains.md) | The wavenumber magnitude counts cycles across each axis's own length, so a cutoff is anisotropic on a non-square domain, and a wall on only some axes makes a square grid non-square; needs a decision on the definition of `\|k\|` | low |
 
 ## Technical debt
 

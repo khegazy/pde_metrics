@@ -70,6 +70,9 @@ the first. An axis that is constant contributes no increments and is dropped fro
 average in Equation (3) rather than contributing a zero or a three, both of which would be
 claims the data does not support.
 
+It therefore declares `requires_periodic`, and the harness does not run it on a dataset with a
+non-periodic axis, such as the Sod shock tube; it reports why in the run log.
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->

@@ -66,6 +66,7 @@ def axis_w1(a: NDArray[np.floating], b: NDArray[np.floating], axis: int) -> floa
     higher_is_better=False,
     symmetric=True,
     units="field",
+    requires_periodic=True,  # increment_flatness's wrap-around increments
 )
 def increment_w1(
     reference: NDArray[np.floating], candidate: NDArray[np.floating]

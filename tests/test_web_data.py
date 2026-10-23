@@ -17,10 +17,11 @@ import os
 import numpy as np
 import pytest
 
-from evaluate import dataset_info, open_trajectory, select_fields
+from evaluate import dataset_info, select_fields
 from fmeval.config import build_job, compose_config
 from fmeval.data.kinet_raw import KinetRawTrajectory
 from fmeval.data.locate import resolve_dataset_path
+from fmeval.data.readers import open_trajectory
 from fmeval.ladder import build_ladder
 from fmeval.pipeline import run
 from metrics import registry as metric_registry
@@ -66,7 +67,7 @@ def test_the_fallback_fires_when_there_is_no_local_copy(web_cfg):
 def test_mse_evaluates_against_the_published_trajectory(web_cfg):
     """The end-to-end claim: a metric runs on a machine with no CFS mount."""
     specs = [metric_registry.get("mse")]
-    trajectory = open_trajectory(web_cfg)
+    trajectory = open_trajectory(web_cfg.dataset, web_cfg.paths)
     try:
         assert trajectory.is_remote, "read the local copy; the fallback did not fire"
 
@@ -111,8 +112,8 @@ def test_the_dev_trajectory_is_published_too(tmp_path):
     that command would fail for anyone without CFS, which is the whole audience this
     fallback exists for.
     """
-    trajectory = open_trajectory(
-        build_job(compose_config("dataset=kinet_re5e4_dev", f"paths.data={tmp_path}")))
+    job = build_job(compose_config("dataset=kinet_re5e4_dev", f"paths.data={tmp_path}"))
+    trajectory = open_trajectory(job.dataset, job.paths)
     try:
         assert trajectory.is_remote
         assert trajectory.source.endswith("D2Q9_shape-256-256_T-100_H-04a8a1.h5")
@@ -130,7 +131,7 @@ def test_opening_the_published_trajectory_is_cheap(web_cfg):
     The clock is the part that can silently regress: `time` is chunked one element per
     chunk, so reading it whole is 9938 requests and 297 s.
     """
-    trajectory = open_trajectory(web_cfg)
+    trajectory = open_trajectory(web_cfg.dataset, web_cfg.paths)
     try:
         stats = trajectory._remote.stats
         assert len(trajectory) == 10001

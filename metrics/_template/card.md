@@ -42,7 +42,10 @@ a single cell, write `None.` and one clause saying so. If it does consult a neig
 — a stencil, a convolution, a transform — say exactly what happens at the edge of the
 domain: periodic wrap, reflection, zero padding, or edge cells dropped. Two
 implementations of the same formula that differ only here produce different numbers, and
-a reader has no way to tell which you used unless you write it down.
+a reader has no way to tell which you used unless you write it down. If the edge wraps — a
+Fourier transform, a spectral derivative, `np.roll` — set `requires_periodic=True` in
+`metric.py` and say here that the metric is therefore not run on a dataset with a
+non-periodic axis.
 
 ## Performance
 

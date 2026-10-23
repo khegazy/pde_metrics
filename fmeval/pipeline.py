@@ -256,6 +256,23 @@ def run(
     if len(indices) == 0:
         raise ValueError("time selection is empty; check dataset.time.start / stop")
 
+    if not trajectory.grid.is_periodic:
+        # A metric built on a Fourier transform or a wrap-around difference would read the
+        # domain edge as a jump. Not run, rather than run on an extended field: what such a
+        # metric means on a bounded domain is a different definition, not a boundary detail.
+        # Skipped without rows, as an ensemble metric is on a deterministic dataset.
+        periodic_only = [m.name for m in metrics if m.requires_periodic]
+        metrics = [m for m in metrics if not m.requires_periodic]
+        if not metrics:
+            raise ValueError(
+                f"every selected metric ({', '.join(periodic_only)}) needs a periodic domain, "
+                f"and dataset {dataset.name!r} has boundaries {trajectory.grid.boundary}"
+            )
+        if periodic_only:
+            log.warning("%s need a periodic domain and dataset %r has boundaries %s; no rows "
+                        "were produced for them", ", ".join(periodic_only), dataset.name,
+                        trajectory.grid.boundary)
+
     factor = coarsen_factor(trajectory.grid, analysis_resolution)
     grid_size = trajectory.grid.shape[0] // factor
     keep_frames = _map_frames(maps, indices)

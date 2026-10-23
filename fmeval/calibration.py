@@ -53,7 +53,9 @@ class FieldCalibration:
         n_frames: How many frames the measurement averaged over.
         wavenumbers: The distinct wavevector magnitudes present on the grid, ascending. Not
             integers: the diagonal modes sit between the shells, and a filter cutoff is compared
-            against these exact values.
+            against these exact values. Along a non-periodic axis they count cycles across the
+            extended domain (:meth:`fmeval.data.base.GridSpec.extend`), which is the field a
+            filter there acts on.
         cumulative_energy: Cumulative fraction of fluctuation energy at or below the matching
             entry of ``wavenumbers``. Averaged over the sampled frames.
         mean_wavenumber: Energy-weighted mean wavenumber.
@@ -193,6 +195,11 @@ def calibrate_field(frames: Sequence[np.ndarray], grid: GridSpec,
     if not frames:
         raise ValueError(f"cannot calibrate {field!r} without any frames")
 
+    # Measured on the field the operators actually act on: extended across any non-periodic
+    # axis by its boundary rule (see fmeval.ladder._call), so the spectrum holds no wrap-around
+    # jump and its wavenumbers are the ones a filter there compares against.
+    frames = [grid.extend(frame) for frame in frames]
+    grid = grid.extended
     shells, inverse = _magnitude_bins(grid)
 
     energies, scales = [], []

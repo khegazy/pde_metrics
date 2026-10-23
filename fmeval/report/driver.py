@@ -392,10 +392,17 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
             )
         return " ".join(parts)
 
+    walls = ", ".join(ctx.meta.get("boundary", ()))
     if key == "displacement":
         text = (
             "A translation leaves every statistic of the field unchanged and alters only "
-            "position. A metric that approaches the unrelated-field level after a "
+            "position. " if ctx.periodic else
+            f"This dataset's boundaries are {escape(walls)}. Across a non-periodic boundary a "
+            "translation brings in the field's extension by that boundary's rule rather than "
+            "the far end of the domain, so it changes the field's values as well as their "
+            "position, and no operator's declared invariants are quoted here. "
+        ) + (
+            "A metric that approaches the unrelated-field level after a "
             "displacement much smaller than the structures in the flow is exhibiting the "
             "double penalty: it is reporting a large error for a field that is correct in "
             "shape and amplitude."
@@ -425,6 +432,15 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
             "random offset, which preserves every statistic exactly while removing "
             "alignment, and therefore defines a damage of one."
         )
+        if not ctx.periodic:
+            text += (
+                " Both statements hold on a periodic domain. This dataset's boundaries are "
+                f"{escape(walls)}, and both fields are built on its extension across them and "
+                "cropped back to the domain, so neither keeps the reference's statistics "
+                "exactly: the Gaussian field keeps the Fourier amplitudes of the extension, "
+                "and the unrelated field is a window onto the displaced extension, so part of "
+                "what it shows is the extension rather than the reference."
+            )
         if ctx.anchor_label != an.UNCORRELATED_LABEL:
             text += (
                 " In this run the damage scale is anchored instead on the ladder entry "

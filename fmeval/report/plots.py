@@ -566,6 +566,8 @@ def field_gallery(ctx, df, opts) -> PlotResult:
     field = str(df["field"].iloc[0])
     stored = {k: v for k, v in ctx.maps.items() if parse_map_key(k)[1] == field}
     ctx.require(bool(stored), f"no stored maps for {field}")
+    ctx.require(all(m.ndim == 2 for m in stored.values()),
+                f"the gallery draws two-dimensional maps and the maps of {field} are not")
 
     panels = sorted(stored)[:12]
     ncols = min(4, len(panels))
@@ -950,6 +952,7 @@ def deception_panel(ctx, df, opts) -> PlotResult:
     correlation exactly while destroying all phase information, so a metric built only on
     second-order statistics scores it as perfect. The positionally unrelated field
     preserves every statistic while destroying alignment, so it defines a damage of 1.
+    Both hold exactly on a periodic domain only.
     """
     field = str(df["field"].iloc[0])
     metrics = sorted(df["metric"].unique())

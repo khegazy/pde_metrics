@@ -40,7 +40,7 @@ records under `reader_options.seed`.
 
 One of:
 
-1. Pass the run seed to a reader that takes one (`evaluate.py::open_trajectory`), so `seed`
+1. Pass the run seed to a reader that takes one (`fmeval/data/readers.py::open_trajectory`), so `seed`
    means "every random draw of the run". This changes every number of a synthetic run; the four
    ensemble cards must be regenerated from a new pinned run.
 2. Keep the generator's seed separate and state it on the card's evidence line beside the run

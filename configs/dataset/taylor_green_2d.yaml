@@ -1,0 +1,27 @@
+# The decaying two-dimensional Taylor-Green vortex, computed on the fly: incompressible
+# Navier-Stokes on the periodic box [0, 2 pi)^2, density 1. See fmeval/data/analytic.py and
+# docs/datasets/taylor_green_vortex.md.
+#
+# NOT PHYSICAL EVIDENCE. A closed form validates the harness against an answer known in
+# advance; it says nothing about a simulated flow, and it is not in evidence_datasets.
+#
+# The window is the reader's default: viscosity 0.01, t from 0 to 50 in 10 frames on 256^2
+# cells, so the velocity amplitude falls to 1/e. The field is a single Fourier mode at every
+# time and every frame is a scalar multiple of the first, so the frames are not independent
+# evidence and calibrated spectral severities collapse onto one shell (see the page).
+name: taylor_green_2d
+format: taylor_green_2d
+
+# Unused: the reader computes its frames. Declared because every dataset config carries one.
+path: ${paths.data}
+trajectory: taylor_green_2d
+
+fields: [velocity, pressure, vorticity]
+
+complexity:
+  family: taylor_green_vortex
+  rank: -1          # generated: below every physical dataset
+  label: "Taylor-Green vortex, 2D (exact solution)"
+
+notes: "Decaying 2D Taylor-Green vortex, exact incompressible solution, computed on the fly.
+  See fmeval/data/analytic.py."

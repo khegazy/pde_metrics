@@ -86,28 +86,60 @@ def test_grid_spec(traj):
     assert g.shape == SHAPE
     assert g.dims == ("x", "y")
     assert g.spacing == (1.0, 1.0)
-    assert g.periodic == (True, True)
+    assert g.boundary == ("periodic", "periodic")
     assert g.n_spatial == 2
     assert g.length == (float(SHAPE[0]), float(SHAPE[1]))
 
 
 def test_grid_axis_resolution_is_dimension_aware():
     """`axis('x')` must be -2 in 2D and -3 in 3D, never a hardcoded constant."""
-    g2 = GridSpec((16, 8), (1.0, 1.0), (True, True), ("x", "y"), (0.0, 0.0))
+    g2 = GridSpec((16, 8), (1.0, 1.0), ("periodic", "periodic"), ("x", "y"), (0.0, 0.0))
     assert g2.axis("x") == -2 and g2.axis("y") == -1
-    g3 = GridSpec((4, 5, 6), (1.0,) * 3, (True,) * 3, ("x", "y", "z"), (0.0,) * 3)
+    g3 = GridSpec((4, 5, 6), (1.0,) * 3, ("periodic",) * 3, ("x", "y", "z"), (0.0,) * 3)
     assert g3.axis("x") == -3 and g3.axis("y") == -2 and g3.axis("z") == -1
 
 
 def test_grid_coarsened_scales_spacing():
     """Spacing must grow by the factor -- forgetting this inflates spectral derivatives."""
-    g = GridSpec((16, 8), (0.5, 0.5), (True, True), ("x", "y"), (0.0, 0.0))
+    g = GridSpec((16, 8), (0.5, 0.5), ("periodic", "periodic"), ("x", "y"), (0.0, 0.0))
     c = g.coarsened(2)
     assert c.shape == (8, 4)
     assert c.spacing == (1.0, 1.0)
     assert c.length == g.length  # physical extent is unchanged
     with pytest.raises(ValueError, match="does not divide"):
         g.coarsened(3)
+
+
+def test_grid_refuses_an_unknown_boundary_type():
+    with pytest.raises(ValueError, match="unknown boundary"):
+        GridSpec((16, 8), (1.0, 1.0), ("periodic", "wall"), ("x", "y"), (0.0, 0.0))
+
+
+def test_a_neumann_axis_extends_to_its_even_mirror():
+    """A zero-gradient wall is extended by appending the axis reversed.
+
+    The result is periodic over twice the length and continuous across both seams -- the
+    two cells meeting at each seam are equal -- so an operator that wraps sees no jump at the
+    wall. Leading axes (channels, members) and periodic axes are untouched, the spacing is
+    kept, cropping recovers the field, and coarsening keeps the boundary types.
+    """
+    g = GridSpec((16, 8), (1.0, 0.5), ("neumann", "periodic"), ("x", "y"), (0.0, 0.0))
+    x = np.random.default_rng(0).standard_normal((3, 2, 16, 8))
+    e = g.extend(x)
+    assert e.shape == (3, 2, 32, 8)
+    assert g.extended == GridSpec((32, 8), (1.0, 0.5), ("periodic", "periodic"), ("x", "y"),
+                                  (0.0, 0.0))
+    assert np.array_equal(e[..., :16, :], x)
+    assert np.array_equal(e[..., 16:, :], x[..., ::-1, :])
+    assert np.array_equal(e[..., 15, :], e[..., 16, :]) and np.array_equal(e[..., 31, :],
+                                                                          e[..., 0, :])
+    assert g.coarsened(2).boundary == g.boundary
+
+
+def test_a_periodic_grid_is_not_extended():
+    g = GridSpec((16, 8), (1.0, 1.0), ("periodic", "periodic"), ("x", "y"), (0.0, 0.0))
+    x = np.zeros((1, 16, 8))
+    assert g.extend(x) is x and g.extended is g and g.is_periodic
 
 
 # --- times -------------------------------------------------------------------------

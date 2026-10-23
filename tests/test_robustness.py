@@ -495,7 +495,7 @@ def test_a_broken_operator_stops_the_run_rather_than_dropping_its_axis(temporary
     def _broken_for_test(x, severity, *, ctx):
         return _missing_helper(x, severity)   # noqa: F821
 
-    grid = GridSpec(shape=(16, 16), spacing=(1.0, 1.0), periodic=(True, True))
+    grid = GridSpec(shape=(16, 16), spacing=(1.0, 1.0), boundary=("periodic", "periodic"))
     data = np.random.default_rng(0).normal(size=(1, 16, 16))
     frame = Frame(index=0, time=0.0, grid=grid, fields={"vorticity": data})
     calibration = calibrate({"vorticity": [data]}, grid, ["vorticity"])
@@ -512,7 +512,7 @@ def test_a_severity_the_grid_cannot_support_is_still_dropped_with_a_warning(capl
     Coarsening by a factor that does not divide the grid is a limit of this run's
     configuration, not a defect, so the other severities are still worth measuring.
     """
-    grid = GridSpec(shape=(8, 8), spacing=(1.0, 1.0), periodic=(True, True))
+    grid = GridSpec(shape=(8, 8), spacing=(1.0, 1.0), boundary=("periodic", "periodic"))
     data = np.random.default_rng(0).normal(size=(1, 8, 8))
     frame = Frame(index=0, time=0.0, grid=grid, fields={"vorticity": data})
     calibration = calibrate({"vorticity": [data]}, grid, ["vorticity"])

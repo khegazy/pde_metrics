@@ -76,6 +76,7 @@ def riesz_potential(
     symmetric=True,
     units="field*length",
     reduction="sqrt_mean",
+    requires_periodic=True,  # an FFT Riesz potential
 )
 def h_minus_one(
     reference: NDArray[np.floating],

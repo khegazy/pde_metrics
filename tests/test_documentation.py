@@ -409,23 +409,53 @@ IDEAS = REPO / "docs" / "ideas"
 _RETIRED_ID = re.compile(r"\b(?:OT|SH|NM|CG|PH|PD|TD|BD|PS|IN)-\d")
 
 
-@pytest.mark.parametrize(
-    "page", sorted(p.relative_to(IDEAS).as_posix() for p in IDEAS.rglob("*.md"))
-)
-def test_an_idea_page_follows_the_site_conventions(page):
-    """Idea pages obey the rules the cards obey, since both render on GitHub and the site.
+DATASETS = REPO / "docs" / "datasets"
+
+
+@pytest.mark.parametrize("page", sorted(p.relative_to(REPO / "docs").as_posix()
+                                        for d in (IDEAS, DATASETS) for p in d.rglob("*.md")))
+def test_an_idea_or_dataset_page_follows_the_site_conventions(page):
+    """Idea and dataset pages obey the rules the cards obey, since all render on GitHub and
+    the site.
 
     Equations use only the dollar forms both readers render; the retired tracker IDs and the
     word "rung" (say "severity level") stay out.
     """
-    text = (IDEAS / page).read_text()
-    assert check_math(text) == [], f"docs/ideas/{page}: {check_math(text)}"
+    text = (REPO / "docs" / page).read_text()
+    assert check_math(text) == [], f"docs/{page}: {check_math(text)}"
     assert not _RETIRED_ID.search(text), (
-        f"docs/ideas/{page} uses a retired tracker ID "
+        f"docs/{page} uses a retired tracker ID "
         f"{_RETIRED_ID.search(text).group(0)!r}; name the idea instead"
     )
     assert not re.search(r"\brungs?\b", text, re.IGNORECASE), (
-        f"docs/ideas/{page} says 'rung'; say 'severity level'"
+        f"docs/{page} says 'rung'; say 'severity level'"
+    )
+
+
+@pytest.mark.parametrize("config", sorted(p.name for p in (REPO / "configs" / "dataset").glob(
+    "*.yaml") if not p.name.startswith("_")))
+def test_every_dataset_is_on_the_page_of_its_problem(config):
+    """One page per physical problem, holding every configuration of it.
+
+    The page is named by the config's ``complexity.family``, which a fragment may supply, so
+    the family is read through the defaults chain. Both the page and the index link must
+    exist, and the page must name the configuration.
+    """
+    chain, family = [config], None
+    while family is None and chain:
+        data = yaml.safe_load((REPO / "configs" / "dataset" / chain.pop()).read_text())
+        family = (data.get("complexity") or {}).get("family")
+        chain += [f"{d}.yaml" for d in data.get("defaults", []) if d != "_self_"]
+    assert family, f"configs/dataset/{config} has no complexity.family"
+    page = DATASETS / f"{family}.md"
+    assert page.is_file(), (
+        f"configs/dataset/{config} belongs to problem {family!r}, which has no page "
+        f"docs/datasets/{family}.md; see docs/recipes/add-a-dataset.md step 6"
+    )
+    name = config.removesuffix(".yaml")
+    assert f"`{name}`" in page.read_text(), f"docs/datasets/{family}.md does not name {name}"
+    assert f"({family}.md)" in (DATASETS / "README.md").read_text(), (
+        f"docs/datasets/README.md does not link {family}.md"
     )
 
 

@@ -152,7 +152,7 @@ class SyntheticEnsembleTrajectory(Trajectory):
         return GridSpec(
             shape=self._grid_shape,
             spacing=(1.0,) * n,
-            periodic=(True,) * n,
+            boundary=("periodic",) * n,
             dims=("x", "y", "z")[:n],
             origin=(0.0,) * n,
         )

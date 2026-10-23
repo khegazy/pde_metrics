@@ -82,6 +82,7 @@ def radial_energy_spectrum(
     symmetric=False,          # the reference sets the scale, so swapping the arguments
                               # changes the value, exactly as for nrmse
     units="dimensionless",
+    requires_periodic=True,  # an FFT energy spectrum
 )
 def spectrum_l2(
     reference: NDArray[np.floating],
