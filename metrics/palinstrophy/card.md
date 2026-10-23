@@ -63,6 +63,9 @@ analysis grid rather than assumed, and here that matters more than it does for a
 quantity: the value carries an inverse length *squared*, so on a grid coarsened by a factor,
 using the native spacing would inflate the result by the square of that factor.
 
+It therefore declares `requires_periodic`, and the harness does not run it on a dataset with a
+non-periodic axis, such as the Sod shock tube; it reports why in the run log.
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1790639359`, do not edit -->

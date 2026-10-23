@@ -48,6 +48,9 @@ analysis grid rather than assumed, because the value carries an inverse length: 
 coarsened by a factor, using the native spacing would inflate the result by exactly that
 factor.
 
+It therefore declares `requires_periodic`, and the harness does not run it on a dataset with a
+non-periodic axis, such as the Sod shock tube; it reports why in the run log.
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1790639359`, do not edit -->

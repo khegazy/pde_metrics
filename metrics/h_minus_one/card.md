@@ -90,6 +90,9 @@ scale the result by exactly that factor. On a domain that is not periodic the tr
 would wrap the field onto itself and the resulting number would be meaningless rather than
 merely approximate.
 
+It therefore declares `requires_periodic`, and the harness does not run it on a dataset with a
+non-periodic axis, such as the Sod shock tube; it reports why in the run log.
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence h_minus_one --results results/comparison_1790639359`, do not edit -->

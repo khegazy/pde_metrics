@@ -56,6 +56,9 @@ Periodic wrap on every axis: the increment of the last cell along an axis is tak
 the first, so every cell contributes exactly one increment per axis and the two samples in
 Equation (2) are guaranteed the same size, which is what the closed form requires.
 
+It therefore declares `requires_periodic`, and the harness does not run it on a dataset with a
+non-periodic axis, such as the Sod shock tube; it reports why in the run log.
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1790639359`, do not edit -->
