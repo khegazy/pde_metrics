@@ -100,6 +100,7 @@ Designed, hooks in place, not built.
 | [063](063-reeb-graph-distance-is-not-standard.md) | Reeb graphs and Morse–Smale complexes: no standard distance between graphs | medium |
 | [064](064-jacobi-set-defines-no-scalar.md) | Jacobi sets define a set, not a number | medium |
 | [065](065-bispectrum-distance-is-not-fixed.md) | Bispectrum and bicoherence: the distance between maps is not fixed | unset |
+| [092](092-sod-damage-anchor-is-poorly-determined.md) | On `sod_shock_tube` the unrelated-field anchor varies by up to 2x across draws on density and pressure and 21x on velocity, so Sod damage numbers are poorly determined; needs a decision | medium |
 
 ## Technical debt
 
