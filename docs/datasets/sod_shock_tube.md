@@ -1,9 +1,12 @@
 # Sod shock tube
 
-!!! note "Computed, not simulated"
+!!! note "Computed, not simulated: an analytic check"
     This dataset is the exact solution of a textbook problem, computed on the fly whenever a
-    frame is read. It tests the evaluation harness against an answer known in advance. It is
-    not evidence about a simulated flow, so no metric's page cites it.
+    frame is read. It tests the evaluation harness, and the metrics that need a shock or
+    pressure, against an answer known in advance. A metric's page may cite it as an
+    **analytic check**: its evidence says the metric locates and scores a known shock
+    correctly, and nothing about turbulence. Every page citing it says so in its run summary.
+    A metric that needs a periodic domain is not run on it.
 
 ## The problem
 
@@ -196,6 +199,29 @@ default ladder on 2026-10-20. These are facts about this field, not defects.
 - **The spectral filters repeat.** On density and pressure several low- and high-pass levels
   repeat a milder level's experiment, because nearly all of their energy is in a few
   shells.
+- **The damage anchor is poorly determined.** Damage 1 is the mean of six large random
+  translations (`uncorrelated`), which `random_large_translation` itself says decorrelates
+  only a broadband field. Measured with `python evaluate.py metrics=[mse]
+  dataset=sod_shock_tube` on 2026-10-24 (run `mse_1792825406`), the largest of the six
+  draws exceeds the smallest within one frame by a factor of 1.62 for density and 1.73 for
+  pressure (medians over the 10 frames; at most 1.99 and 2.21), and 6.47 for velocity (at
+  most 21.0). On `kinet_re5e4` vorticity the six draws agree within 0.96–1.03. A damage
+  number measured here carries that spread.
+
+## Citing it as evidence
+
+A metric that needs a shock or pressure, which `kinet_re5e4` lacks, takes its page's
+evidence from a run on this dataset, with the reader's own 10 frames and the default ladder:
+
+```bash
+python evaluate.py metrics=[<name>] dataset=sod_shock_tube paths.data_url=null
+python -m fmeval.cards evidence <name> --results results/<name>_<stamp>
+```
+
+The page's run summary then calls the numbers an analytic check, in the words
+`evidence_datasets` in `configs/cards/default.yaml` gives: they say the metric locates and
+scores a known shock correctly, and nothing about turbulence. A metric declaring
+`requires_periodic` is not run here, and `evaluate.py` writes no folder for it.
 
 ## References
 

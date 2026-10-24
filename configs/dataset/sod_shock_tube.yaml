@@ -2,8 +2,11 @@
 # (gamma = 1.4), left state rho = 1, p = 1, right state rho = 0.125, p = 0.1, both at rest,
 # diaphragm at x = 0.5 on [0, 1). See fmeval/data/analytic.py and docs/datasets/sod_shock_tube.md.
 #
-# NOT PHYSICAL EVIDENCE. A closed form validates the harness against an answer known in
-# advance; it says nothing about a simulated flow, and it is not in evidence_datasets.
+# AN ANALYTIC CHECK, NOT EVIDENCE ABOUT TURBULENCE. It is in evidence_datasets
+# (configs/cards/default.yaml) for the metrics that need a shock or pressure, which
+# kinet_re5e4 lacks. Evidence from it says a metric locates and scores a known shock
+# correctly; it says nothing about a simulated flow, and every card citing it says so.
+# Cite a run on the reader's own frames, below; metrics needing a periodic domain never run.
 #
 # The time window is the reader's default, t from 0.1 to 0.2 in 10 frames, on 2048 cells.
 # It starts when every wave is fully developed on the grid: at t = 0.1 the narrowest region,

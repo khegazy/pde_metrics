@@ -435,11 +435,29 @@ def test_the_card_settings_are_readable_without_hydra():
     assert "${" not in raw, "card settings must not interpolate; nothing resolves them"
 
     cfg = load_cards_config()
-    assert "kinet_re5e4_dev" not in list(cfg.evidence_datasets), (
+    assert "kinet_re5e4_dev" not in cfg.evidence_datasets, (
         "the dev dataset must never be a source of card evidence: it is the first 100 "
         "solver steps, before the flow develops"
     )
-    assert cfg.exemplar_frame.dataset in list(cfg.evidence_datasets)
+    assert "taylor_green_2d" not in cfg.evidence_datasets, (
+        "Taylor-Green is a harness fixture, not evidence: every frame is a scalar multiple "
+        "of the first"
+    )
+    assert cfg.exemplar_frame.dataset in cfg.evidence_datasets
+
+
+def test_every_evidence_dataset_says_what_kind_of_claim_it_supports():
+    """The phrase is what every card's run summary quotes after the frame count, so an empty
+    one would let a card cite a calibrated null or an analytic check without saying so. A
+    generated dataset's phrase must also say it is not evidence about turbulence."""
+    for name, claim in load_cards_config().evidence_datasets.items():
+        assert claim.strip(), f"evidence_datasets[{name!r}] names no kind of claim"
+        if not READERS[compose_config(f"dataset={name}").dataset.format].reads_from_disk:
+            assert "nothing about turbulence" in claim, (
+                f"{name} is generated, so its evidence must say it is not about turbulence; "
+                f"it says {claim!r}"
+            )
+    assert "analytic check" in load_cards_config().evidence_datasets["sod_shock_tube"]
 
 
 @pytest.mark.parametrize("old,new,error,key", [
@@ -478,7 +496,8 @@ def test_a_generated_dataset_declares_itself_non_physical():
 
     A generated dataset -- the synthetic ensemble, a closed-form solution -- validates code
     against an answer known in advance, which is a claim about arithmetic rather than about a
-    flow. `synthetic_ensemble` is even allowed as card evidence on that basis. That is only
+    flow. `synthetic_ensemble` and `sod_shock_tube` are even allowed as card evidence on that
+    basis. That is only
     safe while the dataset says so about itself: a negative complexity rank is what keeps it
     from being read, or plotted, as if it sat on the physical ladder. A generated dataset that
     ranked alongside the real ones could have its numbers quoted as evidence about a flow.

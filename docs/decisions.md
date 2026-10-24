@@ -137,16 +137,23 @@ degradation preserves is a fact about the operator; whether a metric responds is
 (`damage_max_ucb`, `blind_axes`). Put side by side, the two carry the information an expectation
 would, without a prediction.
 
-## Analytic fields are fixtures, not evidence
+## Analytic fields are fixtures; Sod is an analytic check
 
 The fields in `tests/analytic_fields.py` — a Gaussian bump, a stripe, a single mode — have metric
-responses known in closed form and exist to test the statistics. The datasets computed from
-exact solutions, `sod_shock_tube` and `taylor_green_2d`, are registered so that the harness can
-be run on them, but they are not in `evidence_datasets`. Nothing measured on either kind may
-appear on a metric's page.
+responses known in closed form and exist to test the statistics. Nothing measured on them may
+appear on a metric's page. Of the datasets computed from exact solutions, `taylor_green_2d` is
+the same kind of fixture and is not in `evidence_datasets`. `sod_shock_tube` is, as an
+**analytic check**, for the metrics that need a shock or pressure: its evidence says that a
+metric locates and scores a known shock correctly, and nothing about turbulence. A metric that
+needs a periodic domain is never run on it.
 
 Why: a closed form says what a metric does to an idealised feature, not to turbulence. Numbers
-from a fixture, once written into a page, would read exactly like numbers from a flow.
+from a fixture, once written into a page, would read exactly like numbers from a flow. Sod is
+admitted anyway because `kinet_re5e4` has neither shocks nor pressure, so without it a shock or
+pressure metric would have no evidence at all; that is safe only because the label travels with
+the numbers. `evidence_datasets` maps each dataset to the kind of claim it supports, and every
+card's generated run summary quotes it, as it does for the calibrated null `synthetic_ensemble`.
+Taylor–Green stays refused: every frame is a scalar multiple of the first.
 
 ## A page is validated at `get()`, not at import
 

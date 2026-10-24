@@ -147,8 +147,9 @@ class Figures:
 class CardsConfig:
     """``configs/cards/default.yaml``, which is the only source of every value here."""
 
-    evidence_datasets: list[str] = MISSING
-    """The datasets a card's measurements may come from."""
+    evidence_datasets: dict[str, str] = MISSING
+    """The datasets a card's measurements may come from, each mapped to the kind of claim a
+    run on it supports, as the phrase that completes "n frames of ..." in a card's run summary."""
     evidence_window: EvidenceWindow = field(default_factory=EvidenceWindow)
     exemplar_frame: ExemplarFrame = field(default_factory=ExemplarFrame)
     figures: Figures = field(default_factory=Figures)
