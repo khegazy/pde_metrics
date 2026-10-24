@@ -199,6 +199,14 @@ default ladder on 2026-10-20. These are facts about this field, not defects.
 - **The spectral filters repeat.** On density and pressure several low- and high-pass levels
   repeat a milder level's experiment, because nearly all of their energy is in a few
   shells.
+- **The damage anchor is poorly determined.** Damage 1 is the mean of six large random
+  translations (`uncorrelated`), which `random_large_translation` itself says decorrelates
+  only a broadband field. Measured with `python evaluate.py metrics=[mse]
+  dataset=sod_shock_tube` on 2026-10-24 (run `mse_1792825406`), the largest of the six
+  draws exceeds the smallest within one frame by a factor of 1.62 for density and 1.73 for
+  pressure (medians over the 10 frames; at most 1.99 and 2.21), and 6.47 for velocity (at
+  most 21.0). On `kinet_re5e4` vorticity the six draws agree within 0.96–1.03. A damage
+  number measured here carries that spread.
 
 ## Citing it as evidence
 
