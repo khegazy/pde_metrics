@@ -30,7 +30,9 @@ regime, protected from data leakage and combined.
 - **Gap** says what currently blocks the idea. *Math* means a mathematical question must be
   settled first, such as how to compare signed fields with a transport distance.
   *Implementation* means the mathematics is settled and only code is missing. *Both* means
-  both, and *none* means neither.
+  both, and *none* means neither. A linked issue says what else blocks the idea, such as an
+  open question, a missing dataset, library or experiment, or another metric it builds on;
+  the idea is not built until that issue is resolved.
 - **Cost** is a rough estimate of the effort and compute needed to build and run it.
 - **Priority** is the team's decision about what to build next. It is a planning choice
   rather than a judgement of the metric, and it is dropped once the idea is built.
@@ -50,69 +52,69 @@ regime, protected from data leakage and combined.
 
 | Idea | Theme | Gap | Cost | Priority | Owner |
 |---|---|---|---|---|---|
-| [Wasserstein distance for horizontal displacement](optimal_transport/wasserstein.md) | [Optimal transport](optimal_transport/README.md) | math | medium | high | |
-| [Transport between signed fields](optimal_transport/signed_field_transport.md) | [Optimal transport](optimal_transport/README.md) | math | medium | high | |
-| [Sliced Wasserstein distance](optimal_transport/sliced_wasserstein.md) | [Optimal transport](optimal_transport/README.md) | implementation | low | high | |
-| [Entropic relaxation and Sinkhorn divergences](optimal_transport/sinkhorn.md) | [Optimal transport](optimal_transport/README.md) | implementation | low | medium | |
+| [Wasserstein distance for horizontal displacement](optimal_transport/wasserstein.md) | [Optimal transport](optimal_transport/README.md) | math, [issue 066](https://github.com/khegazy/pde_metrics/blob/main/issues/066-wasserstein-needs-a-transport-library.md) | medium | high | |
+| [Transport between signed fields](optimal_transport/signed_field_transport.md) | [Optimal transport](optimal_transport/README.md) | math, [issue 047](https://github.com/khegazy/pde_metrics/blob/main/issues/047-signed-field-transport-has-no-chosen-formulation.md) | medium | high | |
+| [Sliced Wasserstein distance](optimal_transport/sliced_wasserstein.md) | [Optimal transport](optimal_transport/README.md) | implementation, [issue 048](https://github.com/khegazy/pde_metrics/blob/main/issues/048-sliced-wasserstein-measure-is-undefined.md) | low | high | |
+| [Entropic relaxation and Sinkhorn divergences](optimal_transport/sinkhorn.md) | [Optimal transport](optimal_transport/README.md) | implementation, [issue 067](https://github.com/khegazy/pde_metrics/blob/main/issues/067-sinkhorn-waits-on-wasserstein.md) | low | medium | |
 | [Wasserstein distance between increment distributions at every separation](optimal_transport/gradient_pdf_w1.md) | [Optimal transport](optimal_transport/README.md) | implementation | low | high | |
 | [Shock detector](shock_geometry/shock_detector.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | high | |
 | [Distance between extracted shock sets](shock_geometry/shock_set_distance.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | high | |
-| [Overlap of shock masks](shock_geometry/shock_mask_overlap.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | medium | |
-| [Shock front position, speed and jump conditions](shock_geometry/shock_front_error.md) | [Shock geometry](shock_geometry/README.md) | both | medium | medium | |
-| [Shock–turbulence interaction statistics](shock_geometry/shock_turbulence_interaction.md) | [Shock geometry](shock_geometry/README.md) | implementation | medium | unset | |
-| [Negative Sobolev norms of general order](norms/negative_sobolev_hs.md) | [Norms](norms/README.md) | math | low | high | |
-| [Splitting a field into smooth and sharp parts](norms/mollification_split.md) | [Norms](norms/README.md) | math | low | high | |
+| [Overlap of shock masks](shock_geometry/shock_mask_overlap.md) | [Shock geometry](shock_geometry/README.md) | implementation, [issue 068](https://github.com/khegazy/pde_metrics/blob/main/issues/068-shock-mask-overlap-waits-on-the-detector.md) | low | medium | |
+| [Shock front position, speed and jump conditions](shock_geometry/shock_front_error.md) | [Shock geometry](shock_geometry/README.md) | both, [issue 051](https://github.com/khegazy/pde_metrics/blob/main/issues/051-shock-front-reference-surface-score.md) | medium | medium | |
+| [Shock–turbulence interaction statistics](shock_geometry/shock_turbulence_interaction.md) | [Shock geometry](shock_geometry/README.md) | implementation, [issue 002](https://github.com/khegazy/pde_metrics/blob/main/issues/002-shocklet-dataset.md) | medium | unset | |
+| [Negative Sobolev norms of general order](norms/negative_sobolev_hs.md) | [Norms](norms/README.md) | math, [issue 049](https://github.com/khegazy/pde_metrics/blob/main/issues/049-negative-sobolev-order-and-length-scale.md) | low | high | |
+| [Splitting a field into smooth and sharp parts](norms/mollification_split.md) | [Norms](norms/README.md) | math, [issue 050](https://github.com/khegazy/pde_metrics/blob/main/issues/050-mollification-split-three-open-choices.md) | low | high | |
 | [Maximum pointwise error](norms/maximum_error.md) | [Norms](norms/README.md) | implementation | low | unset | |
-| [Curvature statistics of level sets](curvature/isosurface_curvature.md) | [Curvature](curvature/README.md) | implementation | medium | medium | |
-| [Discrete differential geometry on meshes](curvature/discrete_differential_geometry.md) | [Curvature](curvature/README.md) | math | medium | low | |
-| [Curvature without smooth structure](curvature/metric_geometry_curvature.md) | [Curvature](curvature/README.md) | math | medium | low | |
-| [Riemann curvature of the flow's configuration space](curvature/riemann_curvature.md) | [Curvature](curvature/README.md) | math | high | low | |
-| [Signed entropy production](physics_invariants/entropy_production.md) | [Physics invariants](physics_invariants/README.md) | both | low | high | |
-| [Residual of the equations in weak form](physics_invariants/weak_residual.md) | [Physics invariants](physics_invariants/README.md) | implementation | low | high | |
-| [Consistency with one step of a trusted solver](physics_invariants/solver_consistency.md) | [Physics invariants](physics_invariants/README.md) | implementation | medium | high | |
-| [Helmholtz split into rotational and compressive parts](physics_invariants/helmholtz_split.md) | [Physics invariants](physics_invariants/README.md) | math | medium | high | |
-| [Admissibility checks](physics_invariants/admissibility_checks.md) | [Physics invariants](physics_invariants/README.md) | implementation | low | unset | |
-| [Galilean and rotational equivariance](physics_invariants/equivariance_tests.md) | [Physics invariants](physics_invariants/README.md) | implementation | low | unset | |
-| [Goal-oriented error estimates](physics_invariants/goal_oriented_error.md) | [Physics invariants](physics_invariants/README.md) | implementation | high | unset | |
-| [Four-fifths law and the third-order structure function](turbulence_statistics/four_fifths_law.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | low | unset | |
+| [Curvature statistics of level sets](curvature/isosurface_curvature.md) | [Curvature](curvature/README.md) | implementation, [issue 052](https://github.com/khegazy/pde_metrics/blob/main/issues/052-isosurface-curvature-isovalue-choice.md) | medium | medium | |
+| [Discrete differential geometry on meshes](curvature/discrete_differential_geometry.md) | [Curvature](curvature/README.md) | math, [issue 053](https://github.com/khegazy/pde_metrics/blob/main/issues/053-discrete-differential-geometry-defines-no-metric.md) | medium | low | |
+| [Curvature without smooth structure](curvature/metric_geometry_curvature.md) | [Curvature](curvature/README.md) | math, [issue 054](https://github.com/khegazy/pde_metrics/blob/main/issues/054-metric-geometry-curvature-defines-no-metric.md) | medium | low | |
+| [Riemann curvature of the flow's configuration space](curvature/riemann_curvature.md) | [Curvature](curvature/README.md) | math, [issue 055](https://github.com/khegazy/pde_metrics/blob/main/issues/055-riemann-curvature-has-no-discrete-algorithm.md) | high | low | |
+| [Signed entropy production](physics_invariants/entropy_production.md) | [Physics invariants](physics_invariants/README.md) | both, [issue 056](https://github.com/khegazy/pde_metrics/blob/main/issues/056-entropy-production-sign-contradiction.md) | low | high | |
+| [Residual of the equations in weak form](physics_invariants/weak_residual.md) | [Physics invariants](physics_invariants/README.md) | implementation, [issue 084](https://github.com/khegazy/pde_metrics/blob/main/issues/084-weak-residual-needs-consecutive-states.md) | low | high | |
+| [Consistency with one step of a trusted solver](physics_invariants/solver_consistency.md) | [Physics invariants](physics_invariants/README.md) | implementation, [issue 069](https://github.com/khegazy/pde_metrics/blob/main/issues/069-solver-consistency-needs-a-trusted-solver.md) | medium | high | |
+| [Helmholtz split into rotational and compressive parts](physics_invariants/helmholtz_split.md) | [Physics invariants](physics_invariants/README.md) | math, [issue 057](https://github.com/khegazy/pde_metrics/blob/main/issues/057-helmholtz-split-formulation-and-testability.md) | medium | high | |
+| [Admissibility checks](physics_invariants/admissibility_checks.md) | [Physics invariants](physics_invariants/README.md) | implementation, [issue 070](https://github.com/khegazy/pde_metrics/blob/main/issues/070-admissibility-checks-are-untestable.md) | low | unset | |
+| [Galilean and rotational equivariance](physics_invariants/equivariance_tests.md) | [Physics invariants](physics_invariants/README.md) | implementation, [issue 071](https://github.com/khegazy/pde_metrics/blob/main/issues/071-equivariance-needs-the-model.md) | low | unset | |
+| [Goal-oriented error estimates](physics_invariants/goal_oriented_error.md) | [Physics invariants](physics_invariants/README.md) | implementation, [issue 072](https://github.com/khegazy/pde_metrics/blob/main/issues/072-goal-oriented-error-needs-an-adjoint.md) | high | unset | |
+| [Four-fifths law and the third-order structure function](turbulence_statistics/four_fifths_law.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation, [issue 005](https://github.com/khegazy/pde_metrics/blob/main/issues/005-3d-and-cost-extrapolation.md) | low | unset | |
 | [Structure functions and scaling exponents](turbulence_statistics/structure_functions.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | low | unset | |
 | [Velocity-derivative skewness](turbulence_statistics/derivative_skewness.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | low | unset | |
 | [Spectral energy flux](turbulence_statistics/spectral_energy_flux.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | medium | unset | |
-| [Vortex stretching and energy budgets](turbulence_statistics/vortex_stretching.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | medium | unset | |
-| [Joint distribution of the velocity-gradient invariants Q and R](turbulence_statistics/qr_invariants.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | low | unset | |
-| [Helicity, potential vorticity and information transfer across scales](turbulence_statistics/inviscid_invariants.md) | [Turbulence statistics](turbulence_statistics/README.md) | both | medium | unset | |
-| [One-point statistics and characteristic scales](turbulence_statistics/one_point_statistics.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | low | unset | |
-| [Hough transform for eddy size](pattern_detection/hough_transform.md) | [Pattern detection](pattern_detection/README.md) | implementation | medium | low | |
-| [Winding angle and Poincaré index](pattern_detection/winding_angle.md) | [Pattern detection](pattern_detection/README.md) | implementation | medium | high | |
-| [Eddy census](pattern_detection/eddy_census.md) | [Pattern detection](pattern_detection/README.md) | implementation | medium | medium | |
-| [Vortex criteria: Q, λ₂ and Okubo–Weiss](pattern_detection/vortex_criteria.md) | [Pattern detection](pattern_detection/README.md) | implementation | low | medium | |
-| [Persistence diagrams](topology/persistence_diagrams.md) | [Topology](topology/README.md) | implementation | low | high | |
-| [Multiparameter persistence](topology/multiparameter_persistence.md) | [Topology](topology/README.md) | math | high | low | |
-| [Well groups](topology/well_groups.md) | [Topology](topology/README.md) | math | high | low | |
-| [Reeb graphs and Morse–Smale complexes](topology/reeb_graphs.md) | [Topology](topology/README.md) | implementation | medium | medium | |
-| [Jacobi sets](topology/jacobi_sets.md) | [Topology](topology/README.md) | implementation | medium | medium | |
+| [Vortex stretching and energy budgets](turbulence_statistics/vortex_stretching.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation, [issue 005](https://github.com/khegazy/pde_metrics/blob/main/issues/005-3d-and-cost-extrapolation.md) | medium | unset | |
+| [Joint distribution of the velocity-gradient invariants Q and R](turbulence_statistics/qr_invariants.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation, [issue 005](https://github.com/khegazy/pde_metrics/blob/main/issues/005-3d-and-cost-extrapolation.md) | low | unset | |
+| [Helicity, potential vorticity and information transfer across scales](turbulence_statistics/inviscid_invariants.md) | [Turbulence statistics](turbulence_statistics/README.md) | both, [issue 085](https://github.com/khegazy/pde_metrics/blob/main/issues/085-inviscid-invariants-need-other-data.md) | medium | unset | |
+| [One-point statistics and characteristic scales](turbulence_statistics/one_point_statistics.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation, [issue 058](https://github.com/khegazy/pde_metrics/blob/main/issues/058-one-point-statistics-what-remains.md) | low | unset | |
+| [Hough transform for eddy size](pattern_detection/hough_transform.md) | [Pattern detection](pattern_detection/README.md) | implementation, [issue 059](https://github.com/khegazy/pde_metrics/blob/main/issues/059-hough-transform-defines-no-distance.md) | medium | low | |
+| [Winding angle and Poincaré index](pattern_detection/winding_angle.md) | [Pattern detection](pattern_detection/README.md) | implementation, [issue 086](https://github.com/khegazy/pde_metrics/blob/main/issues/086-winding-angle-is-untestable.md) | medium | high | |
+| [Eddy census](pattern_detection/eddy_census.md) | [Pattern detection](pattern_detection/README.md) | implementation, [issue 073](https://github.com/khegazy/pde_metrics/blob/main/issues/073-eddy-census-waits-on-a-detector.md) | medium | medium | |
+| [Vortex criteria: Q, λ₂ and Okubo–Weiss](pattern_detection/vortex_criteria.md) | [Pattern detection](pattern_detection/README.md) | implementation, [issue 060](https://github.com/khegazy/pde_metrics/blob/main/issues/060-vortex-criteria-define-no-comparison.md) | low | medium | |
+| [Persistence diagrams](topology/persistence_diagrams.md) | [Topology](topology/README.md) | implementation, [issue 074](https://github.com/khegazy/pde_metrics/blob/main/issues/074-persistence-diagrams-need-a-tda-library.md) | low | high | |
+| [Multiparameter persistence](topology/multiparameter_persistence.md) | [Topology](topology/README.md) | math, [issue 061](https://github.com/khegazy/pde_metrics/blob/main/issues/061-multiparameter-persistence-has-no-complete-invariant.md) | high | low | |
+| [Well groups](topology/well_groups.md) | [Topology](topology/README.md) | math, [issue 062](https://github.com/khegazy/pde_metrics/blob/main/issues/062-well-groups-have-no-computable-definition.md) | high | low | |
+| [Reeb graphs and Morse–Smale complexes](topology/reeb_graphs.md) | [Topology](topology/README.md) | implementation, [issue 063](https://github.com/khegazy/pde_metrics/blob/main/issues/063-reeb-graph-distance-is-not-standard.md) | medium | medium | |
+| [Jacobi sets](topology/jacobi_sets.md) | [Topology](topology/README.md) | implementation, [issue 064](https://github.com/khegazy/pde_metrics/blob/main/issues/064-jacobi-set-defines-no-scalar.md) | medium | medium | |
 | [Minkowski functionals and tensors](topology/minkowski_functionals.md) | [Topology](topology/README.md) | implementation | low | unset | |
-| [Two-point correlation](basis_decompositions/two_point_correlation.md) | [Basis decompositions](basis_decompositions/README.md) | none | low | medium | |
-| [Wavelets and coherent vortex extraction](basis_decompositions/coherent_vortex_extraction.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | medium | high | |
-| [Wavelet scattering and phase harmonics](basis_decompositions/wavelet_scattering.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | medium | high | |
-| [Bispectrum and bicoherence](basis_decompositions/bispectrum.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | medium | unset | |
+| [Two-point correlation](basis_decompositions/two_point_correlation.md) | [Basis decompositions](basis_decompositions/README.md) | none, [issue 075](https://github.com/khegazy/pde_metrics/blob/main/issues/075-two-point-correlation-anisotropy-is-untestable.md) | low | medium | |
+| [Wavelets and coherent vortex extraction](basis_decompositions/coherent_vortex_extraction.md) | [Basis decompositions](basis_decompositions/README.md) | implementation, [issue 076](https://github.com/khegazy/pde_metrics/blob/main/issues/076-coherent-vortex-extraction-needs-wavelets.md) | medium | high | |
+| [Wavelet scattering and phase harmonics](basis_decompositions/wavelet_scattering.md) | [Basis decompositions](basis_decompositions/README.md) | implementation, [issue 077](https://github.com/khegazy/pde_metrics/blob/main/issues/077-wavelet-scattering-needs-kymatio.md) | medium | high | |
+| [Bispectrum and bicoherence](basis_decompositions/bispectrum.md) | [Basis decompositions](basis_decompositions/README.md) | implementation, [issue 065](https://github.com/khegazy/pde_metrics/blob/main/issues/065-bispectrum-distance-is-not-fixed.md) | medium | unset | |
 | [Error by wavenumber band](basis_decompositions/spectral_band_error.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | low | unset | |
 | [Spectral coherence and phase error](basis_decompositions/spectral_coherence.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | low | unset | |
 | [Delta-variance spectral slope](basis_decompositions/delta_variance.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | low | unset | |
-| [Velocity channel analysis](basis_decompositions/velocity_channel_analysis.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | medium | unset | |
-| [Valid prediction time](dynamics/valid_prediction_time.md) | [Dynamics](dynamics/README.md) | implementation | medium | unset | |
-| [Temporal autocorrelation](dynamics/temporal_autocorrelation.md) | [Dynamics](dynamics/README.md) | implementation | low | unset | |
-| [Invariant measure and attractor comparison](dynamics/invariant_measure.md) | [Dynamics](dynamics/README.md) | both | high | unset | |
-| [Modal decompositions and radiated sound](dynamics/modal_decompositions.md) | [Dynamics](dynamics/README.md) | implementation | medium | unset | |
+| [Velocity channel analysis](basis_decompositions/velocity_channel_analysis.md) | [Basis decompositions](basis_decompositions/README.md) | implementation, [issue 087](https://github.com/khegazy/pde_metrics/blob/main/issues/087-velocity-channel-analysis-needs-a-projected-reference.md) | medium | unset | |
+| [Valid prediction time](dynamics/valid_prediction_time.md) | [Dynamics](dynamics/README.md) | implementation, [issue 078](https://github.com/khegazy/pde_metrics/blob/main/issues/078-valid-prediction-time-needs-rollouts.md) | medium | unset | |
+| [Temporal autocorrelation](dynamics/temporal_autocorrelation.md) | [Dynamics](dynamics/README.md) | implementation, [issue 079](https://github.com/khegazy/pde_metrics/blob/main/issues/079-temporal-autocorrelation-needs-rollouts.md) | low | unset | |
+| [Invariant measure and attractor comparison](dynamics/invariant_measure.md) | [Dynamics](dynamics/README.md) | both, [issue 080](https://github.com/khegazy/pde_metrics/blob/main/issues/080-invariant-measure-needs-long-rollouts.md) | high | unset | |
+| [Modal decompositions and radiated sound](dynamics/modal_decompositions.md) | [Dynamics](dynamics/README.md) | implementation, [issue 081](https://github.com/khegazy/pde_metrics/blob/main/issues/081-modal-decompositions-need-trajectories.md) | medium | unset | |
 | [Energy distance](distributional/energy_distance.md) | [Distributional](distributional/README.md) | implementation | low | medium | |
 | [Tail-index estimators](distributional/tail_index_estimators.md) | [Distributional](distributional/README.md) | implementation | low | high | |
-| [Pair-correlation function of features](distributional/pair_correlation.md) | [Distributional](distributional/README.md) | implementation | medium | medium | |
+| [Pair-correlation function of features](distributional/pair_correlation.md) | [Distributional](distributional/README.md) | implementation, [issue 082](https://github.com/khegazy/pde_metrics/blob/main/issues/082-pair-correlation-waits-on-features.md) | medium | medium | |
 | [Energy score, variogram score and calibration](distributional/multivariate_proper_scores.md) | [Distributional](distributional/README.md) | implementation | low | unset | |
-| [Width of the log-density distribution](distributional/density_log_pdf.md) | [Distributional](distributional/README.md) | implementation | low | unset | |
-| [Quality of predictive uncertainty](distributional/predictive_uncertainty.md) | [Distributional](distributional/README.md) | implementation | low | unset | |
-| [Wall-bounded flow diagnostics](regime_specific/wall_bounded_flows.md) | [Regime-specific](regime_specific/README.md) | implementation | low | unset | |
-| [Variable-density mixing](regime_specific/variable_density_mixing.md) | [Regime-specific](regime_specific/README.md) | implementation | medium | unset | |
-| [Reacting-flow and scalar-mixing diagnostics](regime_specific/reacting_flows.md) | [Regime-specific](regime_specific/README.md) | implementation | low | unset | |
+| [Width of the log-density distribution](distributional/density_log_pdf.md) | [Distributional](distributional/README.md) | implementation, [issue 088](https://github.com/khegazy/pde_metrics/blob/main/issues/088-log-density-width-needs-supersonic-data.md) | low | unset | |
+| [Quality of predictive uncertainty](distributional/predictive_uncertainty.md) | [Distributional](distributional/README.md) | implementation, [issue 083](https://github.com/khegazy/pde_metrics/blob/main/issues/083-predictive-uncertainty-needs-the-model.md) | low | unset | |
+| [Wall-bounded flow diagnostics](regime_specific/wall_bounded_flows.md) | [Regime-specific](regime_specific/README.md) | implementation, [issue 089](https://github.com/khegazy/pde_metrics/blob/main/issues/089-wall-bounded-diagnostics-need-wall-data.md) | low | unset | |
+| [Variable-density mixing](regime_specific/variable_density_mixing.md) | [Regime-specific](regime_specific/README.md) | implementation, [issue 090](https://github.com/khegazy/pde_metrics/blob/main/issues/090-variable-density-mixing-needs-mixing-data.md) | medium | unset | |
+| [Reacting-flow and scalar-mixing diagnostics](regime_specific/reacting_flows.md) | [Regime-specific](regime_specific/README.md) | implementation, [issue 091](https://github.com/khegazy/pde_metrics/blob/main/issues/091-reacting-flow-diagnostics-need-reacting-data.md) | low | unset | |
 | [Comparing refinement maps across meshes](infrastructure/refinement_map_comparison.md) | [Infrastructure](infrastructure/README.md) | implementation | medium | medium | |
 | [Reference and solver predictor for the degradation ladder](infrastructure/degradation_ladder_reference.md) | [Infrastructure](infrastructure/README.md) | implementation | medium | high | |
 | [Uncertainty on every metric value](infrastructure/metric_uncertainty.md) | [Infrastructure](infrastructure/README.md) | implementation | low | unset | |
