@@ -105,7 +105,11 @@ python -m fmeval.cards evidence <name> --results results/<run>
 ```
 
 Point that command at the reference evaluation run; `configs/cards/default.yaml` lists
-which datasets qualify, and the command refuses smoke-test data. It fills in
+which datasets qualify, and the command refuses smoke-test data. A metric that needs a shock
+or pressure, which `kinet_re5e4` lacks, takes its run on `sod_shock_tube` with the reader's
+own frames (`python evaluate.py metrics=[<name>] dataset=sod_shock_tube`), and its run
+summary then calls the numbers an analytic check; a metric declaring `requires_periodic` is
+never run there. The command fills in
 `## Performance`, the run summary, the per-test tables and `_generated/fingerprint.json`.
 Only after that should you write the Results readings. Any number you type into a sentence
 must be one the fingerprint file supports, and pointing at the generated table beats
