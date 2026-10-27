@@ -60,7 +60,8 @@ def load_run(folder: Path) -> Run:
 
     Raises:
         FileNotFoundError: If the folder holds no results.
-        ValueError: If the run is on a dataset cards may not cite -- the dev dataset is
+        ValueError: If the run is on a dataset cards may not cite (not a key of
+            ``evidence_datasets`` in ``configs/cards/default.yaml``) -- the dev dataset is
             the first 100 solver steps, before the flow develops, and its numbers would be
             indistinguishable once written into a card from ones that mean something.
     """
@@ -71,7 +72,8 @@ def load_run(folder: Path) -> Run:
     if forbidden:
         raise ValueError(
             f"{folder} is on {forbidden}, which cards may not cite; allowed: {allowed}.\n"
-            "Evidence must come from a developed-flow run, not a smoke test."
+            "Evidence must come from a dataset listed in configs/cards/default.yaml, "
+            "not a smoke test."
         )
 
     meta = read_run_meta(folder)
@@ -106,15 +108,20 @@ def _fmt(value: Any, digits: int = 3) -> str:
 
 
 def run_block(run: Run) -> str:
-    """The provenance every number below it inherits."""
+    """The provenance every number below it inherits, and the kind of claim it supports.
+
+    What the frames are is read from ``evidence_datasets``, so a card on a calibrated null or
+    an analytic check says so in the same sentence that names the dataset.
+    """
     meta, rows = run.meta, run.rows
+    dataset = str(rows["dataset"].iloc[0])
     frames = sorted(rows["frame_index"].unique())
     git = meta.get("git", {})
     sha = str(git.get("sha") or "not recorded")[:12]
     dirty = " (working tree dirty)" if git.get("dirty") else ""
     return (
-        f"Measured on `{rows['dataset'].iloc[0]}`, frames {frames[0]} to {frames[-1]} "
-        f"({len(frames)} frames of developed flow), on the "
+        f"Measured on `{dataset}`, frames {frames[0]} to {frames[-1]} "
+        f"({len(frames)} frames of {load_cards_config().evidence_datasets[dataset]}), on the "
         f"{meta.get('analysis_grid') or 'native'} analysis grid, seed "
         f"{meta.get('seed', '—')}, at commit `{sha}`{dirty}. Run `{run.folder.name}`.\n\n"
         f"Every number in this section comes from that one run. Regenerate with "

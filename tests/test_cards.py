@@ -732,19 +732,22 @@ def test_bundle_ids_are_unique():
 
 @pytest.mark.parametrize("bundle", [b for b in BUNDLES if b.kind == "metric"],
                          ids=[b.name for b in BUNDLES if b.kind == "metric"])
-def test_a_fingerprint_never_cites_the_dev_dataset(bundle):
-    """The dev dataset is the first 100 solver steps, before the flow develops.
+def test_a_fingerprint_cites_only_an_evidence_dataset(bundle):
+    """A committed card's run is on a dataset in ``evidence_datasets``, never the dev dataset
+    or Taylor-Green.
 
-    Its numbers mean nothing physically, and once written into a card they would be
-    indistinguishable from ones that do. The generator refuses such a run; this checks
-    nothing already committed slipped through by another route.
+    The dev dataset is the first 100 solver steps, before the flow develops; its numbers mean
+    nothing physically, and once written into a card they would be indistinguishable from ones
+    that do. The generator refuses such a run; this checks nothing already committed slipped
+    through by another route.
     """
     fingerprint = bundle.path / "_generated" / "fingerprint.json"
     if not fingerprint.is_file():
         pytest.skip(f"{bundle.name} has no measurements yet")
     recorded = json.loads(fingerprint.read_text())["dataset"]
-    assert not recorded.endswith("_dev"), (
-        f"{bundle.name} cites {recorded}, which is a smoke-test dataset"
+    allowed = fmeval_config.load_cards_config().evidence_datasets
+    assert recorded in allowed, (
+        f"{bundle.name} cites {recorded}, which is not in evidence_datasets {list(allowed)}"
     )
 
 
@@ -777,10 +780,11 @@ def _run_folder(path: pathlib.Path, df: pd.DataFrame, dataset: str = "kinet_re5e
     return path
 
 
-def test_evidence_refuses_a_run_on_a_dataset_cards_may_not_cite(tmp_path):
+@pytest.mark.parametrize("dataset", ["kinet_re5e4_dev", "taylor_green_2d"])
+def test_evidence_refuses_a_run_on_a_dataset_cards_may_not_cite(dataset, tmp_path):
     folder = _run_folder(tmp_path / "comparison_1",
                          pd.DataFrame({"metric": ["mse"], "field": ["vorticity"], "value": [1.0]}),
-                         dataset="kinet_re5e4_dev")
+                         dataset=dataset)
     with pytest.raises(ValueError, match="cards may not cite"):
         evidence.load_run(folder)
 
@@ -895,8 +899,9 @@ def test_the_site_builds_without_the_dataset(tmp_path):
 # wrong content into a card that looks exactly like right content.
 
 
-def _synthetic_run(tmp_path, with_mae: bool = True):
-    """A results folder small enough to analyse in milliseconds, from the analysis fixture."""
+def _synthetic_run(tmp_path, with_mae: bool = True, dataset: str = "kinet_re5e4"):
+    """A results folder small enough to analyse in milliseconds, from the analysis fixture,
+    stamped with ``dataset``."""
     ladder = {
         "gaussian_blur": [1.0, 2.0, 3.0, 4.0],
         "translate_x": [0.5, 1.0, 2.0, 4.0],
@@ -911,7 +916,7 @@ def _synthetic_run(tmp_path, with_mae: bool = True):
                                                      for k, vals in ladder.items()}))
     df = pd.concat(frames, ignore_index=True)
     df["energy_changed"] = np.where(df["level"] > 0, 0.01 * df["severity"] ** 2, 0.0)
-    return _run_folder(tmp_path / "comparison_synthetic", df)
+    return _run_folder(tmp_path / "comparison_synthetic", df, dataset=dataset)
 
 
 def test_load_run_goes_through_the_one_analysis_entry_point(tmp_path):
@@ -931,6 +936,42 @@ def _bundle_copy(tmp_path, monkeypatch):
     bundle = loader.Bundle(name="mse", kind="metric", path=dst)
     monkeypatch.setattr(loader, "find_bundle", lambda *a, **k: bundle)
     return bundle
+
+
+@pytest.mark.parametrize("dataset", list(fmeval_config.load_cards_config().evidence_datasets))
+def test_the_run_summary_says_what_kind_of_claim_its_dataset_supports(dataset, tmp_path):
+    """A card on a calibrated null or an analytic check says so beside the frame count, in the
+    words ``evidence_datasets`` gives, and only kinet_re5e4 is called developed flow."""
+    block = evidence.run_block(evidence.load_run(_synthetic_run(tmp_path, dataset=dataset)))
+    claim = fmeval_config.load_cards_config().evidence_datasets[dataset]
+    assert f"frames of {claim})" in block, block
+    assert ("developed flow" in block) == (dataset == "kinet_re5e4"), block
+
+
+def test_sod_evidence_runs_end_to_end_and_calls_itself_an_analytic_check(tmp_path, monkeypatch):
+    """The path a shock or pressure metric's evidence takes: ``evaluate.py`` on
+    ``sod_shock_tube`` with the reader's own frames, then ``cards evidence`` on that run.
+
+    Reduced to 64 cells and 3 frames, as tests/test_analytic_datasets.py runs Sod, and written
+    into a throwaway copy of the mse bundle. The card's run summary must call the evidence an
+    analytic check, and the fingerprint must record the dataset.
+    """
+    subprocess.run(
+        [sys.executable, str(REPO / "evaluate.py"), "dataset=sod_shock_tube",
+         "degradation=quick", "metrics=[mse]", "+dataset.reader.grid=[64]",
+         "+dataset.reader.n_frames=3", "paths.data_url=null", f"paths.results={tmp_path}",
+         f"hydra.run.dir={tmp_path}/h"],
+        check=True, capture_output=True, cwd=tmp_path,
+    )
+    (folder,) = tmp_path.glob("mse_*")
+    bundle = _bundle_copy(tmp_path, monkeypatch)
+    assert cli.main(["evidence", "mse", "--results", str(folder)]) == 0
+
+    run = prose.generated_blocks(bundle.card_md.read_text())["run"]
+    claim = fmeval_config.load_cards_config().evidence_datasets["sod_shock_tube"]
+    assert f"Measured on `sod_shock_tube`, frames 0 to 2 (3 frames of {claim})" in run, run
+    assert "analytic check" in run and "developed flow" not in run, run
+    assert json.loads(bundle.fingerprint.read_text())["dataset"] == "sod_shock_tube"
 
 
 def test_evidence_generation_is_idempotent(tmp_path, monkeypatch):
@@ -1408,6 +1449,9 @@ def test_the_sensitivity_page_shows_every_figure_and_names_what_is_not_on_it(tmp
         assert figure.caption in page
     assert "## Run `comparison_figures`" in page
     assert "[crps](metrics/crps.md) (run `crps_1` on `synthetic_ensemble`)" in page
+    claims = fmeval_config.load_cards_config().evidence_datasets
+    assert f"The runs on `synthetic_ensemble` are on frames of {claims['synthetic_ensemble']}." \
+        in page, "the page must say what kind of evidence an off-grid metric's dataset is"
     assert "[mse](metrics/mse.md) (run" not in page, "mse is on the grid"
     assert "ranking" in page and "No overview figures" not in page
     assert "No overview figures have been generated yet" in page_markdown(tmp_path / "none")

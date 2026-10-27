@@ -10,9 +10,11 @@ under the same determinism rules as the card figures (:mod:`fmeval.cards.metric_
 and builds the markdown of the page that shows them.
 
 One directory per run, named for it, because the grid can only hold the metrics one run
-evaluated: the probabilistic metrics are measured on their own single-metric runs on a
-calibrated null and cannot appear beside the kinet metrics. The page says which metrics
-are not on the grid and why, rather than leaving a reader to notice the gap.
+evaluated: a metric measured on its own run on another dataset -- a probabilistic metric on
+the calibrated null, a shock or pressure metric on the Sod analytic check -- cannot appear
+beside the kinet metrics. The page says which metrics are not on the grid and, from
+``evidence_datasets``, what kind of evidence each of their datasets is, rather than leaving
+a reader to notice the gap.
 """
 
 from __future__ import annotations
@@ -22,6 +24,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from fmeval import REPO
+from fmeval.config import load_cards_config
 from fmeval.report.context import ReportContext
 from fmeval.report.latex import slug
 from fmeval.report.registry import PLOTS, check_preconditions, iter_scope
@@ -147,15 +150,17 @@ def page_markdown(figures_root: Path = FIGURES_ROOT, catalog: dict | None = None
                   if e["kind"] == "metric" and e["evidence"]["measured"]
                   and e["name"] not in on_grid]
         if absent:
-            lines += ["\n## Not on these figures\n",
+            claims = load_cards_config().evidence_datasets
+            lines +=["\n## Not on these figures\n",
                       "A cross-metric figure can hold only the metrics one run evaluated "
                       "together. These metrics are measured, but on runs of their own, so "
                       "their figures are on their pages: "
                       + ", ".join(f"[{e['name']}](metrics/{e['name']}.md) "
                                   f"(run `{e['evidence']['run']}` on `{e['evidence']['dataset']}`)"
                                   for e in absent)
-                      + ". The probabilistic metrics are evaluated on a calibrated null, a "
-                        "synthetic ensemble whose statistics are known in closed form; it is "
-                        "not a flow, and placing those numbers beside measurements on turbulence "
-                        "would invite a comparison that means nothing.\n"]
+                      + ". "
+                      + " ".join(f"The runs on `{d}` are on frames of {claims[d]}."
+                                 for d in sorted({e["evidence"]["dataset"] for e in absent}))
+                      + " Placing numbers from one kind of evidence beside another would "
+                        "invite a comparison that means nothing.\n"]
     return "\n".join(lines)

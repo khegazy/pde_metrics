@@ -6,12 +6,17 @@
 # folder or a .hydra directory. A key not in `CardsConfig` is refused, so a new setting
 # needs a field there too.
 
-# Which datasets a card's measurements may come from.
+# Which datasets a card's measurements may come from, and what kind of claim a run on each
+# supports. The phrase completes "Measured on <dataset>, frames a to b (n frames of ...)" in
+# every card's generated run summary (`fmeval.cards.evidence.run_block`), so a card citing a
+# dataset says which kind of claim it is making without anyone having to remember to write it.
 #
 # The dev dataset is absent on purpose and a fingerprint citing it fails the tests. It is
 # the first 100 solver steps, before the flow develops, where a 16-cell translation costs
 # about 1e-4 of an unrelated field against 0.51 at t=5000 -- numbers that mean nothing
 # physically and would be indistinguishable, once written into a card, from ones that do.
+# `taylor_green_2d` stays absent: it is a single Fourier mode, every frame a scalar multiple
+# of the first, so its frames are not independent evidence (docs/decisions.md).
 #
 # `synthetic_ensemble` is admitted for a different reason than kinet_re5e4, and the
 # two must not be read the same way. It is not a flow at all and makes no claim to be one:
@@ -19,17 +24,27 @@
 # every probabilistic metric therefore has a value known in closed form. Evidence from it
 # says "this estimator computes what it claims to compute", which is exactly what a first
 # implementation needs to demonstrate and is checkable against arithmetic rather than
-# opinion. It says nothing about turbulence.
+# opinion. It says nothing about turbulence. The probabilistic metrics are the only ones
+# that can use it, because they are the only ones with no physical ensemble to run on
+# (issue 004); when one exists their cards should be regenerated against it and this entry
+# reconsidered.
 #
-# That distinction has to survive into the artifact, so a card citing it must say which
-# kind of claim it is making. The probabilistic metrics are the only ones that can use it,
-# because they are the only ones with no physical ensemble to run on (issue 004); when one
-# exists their cards should be regenerated against it and this entry reconsidered.
+# `sod_shock_tube` is admitted on the same footing: an analytic check. It is the exact
+# solution of Sod's shock tube, with a shock, a contact and a rarefaction at known places,
+# and pressure. Evidence from it says the metric locates and scores a known shock correctly,
+# and nothing about turbulence. It is cited only by metrics that need a shock or pressure,
+# because kinet_re5e4 has neither; a metric declaring `requires_periodic` is never run on it,
+# since its ends are walls. Runs on it use the reader's own frames, not `evidence_window`.
 evidence_datasets:
-  - kinet_re5e4
-  - synthetic_ensemble
+  kinet_re5e4: developed flow
+  synthetic_ensemble: >-
+    a calibrated null: evidence that the estimator computes what it claims to compute,
+    and nothing about turbulence
+  sod_shock_tube: >-
+    an analytic check: evidence that the metric locates and scores a known shock
+    correctly, and nothing about turbulence
 
-# The window within those datasets that counts as developed flow: the convention a run cited
+# The window within kinet_re5e4 that counts as developed flow: the convention a run cited
 # as evidence follows (`dataset.time.start`, `dataset.time.reduction`). Nothing reads it to
 # select frames; a test checks the exemplar frame below lies inside it, and each fingerprint
 # records the frames its run actually used.

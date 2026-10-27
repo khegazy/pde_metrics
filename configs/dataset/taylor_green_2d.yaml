@@ -3,7 +3,8 @@
 # docs/datasets/taylor_green_vortex.md.
 #
 # NOT PHYSICAL EVIDENCE. A closed form validates the harness against an answer known in
-# advance; it says nothing about a simulated flow, and it is not in evidence_datasets.
+# advance; it says nothing about a simulated flow, and it is not in evidence_datasets
+# (configs/cards/default.yaml says why).
 #
 # The window is the reader's default: viscosity 0.01, t from 0 to 50 in 10 frames on 256^2
 # cells, so the velocity amplitude falls to 1/e. The field is a single Fourier mode at every

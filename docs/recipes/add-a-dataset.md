@@ -96,7 +96,9 @@ there.
 Edit `configs/cards/default.yaml`:
 
 - add the dataset to `evidence_datasets` — until then, `fmeval.cards evidence` refuses
-  runs on it by name;
+  runs on it by name — with the phrase naming the kind of claim a run on it supports
+  ("developed flow", "an analytic check: ..."), which every card citing it quotes in its
+  run summary;
 - record its window under `evidence_window`;
 - decide whether the **one fixed snapshot every example panel is drawn from** stays where
   it is. All the panels share a single snapshot so that the gallery can be compared

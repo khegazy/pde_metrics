@@ -469,8 +469,11 @@ def test_an_ensemble_metric_rises_with_bias(name: str):
     assert values[-1] > values[0], values
 
 
-#: What in a metric's source makes it assume every axis wraps.
-_WRAPS = re.compile(r"np\.fft|numpy\.fft|scipy\.fft|np\.roll|fmeval\.wavenumbers|kinet_spectral")
+#: What in a metric's source makes it assume every axis wraps: a Fourier transform however it
+#: is imported, an FFT convolution (circular unless padded), a rolled difference, the shared
+#: wavenumbers, or wrap-mode padding or filtering (``np.pad``, ``scipy.ndimage``).
+_WRAPS = re.compile(r"np\.fft|numpy\.fft|from numpy import fft|scipy\.fft|fftconvolve|np\.roll"
+                    r"|fmeval\.wavenumbers|kinet_spectral|mode=\"wrap\"|mode='wrap'")
 #: Another bundle's module imported by this one, e.g. ``from ..h1_seminorm.metric import``.
 _BUNDLE_IMPORT = re.compile(r"from (?:\.\.|metrics\.)(\w+)\.metric import")
 
@@ -493,3 +496,16 @@ def test_a_metric_that_wraps_declares_requires_periodic(spec):
             f"{'periodic-only ' + ', '.join(inherited) if inherited else ''}, so it assumes a "
             "periodic domain; declare requires_periodic=True in its @metric decorator"
         )
+
+
+@pytest.mark.parametrize("line", [
+    "F = np.fft.rfftn(x)", "import numpy.fft as nf", "from numpy import fft",
+    "from scipy.fft import rfftn", "from scipy.signal import fftconvolve", "np.roll(x, 1, 0)",
+    "from fmeval.wavenumbers import k_magnitude", "from fmeval.external.kinet_spectral import d",
+    'np.pad(x, 2, mode="wrap")', "ndimage.uniform_filter(x, 3, mode='wrap')",
+])
+def test_every_way_of_wrapping_the_domain_is_recognised(line):
+    """Each form here wraps a bounded tube's ends together; a metric written with any of them
+    and without ``requires_periodic`` would run on ``sod_shock_tube`` and read its walls as a
+    jump, so the source check must see every one."""
+    assert _WRAPS.search(line), f"{line!r} wraps the domain but escapes the periodicity check"

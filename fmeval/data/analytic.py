@@ -9,8 +9,9 @@ cheap. Measured through ``Trajectory.frame``, validation included, on a NERSC lo
 10 ms of I/O per kinet frame (``fmeval/pipeline.py``). Evaluating Taylor-Green's sines
 directly took 7.0 ms, which is why its spatial patterns are computed once.
 
-These are **fixtures for the harness, not evidence about a flow**: neither dataset is in
-``evidence_datasets`` (``docs/decisions.md``). Their pages are ``docs/datasets/``.
+Neither is **evidence about a flow**. ``sod_shock_tube`` is in ``evidence_datasets`` as an
+analytic check, for the metrics that need a shock or pressure; ``taylor_green_2d`` is a
+fixture for the harness only (``docs/decisions.md``). Their pages are ``docs/datasets/``.
 """
 
 from __future__ import annotations
