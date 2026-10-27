@@ -28,6 +28,14 @@ These block criteria that are designed and implemented but cannot be exercised.
 | [037](037-position-blind-metrics-have-no-damage-anchor.md) | A translation-invariant metric scores the unrelated-field anchor at zero, so a whole family of candidates has no damage scale until [004](004-independent-realizations.md) lands | high |
 | [005](005-3d-and-cost-extrapolation.md) | All data is two-dimensional | low |
 | [034](034-the-well-format-copy-is-not-published.md) | The Well-format copy is not published, so that reader's HTTP path is only covered by a fixture | low |
+| [084](084-weak-residual-needs-consecutive-states.md) | Residual of the equations in weak form needs states one solver step apart | high |
+| [085](085-inviscid-invariants-need-other-data.md) | Helicity, potential vorticity and information transfer need data the repository does not have | unset |
+| [086](086-winding-angle-is-untestable.md) | Winding angle and Poincaré index: no experiment changes the vortices in a known way | high |
+| [087](087-velocity-channel-analysis-needs-a-projected-reference.md) | Velocity channel analysis needs a projected reference | unset |
+| [088](088-log-density-width-needs-supersonic-data.md) | Width of the log-density distribution needs supersonic isothermal turbulence and the sound speed | unset |
+| [089](089-wall-bounded-diagnostics-need-wall-data.md) | Wall-bounded flow diagnostics need a dataset with walls | unset |
+| [090](090-variable-density-mixing-needs-mixing-data.md) | Variable-density mixing needs Rayleigh–Taylor or Richtmyer–Meshkov data | unset |
+| [091](091-reacting-flow-diagnostics-need-reacting-data.md) | Reacting-flow diagnostics need reacting data | unset |
 
 ## Deferred functionality
 
@@ -43,6 +51,24 @@ Designed, hooks in place, not built.
 | [015](015-rotation-degradation.md) | Rotation, which must rotate vector components | low |
 | [016](016-mass-weighted-remap.md) | Momentum-conserving remap option | low |
 | [024](024-leray-projection.md) | Solenoidal projection for the spectral operators | low |
+| [066](066-wasserstein-needs-a-transport-library.md) | Wasserstein distance for horizontal displacement needs a transport library | high |
+| [067](067-sinkhorn-waits-on-wasserstein.md) | Sinkhorn divergences wait on the Wasserstein distance | medium |
+| [068](068-shock-mask-overlap-waits-on-the-detector.md) | Overlap of shock masks waits on the shock detector | medium |
+| [069](069-solver-consistency-needs-a-trusted-solver.md) | Consistency with one step of a trusted solver needs the solver | high |
+| [070](070-admissibility-checks-are-untestable.md) | Admissibility checks: no existing experiment violates an admissibility condition | unset |
+| [071](071-equivariance-needs-the-model.md) | Galilean and rotational equivariance needs the model | unset |
+| [072](072-goal-oriented-error-needs-an-adjoint.md) | Goal-oriented error estimates need an adjoint solver and a declared output | unset |
+| [073](073-eddy-census-waits-on-a-detector.md) | Eddy census waits on a vortex detector | medium |
+| [074](074-persistence-diagrams-need-a-tda-library.md) | Persistence diagrams need a topology library | high |
+| [075](075-two-point-correlation-anisotropy-is-untestable.md) | Two-point correlation: what it adds beyond spectrum_l2 is untestable | medium |
+| [076](076-coherent-vortex-extraction-needs-wavelets.md) | Coherent vortex extraction needs a wavelet library, and its comparison is unspecified | high |
+| [077](077-wavelet-scattering-needs-kymatio.md) | Wavelet scattering needs a scattering-transform library | high |
+| [078](078-valid-prediction-time-needs-rollouts.md) | Valid prediction time needs rollouts and a temporal experiment | unset |
+| [079](079-temporal-autocorrelation-needs-rollouts.md) | Temporal autocorrelation needs rollouts and a temporal experiment | unset |
+| [080](080-invariant-measure-needs-long-rollouts.md) | Invariant measure and attractor comparison needs long rollouts and the model | unset |
+| [081](081-modal-decompositions-need-trajectories.md) | Modal decompositions need time-resolved trajectories | unset |
+| [082](082-pair-correlation-waits-on-features.md) | Pair-correlation function of features waits on feature extraction | medium |
+| [083](083-predictive-uncertainty-needs-the-model.md) | Quality of predictive uncertainty needs a surrogate that reports uncertainty | unset |
 
 ## Method and calibration
 
@@ -55,6 +81,27 @@ Designed, hooks in place, not built.
 | [041](041-subpixel-shift-drops-the-nyquist-mode.md) | A fractional Fourier shift drops the Nyquist mode of an even grid; negligible on the production data | low |
 | [044](044-synthetic-ensemble-ignores-the-run-seed.md) | The synthetic ensemble is generated from its own seed, so `seed=` does not change a synthetic run and the ensemble cards cite a seed that had no effect; needs a decision | low |
 | [046](046-wavenumber-magnitude-is-anisotropic-on-non-square-domains.md) | The wavenumber magnitude counts cycles across each axis's own length, so a cutoff is anisotropic on a non-square domain, and a wall on only some axes makes a square grid non-square; needs a decision on the definition of `\|k\|` | low |
+| [047](047-signed-field-transport-has-no-chosen-formulation.md) | Transport between signed fields: which of the four formulations to use | high |
+| [048](048-sliced-wasserstein-measure-is-undefined.md) | Sliced Wasserstein distance: what measure is sliced, on a periodic domain | high |
+| [049](049-negative-sobolev-order-and-length-scale.md) | Negative Sobolev norms of general order: which orders, and the inhomogeneous norm's length scale | high |
+| [050](050-mollification-split-three-open-choices.md) | Splitting a field into smooth and sharp parts: three open choices | high |
+| [051](051-shock-front-reference-surface-score.md) | Shock front position, speed and jump conditions: the reference-surface score is unsettled | medium |
+| [052](052-isosurface-curvature-isovalue-choice.md) | Curvature statistics of level sets: which isovalue | medium |
+| [053](053-discrete-differential-geometry-defines-no-metric.md) | Discrete differential geometry on meshes defines no metric | low |
+| [054](054-metric-geometry-curvature-defines-no-metric.md) | Curvature without smooth structure defines no metric for flow fields | low |
+| [055](055-riemann-curvature-has-no-discrete-algorithm.md) | Riemann curvature of the flow's configuration space has no discrete algorithm | low |
+| [056](056-entropy-production-sign-contradiction.md) | Signed entropy production: the over-smeared-shock contradiction, and consecutive time levels | high |
+| [057](057-helmholtz-split-formulation-and-testability.md) | Helmholtz split: which field is decomposed, what number is reported, and what tests it | high |
+| [058](058-one-point-statistics-what-remains.md) | One-point statistics and characteristic scales: what remains that is neither built, three-dimensional, nor untestable | unset |
+| [059](059-hough-transform-defines-no-distance.md) | Hough transform for eddy size defines no distance between accumulators | low |
+| [060](060-vortex-criteria-define-no-comparison.md) | Vortex criteria define a detector, not a comparison | medium |
+| [061](061-multiparameter-persistence-has-no-complete-invariant.md) | Multiparameter persistence: no complete invariant, research-grade tooling, and it builds on persistence | low |
+| [062](062-well-groups-have-no-computable-definition.md) | Well groups have no computable definition on the page | low |
+| [063](063-reeb-graph-distance-is-not-standard.md) | Reeb graphs and Morse–Smale complexes: no standard distance between graphs | medium |
+| [064](064-jacobi-set-defines-no-scalar.md) | Jacobi sets define a set, not a number | medium |
+| [065](065-bispectrum-distance-is-not-fixed.md) | Bispectrum and bicoherence: the distance between maps is not fixed | unset |
+| [092](092-sod-damage-anchor-is-poorly-determined.md) | On `sod_shock_tube` the unrelated-field anchor varies by up to 2x across draws on density and pressure and 21x on velocity, so Sod damage numbers are poorly determined; needs a decision | medium |
+| [093](093-curve-valued-metrics-need-a-reported-number.md) | How a metric that compares curves (separation, wavenumber, threshold) reports its result: one scalar as `spectrum_l2` does, vector output, or one metric per component; blocks seven planned metrics | high |
 
 ## Technical debt
 
