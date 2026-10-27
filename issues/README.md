@@ -101,6 +101,7 @@ Designed, hooks in place, not built.
 | [064](064-jacobi-set-defines-no-scalar.md) | Jacobi sets define a set, not a number | medium |
 | [065](065-bispectrum-distance-is-not-fixed.md) | Bispectrum and bicoherence: the distance between maps is not fixed | unset |
 | [092](092-sod-damage-anchor-is-poorly-determined.md) | On `sod_shock_tube` the unrelated-field anchor varies by up to 2x across draws on density and pressure and 21x on velocity, so Sod damage numbers are poorly determined; needs a decision | medium |
+| [093](093-curve-valued-metrics-need-a-reported-number.md) | How a metric that compares curves (separation, wavenumber, threshold) reports its result: one scalar as `spectrum_l2` does, vector output, or one metric per component; blocks seven planned metrics | high |
 
 ## Technical debt
 
