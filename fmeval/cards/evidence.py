@@ -258,16 +258,17 @@ def companion_block(run: Run, metric: str) -> str:
         return NOT_MEASURED
     dominance = run.dominance[run.dominance["metric"].astype(str) == metric]
     coordinates = sorted(stats["coordinate"].unique())
-    heads = [f"{c:g}" if isinstance(c, (int, float)) else str(c) for c in coordinates]
+    heads = [an.coordinate_label(c) for c in coordinates]
     lines = []
     for field, sub in stats.groupby("field"):
         for column, title in (("rho", "rank correlation"),
                               ("relative_change_max", "change from clean at the harshest "
                                                       "strength")):
             if not sub[column].notna().any():
-                lines += [f"**{field}, {title}:** not defined at any coordinate. The curve's "
-                          "value on the undegraded field is zero, as a comparison curve's is, so "
-                          "there is no clean value to divide by.", ""]
+                reason = (" The curve's value on the undegraded field is zero, as a comparison "
+                          "curve's is, so there is no clean value to divide by."
+                          if column == "relative_change_max" else "")
+                lines += [f"**{field}, {title}:** not defined at any coordinate.{reason}", ""]
                 continue
             wide = sub.pivot_table(index="degradation", columns="coordinate", values=column,
                                    aggfunc="first", observed=True,
@@ -408,7 +409,7 @@ def canaries_block(run: Run, metric: str) -> str:
         nearest = _cell(row, "gaussian_impostor_nearest_level")
         lines.append(
             f"| {row['field']} | {_fmt(_cell(row, 'gaussian_impostor_damage'))} | "
-            f"{'`' + str(nearest) + '`' if nearest is not None else '—'} | "
+            f"{'`' + nearest + '`' if isinstance(nearest, str) and nearest else '—'} | "
             f"{_fmt(_cell(row, f'{run.anchor_label}_value'))} |"
         )
     lines += [
