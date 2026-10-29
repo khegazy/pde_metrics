@@ -16,6 +16,7 @@ import pytest
 from scipy.ndimage import gaussian_filter
 from scipy.stats import spearmanr
 
+from fmeval.context import COMPANION_KEY
 from fmeval.data.base import FIELDS
 from metrics import registry
 from tests.conftest import (
@@ -93,13 +94,15 @@ def _call(spec: registry.MetricSpec, *arrays: np.ndarray):
     return spec.fn(*arrays, **_kwargs_for(spec, arrays[0]))
 
 
-def _call_map(spec: registry.MetricSpec, *arrays: np.ndarray) -> np.ndarray:
-    """The pointwise map, called the way the pipeline calls it.
+def _call_companion(spec: registry.MetricSpec, *arrays: np.ndarray):
+    """The companion, called the way the pipeline calls it: with a context of the same grid."""
+    kwargs = {"ctx": make_ctx(arrays[0].shape[1:])} if spec.companion.takes_ctx else {}
+    return spec.companion.fn(*arrays, **kwargs)
 
-    The pipeline passes the metric's kwargs straight through to the map as well, so a map
-    that declares a ctx receives the same one its metric did.
-    """
-    return spec.pointwise(*arrays, **_kwargs_for(spec, arrays[0]))
+
+def _companion_args(spec: registry.MetricSpec, args: tuple[np.ndarray, ...]):
+    """The arguments a companion takes: the candidate alone for a one-field curve."""
+    return args[-1:] if spec.companion.one_field else args
 
 
 def test_no_import_errors():
@@ -143,14 +146,12 @@ def test_symmetry(spec):
     assert _call(spec, a, b) == pytest.approx(_call(spec, b, a), rel=1e-12)
 
 
-def test_returns_declared_type(spec):
+def test_returns_one_finite_float(spec):
+    """One number per comparison: the number the literature reports. Anything with more
+    structure is the metric's companion, never its return value."""
     out = _call(spec, *_args_for(spec))
-    if spec.returns == "scalar":
-        assert isinstance(out, float), f"{spec.name} returned {type(out)}, expected float"
-        assert np.isfinite(out), f"{spec.name} returned {out}"
-    else:
-        arr = np.asarray(out)
-        assert arr.ndim == 1 and np.isfinite(arr).all()
+    assert isinstance(out, float), f"{spec.name} returned {type(out)}, expected float"
+    assert np.isfinite(out), f"{spec.name} returned {out}"
 
 
 def test_rejects_mismatched_shapes(spec):
@@ -169,8 +170,7 @@ def test_dtype_stability(spec):
     args64 = _args_for(spec)
     args32 = tuple(x.astype(np.float32) for x in args64)
     got, want = _call(spec, *args32), _call(spec, *args64)
-    if spec.returns == "scalar":
-        assert got == pytest.approx(want, rel=1e-5, abs=1e-12)
+    assert got == pytest.approx(want, rel=1e-5, abs=1e-12)
 
 
 def test_monotone_on_synthetic_blur_ladder(spec):
@@ -204,8 +204,6 @@ def test_monotone_on_synthetic_blur_ladder(spec):
             values.append(_call(spec, ref, cand) if spec.arity == "pairwise"
                           else _call(spec, cand))
 
-    if spec.returns != "scalar":
-        pytest.skip("vector-valued metric")
     rho = spearmanr(range(len(sigmas)), values).statistic
     expected = 1.0 if not spec.higher_is_better else -1.0
     # A metric may declare that it is *not* monotone under smoothing. That is checked
@@ -281,13 +279,22 @@ def test_declared_target_is_consistent_with_direction(spec):
     assert np.isfinite(spec.target)
 
 
-# --- pointwise decomposition -------------------------------------------------------
+# --- companions: the object behind the number ------------------------------------------
+
+
+def _field_map(spec: registry.MetricSpec) -> None:
+    if spec.companion is None or spec.companion.kind != "field":
+        pytest.skip("no per-cell map declared")
+
+
+def _curve(spec: registry.MetricSpec) -> None:
+    if spec.companion is None or spec.companion.kind != "curve":
+        pytest.skip("no curve declared")
 
 
 def test_pointwise_map_shape(spec):
-    if not spec.has_pointwise_map:
-        pytest.skip("no pointwise decomposition declared")
-    m = _call_map(spec, *_args_for(spec))
+    _field_map(spec)
+    m = _call_companion(spec, *_args_for(spec))
     assert m.shape == GRID, f"{spec.name}: map is {m.shape}, expected {GRID}"
     assert np.isfinite(m).all()
 
@@ -299,11 +306,10 @@ def test_pointwise_map_reduces_to_metric(spec):
     of. It catches the two easy mistakes: forgetting that channel-summed maps reduce as
     mean/C, and assuming rmse's map averages to rmse when it averages to mse.
     """
-    if not spec.has_pointwise_map:
-        pytest.skip("no pointwise decomposition declared")
+    _field_map(spec)
     args = _args_for(spec)
     c = args[0].shape[0]
-    m, want = _call_map(spec, *args), _call(spec, *args)
+    m, want = _call_companion(spec, *args), _call(spec, *args)
     assert spec.reduce(m, c) == pytest.approx(want, rel=1e-12), (
         f"{spec.name}: reduction {spec.reduction!r} of the map gives "
         f"{spec.reduce(m, c)}, but the metric gives {want}"
@@ -315,9 +321,51 @@ def test_pointwise_map_is_multichannel_aware():
     spec = registry.get("mse")
     a = synthetic_field(GRID, 2, seed=0)
     b = synthetic_field(GRID, 2, seed=1)
-    m = _call_map(spec, a, b)
+    m = _call_companion(spec, a, b)
     assert m.mean() == pytest.approx(2 * _call(spec, a, b), rel=1e-12)
     assert spec.reduce(m, 2) == pytest.approx(_call(spec, a, b), rel=1e-12)
+
+
+def test_a_curve_has_one_value_per_fixed_coordinate(spec):
+    """Equal lengths, unique coordinates that do not depend on the fields, finite values."""
+    _curve(spec)
+    first = _call_companion(spec, *_companion_args(spec, _args_for(spec)))
+    second = _call_companion(spec, *_companion_args(spec, _args_for(spec, seed_a=3, seed_b=4)))
+    for coordinates, values in (first, second):
+        coordinates, values = np.asarray(coordinates), np.asarray(values, dtype=float)
+        assert coordinates.ndim == values.ndim == 1 and len(coordinates) == len(values), (
+            f"{spec.name}: curve of {coordinates.shape} coordinates and {values.shape} values")
+        assert len(set(coordinates.tolist())) == len(coordinates), (
+            f"{spec.name}: repeated coordinates {coordinates.tolist()}")
+        assert np.isfinite(values).all(), f"{spec.name}: non-finite curve values {values}"
+    assert np.array_equal(np.asarray(first[0]), np.asarray(second[0])), (
+        f"{spec.name}: the coordinates moved with the fields, {first[0]} vs {second[0]}; a "
+        "coordinate is the same at every row or the rows cannot be compared")
+
+
+def test_a_comparison_curve_is_zero_on_identical_fields(spec):
+    """A comparison curve of an error metric takes the metric's identity value, zero, at every
+    coordinate when the two fields are the same."""
+    _curve(spec)
+    if spec.companion.one_field or spec.arity != "pairwise" or spec.higher_is_better:
+        pytest.skip("not a comparison curve of a pairwise error metric")
+    x = synthetic_field(GRID, _channels_for(spec))
+    _, values = _call_companion(spec, x, x)
+    assert np.allclose(values, 0.0, atol=1e-12), f"{spec.name}: curve on (x, x) is {values}"
+
+
+def test_the_metric_reads_its_curve_from_the_cache(spec):
+    """The pipeline computes a curve once per row and hands it to the metric in the context; the
+    metric must give the same number from that as when it computes the curve itself."""
+    _curve(spec)
+    if not spec.takes_ctx:
+        pytest.skip("the metric takes no context, so it always computes the curve itself")
+    args = _args_for(spec)
+    ctx = make_ctx(args[0].shape[1:])
+    ctx.cache[COMPANION_KEY] = _call_companion(spec, *_companion_args(spec, args))
+    direct = spec.fn(*args, ctx=make_ctx(args[0].shape[1:]))
+    assert spec.fn(*args, ctx=ctx) == pytest.approx(direct, rel=1e-12), (
+        f"{spec.name}: the number from the cached curve differs from the direct one")
 
 
 # --- registry mechanics ------------------------------------------------------------
@@ -342,6 +390,26 @@ def test_wrong_arity_signature_raises():
         @registry.metric(name="_bad_arity", arity="pairwise")
         def _bad(a):
             return 0.0
+
+
+def test_a_companion_is_refused_when_its_declaration_contradicts_itself(temporary_metric):
+    """One companion per metric; a curve names its coordinate and a field map does not; and the
+    signature takes the metric's arguments, or one field where a pairwise metric takes two."""
+    temporary_metric(name="_has_curve", arity="pairwise")(lambda a, b: 0.0)
+    with pytest.raises(ValueError, match="names its coordinate"):
+        registry.companion(of="_has_curve", kind="curve")(lambda a, b: ([0], [0.0]))
+    with pytest.raises(ValueError, match="names its coordinate"):
+        registry.companion(of="_has_curve", coordinate=("l", "cells"))(lambda a, b: a)
+    with pytest.raises(TypeError, match="positional"):
+        registry.companion(of="_has_curve", kind="field")(lambda a: a)
+    registry.companion(of="_has_curve", kind="curve", coordinate=("l", "cells"))(
+        lambda x: ([1], [0.0]))
+    assert registry.REGISTRY["_has_curve"].companion.one_field
+    with pytest.raises(ValueError, match="already has a companion"):
+        registry.companion(of="_has_curve", kind="curve", coordinate=("l", "cells"))(
+            lambda a, b: ([1], [0.0]))
+    with pytest.raises(ValueError, match="not registered"):
+        registry.companion(of="_no_such_metric")(lambda a, b: a)
 
 
 def test_unknown_reduction_raises():
@@ -369,7 +437,7 @@ def test_unknown_reduction_raises():
 ])
 def test_the_error_map_shows_two_lobes_for_a_displaced_feature(name: str):
     """The double penalty as a picture: error where the feature is not, and where it is."""
-    error = registry.get(name).pointwise(SQUARE_REFERENCE, SQUARE_SHIFTED)
+    error = registry.get(name).companion.fn(SQUARE_REFERENCE, SQUARE_SHIFTED)
     assert np.all(error[1:3, 1] == 1.0), "where the feature should be and is not"
     assert np.all(error[1:3, 3] == 1.0), "where it is and should not be"
     assert np.all(error[1:3, 2] == 0.0), "the overlapping column should carry no error at all"

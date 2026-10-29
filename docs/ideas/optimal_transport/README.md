@@ -21,6 +21,5 @@ distributions ([increment_w1](../../metrics/increment_w1.md)).
   transport distances along many projections.
 - [Entropic relaxation and Sinkhorn divergences](sinkhorn.md): a smoothed, differentiable
   approximation to transport, relevant once transport has proved useful.
-- [Wasserstein distance between increment distributions at every
-  separation](gradient_pdf_w1.md): transport between the distributions of increments at each
-  separation, extending the built one-cell comparison to a curve over scale.
+- [Increment distances with other stencils, longitudinal and transverse](gradient_pdf_w1.md): what remains of transport between increment
+  distributions once the one-cell comparison and the curve over separation are built.

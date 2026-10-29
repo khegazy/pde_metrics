@@ -75,7 +75,6 @@ def radial_energy_spectrum(
     name="spectrum_l2",
     arity="pairwise",
     fields=("*",),
-    returns="scalar",
     differentiable=True,
     cost="cheap",
     higher_is_better=False,

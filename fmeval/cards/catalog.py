@@ -22,7 +22,7 @@ from fmeval import analysis as an
 
 from .loader import GENERATED_DIR, Bundle, iter_bundles, load_card, write_strict_json
 
-CATALOG_SCHEMA_VERSION = 2
+CATALOG_SCHEMA_VERSION = 3
 """Bump when an entry's shape changes in a way a consumer could not ignore. Not the card
 schema's version (:data:`fmeval.cards.schema.SCHEMA_VERSION`), which versions ``card.yaml``."""
 

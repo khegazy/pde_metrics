@@ -19,7 +19,6 @@ from metrics.registry import metric
     name="template_metric",
     arity="pairwise",        # "pairwise" -> fn(reference, candidate); "single" -> fn(x)
     fields=("*",),           # canonical fields this accepts; ("*",) for any
-    returns="scalar",
     differentiable=True,     # declared, never inferred: could this be a training loss?
     cost="cheap",            # cheap | moderate | expensive (advisory)
     higher_is_better=False,

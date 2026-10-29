@@ -1,4 +1,4 @@
-# Wasserstein distance between increment distributions at every separation
+# Increment distances with other stencils, longitudinal and transverse
 
 !!! note "Planned, not built"
     The idea on this page is not built yet. Its gap, cost, priority and owner are in the
@@ -15,16 +15,16 @@ that one-cell increment divided by the grid spacing, and $W_1$ scales in proport
 argument, so $W_1$ between forward-difference gradient distributions is `increment_w1`
 divided by the grid spacing.
 
-What remains is the same comparison at separations larger than one cell. With
+The same comparison at every octave of separation is built too, as
+[increment_w1_by_separation](../../metrics/increment_w1_by_separation.md): with
 $\delta_\ell u = u(\mathbf{x} + \boldsymbol{\ell}) - u(\mathbf{x})$ the increment at a
-separation $\boldsymbol{\ell}$, collect the increments of the prediction and of the reference
-into two one-dimensional distributions and compare them with $W_1$ separately at each
-separation $\ell$. The result is a curve rather than one number, so the scale at which the
-prediction's statistics depart from the reference is visible. Two smaller remainders are
-gradients from another derivative stencil, such as the one used for the
-[velocity-derivative skewness](../turbulence_statistics/derivative_skewness.md), and
-reporting longitudinal increments (a velocity component along its own direction) separately
-from transverse ones, which `increment_w1` averages together.
+separation $\boldsymbol{\ell}$, it stores $W_1$ at each separation as a curve, so the scale at
+which the prediction's statistics depart from the reference is visible.
+
+Two remainders are not built. One is gradients from another derivative stencil, such as the
+one used for the [velocity-derivative skewness](../turbulence_statistics/derivative_skewness.md).
+The other is reporting longitudinal increments (a velocity component along its own direction)
+separately from transverse ones, which both built metrics average together.
 
 In one dimension $W_1$ has a quantile form. If $F^{-1}$ and $G^{-1}$ are the quantile functions
 (inverse cumulative distribution functions) of the two distributions, then
@@ -55,8 +55,6 @@ fields with turbulent velocity statistics, which gives a ready-made negative con
 
 ## Pitfalls
 
-- A single value pooled over separations hides which scale failed; the per-separation curve
-  is what localises it.
 - The tails that make $W_1$ useful are, by definition, sparsely sampled, so many samples are
   needed for a stable value.
 

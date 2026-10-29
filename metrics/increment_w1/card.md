@@ -71,30 +71,72 @@ Four measured statistics for increment_w1, one row per degradation grouped by fa
 
 Median damage over frames against severity level for increment_w1, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, an unrelated field; the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to an unrelated field. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points above 2 are drawn as triangles at the top. No damage scale on density, velocity, vorticity: the grey panels show the raw value instead.
 
-| test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
+**Trend: does the response follow the degradation?**
+
+| test family | field | degradations | rank correlation | fraction of frames in order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| Displacement | density | 2 | -0.714 to -0.714 | 0 | level — |
-| Displacement | velocity | 2 | -0.714 to -0.714 | 0 | level — |
-| Displacement | vorticity | 2 | -0.6 to -0.6 | 0 | level — |
-| Resolution loss | density | 2 | 1 to 1 | 0.719 | level — |
-| Resolution loss | velocity | 2 | 1 to 1 | 0.774 | level — |
-| Resolution loss | vorticity | 2 | 1 to 1 | 0.685 | level — |
-| Smoothing | density | 3 | 1 to 1 | 0.96 | level — |
-| Smoothing | velocity | 3 | 1 to 1 | 0.771 | level — |
-| Smoothing | vorticity | 3 | 1 to 1 | 0.638 | level — |
-| Spectral filtering | density | 4 | 1 to 1 | 0.829 | level — |
-| Spectral filtering | velocity | 4 | 1 to 1 | 0.881 | level — |
-| Spectral filtering | vorticity | 4 | 1 to 1 | 0.595 | level — |
-| Noise | density | 1 | 1 to 1 | 1 | level — |
-| Noise | velocity | 1 | 1 to 1 | 1 | level — |
-| Noise | vorticity | 1 | 1 to 1 | 1 | level — |
-| trap test: fake prediction, right spectrum | density | 1 | — | — | damage — |
-| trap test: fake prediction, right spectrum | velocity | 1 | — | — | damage — |
-| trap test: fake prediction, right spectrum | vorticity | 1 | — | — | damage — |
+| Displacement | density | 2 | -0.714 | 0 | 0 |
+| Displacement | velocity | 2 | -0.714 | 0 | 0 |
+| Displacement | vorticity | 2 | -0.6 | 0 | 0 |
+| Resolution loss | density | 2 | 1 | 1 | 0.719 to 0.828 |
+| Resolution loss | velocity | 2 | 1 | 1 | 0.774 to 0.864 |
+| Resolution loss | vorticity | 2 | 1 | 0.919 to 0.988 | 0.685 to 0.805 |
+| Smoothing | density | 3 | 1 | 1 | 0.96 to 0.978 |
+| Smoothing | velocity | 3 | 1 | 1 | 0.771 to 0.889 |
+| Smoothing | vorticity | 3 | 1 | 1 | 0.638 to 0.762 |
+| Spectral filtering | density | 4 | 1 | 1 | 0.829 to 0.958 |
+| Spectral filtering | velocity | 4 | 1 | 0.919 to 1 | 0.881 to 0.995 |
+| Spectral filtering | vorticity | 4 | 1 | 0.925 to 1 | 0.595 to 0.888 |
+| Noise | density | 1 | 1 | 1 | 1 |
+| Noise | velocity | 1 | 1 | 1 | 1 |
+| Noise | vorticity | 1 | 1 | 1 | 1 |
 
-One row per family of degradation and physical field. **Rank correlation** asks whether the metric put the strengths of one degradation in the right order: it is the Spearman correlation between the metric and the applied strength, computed inside a single frame, and the column gives the range over the degradations in that family. A value of 1 means every strength was ordered correctly in every frame. **Weakest gap between neighbouring strengths** asks whether the metric can tell one strength from the next: it is the smallest Mann-Whitney overlap between any two neighbouring strengths, where 1 means the two never overlap and 0.5 means the metric cannot separate them at all. **First strength detected** is the mildest strength at which the metric has moved a tenth of the way from the undegraded reference toward a field with no relation to the truth; a dash means the metric never reached that tenth. **Damage** is that same 0-to-1 scale read as a number: 0 is the undegraded reference and 1 is an unrelated field.
+**Reactivity: how far does it move?**
 
-This table reports what was measured and grades none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
+| test family | field | change from clean at the harshest strength | elasticity | first strength detected |
+|---|---|---|---|---|
+| Displacement | density | — | 0.327 | level — |
+| Displacement | velocity | — | 0.3 | level — |
+| Displacement | vorticity | — | 0.253 | level — |
+| Resolution loss | density | — | 0.72 to 0.791 | level — |
+| Resolution loss | velocity | — | 0.576 to 2.41 | level — |
+| Resolution loss | vorticity | — | 0.423 to 1.94 | level — |
+| Smoothing | density | — | 1.37 to 1.67 | level — |
+| Smoothing | velocity | — | 0.604 to 0.663 | level — |
+| Smoothing | vorticity | — | 0.546 to 0.746 | level — |
+| Spectral filtering | density | — | 0.639 to 9.16 | level — |
+| Spectral filtering | velocity | — | 0.465 to 1.17 | level — |
+| Spectral filtering | vorticity | — | 0.405 to 3.13 | level — |
+| Noise | density | — | 1.52 | level — |
+| Noise | velocity | — | 1.45 | level — |
+| Noise | vorticity | — | 1.35 | level — |
+| trap test: fake prediction, right spectrum | density | — | — | damage — |
+| trap test: fake prediction, right spectrum | velocity | — | — | damage — |
+| trap test: fake prediction, right spectrum | vorticity | — | — | damage — |
+
+**Consistency: how much does it vary from snapshot to snapshot?**
+
+| test family | field | consistency, in the strength's units | snapshots per independent block |
+|---|---|---|---|
+| Displacement | density | 0.0911 | 1 to 14 |
+| Displacement | velocity | 0.138 | 1 to 20 |
+| Displacement | vorticity | 0.28 | 1 to 21 |
+| Resolution loss | density | 0.262 to 1.67 | 16 to 20 |
+| Resolution loss | velocity | 0.56 to 1.51 | 21 to 22 |
+| Resolution loss | vorticity | 1.34 to 1.92 | 21 to 22 |
+| Smoothing | density | 0.00487 to 0.0125 | 20 to 21 |
+| Smoothing | velocity | 0.0093 to 0.0195 | 21 to 22 |
+| Smoothing | vorticity | 0.0115 to 0.0289 | 22 |
+| Spectral filtering | density | 0.00899 to 0.0477 | 19 to 21 |
+| Spectral filtering | velocity | 0.0242 to 0.0488 | 21 to 22 |
+| Spectral filtering | vorticity | 0.0296 to 0.0732 | 21 to 22 |
+| Noise | density | 0.000607 | 16 |
+| Noise | velocity | 0.0013 | 20 |
+| Noise | vorticity | 0.0105 | 22 |
+
+One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. It does not exist for this metric, whose undegraded value is exactly zero; the damage below is its relative reading. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to a field with no relation to the truth; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
+
+These tables report what was measured and grade none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
 
 **Profile.**
 
@@ -337,9 +379,9 @@ metric measures.
 
 | field | damage assigned to the fake prediction | closest real degradation | value on an unrelated field |
 |---|---|---|---|
-| density | — | `` | 0 |
-| velocity | — | `` | 0 |
-| vorticity | — | `` | 0 |
+| density | — | — | 0 |
+| velocity | — | — | 0 |
+| vorticity | — | — | 0 |
 
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage of 1 is what a field with no relation to the truth scores, so the damage column says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture.
 

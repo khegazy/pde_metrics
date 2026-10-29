@@ -8,8 +8,11 @@ folder written by the same invocation (the per-metric folders) is compared too. 
 
 What "agrees" means:
 
-* ``results.csv`` is compared row by row, keyed so that row order cannot hide a change, on
-  every column but ``wall_time_s``. Numbers must agree to ``np.isclose(rtol, atol=0)``, with
+* ``results.csv`` and ``companions.csv`` are compared row by row, keyed so that row order
+  cannot hide a change, on every column but ``wall_time_s``. ``--drop-column`` names a column a
+  change removes on purpose: it is dropped from the before side, so the after side must lack it,
+  and a column that told rows apart cannot be dropped silently because the keys would repeat.
+  Numbers must agree to ``np.isclose(rtol, atol=0)``, with
   NaN equal only to NaN. Text is compared exactly, which also catches a type change such as
   ``True`` becoming ``1.0``. Cells are read as text and parsed with Python's correctly
   rounded ``float``: pandas' default parser is not round-trip exact and hid a one-ulp change
@@ -19,7 +22,8 @@ What "agrees" means:
   code (git state, the folder stamp, wall-clock timings, the host, the config hash). ``config.yaml``
   leaf by leaf as well. ``--ignore`` and ``--ignore-config`` drop further leaves of each, named
   by dotted prefix (``registries.metrics``, ``report.style``), that a change adds or alters on
-  purpose -- which the change must declare.
+  purpose -- which the change must declare. A ``*`` segment matches any one key, so
+  ``registries.metrics.*.companion`` names one new leaf of every metric and nothing else.
 * Every other file byte for byte. In every text the results directory of each side, under both
   its spelling as given and its resolved spelling (a symlinked home on NERSC differs), is
   replaced by one placeholder, and wall-clock stamps by another. A file present on one side
@@ -42,7 +46,8 @@ import numpy as np
 import pandas as pd
 import yaml
 
-KEYS = ["metric", "field", "degradation", "level", "frame_index", "variant_label", "component"]
+KEYS = ["metric", "field", "degradation", "level", "frame_index", "variant_label", "component",
+        "coordinate"]
 EXCLUDED_COLUMNS = {"wall_time_s"}
 VOLATILE_META = {"git", "run_id", "timings", "host", "config_hash"}
 _STAMP = re.compile(r"\d{4}-\d\d-\d\d \d\d:\d\d(:\d\d)?")
@@ -52,9 +57,9 @@ class Comparison:
     """One before/after comparison: the tolerance, the placeholders, and what it has seen."""
 
     def __init__(self, rtol: float, roots: tuple[list[str], list[str]], ignore: set[str],
-                 ignore_config: set[str], skip_images: bool) -> None:
+                 ignore_config: set[str], skip_images: bool, dropped: set[str]) -> None:
         self.rtol, self.roots, self.skip_images = rtol, roots, skip_images
-        self.ignore, self.ignore_config = ignore, ignore_config
+        self.ignore, self.ignore_config, self.dropped = ignore, ignore_config, dropped
         self.max_rel, self.n_inexact = 0.0, 0
 
     # --- numbers --------------------------------------------------------------------
@@ -101,6 +106,7 @@ class Comparison:
 
     def results(self, before: Path, after: Path) -> list[str]:
         raw = [pd.read_csv(p, dtype=str, keep_default_na=False) for p in (before, after)]
+        raw[0] = raw[0].drop(columns=[c for c in self.dropped if c in raw[0].columns])
         if list(raw[0].columns) != list(raw[1].columns):
             return [f"columns differ: {list(raw[0].columns)} vs {list(raw[1].columns)}"]
         keys = [k for k in KEYS if k in raw[0].columns]   # the identifying columns it has
@@ -135,7 +141,7 @@ class Comparison:
             return {k: (self.text(v, side) if isinstance(v, str) else v)
                     for k, v in _flatten(load(path.read_text())).items()
                     if not k.endswith("duration_s")
-                    and not any(k == p or k.startswith(p + ".") for p in drop)}
+                    and not any(_under(k, p) for p in drop)}
 
         b, a = leaves(before, 0), leaves(after, 1)
         out = []
@@ -179,7 +185,7 @@ class Comparison:
         name = before.name
         if name == "config_hash.txt" or (self.skip_images and before.suffix in {".pdf", ".png"}):
             return []      # a hash of the config, which is compared itself; or rendered pixels
-        if name.startswith("results.csv"):
+        if name.startswith(("results.csv", "companions.csv")):
             return self.results(before, after)
         if name.endswith(".csv"):
             return self.csv(before, after)
@@ -201,6 +207,12 @@ class Comparison:
         for path in sorted(files[0].keys() & files[1].keys()):
             out += [f"{path}: {line}" for line in self.file(files[0][path], files[1][path])]
         return out
+
+
+def _under(key: str, prefix: str) -> bool:
+    """Whether dotted ``key`` is ``prefix`` or below it, a ``*`` segment matching any one key."""
+    k, p = key.split("."), prefix.split(".")
+    return len(k) >= len(p) and all(a in ("*", b) for a, b in zip(p, k))
 
 
 def _flatten(obj, prefix: str = "") -> dict[str, object]:
@@ -233,6 +245,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="run_meta.json leaves the change alters on purpose, by dotted prefix")
     parser.add_argument("--ignore-config", nargs="*", default=[],
                         help="config.yaml leaves the change alters on purpose, by dotted prefix")
+    parser.add_argument("--drop-column", nargs="*", default=[],
+                        help="result columns the change removes on purpose")
     parser.add_argument("--folder-only", action="store_true",
                         help="compare the two folders alone, e.g. two rendered reports")
     parser.add_argument("--skip-images", action="store_true",
@@ -244,7 +258,7 @@ def main(argv: list[str] | None = None) -> int:
     roots = tuple(sorted({str(p.parent), str(p.parent.resolve())}, key=len, reverse=True)
                   for p in (before, after))
     check = Comparison(args.rtol, roots, set(args.ignore), set(args.ignore_config),
-                       args.skip_images)
+                       args.skip_images, set(args.drop_column))
     differences = [f"run folder {name}_*: only {side}"
                    for side, mine, other in (("before", *runs), ("after", runs[1], runs[0]))
                    for name in sorted(mine.keys() - other.keys())]

@@ -56,7 +56,7 @@ regime, protected from data leakage and combined.
 | [Transport between signed fields](optimal_transport/signed_field_transport.md) | [Optimal transport](optimal_transport/README.md) | math, [issue 047](https://github.com/khegazy/pde_metrics/blob/main/issues/047-signed-field-transport-has-no-chosen-formulation.md) | medium | high | |
 | [Sliced Wasserstein distance](optimal_transport/sliced_wasserstein.md) | [Optimal transport](optimal_transport/README.md) | implementation, [issue 048](https://github.com/khegazy/pde_metrics/blob/main/issues/048-sliced-wasserstein-measure-is-undefined.md) | low | high | |
 | [Entropic relaxation and Sinkhorn divergences](optimal_transport/sinkhorn.md) | [Optimal transport](optimal_transport/README.md) | implementation, [issue 067](https://github.com/khegazy/pde_metrics/blob/main/issues/067-sinkhorn-waits-on-wasserstein.md) | low | medium | |
-| [Wasserstein distance between increment distributions at every separation](optimal_transport/gradient_pdf_w1.md) | [Optimal transport](optimal_transport/README.md) | implementation, [issue 093](https://github.com/khegazy/pde_metrics/blob/main/issues/093-curve-valued-metrics-need-a-reported-number.md) | low | high | |
+| [Increment distances with other stencils, longitudinal and transverse](optimal_transport/gradient_pdf_w1.md) | [Optimal transport](optimal_transport/README.md) | implementation | low | high | |
 | [Shock detector](shock_geometry/shock_detector.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | high | |
 | [Distance between extracted shock sets](shock_geometry/shock_set_distance.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | high | |
 | [Overlap of shock masks](shock_geometry/shock_mask_overlap.md) | [Shock geometry](shock_geometry/README.md) | implementation, [issue 068](https://github.com/khegazy/pde_metrics/blob/main/issues/068-shock-mask-overlap-waits-on-the-detector.md) | low | medium | |
@@ -77,9 +77,9 @@ regime, protected from data leakage and combined.
 | [Galilean and rotational equivariance](physics_invariants/equivariance_tests.md) | [Physics invariants](physics_invariants/README.md) | implementation, [issue 071](https://github.com/khegazy/pde_metrics/blob/main/issues/071-equivariance-needs-the-model.md) | low | unset | |
 | [Goal-oriented error estimates](physics_invariants/goal_oriented_error.md) | [Physics invariants](physics_invariants/README.md) | implementation, [issue 072](https://github.com/khegazy/pde_metrics/blob/main/issues/072-goal-oriented-error-needs-an-adjoint.md) | high | unset | |
 | [Four-fifths law and the third-order structure function](turbulence_statistics/four_fifths_law.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation, [issue 005](https://github.com/khegazy/pde_metrics/blob/main/issues/005-3d-and-cost-extrapolation.md) | low | unset | |
-| [Structure functions and scaling exponents](turbulence_statistics/structure_functions.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation, [issue 093](https://github.com/khegazy/pde_metrics/blob/main/issues/093-curve-valued-metrics-need-a-reported-number.md) | low | unset | |
+| [Structure functions and scaling exponents](turbulence_statistics/structure_functions.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | low | unset | |
 | [Velocity-derivative skewness](turbulence_statistics/derivative_skewness.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | low | unset | |
-| [Spectral energy flux](turbulence_statistics/spectral_energy_flux.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation, [issue 093](https://github.com/khegazy/pde_metrics/blob/main/issues/093-curve-valued-metrics-need-a-reported-number.md) | medium | unset | |
+| [Spectral energy flux](turbulence_statistics/spectral_energy_flux.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation | medium | unset | |
 | [Vortex stretching and energy budgets](turbulence_statistics/vortex_stretching.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation, [issue 005](https://github.com/khegazy/pde_metrics/blob/main/issues/005-3d-and-cost-extrapolation.md) | medium | unset | |
 | [Joint distribution of the velocity-gradient invariants Q and R](turbulence_statistics/qr_invariants.md) | [Turbulence statistics](turbulence_statistics/README.md) | implementation, [issue 005](https://github.com/khegazy/pde_metrics/blob/main/issues/005-3d-and-cost-extrapolation.md) | low | unset | |
 | [Helicity, potential vorticity and information transfer across scales](turbulence_statistics/inviscid_invariants.md) | [Turbulence statistics](turbulence_statistics/README.md) | both, [issue 085](https://github.com/khegazy/pde_metrics/blob/main/issues/085-inviscid-invariants-need-other-data.md) | medium | unset | |
@@ -93,14 +93,14 @@ regime, protected from data leakage and combined.
 | [Well groups](topology/well_groups.md) | [Topology](topology/README.md) | math, [issue 062](https://github.com/khegazy/pde_metrics/blob/main/issues/062-well-groups-have-no-computable-definition.md) | high | low | |
 | [Reeb graphs and Morse–Smale complexes](topology/reeb_graphs.md) | [Topology](topology/README.md) | implementation, [issue 063](https://github.com/khegazy/pde_metrics/blob/main/issues/063-reeb-graph-distance-is-not-standard.md) | medium | medium | |
 | [Jacobi sets](topology/jacobi_sets.md) | [Topology](topology/README.md) | implementation, [issue 064](https://github.com/khegazy/pde_metrics/blob/main/issues/064-jacobi-set-defines-no-scalar.md) | medium | medium | |
-| [Minkowski functionals and tensors](topology/minkowski_functionals.md) | [Topology](topology/README.md) | implementation, [issue 093](https://github.com/khegazy/pde_metrics/blob/main/issues/093-curve-valued-metrics-need-a-reported-number.md) | low | unset | |
+| [Minkowski functionals and tensors](topology/minkowski_functionals.md) | [Topology](topology/README.md) | implementation | low | unset | |
 | [Two-point correlation](basis_decompositions/two_point_correlation.md) | [Basis decompositions](basis_decompositions/README.md) | none, [issue 075](https://github.com/khegazy/pde_metrics/blob/main/issues/075-two-point-correlation-anisotropy-is-untestable.md) | low | medium | |
 | [Wavelets and coherent vortex extraction](basis_decompositions/coherent_vortex_extraction.md) | [Basis decompositions](basis_decompositions/README.md) | implementation, [issue 076](https://github.com/khegazy/pde_metrics/blob/main/issues/076-coherent-vortex-extraction-needs-wavelets.md) | medium | high | |
 | [Wavelet scattering and phase harmonics](basis_decompositions/wavelet_scattering.md) | [Basis decompositions](basis_decompositions/README.md) | implementation, [issue 077](https://github.com/khegazy/pde_metrics/blob/main/issues/077-wavelet-scattering-needs-kymatio.md) | medium | high | |
 | [Bispectrum and bicoherence](basis_decompositions/bispectrum.md) | [Basis decompositions](basis_decompositions/README.md) | implementation, [issue 065](https://github.com/khegazy/pde_metrics/blob/main/issues/065-bispectrum-distance-is-not-fixed.md) | medium | unset | |
-| [Error by wavenumber band](basis_decompositions/spectral_band_error.md) | [Basis decompositions](basis_decompositions/README.md) | implementation, [issue 093](https://github.com/khegazy/pde_metrics/blob/main/issues/093-curve-valued-metrics-need-a-reported-number.md) | low | unset | |
-| [Spectral coherence and phase error](basis_decompositions/spectral_coherence.md) | [Basis decompositions](basis_decompositions/README.md) | implementation, [issue 093](https://github.com/khegazy/pde_metrics/blob/main/issues/093-curve-valued-metrics-need-a-reported-number.md) | low | unset | |
-| [Delta-variance spectral slope](basis_decompositions/delta_variance.md) | [Basis decompositions](basis_decompositions/README.md) | implementation, [issue 093](https://github.com/khegazy/pde_metrics/blob/main/issues/093-curve-valued-metrics-need-a-reported-number.md) | low | unset | |
+| [Error by wavenumber band](basis_decompositions/spectral_band_error.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | low | unset | |
+| [Spectral coherence and phase error](basis_decompositions/spectral_coherence.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | low | unset | |
+| [Delta-variance spectral slope](basis_decompositions/delta_variance.md) | [Basis decompositions](basis_decompositions/README.md) | implementation | low | unset | |
 | [Velocity channel analysis](basis_decompositions/velocity_channel_analysis.md) | [Basis decompositions](basis_decompositions/README.md) | implementation, [issue 087](https://github.com/khegazy/pde_metrics/blob/main/issues/087-velocity-channel-analysis-needs-a-projected-reference.md) | medium | unset | |
 | [Valid prediction time](dynamics/valid_prediction_time.md) | [Dynamics](dynamics/README.md) | implementation, [issue 078](https://github.com/khegazy/pde_metrics/blob/main/issues/078-valid-prediction-time-needs-rollouts.md) | medium | unset | |
 | [Temporal autocorrelation](dynamics/temporal_autocorrelation.md) | [Dynamics](dynamics/README.md) | implementation, [issue 079](https://github.com/khegazy/pde_metrics/blob/main/issues/079-temporal-autocorrelation-needs-rollouts.md) | low | unset | |
@@ -131,9 +131,8 @@ judgement.
 1. **[Persistence diagrams](topology/persistence_diagrams.md) on vorticity and density.**
    Off-the-shelf software exists, the stability theory is settled, and there is precedent at
    LBNL.
-2. **[Tail-index estimators](distributional/tail_index_estimators.md) and the
-   [Wasserstein distance between increment distributions at every separation](optimal_transport/gradient_pdf_w1.md).**
-   Neither has a positivity problem to solve, and both measure intermittency directly.
+2. **[Tail-index estimators](distributional/tail_index_estimators.md).** It has no positivity
+   problem to solve, and it measures intermittency directly.
 3. **The [shock detector](shock_geometry/shock_detector.md) with
    [distances between shock sets](shock_geometry/shock_set_distance.md).** These close the
    gap of measuring how far apart two shocks are, using distances imported from medical

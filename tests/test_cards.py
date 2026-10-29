@@ -1311,7 +1311,11 @@ def test_the_performance_block_opens_with_the_figures(tmp_path, monkeypatch):
     body = [line for line in block.splitlines()[1:] if line.strip()]
     assert body[0] == f"![{ALT_TEXT['sensitivity_profile']}](_generated/sensitivity_profile.svg)"
     assert body[2] == f"![{ALT_TEXT['response_curves']}](_generated/response_curves.svg)"
-    assert body[4].startswith("| test family |"), "the table follows the figures"
+    assert body[4].startswith("**Trend") and body[5].startswith("| test family |"), (
+        "the tables follow the figures")
+    headings = [line for line in body if line.startswith("**") and line.endswith("?**")]
+    assert [h.split(":")[0] for h in headings] == ["**Trend", "**Reactivity", "**Consistency"], (
+        f"the three measurements, each in a table of its own, in order; got {headings}")
     for alt in ALT_TEXT.values():
         assert "]" not in alt and ")" not in alt, "alt text would truncate the link pattern"
     referenced = set(re.findall(r"\]\(_generated/([^)]+\.svg)\)", block))
@@ -1601,3 +1605,28 @@ def test_profile_header_nests_no_parentheses(tmp_path):
         depth += {"(": 1, ")": -1}.get(character, 0)
         deepest = max(deepest, depth)
     assert "against" in header and deepest <= 1, header
+
+
+def test_the_canaries_table_never_prints_an_empty_identifier(tmp_path):
+    """No nearest level (no damage to match) is a dash, not a pair of empty backticks."""
+    run = evidence.load_run(_synthetic_run(tmp_path))
+    probes = run.probes.assign(gaussian_impostor_nearest_level="")
+    block = evidence.canaries_block(dataclasses.replace(run, probes=probes), "mse")
+    assert "``" not in block, block
+
+
+def test_the_curve_table_gives_each_coordinate_its_own_column_and_the_right_reason(tmp_path):
+    """Coordinates that six significant figures would merge keep distinct headers, and a rank
+    correlation undefined everywhere is not explained as a clean value of zero."""
+    run = evidence.load_run(_synthetic_run(tmp_path))
+    stats = pd.DataFrame({"metric": "mse", "field": "f", "degradation": "gaussian_blur",
+                          "is_probe": False, "coordinate": [1234567.0, 1234568.0],
+                          "rho": np.nan, "relative_change_max": [0.1, 0.2]})
+    dominance = pd.DataFrame({"dataset": "d", "metric": ["mse"], "field": "f",
+                              "degradation": "gaussian_blur", "dominance_min": [1.0],
+                              "n_coordinates": [2]})
+    block = evidence.companion_block(
+        dataclasses.replace(run, companion_axes=stats, dominance=dominance), "mse")
+    assert "| 1234567 | 1234568 |" in block, block
+    rho_line = next(line for line in block.splitlines() if "rank correlation" in line)
+    assert "zero" not in rho_line, rho_line

@@ -24,9 +24,12 @@ passes a :class:`~fmeval.context.FieldContext` carrying grid spacing, periodicit
 field name and the physical time. Detection happens once, here, via :mod:`inspect`, so the
 common case needs no boilerplate.
 
-Some metrics are *pointwise-decomposable*: their scalar value is a reduction of a per-cell
-density. Declare the companion map with :func:`pointwise_map` and the reduction with the
-``reduction=`` argument; the contract test then verifies ``R(map(a, b)) == metric(a, b)``.
+A metric returns one float, the number the literature reports. The object behind that number
+is its **companion**, declared with :func:`companion`: a per-cell map (``kind="field"``) whose
+declared ``reduction`` gives back the number, which the contract test verifies as
+``R(map(a, b)) == metric(a, b)``; or a curve on a named coordinate (``kind="curve"``), the
+literature's own values, which the pipeline stores on every result row and the analysis
+evaluates coordinate by coordinate beside the panel.
 """
 
 from __future__ import annotations
@@ -53,8 +56,8 @@ Arity = Literal["pairwise", "single", "ensemble"]
 #: Positional arguments each arity's function must declare.
 ARITY_POSITIONAL: dict[str, int] = {"pairwise": 2, "single": 1, "ensemble": 2}
 Cost = Literal["cheap", "moderate", "expensive"]
-Returns = Literal["scalar", "vector"]
 Measures = Literal["error", "calibration"]
+CompanionKind = Literal["field", "curve"]
 
 #: How a pointwise map reduces to the metric's scalar value. ``C`` is the channel count of
 #: the *input* field, because maps are summed over channels before reduction.
@@ -66,6 +69,28 @@ REDUCTIONS: dict[str, Callable[[np.ndarray, int], float]] = {
 
 
 @dataclass(frozen=True)
+class Companion:
+    """The object behind a metric's number, declared with :func:`companion`."""
+
+    fn: Callable[..., Any]
+    kind: CompanionKind
+    """``"field"``: a per-cell map, ``(*spatial)``, stored on chosen frames. ``"curve"``: a pair
+    ``(coordinates, values)``, stored on every row."""
+    coordinate: tuple[str, str] | None
+    """``(name, units)`` of a curve's coordinate; None for a field map."""
+    one_field: bool
+    """Whether the companion takes one field where its metric takes two: a property of one
+    field, called on the candidate of every variant, which on the clean level is the reference
+    (the member mean on an ensemble dataset, whose ladder degrades the prediction). Inferred from
+    the signature."""
+    takes_ctx: bool
+
+    def describe(self) -> dict[str, Any]:
+        return {"kind": self.kind, "coordinate": list(self.coordinate or []) or None,
+                "one_field": self.one_field}
+
+
+@dataclass(frozen=True)
 class MetricSpec(Accepts):
     """Everything the harness knows about one metric."""
 
@@ -73,7 +98,6 @@ class MetricSpec(Accepts):
     fn: Callable[..., Any]
     arity: Arity
     fields: tuple[str, ...]
-    returns: Returns
     differentiable: bool
     cost: Cost
     higher_is_better: bool
@@ -85,7 +109,7 @@ class MetricSpec(Accepts):
     module: str
     takes_ctx: bool
     reduction: str
-    pointwise: Callable[..., np.ndarray] | None = None
+    companion: Companion | None = None
     target: float | None = None
     """The value a perfectly calibrated prediction attains, if it is not zero.
 
@@ -107,10 +131,6 @@ class MetricSpec(Accepts):
     derivative, a wrap-around increment. Such a metric is not run on a dataset with a
     non-periodic axis (:func:`fmeval.pipeline.run`)."""
 
-    @property
-    def has_pointwise_map(self) -> bool:
-        return self.pointwise is not None
-
     def reduce(self, map_: np.ndarray, n_channels: int) -> float:
         """Apply this metric's declared reduction to a pointwise map."""
         return REDUCTIONS[self.reduction](map_, n_channels)
@@ -118,11 +138,11 @@ class MetricSpec(Accepts):
     def describe(self) -> dict[str, Any]:
         """What the decorator declares, as plain data: the catalog entry and run provenance."""
         return {
-            "arity": self.arity, "fields": list(self.fields), "returns": self.returns,
+            "arity": self.arity, "fields": list(self.fields),
             "units": self.units, "cost": self.cost, "differentiable": self.differentiable,
             "symmetric": self.symmetric, "higher_is_better": self.higher_is_better,
             "target": self.target, "measures": self.measures, "reduction": self.reduction,
-            "has_pointwise_map": self.has_pointwise_map,
+            "companion": None if self.companion is None else self.companion.describe(),
             "requires_periodic": self.requires_periodic,
         }
 
@@ -147,7 +167,6 @@ def metric(
     name: str | None = None,
     arity: Arity = "pairwise",
     fields: Sequence[str] = ("*",),
-    returns: Returns = "scalar",
     differentiable: bool = True,
     cost: Cost = "cheap",
     higher_is_better: bool = False,
@@ -169,7 +188,6 @@ def metric(
             ``fn(x)``, ``"ensemble"`` for ``fn(reference, members)`` with members
             ``(N, C, *spatial)``.
         fields: Canonical field names this metric accepts; ``("*",)`` means any.
-        returns: ``"scalar"`` for a float, ``"vector"`` for a 1-D array.
         differentiable: Whether it could serve as a training loss. Declared, not inferred.
         cost: Advisory tier; the pipeline warns on expensive metrics over many frames.
         higher_is_better: Whether larger values mean a better match.
@@ -238,7 +256,6 @@ def metric(
             fn=fn,
             arity=arity,
             fields=tuple(fields),
-            returns=returns,
             differentiable=differentiable,
             cost=cost,
             higher_is_better=higher_is_better,
@@ -258,28 +275,64 @@ def metric(
     return _decorate
 
 
-def pointwise_map(*, of: str) -> Callable[[Callable], Callable]:
-    """Attach a per-cell density function to an already-registered metric.
+def companion(*, of: str, kind: CompanionKind = "field",
+              coordinate: tuple[str, str] | None = None) -> Callable[[Callable], Callable]:
+    """Attach the object behind a metric's number to an already-registered metric.
 
-    The map takes the same arguments as its metric and returns an array with the channel
-    axis reduced away -- shape ``(*spatial)``. Reducing it with the metric's declared
-    ``reduction`` must reproduce the metric's scalar; the contract test enforces that.
+    One companion per metric. A second number from the literature is a sibling bundle that
+    imports the function, as ``rmse`` imports ``mse``.
+
+    * ``kind="field"``: a per-cell density taking the metric's arguments and returning
+      ``(*spatial)``, the channel axis summed away. Reducing it with the metric's declared
+      ``reduction`` must reproduce the metric's number; the contract test enforces that. Stored
+      on the frames ``report.error_map`` names.
+    * ``kind="curve"``: returns ``(coordinates, values)``, two 1-D arrays of one length with fixed
+      coordinates and the literature's own values, untransformed. It takes either the metric's
+      arguments, and is then itself a comparison, or one field where the metric takes two, and is
+      then a property of one field. The pipeline calls it before the metric on every row, stores
+      the curve, and hands it to the metric in ``ctx.cache[COMPANION_KEY]``
+      (:data:`fmeval.context.COMPANION_KEY`), so a metric that reads it there computes the curve
+      once per row.
 
     Args:
-        of: Name of the metric this map belongs to. Must already be registered, so the
-            map is defined *after* its metric in the same module.
+        of: Name of the metric. Must already be registered, so the companion is defined *after*
+            its metric in the same module.
+        kind: ``"field"`` or ``"curve"``.
+        coordinate: ``(name, units)`` of a curve's coordinate, e.g. ``("separation", "cells")``;
+            required for a curve and refused for a field map.
+
+    Raises:
+        ValueError: If the metric is unknown or already has a companion, or the kind and the
+            coordinate disagree.
+        TypeError: If the positional-argument count fits neither form.
     """
 
     def _decorate(fn: Callable) -> Callable:
         if of not in REGISTRY:
             raise ValueError(
-                f"pointwise_map(of={of!r}): metric is not registered; define the map "
+                f"companion(of={of!r}): metric is not registered; define the companion "
                 "after the metric it belongs to"
             )
         spec = REGISTRY[of]
-        if spec.has_pointwise_map:
-            raise ValueError(f"metric {of!r} already has a pointwise map")
-        REGISTRY[of] = dataclasses.replace(spec, pointwise=fn)
+        if spec.companion is not None:
+            raise ValueError(f"metric {of!r} already has a companion")
+        if kind not in ("field", "curve"):
+            raise ValueError(f"companion(of={of!r}): unknown kind {kind!r}")
+        if (kind == "curve") != (coordinate is not None):
+            raise ValueError(
+                f"companion(of={of!r}): a curve names its coordinate as (name, units) and a "
+                f"field map does not; got kind={kind!r}, coordinate={coordinate!r}"
+            )
+        n_pos, expected = positional_count(fn), ARITY_POSITIONAL[spec.arity]
+        allowed = {expected, 1} if kind == "curve" and spec.arity == "pairwise" else {expected}
+        if n_pos not in allowed:
+            raise TypeError(
+                f"companion(of={of!r}): takes {n_pos} positional argument(s); a {kind} "
+                f"companion of a {spec.arity} metric takes {sorted(allowed)}"
+            )
+        REGISTRY[of] = dataclasses.replace(spec, companion=Companion(
+            fn=fn, kind=kind, coordinate=None if coordinate is None else tuple(coordinate),
+            one_field=n_pos < expected, takes_ctx="ctx" in inspect.signature(fn).parameters))
         return fn
 
     return _decorate
@@ -312,10 +365,10 @@ def _main() -> None:
             ",".join(s.fields),
             s.units,
             s.cost,
-            "yes" if s.has_pointwise_map else "-",
+            s.companion.kind if s.companion else "-",
             "yes" if s.differentiable else "-",
         )
         for s in sorted(REGISTRY.values(), key=lambda s: s.name)
     ]
-    print_table(("metric", "arity", "fields", "units", "cost", "pointwise", "diff'able"),
+    print_table(("metric", "arity", "fields", "units", "cost", "companion", "diff'able"),
                 rows, _IMPORT_ERRORS, "no metrics registered")

@@ -184,13 +184,37 @@ def _folder(folder: RunFolder | Path) -> RunFolder:
     return folder if isinstance(folder, RunFolder) else RunFolder(Path(folder))
 
 
-def read_results(folder: RunFolder | Path, name: str = "results") -> pd.DataFrame:
-    """Read a tidy frame back, from either the plain or the gzipped form."""
+#: Result columns read back as text, an empty cell staying ``""``. A calibration-free operator
+#: writes ``calibration`` empty, and the default reader would turn that into NaN. Only these
+#: columns: read the whole file this way and the empty ``target_value`` cells become strings,
+#: which ``summarise_axes`` then fails to convert.
+RESULT_TEXT_COLUMNS: tuple[str, ...] = ("calibration", "severity_name", "variant_label")
+
+#: The name of a run's curve-companion rows, ``data/companions.csv``, beside ``results.csv``.
+COMPANIONS: str = "companions"
+
+
+def read_results(folder: RunFolder | Path, name: str = "results", *,
+                 missing_ok: bool = False) -> pd.DataFrame | None:
+    """Read a tidy frame back, from either the plain or the gzipped form.
+
+    The columns of :data:`RESULT_TEXT_COLUMNS` are read as written, without missing-value
+    detection (a ``str`` converter, which is ``keep_default_na=False`` for those columns
+    alone); every other column is parsed as usual. A named column a file lacks is skipped.
+
+    Args:
+        folder: The run folder.
+        name: ``"results"``, or :data:`COMPANIONS` for the curve-companion rows.
+        missing_ok: Return None rather than raise when the file is absent, as it is in a run
+            whose metrics have no curve companion.
+    """
     data = _folder(folder).data
     for suffix in (".csv", ".csv.gz"):
         path = data / f"{name}{suffix}"
         if path.exists():
-            return pd.read_csv(path)
+            return pd.read_csv(path, converters=dict.fromkeys(RESULT_TEXT_COLUMNS, str))
+    if missing_ok:
+        return None
     raise FileNotFoundError(f"no {name}.csv or {name}.csv.gz in {data}")
 
 

@@ -29,7 +29,15 @@ from matplotlib import rc_context
 
 from fmeval import CONFIGS
 from fmeval import analysis as an
-from fmeval.io import RunFolder, dump_yaml, read_config, read_results, read_run_meta, read_yaml
+from fmeval.io import (
+    COMPANIONS,
+    RunFolder,
+    dump_yaml,
+    read_config,
+    read_results,
+    read_run_meta,
+    read_yaml,
+)
 
 from . import plots as _plots  # noqa: F401  (registers the figure renderers)
 from . import tables as _tables  # noqa: F401  (registers the table renderers)
@@ -100,7 +108,8 @@ def build_context(
     spectrum_path = folder.data / "calibration_spectrum.csv"
     spectrum = pd.read_csv(spectrum_path) if spectrum_path.exists() else pd.DataFrame()
 
-    analysis = an.analyse(df, meta=meta, config=config, n_bootstrap=bootstrap)
+    analysis = an.analyse(df, companions=read_results(folder, COMPANIONS, missing_ok=True),
+                          meta=meta, config=config, n_bootstrap=bootstrap)
 
     return ReportContext.from_analysis(
         analysis, meta=meta, theme=theme, card=an.flag(analysis.card, thresholds),

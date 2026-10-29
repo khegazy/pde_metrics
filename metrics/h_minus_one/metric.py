@@ -22,7 +22,7 @@ from numpy.typing import NDArray
 
 from fmeval.context import FieldContext
 from fmeval.external.kinet_spectral import physical_wavenumber_grid
-from metrics.registry import REDUCTIONS, metric, pointwise_map
+from metrics.registry import REDUCTIONS, companion, metric
 
 
 def riesz_potential(
@@ -69,7 +69,6 @@ def riesz_potential(
     name="h_minus_one",
     arity="pairwise",
     fields=("*",),
-    returns="scalar",
     differentiable=True,
     cost="cheap",
     higher_is_better=False,
@@ -115,7 +114,7 @@ def h_minus_one(
                                    reference.shape[0])
 
 
-@pointwise_map(of="h_minus_one")
+@companion(of="h_minus_one")
 def h_minus_one_map(
     reference: NDArray[np.floating],
     candidate: NDArray[np.floating],

@@ -98,7 +98,8 @@ TODO(fill) Answer four questions, in order. What is the range, and
 what are the units? Is lower better, higher better, or is there a target value? What
 counts as a good value, and what does that depend on? And which comparisons are
 meaningful — across models, across resolutions, across datasets — and which of those are
-invalid for this metric in particular?
+invalid for this metric in particular? If the metric has a companion, name it and its columns:
+the per-cell map, or the curve, its coordinate and what one value of it means.
 
 ## Limitations
 
@@ -233,6 +234,18 @@ Not generated yet. Run `python -m fmeval.cards evidence <name>`.
 <!-- END GENERATED results_damage_by_level -->
 
 TODO(fill) What the per-strength damage shows beside the pointwise controls: where this metric charges more or less than they do for the same displacement, and on which field. Magnitude, not order, is the claim here.
+
+### The curve behind the number
+
+<!-- GENERATED results_companion: written by `python -m fmeval.cards evidence <name>`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence <name>`.
+
+<!-- END GENERATED results_companion -->
+
+TODO(fill) Only for a metric with a curve companion; delete this subsection otherwise. Which
+coordinates each degradation moves, whether the trend holds coordinate by coordinate, and what
+the dominance says about the registered number standing for the curve.
 
 ## References
 

@@ -10,10 +10,18 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
+from dataclasses import field as dc_field
+from typing import Any
 
 import numpy as np
 
 from .data.base import GridSpec
+
+#: The ``FieldContext.cache`` key under which the pipeline hands a curve companion's result,
+#: ``(coordinates, values)`` for the variant being scored, to its metric
+#: (:func:`metrics.registry.companion`). Only the pipeline writes it: the cache lives across the
+#: whole ladder, so a curve a metric stored there itself would be read back for the next variant.
+COMPANION_KEY: str = "companion"
 
 
 @dataclass(frozen=True)
@@ -29,6 +37,12 @@ class FieldContext:
     #: density is 1.0 +/- 1.8e-4 and a fraction of the raw RMS would be pure destruction.
     fluctuation_rms: float
     rng: np.random.Generator
+    #: Work shared across the ladder. The pipeline builds one context per (frame, field, metric)
+    #: and hands it to every variant's call, so a quantity of the reference is computed once per
+    #: frame by testing membership first: ``if key not in ctx.cache: ctx.cache[key] = f(ref)``.
+    #: (``setdefault(key, f(ref))`` would evaluate ``f`` on every call.) Under
+    #: :data:`COMPANION_KEY` it holds the curve of the variant being scored.
+    cache: dict[str, Any] = dc_field(default_factory=dict)
 
     @property
     def spatial_axes(self) -> tuple[int, ...]:

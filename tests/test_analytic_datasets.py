@@ -29,7 +29,7 @@ import pytest
 from fmeval import CONFIGS, REPO
 from fmeval.cards import dataset_figures
 from fmeval.config import build_job, compose_config
-from fmeval.data.analytic import SodShockTube, TaylorGreen2D
+from fmeval.data.analytic import AdvectingBlobs, SodShockTube, TaylorGreen2D
 from fmeval.data.base import READERS
 from fmeval.data.readers import open_trajectory
 from fmeval.derived import RecomputingTrajectory
@@ -316,3 +316,71 @@ def test_the_dynamics_figures_are_drawn_with_their_numbers(name, figures, tmp_pa
         record = json.loads(path.with_suffix(".json").read_text())
         assert record["dataset"] == name and record["panels"]
         assert len(record["time"]) == dataset_figures.N_SNAPSHOTS
+
+
+# --- advecting blobs: the time-dependent test bed --------------------------------------------
+
+
+def test_a_blob_is_carried_rigidly_at_its_velocity():
+    """Exact advection: at 0.125 domain lengths per unit time on 16 cells along x, one unit of
+    time later the field is the first frame shifted by exactly two cells."""
+    blob = AdvectingBlobs(grid=(16, 8), n_frames=3, t_end=2.0, velocities=((0.125, 0.0),),
+                          width=0.1)
+    first, later = (blob.frame(i, ["density"])["density"] for i in (0, 1))
+    assert later == pytest.approx(np.roll(first, 2, axis=-2), rel=1e-12)
+    assert blob.grid.boundary == ("periodic", "periodic")
+
+
+def test_blobs_at_distinct_speeds_change_the_error_from_frame_to_frame():
+    """The reason for three blobs: with distinct velocities their relative positions change, so
+    one blur costs a different amount in each frame, while one blob gives the same error in
+    every frame. Measured with the defaults, MSE under this blur varies by 7.5% across frames."""
+    ladder = build_ladder({"gaussian_blur": {"severities": [0.25]}})
+
+    def spread(trajectory):
+        rows = run(trajectory, [metric_registry.get("mse")], ladder, fields=["density"],
+                   dataset=DatasetInfo(name="advecting_blobs")).rows
+        values = rows.loc[rows["degradation"] == "gaussian_blur", "value"].to_numpy()
+        return values.std() / values.mean()
+
+    assert spread(AdvectingBlobs()) > 0.01
+    assert spread(AdvectingBlobs(velocities=((0.05, 0.02),))) < 1e-9
+
+
+def test_per_unit_time_grows_the_applied_severity_linearly_in_time():
+    """A rate times the time since the trajectory's first frame, recorded beside the rate; on that
+    frame it does nothing and the rows say so, whatever the first frame's time."""
+    ladder = build_ladder({"drift": {"op": "translate_subpixel", "severities": [0.5, 1.0],
+                                     "per_unit_time": True}})
+    rows = run(AdvectingBlobs(n_frames=5, t_start=2.0, t_end=6.0), [metric_registry.get("mse")],
+               ladder, fields=["density"], dataset=DatasetInfo(name="advecting_blobs")).rows
+    drift = rows[rows["degradation"] == "drift"]
+    assert drift["severity"].to_numpy() == pytest.approx(
+        (drift["severity_nominal"] * (drift["time"] - 2.0)).to_numpy(), rel=1e-12)
+    assert drift.loc[drift["time"] == 2.0, "severity_degenerate"].all()
+    assert not drift.loc[drift["time"] > 2.0, "severity_degenerate"].any(), (
+        "a level that is a no-op only on the first frame must not be excluded at later times")
+
+
+@pytest.mark.parametrize("op, reason", [
+    ("gaussian_blur", "calibrated"),                # a fraction of a spectrum, not a rate
+    ("band_attenuate", "unchanged at severity 0"),  # severity 0 damages; damage falls with it
+    ("gaussian_impostor", "not ordinal"),           # a probe's severity is not a strength
+])
+def test_per_unit_time_is_refused_where_a_rate_times_a_time_is_no_strength(op, reason):
+    """Only an ordinal, uncalibrated operator whose severity 0 is the identity and whose damage
+    grows with its severity starts undamaged and is damaged more as time passes."""
+    with pytest.raises(ValueError, match=reason):
+        build_ladder({"grow": {"op": op, "severities": [0.1], "per_unit_time": True}})
+
+
+def test_a_per_unit_time_strength_the_grid_cannot_take_is_dropped_before_the_run():
+    """Coarsening by 2 per unit time reaches a factor of 3 at t = 1.5, which does not divide the
+    64-cell grid. The level is tried at every frame's time before the loop and dropped, as any
+    unsupported strength is, rather than stopping the run inside it at that frame."""
+    ladder = build_ladder({"grow": {"op": "coarsen", "severities": [2.0], "per_unit_time": True},
+                           "translate_x": {"op": "translate", "severities": [1]}})
+    rows = run(AdvectingBlobs(n_frames=4, t_end=1.5), [metric_registry.get("mse")], ladder,
+               fields=["density"], dataset=DatasetInfo(name="advecting_blobs")).rows
+    assert "grow" not in set(rows["degradation"].astype(str))
+    assert "translate_x" in set(rows["degradation"].astype(str))

@@ -46,7 +46,7 @@ The idea has three forms.
    a flux at every point rather than one number per wavenumber. The distributions of that
    local flux in the prediction and the reference can then be compared with the 1-Wasserstein
    distance, as on
-   [Wasserstein distance between increment distributions at every separation](../optimal_transport/gradient_pdf_w1.md).
+   built [increment_w1_by_separation](../../metrics/increment_w1_by_separation.md).
 
 **Compressible and variable-density flow.** When density varies, the pressure does work and
 kinetic energy can be exchanged with internal energy, so Equation (1) is incomplete. The

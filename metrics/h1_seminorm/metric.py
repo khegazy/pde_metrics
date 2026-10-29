@@ -22,14 +22,13 @@ from numpy.typing import NDArray
 
 from fmeval.context import FieldContext
 from fmeval.external.kinet_spectral import spectral_derivative
-from metrics.registry import REDUCTIONS, metric, pointwise_map
+from metrics.registry import REDUCTIONS, companion, metric
 
 
 @metric(
     name="h1_seminorm",
     arity="pairwise",
     fields=("*",),
-    returns="scalar",
     differentiable=True,
     cost="cheap",
     higher_is_better=False,
@@ -69,7 +68,7 @@ def h1_seminorm(
                                    reference.shape[0])
 
 
-@pointwise_map(of="h1_seminorm")
+@companion(of="h1_seminorm")
 def h1_seminorm_map(
     reference: NDArray[np.floating],
     candidate: NDArray[np.floating],

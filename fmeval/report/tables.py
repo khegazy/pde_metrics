@@ -101,7 +101,8 @@ def axis_detail(ctx, df, opts) -> TableResult:
 
 
 #: What the response table shows, in order. The CSV beside it carries every per-axis column.
-RESPONSE_TABLE = ("metric", "degradation", "elasticity_x", "elasticity", "response_shape",
+RESPONSE_TABLE = ("metric", "degradation", "elasticity_x", "elasticity", "relative_change_max",
+                  "response_shape",
                   "sensitivity_level", "severity_10", "severity_50", "saturation_level",
                   "severity_resolution", "damage_max_ucb", "blindness_q")
 
@@ -124,16 +125,20 @@ def axis_response(ctx, df, opts) -> TableResult:
         frame=rows[list(RESPONSE_TABLE)],
         keys={"field": field},
         caption=f"Response statistics on {field}. The elasticity is the log-log slope over the "
-                "mildest levels against the strength named in the second column. Onset and "
-                "half-damage are in that strength's units; the resolution is a lower bound on "
-                "how precisely one snapshot's value pins the strength down. The last two columns "
+                "mildest levels against the strength named in the second column, and the change "
+                "from clean is the median departure at the harshest strength over the clean "
+                "value of the same snapshot (a dash where that clean value is zero). Onset and "
+                "half-damage are in that strength's units; the consistency is how much the "
+                "response varies from snapshot to snapshot relative to its size, in the "
+                "strength's units. The last two columns "
                 f"are the {an.BLINDNESS_CONFIDENCE:.0%} upper bound of the largest damage and the "
                 f"false-discovery-adjusted evidence that it stays below {an.BLINDNESS_MARGIN:g}.",
         headers={"degradation": "axis", "elasticity_x": "against", "response_shape": "shape",
+                 "relative_change_max": "change from clean",
                  "sensitivity_level": "detection onset (level)",
                  "severity_10": "detection onset (strength)",
                  "severity_50": "half-damage strength", "saturation_level": "saturation point",
-                 "severity_resolution": "severity resolution",
+                 "severity_resolution": "consistency",
                  "damage_max_ucb": "largest damage, upper bound",
                  "blindness_q": "blindness q"},
         formats={"metric": "code", "degradation": "code", "elasticity_x": "%s",

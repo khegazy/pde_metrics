@@ -15,7 +15,7 @@ Two kinds of dataset appear:
   and its run summary then names the kind of claim the numbers support:
   `synthetic_ensemble` as a **calibrated null**, for the probabilistic metrics, and
   `sod_shock_tube` as an **analytic check**, for the metrics that need a shock or pressure.
-  Neither is evidence about turbulence. `taylor_green_2d` is never cited.
+  Neither is evidence about turbulence. `taylor_green_2d` and `advecting_blobs` are never cited.
 
 | Problem | Configurations | Kind | Grid | Boundaries |
 |---|---|---|---|---|
@@ -23,6 +23,7 @@ Two kinds of dataset appear:
 | [Sod shock tube](sod_shock_tube.md) | `sod_shock_tube` | computed: exact solution of the Euler equations | 2048 cells, 1D | Neumann walls |
 | [Taylor–Green vortex](taylor_green_vortex.md) | `taylor_green_2d` | computed: exact solution of the Navier–Stokes equations | $256^2$ | periodic |
 | [Synthetic exchangeable ensemble](synthetic_ensemble.md) | `synthetic_ensemble` | computed: a formula and a seed | $64^2$ | periodic |
+| [Advecting Gaussian blobs](advecting_blobs.md) | `advecting_blobs` | computed: exact solution of passive advection, a test bed for time-dependent degradations | $64^2$ | periodic |
 
 **Boundaries.** Each dataset states the boundary of each axis. On an axis that is not
 periodic, the degradations act on the field extended across the boundary by that boundary's

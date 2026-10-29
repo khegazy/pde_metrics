@@ -78,18 +78,40 @@ Four measured statistics for palinstrophy, one row per degradation grouped by fa
 
 Median damage over frames against severity level for palinstrophy, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, an unrelated field; the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to an unrelated field. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points above 2 are drawn as triangles at the top. No damage scale on vorticity: the grey panels show the raw value instead.
 
-| test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
+**Trend: does the response follow the degradation?**
+
+| test family | field | degradations | rank correlation | fraction of frames in order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| Displacement | vorticity | 2 | — to — | — | level — |
-| Resolution loss | vorticity | 2 | -1 to -1 | 0.0328 | level — |
-| Smoothing | vorticity | 3 | -1 to -1 | 0.0232 | level — |
-| Spectral filtering | vorticity | 4 | -1 to -1 | 0 | level — |
-| Noise | vorticity | 1 | 1 to 1 | 0.505 | level — |
-| trap test: fake prediction, right spectrum | vorticity | 1 | — | — | damage — |
+| Displacement | vorticity | 2 | — | — | — |
+| Resolution loss | vorticity | 2 | 1 | 0.901 to 1 | 0.578 to 0.685 |
+| Smoothing | vorticity | 3 | 1 | 1 | 0.531 to 0.678 |
+| Spectral filtering | vorticity | 4 | 1 | 1 | 0.514 to 0.85 |
+| Noise | vorticity | 1 | 1 | 1 | 1 |
 
-One row per family of degradation and physical field. **Rank correlation** asks whether the metric put the strengths of one degradation in the right order: it is the Spearman correlation between the metric and the applied strength, computed inside a single frame, and the column gives the range over the degradations in that family. A value of 1 means every strength was ordered correctly in every frame. **Weakest gap between neighbouring strengths** asks whether the metric can tell one strength from the next: it is the smallest Mann-Whitney overlap between any two neighbouring strengths, where 1 means the two never overlap and 0.5 means the metric cannot separate them at all. **First strength detected** is the mildest strength at which the metric has moved a tenth of the way from the undegraded reference toward a field with no relation to the truth; a dash means the metric never reached that tenth. **Damage** is that same 0-to-1 scale read as a number: 0 is the undegraded reference and 1 is an unrelated field.
+**Reactivity: how far does it move?**
 
-This table reports what was measured and grades none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
+| test family | field | change from clean at the harshest strength | elasticity | first strength detected |
+|---|---|---|---|---|
+| Displacement | vorticity | 0 | — | level — |
+| Resolution loss | vorticity | -0.96 to -0.578 | 2.27 | level — |
+| Smoothing | vorticity | -0.98 to -0.734 | 0.432 to 1.07 | level — |
+| Spectral filtering | vorticity | -0.99 to -0.517 | 0.21 to 5.14 | level — |
+| Noise | vorticity | 10.8 | 2.01 | level — |
+| trap test: fake prediction, right spectrum | vorticity | — | — | damage — |
+
+**Consistency: how much does it vary from snapshot to snapshot?**
+
+| test family | field | consistency, in the strength's units | snapshots per independent block |
+|---|---|---|---|
+| Displacement | vorticity | — | 1 to 17 |
+| Resolution loss | vorticity | 1.42 to 1.9 | 21 |
+| Smoothing | vorticity | 0.0161 to 0.0354 | 21 |
+| Spectral filtering | vorticity | 0.0335 to 0.058 | 21 to 22 |
+| Noise | vorticity | 0.00297 | 22 |
+
+One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to a field with no relation to the truth; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
+
+These tables report what was measured and grade none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
 
 **Profile.**
 
@@ -191,14 +213,14 @@ Every number in this section comes from that one run. Regenerate with `python -m
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `box_blur` | vorticity | 4 | -1 | 0 | 0.121 |
-| `gaussian_blur` | vorticity | 4 | -1 | 0 | 0.0232 |
-| `median_blur` | vorticity | 3 | -1 | 0 | 0.218 |
+| `box_blur` | vorticity | 4 | 1 | 1 | 0.531 |
+| `gaussian_blur` | vorticity | 4 | 1 | 1 | 0.533 |
+| `median_blur` | vorticity | 3 | 1 | 1 | 0.678 |
 
 <!-- END GENERATED results_smoothing -->
 
-The rank correlation of −1 is the correct result for a single-field quantity, not a failure:
-smoothing removes fine detail, so palinstrophy falls as the strength rises. What this family
+Smoothing removes fine detail, so palinstrophy falls steadily as the strength rises and follows
+each blur with a rank correlation of 1. What this family
 measures is the size of that fall beside enstrophy's. At the mildest `gaussian_blur`
 palinstrophy has already lost 31% against enstrophy's 6%, and at the strongest 98% against
 47%; `box_blur` gives 42% against 9% at its mildest. Equation (3) guarantees the ordering for
@@ -214,10 +236,10 @@ ordering on this data.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `highpass_butterworth` | vorticity | 4 | -1 | 0 | 0.236 |
-| `highpass_ideal` | vorticity | 4 | -1 | 0 | 0.277 |
-| `lowpass_butterworth` | vorticity | 4 | -1 | 0 | 0 |
-| `lowpass_ideal` | vorticity | 4 | -1 | 0 | 0 |
+| `highpass_butterworth` | vorticity | 4 | 1 | 1 | 0.824 |
+| `highpass_ideal` | vorticity | 4 | 1 | 1 | 0.85 |
+| `lowpass_butterworth` | vorticity | 4 | 1 | 1 | 0.514 |
+| `lowpass_ideal` | vorticity | 4 | 1 | 1 | 0.516 |
 
 <!-- END GENERATED results_spectral -->
 
@@ -254,8 +276,8 @@ statistic is withheld.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `coarsen` | vorticity | 4 | -1 | 0 | 0.175 |
-| `coarsen_bandlimited` | vorticity | 4 | -1 | 0 | 0.0328 |
+| `coarsen` | vorticity | 4 | 1 | 0.901 | 0.685 |
+| `coarsen_bandlimited` | vorticity | 4 | 1 | 1 | 0.578 |
 
 <!-- END GENERATED results_resolution -->
 
@@ -264,9 +286,11 @@ warns about. Coarsening by a factor of 2 *raises* palinstrophy by 89% above the 
 and a factor of 4 still leaves it 39% high; only at factors 8 and 16 does it fall below, by 28%
 and 59%. The degradation expands each block back to the fine grid as a constant, so it adds
 a jump at every block edge, and a jump is exactly the steep gradient this quantity counts.
-Enstrophy falls throughout, by 4% to 40%. The rank correlation of −1 in the table is computed
-across the four coarsening strengths only and does not show that the mildest of them moved the
-value the wrong way. `issues/039` records the same mechanism for `h1_seminorm`.
+Enstrophy falls throughout, by 4% to 40%. The rank correlation of 1 in the table says the value
+moves steadily one way across the four strengths, read as a departure from the clean value; the
+clean value is not one of the points, so the table does not show that the two mildest
+strengths raised palinstrophy above it. The response curve does. `issues/039` records the same
+mechanism for `h1_seminorm`.
 
 `coarsen_bandlimited` keeps the same block means as `coarsen` without adding edges, and under
 it palinstrophy only falls: by 2%, 39%, 84% and 96% at factors 2 to 16, while enstrophy falls
@@ -283,15 +307,16 @@ it boosts the modes nearest the cut.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `additive_noise` | vorticity | 4 | 1 | 1 | 0.505 |
+| `additive_noise` | vorticity | 4 | 1 | 1 | 1 |
 
 <!-- END GENERATED results_stochastic -->
 
 Noise is broadband, so it adds energy at the highest wavenumbers, where Equation (2) weights
 it most. At the strongest noise palinstrophy is 12 times its reference value while enstrophy
-has risen by 25%. The ordering is correct in every frame, but the two mildest strengths are
-barely separable across frames, with a weakest gap of 0.505: they move the value by 0.01% and
-0.4%, which is small beside how much it changes from one frame to the next.
+has risen by 25%. The ordering is correct in every frame, and read against the clean value of
+the same frame no two neighbouring strengths overlap (a weakest gap of 1), although the two
+mildest move the value by only 0.01% and 0.4%, small beside how much the value itself changes
+from one frame to the next.
 
 ### Trap tests
 
@@ -302,7 +327,7 @@ barely separable across frames, with a weakest gap of 0.505: they move the value
 
 | field | damage assigned to the fake prediction | closest real degradation | value on an unrelated field |
 |---|---|---|---|
-| vorticity | — | `` | 4.62e-07 |
+| vorticity | — | — | 4.62e-07 |
 
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage of 1 is what a field with no relation to the truth scores, so the damage column says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture.
 

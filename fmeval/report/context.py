@@ -79,6 +79,11 @@ class ReportContext:
     support a finely spaced cutoff ladder, and the curve shows that at a glance.
     """
     maps: dict[str, np.ndarray] = dc_field(default_factory=dict)
+    companion_scored: pd.DataFrame = dc_field(default_factory=pd.DataFrame)
+    """Curve-companion rows, one coordinate per ``metric[coordinate]`` label, with ``damage``."""
+    companion_axes: pd.DataFrame = dc_field(default_factory=pd.DataFrame)
+    """The per-coordinate statistics of :attr:`fmeval.analysis.Analysis.companion_axes`."""
+    dominance: pd.DataFrame = dc_field(default_factory=pd.DataFrame)
     meta: dict[str, Any] = dc_field(default_factory=dict)
     config: dict[str, Any] = dc_field(default_factory=dict)
     style: Style = dc_field(default_factory=Style)
@@ -103,6 +108,8 @@ class ReportContext:
                    style=Style.build(theme, metrics=scored["metric"].unique(),
                                      axes=scored["degradation"].unique()),
                    anchor_label=analysis.anchor_label, probe_labels=analysis.probe_labels,
+                   companion_scored=analysis.companion_scored,
+                   companion_axes=analysis.companion_axes, dominance=analysis.dominance,
                    **extra)
 
     # --- graceful skip ---------------------------------------------------------------
