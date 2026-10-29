@@ -663,6 +663,53 @@ directions.
 
 ---
 
+## The curve behind the number
+
+Some metrics report one number that stands for a curve: a distance at every separation, an
+energy at every wavenumber. Such a metric declares the curve as its **companion**, and the run
+stores it beside the result rows.
+
+### `companions.csv` and `coordinate` — the curve, one row per coordinate
+
+**What it is.** One row per coordinate of the curve for every result row of that metric. It has
+the same columns as `results.csv`, `value` holding the curve's value there, plus `coordinate`,
+the separation, wavenumber or threshold. The values are the literature's own, untransformed.
+The coordinate's name and units are in `run_meta.json`, under the metric's registry entry. A curve
+that is a property of one field, such as a structure function, is stored for the damaged field
+at every strength, and on the clean level it is the reference's own curve.
+
+**How it is evaluated.** Each coordinate is read as a metric of its own, named
+`metric[coordinate]`, and receives every per-degradation statistic above (trend, change from
+clean, consistency) with no resampling interval. The results form a table of their own, beside
+the panel, never inside it. They never enter the summary card, the advisory flags, the
+cross-metric matrices or the false-discovery adjustment.
+
+**Caveats.** Neighbouring coordinates of one curve are strongly correlated: the step-to-step
+correlation was 0.85 to 1.0 in the review of the curve design. A curve of per-coordinate rank
+correlations therefore localises the evidence and does not multiply it. Where the clean curve
+crosses zero along its coordinate, the change from clean is large by construction near the
+crossing, and the raw curve is the reading there.
+
+**Where it appears.** `data/companions.csv`; the `companion_curves` figure; the companion table
+of a metric's page.
+
+### `dominance_min`, `n_coordinates` — can the choice of summary change the ordering?
+
+**What it is.** For each frame and each pair of neighbouring strengths, whether the harsher
+strength's curve has moved at least as far from clean as the milder one's at *every* coordinate,
+each coordinate in its own measured direction. `dominance_min` is the fraction of frames in
+which that held, for the weakest pair of neighbouring strengths (after the forecast dominance of
+Ehm, Gneiting, Jordan and Krüger 2016, *J. R. Stat. Soc. B* 78(3):505–562). `n_coordinates` is how many coordinates it was read over: a coordinate whose
+departure is round-off has no direction and is left out.
+
+**How to read it.** Near 1, every number built from the curve that grows with each
+coordinate's departure orders those strengths the same way: a root-mean-square, a largest
+difference, a normalised mean. The choice of summary then cannot change the trend. Lower, the
+summary decides the ordering in that fraction of frames. A fitted slope is not such a number, so
+this says nothing about one.
+
+**Where it appears.** The companion table of a metric's page.
+
 ## Normalisation and bookkeeping
 
 ### `value`
@@ -961,10 +1008,13 @@ Present on every row as the groundwork for comparing metrics across datasets; no
 
 The index into the source trajectory, and the corresponding physical time.
 
-### `metric`, `arity`, `field`, `component`
+### `metric`, `arity`, `field`
 
-Which metric, whether it compares two fields or characterises one, which physical field,
-and — for a metric returning a vector — which element.
+Which metric, whether it compares two fields or characterises one, and which physical field.
+`results.csv` holds exactly one row per (dataset, trajectory, frame, field, metric, variant);
+the analysis refuses a file that does not, because every statistic reads a row as one point of
+one trace. A run written before this rule may carry an empty `component` column, which is
+ignored.
 
 ### `seed`, `wall_time_s`
 
@@ -1015,6 +1065,13 @@ and re-flagging needs no recomputation, so changing your mind is a config edit.
 ---
 
 ## The degradations
+
+**Strength that grows with time.** A ladder entry of an uncalibrated operator may set
+`per_unit_time: true`. Its strength is then a rate, multiplied by each frame's physical time:
+the applied value is recorded in `severity` and the rate in `severity_nominal`. A translation then
+becomes a wrong advection speed and noise an error growing in time. At time 0 such an entry does
+nothing, and its rows there are flagged `severity_degenerate`. A calibrated operator refuses it,
+because its strength is a fraction of a measured spectrum, not a rate.
 
 Every operator also declares what it provably leaves unchanged — the multiset of values, the
 fluctuation's amplitude spectrum, the spatial mean, or the shape up to a rigid displacement — and
@@ -1155,6 +1212,8 @@ translates the ensemble rather than perturbing it, and would leave the spread un
 | `response_curves` | 3 | Median damage over frames against severity level for one metric, one panel per family of degradation (rows) and field (columns), every panel on one shared 0-to-1 scale so onset, slope and saturation are read by position. The solid grey line is damage 1, an unrelated field; the dotted black line is the damage assigned to the fake prediction with the right spectrum; the hollow black ring is `sensitivity_level`, the first level at which the metric has moved a tenth of the way to an unrelated field; hollow grey markers are strengths flagged `severity_degenerate`; three or fewer usable levels are drawn as markers only; points above the clip are triangles. A field with no damage scale shows the raw value on a grey panel. The numbers behind it are `per_level_response`: per level, the median and quartiles of damage and of the raw value (`damage_median`, `damage_q25`, `damage_q75`, `value_median`, `value_q25`, `value_q75`), the applied and nominal strength, `n_frames` and the median `energy_changed` |
 | `energy_spectrum` | 3 | Cumulative fluctuation energy against wavenumber, per field, with the applied spectral cutoffs drawn on. This sets the resolution of every filter's sequence of strengths: a spectral severity is a fraction of energy to remove and is converted to a cutoff using exactly this curve, so where the curve rises sharply neighbouring severity levels land on the same set of modes and become the same experiment. The density curve is almost a step — 3×10⁻⁵ of its fluctuation energy at or below |k| = 1 and 69% at |k| = √2 — which is why a sharp filter has only a couple of usable severity levels there; vorticity rises gradually, 50% by |k| = 3.2 and 99% by 51, and its cutoffs spread over more than a factor of ten. Dashed lines are cutoffs in use, dotted lines severity levels excluded for repeating a milder severity level or for doing nothing. It says nothing about phase — two fields with identical curves can look entirely different, which is the premise of the trap test above |
 | `ladder_curves` | 3 | Value against severity level for every degradation, with an interquartile band over frames. The curve the correlation summarises. Flat means blind to that failure mode |
+| `companion_curves` | 3 | For a metric with a curve companion: the curve against its coordinate, one panel per degradation, the median over frames at every strength (darker for harsher), the clean curve in black, an unrelated field dashed and the impostor dotted. The values are the literature's own. A second figure reads each coordinate as a metric of its own: its rank correlation with strength and its change from clean at the harshest strength, one line per degradation |
+| `response_along_time` | 3 | The metric against the frame's physical time, one line per strength, for each degradation whose applied strength changes along the trajectory (`per_unit_time`); the clean field in black. Shows an error growing in time. Not drawn for a run with no such degradation |
 | `monotonicity_heatmap` | 4 | `rho` for every metric against every degradation. Down a column: is this metric monotone? Across a row: what does it detect? Hatched cells fall below the reference value |
 | `severity_level_separation` | 5 | The spread of each severity level across frames, as violins. Where neighbouring violins overlap, the metric cannot rank models one severity level apart |
 | `field_gallery` | 6 | The per-cell contribution to the metric, on **shared colour limits**. Autoscaling each panel would make a heavily smoothed field look identical to the reference. A displaced feature shows as two lobes — one where it should be and is not, one where it is and should not be |

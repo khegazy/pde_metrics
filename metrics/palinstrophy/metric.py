@@ -30,7 +30,6 @@ from ..h1_seminorm.metric import squared_gradient
     name="palinstrophy",
     arity="single",
     fields=("vorticity",),
-    returns="scalar",
     differentiable=True,
     cost="cheap",
     higher_is_better=False,   # no direction of its own: the drift from the reference is

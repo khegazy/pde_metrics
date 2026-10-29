@@ -24,7 +24,6 @@ from ..rmse.metric import rmse
     name="ensemble_mean_rmse",
     arity="ensemble",
     fields=("*",),
-    returns="scalar",
     differentiable=True,
     cost="cheap",
     higher_is_better=False,

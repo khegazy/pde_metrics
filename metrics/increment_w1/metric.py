@@ -60,7 +60,6 @@ def axis_w1(a: NDArray[np.floating], b: NDArray[np.floating], axis: int) -> floa
     name="increment_w1",
     arity="pairwise",
     fields=("*",),
-    returns="scalar",
     differentiable=True,
     cost="cheap",
     higher_is_better=False,

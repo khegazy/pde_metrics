@@ -11,14 +11,13 @@ from __future__ import annotations
 import numpy as np
 
 from ..mse.metric import mse, mse_map
-from ..registry import metric, pointwise_map
+from ..registry import companion, metric
 
 
 @metric(
     name="rmse",
     arity="pairwise",
     fields=("*",),
-    returns="scalar",
     differentiable=True,
     cost="cheap",
     higher_is_better=False,
@@ -44,7 +43,7 @@ def rmse(reference: np.ndarray, candidate: np.ndarray) -> float:
     return float(np.sqrt(mse(reference, candidate)))
 
 
-@pointwise_map(of="rmse")
+@companion(of="rmse")
 def rmse_map(reference: np.ndarray, candidate: np.ndarray) -> np.ndarray:
     """Per-cell *squared* error, summed over channels: ``mse``'s map.
 

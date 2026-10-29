@@ -120,6 +120,145 @@ def ladder_curves(ctx, df, opts) -> PlotResult:
     )
 
 
+def _coordinate_label(ctx, metric: str) -> str:
+    """``name [units]`` of a metric's curve coordinate, from the run's own registry snapshot."""
+    entry = ctx.meta.get("registries", {}).get("metrics", {}).get(metric, {}).get("companion")
+    coordinate = (entry or {}).get("coordinate") or ["coordinate", ""]
+    return f"{coordinate[0]} [{coordinate[1]}]" if coordinate[1] else str(coordinate[0])
+
+
+@plot(
+    section=3, order=12, scope="per_metric_field",
+    title="The curve behind the number",
+    requires_columns=("degradation", "level", "value"),
+)
+def companion_curves(ctx, df, opts) -> PlotResult:
+    """The metric's curve companion against its coordinate, one panel per degradation.
+
+    The literature's own values, untransformed: in each panel the clean curve in black, one line
+    per strength in the degradation's colour, darker with strength, and in every panel the
+    unrelated-field anchor dashed and the impostor dotted, so a reader sees which coordinates a
+    degradation moves and how far toward an unrelated field. A second figure gives the
+    per-coordinate trend and change from clean that :func:`fmeval.analysis.analyse` computes.
+    """
+    metric, field = str(df["metric"].iloc[0]), str(df["field"].iloc[0])
+    scored = ctx.companion_scored
+    ctx.require(not scored.empty, "this run stored no curve companion")
+    rows = scored[scored["metric"].astype(str).str.startswith(f"{metric}[")
+                  & (scored["field"].astype(str) == field)]
+    ctx.require(not rows.empty, f"{metric} has no curve companion")
+    medians = (rows.groupby(["degradation", "level", "coordinate"], observed=True)["value"]
+               .median().rename("value_median").reset_index())
+    numeric = pd.api.types.is_numeric_dtype(medians["coordinate"])
+    clean = medians[medians["level"] == 0].sort_values("coordinate")
+    names = [a for a in ctx.ordinal_axes if a in set(medians["degradation"].astype(str))]
+    ctx.require(bool(names), "no ordinal ladder axes")
+    ncols = min(4, len(names))
+    nrows = -(-len(names) // ncols)
+    fig, grid = ctx.style.figure(nrows, ncols, sharex=True, sharey=True)
+    positive = numeric and (medians["coordinate"] > 0).all()
+    for k, name in enumerate(names):
+        ax = grid[k // ncols, k % ncols]
+        block = medians[medians["degradation"] == name]
+        levels = sorted(block["level"].unique())
+        for level, colour in zip(levels, ctx.style.level_colours(ctx.style.axis_colour(name),
+                                                                  len(levels)), strict=True):
+            line = block[block["level"] == level].sort_values("coordinate")
+            ax.plot(line["coordinate"], line["value_median"], color=colour, lw=1.2,
+                    marker="o", ms=2.5, label=f"level {level}")
+        ax.plot(clean["coordinate"], clean["value_median"], color="k", lw=1.6, label="clean")
+        for label, ls in ((ctx.anchor_label, "--"), ("gaussian_impostor", ":")):
+            probe = medians[medians["degradation"] == label].sort_values("coordinate")
+            if not probe.empty:
+                ax.plot(probe["coordinate"], probe["value_median"], color="0.45", ls=ls, lw=1,
+                        label=ctx.label(label))
+        if positive and medians["coordinate"].max() / medians["coordinate"].min() > 10:
+            ax.set_xscale("log", base=2)
+        ax.set_title(ctx.label(name), fontsize="small")
+    for k in range(len(names), nrows * ncols):
+        grid[k // ncols, k % ncols].set_visible(False)
+    for ax in grid[-1, :]:
+        ax.set_xlabel(_coordinate_label(ctx, metric))
+    grid[0, 0].set_ylabel(metric)
+    grid[0, 0].legend(fontsize="xx-small")
+    items = [FigureItem(fig, {"metric": metric, "field": field},
+                        caption=f"The curve behind {metric} on {field}: the median over frames "
+                                "at every strength of every degradation, the clean curve in "
+                                "black, an unrelated field dashed and the impostor dotted. "
+                                "Values are the literature's own, untransformed.",
+                        data=medians)]
+
+    stats = ctx.companion_axes
+    stats = stats[(stats["metric"].astype(str) == metric) & (stats["field"].astype(str) == field)
+                  & ~stats["is_probe"]] if not stats.empty else stats
+    if not stats.empty:
+        fig2, grid2 = ctx.style.figure(1, 2, sharex=True)
+        for name, block in stats.groupby("degradation", observed=True):
+            block = block.sort_values("coordinate")
+            for ax, column in zip(grid2[0], ("rho", "relative_change_max"), strict=True):
+                ax.plot(block["coordinate"], block[column], color=ctx.style.axis_colour(str(name)),
+                        ls=ctx.style.axis_style(str(name)), marker="o", ms=2.5,
+                        label=ctx.label(name))
+        for ax, column in zip(grid2[0], ("rho", "relative_change_max"), strict=True):
+            ax.set_ylabel(vocabulary.label(column), fontsize="small")
+            ax.set_xlabel(_coordinate_label(ctx, metric))
+            if positive and medians["coordinate"].max() / medians["coordinate"].min() > 10:
+                ax.set_xscale("log", base=2)
+        grid2[0, 1].legend(fontsize="xx-small", ncol=2)
+        items.append(FigureItem(
+            fig2, {"metric": metric, "field": field, "view": "per-coordinate"},
+            caption=f"Each coordinate of {metric}'s curve on {field} read as a metric of its own: "
+                    "its rank correlation with strength and its change from clean at the "
+                    "harshest strength. Neighbouring coordinates of one curve are strongly "
+                    "correlated, so this localises the evidence and does not multiply it.",
+            data=stats[["degradation", "coordinate", "rho", "monotone_fraction",
+                        "relative_change_max", "elasticity", "severity_resolution"]]))
+    return PlotResult(items)
+
+
+@plot(
+    section=3, order=14, scope="per_metric_field",
+    title="Response along time",
+    requires_columns=("degradation", "level", "value", "time", "severity"),
+    min_frames=2,
+)
+def response_along_time(ctx, df, opts) -> PlotResult:
+    """The metric against the frame's time, one line per strength, for each degradation whose
+    applied strength changes along the trajectory (``per_unit_time`` in the ladder).
+
+    How a reader sees an error grow in time: a translation applied as a rate is a wrong advection
+    speed, and its cost should rise frame by frame. Degradations whose strength is the same in
+    every frame are left out, since along time they show only the flow changing.
+    """
+    metric, field = str(df["metric"].iloc[0]), str(df["field"].iloc[0])
+    ladder = df[df["level"] > 0]
+    varying = ladder.groupby(["degradation", "level"], observed=True)["severity"].nunique()
+    names = sorted({str(d) for (d, _), n in varying.items() if n > 1} - set(ctx.probe_labels))
+    ctx.require(bool(names), "no degradation whose strength changes along time")
+    fig, grid = ctx.style.figure(1, len(names), sharey=True)
+    tidy = []
+    for ax, name in zip(grid[0], names, strict=True):
+        block = df[(df["degradation"] == name) | (df["level"] == 0)]
+        levels = sorted(block["level"].unique())
+        colours = ["k", *ctx.style.level_colours(ctx.style.axis_colour(name), len(levels) - 1)]
+        for level, colour in zip(levels, colours, strict=True):
+            line = (block[block["level"] == level].groupby("time", observed=True)["value"]
+                    .median().reset_index())
+            ax.plot(line["time"], line["value"], color=colour, marker="o", ms=2.5,
+                    label="clean" if level == 0 else f"level {level}")
+            tidy.append(line.assign(degradation=name, level=level))
+        ax.set_title(ctx.label(name), fontsize="small")
+        ax.set_xlabel("time")
+    grid[0, 0].set_ylabel(metric)
+    grid[0, 0].legend(fontsize="xx-small")
+    return PlotResult([FigureItem(
+        fig, {"metric": metric, "field": field},
+        caption=f"{metric} on {field} against the frame's physical time, one line per strength of "
+                "each degradation whose applied strength grows with time; the clean field in "
+                "black. Median over frames at each time.",
+        data=pd.concat(tidy, ignore_index=True))])
+
+
 # --- the response at a glance: the two figures every metric card opens with -----------------
 #
 # Both are `per_metric`, so the LaTeX report draws one per metric and the card generator

@@ -296,7 +296,7 @@ def make_frame(
             "calibration": "", "severity_degenerate": False,
             "energy_removed": np.nan, "energy_changed": np.nan, "severity_name": "s",
             "variant_label": f"{label}_l{level}" if level else "reference",
-            "component": "", "value": value, "seed": 0, "wall_time_s": 1e-4,
+            "value": value, "seed": 0, "wall_time_s": 1e-4,
             "n_members": np.nan, "target_value": np.nan,
         } for label, family, level, value in levels]
     return pd.DataFrame(rows, columns=list(pipeline.RESULT_DTYPES)).astype(pipeline.RESULT_DTYPES)

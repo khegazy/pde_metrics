@@ -29,6 +29,8 @@ import pytest
 
 from degradations import registry as deg_registry
 from fmeval import analysis as an
+from fmeval import io as fio
+from fmeval.context import COMPANION_KEY, fluctuation_energy
 from fmeval.data.base import TimeSelection
 from fmeval.data.kinet_raw import KinetRawTrajectory
 from fmeval.derived import RecomputingTrajectory
@@ -36,7 +38,6 @@ from fmeval.ladder import build_ladder
 from fmeval.pipeline import DatasetInfo, run
 from metrics import registry as metric_registry
 from metrics.h_minus_one.metric import h_minus_one
-from metrics.spectrum_l2.metric import radial_energy_spectrum
 from tests.conftest import SyntheticTrajectory, make_ctx, synthetic_field
 
 SHAPE: tuple[int, int] = (32, 16)  # non-square; large enough for a spectral ladder
@@ -77,38 +78,89 @@ def test_a_ctx_using_pairwise_metric_needs_no_harness_change(temporary_metric):
     )
 
 
-def test_a_vector_returning_metric_expands_into_one_row_per_component(temporary_metric):
-    """``returns="vector"`` works end to end, which issue 012 leaves open.
+def _register_two_way(temporary_metric, name: str, *, with_curve: bool = True) -> None:
+    """A pairwise metric whose one-field curve has two coordinates moving in opposite directions
+    under blur: the fluctuation energy falls, its reciprocal rises. The metric reads the
+    candidate's curve from the cache and draws one random number, so the generator rule shows."""
 
-    Issue 012 lists vector-valued metrics as deferred functionality. The *pipeline* half is
-    already there: ``_emit`` ravels the return value and writes one row per component with
-    the index in the ``component`` column. Recording that here means the remaining work is
-    scoped to the report layer rather than rediscovered from scratch.
+    def two_way(reference, candidate, *, ctx):
+        """Relative change of the fluctuation energy, plus a draw from the metric's generator."""
+        # Read, never written: the cache lives across the ladder, and only the pipeline knows
+        # which variant a curve belongs to.
+        curve = ctx.cache[COMPANION_KEY] if COMPANION_KEY in ctx.cache else two_way_curve(candidate)
+        energy = curve[1][0]
+        return float(abs(energy / fluctuation_energy(reference) - 1.0) + 1e-9 * ctx.rng.random())
 
-    An energy spectrum is the natural first such metric, and it is also the BD-1 candidate,
-    so this doubles as a check that the shape of that metric is expressible.
+    def two_way_curve(x, *, ctx=None):
+        """(coordinates, values): the energy and its reciprocal; draws from its own generator."""
+        if ctx is not None:
+            ctx.rng.random()
+        energy = float(fluctuation_energy(x))
+        return np.array([1, 2]), np.array([energy, 1.0 / energy])
+
+    temporary_metric(name=name, arity="pairwise", fields=("*",), units="dimensionless",
+                     symmetric=False)(two_way)
+    if with_curve:
+        metric_registry.companion(of=name, kind="curve", coordinate=("moment", "index"))(
+            two_way_curve)
+
+
+def test_a_curve_companion_runs_end_to_end_through_a_run_folder(temporary_metric, tmp_path):
+    """A metric with a curve: one result row per comparison, one companion row per coordinate,
+    both through a run folder and back into the analysis.
+
+    Pins the contract of the curve companion (metric-evaluation design, §3.7): the round trip;
+    a one-field curve on the clean level is the reference's own; the curve's coordinates are
+    analysed one by one, so two coordinates moving in opposite directions each follow the blur
+    perfectly, which no single trace pooling both could; and results.csv keeps one row per key.
     """
-    n_shells = [0]
+    _register_two_way(temporary_metric, "_two_way")
+    spec = metric_registry.get("_two_way")
+    assert spec.companion.one_field and spec.companion.kind == "curve"
 
-    @temporary_metric(name="_spectrum_profile", arity="pairwise",
-                      fields=("*",), returns="vector", units="dimensionless")
-    def _spectrum_profile(reference, candidate):
-        """Per-shell energy difference: one number per wavenumber shell."""
-        out = (radial_energy_spectrum(reference, make_ctx(reference))
-               - radial_energy_spectrum(candidate, make_ctx(candidate)))
-        n_shells[0] = len(out)
-        return out
+    ladder = build_ladder({"gaussian_blur": {"severities": [1.0, 2.0, 3.0]}})
+    result = run(SyntheticTrajectory(), [spec], ladder, fields=["density"],
+                 dataset=DatasetInfo(name="synthetic"), seed=0)
+    rows, curve = result.rows, result.companions
+    assert len(curve) == 2 * len(rows), "one companion row per coordinate of every result row"
+    assert not rows.duplicated(an.ROW_KEYS).any(), "results.csv must keep one row per key"
 
-    ladder = build_ladder({"gaussian_blur": {"severities": [1.0, 2.0]}})
-    result = run(SyntheticTrajectory(), [metric_registry.get("_spectrum_profile")],
-                 ladder, fields=["density"], dataset=DatasetInfo(name="synthetic"),
-                 seed=0)
+    clean = curve[curve["level"] == 0]
+    reference = SyntheticTrajectory().frame(0, ["density"]).fields["density"]
+    energy = clean.loc[(clean["frame_index"] == 0) & (clean["coordinate"] == 1), "value"]
+    assert energy.iloc[0] == pytest.approx(float(fluctuation_energy(reference)), rel=1e-12), (
+        "a one-field curve on the clean level must be the reference's own curve")
 
-    components = result.rows["component"].astype(str).unique()
-    assert len(components) == n_shells[0] > 1, (
-        f"expected one row per shell, got components {sorted(components)}"
-    )
-    assert result.rows["value"].notna().all()
+    folder = fio.make_run_folder(tmp_path, "_two_way", 1)
+    fio.write_results(folder, rows)
+    fio.write_results(folder, curve, name=fio.COMPANIONS)
+    analysis = an.analyse(fio.read_results(folder),
+                          companions=fio.read_results(folder, fio.COMPANIONS), n_bootstrap=0)
+    per_coordinate = analysis.companion_axes.set_index("coordinate")
+    for coordinate in (1, 2):
+        row = per_coordinate.loc[coordinate]
+        assert row["rho"] == pytest.approx(1.0), f"coordinate {coordinate}: rho {row['rho']}"
+        assert row["monotone_fraction"] == pytest.approx(1.0), (
+            f"coordinate {coordinate}: monotone fraction {row['monotone_fraction']}")
+    assert set(per_coordinate["direction"]) == {-1, 1}, "the two coordinates move opposite ways"
+    assert analysis.dominance["dominance_min"].iloc[0] == pytest.approx(1.0)
+    assert set(analysis.card["metric"]) == {"_two_way"}, "the curve never enters the panel"
+    with pytest.raises(ValueError, match="share a key"):
+        an.normalisation(curve)       # both coordinates pooled as one trace: refused
+
+
+def test_a_companion_cannot_move_its_metric_s_number(temporary_metric):
+    """The companion draws from a generator of its own, so attaching one to a metric that
+    draws random numbers leaves the metric's number exactly where it was."""
+    _register_two_way(temporary_metric, "_with_curve")
+    _register_two_way(temporary_metric, "_without_curve", with_curve=False)
+    ladder = build_ladder({"additive_noise": {"severities": [0.1, 0.2]}})
+    result = run(SyntheticTrajectory(), [metric_registry.get("_with_curve"),
+                                         metric_registry.get("_without_curve")],
+                 ladder, fields=["density"], dataset=DatasetInfo(name="synthetic"), seed=0)
+    values = result.rows.pivot_table(index="variant_label", columns="metric", values="value",
+                                     observed=True)
+    assert np.array_equal(values["_with_curve"], values["_without_curve"])
 
 
 def test_a_new_degradation_inherits_the_whole_contract(temporary_degradation):

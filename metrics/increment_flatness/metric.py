@@ -57,7 +57,6 @@ def increments(x: NDArray[np.floating], axis: int) -> NDArray[np.floating]:
     name="increment_flatness",
     arity="single",
     fields=("*",),
-    returns="scalar",
     differentiable=True,
     cost="cheap",
     higher_is_better=False,   # no direction of its own: the drift from the reference is

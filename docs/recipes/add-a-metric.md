@@ -37,10 +37,20 @@ looping over all three; your metric sees two arrays and returns a number.
 - Reuse code from another directory by importing it, the way `rmse` imports `mse`. The
   decorator returns the function unwrapped, so shared mathematics cannot drift apart into
   two disagreeing copies. Do not copy an equation from another directory.
-- If your metric's total can be written as a sum over cells, add a companion function
-  decorated with `@pointwise_map(of="<name>")` returning the contribution of each cell, and
-  declare the `reduction` that turns that map back into the single number. The map is what
-  lets a report show *where* in the domain a model went wrong.
+- Return the number the literature reports, untransformed. If something with more structure
+  stands behind it, declare it as the metric's **companion**, after the metric:
+  - If the total can be written as a sum over cells, `@companion(of="<name>")` returning the
+    contribution of each cell, with the `reduction` that turns that map back into the single
+    number declared on `@metric`. The map is what lets a report show *where* in the domain a
+    model went wrong.
+  - If the number stands for a curve, `@companion(of="<name>", kind="curve",
+    coordinate=("<name>", "<units>"))` returning `(coordinates, values)`, the literature's own
+    values at fixed coordinates. Read the curve in the metric from `ctx.cache[COMPANION_KEY]`
+    when it is there (`fmeval.context`), compute it otherwise, and never write under that key.
+    Put a quantity of the reference in `ctx.cache` under a key of your own, behind a membership
+    test, so it is computed once per frame. `AGENTS.md` §3.3 has the details.
+  - If the number is a summary of the curve that no source fixes, it is a convention: say so in
+    the docstring and on the card, and write an issue.
 
 ## 3. Test — `test_metric.py`
 

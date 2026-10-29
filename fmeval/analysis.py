@@ -24,6 +24,7 @@ import logging
 import warnings
 from collections.abc import Mapping
 from dataclasses import dataclass
+from dataclasses import field as dc_field
 from itertools import pairwise
 
 import numpy as np
@@ -1070,6 +1071,66 @@ def _profile(axes: pd.DataFrame) -> dict[str, object]:
     ), strict=True))
 
 
+def per_coordinate(curve: pd.DataFrame) -> pd.DataFrame:
+    """Curve-companion rows with each coordinate read as a metric of its own, ``name[coordinate]``.
+
+    The form :func:`summarise_axes`, :func:`per_level_response` and :func:`response_direction` take,
+    so a curve gets, coordinate by coordinate, the statistics any metric gets.
+    """
+    coordinate = curve["coordinate"].map(
+        lambda c: f"{c:g}" if isinstance(c, (int, float, np.number)) else str(c))
+    return curve.assign(metric=curve["metric"].astype(str) + "[" + coordinate + "]")
+
+
+def dominance(curve: pd.DataFrame, probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
+    """Whether a curve's ordering of neighbouring strengths can depend on the summary chosen.
+
+    For each frame and each pair of neighbouring usable levels, the harsher level's curve
+    dominates the milder one's when every coordinate has moved at least as far from clean, in that
+    coordinate's own measured direction (:func:`response_direction`). Any registered number that is
+    non-decreasing in every coordinate's oriented departure -- a root-mean-square, a largest
+    difference -- then orders the pair the same way; a fitted slope need not. The fraction of frames
+    in which the harsher dominates is computed per pair (Eq. 4 of the metric-evaluation design,
+    after the forecast dominance of Ehm et al. 2016, J. R. Stat. Soc. B 78(3):505-562), and
+    ``dominance_min`` is the smallest over pairs. Coordinates without a measured direction on a
+    degradation (round-off departures) are left out of it, since round-off cannot dominate.
+
+    Returns:
+        One row per (dataset, metric, field, ordinal degradation) with ``dominance_min`` and
+        ``n_coordinates``, the coordinates it was read over.
+    """
+    directions = response_direction(per_coordinate(curve))
+    label = dict(zip(zip(curve["metric"].astype(str), curve["coordinate"]),
+                     per_coordinate(curve)["metric"], strict=True))
+    clean = dict(list(curve[curve["level"] == 0].groupby(GROUP_KEYS, observed=True)))
+    ladder = curve[(curve["level"] > 0) & ~curve["degradation"].isin(probe_labels)
+                   & ~_degenerate_severities(curve)]
+    rows = []
+    for (*key, axis), g in ladder.groupby([*GROUP_KEYS, "degradation"], observed=True):
+        key = tuple(key)
+        if key not in clean or g["level"].nunique() < 2:
+            continue
+        base = clean[key].pivot_table(index="frame_index", columns="coordinate", values="value",
+                                      aggfunc="first")
+        signs = {c: directions.get((key[0], label[(str(key[1]), c)], key[2], axis))
+                 for c in base.columns}
+        coordinates = [c for c, sign in signs.items() if sign is not None]
+        values = g.pivot_table(index="frame_index", columns=["level", "coordinate"],
+                               values="value", aggfunc="first")
+        frames = values.index.intersection(base.index)
+        cube = np.stack([values.loc[frames, level][coordinates].to_numpy(float)
+                         - base.loc[frames, coordinates].to_numpy(float)
+                         for level in sorted(g["level"].unique())], axis=1)
+        oriented = cube * np.array([signs[c] for c in coordinates], dtype=float)
+        dominated = (oriented[:, 1:, :] >= oriented[:, :-1, :]).all(axis=2)
+        rows.append({**dict(zip(GROUP_KEYS, key, strict=True)), "degradation": axis,
+                     "dominance_min": (float(dominated.mean(axis=0).min())
+                                       if coordinates and len(frames) else np.nan),
+                     "n_coordinates": len(coordinates)})
+    return pd.DataFrame(rows, columns=[*GROUP_KEYS, "degradation", "dominance_min",
+                                       "n_coordinates"])
+
+
 @dataclass(frozen=True)
 class Analysis:
     """Everything the report and the cards derive from one run."""
@@ -1083,9 +1144,19 @@ class Analysis:
     """Unflagged; :func:`flag` is the report's business, and cards never carry flags."""
     anchor_label: str
     probe_labels: frozenset[str]
+    companion_scored: pd.DataFrame = dc_field(default_factory=pd.DataFrame)
+    """Curve-companion rows with ``damage`` attached per coordinate and ``metric`` read as
+    :func:`per_coordinate` labels it; empty without a curve."""
+    companion_axes: pd.DataFrame = dc_field(default_factory=pd.DataFrame)
+    """:func:`summarise_axes` on the companion rows, one row per (metric, field, degradation,
+    coordinate), with no bootstrap. Never enters :func:`report_card`, :func:`flag`, the
+    cross-metric matrices or the false-discovery adjustment of the panel."""
+    dominance: pd.DataFrame = dc_field(default_factory=pd.DataFrame)
+    """:func:`dominance` per (metric, field, degradation)."""
 
 
-def analyse(rows: pd.DataFrame, *, meta: Mapping | None = None, config: Mapping | None = None,
+def analyse(rows: pd.DataFrame, *, companions: pd.DataFrame | None = None,
+            meta: Mapping | None = None, config: Mapping | None = None,
             block_length: int = BLOCK_LENGTH, n_bootstrap: int = N_BOOTSTRAP,
             seed: int = 0) -> Analysis:
     """Every statistic of one run, in one call.
@@ -1093,6 +1164,11 @@ def analyse(rows: pd.DataFrame, *, meta: Mapping | None = None, config: Mapping 
     The report driver and the card evidence loader both call this, so a card carries exactly the
     statistics its report shows. ``meta`` and ``config`` are the run's ``run_meta.json`` and
     resolved configuration, from which the anchor and probe labels are read (:func:`run_labels`).
+
+    ``companions`` are the run's curve-companion rows. Each coordinate is analysed as a metric of
+    its own (:func:`per_coordinate`) by the same functions as the panel, with no bootstrap, into
+    tables of their own beside it. Adjacent coordinates of one curve are strongly correlated, so a
+    curve of per-coordinate statistics localises the evidence and does not multiply it.
     """
     anchor, probe_labels = run_labels(meta or {}, config)
     norm = normalisation(rows, uncorrelated_label=anchor, probe_labels=probe_labels)
@@ -1100,9 +1176,22 @@ def analyse(rows: pd.DataFrame, *, meta: Mapping | None = None, config: Mapping 
     axes = summarise_axes(scored, norm=norm, block_length=block_length, n_bootstrap=n_bootstrap,
                           seed=seed, probe_labels=probe_labels)
     probes = probe_summary(scored, norm, uncorrelated_label=anchor, probe_labels=probe_labels)
+    extra = {}
+    if companions is not None and not companions.empty:
+        labelled = per_coordinate(companions)
+        curve_norm = normalisation(labelled, uncorrelated_label=anchor, probe_labels=probe_labels)
+        curve_axes = summarise_axes(add_damage(labelled, curve_norm), norm=curve_norm,
+                                    n_bootstrap=0, seed=seed, probe_labels=probe_labels)
+        bundle = dict(zip(labelled["metric"], zip(companions["metric"].astype(str),
+                                                  companions["coordinate"], strict=True)))
+        curve_axes.insert(1, "coordinate", curve_axes["metric"].map(lambda m: bundle[m][1]))
+        curve_axes["metric"] = curve_axes["metric"].map(lambda m: bundle[m][0])
+        extra = {"companion_scored": add_damage(labelled, curve_norm),
+                 "companion_axes": curve_axes,
+                 "dominance": dominance(companions, probe_labels)}
     return Analysis(norm=norm, scored=scored, axes=axes, probes=probes,
                     card=report_card(axes, probes, norm), anchor_label=anchor,
-                    probe_labels=probe_labels)
+                    probe_labels=probe_labels, **extra)
 
 
 #: How ``blind_axes`` joins its degradations into one cell, so the CSV stays one row per group.

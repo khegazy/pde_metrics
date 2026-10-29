@@ -214,8 +214,10 @@ missing or malformed fails when the harness asks for it, not later. Fill the bun
 order — the first two are yours, the rest an agent can complete from the contract:
 
 1. **`metric.py`** — one `@metric`-decorated function returning one float per (field,
-   frame, severity level). The decorator's fields are read by the harness and appear in the
-   catalog; nothing in `card.yaml` repeats them.
+   frame, severity level): the number the literature reports. Anything with more structure
+   behind that number, a per-cell map or a curve, is its companion (§3.3). The decorator's
+   fields are read by the harness and appear in the catalog; nothing in `card.yaml` repeats
+   them.
 2. **`test_metric.py`** — at least one test whose expected value you worked out by hand, on
    a small field. It is also the source of the worked example in the card, so the prose
    cannot drift from the code.
@@ -273,7 +275,7 @@ Discovery walks the package, so there is no import list to edit and no registrat
 add.
 
 ```python
-from metrics.registry import metric, pointwise_map
+from metrics.registry import companion, metric
 
 
 @metric(
@@ -282,7 +284,6 @@ from metrics.registry import metric, pointwise_map
     arity="pairwise",            # "pairwise" -> fn(reference, candidate); "single" -> fn(x);
                                  # "ensemble" -> fn(reference, members)
     fields=("vorticity",),       # canonical fields it accepts; ("*",) for any
-    returns="scalar",            # "scalar" -> float; "vector" -> 1-D array
     differentiable=True,         # declared, never inferred. Could this be a training loss?
     cost="cheap",                # cheap | moderate | expensive (advisory; warns on long runs)
     higher_is_better=False,
@@ -370,16 +371,44 @@ physical time, the reference fluctuation RMS, and a seeded generator. Omit it an
 nothing extra — which is why `mae(reference, candidate)` needs no boilerplate. Never hardcode
 an axis index: use `ctx.axis("x")`, because which axis is x depends on the dimension count.
 
-**Pointwise maps.** If the metric is a reduction of a per-cell density, declare the companion.
-It is what makes the `field_gallery` figure possible, and for a displaced feature it shows the
-double penalty as two lobes rather than as an argument.
+**Companions: the object behind the number.** One per metric, declared after the metric with
+`@companion(of=...)`. A second number from the literature is a sibling bundle that imports the
+function, the `rmse` pattern.
 
-```python
-@pointwise_map(of="h_minus_one")      # must come AFTER the metric it belongs to
-def h_minus_one_map(reference, candidate, *, ctx):
-    """Per-cell density, summed over channels. Reduces to the metric by mean/C."""
-    ...
-```
+- **`kind="field"`**, a per-cell map, if the metric is a reduction of a per-cell density. It is
+  what makes the `field_gallery` figure possible, and for a displaced feature it shows the
+  double penalty as two lobes rather than as an argument.
+
+  ```python
+  @companion(of="h_minus_one")          # must come AFTER the metric it belongs to
+  def h_minus_one_map(reference, candidate, *, ctx):
+      """Per-cell density, summed over channels. Reduces to the metric by mean/C."""
+      ...
+  ```
+
+- **`kind="curve"`**, if the number stands for a curve over a coordinate (a separation, a
+  wavenumber, a threshold). It returns `(coordinates, values)`: fixed coordinates and the
+  literature's own values, untransformed. With the metric's arguments it is a comparison; with
+  one field where the metric takes two it is a property of one field, stored for the candidate
+  at every level, which on the clean level is the reference. The pipeline calls it **before**
+  the metric on every row, stores it in `companions.csv`, times both calls, and hands the curve
+  to the metric in `ctx.cache[COMPANION_KEY]` (`fmeval.context`). The metric reads it from there
+  when present and computes it itself otherwise, and must give the same number both ways, which
+  a contract test checks. **Never write under that key**: the cache lives across the ladder, and
+  a curve stored there by the metric is read back for the next variant. The analysis reads each
+  coordinate as a metric of its own (`metric[coordinate]`) in tables beside the panel.
+
+  ```python
+  @companion(of="structure_function_2", kind="curve", coordinate=("separation", "cells"))
+  def structure_function_2_curve(x, *, ctx):
+      """(separations, S_2(l)) of one field: the curve the literature plots."""
+      ...
+  ```
+
+**Work shared across the ladder** goes in `ctx.cache`, which lives for one (frame, field,
+metric): compute a quantity of the reference once per frame with a membership test,
+`if key not in ctx.cache: ctx.cache[key] = f(reference)`. Not `setdefault(key, f(reference))`,
+which evaluates `f` on every call.
 
 **Get the reduction right — this is the easy mistake.** The declared `reduction` is verified by
 a test, and two cases catch people:
@@ -398,9 +427,10 @@ touch your metric.
 
 1. `python -m metrics` — confirm it appears with the metadata you expect.
 2. `pytest` — the contract test is parametrized over the whole registry, so your metric
-   is now automatically checked for `d(x,x) == 0`, declared symmetry, return type, shape
-   rejection, float32/float64 agreement, monotonicity on a synthetic blur ladder, and the
-   map-reduces-to-metric identity. You do not write any of that.
+   is now automatically checked for `d(x,x) == 0`, declared symmetry, one finite float, shape
+   rejection, float32/float64 agreement, monotonicity on a synthetic blur ladder, the
+   map-reduces-to-metric identity, and for a curve: one value per fixed coordinate, zero on
+   identical fields, and the same number from the cached curve. You do not write any of that.
 3. **Add an entry to `TEST_DESCRIPTION.md`** if your metric introduces a new reported quantity.
    A test fails otherwise.
 4. **Remove the idea from `docs/ideas/README.md`.** Once a metric is built, its card is the only

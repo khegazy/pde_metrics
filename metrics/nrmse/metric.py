@@ -18,7 +18,6 @@ from ..rmse.metric import rmse
     name="nrmse",
     arity="pairwise",
     fields=("*",),
-    returns="scalar",
     differentiable=True,
     cost="cheap",
     higher_is_better=False,

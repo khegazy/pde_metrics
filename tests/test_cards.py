@@ -1311,7 +1311,11 @@ def test_the_performance_block_opens_with_the_figures(tmp_path, monkeypatch):
     body = [line for line in block.splitlines()[1:] if line.strip()]
     assert body[0] == f"![{ALT_TEXT['sensitivity_profile']}](_generated/sensitivity_profile.svg)"
     assert body[2] == f"![{ALT_TEXT['response_curves']}](_generated/response_curves.svg)"
-    assert body[4].startswith("| test family |"), "the table follows the figures"
+    assert body[4].startswith("**Trend") and body[5].startswith("| test family |"), (
+        "the tables follow the figures")
+    headings = [line for line in body if line.startswith("**") and line.endswith("?**")]
+    assert [h.split(":")[0] for h in headings] == ["**Trend", "**Reactivity", "**Consistency"], (
+        f"the three measurements, each in a table of its own, in order; got {headings}")
     for alt in ALT_TEXT.values():
         assert "]" not in alt and ")" not in alt, "alt text would truncate the link pattern"
     referenced = set(re.findall(r"\]\(_generated/([^)]+\.svg)\)", block))

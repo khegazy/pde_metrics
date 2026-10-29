@@ -1156,17 +1156,16 @@
       "category": "probabilistic",
       "declared": {
         "arity": "ensemble",
+        "companion": null,
         "cost": "cheap",
         "differentiable": true,
         "fields": [
           "*"
         ],
-        "has_pointwise_map": false,
         "higher_is_better": false,
         "measures": "error",
         "reduction": "mean",
         "requires_periodic": false,
-        "returns": "scalar",
         "symmetric": false,
         "target": null,
         "units": "field"
@@ -1290,17 +1289,16 @@
       "category": "probabilistic",
       "declared": {
         "arity": "ensemble",
+        "companion": null,
         "cost": "cheap",
         "differentiable": true,
         "fields": [
           "*"
         ],
-        "has_pointwise_map": false,
         "higher_is_better": false,
         "measures": "error",
         "reduction": "sqrt_mean",
         "requires_periodic": false,
-        "returns": "scalar",
         "symmetric": false,
         "target": null,
         "units": "field"
@@ -1427,17 +1425,16 @@
       "category": "physical",
       "declared": {
         "arity": "single",
+        "companion": null,
         "cost": "cheap",
         "differentiable": true,
         "fields": [
           "vorticity"
         ],
-        "has_pointwise_map": false,
         "higher_is_better": false,
         "measures": "error",
         "reduction": "mean",
         "requires_periodic": false,
-        "returns": "scalar",
         "symmetric": false,
         "target": null,
         "units": "field^2"
@@ -1791,17 +1788,20 @@
       "category": "functional",
       "declared": {
         "arity": "pairwise",
+        "companion": {
+          "coordinate": null,
+          "kind": "field",
+          "one_field": false
+        },
         "cost": "cheap",
         "differentiable": true,
         "fields": [
           "*"
         ],
-        "has_pointwise_map": true,
         "higher_is_better": false,
         "measures": "error",
         "reduction": "sqrt_mean",
         "requires_periodic": true,
-        "returns": "scalar",
         "symmetric": true,
         "target": null,
         "units": "field/length"
@@ -2745,17 +2745,20 @@
       "category": "functional",
       "declared": {
         "arity": "pairwise",
+        "companion": {
+          "coordinate": null,
+          "kind": "field",
+          "one_field": false
+        },
         "cost": "cheap",
         "differentiable": true,
         "fields": [
           "*"
         ],
-        "has_pointwise_map": true,
         "higher_is_better": false,
         "measures": "error",
         "reduction": "sqrt_mean",
         "requires_periodic": true,
-        "returns": "scalar",
         "symmetric": true,
         "target": null,
         "units": "field*length"
@@ -3712,17 +3715,16 @@
       "category": "statistical",
       "declared": {
         "arity": "single",
+        "companion": null,
         "cost": "cheap",
         "differentiable": true,
         "fields": [
           "*"
         ],
-        "has_pointwise_map": false,
         "higher_is_better": false,
         "measures": "error",
         "reduction": "mean",
         "requires_periodic": true,
-        "returns": "scalar",
         "symmetric": false,
         "target": null,
         "units": "dimensionless"
@@ -4678,17 +4680,16 @@
       "category": "statistical",
       "declared": {
         "arity": "pairwise",
+        "companion": null,
         "cost": "cheap",
         "differentiable": true,
         "fields": [
           "*"
         ],
-        "has_pointwise_map": false,
         "higher_is_better": false,
         "measures": "error",
         "reduction": "mean",
         "requires_periodic": true,
-        "returns": "scalar",
         "symmetric": true,
         "target": null,
         "units": "field"
@@ -5654,17 +5655,16 @@
       "category": "physical",
       "declared": {
         "arity": "single",
+        "companion": null,
         "cost": "cheap",
         "differentiable": true,
         "fields": [
           "velocity"
         ],
-        "has_pointwise_map": false,
         "higher_is_better": false,
         "measures": "error",
         "reduction": "mean",
         "requires_periodic": false,
-        "returns": "scalar",
         "symmetric": false,
         "target": null,
         "units": "field^2"
@@ -6020,17 +6020,20 @@
       "category": "pointwise",
       "declared": {
         "arity": "pairwise",
+        "companion": {
+          "coordinate": null,
+          "kind": "field",
+          "one_field": false
+        },
         "cost": "cheap",
         "differentiable": true,
         "fields": [
           "*"
         ],
-        "has_pointwise_map": true,
         "higher_is_better": false,
         "measures": "error",
         "reduction": "mean",
         "requires_periodic": false,
-        "returns": "scalar",
         "symmetric": true,
         "target": null,
         "units": "field"
@@ -6978,17 +6981,20 @@
       "category": "pointwise",
       "declared": {
         "arity": "pairwise",
+        "companion": {
+          "coordinate": null,
+          "kind": "field",
+          "one_field": false
+        },
         "cost": "cheap",
         "differentiable": true,
         "fields": [
           "*"
         ],
-        "has_pointwise_map": true,
         "higher_is_better": false,
         "measures": "error",
         "reduction": "mean",
         "requires_periodic": false,
-        "returns": "scalar",
         "symmetric": true,
         "target": null,
         "units": "field^2"
@@ -7943,17 +7949,16 @@
       "category": "pointwise",
       "declared": {
         "arity": "pairwise",
+        "companion": null,
         "cost": "cheap",
         "differentiable": true,
         "fields": [
           "*"
         ],
-        "has_pointwise_map": false,
         "higher_is_better": false,
         "measures": "error",
         "reduction": "mean",
         "requires_periodic": false,
-        "returns": "scalar",
         "symmetric": false,
         "target": null,
         "units": "dimensionless"
@@ -8899,17 +8904,16 @@
       "category": "physical",
       "declared": {
         "arity": "single",
+        "companion": null,
         "cost": "cheap",
         "differentiable": true,
         "fields": [
           "vorticity"
         ],
-        "has_pointwise_map": false,
         "higher_is_better": false,
         "measures": "error",
         "reduction": "mean",
         "requires_periodic": true,
-        "returns": "scalar",
         "symmetric": false,
         "target": null,
         "units": "field^2/length^2"
@@ -9263,17 +9267,16 @@
       "category": "probabilistic",
       "declared": {
         "arity": "ensemble",
+        "companion": null,
         "cost": "cheap",
         "differentiable": false,
         "fields": [
           "*"
         ],
-        "has_pointwise_map": false,
         "higher_is_better": false,
         "measures": "calibration",
         "reduction": "mean",
         "requires_periodic": false,
-        "returns": "scalar",
         "symmetric": false,
         "target": null,
         "units": "dimensionless"
@@ -9397,17 +9400,20 @@
       "category": "pointwise",
       "declared": {
         "arity": "pairwise",
+        "companion": {
+          "coordinate": null,
+          "kind": "field",
+          "one_field": false
+        },
         "cost": "cheap",
         "differentiable": true,
         "fields": [
           "*"
         ],
-        "has_pointwise_map": true,
         "higher_is_better": false,
         "measures": "error",
         "reduction": "sqrt_mean",
         "requires_periodic": false,
-        "returns": "scalar",
         "symmetric": true,
         "target": null,
         "units": "field"
@@ -10355,17 +10361,16 @@
       "category": "spectral",
       "declared": {
         "arity": "pairwise",
+        "companion": null,
         "cost": "cheap",
         "differentiable": true,
         "fields": [
           "*"
         ],
-        "has_pointwise_map": false,
         "higher_is_better": false,
         "measures": "error",
         "reduction": "mean",
         "requires_periodic": true,
-        "returns": "scalar",
         "symmetric": false,
         "target": null,
         "units": "dimensionless"
@@ -11318,17 +11323,16 @@
       "category": "probabilistic",
       "declared": {
         "arity": "ensemble",
+        "companion": null,
         "cost": "cheap",
         "differentiable": false,
         "fields": [
           "*"
         ],
-        "has_pointwise_map": false,
         "higher_is_better": false,
         "measures": "calibration",
         "reduction": "mean",
         "requires_periodic": false,
-        "returns": "scalar",
         "symmetric": false,
         "target": 1.0,
         "units": "dimensionless"
@@ -11448,5 +11452,5 @@
       "summary": "Ratio of the ensemble's own spread to the error of its mean, the standard check for whether a prediction's stated uncertainty is honest. Calibrated at one."
     }
   ],
-  "schema_version": 2
+  "schema_version": 3
 }

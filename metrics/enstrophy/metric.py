@@ -16,7 +16,6 @@ from ..registry import metric
     name="enstrophy",
     arity="single",
     fields=("vorticity",),
-    returns="scalar",
     differentiable=True,
     cost="cheap",
     higher_is_better=False,   # no direction of its own: the drift from the reference

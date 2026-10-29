@@ -163,11 +163,13 @@ class CardError(Exception):
 
 @dataclass(frozen=True)
 class Output:
-    """What the single number a metric returns means, and what range it lives in.
+    """What the registered number means, and what range it lives in.
 
-    Metrics in this repository return one float per (field, frame, severity level); the
-    structure over fields and frames comes from the evaluation loop, not from the metric.
-    So there is one output per card, not a list.
+    A metric returns one float per (field, frame, severity level): the number the literature
+    reports, which the harness treats as it treats every other metric's. The structure over
+    fields and frames comes from the evaluation loop, not from the metric, so there is one output
+    per card, not a list. A curve or a per-cell map behind the number is the metric's companion
+    (``metrics.registry.companion``); ``## Reading the output`` names it and its columns.
 
     Direction (whether higher or lower is better) is *not* here: the ``@metric``
     decorator declares ``higher_is_better`` and the analysis layer already orients its
