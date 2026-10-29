@@ -80,7 +80,10 @@ from the run seed, the label, the snapshot and the field together, so the draws 
 
 If a change alters `run_meta.json` or `config.yaml` on purpose, name exactly what it alters with
 `--ignore` or `--ignore-config`, by dotted prefix (`--ignore registries.metrics`,
-`--ignore-config report.style`), and say so in the pull request. Never use either for a value
+`--ignore-config report.style`), and say so in the pull request. A `*` segment matches any one
+key, so `--ignore 'registries.metrics.*.companion'` names one new leaf of every metric and nothing
+else. A result column the change removes on purpose is named with `--drop-column`; every other
+column is still compared, and the after side may not keep it. Never use any of them for a value
 you did not mean to change.
 
 ## 4. If it is not identical

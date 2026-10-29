@@ -85,15 +85,61 @@ def test_an_extra_file_is_a_difference(pair):
     assert compare_runs.main([str(p) for p in pair]) == 1
 
 
-def test_rows_of_a_vector_metric_are_keyed_by_component(tmp_path):
-    """A vector metric writes one row per component, all sharing every other key."""
+def test_companion_rows_are_keyed_by_coordinate(tmp_path):
+    """A curve companion writes one row per coordinate, all sharing every other key, into
+    ``companions.csv``; the rows are matched by coordinate, so a changed value is still found."""
     pair = _run(tmp_path / "before"), _run(tmp_path / "after")
     for folder in pair:
-        for path in folder.parent.glob("*/data/results.csv"):
-            df = pd.read_csv(path, dtype=str, keep_default_na=False)
-            df = pd.concat([df.assign(component="0"), df.assign(component="1")])
-            df.to_csv(path, index=False)
-    assert compare_runs.main([str(p) for p in pair]) == 0
+        rows = pd.read_csv(folder / "data" / "results.csv", dtype=str, keep_default_na=False)
+        curve = pd.concat([rows.assign(coordinate="1"), rows.assign(coordinate="2")])
+        curve.to_csv(folder / "data" / "companions.csv", index=False)
+    argv = [str(p) for p in pair]
+    assert compare_runs.main(argv) == 0
+    path = pair[1] / "data" / "companions.csv"
+    curve = pd.read_csv(path, dtype=str, keep_default_na=False)
+    curve.iloc[::-1].to_csv(path, index=False)               # same rows, other order
+    assert compare_runs.main(argv) == 1, "row order differs and must be reported"
+    curve.loc[3, "value"] = "3.0"
+    curve.to_csv(path, index=False)
+    assert compare_runs.main(argv) == 1
+
+
+def test_a_declared_dropped_column_is_compared_without_it(pair):
+    """``--drop-column`` names a column the change removes; every other column is still compared,
+    and the after side may not keep the column it declared dropped."""
+    for path in pair[1].parent.glob("*/data/results.csv"):
+        pd.read_csv(path, dtype=str, keep_default_na=False).assign(component="").to_csv(
+            path, index=False)
+    for path in pair[0].parent.glob("*/data/results.csv"):
+        pd.read_csv(path, dtype=str, keep_default_na=False).assign(component="").to_csv(
+            path, index=False)
+    for path in pair[1].parent.glob("*/data/results.csv"):
+        pd.read_csv(path, dtype=str, keep_default_na=False).drop(columns="component").to_csv(
+            path, index=False)
+    argv = [str(p) for p in pair]
+    assert compare_runs.main(argv) == 1, "a removed column is a difference until declared"
+    assert compare_runs.main([*argv, "--drop-column", "component"]) == 0
+    _edit_results(pair[1], "value", 1, "2.5")
+    assert compare_runs.main([*argv, "--drop-column", "component"]) == 1
+
+
+def test_a_star_segment_names_one_leaf_of_every_entry(pair):
+    """``registries.metrics.*.companion`` ignores that new leaf of every metric and nothing else."""
+    meta = pair[1] / "data" / "run_meta.json"
+    data = json.loads(meta.read_text())
+    data["registries"] = {"metrics": {m: {"units": "field", "companion": None}
+                                      for m in ("mse", "mae")}}
+    meta.write_text(json.dumps(data))
+    before = pair[0] / "data" / "run_meta.json"
+    before.write_text(json.dumps({**json.loads(before.read_text()),
+                                  "registries": {"metrics": {m: {"units": "field"}
+                                                             for m in ("mse", "mae")}}}))
+    argv = [str(p) for p in pair]
+    assert compare_runs.main(argv) == 1
+    assert compare_runs.main([*argv, "--ignore", "registries.metrics.*.companion"]) == 0
+    data["registries"]["metrics"]["mse"]["units"] = "field^2"
+    meta.write_text(json.dumps(data))
+    assert compare_runs.main([*argv, "--ignore", "registries.metrics.*.companion"]) == 1
 
 
 def test_a_symlinked_results_directory_is_not_a_difference(tmp_path):
