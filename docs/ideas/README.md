@@ -56,7 +56,7 @@ regime, protected from data leakage and combined.
 | [Transport between signed fields](optimal_transport/signed_field_transport.md) | [Optimal transport](optimal_transport/README.md) | math, [issue 047](https://github.com/khegazy/pde_metrics/blob/main/issues/047-signed-field-transport-has-no-chosen-formulation.md) | medium | high | |
 | [Sliced Wasserstein distance](optimal_transport/sliced_wasserstein.md) | [Optimal transport](optimal_transport/README.md) | implementation, [issue 048](https://github.com/khegazy/pde_metrics/blob/main/issues/048-sliced-wasserstein-measure-is-undefined.md) | low | high | |
 | [Entropic relaxation and Sinkhorn divergences](optimal_transport/sinkhorn.md) | [Optimal transport](optimal_transport/README.md) | implementation, [issue 067](https://github.com/khegazy/pde_metrics/blob/main/issues/067-sinkhorn-waits-on-wasserstein.md) | low | medium | |
-| [Wasserstein distance between increment distributions at every separation](optimal_transport/gradient_pdf_w1.md) | [Optimal transport](optimal_transport/README.md) | implementation | low | high | |
+| [Increment distances with other stencils, longitudinal and transverse](optimal_transport/gradient_pdf_w1.md) | [Optimal transport](optimal_transport/README.md) | implementation | low | high | |
 | [Shock detector](shock_geometry/shock_detector.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | high | |
 | [Distance between extracted shock sets](shock_geometry/shock_set_distance.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | high | |
 | [Overlap of shock masks](shock_geometry/shock_mask_overlap.md) | [Shock geometry](shock_geometry/README.md) | implementation, [issue 068](https://github.com/khegazy/pde_metrics/blob/main/issues/068-shock-mask-overlap-waits-on-the-detector.md) | low | medium | |
@@ -131,9 +131,8 @@ judgement.
 1. **[Persistence diagrams](topology/persistence_diagrams.md) on vorticity and density.**
    Off-the-shelf software exists, the stability theory is settled, and there is precedent at
    LBNL.
-2. **[Tail-index estimators](distributional/tail_index_estimators.md) and the
-   [Wasserstein distance between increment distributions at every separation](optimal_transport/gradient_pdf_w1.md).**
-   Neither has a positivity problem to solve, and both measure intermittency directly.
+2. **[Tail-index estimators](distributional/tail_index_estimators.md).** It has no positivity
+   problem to solve, and it measures intermittency directly.
 3. **The [shock detector](shock_geometry/shock_detector.md) with
    [distances between shock sets](shock_geometry/shock_set_distance.md).** These close the
    gap of measuring how far apart two shocks are, using distances imported from medical

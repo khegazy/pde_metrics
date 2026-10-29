@@ -264,8 +264,14 @@ def companion_block(run: Run, metric: str) -> str:
         for column, title in (("rho", "rank correlation"),
                               ("relative_change_max", "change from clean at the harshest "
                                                       "strength")):
+            if not sub[column].notna().any():
+                lines += [f"**{field}, {title}:** not defined at any coordinate. The curve's "
+                          "value on the undegraded field is zero, as a comparison curve's is, so "
+                          "there is no clean value to divide by.", ""]
+                continue
             wide = sub.pivot_table(index="degradation", columns="coordinate", values=column,
-                                   aggfunc="first", observed=True).reindex(columns=coordinates)
+                                   aggfunc="first", observed=True,
+                                   dropna=False).reindex(columns=coordinates)
             extra = ("dominance",) if column == "rho" else ()
             lines += [f"**{field}, {title}, at each coordinate.**", "",
                       *_header("degradation", *heads, *extra)]

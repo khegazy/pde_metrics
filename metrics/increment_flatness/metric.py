@@ -35,8 +35,9 @@ from metrics.registry import metric
 SEPARATION_CELLS = 1
 
 
-def increments(x: NDArray[np.floating], axis: int) -> NDArray[np.floating]:
-    """One-cell increments of ``x`` along one spatial ``axis``, with periodic wrap.
+def increments(x: NDArray[np.floating], axis: int,
+               separation: int = SEPARATION_CELLS) -> NDArray[np.floating]:
+    """Increments of ``x`` along one spatial ``axis`` at ``separation`` cells, with periodic wrap.
 
     The single definition of an increment in this repository. ``increment_w1`` imports it
     rather than restating it, so the two metrics cannot come to disagree about what a
@@ -45,12 +46,13 @@ def increments(x: NDArray[np.floating], axis: int) -> NDArray[np.floating]:
     Args:
         x: Array whose ``axis`` is spatial and periodic.
         axis: Which axis to difference along, as a negative index.
+        separation: The separation in cells; one cell, this metric's, by default.
 
     Returns:
-        An array the same shape as ``x``: entry ``n`` is ``x[n + 1] - x[n]`` along
-        ``axis``, and the last entry wraps around to the first.
+        An array the same shape as ``x``: entry ``n`` is ``x[n + separation] - x[n]`` along
+        ``axis``, wrapping around at the end.
     """
-    return np.roll(x, -SEPARATION_CELLS, axis=axis) - x
+    return np.roll(x, -separation, axis=axis) - x
 
 
 @metric(

@@ -25,11 +25,12 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from metrics.increment_flatness.metric import increments
+from metrics.increment_flatness.metric import SEPARATION_CELLS, increments
 from metrics.registry import metric
 
 
-def axis_w1(a: NDArray[np.floating], b: NDArray[np.floating], axis: int) -> float:
+def axis_w1(a: NDArray[np.floating], b: NDArray[np.floating], axis: int,
+            separation: int = SEPARATION_CELLS) -> float:
     """1-Wasserstein distance between the increment distributions of ``a`` and ``b``.
 
     Both samples have the same number of points, so the quantile form of the 1-Wasserstein
@@ -41,6 +42,7 @@ def axis_w1(a: NDArray[np.floating], b: NDArray[np.floating], axis: int) -> floa
         a: One channel of the reference field, shape ``(*spatial)``.
         b: The matching channel of the candidate, same shape.
         axis: Which spatial axis to take increments along, as a negative index.
+        separation: The increments' separation in cells; one by default.
 
     Returns:
         The transport distance, in the field's units. Zero when the two increment
@@ -49,8 +51,8 @@ def axis_w1(a: NDArray[np.floating], b: NDArray[np.floating], axis: int) -> floa
     return float(
         np.mean(
             np.abs(
-                np.sort(increments(a, axis), axis=None)
-                - np.sort(increments(b, axis), axis=None)
+                np.sort(increments(a, axis, separation), axis=None)
+                - np.sort(increments(b, axis, separation), axis=None)
             )
         )
     )
@@ -68,7 +70,8 @@ def axis_w1(a: NDArray[np.floating], b: NDArray[np.floating], axis: int) -> floa
     requires_periodic=True,  # increment_flatness's wrap-around increments
 )
 def increment_w1(
-    reference: NDArray[np.floating], candidate: NDArray[np.floating]
+    reference: NDArray[np.floating], candidate: NDArray[np.floating], *,
+    separation: int = SEPARATION_CELLS,
 ) -> float:
     """Increment-PDF 1-Wasserstein distance, averaged over spatial axes and channels.
 
@@ -96,6 +99,8 @@ def increment_w1(
     Args:
         reference: The trusted field, shape ``(C, *spatial)`` on the analysis grid.
         candidate: The field being scored, same shape and grid.
+        separation: The increments' separation in cells. The registered metric is at one cell;
+            ``increment_w1_by_separation`` reads the others, so both share this computation.
 
     Returns:
         Mean transport distance, in the field's units. Zero when every increment
@@ -109,7 +114,7 @@ def increment_w1(
     n_spatial = reference.ndim - 1
     return float(
         np.mean([
-            axis_w1(ref_c, cand_c, axis=axis)
+            axis_w1(ref_c, cand_c, axis=axis, separation=separation)
             for ref_c, cand_c in zip(reference, candidate)
             for axis in range(-n_spatial, 0)
         ])
