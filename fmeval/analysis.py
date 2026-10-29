@@ -263,46 +263,60 @@ def _oriented(values: pd.Series, sign: int, target: float | None) -> pd.Series:
     return pd.Series(np.where(v > 0, out, np.inf), index=values.index)
 
 
-def response_direction(df: pd.DataFrame,
-                       norm: pd.DataFrame | None = None) -> dict[tuple, int]:
-    """Which way each metric's value moves as damage rises: ``+1`` up, ``-1`` down.
+def response_direction(df: pd.DataFrame) -> dict[tuple, int]:
+    """Which way each metric moves under each degradation: ``+1`` away from clean upward, ``-1``.
 
-    Three of the ordering statistics below are one-sided -- monotonicity requires a rising
-    difference, the Mann-Whitney AUC is taken with ``alternative="greater"``, and the
-    threshold levels look for the first median to exceed a target. Applied blind they assume
-    every metric is an error measure. A metric where larger means a better match then arrives
-    in the report card flagged on three criteria at once while being perfectly well behaved:
-    measured on an axis falling cleanly from 1.0 to 0.2, ``rho = -1.0``,
-    ``monotone_fraction = 0.0`` and ``separability_auc_min = 0.0``. That shape is not
-    hypothetical -- it is any correlation, SSIM or skill score, and PS-2/PS-3 when they
-    arrive.
+    The only place a direction comes from. The ordering statistics read a degradation's trace as
+    a *departure from clean* in a fixed direction (:func:`summarise_axes`), so a metric that falls
+    steadily under blur and one that rises steadily under noise both read as following their
+    degradation; which way a metric moves carries no weight (the design's D6).
 
-    The direction is taken from the metric's own declaration where the run recorded one, and
-    otherwise measured: the ``uncorrelated`` anchor is by construction as bad as a field can
-    look, so an anchor below the clean value means larger is better. Measuring is the fallback
-    rather than the primary source because the anchor is empty for a metric invariant to the
-    translation it is built from -- the case the degeneracy guard above exists for.
+    One sign per (dataset, metric, field, degradation): the sign of the median over frames of
+    ``v(L) - v(0)``, the departure at the harshest usable level ``L`` from the clean value of the
+    same frame. One sign per row, never one per point: choosing the sign point by point (ranking
+    the absolute departure) lets a response that scatters to both sides of clean, more widely at
+    each level, read as a perfect trend. A two-field error metric is exactly zero on the clean
+    field, so its sign is ``+1`` and its statistics are those of its raw values.
 
     Returns:
-        ``{(dataset, metric, field): +1 or -1}``. Missing keys mean ``+1``.
+        ``{(dataset, metric, field, degradation): +1 or -1}``. A row whose median departure at
+        ``L`` is round-off against the metric's largest value has no direction and no key; its
+        callers default to ``+1`` and the round-off guard of the ordering statistics withholds it.
     """
+    clean = dict(list(df[df["level"] == 0].groupby(GROUP_KEYS, observed=True)))
+    ladder = df[(df["level"] > 0) & ~_degenerate_severities(df)]
+    scales = df["value"].abs().groupby([df[k] for k in GROUP_KEYS], observed=True).max()
     out: dict[tuple, int] = {}
-    if "higher_is_better" in df.columns:
-        declared = df.groupby(GROUP_KEYS, observed=True)["higher_is_better"].agg(
-            lambda s: bool(s.iloc[0])
-        )
-        out = {key: -1 if higher else 1 for key, higher in declared.items()}
-
-    anchors = norm if norm is not None else normalisation(df)
-    for _, row in anchors.iterrows():
-        key = tuple(row[k] for k in GROUP_KEYS)
-        if key in out:
-            continue                      # a declaration outranks an inference
-        clean, high = row["value_clean"], row["value_uncorrelated"]
-        if row["degenerate"] or not (np.isfinite(clean) and np.isfinite(high)):
-            continue                      # no usable anchor: leave it at the default
-        out[key] = -1 if high < clean else 1
+    for (*key, axis), g in ladder.groupby([*GROUP_KEYS, "degradation"], observed=True):
+        key = tuple(key)
+        if key not in clean:
+            continue
+        by_frame = clean[key].groupby("frame_index", observed=True)["value"].median()
+        harshest = g[g["level"] == g["level"].max()]
+        departure = (harshest["value"] - harshest["frame_index"].map(by_frame)).to_numpy(float)
+        if not np.isfinite(departure).any():
+            continue
+        median = float(np.nanmedian(departure))
+        if abs(median) > DEGENERATE_SPAN * float(scales.loc[key]):
+            out[(*key, axis)] = 1 if median > 0 else -1
     return out
+
+
+def _relative_change(rows: pd.DataFrame) -> pd.Series:
+    """Each row's departure from the clean value of its frame, over that clean value's size.
+
+    ``(v - v(0)) / |v(0)|`` per (dataset, metric, field, frame): "the value moved 30% from its
+    clean value". NaN where the clean value is round-off against the largest value in the frame,
+    which is every row of a two-field error metric, whose clean value is exactly zero; its damage
+    is the relative reading there. ``rows`` must hold the clean (level 0) rows of every frame it
+    holds.
+    """
+    keys = [rows[k] for k in (*GROUP_KEYS, "frame_index")]
+    clean = rows["value"].where(rows["level"] == 0).groupby(keys, observed=True).transform("median")
+    scale = rows["value"].abs().groupby(keys, observed=True).transform("max")
+    with np.errstate(divide="ignore", invalid="ignore"):
+        relative = (rows["value"] - clean) / clean.abs()
+    return relative.where(clean.abs() > DEGENERATE_SPAN * scale)
 
 
 # --- per-axis criteria ------------------------------------------------------------------
@@ -328,7 +342,8 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
     rng = np.random.default_rng(seed)
     reference = df[df["level"] == 0]
     references = dict(list(reference.groupby(GROUP_KEYS, observed=True)))
-    directions = response_direction(df, norm)
+    directions = response_direction(df)
+    relative = _relative_change(df)
     # A degenerate span is carried as NaN rather than dropped. Dropping it would make the
     # threshold levels fall back to each axis's own range, and passing it through would make
     # them meaningless in the other direction: a tenth of a round-off span is cleared by any
@@ -373,15 +388,26 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
         declared = g["target_value"].dropna().unique() if "target_value" in g.columns else []
         first = float(declared[0]) if len(declared) else np.nan
         target = first if np.isfinite(first) and first > 0 else None
-        # Every ordering statistic below is computed on the oriented value (:func:`_oriented`),
-        # so "rises with damage" holds by construction and the four of them need no direction
-        # argument. The reported values stay in the metric's own units.
-        sign = directions.get(key, 1) if target is None else 1
-        oriented = g.assign(value=_oriented(g["value"], sign, target))
         clean_rows = references.get(key, reference.iloc[:0])
         clean = float(clean_rows["value"].median())
-        # The clean value on the same scale, which is near zero for a calibrated prediction.
-        oriented_clean = float(_oriented(pd.Series([clean]), sign, target).iloc[0])
+        # Every ordering statistic below is computed on the oriented value (:func:`_oriented`),
+        # so "rises with damage" holds by construction and the four of them need no direction
+        # argument. For an ordinary metric that is the departure from the clean value of the
+        # same frame times the degradation's measured sign (:func:`response_direction`): the
+        # clean level is not a point of the trend, and a value that crosses its clean value
+        # while moving steadily one way still follows the degradation. A target-valued metric
+        # keeps its distance from the target. The reported values stay in the metric's own units.
+        base = clean_base = 0.0
+        if target is None:
+            by_frame = clean_rows.groupby("frame_index", observed=True)["value"].median()
+            base = g["frame_index"].map(by_frame)
+            clean_base = clean_rows["frame_index"].map(by_frame)
+        sign = directions.get((*key, axis), 1) if target is None else 1
+        oriented = g.assign(value=_oriented(g["value"] - base, sign, target))
+        # The clean value on the same scale: zero by construction for an ordinary metric, and
+        # near zero for a calibrated prediction.
+        oriented_clean = (0.0 if target is None
+                          else float(_oriented(pd.Series([clean]), sign, target).iloc[0]))
 
         record: dict[str, object] = {
             **dict(zip(GROUP_KEYS, key, strict=True)),
@@ -397,7 +423,9 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
             "value_min": float(values.min()),
             "value_max": float(values.max()),
             "cost_s": float(g["wall_time_s"].mean()),
-            "higher_is_better": sign < 0,
+            "direction": sign,
+            # Reactivity relative to clean, Eq. (2) of the design, at the harshest usable level.
+            "relative_change_max": float(relative.loc[g.index[levels == levels.max()]].median()),
         }
 
         if is_probe or g["level"].nunique() < 2:
@@ -406,8 +434,9 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                  "monotone_fraction", "separability_auc_min", "sensitivity_level",
                  "saturation_level"), np.nan) | _withheld_response())
         else:
+            # The span's size: the trace is oriented to rise whichever way the metric moves.
             span = spans.get(key)
-            signed_span = None if span is None else sign * span
+            span_size = None if span is None else abs(span)
             rho_by_frame = _per_frame_rho(oriented, frame_scale)
             per_frame = np.fromiter(rho_by_frame.values(), dtype=float, count=len(rho_by_frame))
             lo, hi = _block_bootstrap_rho(rho_by_frame, np.sort(g["frame_index"].unique()), rng,
@@ -425,7 +454,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
             record.update(
                 rho=rho_median,
                 rho_frame_min=rho_worst,
-                rho_pooled=(np.nan if _is_round_off(values, group_scale)
+                rho_pooled=(np.nan if _is_round_off(oriented["value"].to_numpy(), group_scale)
                             else float(spearmanr(levels, oriented["value"].to_numpy()).statistic)),
                 rho_ci_lo=lo,
                 rho_ci_hi=hi,
@@ -437,12 +466,12 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                 # ordering statistics run on, so a target-valued metric measures its
                 # departure from *calibration* rather than from a raw ratio.
                 sensitivity_level=np.nan if axis_round_off else _threshold_level(
-                    oriented, oriented_clean, SENSITIVITY_FRACTION, signed_span, group_scale),
+                    oriented, oriented_clean, SENSITIVITY_FRACTION, span_size, group_scale),
                 saturation_level=np.nan if axis_round_off else _threshold_level(
-                    oriented, oriented_clean, SATURATION_FRACTION, signed_span, group_scale),
+                    oriented, oriented_clean, SATURATION_FRACTION, span_size, group_scale),
             )
             if target is None:
-                response_span = np.nan if signed_span is None else signed_span
+                response_span = np.nan if span_size is None else span_size
             else:
                 high = highs.get(key, np.nan)
                 response_span = (
@@ -454,7 +483,8 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                 frame_scale, axis_round_off, record["separability_auc_min"],
                 largest.get(key, np.nan), n_bootstrap,
                 derive_rng(seed, f"blindness/{dataset}/{metric}/{axis}", 0, str(field)),
-                clean_rows.assign(value=_oriented(clean_rows["value"], sign, target)),
+                clean_rows.assign(
+                    value=_oriented(clean_rows["value"] - clean_base, sign, target)),
             ))
         if "damage" in g.columns:
             damage = g["damage"].to_numpy()
@@ -872,12 +902,14 @@ def probe_summary(df: pd.DataFrame, norm: pd.DataFrame, *,
 
     When the anchor is degenerate the impostor has no damage, so ``gaussian_impostor_relative``
     reports its departure from clean as a fraction of the largest departure any ordinary level
-    produced, both in the metric's own direction -- the interim number issues/037 proposes. For a
+    produced, the probe's departure oriented by its own measured direction
+    (:func:`response_direction`), so the number is its size -- the interim number issues/037
+    proposes. For a
     phase-blind metric it reads about 1e-15: the fake prediction moves it no more than round-off
     while a blur moves it fully. It is NaN whenever a damage exists, so the two never sit together.
     """
     scored = df if "damage" in df.columns else add_damage(df, norm)
-    directions = response_direction(df, norm)
+    directions = response_direction(df)
     degenerate = norm.set_index(GROUP_KEYS)["degenerate"].to_dict()
     rows = []
     for key, g in scored.groupby(GROUP_KEYS, observed=True):
@@ -896,7 +928,8 @@ def probe_summary(df: pd.DataFrame, norm: pd.DataFrame, *,
                 record[f"{label}_nearest_level"] = _nearest_level(g, damage, probe_labels)
         if "gaussian_impostor" in present:
             record["gaussian_impostor_relative"] = (
-                _relative_response(g, "gaussian_impostor", directions.get(key, 1), probe_labels)
+                _relative_response(g, "gaussian_impostor",
+                                   directions.get((*key, "gaussian_impostor"), 1), probe_labels)
                 if bool(degenerate.get(key, False)) else np.nan
             )
         rows.append(record)
@@ -1171,7 +1204,9 @@ def per_level_response(scored: pd.DataFrame, *, metric: str,
 
     This is the record a figure draws and the number a reader should be able to download: the
     median, lower and upper quartile over frames of both the damage and the raw value at every
-    level, with the strength that was applied, how much it measurably changed the field, and
+    level, the change relative to the clean value of the same frame (:func:`_relative_change`;
+    NaN throughout for a metric whose clean value is zero), with the strength that was applied,
+    how much it measurably changed the field, and
     whether the level was a distinct experiment. The reference level and the probes are left
     out; levels flagged ``severity_degenerate`` are **kept and flagged**, unlike in
     :func:`damage_by_level`, because a figure should show a reader that a level was excluded
@@ -1193,15 +1228,17 @@ def per_level_response(scored: pd.DataFrame, *, metric: str,
     """
     if "damage" not in scored.columns:
         raise KeyError("per_level_response needs the damage column; pass add_damage(df, norm)")
-    sub = scored[(scored["metric"].astype(str) == metric) & (scored["level"] > 0)
-                 & ~scored["degradation"].isin(probe_labels)].copy()
+    rows = scored[scored["metric"].astype(str) == metric]
+    sub = rows.assign(relative_change=_relative_change(rows))
+    sub = sub[(sub["level"] > 0) & ~sub["degradation"].isin(probe_labels)].copy()
     for column, default in {**_RESPONSE_CARRIED, "energy_changed": np.nan}.items():
         if column not in sub.columns:
             sub[column] = default
     sub["severity_degenerate"] = _degenerate_severities(sub)
     columns = [*RESPONSE_KEYS, *_RESPONSE_CARRIED, "severity_degenerate", "n_frames",
                "damage_median", "damage_q25", "damage_q75",
-               "value_median", "value_q25", "value_q75", "energy_changed_median"]
+               "value_median", "value_q25", "value_q75", "relative_change_median",
+               "relative_change_q25", "relative_change_q75", "energy_changed_median"]
     if sub.empty:
         return pd.DataFrame(columns=columns)
     out = (
@@ -1218,6 +1255,9 @@ def per_level_response(scored: pd.DataFrame, *, metric: str,
             value_median=("value", "median"),
             value_q25=("value", lambda s: s.quantile(0.25)),
             value_q75=("value", lambda s: s.quantile(0.75)),
+            relative_change_median=("relative_change", "median"),
+            relative_change_q25=("relative_change", lambda s: s.quantile(0.25)),
+            relative_change_q75=("relative_change", lambda s: s.quantile(0.75)),
             energy_changed_median=("energy_changed", "median"),
         )
         .reset_index()

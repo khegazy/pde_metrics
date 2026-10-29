@@ -338,9 +338,11 @@ contract test that expects a perfect prediction to score zero does not apply to 
 A single-field metric will be reported as `no dynamic range`, and **that is correct, not a bug you
 should try to fix**. The normalised damage scale is anchored between the reference and a
 *translated* copy of it, which has identical statistics — so a single-field quantity takes the same
-value at both anchors and the span is zero. On a smoothing axis you will also see `rho = -1`,
-because smoothing reduces such quantities rather than increasing them. If you find yourself
-"fixing" either, stop: you would be removing a true statement.
+value at both anchors and the span is zero. If you find yourself "fixing" that, stop: you would
+be removing a true statement. On a smoothing axis such a quantity falls rather than rises, and it
+reads `rho = 1` with `direction = -1`: the trend is measured on the departure from clean in one
+direction measured per degradation, so falling steadily and rising steadily both follow the
+degradation, and which way the value went is a separate column.
 
 On an axis the quantity is *invariant* to — a translation, for a quantity that does not depend on
 position — `rho` is reported as **NaN**, not as a number. It used to be a number: `np.roll` cannot
@@ -351,12 +353,16 @@ beside genuine correlations. Anything whose variation across an axis is below a 
 column when the anchor itself is round-off, and to the sensitivity and saturation levels when the
 span is.
 
-**Declare `higher_is_better` correctly, because it is now read.** Four statistics are one-sided —
-monotonicity asks whether the value rises, the separability AUC is taken with
-`alternative="greater"`, and the two threshold levels look for the first median to exceed a target.
-The analysis multiplies the value by the declared direction before computing them, so `rho = +1`
-means "responds correctly to damage" whichever convention you use. Declare it wrong and all four
-invert; the symptom is a clean `-1` on every axis at once.
+**Declare `higher_is_better` correctly, but know that the analysis does not read it.** It is a
+fact about the metric for the catalog, and the contract test checks it against a synthetic blur
+ladder. The ordering statistics are one-sided — monotonicity asks whether the value rises, the
+separability AUC is taken with `alternative="greater"`, the threshold levels look for the first
+median to exceed a target — so `analysis.py::response_direction` measures one direction per
+(metric, field, degradation), the sign of the median departure from clean at the harshest usable
+level, and every ordering statistic runs on the departure from the clean value of the same frame
+times that sign. One sign per degradation, never per point: ordering the size of each departure on
+its own reads a response that scatters to both sides of clean as a perfect trend. The clean level is
+not a point of the trend. A target-valued metric is ordered by its distance from the target.
 
 **`ctx` is opt-in.** Declare a keyword-only parameter named `ctx` and you receive a
 `FieldContext` with the grid (spacing, periodicity, dimension names), the frame index, the
@@ -891,7 +897,8 @@ listed so nobody has to rediscover them.
 | **Ranking values that differ only in the last bits** | `np.roll` cannot change a translation-invariant quantity but does change the summation order in `np.mean`. The reported `rho` was 0.707 over a relative 1.6e-16 | `analysis.py::_is_round_off` |
 | **A median as the scale in a degeneracy guard** | When most severity levels are round-off the median collapses with them, so the guard compares noise against noise and passes — defeated in exactly the case it exists for. Use the largest value | `analysis.py::normalisation` |
 | **Two copies of one value that have already diverged** | The report thresholds were defined in four places and only one was read; three vocabularies named the same column differently; a test's radial spectrum rounded shells down where the metric rounds to nearest. Every test passed throughout | §1, "One source of truth" |
-| **Assuming every metric rises with damage** | Three one-sided statistics scored a perfectly ordered similarity metric at `monotone_fraction = 0`, `AUC = 0`, `rho = -1`, flagging a correct metric on three criteria | `analysis.py::response_direction` |
+| **Assuming every metric rises with damage** | Three one-sided statistics scored a perfectly ordered similarity metric at `monotone_fraction = 0`, `AUC = 0`, `rho = -1`, flagging a correct metric on three criteria; one declared direction per metric then scored enstrophy under blur at `rho = -1`, because a single-field quantity runs both ways on one ladder | `analysis.py::response_direction`, one measured sign per degradation |
+| **Ordering the size of each departure on its own** | Picks a sign per point, so a response that scatters to both sides of clean, more widely at each strength, reads as a perfect trend: a simulated null whose spread grows tenfold per strength scored `rho = 1.0`, against 0.2 with one sign per degradation, and `increment_flatness` on vorticity under box blur, falling in 49 snapshots and rising in 34, read `rho = 1.0` | `analysis.py::response_direction` |
 
 Two interpretive traps, which are not bugs but produce wrong conclusions:
 

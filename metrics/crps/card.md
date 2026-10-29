@@ -167,7 +167,7 @@ the score moves, `spread_skill` and `rank_histogram` are what say which half mov
 
 <!-- GENERATED run: written by `python -m fmeval.cards evidence crps --results results/crps_1787800137`, do not edit -->
 
-Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of developed flow), on the 64 analysis grid, seed 20260807, at commit `c49b363765d7` (working tree dirty). Run `crps_1787800137`.
+Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `c49b363765d7` (working tree dirty). Run `crps_1787800137`.
 
 Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/crps_1787800137`.
 

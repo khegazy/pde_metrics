@@ -73,14 +73,25 @@ no resolution left in the regime that matters. Each quantity below closes one of
 
 ## Group A: does the metric respond correctly?
 
-### `rho` — did the metric order the strengths correctly?
+### `rho` — does the metric follow the degradation?
 
-**What it is.** How reliably the metric orders the severity levels of one degradation from mildest to worst.
-1.0 means it gets the order right every time, 0 means no relationship, -1 means it is exactly
-backwards.
+**What it is.** How reliably the metric moves further from its clean value as one degradation
+grows, whichever way it moves. 1.0 means every strength took it further than the last in every
+frame, 0 means no relationship, -1 means it consistently moved back toward clean. A quantity that
+falls under smoothing and one that rises under noise both read 1.0 when they move steadily; the
+way it moved is recorded separately, in `direction`.
 
-**How it is computed.** Spearman rank correlation between the severity level number and the metric
-value, computed **within each frame separately**, then the median over frames is reported.
+**How it is computed.** Each value is first read as its *departure* from the clean value of the
+same frame, multiplied by the degradation's measured `direction`. Spearman rank correlation between
+the severity level number and that oriented departure is computed **within each frame
+separately**, over the damaged levels only, and the median over frames is reported. The clean
+level is not a point of the trend, so a metric that moves steadily one way and passes through its
+clean value on the way still follows the degradation. One direction per degradation, never one per
+point: ranking the size of each departure on its own would let a response that only scatters to
+both sides of clean, more widely at each strength, read as perfectly ordered. For an error metric,
+which is exactly zero on the clean field, the departure is the value itself and the direction is
++1. A metric with a target value is read by its distance from the target instead (see "Metrics
+with a target value").
 
 **Why not pooled over frames.** Because that measures the wrong thing. The flow evolves along
 the trajectory, and on this data the density perturbation grows six orders of magnitude from
@@ -236,8 +247,47 @@ describe the size and shape of the response. More sensitive is not better: the d
 this project exists to address *is* excess sensitivity to a displacement that is physically
 benign, so read every one of them against what the degradation does.
 
-All of them are computed on the same oriented scale as the ordering statistics, so a metric where
-larger is better and a metric with a target value are read in their own direction.
+All of them are computed on the same oriented departure as the ordering statistics, so a metric
+that falls under a degradation and one with a target value are read in their own direction.
+
+Every magnitude here depends on the form a metric is written in, and the rank statistics do not.
+Mean squared error and root-mean-square error carry the same information and agree on every rank
+statistic of the pinned run, yet root-mean-square error's elasticity is exactly half of mean
+squared error's: a metric's reactivity scales with the power it is expressed in. Compare
+magnitudes across two metrics only with that in mind.
+
+### `relative_change_max`, `relative_change_median`, `relative_change_q25`, `relative_change_q75` — how far the value moved, as a fraction of its clean value
+
+**What it is.** The change of the value from the clean value of the same frame, divided by the size
+of that clean value: 0.3 means the value moved 30% from clean, −0.5 that it halved.
+`relative_change_max` is the median over frames at the harshest usable strength of a degradation
+(in the per-degradation table); the other three are the median and quartiles over frames at every
+strength (in each card's response-curve data).
+
+**Range.** Any real number, dimensionless. Signed: the sign says which way the value moved.
+
+**Caveats.** Undefined, and shown as a dash, wherever the clean value is round-off. That is every
+row of an error metric, whose clean value is exactly zero; for such a metric the damage, the
+fraction of the way from clean to an unrelated field, is the relative reading. For a curve whose
+clean value crosses zero along its coordinate the change is large by construction near the
+crossing, and the raw curve is the reading there.
+
+**Where it appears.** `axis_response__field-*.csv`, the per-degradation table and the
+response-curve data of each card.
+
+### `direction` — which way the metric moved under this degradation
+
+**What it is.** +1 when the metric's value moves above its clean value as the degradation grows, −1
+when it moves below, measured: the sign of the median, over frames, of the departure from clean at
+the harshest usable strength. It orients every ordering statistic of that degradation and carries
+no judgement: enstrophy falls under blur and rises under noise, and both are recorded as they are.
+For a metric with a target value it is +1, because its distance from the target is what is ordered.
+
+**Caveats.** Measured from the data being described, one sign per degradation. Where the median
+departure is round-off the direction is undefined, +1 is recorded, and the ordering statistics of
+that degradation are withheld by the round-off guard.
+
+**Where it appears.** The per-degradation table (`axis_detail__field-*.csv`).
 
 ### `cliffs_delta_min` — the level separation, centred on zero
 
@@ -259,7 +309,7 @@ taken against, because the exponent depends on it.
 
 **How it is computed.** Ordinary least squares of the logarithm of the size of the median response
 — the change from the clean value in the same frame — on ln(strength). A response that falls, as a
-single-field quantity does under smoothing, is read by its size; `rho` gives its direction.
+single-field quantity does under smoothing, is read by its size; `direction` gives its sign.
 On a degradation whose strength is calibrated per field the recorded absolute value can fall as
 the damage rises — a low-pass records its cutoff wavenumber, 33, 17, 8 and 4.7 on vorticity — so
 the slope is taken against the configured fraction instead (`severity_nominal`), which rises and
@@ -320,11 +370,13 @@ the pinned run it is defined on 69 of the 360 rows, `severity_10` on 165.
 
 **Where it appears.** `axis_response__field-*.csv`.
 
-### `severity_resolution` — how precisely the metric's value pins down the strength
+### `severity_resolution` — consistency: how much the response varies from snapshot to snapshot
 
-**What it is.** Slope and scatter in one number: from one snapshot of this metric, the strength
-could be inferred to about ± this much. A steep but noisy metric and a flat quiet one both score
-badly, which the rank correlation cannot tell apart.
+**What it is.** How much the response varies from snapshot to snapshot relative to its size, in the
+degradation's units: the strength could be inferred from one snapshot of this metric to about ±
+this much. A steep but noisy response and a flat quiet one both give large values, which the rank
+correlation cannot tell apart. A small value is a measurement, neither good nor bad: on one
+trajectory much of the variation is the flow changing between snapshots, not noise in the metric.
 
 **How it is computed.** For each pair of neighbouring strengths, the frame-to-frame scatter of the
 step between them divided by its mean, times the step in strength — the Cramér–Rao bound built from
@@ -335,7 +387,9 @@ over pairs is reported. A target-valued metric is already on a drift-free scale 
 
 **Range.** Strength units, 0 upward; `inf` where the median does not move between two strengths.
 
-**Caveats.** A lower bound, tight only when the scatter is small.
+**Caveats.** A lower bound, tight only when the scatter is small. The snapshots of one trajectory are
+strongly correlated in time, so they are far fewer independent samples than their count; the
+estimated block length (`blindness_block_length`) is shown beside this number for that reason.
 
 **Where it appears.** `axis_response__field-*.csv`.
 
@@ -662,14 +716,13 @@ characterises one field rather than comparing two, and the unrelated-field ancho
 reference *translated*, which leaves every statistic unchanged. So enstrophy — or any other
 single-field quantity — has exactly the same value on the reference and on the anchor, the span
 is zero, and there is nothing to normalise against. `enstrophy` will therefore appear in the
-summary with `rho = -1`, `no dynamic range`, and no damage figure, on its very first run.
+summary with `no dynamic range` and no damage figure on its very first run.
 
 Read that as the suite telling you something true: enstrophy cannot serve as a comparison
 metric between two fields. Enstrophy is instead a rough alarm on a single field, which is
-exactly how it is intended to be used. `rho = -1` is also correct rather than alarming:
-smoothing destroys small-scale structure, so enstrophy *falls* monotonically as damage
-increases, and a rank correlation of exactly -1 is perfect monotonicity in the direction
-that quantity runs.
+exactly how it is intended to be used. Under smoothing it reads `rho = 1` with
+`direction = -1`: smoothing destroys small-scale structure, so enstrophy *falls* steadily as the
+damage increases, and it follows the degradation perfectly in the direction that quantity runs.
 
 For a *pairwise* metric, `degenerate = True` is a genuine problem and means the metric cannot
 distinguish an unrelated field from the reference at all.
@@ -759,31 +812,22 @@ reference; `severity` is the physical knob value **actually applied** and `sever
 says what it means (sigma, cutoff, distance); `variant_label` is the stable identifier
 used in filenames.
 
-### `higher_is_better` — which direction counts as a better match
+### `higher_is_better` — the metric's declared convention
 
-**What it is.** The metric's declared direction: `True` when a larger value means a *better*
+**What it is.** The metric's declared convention: `True` when a larger value means a *better*
 match, `False` for an error measure where larger is worse. Copied onto every row from the metric's
-registration, and repeated in the per-degradation table so a reader can see which convention a row was
-read under.
+registration, as a fact about the metric for the catalog.
 
-**Why we report it.** Three of the ordering statistics are one-sided — monotonicity asks whether
-the value *rises*, the separability AUC is taken with `alternative="greater"`, and the sensitivity
-and saturation levels look for the first median to *exceed* a target. Applied blind they assume
-every metric is an error measure, so a metric where larger is better arrives flagged on three
-criteria at once while behaving perfectly. Measured on a degradation falling cleanly from 1.0 to 0.2:
-`rho` −1.0, `monotone_fraction` 0.0, `separability_auc_min` 0.0. Every one of those trips a
-configured threshold. The analysis now multiplies the value by the declared direction before
-computing those four, so **`rho` = +1 always means "responds correctly to damage"** whichever
-convention the metric uses.
+**Why it is no longer read by the analysis.** The ordering statistics are one-sided — monotonicity
+asks whether the value *rises*, the separability AUC is taken with `alternative="greater"`, and the
+sensitivity and saturation levels look for the first median to *exceed* a target — so every trace
+is oriented before they are computed. The orientation is now measured per degradation
+(`direction`), because a single-field quantity runs both ways on one ladder: it falls under blur
+and rises under noise, and one declared direction scored one of the two as backwards. A metric
+whose declaration is wrong is caught by the contract test, which checks it against a synthetic blur
+ladder.
 
-**Caveats.** The declaration is trusted, not verified — a metric that declares the wrong direction
-will have all four statistics inverted, and the symptom is a clean −1 correlation on every degradation.
-When a run does not record the column (an older result folder), the direction is instead measured
-from the anchor, which is as bad as a field can look by construction: an anchor below the clean
-value means larger is better. That inference is unavailable when the anchor is degenerate, and the
-direction then defaults to "larger is worse".
-
-**Where it appears.** A column in `results.csv` and in the per-degradation table.
+**Where it appears.** A column in `results.csv`.
 
 ### `severity_nominal`, `calibration` — strengths written relative to the field's own properties
 
@@ -1115,7 +1159,7 @@ translates the ensemble rather than perturbing it, and would leave the spread un
 | `severity_level_separation` | 5 | The spread of each severity level across frames, as violins. Where neighbouring violins overlap, the metric cannot rank models one severity level apart |
 | `field_gallery` | 6 | The per-cell contribution to the metric, on **shared colour limits**. Autoscaling each panel would make a heavily smoothed field look identical to the reference. A displaced feature shows as two lobes — one where it should be and is not, one where it is and should not be |
 | `response_sparklines` | 6 | Every metric (rows) against every degradation (columns), each cell a tiny curve of median damage against severity level on one shared 0–1 scale, starting from the undamaged reference. The whole ladder in one view: onset, slope, saturation and a flat, blind response are all read by position. The red dot is the first level at which the metric has moved a tenth of the way to an unrelated field; the small number is the elasticity; degradations with three or fewer usable levels are drawn as dots; grey cells are metrics with no damage scale on that field. Below each column is the range of the severity actually applied |
-| `response_portrait` | 7 | Every metric against every degradation with each cell split into one wedge per field (key beside the grid), coloured by `cliffs_delta_min`. The one figure that holds all three fields at once: read a row for what a metric can tell apart, a column for which metrics see a degradation, a wedge for how that changes with the field. Grey wedges have no defined value, including fields a metric does not apply to. The colour-bar ticks at 0.12, 0.28 and 0.42 are the Vargha–Delaney small, medium and large anchors, for scale and not as grades. A single-field quantity reads negative under smoothing because it falls as structure is removed, as `rho` does |
+| `response_portrait` | 7 | Every metric against every degradation with each cell split into one wedge per field (key beside the grid), coloured by `cliffs_delta_min`. The one figure that holds all three fields at once: read a row for what a metric can tell apart, a column for which metrics see a degradation, a wedge for how that changes with the field. Grey wedges have no defined value, including fields a metric does not apply to. The colour-bar ticks at 0.12, 0.28 and 0.42 are the Vargha–Delaney small, medium and large anchors, for scale and not as grades. Like `rho`, it is read on the departure from clean in the measured direction, so a quantity that falls under smoothing reads positive when it falls steadily |
 | `concordance_matrix` | 7 | Two matrices side by side: the rank correlation between metrics over the ladder (the redundancy statistic), and Lin's concordance of their damage, which also penalises departure from the identity line. A pair high on the left and lower on the right orders the degradations alike but charges different amounts: mean absolute error and mean squared error are the standing example. Grey cells are undefined, which on the right means a metric with no damage scale. Comparison folder only |
 | `redundancy_dendrogram` | 7 | Average-linkage clustering of the metrics that have a damage scale, on one minus the absolute concordance of their damage. Metrics that join near zero assign nearly the same damage everywhere. Drawn in one colour because it shows structure, not groups to adopt. Needs three metrics with a damage scale |
 | `selectivity_profile` | 7 | Each metric's response across every degradation, as grouped bars. Needs two or more metrics |

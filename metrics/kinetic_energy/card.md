@@ -39,10 +39,10 @@ Median damage over frames against severity level for kinetic_energy, one row per
 | test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
 |---|---|---|---|---|---|
 | Displacement | velocity | 2 | — to — | — | level — |
-| Resolution loss | velocity | 2 | -1 to -1 | 0 | level — |
-| Smoothing | velocity | 3 | -1 to -1 | 0 | level — |
-| Spectral filtering | velocity | 4 | -1 to -1 | 0 | level — |
-| Noise | velocity | 1 | 1 to 1 | 0.511 | level — |
+| Resolution loss | velocity | 2 | 1 to 1 | 0.796 | level — |
+| Smoothing | velocity | 3 | 1 to 1 | 0.981 | level — |
+| Spectral filtering | velocity | 4 | 1 to 1 | 0.993 | level — |
+| Noise | velocity | 1 | 1 to 1 | 0.968 | level — |
 | trap test: fake prediction, right spectrum | velocity | 1 | — | — | damage — |
 
 One row per family of degradation and physical field. **Rank correlation** asks whether the metric put the strengths of one degradation in the right order: it is the Spearman correlation between the metric and the applied strength, computed inside a single frame, and the column gives the range over the degradations in that family. A value of 1 means every strength was ordered correctly in every frame. **Weakest gap between neighbouring strengths** asks whether the metric can tell one strength from the next: it is the smallest Mann-Whitney overlap between any two neighbouring strengths, where 1 means the two never overlap and 0.5 means the metric cannot separate them at all. **First strength detected** is the mildest strength at which the metric has moved a tenth of the way from the undegraded reference toward a field with no relation to the truth; a dash means the metric never reached that tenth. **Damage** is that same 0-to-1 scale read as a number: 0 is the undegraded reference and 1 is an unrelated field.
@@ -146,9 +146,9 @@ read here is the drift away from the reference value rather than an error.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `box_blur` | velocity | 4 | -1 | 0 | 0 |
-| `gaussian_blur` | velocity | 4 | -1 | 0 | 0 |
-| `median_blur` | velocity | 3 | -1 | 0 | 0.000502 |
+| `box_blur` | velocity | 4 | 1 | 1 | 1 |
+| `gaussian_blur` | velocity | 4 | 1 | 1 | 1 |
+| `median_blur` | velocity | 3 | 1 | 1 | 0.981 |
 
 <!-- END GENERATED results_smoothing -->
 
@@ -163,10 +163,10 @@ read here is the drift away from the reference value rather than an error.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `highpass_butterworth` | velocity | 3 | -1 | 0 | 0 |
-| `highpass_ideal` | velocity | 2 | -1 | 0 | 0 |
-| `lowpass_butterworth` | velocity | 3 | -1 | 0 | 0 |
-| `lowpass_ideal` | velocity | 2 | -1 | 0 | 0 |
+| `highpass_butterworth` | velocity | 3 | 1 | 1 | 1 |
+| `highpass_ideal` | velocity | 2 | 1 | 1 | 1 |
+| `lowpass_butterworth` | velocity | 3 | 1 | 1 | 1 |
+| `lowpass_ideal` | velocity | 2 | 1 | 1 | 0.993 |
 
 <!-- END GENERATED results_spectral -->
 
@@ -198,13 +198,13 @@ should — which is one of the things a reference-free diagnostic is useful for.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `coarsen` | velocity | 4 | -1 | 0 | 0 |
-| `coarsen_bandlimited` | velocity | 4 | -1 | 0 | 0.272 |
+| `coarsen` | velocity | 4 | 1 | 1 | 1 |
+| `coarsen_bandlimited` | velocity | 4 | 1 | 0.907 | 0.796 |
 
 <!-- END GENERATED results_resolution -->
 
-The rank correlation of −1 under both coarsenings is the correct result for a quantity that
-falls as detail is removed. The losses are small because velocity keeps its energy at large
+Both coarsenings take the value steadily below its clean value, so each follows its
+degradation with a rank correlation of 1; it falls because detail is removed. The losses are small because velocity keeps its energy at large
 scales: 0.05%, 0.2%, 0.9% and 3.0% at factors 2 to 16 under `coarsen`, and 0.00%, 0.01%, 0.07%
 and 0.25% under `coarsen_bandlimited`. Most of what `coarsen` removes is the variance inside
 each block, which its staircase flattens.
@@ -217,7 +217,7 @@ each block, which its staircase flattens.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `additive_noise` | velocity | 4 | 1 | 0.969 | 0.511 |
+| `additive_noise` | velocity | 4 | 1 | 0.969 | 0.968 |
 
 <!-- END GENERATED results_stochastic -->
 

@@ -8,7 +8,7 @@
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": 0.0052081324,
+        "cliffs_delta_min": 0.8380463717,
         "damage_max_ucb": 0.2692526133,
         "damage_per_change": null,
         "degradation": "additive_noise",
@@ -23,7 +23,7 @@
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": -0.4614405308,
+        "cliffs_delta_min": 0.28806759,
         "damage_max_ucb": 0.5278900721,
         "damage_per_change": null,
         "degradation": "box_blur",
@@ -31,14 +31,14 @@
         "field": "vorticity",
         "metric": "enstrophy",
         "n_levels": 4.0,
-        "rho": -1.0,
-        "rho_ci_hi": -1.0,
-        "rho_ci_lo": -1.0
+        "rho": 1.0,
+        "rho_ci_hi": 1.0,
+        "rho_ci_lo": 1.0
       },
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": -0.7056440724,
+        "cliffs_delta_min": 0.4820415879,
         "damage_max_ucb": 0.5983672212,
         "damage_per_change": null,
         "degradation": "coarsen",
@@ -46,14 +46,14 @@
         "field": "vorticity",
         "metric": "enstrophy",
         "n_levels": 4.0,
-        "rho": -1.0,
-        "rho_ci_hi": -1.0,
-        "rho_ci_lo": -1.0
+        "rho": 1.0,
+        "rho_ci_hi": 1.0,
+        "rho_ci_lo": 1.0
       },
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": -0.5361290074,
+        "cliffs_delta_min": 0.5875159137,
         "damage_max_ucb": 0.4532853832,
         "damage_per_change": null,
         "degradation": "coarsen_bandlimited",
@@ -61,14 +61,14 @@
         "field": "vorticity",
         "metric": "enstrophy",
         "n_levels": 4.0,
-        "rho": -1.0,
-        "rho_ci_hi": -1.0,
-        "rho_ci_lo": -1.0
+        "rho": 1.0,
+        "rho_ci_hi": 1.0,
+        "rho_ci_lo": 1.0
       },
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": -0.8510088345,
+        "cliffs_delta_min": 0.4293430037,
         "damage_max_ucb": 0.6457880391,
         "damage_per_change": null,
         "degradation": "gaussian_blur",
@@ -76,14 +76,14 @@
         "field": "vorticity",
         "metric": "enstrophy",
         "n_levels": 4.0,
-        "rho": -1.0,
-        "rho_ci_hi": -1.0,
-        "rho_ci_lo": -1.0
+        "rho": 1.0,
+        "rho_ci_hi": 1.0,
+        "rho_ci_lo": 1.0
       },
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": -0.8432930828,
+        "cliffs_delta_min": 0.1989506578,
         "damage_max_ucb": 1.1929296496,
         "damage_per_change": null,
         "degradation": "highpass_butterworth",
@@ -91,14 +91,14 @@
         "field": "vorticity",
         "metric": "enstrophy",
         "n_levels": 4.0,
-        "rho": -1.0,
-        "rho_ci_hi": -1.0,
-        "rho_ci_lo": -1.0
+        "rho": 1.0,
+        "rho_ci_hi": 1.0,
+        "rho_ci_lo": 1.0
       },
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": -0.8084950426,
+        "cliffs_delta_min": 0.2395355117,
         "damage_max_ucb": 1.1710068831,
         "damage_per_change": null,
         "degradation": "highpass_ideal",
@@ -106,14 +106,14 @@
         "field": "vorticity",
         "metric": "enstrophy",
         "n_levels": 4.0,
-        "rho": -1.0,
-        "rho_ci_hi": -1.0,
-        "rho_ci_lo": -1.0
+        "rho": 1.0,
+        "rho_ci_hi": 1.0,
+        "rho_ci_lo": 1.0
       },
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": -1.0,
+        "cliffs_delta_min": 0.3599783959,
         "damage_max_ucb": 0.7048255075,
         "damage_per_change": null,
         "degradation": "lowpass_butterworth",
@@ -121,14 +121,14 @@
         "field": "vorticity",
         "metric": "enstrophy",
         "n_levels": 4.0,
-        "rho": -1.0,
-        "rho_ci_hi": -1.0,
-        "rho_ci_lo": -1.0
+        "rho": 1.0,
+        "rho_ci_hi": 1.0,
+        "rho_ci_lo": 1.0
       },
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": -1.0,
+        "cliffs_delta_min": 0.3703946607,
         "damage_max_ucb": 0.6884075795,
         "damage_per_change": null,
         "degradation": "lowpass_ideal",
@@ -136,14 +136,14 @@
         "field": "vorticity",
         "metric": "enstrophy",
         "n_levels": 4.0,
-        "rho": -1.0,
-        "rho_ci_hi": -1.0,
-        "rho_ci_lo": -1.0
+        "rho": 1.0,
+        "rho_ci_hi": 1.0,
+        "rho_ci_lo": 1.0
       },
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": -0.4602831681,
+        "cliffs_delta_min": 0.4652212492,
         "damage_max_ucb": 0.4366101459,
         "damage_per_change": null,
         "degradation": "median_blur",
@@ -151,9 +151,9 @@
         "field": "vorticity",
         "metric": "enstrophy",
         "n_levels": 3.0,
-        "rho": -1.0,
-        "rho_ci_hi": -1.0,
-        "rho_ci_lo": -1.0
+        "rho": 1.0,
+        "rho_ci_hi": 1.0,
+        "rho_ci_lo": 1.0
       },
       {
         "blind": true,

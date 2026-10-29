@@ -170,7 +170,7 @@ unless they persist across frames.
 
 <!-- GENERATED run: written by `python -m fmeval.cards evidence spread_skill --results results/spread_skill_1787800137`, do not edit -->
 
-Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of developed flow), on the 64 analysis grid, seed 20260807, at commit `c49b363765d7` (working tree dirty). Run `spread_skill_1787800137`.
+Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `c49b363765d7` (working tree dirty). Run `spread_skill_1787800137`.
 
 Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/spread_skill_1787800137`.
 

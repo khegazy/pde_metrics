@@ -788,7 +788,7 @@ def test_damage_profile_is_withheld_for_a_target_valued_metric():
 
 def test_a_falling_response_has_an_elasticity():
     """A single-field quantity falls under smoothing; the exponent of the size of that fall is as
-    meaningful as that of a rise, and rho already gives its direction."""
+    meaningful as that of a rise, and the ``direction`` column gives which way it went."""
     axes = an.summarise_axes(_single_field({"falls": [-1.0, -2.0, -3.0, -4.0]}, drift=1.05),
                              n_bootstrap=0)
     row = _axis(axes, "falls")
@@ -807,3 +807,97 @@ def test_a_retained_fraction_is_read_as_the_fraction_removed():
     row = _axis(an.summarise_axes(scored, norm=norm, n_bootstrap=0), "band")
     assert row["elasticity_x"] == "1 - severity (s)"
     assert 0.8 < row["severity_10"] <= 1.0, "the crossing lies at the harshest level"
+
+
+# --- the trend rule: a departure from clean, in one measured direction per degradation -----
+
+
+_TREND = ("rho", "rho_frame_min", "monotone_fraction", "separability_auc_min", "cliffs_delta_min")
+
+
+def test_scatter_around_clean_scores_far_below_a_real_response():
+    """A response that only scatters, more widely at each level, is not a trend (the design's D1).
+
+    Ranking the *absolute* departure would pick a sign per point and read this null as ordered,
+    because the spread grows with the level. One sign per degradation cannot follow the scatter.
+    """
+    rng = np.random.default_rng(3)
+    df = _single_field({"scatter": [0.0] * 4, "real": [0.1, 0.2, 0.3, 0.4]}, n_frames=80)
+    null = (df["degradation"] == "scatter").to_numpy()
+    df.loc[null, "value"] += (10.0 ** df.loc[null, "level"] * 1e-4
+                              * rng.standard_normal(int(null.sum())))
+    axes = an.summarise_axes(df, n_bootstrap=0)
+    scatter, real = _axis(axes, "scatter"), _axis(axes, "real")
+    assert real["rho"] == pytest.approx(1.0) and real["monotone_fraction"] == pytest.approx(1.0)
+    assert abs(scatter["rho"]) < 0.5 and scatter["monotone_fraction"] < 0.3, (
+        f"a pure scatter null scored rho={scatter['rho']:.2f}, monotone fraction "
+        f"{scatter['monotone_fraction']:.2f}; the trend is reading scatter as order")
+
+
+def test_a_falling_and_a_rising_response_both_follow_their_degradation():
+    """Which way a metric moves carries no weight (D6): falling under one degradation and rising
+    under another both score a perfect trend, and ``direction`` records which it was."""
+    axes = an.summarise_axes(_single_field({"blur": [-0.4, -0.8, -1.2, -1.6],
+                                            "noise": [0.4, 0.8, 1.2, 1.6]}), n_bootstrap=0)
+    for label, sign in (("blur", -1), ("noise", 1)):
+        row = _axis(axes, label)
+        assert row["direction"] == sign, f"{label}: direction {row['direction']}, expected {sign}"
+        for column in _TREND:
+            assert row[column] == pytest.approx(1.0), f"{label}: {column} = {row[column]}"
+
+
+def test_a_steady_response_that_crosses_its_clean_value_follows_the_trend():
+    """The clean level is not a point of the trend (D9). Palinstrophy under coarsening moves
+    +77%, +20%, -25%, -53% from clean on the pinned run: steadily one way, through clean."""
+    df = _single_field({"coarsen": [0.77 * 5, 0.20 * 5, -0.25 * 5, -0.53 * 5]})
+    row = _axis(an.summarise_axes(df, n_bootstrap=0), "coarsen")
+    assert row["direction"] == -1
+    assert row["rho"] == pytest.approx(1.0) and row["monotone_fraction"] == pytest.approx(1.0)
+
+
+def test_a_two_field_error_metric_is_unchanged_by_the_departure_rule():
+    """An error metric is exactly zero on the clean field, so its departure is its value and its
+    direction +1: every trend statistic equals the one computed on the raw values."""
+    df = make_frame(axes={"a": [1.0, 2.0, 2.5, 4.0]}, noise=0.4, n_frames=30, seed=4)
+    ladder = df[df["level"] > 0]
+    row = _axis(an.summarise_axes(df, n_bootstrap=0))
+    rho = np.nanmedian(list(an._per_frame_rho(ladder).values()))
+    assert row["direction"] == 1
+    assert row["rho"] == pytest.approx(rho, rel=1e-12)
+    assert row["monotone_fraction"] == pytest.approx(an._monotone_fraction(ladder), rel=1e-12)
+    assert row["separability_auc_min"] == pytest.approx(an._min_adjacent_auc(ladder), rel=1e-12)
+
+
+@pytest.mark.parametrize("transform", [np.log, np.sqrt, lambda v: -1.0 / v, lambda v: np.exp(-v)],
+                         ids=["log", "sqrt", "minus-reciprocal", "decreasing-exp"])
+def test_a_monotone_re_expression_leaves_the_trend_unchanged(transform):
+    """A metric and any monotone function of it, increasing or decreasing, carry the same trend.
+
+    Holds exactly for the statistics read within a frame. Those pooled over frames
+    (separability, Cliff's delta) compare departures from different frames' clean values, which a
+    non-linear map can reorder when the clean value drifts; on an error metric, whose clean value
+    is the same zero in every frame, they are invariant too (the second case below).
+    """
+    single = _single_field({"a": [-0.5, -1.0, -1.5, -2.0]}, drift=1.02, noise=0.05)
+    error = make_frame(axes={"a": [1.0, 2.0, 2.5, 4.0]}, noise=0.4, n_frames=30, seed=4)
+    error["value"] += 1.0      # keep the log and the reciprocal finite; clean is 1 everywhere
+    for df, columns in ((single, ("rho", "rho_frame_min", "monotone_fraction")), (error, _TREND)):
+        before = _axis(an.summarise_axes(df, n_bootstrap=0))
+        after = _axis(an.summarise_axes(df.assign(value=transform(df["value"])), n_bootstrap=0))
+        for column in columns:
+            assert after[column] == pytest.approx(before[column], rel=1e-12), (
+                f"{column}: {before[column]} became {after[column]} under a monotone map")
+
+
+def test_relative_change_is_measured_from_the_clean_value_of_the_same_frame():
+    """Equation (2): ``(v - v0) / |v0|``. Defined for a single-field quantity, absent for an error
+    metric whose clean value is zero."""
+    single = _single_field({"a": [0.5, 1.0, 2.5]}, clean=5.0, drift=1.1, noise=0.0)
+    row = _axis(an.summarise_axes(single, n_bootstrap=0))
+    assert row["relative_change_max"] == pytest.approx(0.5, rel=1e-9), "drift cancels per frame"
+    scored, _ = _scored(single)
+    curve = an.per_level_response(scored, metric="m")
+    assert curve.loc[curve["degradation"] == "a", "relative_change_median"].to_numpy() == \
+        pytest.approx([0.1, 0.2, 0.5], rel=1e-9)
+    error = _axis(an.summarise_axes(make_frame(axes={"a": [1.0, 2.0]}), n_bootstrap=0))
+    assert np.isnan(error["relative_change_max"]), "an error metric's clean value is zero"
