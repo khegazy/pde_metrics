@@ -45,6 +45,18 @@ def test_anchor_falls_back_to_the_largest_translation_and_says_so():
     assert row["value_uncorrelated"] == pytest.approx(6.0)
 
 
+def test_a_second_row_under_one_key_is_refused():
+    """Two rows for one (frame, field, metric, variant) would be read as one point, merged.
+
+    That is what a metric writing several numbers per evaluation into ``results.csv`` produced:
+    every statistic averaged or ranked its components together. The guard names the key.
+    """
+    df = make_frame(axes={"a": [1.0, 2.0]})
+    assert not an.normalisation(df).empty
+    with pytest.raises(ValueError, match="share a key"):
+        an.normalisation(pd.concat([df, df.iloc[:1]], ignore_index=True))
+
+
 def test_degenerate_metric_is_marked_and_produces_no_damage():
     df = make_frame(axes={"a": [3.0, 3.0, 3.0]}, reference=3.0)  # constant everywhere
     norm = an.normalisation(df)

@@ -184,13 +184,26 @@ def _folder(folder: RunFolder | Path) -> RunFolder:
     return folder if isinstance(folder, RunFolder) else RunFolder(Path(folder))
 
 
+#: Result columns read back as text, an empty cell staying ``""``. A calibration-free operator
+#: writes ``calibration`` empty, and the default reader would turn that into NaN. Only these
+#: columns: read the whole file this way and the empty ``target_value`` cells become strings,
+#: which ``summarise_axes`` then fails to convert.
+RESULT_TEXT_COLUMNS: tuple[str, ...] = ("component", "calibration", "severity_name",
+                                        "variant_label")
+
+
 def read_results(folder: RunFolder | Path, name: str = "results") -> pd.DataFrame:
-    """Read a tidy frame back, from either the plain or the gzipped form."""
+    """Read a tidy frame back, from either the plain or the gzipped form.
+
+    The columns of :data:`RESULT_TEXT_COLUMNS` are read as written, without missing-value
+    detection (a ``str`` converter, which is ``keep_default_na=False`` for those columns
+    alone); every other column is parsed as usual. A named column a file lacks is skipped.
+    """
     data = _folder(folder).data
     for suffix in (".csv", ".csv.gz"):
         path = data / f"{name}{suffix}"
         if path.exists():
-            return pd.read_csv(path)
+            return pd.read_csv(path, converters=dict.fromkeys(RESULT_TEXT_COLUMNS, str))
     raise FileNotFoundError(f"no {name}.csv or {name}.csv.gz in {data}")
 
 

@@ -46,6 +46,11 @@ PROBE_LABELS: frozenset[str] = frozenset({"gaussian_impostor", UNCORRELATED_LABE
 #: tuple passed to ``groupby`` as one key.
 GROUP_KEYS: list[str] = ["dataset", "metric", "field"]
 
+#: What identifies one result row: one metric evaluation of one variant of one frame. Every
+#: statistic reads a row as one point on one trace, so a second row under the same key would be
+#: merged into it silently; :func:`normalisation` refuses that.
+ROW_KEYS: list[str] = [*GROUP_KEYS, "trajectory", "frame_index", "variant_label"]
+
 #: The ladder entry the profile's displacement elasticity is read from: a sub-pixel shift, the
 #: smallest displacement the ladder applies and the regime of the double penalty.
 DISPLACEMENT_AXIS: str = "translate_subpixel"
@@ -159,7 +164,19 @@ def normalisation(df: pd.DataFrame, *, uncorrelated_label: str = UNCORRELATED_LA
     Returns:
         One row per (dataset, metric, field) with ``value_clean``, ``value_uncorrelated``,
         ``span``, ``anchor_source`` and ``degenerate``.
+
+    Raises:
+        ValueError: If two rows share a :data:`ROW_KEYS` key, which no statistic here can read.
     """
+    keys = [k for k in ROW_KEYS if k in df.columns]
+    repeated = df.duplicated(keys, keep=False)
+    if repeated.any():
+        raise ValueError(
+            f"{int(repeated.sum())} result rows share a key of {ROW_KEYS} with another row, "
+            f"e.g. {df.loc[repeated, keys].head(2).to_dict('records')}. "
+            "Every statistic reads one row as one point of one trace; concatenate runs with "
+            "distinct dataset or trajectory names, or analyse them separately."
+        )
     rows = []
     for key, g in df.groupby(GROUP_KEYS, observed=True):
         clean = float(g.loc[g["level"] == 0, "value"].median())    # NaN with no reference rows
@@ -278,7 +295,7 @@ def response_direction(df: pd.DataFrame,
 
     anchors = norm if norm is not None else normalisation(df)
     for _, row in anchors.iterrows():
-        key = (row["dataset"], row["metric"], row["field"])
+        key = tuple(row[k] for k in GROUP_KEYS)
         if key in out:
             continue                      # a declaration outranks an inference
         clean, high = row["value_clean"], row["value_uncorrelated"]
@@ -343,10 +360,9 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
     group_scales = magnitude.groupby(GROUP_KEYS, observed=True)["_abs"].max()
     largest = _largest_responses(pd.concat([reference, ladder]), GROUP_KEYS, probe_labels)
 
-    for (dataset, metric, field, axis), g in ladder.groupby(
-        ["dataset", "metric", "field", "degradation"], observed=True
-    ):
-        key = (dataset, metric, field)
+    for (*key, axis), g in ladder.groupby([*GROUP_KEYS, "degradation"], observed=True):
+        key = tuple(key)
+        dataset, metric, field = key
         frame_scale = frame_scales.loc[key].to_dict()
         group_scale = float(group_scales.loc[key])
         levels = g["level"].to_numpy()
@@ -368,9 +384,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
         oriented_clean = float(_oriented(pd.Series([clean]), sign, target).iloc[0])
 
         record: dict[str, object] = {
-            "dataset": dataset,
-            "metric": metric,
-            "field": field,
+            **dict(zip(GROUP_KEYS, key, strict=True)),
             "degradation": axis,
             "degradation_family": g["degradation_family"].iloc[0],
             "is_probe": is_probe,
