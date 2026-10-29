@@ -149,6 +149,22 @@ def test_a_curve_companion_runs_end_to_end_through_a_run_folder(temporary_metric
         an.normalisation(curve)       # both coordinates pooled as one trace: refused
 
 
+def test_a_one_field_curve_on_an_ensemble_is_the_member_mean_s_when_clean(temporary_metric,
+                                                                         ensemble_traj):
+    """On an ensemble dataset the ladder degrades the prediction, so the candidate of the clean
+    level, and with it a one-field curve there, is the member mean's, not the reference's."""
+    _register_two_way(temporary_metric, "_two_way_ensemble")
+    ladder = build_ladder({"gaussian_blur": {"severities": [1.0]}})
+    curve = run(ensemble_traj, [metric_registry.get("_two_way_ensemble")], ladder,
+                fields=["density"], dataset=DatasetInfo(name="ensemble"), seed=0).companions
+    frame = ensemble_traj.frame(0, ["density"])
+    energy = curve.loc[(curve["level"] == 0) & (curve["frame_index"] == 0)
+                       & (curve["coordinate"] == 1), "value"].iloc[0]
+    assert energy == pytest.approx(
+        float(fluctuation_energy(frame.members["density"].mean(axis=0))), rel=1e-12)
+    assert energy != pytest.approx(float(fluctuation_energy(frame.fields["density"])), rel=1e-6)
+
+
 def test_a_companion_cannot_move_its_metric_s_number(temporary_metric):
     """The companion draws from a generator of its own, so attaching one to a metric that
     draws random numbers leaves the metric's number exactly where it was."""

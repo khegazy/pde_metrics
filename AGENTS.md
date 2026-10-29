@@ -390,7 +390,8 @@ function, the `rmse` pattern.
   wavenumber, a threshold). It returns `(coordinates, values)`: fixed coordinates and the
   literature's own values, untransformed. With the metric's arguments it is a comparison; with
   one field where the metric takes two it is a property of one field, stored for the candidate
-  at every level, which on the clean level is the reference. The pipeline calls it **before**
+  at every level, which on the clean level is the reference (on an ensemble dataset it is the
+  member mean, the undamaged prediction the ladder degrades). The pipeline calls it **before**
   the metric on every row, stores it in `companions.csv`, times both calls, and hands the curve
   to the metric in `ctx.cache[COMPANION_KEY]` (`fmeval.context`). The metric reads it from there
   when present and computes it itself otherwise, and must give the same number both ways, which

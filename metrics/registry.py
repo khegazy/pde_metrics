@@ -80,8 +80,9 @@ class Companion:
     """``(name, units)`` of a curve's coordinate; None for a field map."""
     one_field: bool
     """Whether the companion takes one field where its metric takes two: a property of one
-    field, called on the candidate of every variant, which on the clean level is the reference.
-    Inferred from the signature."""
+    field, called on the candidate of every variant, which on the clean level is the reference
+    (the member mean on an ensemble dataset, whose ladder degrades the prediction). Inferred from
+    the signature."""
     takes_ctx: bool
 
     def describe(self) -> dict[str, Any]:
