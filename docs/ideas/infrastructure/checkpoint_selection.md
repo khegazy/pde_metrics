@@ -42,7 +42,7 @@ rollouts instead of from the one-step validation loss.
      inertial range;
    - the deviation from the
      [four-fifths law](../turbulence_statistics/four_fifths_law.md);
-   - the [Wasserstein distance between increment distributions at every separation](../optimal_transport/gradient_pdf_w1.md),
+   - the built [increment_w1_by_separation](../../metrics/increment_w1_by_separation.md),
      or the [velocity-derivative skewness](../turbulence_statistics/derivative_skewness.md)
      with the gradient flatness;
    - the long-time spectrum error, restricted to the

@@ -15,7 +15,6 @@ from ..registry import metric
     name="kinetic_energy",
     arity="single",
     fields=("velocity",),
-    returns="scalar",
     differentiable=True,
     cost="cheap",
     higher_is_better=False,   # no direction of its own: the drift from the reference

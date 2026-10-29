@@ -1,0 +1,36 @@
+schema_version: 1
+
+name: increment_w1_by_separation
+kind: metric
+
+# The schema's "statistical" names increment PDFs explicitly, as increment_w1 does: what is
+# compared is a distribution derived from each field, at each separation.
+category: statistical
+
+summary: >-
+  Transport distance between the increment distributions of two fields at every octave of
+  separation, reported as a curve, with one number for the panel: the mean of each distance
+  over the reference's increment size at that separation.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    Mean over separations 1, 2, 4, ... cells of the 1-Wasserstein distance between the
+    reference's and the candidate's increment distributions at that separation, divided by the
+    reference's mean absolute increment there; dimensionless. A repository convention with no
+    source (issues/098). The curve of undivided distances is stored beside it.
+  bounds:
+    lower: 0.0
+    upper: null
+
+math:
+  # Divided by a scale of the first argument only, so neither symmetric nor a metric on
+  # fields; each distance before the division is a pseudometric, as increment_w1 is.
+  triangle_inequality: false
+  scale_dependent: false       # both fields times c: every distance and every scale times c
+  resolution_dependent: true   # the separations are in cells
+  complexity: "O(N log^2 N)"   # a sort per separation, log N separations
+references: [peyrecuturi2019, granero2024]
+review: null

@@ -235,6 +235,12 @@ def test_run_folder_round_trip(tmp_path, traj):
     reloaded = fio.read_results(folder)
     assert len(reloaded) == len(result.rows)
     assert list(reloaded.columns) == list(RESULT_DTYPES)
+    for column in fio.RESULT_TEXT_COLUMNS:
+        assert not reloaded[column].isna().any(), (
+            f"{column}: an empty cell came back as NaN rather than the empty text written")
+    assert reloaded["target_value"].dtype == np.float64, (
+        f"target_value came back as {reloaded['target_value'].dtype}; only the named text "
+        "columns may skip missing-value parsing")
 
     meta = json.loads((folder.data / "run_meta.json").read_text())
     assert meta["config_hash"] == digest

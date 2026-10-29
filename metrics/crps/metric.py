@@ -31,7 +31,6 @@ from ..registry import metric
     name="crps",
     arity="ensemble",
     fields=("*",),
-    returns="scalar",
     differentiable=True,      # piecewise linear; subgradient at ties, as for mae
     cost="cheap",
     higher_is_better=False,

@@ -9,9 +9,10 @@ cheap. Measured through ``Trajectory.frame``, validation included, on a NERSC lo
 10 ms of I/O per kinet frame (``fmeval/pipeline.py``). Evaluating Taylor-Green's sines
 directly took 7.0 ms, which is why its spatial patterns are computed once.
 
-Neither is **evidence about a flow**. ``sod_shock_tube`` is in ``evidence_datasets`` as an
-analytic check, for the metrics that need a shock or pressure; ``taylor_green_2d`` is a
-fixture for the harness only (``docs/decisions.md``). Their pages are ``docs/datasets/``.
+None is **evidence about a flow**. ``sod_shock_tube`` is in ``evidence_datasets`` as an
+analytic check, for the metrics that need a shock or pressure; ``taylor_green_2d`` and
+``advecting_blobs`` are fixtures for the harness only (``docs/decisions.md``). Their pages are
+``docs/datasets/``.
 """
 
 from __future__ import annotations
@@ -286,3 +287,71 @@ class TaylorGreen2D(ClosedFormTrajectory):
         decay = np.exp(-2.0 * self._nu * time)
         return {"velocity": self._velocity * decay, "pressure": self._pressure * decay**2,
                 "vorticity": self._vorticity * decay}
+
+
+@register_reader("advecting_blobs")
+class AdvectingBlobs(ClosedFormTrajectory):
+    """Gaussian density blobs, each carried at its own constant velocity on a periodic square.
+
+    A passive density on ``[0, 1)^2``: the uniform value 1 plus one Gaussian bump per velocity,
+
+        rho(x, t) = 1 + a * sum_b exp(-|x - c_b - u_b t|^2 / (2 w^2)),
+
+    with ``|.|`` the periodic (minimum-image) distance, the centres ``c_b`` drawn uniformly from
+    ``seed``, amplitude ``a`` and width ``w``. Each blob moves rigidly, so this is the exact
+    solution of the advection equation for that velocity, blob by blob; a single uniform velocity
+    would carry every blob alike. With distinct velocities the blobs' relative positions change,
+    so an error measured on it changes from frame to frame; with one blob, or one velocity, it
+    would not. It tests the time-dependent machinery, not physics (``docs/decisions.md``), and is
+    not an evidence dataset.
+
+    Periodic wrap-around is the minimum image only: at a width of 0.06 the bump has fallen to
+    ``exp(-0.5^2 / (2 * 0.06^2)) = 8.3e-16`` of its peak at the half-domain distance, so the
+    seam it leaves there is round-off.
+    """
+
+    FORMAT = "advecting_blobs"
+    FIELDS = ("density",)
+
+    def __init__(self, path: str | None = None, *, grid: Sequence[int] = (64, 64),
+                 n_frames: int = 21, t_start: float = 0.0, t_end: float = 10.0,
+                 velocities: Sequence[Sequence[float]] = ((0.05, 0.0), (0.0, 0.08),
+                                                          (-0.06, 0.04)),
+                 width: float = 0.06, amplitude: float = 0.1, seed: int = 0) -> None:
+        """Draw the blobs' starting centres.
+
+        Args:
+            path: Ignored; accepted so every reader is constructed the same way.
+            grid: Cells along ``(x, y)``.
+            n_frames: Number of frames.
+            t_start, t_end: The window.
+            velocities: One ``(u_x, u_y)`` per blob, in domain lengths per unit time.
+            width: The Gaussian width ``w``, in domain lengths.
+            amplitude: The peak ``a`` above the uniform density 1.
+            seed: Draws the starting centres.
+
+        Raises:
+            ValueError: On a non-positive width or amplitude, a velocity that is not a pair, or
+                an invalid grid or window.
+        """
+        speeds = np.asarray(velocities, dtype=float)
+        if speeds.ndim != 2 or speeds.shape[1] != 2 or len(speeds) == 0:
+            raise ValueError(f"velocities must be one (u_x, u_y) pair per blob, got {velocities}")
+        if float(width) <= 0 or float(amplitude) <= 0:
+            raise ValueError(f"width and amplitude must be positive, got {width}, {amplitude}")
+        super().__init__(grid=grid, length=(1.0, 1.0), boundary=("periodic", "periodic"),
+                         n_frames=n_frames, t_start=t_start, t_end=t_end,
+                         params={"velocities": speeds.tolist(), "width": float(width),
+                                 "amplitude": float(amplitude), "seed": int(seed)})
+        self._velocities, self._width, self._amplitude = speeds, float(width), float(amplitude)
+        self._centres = np.random.default_rng(int(seed)).random((len(speeds), 2))
+
+    def solution(self, time: float) -> dict[str, np.ndarray]:
+        """The density at ``time`` on the cell centres."""
+        density = np.ones_like(self.centres[0])
+        for centre, velocity in zip(self._centres, self._velocities, strict=True):
+            position = (centre + velocity * time) % 1.0
+            squared = sum(((x - c + 0.5) % 1.0 - 0.5) ** 2
+                          for x, c in zip(self.centres, position, strict=True))
+            density += self._amplitude * np.exp(-squared / (2.0 * self._width**2))
+        return {"density": density[None]}

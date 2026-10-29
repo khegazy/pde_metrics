@@ -11,6 +11,13 @@ the same operator can appear twice with different options -- ``translate_x`` and
       translate_y:        {op: translate, severities: [1, 2, 4], options: {axis: y}}
       lowpass_ideal:      {severities: [0.05, 0.15, 0.3]} # calibrated: energy fraction
       gaussian_impostor:  {severities: [0]}               # ordinal=False, excluded from rho
+      drift:              {op: translate, severities: [0.5, 1], per_unit_time: true}
+
+``per_unit_time: true`` makes an entry's severity a rate: it is multiplied by the time elapsed
+since the trajectory's first frame, so a translation becomes a wrong advection speed and noise
+an error growing in time. Only an ordinal, uncalibrated operator whose severity 0 is the identity
+and whose damage grows with its severity takes it, since only then is a rate times a time a
+strength that starts at no damage and grows.
 """
 
 from __future__ import annotations
@@ -50,14 +57,17 @@ class SeverityLevel:
     severity_name: str
     ordinal: bool
     options: dict[str, Any] = dc_field(default_factory=dict)
+    per_unit_time: bool = False
+    """Whether ``severity`` is a rate, applied times each frame's physical time."""
 
     @classmethod
     def from_spec(cls, spec: DegradationSpec, *, label: str, level: int, severity: float,
-                  options: dict[str, Any]) -> SeverityLevel:
+                  options: dict[str, Any], per_unit_time: bool = False) -> SeverityLevel:
         """One severity of the operator ``spec``, carrying the spec fields a result row needs."""
         return cls(label=label, op=spec.name, family=spec.family, level=level,
                    severity=float(severity), calibration=spec.calibration,
-                   severity_name=spec.severity_name, ordinal=spec.ordinal, options=options)
+                   severity_name=spec.severity_name, ordinal=spec.ordinal, options=options,
+                   per_unit_time=per_unit_time)
 
     @property
     def variant_label(self) -> str:
@@ -86,8 +96,8 @@ class DegradationConfig:
     """The ``degradation`` config block, and the arguments of :func:`build_ladder`."""
 
     ladder: dict[str, Any] = MISSING
-    """Entry label -> ``{op?, severities, options?, enabled?}``; ``op`` defaults to the label.
-    An entry's ``options`` default to its operator's keyword-only parameters."""
+    """Entry label -> ``{op?, severities, options?, enabled?, per_unit_time?}``; ``op`` defaults
+    to the label. An entry's ``options`` default to its operator's keyword-only parameters."""
     include_reference: bool = True
     """Prepend the identity severity level, level 0 of the whole ladder: pairwise error
     metrics must return exactly 0 there."""
@@ -143,27 +153,47 @@ def build_ladder(
                 f"take; it takes {sorted(spec.option_names)}"
             )
         options = {**spec.defaults, **chosen}
+        per_unit_time = bool(entry.pop("per_unit_time", False))
+        unfit = [reason for reason, applies in (
+            (f"is calibrated ({spec.calibration!r}): its severity is a fraction of a measured "
+             "spectrum, and a fraction times a time means nothing", spec.calibration is not None),
+            ("does not leave the field unchanged at severity 0, so the first frame would already "
+             "be damaged", not spec.zero_is_identity),
+            ("damages less as its severity grows, so a growing time would undo the damage",
+             spec.severity_direction != "increasing"),
+            ("is not ordinal: its severity is not a strength", not spec.ordinal),
+        ) if applies]
+        if per_unit_time and unfit:
+            raise ValueError(
+                f"ladder entry {label!r} sets per_unit_time, but {op_name} "
+                + "; and it ".join(unfit) + ". A rate times a time is a strength only for an "
+                "ordinal, uncalibrated operator whose severity 0 is the identity and whose damage "
+                "grows with its severity."
+            )
         if entry:
             raise ValueError(
                 f"ladder entry {label!r} has unexpected keys {sorted(entry)}; "
-                "expected op / severities / options / enabled"
+                "expected op / severities / options / enabled / per_unit_time"
             )
 
         # Sorted by increasing damage, so a decreasing-direction list written in any
         # order still gets correct ordinal levels. Getting this wrong inverts a Spearman.
         for level, severity in enumerate(spec.sort_severities(severities), start=1):
             severity_levels.append(SeverityLevel.from_spec(
-                spec, label=label, level=level, severity=severity, options=options))
+                spec, label=label, level=level, severity=severity, options=options,
+                per_unit_time=per_unit_time))
     return severity_levels
 
 
 def resolve_severity(severity_level: SeverityLevel, field: str,
-                    calibration: Calibration | None) -> float:
+                    calibration: Calibration | None, elapsed: float | None = None) -> float:
     """Turn a nominal severity into the absolute value to apply to ``field``.
 
-    Absolute operators pass straight through. A calibrated one is resolved against the
-    field's measured spectrum, so the same config number destroys the same fraction of
-    structure on a smooth field and a broadband one.
+    Absolute operators pass straight through, times ``elapsed``, the frame's time since the
+    trajectory's first frame, when the entry is ``per_unit_time``. A calibrated one is resolved
+    against the field's measured spectrum, so
+    the same config number destroys the same fraction of structure on a smooth field and a
+    broadband one.
 
     Raises:
         KeyError: If the operator needs a calibration and none was measured for the field.
@@ -172,7 +202,12 @@ def resolve_severity(severity_level: SeverityLevel, field: str,
             look like a plausible result.
     """
     if severity_level.calibration is None:
-        return severity_level.severity
+        if not severity_level.per_unit_time:
+            return severity_level.severity
+        if elapsed is None:
+            raise ValueError(f"{severity_level.label!r} is per_unit_time and needs the time "
+                             "elapsed since the trajectory's first frame")
+        return severity_level.severity * float(elapsed)
     measured = calibration.fields.get(field) if calibration is not None else None
     if measured is None:
         raise KeyError(
@@ -239,6 +274,7 @@ def apply_severity_level(
     seed: int,
     reference_rms: Mapping[str, float] | None = None,
     calibration: Calibration | None = None,
+    time_origin: float = 0.0,
 ) -> SeverityLevelApplication:
     """Apply one severity level to the requested fields of a frame.
 
@@ -271,6 +307,8 @@ def apply_severity_level(
             relative to the *reference* rather than to whatever the previous severity level left.
         calibration: Measured field properties, needed by any operator declaring a
             ``calibration``.
+        time_origin: The time of the trajectory's first frame. A ``per_unit_time`` severity is
+            a rate times the time elapsed since it, so it does nothing on that frame.
 
     Returns:
         A :class:`SeverityLevelApplication`: the degraded arrays, the absolute severity
@@ -308,7 +346,7 @@ def apply_severity_level(
     if whole_frame:
         whole = _apply_whole_frame(spec, severity_level, frame, fields, seed=seed,
                                    reference_rms=reference_rms, calibration=calibration,
-                                   resolved=applied.resolved)
+                                   resolved=applied.resolved, elapsed=frame.time - time_origin)
     for name in fields:
         source = frame.members[name] if ensemble else frame.fields[name]
         if not (whole_frame or spec.ensemble or spec.accepts(name)):
@@ -320,7 +358,8 @@ def apply_severity_level(
         if whole_frame:
             result = whole[name]
         else:
-            severity = resolve_severity(severity_level, name, calibration)
+            severity = resolve_severity(severity_level, name, calibration,
+                                        frame.time - time_origin)
             applied.resolved[name] = severity
             if ensemble and not spec.ensemble:
                 # A stochastic operator draws independently per member: one shared noise
@@ -413,6 +452,7 @@ def _apply_whole_frame(
     reference_rms: Mapping[str, float] | None,
     calibration: Calibration | None,
     resolved: dict[str, float],
+    elapsed: float,
 ) -> dict[str, np.ndarray]:
     """Apply an operator that declared ``whole_frame=True``, in one call over every field.
 
@@ -423,6 +463,7 @@ def _apply_whole_frame(
 
     Args:
         resolved: Filled in with the severity applied to each field, in place.
+        elapsed: The frame's time since the trajectory's first frame, for ``per_unit_time``.
 
     Raises:
         TypeError: If the operator does not return a mapping.
@@ -438,7 +479,7 @@ def _apply_whole_frame(
             f"{frame.grid.boundary}; whole-frame operators are not boundary-aware yet"
         )
     for name in fields:
-        resolved[name] = resolve_severity(severity_level, name, calibration)
+        resolved[name] = resolve_severity(severity_level, name, calibration, elapsed)
     if len(set(resolved.values())) > 1:
         raise ValueError(
             f"{severity_level.op!r} declares whole_frame=True and "

@@ -10,14 +10,13 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from metrics.registry import metric, pointwise_map
+from metrics.registry import companion, metric
 
 
 @metric(
     name="mse",
     arity="pairwise",
     fields=("*",),
-    returns="scalar",
     differentiable=True,
     cost="cheap",
     higher_is_better=False,
@@ -40,7 +39,7 @@ def mse(reference: NDArray[np.floating], candidate: NDArray[np.floating]) -> flo
     return float(np.mean(d * d))
 
 
-@pointwise_map(of="mse")
+@companion(of="mse")
 def mse_map(
     reference: NDArray[np.floating], candidate: NDArray[np.floating]
 ) -> NDArray[np.floating]:

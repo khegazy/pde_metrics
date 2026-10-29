@@ -55,7 +55,12 @@ LABELS: dict[str, str] = {
     "damage": "damage (0 = undegraded reference, 1 = unrelated field)",
     "value": "metric value",
     "level": "severity level (1 = mildest)",
-    "rho": "rank correlation with strength (1 = ordered correctly in every frame)",
+    "rho": "rank correlation with strength (1 = follows the degradation in every frame)",
+    "relative_change_max": "change from the clean value at the harshest strength "
+                           "(fraction of clean)",
+    "relative_change_median": "change from the clean value (fraction of clean)",
+    "severity_resolution": "variation from snapshot to snapshot relative to the response, "
+                           "in the strength's units",
     "rho_ci_lo": "rank correlation, lower end of the resampling interval",
     "rho_ci_hi": "rank correlation, upper end of the resampling interval",
     "cliffs_delta_min": "separation of neighbouring strengths "

@@ -1,0 +1,26 @@
+# Three Gaussian density blobs, each carried at its own constant velocity on the periodic unit
+# square, computed on the fly. See fmeval/data/analytic.py and docs/datasets/advecting_blobs.md.
+#
+# NOT PHYSICAL EVIDENCE. It is the test bed for time-dependent degradations
+# (`per_unit_time: true` on a ladder entry) and for the dynamics family (issues/094); it is not
+# in evidence_datasets. Because the blobs move at different velocities their relative positions
+# change, so an error measured on it varies from frame to frame, which one blob would not do.
+#
+# The window is the reader's default: 21 frames from t = 0 to t = 10 on 64^2 cells, in which the
+# blobs travel between 0.5 and 0.8 of the domain.
+name: advecting_blobs
+format: advecting_blobs
+
+# Unused: the reader computes its frames. Declared because every dataset config carries one.
+path: ${paths.data}
+trajectory: advecting_blobs
+
+fields: [density]
+
+complexity:
+  family: advecting_blobs
+  rank: -1          # generated: below every physical dataset
+  label: "Advecting Gaussian blobs, 2D (exact solution of passive advection)"
+
+notes: "Three Gaussian density blobs advected at distinct constant velocities on a periodic grid,
+  computed on the fly. A test bed for the time-dependent machinery; see fmeval/data/analytic.py."

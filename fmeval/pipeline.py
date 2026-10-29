@@ -23,7 +23,7 @@ from __future__ import annotations
 import logging
 import time
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from dataclasses import field as dc_field
 from typing import Any
 
@@ -33,7 +33,7 @@ import pandas as pd
 from metrics.registry import MetricSpec
 
 from .calibration import Calibration, calibrate
-from .context import FieldContext, derive_rng, fluctuation_rms
+from .context import COMPANION_KEY, FieldContext, derive_rng, fluctuation_rms
 from .data.base import Frame, TimeSelection, Trajectory
 from .ladder import SeverityLevel, SeverityLevelApplication, apply_severity_level
 from .remap import DEFAULT_METHOD, RemapMethod, coarsen_factor, remap_frame
@@ -60,8 +60,8 @@ RESULT_DTYPES: dict[str, str] = {
     "remap_op": "category",
     "metric": "category",
     "arity": "category",
-    "higher_is_better": "bool",      # so the analysis orients its one-sided statistics by
-                                     # the metric's own direction rather than assuming error
+    "higher_is_better": "bool",      # the declaration, as provenance; the analysis measures
+                                     # its direction instead (analysis.response_direction)
     # how the field was damaged
     "degradation": "category",       # the ladder-entry label: the unit of rank correlation
     "degradation_op": "category",    # the registry name behind it
@@ -79,7 +79,6 @@ RESULT_DTYPES: dict[str, str] = {
     "severity_name": "category",
     "variant_label": "category",
     # the number
-    "component": "category",
     "value": "float64",
     "seed": "int64",
     "wall_time_s": "float64",
@@ -143,6 +142,10 @@ class PipelineResult:
     rows: pd.DataFrame
     maps: dict[str, np.ndarray] = dc_field(default_factory=dict)
     """``"<metric>:<field>__<variant>__t<frame>"`` -> pointwise density, for ``error_maps.npz``."""
+    companions: pd.DataFrame = dc_field(default_factory=pd.DataFrame)
+    """One row per curve coordinate of every result row whose metric has a curve companion: the
+    result row's columns, its ``value`` replaced by the curve's, plus ``coordinate``. Empty when no
+    metric has one. Written to ``companions.csv``."""
     n_frames: int = 0
     analysis_grid: int = 0
     """Extent of the analysis grid along its first axis, as written to every row."""
@@ -162,13 +165,13 @@ def _emit(
     value: Any,
     wall: float,
     n_members: int | None = None,
-) -> list[dict[str, Any]]:
-    """Expand one metric evaluation into result rows (several if it returns a vector).
+) -> dict[str, Any]:
+    """The result row of one metric evaluation: one number per (frame, field, metric, variant).
 
     ``run_columns`` are the columns every row of the run shares; column order is fixed later by
     :data:`RESULT_DTYPES`, not here.
     """
-    base = {
+    return {
         **run_columns,
         "frame_index": frame.index,
         "time": frame.time,
@@ -193,11 +196,8 @@ def _emit(
         "wall_time_s": wall,
         "n_members": n_members,
         "target_value": spec.target if spec.target is not None else np.nan,
+        "value": float(value),
     }
-    if spec.returns == "scalar":
-        return [{**base, "component": "", "value": float(value)}]
-    arr = np.asarray(value, dtype=np.float64).ravel()
-    return [{**base, "component": str(i), "value": float(v)} for i, v in enumerate(arr)]
 
 
 def map_key(metric: str, field: str, variant: str, frame_index: int) -> str:
@@ -288,16 +288,19 @@ def run(
         trajectory, fields, indices, factor, remap_method, calibration_frames
     )
 
+    # A per_unit_time level is a rate times the time since the trajectory's first frame.
+    time_origin = float(trajectory.times[0])
     probe = remap_frame(trajectory.frame(int(indices[0]), fields), factor,
                         method=remap_method)
     severity_levels = _runnable_levels(
         severity_levels, probe, fields, seed=seed, calibration=calibration,
-        analysis_grid=grid_size,
+        analysis_grid=grid_size, times=trajectory.times[indices], time_origin=time_origin,
     )
 
     run_columns = {**dataset.row(), "analysis_grid": grid_size, "remap_op": remap_method,
                    "seed": seed}
     rows: list[dict[str, Any]] = []
+    curve_rows: list[dict[str, Any]] = []
     stored_maps: dict[str, np.ndarray] = {}
     skipped_ensemble: set[str] = set()
     t_io = t_deg = t_metric = 0.0
@@ -316,7 +319,7 @@ def run(
                 severity_level,
                 apply_severity_level(
                     severity_level, frame, available, seed=seed,
-                    reference_rms=ref_rms, calibration=calibration,
+                    reference_rms=ref_rms, calibration=calibration, time_origin=time_origin,
                 ),
             )
             for severity_level in severity_levels
@@ -341,6 +344,13 @@ def run(
                     rng=derive_rng(seed, "metric", frame.index, field),
                 )
                 kwargs = {"ctx": ctx} if spec.takes_ctx else {}
+                companion = spec.companion
+                # The companion draws from its own generator, so adding one to a metric that
+                # draws random numbers cannot move the metric's number. The cache is shared.
+                companion_kwargs = ({"ctx": replace(ctx, rng=derive_rng(
+                    seed, f"companion/{spec.name}", frame.index, field))}
+                    if companion is not None and companion.takes_ctx else {})
+                curve = companion is not None and companion.kind == "curve"
 
                 for label, (severity_level, applied) in variants.items():
                     candidate = applied.fields[field]
@@ -354,19 +364,30 @@ def run(
                     else:
                         args = (candidate,)
                     t1 = time.perf_counter()
+                    if curve:
+                        # First, so the metric reads the curve rather than computing it again;
+                        # both calls are timed, so the row's cost is the whole evaluation.
+                        coordinates, curve_values = companion.fn(
+                            *((candidate,) if companion.one_field else args), **companion_kwargs)
+                        ctx.cache[COMPANION_KEY] = (coordinates, curve_values)
                     value = spec.fn(*args, **kwargs)
                     wall = time.perf_counter() - t1
                     t_metric += wall
-                    rows.extend(_emit(spec, field, frame, severity_level, applied, run_columns,
-                                      value, wall, n_members=n_members))
+                    row = _emit(spec, field, frame, severity_level, applied, run_columns,
+                                value, wall, n_members=n_members)
+                    rows.append(row)
+                    if curve:
+                        curve_rows += [{**row, "coordinate": c, "value": float(v),
+                                        "_row": len(rows) - 1}
+                                       for c, v in zip(coordinates, curve_values, strict=True)]
 
                     if (
-                        spec.has_pointwise_map
+                        companion is not None and companion.kind == "field"
                         and frame.index in keep_frames
                         and (not maps.axes or severity_level.label in maps.axes)
                         and (not maps.fields or field in maps.fields)
                     ):
-                        m = spec.pointwise(*args, **kwargs)
+                        m = companion.fn(*args, **companion_kwargs)
                         stored_maps[map_key(spec.name, field, label, frame.index)] = (
                             np.asarray(m, dtype=np.float64)
                         )
@@ -381,10 +402,18 @@ def run(
     # A metric may accept none of the available fields, which is a legitimate no-op
     # rather than an error -- but pd.DataFrame([]) has no columns to coerce.
     df = _coerce(pd.DataFrame(rows)) if rows else empty_results()
-    df = _flag_repeated_levels(df)
+    df = _flag_repeated_levels(df, {level.label for level in severity_levels if level.ordinal})
+    companions = pd.DataFrame()
+    if curve_rows:
+        companions = pd.DataFrame(curve_rows)
+        # A repeated level is a property of the experiment, flagged on the result rows above.
+        companions["severity_degenerate"] = (
+            df["severity_degenerate"].to_numpy()[companions.pop("_row").to_numpy()])
+        companions = companions[[*RESULT_DTYPES, "coordinate"]].astype(RESULT_DTYPES)
     return PipelineResult(
         rows=df,
         maps=stored_maps,
+        companions=companions,
         n_frames=len(indices),
         analysis_grid=grid_size,
         calibration=calibration,
@@ -394,15 +423,20 @@ def run(
     )
 
 
-def _flag_repeated_levels(df: pd.DataFrame) -> pd.DataFrame:
+def _flag_repeated_levels(df: pd.DataFrame, ordinal: set[str]) -> pd.DataFrame:
     """Mark severity levels that repeat a milder one as the same experiment, and log them.
 
     Detected by measurement rather than by declaration: two severity levels whose
     severities resolve to the same quantised operation produce a bitwise identical field,
-    hence an exactly equal
-    ``energy_changed``. That is a stronger test than asking each operator to describe how it
-    rounds, and it needs no such description -- it catches a sharp filter landing twice on the same
-    set of modes, and a windowed kernel landing twice on the same odd width, alike.
+    hence an exactly equal ``energy_changed``. That is a stronger test than
+    asking each operator to describe how it rounds, and it needs no such description -- it
+    catches a sharp filter landing twice on the same set of modes, and a windowed kernel landing
+    twice on the same odd width, alike. It is applied frame by frame: a ``per_unit_time`` entry's
+    levels are distinct experiments at most times and can coincide at one (whole-cell shifts of
+    1.0 and 1.4 cells per unit time, both one cell at t = 1), and only that frame's tie is the
+    same experiment twice. Only the ``ordinal`` ladder labels are checked: the draws of a probe or
+    an anchor are samples, not strengths, and two random draws that happen to coincide in one
+    frame are not an ordering to protect.
 
     Such a severity level is not padding, it is corruption: the rank correlation would
     score the tie as agreement and the adjacent-severity level separability would compare
@@ -417,26 +451,26 @@ def _flag_repeated_levels(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return df
 
-    repeated = pd.Series(False, index=df.index)
-    for (field, axis), g in df[df["level"] > 0].groupby(
-        ["field", "degradation"], observed=True
-    ):
-        seen: dict[float, int] = {}
-        levels = []
-        for level in sorted(g["level"].unique()):
-            effect = float(g.loc[g["level"] == level, "energy_changed"].iloc[0])
-            if effect in seen:
-                repeated.loc[g.index[g["level"] == level]] = True
-                levels.append((int(level), seen[effect]))
-            else:
-                seen[effect] = int(level)
-        if levels:
-            log.warning(
-                "%s / %s: level(s) %s repeat the experiment of level(s) %s and are excluded "
-                "from the acceptance statistics. The field's spectrum cannot resolve that many "
-                "distinct severity levels for this operator.",
-                field, axis, [a for a, _ in levels], [b for _, b in levels],
-            )
+    # One row per (field, degradation, frame, level): the experiment, whichever metric scored it.
+    keys = ["field", "degradation", "frame_index"]
+    ladder = df[(df["level"] > 0) & df["degradation"].isin(ordinal)]
+    effects = ladder.drop_duplicates([*keys, "level"])
+    # The mildest level with the same energy change in the same frame; NaN never repeats.
+    first = effects.groupby([*keys, "energy_changed"], observed=True)["level"].transform("min")
+    repeats = effects[effects["level"] > first].assign(first=first)
+    repeated = pd.Series(pd.MultiIndex.from_frame(ladder[[*keys, "level"]]).isin(
+        pd.MultiIndex.from_frame(repeats[[*keys, "level"]])), index=ladder.index
+    ).reindex(df.index, fill_value=False)
+    for (field, axis), g in repeats.groupby(["field", "degradation"], observed=True):
+        pairs = g.groupby(["level", "first"], observed=True)["frame_index"].nunique()
+        log.warning(
+            "%s / %s: level(s) %s repeat the experiment of level(s) %s in %s of %d frame(s) "
+            "and are excluded there from the acceptance statistics. The field's spectrum cannot "
+            "resolve that many distinct severity levels for this operator.",
+            field, axis, [int(a) for a, _ in pairs.index], [int(b) for _, b in pairs.index],
+            pairs.tolist(), ladder.loc[ladder["field"].eq(field)
+                                       & ladder["degradation"].eq(axis), "frame_index"].nunique(),
+        )
 
     flagged = df[(df["level"] > 0) & df["severity_degenerate"]]
     for (field, axis), g in flagged.groupby(["field", "degradation"], observed=True):
@@ -501,6 +535,8 @@ def _runnable_levels(
     seed: int,
     calibration: Calibration,
     analysis_grid: int,
+    times: Sequence[float] = (),
+    time_origin: float = 0.0,
 ) -> list[SeverityLevel]:
     """Drop severity levels that cannot run on the analysis grid, before the frame loop starts.
 
@@ -515,14 +551,23 @@ def _runnable_levels(
     the rest: an unsupported
     severity level is one missing experiment, not a reason to discard the others.
 
+    A ``per_unit_time`` level applies a different strength in every frame, its rate times the
+    frame's time since ``time_origin``, so it is tried at each of the selected frames' ``times``:
+    a coarsening factor that does not divide the grid at one of them would otherwise stop the run
+    inside the frame loop.
+
     Raises:
         ValueError: If no severity level survives, since there is then nothing to measure.
     """
     keep: list[SeverityLevel] = []
     dropped: list[str] = []
     for severity_level in severity_levels:
+        trials = ([replace(probe, time=float(t)) for t in times]
+                  if severity_level.per_unit_time and len(times) else [probe])
         try:
-            apply_severity_level(severity_level, probe, fields, seed=seed, calibration=calibration)
+            for trial in trials:
+                apply_severity_level(severity_level, trial, fields, seed=seed,
+                                     calibration=calibration, time_origin=time_origin)
         except _OPERATOR_DEFECTS as exc:
             raise RuntimeError(
                 f"the {severity_level.label!r} operator is broken: {type(exc).__name__}: {exc}.\n"

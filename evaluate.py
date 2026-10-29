@@ -150,10 +150,13 @@ def main(cfg: DictConfig) -> None:
 
     overrides = _overrides()
 
-    def write_folder(name: str, rows: pd.DataFrame, maps: dict, **meta: Any) -> Path:
+    def write_folder(name: str, rows: pd.DataFrame, maps: dict, companions: pd.DataFrame,
+                     **meta: Any) -> Path:
         """One self-contained run folder: numbers, calibration, config, maps, provenance."""
         folder = fio.make_run_folder(job.paths.results, name, stamp)
         fio.write_results(folder, rows)
+        if not companions.empty:
+            fio.write_results(folder, companions, name=fio.COMPANIONS)
         fio.write_table(folder, calibration_table, "calibration")
         fio.write_table(folder, spectrum_table, "calibration_spectrum")
         digest = fio.write_config(folder, cfg, overrides)
@@ -200,6 +203,8 @@ def main(cfg: DictConfig) -> None:
     written = [
         write_folder(name, result.rows[result.rows["metric"] == name],
                      {k: v for k, v in result.maps.items() if parse_map_key(k)[0] == name},
+                     (result.companions[result.companions["metric"] == name]
+                      if not result.companions.empty else result.companions),
                      metric=name, timings=timings)
         for name in ran
     ]
@@ -207,7 +212,7 @@ def main(cfg: DictConfig) -> None:
     # are meaningless inside a single-metric folder and are skipped there by their own
     # preconditions. They live in one comparison folder holding every metric's rows.
     if len(ran) > 1:
-        written.append(write_folder("comparison", result.rows, result.maps,
+        written.append(write_folder("comparison", result.rows, result.maps, result.companions,
                                     metric=", ".join(ran), comparison=True))
 
     for path in written:

@@ -85,30 +85,72 @@ Four measured statistics for increment_flatness, one row per degradation grouped
 
 Median damage over frames against severity level for increment_flatness, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, an unrelated field; the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to an unrelated field. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points above 2 are drawn as triangles at the top. No damage scale on density, velocity, vorticity: the grey panels show the raw value instead.
 
-| test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
+**Trend: does the response follow the degradation?**
+
+| test family | field | degradations | rank correlation | fraction of frames in order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| Displacement | density | 2 | 0.516 to 0.516 | 0.499 | level — |
-| Displacement | velocity | 2 | -0.0304 to -0.0304 | 0.499 | level — |
-| Displacement | vorticity | 2 | -0.058 to -0.058 | 0.499 | level — |
-| Resolution loss | density | 2 | -0.8 to 1 | 0.182 | level — |
-| Resolution loss | velocity | 2 | 0.8 to 1 | 0.469 | level — |
-| Resolution loss | vorticity | 2 | 0.4 to 1 | 0.25 | level — |
-| Smoothing | density | 3 | -1 to -1 | 0 | level — |
-| Smoothing | velocity | 3 | -1 to -1 | 0 | level — |
-| Smoothing | vorticity | 3 | 0.8 to 1 | 0.549 | level — |
-| Spectral filtering | density | 4 | -1 to 1 | 0 | level — |
-| Spectral filtering | velocity | 4 | -1 to 1 | 0 | level — |
-| Spectral filtering | vorticity | 4 | -0.8 to 0.4 | 0.00772 | level — |
-| Noise | density | 1 | -1 to -1 | 0 | level — |
-| Noise | velocity | 1 | -1 to -1 | 0 | level — |
-| Noise | vorticity | 1 | -1 to -1 | 0 | level — |
-| trap test: fake prediction, right spectrum | density | 1 | — | — | damage — |
-| trap test: fake prediction, right spectrum | velocity | 1 | — | — | damage — |
-| trap test: fake prediction, right spectrum | vorticity | 1 | — | — | damage — |
+| Displacement | density | 2 | -0.516 | 0 | 0.348 |
+| Displacement | velocity | 2 | -0.0304 | 0 | 0.385 |
+| Displacement | vorticity | 2 | -0.058 | 0 | 0.41 |
+| Resolution loss | density | 2 | 0.8 to 1 | 0.317 to 1 | 0.461 to 0.98 |
+| Resolution loss | velocity | 2 | 0.8 to 1 | 0.46 to 1 | 0.532 to 0.944 |
+| Resolution loss | vorticity | 2 | 0.4 to 1 | 0.087 to 0.994 | 0.148 to 0.921 |
+| Smoothing | density | 3 | 1 | 1 | 0.777 to 0.999 |
+| Smoothing | velocity | 3 | 1 | 0.776 to 1 | 0.678 to 0.697 |
+| Smoothing | vorticity | 3 | 0.8 to 1 | 0.304 to 0.969 | 0.462 to 0.896 |
+| Spectral filtering | density | 4 | 1 | 0.95 to 1 | 0.503 to 0.902 |
+| Spectral filtering | velocity | 4 | 0.5 to 1 | 0.267 to 1 | 0.498 to 0.724 |
+| Spectral filtering | vorticity | 4 | 0.2 to 0.8 | 0 to 0.497 | 0.228 to 0.612 |
+| Noise | density | 1 | 1 | 0.981 | 0.51 |
+| Noise | velocity | 1 | 1 | 0.913 | 0.507 |
+| Noise | vorticity | 1 | 1 | 1 | 0.812 |
 
-One row per family of degradation and physical field. **Rank correlation** asks whether the metric put the strengths of one degradation in the right order: it is the Spearman correlation between the metric and the applied strength, computed inside a single frame, and the column gives the range over the degradations in that family. A value of 1 means every strength was ordered correctly in every frame. **Weakest gap between neighbouring strengths** asks whether the metric can tell one strength from the next: it is the smallest Mann-Whitney overlap between any two neighbouring strengths, where 1 means the two never overlap and 0.5 means the metric cannot separate them at all. **First strength detected** is the mildest strength at which the metric has moved a tenth of the way from the undegraded reference toward a field with no relation to the truth; a dash means the metric never reached that tenth. **Damage** is that same 0-to-1 scale read as a number: 0 is the undegraded reference and 1 is an unrelated field.
+**Reactivity: how far does it move?**
 
-This table reports what was measured and grades none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
+| test family | field | change from clean at the harshest strength | elasticity | first strength detected |
+|---|---|---|---|---|
+| Displacement | density | -1.23e-15 to 0 | 1.36 | level — |
+| Displacement | velocity | 0 | 10.2 | level — |
+| Displacement | vorticity | 0 | 1.15 | level — |
+| Resolution loss | density | -0.156 to 10.5 | 1.29 | level — |
+| Resolution loss | velocity | 0.129 to 13.2 | 1.41 to 4.15 | level — |
+| Resolution loss | vorticity | 0.573 to 30.1 | 1.88 | level — |
+| Smoothing | density | -0.819 to -0.409 | 1.12 to 2.09 | level — |
+| Smoothing | velocity | -0.797 to -0.174 | — | level — |
+| Smoothing | vorticity | 0.707 to 1.1 | 1.18 | level — |
+| Spectral filtering | density | -0.901 to 1.6 | 0.151 to 14.4 | level — |
+| Spectral filtering | velocity | -0.838 to 0.288 | 0.0779 to 0.846 | level — |
+| Spectral filtering | vorticity | -0.249 to 0.104 | — | level — |
+| Noise | density | -0.803 | 1.27 | level — |
+| Noise | velocity | -0.675 | 1.12 | level — |
+| Noise | vorticity | -0.665 | 1.83 | level — |
+| trap test: fake prediction, right spectrum | density | — | — | damage — |
+| trap test: fake prediction, right spectrum | velocity | — | — | damage — |
+| trap test: fake prediction, right spectrum | vorticity | — | — | damage — |
+
+**Consistency: how much does it vary from snapshot to snapshot?**
+
+| test family | field | consistency, in the strength's units | snapshots per independent block |
+|---|---|---|---|
+| Displacement | density | 4.24 | 1 to 6 |
+| Displacement | velocity | 1.45 | 1 to 4 |
+| Displacement | vorticity | 12.1 | 1 to 8 |
+| Resolution loss | density | 0.122 to 2.43 | 12 to 19 |
+| Resolution loss | velocity | 0.489 to 13.6 | 13 to 22 |
+| Resolution loss | vorticity | 1.53 to 9.15 | 18 to 21 |
+| Smoothing | density | 0.00288 to 0.0121 | 11 to 19 |
+| Smoothing | velocity | 0.0079 to 0.0799 | 19 to 21 |
+| Smoothing | vorticity | 0.0503 to 0.171 | 19 to 22 |
+| Spectral filtering | density | 0.0135 to 0.0948 | 19 |
+| Spectral filtering | velocity | 0.0243 to 0.337 | 20 to 21 |
+| Spectral filtering | vorticity | 0.184 to 1 | 13 to 21 |
+| Noise | density | 0.00969 | 18 |
+| Noise | velocity | 0.0246 | 19 |
+| Noise | vorticity | 0.129 | 20 |
+
+One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to a field with no relation to the truth; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
+
+These tables report what was measured and grade none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
 
 **Profile.**
 
@@ -234,29 +276,28 @@ Every number in this section comes from that one run. Regenerate with `python -m
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `box_blur` | density | 4 | -1 | 0 | 0.0226 |
-| `box_blur` | velocity | 4 | -1 | 0 | 0 |
-| `box_blur` | vorticity | 4 | 0.8 | 0.435 | 0.556 |
-| `gaussian_blur` | density | 4 | -1 | 0 | 0 |
-| `gaussian_blur` | velocity | 4 | -1 | 0 | 0 |
-| `gaussian_blur` | vorticity | 4 | 0.8 | 0.304 | 0.549 |
-| `median_blur` | density | 3 | -1 | 0 | 0.113 |
-| `median_blur` | velocity | 3 | -1 | 0.0373 | 0.232 |
-| `median_blur` | vorticity | 3 | 1 | 0.969 | 0.691 |
+| `box_blur` | density | 4 | 1 | 1 | 0.783 |
+| `box_blur` | velocity | 4 | 1 | 1 | 0.697 |
+| `box_blur` | vorticity | 4 | 0.8 | 0.435 | 0.479 |
+| `gaussian_blur` | density | 4 | 1 | 1 | 0.777 |
+| `gaussian_blur` | velocity | 4 | 1 | 1 | 0.678 |
+| `gaussian_blur` | vorticity | 4 | 0.8 | 0.304 | 0.462 |
+| `median_blur` | density | 3 | 1 | 1 | 0.999 |
+| `median_blur` | velocity | 3 | 1 | 0.776 | 0.686 |
+| `median_blur` | vorticity | 3 | 1 | 0.969 | 0.896 |
 
 <!-- END GENERATED results_smoothing -->
 
-The response is monotone on every field, and its **sign differs between fields**: -1 on
-density and velocity, where smoothing drives the flatness down, and +0.8 to +1 on vorticity,
-where it drives it up. A single metric changing direction from one field to another is
-disqualifying for ranking, because there is no single declaration of which way is worse that
-can be right for both.
+The **direction differs between fields**: smoothing drives the flatness down on density and
+velocity, where every blur is followed in every frame, and up on vorticity, where the trend is
+weaker: a rank correlation of 0.8 under the box and Gaussian blurs, with 43% and 30% of frames
+in order. Under the box blur, vorticity's flatness falls at every strength in 49 of 161 frames
+and rises at every strength in 34; the median moves up, which sets the direction. A metric whose
+direction depends on the field gives no single answer to which way is worse.
 
 This is the same phenomenon recorded in
 `issues/036-increment-flatness-is-not-monotone-under-smoothing.md`, seen through the ladder
-rather than through a blur sweep on one frame. The separability of 0 on density and velocity
-means the strengths are perfectly separated in the falling direction; it is not a failure to
-separate them.
+rather than through a blur sweep on one frame.
 
 ### Spectral filtering
 
@@ -267,26 +308,26 @@ separate them.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `highpass_butterworth` | density | 4 | 1 | 1 | 0.787 |
-| `highpass_butterworth` | velocity | 3 | 0.5 | 0.466 | 0.561 |
-| `highpass_butterworth` | vorticity | 4 | -0.2 | 0.0559 | 0.465 |
-| `highpass_ideal` | density | 3 | 1 | 0.95 | 0.702 |
-| `highpass_ideal` | velocity | 2 | 1 | 0.646 | 0.641 |
-| `highpass_ideal` | vorticity | 4 | -0.8 | 0 | 0.448 |
-| `lowpass_butterworth` | density | 4 | -1 | 0 | 0 |
-| `lowpass_butterworth` | velocity | 3 | -0.5 | 0 | 0 |
-| `lowpass_butterworth` | vorticity | 4 | 0.4 | 0 | 0.00829 |
-| `lowpass_ideal` | density | 3 | -1 | 0 | 0 |
-| `lowpass_ideal` | velocity | 2 | -1 | 0 | 0 |
-| `lowpass_ideal` | vorticity | 4 | -0.2 | 0 | 0.00772 |
+| `highpass_butterworth` | density | 4 | 1 | 1 | 0.902 |
+| `highpass_butterworth` | velocity | 3 | 0.5 | 0.466 | 0.644 |
+| `highpass_butterworth` | vorticity | 4 | 0.2 | 0.155 | 0.472 |
+| `highpass_ideal` | density | 3 | 1 | 0.95 | 0.724 |
+| `highpass_ideal` | velocity | 2 | 1 | 0.646 | 0.724 |
+| `highpass_ideal` | vorticity | 4 | 0.8 | 0.497 | 0.612 |
+| `lowpass_butterworth` | density | 4 | 1 | 1 | 0.503 |
+| `lowpass_butterworth` | velocity | 3 | 0.5 | 0.267 | 0.498 |
+| `lowpass_butterworth` | vorticity | 4 | 0.4 | 0 | 0.228 |
+| `lowpass_ideal` | density | 3 | 1 | 1 | 0.65 |
+| `lowpass_ideal` | velocity | 2 | 1 | 1 | 0.678 |
+| `lowpass_ideal` | vorticity | 4 | 0.2 | 0.118 | 0.347 |
 
 <!-- END GENERATED results_spectral -->
 
-The weakest family for this metric, and the only one where it fails to order anything
-consistently. The correlation ranges from -1 to +1 across the four filters on density and
-velocity and from -0.8 to +0.4 on vorticity, so different filters move the flatness in
-opposite directions on the same field. Separability is at or near zero throughout, reaching
-0.008 on vorticity.
+The weakest family for this metric. On density every filter is followed, but the low-passes
+drive the flatness down and the high-passes up. On velocity the rank correlation is 0.5 to 1 and
+on vorticity 0.2 to 0.8, with as few as none of the frames in order under the Butterworth
+low-pass. Different filters move the flatness in opposite directions on the same field, and
+the weakest gap between neighbouring strengths falls to 0.23 on vorticity.
 
 The mechanism is not mysterious: a low-pass and a high-pass filter reshape the increment
 distribution in opposite ways, and flatness is a shape statistic with no reason to respond to
@@ -301,9 +342,9 @@ both alike. Nothing here should be read as this metric ranking spectral damage.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `translate_subpixel` | density | 6 | 0.516 | 0 | 0.499 |
-| `translate_subpixel` | velocity | 6 | -0.0304 | 0 | 0.499 |
-| `translate_subpixel` | vorticity | 6 | -0.058 | 0 | 0.499 |
+| `translate_subpixel` | density | 6 | -0.516 | 0 | 0.348 |
+| `translate_subpixel` | velocity | 6 | -0.0304 | 0 | 0.385 |
+| `translate_subpixel` | vorticity | 6 | -0.058 | 0 | 0.41 |
 | `translate_x` | density | 5 | — | — | — |
 | `translate_x` | velocity | 5 | — | — | — |
 | `translate_x` | vorticity | 5 | — | — | — |
@@ -313,8 +354,9 @@ both alike. Nothing here should be read as this metric ranking spectral damage.
 Invariant, as it must be. An integer translation permutes the increments without changing
 the multiset, so `translate_x` gives an identical value at every strength and its correlation
 is withheld as round-off. `translate_subpixel` interpolates and so perturbs the field
-slightly, producing correlations between -0.06 and +0.52 and a separability of 0.499, which
-is the chance floor.
+slightly at fractional distances and not at all at the whole-cell strengths, so the value moves
+off clean and comes back: correlations between -0.52 and -0.03, no frame in order, and weakest
+gaps of 0.35 to 0.41, below the chance value of 0.5.
 
 For this metric the invariance is incidental rather than the point — it is a consequence of
 reading only the distribution of increments — but it has the same protocol consequence
@@ -329,12 +371,12 @@ described in `issues/037-position-blind-metrics-have-no-damage-anchor.md`.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `coarsen` | density | 4 | 1 | 1 | 0.96 |
-| `coarsen` | velocity | 4 | 1 | 1 | 0.931 |
-| `coarsen` | vorticity | 4 | 1 | 0.994 | 0.817 |
-| `coarsen_bandlimited` | density | 4 | -0.8 | 0 | 0.182 |
-| `coarsen_bandlimited` | velocity | 4 | 0.8 | 0.46 | 0.469 |
-| `coarsen_bandlimited` | vorticity | 4 | 0.4 | 0.087 | 0.25 |
+| `coarsen` | density | 4 | 1 | 1 | 0.98 |
+| `coarsen` | velocity | 4 | 1 | 1 | 0.944 |
+| `coarsen` | vorticity | 4 | 1 | 0.994 | 0.921 |
+| `coarsen_bandlimited` | density | 4 | 0.8 | 0.317 | 0.461 |
+| `coarsen_bandlimited` | velocity | 4 | 0.8 | 0.46 | 0.532 |
+| `coarsen_bandlimited` | vorticity | 4 | 0.4 | 0.087 | 0.148 |
 
 <!-- END GENERATED results_resolution -->
 
@@ -347,7 +389,7 @@ with rare large values, which is precisely what flatness measures.
 `coarsen_bandlimited` keeps the same block means without adding edges, and under it the
 flatness barely moves on density and velocity (15.3, 15.3, 14.9, 13.0 and 9.2, 9.3, 9.8, 10.2
 at factors 2 to 16) and on vorticity falls and then rises (8.8, 6.5, 9.7, 14.3), with rank
-correlations of −0.8, 0.8 and 0.4. An earlier version of this card read the `coarsen` row as
+correlations of 0.8, 0.8 and 0.4 and at most 46% of frames in order. An earlier version of this card read the `coarsen` row as
 the one family this metric handles cleanly. It was a response to the operator's block edges;
 `issues/039` records the mechanism.
 
@@ -359,15 +401,18 @@ the one family this metric handles cleanly. It was a response to the operator's 
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `additive_noise` | density | 4 | -1 | 0 | 0 |
-| `additive_noise` | velocity | 4 | -1 | 0 | 0 |
-| `additive_noise` | vorticity | 4 | -1 | 0 | 0 |
+| `additive_noise` | density | 4 | 1 | 0.981 | 0.51 |
+| `additive_noise` | velocity | 4 | 1 | 0.913 | 0.507 |
+| `additive_noise` | vorticity | 4 | 1 | 1 | 0.812 |
 
 <!-- END GENERATED results_stochastic -->
 
-Correlation -1 on all three fields with complete separation between neighbouring
-strengths. Additive Gaussian noise pushes the increment distribution toward a Gaussian one,
-so the flatness falls toward 3 from the much larger values the undegraded fields carry. This
+A rank correlation of 1 on all three fields, with the flatness falling in 91% to 100% of
+frames at every strength. Additive Gaussian noise pushes the increment distribution toward a
+Gaussian one, so the flatness falls toward 3 from the much larger values the undegraded fields
+carry. Read against the clean value of the same frame, neighbouring strengths overlap across
+frames on density and velocity (weakest gaps 0.51) and less on vorticity (0.81): the size of the
+fall differs from frame to frame more than it differs between neighbouring strengths. This
 is the clearest confirmation in the run that the metric measures what it claims to: the one
 degradation that manipulates Gaussianity directly is the one it responds to most cleanly, and
 in the direction the definition predicts.
@@ -381,9 +426,9 @@ in the direction the definition predicts.
 
 | field | damage assigned to the fake prediction | closest real degradation | value on an unrelated field |
 |---|---|---|---|
-| density | — | `` | 15.2 |
-| velocity | — | `` | 9.23 |
-| vorticity | — | `` | 9.34 |
+| density | — | — | 15.2 |
+| velocity | — | — | 9.23 |
+| vorticity | — | — | 9.34 |
 
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage of 1 is what a field with no relation to the truth scores, so the damage column says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture.
 
@@ -423,7 +468,7 @@ Computed on the median value at each combination of degradation and strength, ov
 <!-- END GENERATED results_summary -->
 
 Read as a ranker, this metric works on exactly one family of the five. It orders noise
-cleanly, changes sign between fields under smoothing, orders spectral filtering
+cleanly, moves in opposite directions on different fields under smoothing, orders spectral filtering
 inconsistently and is invariant to displacement. Its clean ordering under `coarsen` turned
 out to be a response to that operator's block edges rather than to lost resolution: under
 `coarsen_bandlimited`, which discards the same information without adding edges, it is not

@@ -23,7 +23,7 @@ import pandas as pd
 
 from fmeval import analysis as an
 from fmeval.config import load_cards_config
-from fmeval.io import read_config, read_results, read_run_meta
+from fmeval.io import COMPANIONS, read_config, read_results, read_run_meta
 from fmeval.report.registry import PLOTS
 from fmeval.report.vocabulary import FAMILY_INFO, family_label, label
 
@@ -77,7 +77,8 @@ def load_run(folder: Path) -> Run:
         )
 
     meta = read_run_meta(folder)
-    analysis = an.analyse(rows, meta=meta, config=read_config(folder))
+    analysis = an.analyse(rows, companions=read_results(folder, COMPANIONS, missing_ok=True),
+                          meta=meta, config=read_config(folder))
     return Run(folder=folder, rows=rows, meta=meta,
                **{f.name: getattr(analysis, f.name) for f in dataclasses.fields(analysis)})
 
@@ -156,55 +157,143 @@ def figure_lines(figures: Sequence[CardFigure] | None, reasons: Mapping[str, str
     return lines
 
 
+def _span(values: pd.Series) -> str:
+    """The range of a column over the rows of one table cell, or its one value, or a dash."""
+    finite = values.dropna()
+    if finite.empty:
+        return "—"
+    low, high = _fmt(float(finite.min())), _fmt(float(finite.max()))
+    return low if low == high else f"{low} to {high}"
+
+
 def performance_block(run: Run, metric: str, figures: Sequence[CardFigure] = (),
                       reasons: Mapping[str, str] | None = None) -> str:
-    """The summary, at a glance: the figures first, then the table they summarise."""
+    """The summary, at a glance: the figures first, then one table per measurement.
+
+    Three measurements per degradation, none of them a grade: whether the response follows the
+    degradation (trend), how far it moves (reactivity), and how much it varies from snapshot to
+    snapshot (consistency). Only the first compares exactly across metrics.
+    """
     axes = run.axes[run.axes["metric"] == metric]
     if axes.empty:
         return NOT_MEASURED
+    ordinal = axes[~axes["is_probe"]]
+    groups = [(family_label(family), field, sub)
+              for family, group in ordinal.groupby("degradation_family")
+              for field, sub in group.groupby("field")]
+    # A run analysed before a column existed lacks it, and its cells read as a dash.
+    absent = pd.Series(dtype=float)
 
     lines = figure_lines(figures, reasons, "performance")
-    lines += _header("test family", "field", "degradations", "rank correlation",
-                     "weakest gap between neighbouring strengths", "first strength detected")
-    for family, group in axes[~axes["is_probe"]].groupby("degradation_family"):
-        # The same readable name the matching '### ' subsection uses, so a reader moving
-        # between the summary and the detail is not asked to learn two vocabularies.
-        named = family_label(family)
-        for field, sub in group.groupby("field"):
-            lines.append(
-                f"| {named} | {field} | {len(sub)} | "
-                f"{_fmt(sub['rho'].min())} to {_fmt(sub['rho'].max())} | "
-                f"{_fmt(sub['separability_auc_min'].min())} | "
-                f"level {_fmt(sub['sensitivity_level'].min())} |"
-            )
+    lines += ["**Trend: does the response follow the degradation?**", "",
+              *_header("test family", "field", "degradations", "rank correlation",
+                       "fraction of frames in order",
+                       "weakest gap between neighbouring strengths")]
+    for named, field, sub in groups:
+        lines.append(f"| {named} | {field} | {len(sub)} | {_span(sub['rho'])} | "
+                     f"{_span(sub['monotone_fraction'])} | "
+                     f"{_span(sub['separability_auc_min'])} |")
+    lines += ["", "**Reactivity: how far does it move?**", "",
+              *_header("test family", "field", "change from clean at the harshest strength",
+                       "elasticity", "first strength detected")]
+    for named, field, sub in groups:
+        lines.append(f"| {named} | {field} | {_span(sub.get('relative_change_max', absent))} | "
+                     f"{_span(sub.get('elasticity', absent))} | "
+                     f"level {_fmt(sub['sensitivity_level'].min())} |")
     probes = run.probes[run.probes["metric"] == metric]
     for _, row in probes.iterrows():
         lines.append(
-            f"| trap test: fake prediction, right spectrum | {row['field']} | 1 | — | — | "
+            f"| trap test: fake prediction, right spectrum | {row['field']} | — | — | "
             f"damage {_fmt(_cell(row, 'gaussian_impostor_damage'))} |"
         )
+    lines += ["", "**Consistency: how much does it vary from snapshot to snapshot?**", "",
+              *_header("test family", "field", "consistency, in the strength's units",
+                       "snapshots per independent block")]
+    for named, field, sub in groups:
+        lines.append(f"| {named} | {field} | {_span(sub.get('severity_resolution', absent))} | "
+                     f"{_span(sub.get('blindness_block_length', absent))} |")
+    no_relative = not ordinal["relative_change_max"].notna().any() \
+        if "relative_change_max" in ordinal.columns else True
     lines += [
         "",
-        "One row per family of degradation and physical field. **Rank correlation** asks "
-        "whether the metric put the strengths of one degradation in the right order: it "
-        "is the Spearman correlation between the metric and the applied strength, "
-        "computed inside a single frame, and the column gives the range over the "
-        "degradations in that family. A value of 1 means every strength was ordered "
-        "correctly in every frame. **Weakest gap between neighbouring strengths** asks "
-        "whether the metric can tell one strength from the next: it is the smallest "
-        "Mann-Whitney overlap between any two neighbouring strengths, where 1 means the "
-        "two never overlap and 0.5 means the metric cannot separate them at all. "
-        "**First strength detected** is the mildest strength at which the metric has "
-        "moved a tenth of the way from the undegraded reference toward a field with no "
-        "relation to the truth; a dash means the metric never reached that tenth. "
-        "**Damage** is that same 0-to-1 scale read as a number: 0 is the undegraded "
-        "reference and 1 is an unrelated field.",
+        "One row per family of degradation and physical field; a cell gives the range over "
+        "the degradations in that family. **Trend.** The rank correlation is the Spearman "
+        "correlation between the strength and how far the metric has moved from its value on "
+        "the undegraded field of the same frame, in the one direction it moves under that "
+        "degradation, computed inside a single frame. A value of 1 means every strength moved "
+        "it further than the last in every frame, whichever way it moves; a response that "
+        "scatters to both sides scores near 0. The fraction of frames in order counts the "
+        "frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between "
+        "two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they "
+        "cannot be told apart. **Reactivity.** The change from clean is the median, at the "
+        "harshest strength, of the departure from the undegraded value of the same frame over "
+        "the size of that value: 0.3 means 30%. "
+        + ("It does not exist for this metric, whose undegraded value is exactly zero; the "
+           "damage below is its relative reading. " if no_relative else "")
+        + "The elasticity is the percentage change of that departure per percentage change in "
+        "strength over the mildest strengths. First strength detected is the mildest at which "
+        "the metric has moved a tenth of the way to a field with no relation to the truth; "
+        "**damage** reads that 0-to-1 scale as a number. A dash means the measurement is not "
+        "defined there. A metric's reactivity scales with the power it is expressed in: mean "
+        "squared error's elasticity is twice root-mean-square error's, though the two carry "
+        "the same information, so compare magnitudes across metrics with that in mind. "
+        "**Consistency** is how much the response varies from snapshot to snapshot relative to "
+        "its size, in the strength's units; the snapshots of one trajectory are correlated, "
+        "and the last column is how many consecutive snapshots one independent block spans.",
         "",
-        "This table reports what was measured and grades none of the measurements. What "
-        "the numbers mean for this metric is written in the subsections below, beside the "
-        "test that produced each number.",
+        "These tables report what was measured and grade none of the measurements. What the "
+        "numbers mean for this metric is written in the subsections below, beside the test "
+        "that produced each number.",
     ]
     lines += _profile_lines(run, metric, axes)
+    return "\n".join(lines)
+
+
+def companion_block(run: Run, metric: str) -> str:
+    """The metric's curve read coordinate by coordinate, beside the panel, never inside it."""
+    stats = run.companion_axes
+    stats = stats[(stats["metric"].astype(str) == metric) & ~stats["is_probe"]] \
+        if not stats.empty else stats
+    if stats.empty:
+        return NOT_MEASURED
+    dominance = run.dominance[run.dominance["metric"].astype(str) == metric]
+    coordinates = sorted(stats["coordinate"].unique())
+    heads = [an.coordinate_label(c) for c in coordinates]
+    lines = []
+    for field, sub in stats.groupby("field"):
+        for column, title in (("rho", "rank correlation"),
+                              ("relative_change_max", "change from clean at the harshest "
+                                                      "strength")):
+            if not sub[column].notna().any():
+                reason = (" The curve's value on the undegraded field is zero, as a comparison "
+                          "curve's is, so there is no clean value to divide by."
+                          if column == "relative_change_max" else "")
+                lines += [f"**{field}, {title}:** not defined at any coordinate.{reason}", ""]
+                continue
+            wide = sub.pivot_table(index="degradation", columns="coordinate", values=column,
+                                   aggfunc="first", observed=True,
+                                   dropna=False).reindex(columns=coordinates)
+            extra = ("dominance",) if column == "rho" else ()
+            lines += [f"**{field}, {title}, at each coordinate.**", "",
+                      *_header("degradation", *heads, *extra)]
+            for degradation, values in wide.iterrows():
+                cells = [_fmt(float(v)) for v in values]
+                if extra:
+                    hit = dominance[(dominance["field"].astype(str) == field)
+                                    & (dominance["degradation"].astype(str) == degradation)]
+                    cells.append(_fmt(float(hit["dominance_min"].iloc[0])) if len(hit) else "—")
+                lines.append(f"| `{degradation}` | " + " | ".join(cells) + " |")
+            lines.append("")
+    lines.append(
+        "Each coordinate of the curve read as a metric of its own, with the same statistics as "
+        "the tables above and no resampling interval. Neighbouring coordinates are strongly "
+        "correlated, so a row localises the evidence and does not multiply it. **Dominance** "
+        "is the fraction of frames in which, for the weakest pair of neighbouring strengths, the "
+        "harsher strength's curve has moved at least as far as the milder one's at every "
+        "coordinate, each in its own direction: near 1, any summary that grows with every "
+        "coordinate's departure orders those strengths the same way, so the choice of summary "
+        "cannot change the trend. None of these numbers enters the tables above."
+    )
     return "\n".join(lines)
 
 
@@ -320,7 +409,7 @@ def canaries_block(run: Run, metric: str) -> str:
         nearest = _cell(row, "gaussian_impostor_nearest_level")
         lines.append(
             f"| {row['field']} | {_fmt(_cell(row, 'gaussian_impostor_damage'))} | "
-            f"{'`' + str(nearest) + '`' if nearest is not None else '—'} | "
+            f"{'`' + nearest + '`' if isinstance(nearest, str) and nearest else '—'} | "
             f"{_fmt(_cell(row, f'{run.anchor_label}_value'))} |"
         )
     lines += [
@@ -392,6 +481,7 @@ def generate(metric: str, run: Run) -> Path:
         "results_canaries": canaries_block(run, metric),
         "results_summary": summary_block(run, metric),
         "results_damage_by_level": damage_by_level_block(run, metric, figures, reasons),
+        "results_companion": companion_block(run, metric),
     }
     for family, block in FAMILY_BLOCKS.items():
         blocks[block] = family_block(run, metric, family)
@@ -403,6 +493,10 @@ def generate(metric: str, run: Run) -> Path:
 
     axes = run.axes[run.axes["metric"] == metric]
     probes = run.probes[run.probes["metric"] == metric]
+    curve = (run.companion_axes[run.companion_axes["metric"].astype(str) == metric]
+             if not run.companion_axes.empty else run.companion_axes)
+    dominance = (run.dominance[run.dominance["metric"].astype(str) == metric]
+                 if not run.dominance.empty else run.dominance)
     fingerprint = {
         "metric": metric,
         "dataset": str(run.rows["dataset"].iloc[0]),
@@ -414,6 +508,9 @@ def generate(metric: str, run: Run) -> Path:
         "axes": json.loads(axes.to_json(orient="records")),
         "probes": json.loads(probes.to_json(orient="records")),
         "profile": json.loads(run.card[run.card["metric"] == metric].to_json(orient="records")),
+        **({"companion": json.loads(curve.to_json(orient="records")),
+            "dominance": json.loads(dominance.to_json(orient="records"))}
+           if not curve.empty else {}),
     }
     write_strict_json(bundle.fingerprint, fingerprint)
     return bundle.fingerprint

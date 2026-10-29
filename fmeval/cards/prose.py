@@ -139,12 +139,13 @@ claim about a measurement that nothing checks.
 #: outside the families: ``Trap tests`` for the deliberately fake predictions, which carry no
 #: ordered severity, and the cross-cutting ones below.
 CROSS_CUTTING_SUBSECTIONS = frozenset({"Compared with the other metrics",
-                                       "Damage beside the other metrics"})
+                                       "Damage beside the other metrics",
+                                       "The curve behind the number"})
 """Result subsections that report no single degradation and so link to none.
 
 Every other subsection of ``## Results`` reports named degradations and must link to the
-bundles that define them. This one reports what holds over all the degradations at once,
-such as how this metric correlates with the baseline controls.
+bundles that define them. These report what holds over all the degradations at once: how
+this metric correlates with the baseline controls, or its curve read coordinate by coordinate.
 """
 
 NO_MATH_SECTIONS = frozenset({"Intuition", DEGRADATION_RESULTS})

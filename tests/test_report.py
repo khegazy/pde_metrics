@@ -19,7 +19,17 @@ import pandas as pd
 import pytest
 
 from fmeval import analysis
-from fmeval.io import RunFolder, write_config, write_maps, write_results, write_run_meta
+from fmeval.data.analytic import AdvectingBlobs
+from fmeval.io import (
+    COMPANIONS,
+    RunFolder,
+    write_config,
+    write_maps,
+    write_results,
+    write_run_meta,
+)
+from fmeval.ladder import build_ladder
+from fmeval.pipeline import DatasetInfo, run
 from fmeval.report import latex
 from fmeval.report.context import TableResult
 from fmeval.report.driver import (
@@ -39,6 +49,7 @@ from fmeval.report.registry import (
     plot,
 )
 from fmeval.report.style import Style
+from metrics import registry as metric_registry
 from tests.conftest import (
     SYNTHETIC_FIELDS,
     SYNTHETIC_LADDER,
@@ -727,3 +738,43 @@ def test_the_cost_projection_uses_the_trajectory_length_the_run_recorded(run_fol
     else:
         assert np.allclose(result.frame["full_trajectory_s"], result.frame["per_frame_s"] * 40)
         assert "40 frames" in result.caption
+
+
+def test_a_curve_and_a_growing_error_are_drawn(tmp_path, temporary_metric):
+    """The two time- and curve-shaped figures render from a run that has what they need: a
+    metric with a curve companion, and a ladder entry whose strength grows with time."""
+
+    def _curve_l2(reference, candidate):
+        """Mean of the curve below."""
+        return float(np.mean(_curve_l2_curve(reference, candidate)[1]))
+
+    def _curve_l2_curve(reference, candidate):
+        """(shift, mean squared difference after rolling the candidate by that many cells)."""
+        shifts = np.array([0, 1, 2])
+        return shifts, np.array([np.mean((reference - np.roll(candidate, s, axis=-2)) ** 2)
+                                 for s in shifts])
+
+    temporary_metric(name="_curve_l2", arity="pairwise", symmetric=False)(_curve_l2)
+    metric_registry.companion(of="_curve_l2", kind="curve", coordinate=("shift", "cells"))(
+        _curve_l2_curve)
+    ladder = build_ladder({"gaussian_blur": {"severities": [0.1, 0.2]},
+                           "drift": {"op": "translate_subpixel", "severities": [0.5, 1.0],
+                                     "per_unit_time": True}})
+    result = run(AdvectingBlobs(grid=(16, 8), n_frames=4, t_end=3.0),
+                 [metric_registry.get("_curve_l2")], ladder, fields=["density"],
+                 dataset=DatasetInfo(name="advecting_blobs"))
+    folder = RunFolder(tmp_path / "_curve_l2_1").create()
+    write_results(folder, result.rows)
+    write_results(folder, result.companions, name=COMPANIONS)
+    write_config(folder, {"metrics": ["_curve_l2"], "seed": 0}, [])
+    write_run_meta(folder, run_id=1, metric="_curve_l2", dataset="advecting_blobs")
+
+    curves = _rendered(folder, "companion_curves")
+    assert curves.status == "ok", curves.reason
+    data = _figure_data(folder, "companion_curves__metric-_curve_l2__field-density")
+    assert set(data["coordinate"]) == {0, 1, 2}
+    assert {"gaussian_blur", "drift"} <= set(data["degradation"])
+    timed = _rendered(folder, "response_along_time")
+    assert timed.status == "ok", timed.reason
+    data = _figure_data(folder, "response_along_time__metric-_curve_l2__field-density")
+    assert set(data["degradation"]) == {"drift"}, "only the entry whose strength grows with time"

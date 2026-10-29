@@ -45,7 +45,6 @@ Designed, hooks in place, not built.
 |---|---|---|
 | [010](010-forecast-pair-reader.md) | Read the real prediction/target pairs | **high** |
 | [011](011-cross-dataset-comparison.md) | Compare metrics across a Reynolds ladder | medium |
-| [012](012-vector-valued-metrics.md) | Metrics returning spectra or PDFs | medium |
 | [013](013-remaining-intuition-figures.md) | Outlier, invariance, triangle-inequality figures | low |
 | [014](014-gradient-signal-criterion.md) | Gradient quality where L2 goes flat | medium |
 | [015](015-rotation-degradation.md) | Rotation, which must rotate vector components | low |
@@ -66,6 +65,8 @@ Designed, hooks in place, not built.
 | [078](078-valid-prediction-time-needs-rollouts.md) | Valid prediction time needs rollouts and a temporal experiment | unset |
 | [079](079-temporal-autocorrelation-needs-rollouts.md) | Temporal autocorrelation needs rollouts and a temporal experiment | unset |
 | [080](080-invariant-measure-needs-long-rollouts.md) | Invariant measure and attractor comparison needs long rollouts and the model | unset |
+| [094](094-dynamics-family-has-a-test-bed-but-no-rollout-input.md) | The dynamics family has a test bed (`advecting_blobs`, `per_unit_time`) but no rollout input, and the valid prediction time needs a stated threshold convention | unset |
+| [096](096-several-fields-handed-to-one-metric.md) | Several fields handed to one metric together, without reusing `fields=` | unset |
 | [081](081-modal-decompositions-need-trajectories.md) | Modal decompositions need time-resolved trajectories | unset |
 | [082](082-pair-correlation-waits-on-features.md) | Pair-correlation function of features waits on feature extraction | medium |
 | [083](083-predictive-uncertainty-needs-the-model.md) | Quality of predictive uncertainty needs a surrogate that reports uncertainty | unset |
@@ -101,7 +102,9 @@ Designed, hooks in place, not built.
 | [064](064-jacobi-set-defines-no-scalar.md) | Jacobi sets define a set, not a number | medium |
 | [065](065-bispectrum-distance-is-not-fixed.md) | Bispectrum and bicoherence: the distance between maps is not fixed | unset |
 | [092](092-sod-damage-anchor-is-poorly-determined.md) | On `sod_shock_tube` the unrelated-field anchor varies by up to 2x across draws on density and pressure and 21x on velocity, so Sod damage numbers are poorly determined; needs a decision | medium |
-| [093](093-curve-valued-metrics-need-a-reported-number.md) | A metric that produces a table of values (one per distance, wavenumber or threshold) has no single number to report: reduce it to one number, store the table, or split it into named metrics; blocks seven planned metrics | high |
+| [095](095-pooling-across-frames-for-distributional-estimates.md) | Pooling across frames for a distributional estimate; the contract of a series-level procedure, should a metric need one | unset |
+| [097](097-stochastic-ladder-for-comparable-magnitudes.md) | A stochastic ladder (several draws per severity) would make response magnitudes comparable across a metric's functional forms | none set |
+| [098](098-increment-w1-registered-number-is-a-convention.md) | The number `increment_w1_by_separation` registers, a normalised mean over separations, is a convention with no source | unset |
 
 ## Technical debt
 

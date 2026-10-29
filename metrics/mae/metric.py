@@ -10,14 +10,13 @@ from __future__ import annotations
 
 import numpy as np
 
-from ..registry import metric, pointwise_map
+from ..registry import companion, metric
 
 
 @metric(
     name="mae",
     arity="pairwise",
     fields=("*",),
-    returns="scalar",
     differentiable=True,      # everywhere except at zero error, where the subgradient is used
     cost="cheap",
     higher_is_better=False,
@@ -43,7 +42,7 @@ def mae(reference: np.ndarray, candidate: np.ndarray) -> float:
     return float(np.abs(reference - candidate).mean())
 
 
-@pointwise_map(of="mae")
+@companion(of="mae")
 def mae_map(reference: np.ndarray, candidate: np.ndarray) -> np.ndarray:
     """Per-cell absolute error, summed over channels.
 

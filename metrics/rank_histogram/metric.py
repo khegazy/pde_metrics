@@ -59,7 +59,6 @@ def reliability_index(counts: np.ndarray) -> float:
     name="rank_histogram",
     arity="ensemble",
     fields=("*",),
-    returns="scalar",
     differentiable=False,     # ranks are integer-valued; no useful gradient
     cost="cheap",
     higher_is_better=False,

@@ -214,8 +214,10 @@ missing or malformed fails when the harness asks for it, not later. Fill the bun
 order — the first two are yours, the rest an agent can complete from the contract:
 
 1. **`metric.py`** — one `@metric`-decorated function returning one float per (field,
-   frame, severity level). The decorator's fields are read by the harness and appear in the
-   catalog; nothing in `card.yaml` repeats them.
+   frame, severity level): the number the literature reports. Anything with more structure
+   behind that number, a per-cell map or a curve, is its companion (§3.3). The decorator's
+   fields are read by the harness and appear in the catalog; nothing in `card.yaml` repeats
+   them.
 2. **`test_metric.py`** — at least one test whose expected value you worked out by hand, on
    a small field. It is also the source of the worked example in the card, so the prose
    cannot drift from the code.
@@ -273,7 +275,7 @@ Discovery walks the package, so there is no import list to edit and no registrat
 add.
 
 ```python
-from metrics.registry import metric, pointwise_map
+from metrics.registry import companion, metric
 
 
 @metric(
@@ -282,7 +284,6 @@ from metrics.registry import metric, pointwise_map
     arity="pairwise",            # "pairwise" -> fn(reference, candidate); "single" -> fn(x);
                                  # "ensemble" -> fn(reference, members)
     fields=("vorticity",),       # canonical fields it accepts; ("*",) for any
-    returns="scalar",            # "scalar" -> float; "vector" -> 1-D array
     differentiable=True,         # declared, never inferred. Could this be a training loss?
     cost="cheap",                # cheap | moderate | expensive (advisory; warns on long runs)
     higher_is_better=False,
@@ -338,9 +339,11 @@ contract test that expects a perfect prediction to score zero does not apply to 
 A single-field metric will be reported as `no dynamic range`, and **that is correct, not a bug you
 should try to fix**. The normalised damage scale is anchored between the reference and a
 *translated* copy of it, which has identical statistics — so a single-field quantity takes the same
-value at both anchors and the span is zero. On a smoothing axis you will also see `rho = -1`,
-because smoothing reduces such quantities rather than increasing them. If you find yourself
-"fixing" either, stop: you would be removing a true statement.
+value at both anchors and the span is zero. If you find yourself "fixing" that, stop: you would
+be removing a true statement. On a smoothing axis such a quantity falls rather than rises, and it
+reads `rho = 1` with `direction = -1`: the trend is measured on the departure from clean in one
+direction measured per degradation, so falling steadily and rising steadily both follow the
+degradation, and which way the value went is a separate column.
 
 On an axis the quantity is *invariant* to — a translation, for a quantity that does not depend on
 position — `rho` is reported as **NaN**, not as a number. It used to be a number: `np.roll` cannot
@@ -351,12 +354,16 @@ beside genuine correlations. Anything whose variation across an axis is below a 
 column when the anchor itself is round-off, and to the sensitivity and saturation levels when the
 span is.
 
-**Declare `higher_is_better` correctly, because it is now read.** Four statistics are one-sided —
-monotonicity asks whether the value rises, the separability AUC is taken with
-`alternative="greater"`, and the two threshold levels look for the first median to exceed a target.
-The analysis multiplies the value by the declared direction before computing them, so `rho = +1`
-means "responds correctly to damage" whichever convention you use. Declare it wrong and all four
-invert; the symptom is a clean `-1` on every axis at once.
+**Declare `higher_is_better` correctly, but know that the analysis does not read it.** It is a
+fact about the metric for the catalog, and the contract test checks it against a synthetic blur
+ladder. The ordering statistics are one-sided — monotonicity asks whether the value rises, the
+separability AUC is taken with `alternative="greater"`, the threshold levels look for the first
+median to exceed a target — so `analysis.py::response_direction` measures one direction per
+(metric, field, degradation), the sign of the median departure from clean at the harshest level
+whose median departure is more than round-off, and every ordering statistic runs on the departure from the clean value of the same frame
+times that sign. One sign per degradation, never per point: ordering the size of each departure on
+its own reads a response that scatters to both sides of clean as a perfect trend. The clean level is
+not a point of the trend. A target-valued metric is ordered by its distance from the target.
 
 **`ctx` is opt-in.** Declare a keyword-only parameter named `ctx` and you receive a
 `FieldContext` with the grid (spacing, periodicity, dimension names), the frame index, the
@@ -364,16 +371,45 @@ physical time, the reference fluctuation RMS, and a seeded generator. Omit it an
 nothing extra — which is why `mae(reference, candidate)` needs no boilerplate. Never hardcode
 an axis index: use `ctx.axis("x")`, because which axis is x depends on the dimension count.
 
-**Pointwise maps.** If the metric is a reduction of a per-cell density, declare the companion.
-It is what makes the `field_gallery` figure possible, and for a displaced feature it shows the
-double penalty as two lobes rather than as an argument.
+**Companions: the object behind the number.** One per metric, declared after the metric with
+`@companion(of=...)`. A second number from the literature is a sibling bundle that imports the
+function, the `rmse` pattern.
 
-```python
-@pointwise_map(of="h_minus_one")      # must come AFTER the metric it belongs to
-def h_minus_one_map(reference, candidate, *, ctx):
-    """Per-cell density, summed over channels. Reduces to the metric by mean/C."""
-    ...
-```
+- **`kind="field"`**, a per-cell map, if the metric is a reduction of a per-cell density. It is
+  what makes the `field_gallery` figure possible, and for a displaced feature it shows the
+  double penalty as two lobes rather than as an argument.
+
+  ```python
+  @companion(of="h_minus_one")          # must come AFTER the metric it belongs to
+  def h_minus_one_map(reference, candidate, *, ctx):
+      """Per-cell density, summed over channels. Reduces to the metric by mean/C."""
+      ...
+  ```
+
+- **`kind="curve"`**, if the number stands for a curve over a coordinate (a separation, a
+  wavenumber, a threshold). It returns `(coordinates, values)`: fixed coordinates and the
+  literature's own values, untransformed. With the metric's arguments it is a comparison; with
+  one field where the metric takes two it is a property of one field, stored for the candidate
+  at every level, which on the clean level is the reference (on an ensemble dataset it is the
+  member mean, the undamaged prediction the ladder degrades). The pipeline calls it **before**
+  the metric on every row, stores it in `companions.csv`, times both calls, and hands the curve
+  to the metric in `ctx.cache[COMPANION_KEY]` (`fmeval.context`). The metric reads it from there
+  when present and computes it itself otherwise, and must give the same number both ways, which
+  a contract test checks. **Never write under that key**: the cache lives across the ladder, and
+  a curve stored there by the metric is read back for the next variant. The analysis reads each
+  coordinate as a metric of its own (`metric[coordinate]`) in tables beside the panel.
+
+  ```python
+  @companion(of="structure_function_2", kind="curve", coordinate=("separation", "cells"))
+  def structure_function_2_curve(x, *, ctx):
+      """(separations, S_2(l)) of one field: the curve the literature plots."""
+      ...
+  ```
+
+**Work shared across the ladder** goes in `ctx.cache`, which lives for one (frame, field,
+metric): compute a quantity of the reference once per frame with a membership test,
+`if key not in ctx.cache: ctx.cache[key] = f(reference)`. Not `setdefault(key, f(reference))`,
+which evaluates `f` on every call.
 
 **Get the reduction right — this is the easy mistake.** The declared `reduction` is verified by
 a test, and two cases catch people:
@@ -392,9 +428,10 @@ touch your metric.
 
 1. `python -m metrics` — confirm it appears with the metadata you expect.
 2. `pytest` — the contract test is parametrized over the whole registry, so your metric
-   is now automatically checked for `d(x,x) == 0`, declared symmetry, return type, shape
-   rejection, float32/float64 agreement, monotonicity on a synthetic blur ladder, and the
-   map-reduces-to-metric identity. You do not write any of that.
+   is now automatically checked for `d(x,x) == 0`, declared symmetry, one finite float, shape
+   rejection, float32/float64 agreement, monotonicity on a synthetic blur ladder, the
+   map-reduces-to-metric identity, and for a curve: one value per fixed coordinate, zero on
+   identical fields, and the same number from the cached curve. You do not write any of that.
 3. **Add an entry to `TEST_DESCRIPTION.md`** if your metric introduces a new reported quantity.
    A test fails otherwise.
 4. **Remove the idea from `docs/ideas/README.md`.** Once a metric is built, its card is the only
@@ -891,7 +928,8 @@ listed so nobody has to rediscover them.
 | **Ranking values that differ only in the last bits** | `np.roll` cannot change a translation-invariant quantity but does change the summation order in `np.mean`. The reported `rho` was 0.707 over a relative 1.6e-16 | `analysis.py::_is_round_off` |
 | **A median as the scale in a degeneracy guard** | When most severity levels are round-off the median collapses with them, so the guard compares noise against noise and passes — defeated in exactly the case it exists for. Use the largest value | `analysis.py::normalisation` |
 | **Two copies of one value that have already diverged** | The report thresholds were defined in four places and only one was read; three vocabularies named the same column differently; a test's radial spectrum rounded shells down where the metric rounds to nearest. Every test passed throughout | §1, "One source of truth" |
-| **Assuming every metric rises with damage** | Three one-sided statistics scored a perfectly ordered similarity metric at `monotone_fraction = 0`, `AUC = 0`, `rho = -1`, flagging a correct metric on three criteria | `analysis.py::response_direction` |
+| **Assuming every metric rises with damage** | Three one-sided statistics scored a perfectly ordered similarity metric at `monotone_fraction = 0`, `AUC = 0`, `rho = -1`, flagging a correct metric on three criteria; one declared direction per metric then scored enstrophy under blur at `rho = -1`, because a single-field quantity runs both ways on one ladder | `analysis.py::response_direction`, one measured sign per degradation |
+| **Ordering the size of each departure on its own** | Picks a sign per point, so a response that scatters to both sides of clean, more widely at each strength, reads as a perfect trend: a simulated null whose spread grows tenfold per strength scored `rho = 1.0`, against 0.2 with one sign per degradation, and `increment_flatness` on vorticity under box blur, falling in 49 snapshots and rising in 34, read `rho = 1.0` | `analysis.py::response_direction` |
 
 Two interpretive traps, which are not bugs but produce wrong conclusions:
 

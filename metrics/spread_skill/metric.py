@@ -30,7 +30,6 @@ from ..registry import metric
     name="spread_skill",
     arity="ensemble",
     fields=("*",),
-    returns="scalar",
     differentiable=False,     # a ratio of two square roots; not a loss
     cost="cheap",
     higher_is_better=False,   # neither, in fact: see target

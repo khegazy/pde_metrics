@@ -39,18 +39,40 @@ Four measured statistics for enstrophy, one row per degradation grouped by famil
 
 Median damage over frames against severity level for enstrophy, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, an unrelated field; the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to an unrelated field. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points above 2 are drawn as triangles at the top. No damage scale on vorticity: the grey panels show the raw value instead.
 
-| test family | field | degradations | rank correlation | weakest gap between neighbouring strengths | first strength detected |
+**Trend: does the response follow the degradation?**
+
+| test family | field | degradations | rank correlation | fraction of frames in order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| Displacement | vorticity | 2 | — to — | — | level — |
-| Resolution loss | vorticity | 2 | -1 to -1 | 0.147 | level — |
-| Smoothing | vorticity | 3 | -1 to -1 | 0.0745 | level — |
-| Spectral filtering | vorticity | 4 | -1 to -1 | 0 | level — |
-| Noise | vorticity | 1 | 1 to 1 | 0.503 | level — |
-| trap test: fake prediction, right spectrum | vorticity | 1 | — | — | damage — |
+| Displacement | vorticity | 2 | — | — | — |
+| Resolution loss | vorticity | 2 | 1 | 1 | 0.741 to 0.794 |
+| Smoothing | vorticity | 3 | 1 | 1 | 0.644 to 0.733 |
+| Spectral filtering | vorticity | 4 | 1 | 1 | 0.599 to 0.685 |
+| Noise | vorticity | 1 | 1 | 0.919 | 0.919 |
 
-One row per family of degradation and physical field. **Rank correlation** asks whether the metric put the strengths of one degradation in the right order: it is the Spearman correlation between the metric and the applied strength, computed inside a single frame, and the column gives the range over the degradations in that family. A value of 1 means every strength was ordered correctly in every frame. **Weakest gap between neighbouring strengths** asks whether the metric can tell one strength from the next: it is the smallest Mann-Whitney overlap between any two neighbouring strengths, where 1 means the two never overlap and 0.5 means the metric cannot separate them at all. **First strength detected** is the mildest strength at which the metric has moved a tenth of the way from the undegraded reference toward a field with no relation to the truth; a dash means the metric never reached that tenth. **Damage** is that same 0-to-1 scale read as a number: 0 is the undegraded reference and 1 is an unrelated field.
+**Reactivity: how far does it move?**
 
-This table reports what was measured and grades none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
+| test family | field | change from clean at the harshest strength | elasticity | first strength detected |
+|---|---|---|---|---|
+| Displacement | vorticity | 0 | — | level — |
+| Resolution loss | vorticity | -0.41 to -0.294 | 1.47 to 3.74 | level — |
+| Smoothing | vorticity | -0.465 to -0.234 | 0.915 to 1.48 | level — |
+| Spectral filtering | vorticity | -0.971 to -0.473 | 0.823 to 0.955 | level — |
+| Noise | vorticity | 0.25 | — | level — |
+| trap test: fake prediction, right spectrum | vorticity | — | — | damage — |
+
+**Consistency: how much does it vary from snapshot to snapshot?**
+
+| test family | field | consistency, in the strength's units | snapshots per independent block |
+|---|---|---|---|
+| Displacement | vorticity | — | 1 to 18 |
+| Resolution loss | vorticity | 1.16 to 1.51 | 22 |
+| Smoothing | vorticity | 0.0138 to 0.0321 | 22 |
+| Spectral filtering | vorticity | 0.0364 to 0.0404 | 22 |
+| Noise | vorticity | 0.00635 | 1 |
+
+One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to a field with no relation to the truth; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
+
+These tables report what was measured and grade none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
 
 **Profile.**
 
@@ -148,9 +170,9 @@ read here is the drift away from the reference value rather than an error.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `box_blur` | vorticity | 4 | -1 | 0 | 0.269 |
-| `gaussian_blur` | vorticity | 4 | -1 | 0 | 0.0745 |
-| `median_blur` | vorticity | 3 | -1 | 0 | 0.27 |
+| `box_blur` | vorticity | 4 | 1 | 1 | 0.644 |
+| `gaussian_blur` | vorticity | 4 | 1 | 1 | 0.715 |
+| `median_blur` | vorticity | 3 | 1 | 1 | 0.733 |
 
 <!-- END GENERATED results_smoothing -->
 
@@ -165,10 +187,10 @@ read here is the drift away from the reference value rather than an error.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `highpass_butterworth` | vorticity | 4 | -1 | 0 | 0.0784 |
-| `highpass_ideal` | vorticity | 4 | -1 | 0 | 0.0958 |
-| `lowpass_butterworth` | vorticity | 4 | -1 | 0 | 0 |
-| `lowpass_ideal` | vorticity | 4 | -1 | 0 | 0 |
+| `highpass_butterworth` | vorticity | 4 | 1 | 1 | 0.599 |
+| `highpass_ideal` | vorticity | 4 | 1 | 1 | 0.62 |
+| `lowpass_butterworth` | vorticity | 4 | 1 | 1 | 0.68 |
+| `lowpass_ideal` | vorticity | 4 | 1 | 1 | 0.685 |
 
 <!-- END GENERATED results_spectral -->
 
@@ -200,13 +222,13 @@ should — which is one of the things a reference-free diagnostic is useful for.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `coarsen` | vorticity | 4 | -1 | 0 | 0.147 |
-| `coarsen_bandlimited` | vorticity | 4 | -1 | 0 | 0.232 |
+| `coarsen` | vorticity | 4 | 1 | 1 | 0.741 |
+| `coarsen_bandlimited` | vorticity | 4 | 1 | 1 | 0.794 |
 
 <!-- END GENERATED results_resolution -->
 
-The rank correlation of −1 under both coarsenings is the correct result for a quantity that
-falls as detail is removed. `coarsen` removes more at every factor: 4%, 14%, 26% and 40% of the
+Both coarsenings take the value steadily below its clean value, so each follows its
+degradation with a rank correlation of 1; it falls because detail is removed. `coarsen` removes more at every factor: 4%, 14%, 26% and 40% of the
 enstrophy at factors 2 to 16, against 0.1%, 5%, 17% and 31% under `coarsen_bandlimited`. The
 two keep the same block means; the staircase additionally flattens each block, discarding the
 variance inside it that the band-limited reconstruction keeps wherever the coarse grid can
@@ -220,7 +242,7 @@ represent it.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `additive_noise` | vorticity | 4 | 1 | 0.919 | 0.503 |
+| `additive_noise` | vorticity | 4 | 1 | 0.919 | 0.919 |
 
 <!-- END GENERATED results_stochastic -->
 
@@ -233,7 +255,7 @@ represent it.
 
 | field | damage assigned to the fake prediction | closest real degradation | value on an unrelated field |
 |---|---|---|---|
-| vorticity | — | `` | 3.08e-06 |
+| vorticity | — | — | 3.08e-06 |
 
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage of 1 is what a field with no relation to the truth scores, so the damage column says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture.
 
