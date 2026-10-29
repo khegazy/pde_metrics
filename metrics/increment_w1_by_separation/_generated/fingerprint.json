@@ -15167,10 +15167,10 @@
     {
       "dataset": "kinet_re5e4",
       "degradation": "translate_subpixel",
-      "dominance_min": null,
+      "dominance_min": 0.0,
       "field": "density",
       "metric": "increment_w1_by_separation",
-      "n_coordinates": 0
+      "n_coordinates": 8
     },
     {
       "dataset": "kinet_re5e4",
@@ -15263,10 +15263,10 @@
     {
       "dataset": "kinet_re5e4",
       "degradation": "translate_subpixel",
-      "dominance_min": null,
+      "dominance_min": 0.0,
       "field": "velocity",
       "metric": "increment_w1_by_separation",
-      "n_coordinates": 0
+      "n_coordinates": 8
     },
     {
       "dataset": "kinet_re5e4",
@@ -15359,10 +15359,10 @@
     {
       "dataset": "kinet_re5e4",
       "degradation": "translate_subpixel",
-      "dominance_min": null,
+      "dominance_min": 0.0,
       "field": "vorticity",
       "metric": "increment_w1_by_separation",
-      "n_coordinates": 0
+      "n_coordinates": 8
     },
     {
       "dataset": "kinet_re5e4",

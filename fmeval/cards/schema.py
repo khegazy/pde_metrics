@@ -172,8 +172,8 @@ class Output:
     (``metrics.registry.companion``); ``## Reading the output`` names it and its columns.
 
     Direction (whether higher or lower is better) is *not* here: the ``@metric``
-    decorator declares ``higher_is_better`` and the analysis layer already orients its
-    statistics by it.
+    decorator declares ``higher_is_better``, and the analysis layer measures the direction it
+    orients its statistics by, one per degradation (``fmeval.analysis.response_direction``).
     """
 
     description: str

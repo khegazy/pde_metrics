@@ -901,3 +901,104 @@ def test_relative_change_is_measured_from_the_clean_value_of_the_same_frame():
         pytest.approx([0.1, 0.2, 0.5], rel=1e-9)
     error = _axis(an.summarise_axes(make_frame(axes={"a": [1.0, 2.0]}), n_bootstrap=0))
     assert np.isnan(error["relative_change_max"]), "an error metric's clean value is zero"
+
+
+def test_a_response_back_on_clean_at_the_harshest_level_keeps_its_measured_direction():
+    """The direction is read at the harshest level that moved the metric more than round-off.
+
+    A translation-invariant quantity under a sub-pixel shift moves at fractional distances and is
+    back on its clean value at whole cells, the harshest levels. A falling and a rising copy of
+    that response are mirror images, so they must read the same trend and opposite directions;
+    with the sign defaulted at the harshest level they read ``rho`` of opposite signs.
+    """
+    falls = _axis(an.summarise_axes(_single_field({"a": [-1.0, -2.0, -1.0, 0.0]}, noise=0.0),
+                                    n_bootstrap=0))
+    rises = _axis(an.summarise_axes(_single_field({"a": [1.0, 2.0, 1.0, 0.0]}, noise=0.0),
+                                    n_bootstrap=0))
+    assert (falls["direction"], rises["direction"]) == (-1, 1)
+    assert falls["rho"] == pytest.approx(rises["rho"]), (
+        f"mirror-image responses read rho {falls['rho']} falling and {rises['rho']} rising; the "
+        "sign of the trend depends on a defaulted direction")
+
+
+def test_every_row_without_a_direction_has_its_ordering_withheld():
+    """No direction means every level's median departure is round-off, and then nothing is
+    ordered: a convention must never stand in for the measured sign of a reported trend."""
+    df = _single_field({"flat": [0.0] * 4, "back": [-1.0, -2.0, 0.0, 0.0],
+                        "real": [0.5, 1.0, 1.5, 2.0]}, noise=0.0)
+    axes = an.summarise_axes(df, n_bootstrap=0)
+    directions = an.response_direction(df)
+    for _, row in axes[~axes["is_probe"]].iterrows():
+        key = (row["dataset"], row["metric"], row["field"], row["degradation"])
+        if key not in directions:
+            assert np.isnan(row["rho"]), (
+                f"{row['degradation']}: no measured direction, yet rho = {row['rho']}")
+    assert ("d", "m", "f", "flat") not in directions
+
+
+# --- curve companions: per-coordinate labels and the dominance fraction ---------------------
+
+
+def _curve_rows(coordinates=(1, 2, 4), axes=None, n_frames: int = 10) -> pd.DataFrame:
+    """Companion rows of an error curve rising with level, steeper at larger coordinates."""
+    axes = axes or {"a": [1.0, 2.0, 3.0]}
+    frames = []
+    for i, coordinate in enumerate(coordinates):
+        scaled = {label: [v * (1 + 0.1 * i) for v in values] for label, values in axes.items()}
+        frames.append(make_frame(axes={**scaled, "uncorrelated": [10.0, 10.0]},
+                                 n_frames=n_frames).assign(coordinate=coordinate))
+    return pd.concat(frames, ignore_index=True)
+
+
+def test_distinct_coordinates_get_distinct_labels():
+    """Each coordinate is analysed as a metric of its own, so two coordinates under one label
+    would be one trace; a label reads back as the same number and drops a trailing ``.0``, so an
+    integer coordinate read back from CSV as a float keeps its label."""
+    coordinates = [1e-7, 1.0000001e-7, 1234567, 1234568, 0.1, 4, 4.0, np.int64(8), "low"]
+    labels = an.per_coordinate(pd.DataFrame({"metric": "m", "coordinate": coordinates},
+                                            dtype=object))["metric"].tolist()
+    assert len(set(labels[:6])) == 6, f"distinct coordinates share a label: {labels}"
+    assert labels[5:] == ["m[4]", "m[4]", "m[8]", "m[low]"]
+    assert all(float(label[2:-1]) == c for label, c in zip(labels[:4], coordinates, strict=False))
+
+
+def test_dominance_reads_only_frames_where_both_curves_are_complete():
+    """A coordinate missing from one level, or NaN there, leaves the comparisons it enters unread
+    rather than failing the analysis or counting as a curve that did not dominate: here the two
+    pairs touching level 2 in every frame, or in one frame."""
+    curve = _curve_rows(axes={"a": [1.0, 2.0, 3.0, 4.0]})
+    assert an.dominance(curve)["dominance_min"].iloc[0] == pytest.approx(1.0)
+    hole = (curve["coordinate"] == 4) & (curve["degradation"] == "a") & (curve["level"] == 2)
+    one_frame = hole & (curve["frame_index"] == 3)
+    for broken in (curve[~hole], curve.assign(value=curve["value"].mask(hole)),
+                   curve[~one_frame]):
+        row = an.dominance(broken).iloc[0]
+        assert row["dominance_min"] == pytest.approx(1.0), row.to_dict()
+        assert row["n_coordinates"] == 3
+
+
+def test_a_strength_growing_in_time_is_still_one_row_per_level():
+    """A ``per_unit_time`` entry applies its rate times each frame's time, so its rows record a
+    different strength in every frame, and nothing at t = 0, where they are flagged. The per-level
+    records are still one row per level: the strength is the median over the frames used, and a
+    frame in which the level did nothing is left out as the trend statistics leave it out, not
+    taken to flag the whole level."""
+    df = _two_metrics({"drift": [1.0, 2.0, 3.0], "uncorrelated": [10.0, 10.0]},
+                      {"drift": [2.0, 4.0, 6.0], "uncorrelated": [20.0, 20.0]}, noise=0.1, seed=2)
+    drift = df["degradation"] == "drift"
+    df.loc[drift, "severity"] = df.loc[drift, "severity_nominal"] * df.loc[drift, "time"]
+    df.loc[drift & (df["time"] == 0.0), ["severity_degenerate", "value"]] = [True, 0.0]
+    scored = _scored(df)[0]
+    times = np.sort(df["time"].unique())[1:]
+
+    wide = an.damage_by_level(scored)
+    assert wide.loc[wide["degradation"] == "drift", "level"].tolist() == [1, 2, 3], (
+        f"one row per level expected, got\n{wide}")
+    curve = an.per_level_response(scored, metric="a").set_index("level")
+    assert not curve["severity_degenerate"].any(), "a no-op at t = 0 flagged the whole level"
+    assert (curve["n_frames"] == len(times)).all()
+    for level in (1, 2, 3):
+        assert curve.loc[level, "severity"] == pytest.approx(level * np.median(times))
+    one = scored[scored["metric"] == "a"]
+    nearest = an._nearest_level(one, float(curve.loc[2, "damage_median"]))
+    assert nearest == f"drift={2 * np.median(times):g}", nearest

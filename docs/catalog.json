@@ -3954,7 +3954,7 @@
           {
             "axis": "translate_subpixel",
             "blindness_q": 0.0,
-            "cliffs_delta": -0.1250337564,
+            "cliffs_delta": -0.3045792986,
             "detection_onset_severity": null,
             "elasticity": 1.3619254575,
             "elasticity_x": "severity (distance)",
@@ -3966,10 +3966,10 @@
             "largest_response_upper_bound": 1.4e-08,
             "levels": 6,
             "monotone_fraction": 0.0,
-            "rank_correlation": 0.5161002296,
+            "rank_correlation": -0.5161002296,
             "response_shape": "linear",
             "severity_resolution": 4.2377826375,
-            "weakest_separation": 0.4374831218
+            "weakest_separation": 0.3477103507
           },
           {
             "axis": "translate_x",

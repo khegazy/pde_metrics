@@ -60,8 +60,8 @@ RESULT_DTYPES: dict[str, str] = {
     "remap_op": "category",
     "metric": "category",
     "arity": "category",
-    "higher_is_better": "bool",      # so the analysis orients its one-sided statistics by
-                                     # the metric's own direction rather than assuming error
+    "higher_is_better": "bool",      # the declaration, as provenance; the analysis measures
+                                     # its direction instead (analysis.response_direction)
     # how the field was damaged
     "degradation": "category",       # the ladder-entry label: the unit of rank correlation
     "degradation_op": "category",    # the registry name behind it

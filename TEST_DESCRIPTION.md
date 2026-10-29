@@ -279,13 +279,16 @@ response-curve data of each card.
 
 **What it is.** +1 when the metric's value moves above its clean value as the degradation grows, −1
 when it moves below, measured: the sign of the median, over frames, of the departure from clean at
-the harshest usable strength. It orients every ordering statistic of that degradation and carries
+the harshest strength at which that median is more than round-off. It orients every ordering statistic of that degradation and carries
 no judgement: enstrophy falls under blur and rises under noise, and both are recorded as they are.
 For a metric with a target value it is +1, because its distance from the target is what is ordered.
 
-**Caveats.** Measured from the data being described, one sign per degradation. Where the median
-departure is round-off the direction is undefined, +1 is recorded, and the ordering statistics of
-that degradation are withheld by the round-off guard.
+**Caveats.** Measured from the data being described, one sign per degradation. A quantity that moves
+at mild strengths and is back on its clean value at the harshest ones (a translation-invariant
+quantity under a sub-pixel shift, exactly invariant at whole cells) takes its sign from the
+harshest strength that moved it. Where the median departure is round-off at every strength the
+direction is undefined, +1 is recorded, and the ordering statistics of that degradation are
+withheld by the round-off guard.
 
 **Where it appears.** The per-degradation table (`axis_detail__field-*.csv`).
 

@@ -158,7 +158,7 @@
       {
         "blind": true,
         "blindness_q": 0.0,
-        "cliffs_delta_min": -0.1250337564,
+        "cliffs_delta_min": -0.3045792986,
         "damage_max_ucb": 1.4e-08,
         "damage_per_change": null,
         "degradation": "translate_subpixel",
@@ -166,9 +166,9 @@
         "field": "density",
         "metric": "increment_flatness",
         "n_levels": 6.0,
-        "rho": 0.5161002296,
-        "rho_ci_hi": 0.5797710357,
-        "rho_ci_lo": 0.0573514187
+        "rho": -0.5161002296,
+        "rho_ci_hi": -0.0573514187,
+        "rho_ci_lo": -0.5797710357
       },
       {
         "blind": true,

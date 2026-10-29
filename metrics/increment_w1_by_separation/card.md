@@ -298,7 +298,7 @@ withheld as round-off. `translate_subpixel` is not a monotone axis for this metr
 an eighth, a quarter and half a cell interpolate the field and so smooth its increments, while
 shifts of one, two and four cells are exact rolls and score round-off, about 1e-15. The value
 rises and then drops to zero, which is what the negative rank correlations record. The harshest
-level is round-off, so no direction is measured there.
+levels are round-off, so the direction, upward, is measured at half a cell.
 
 ### Resolution loss
 
@@ -470,7 +470,7 @@ not see.
 | `lowpass_butterworth` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.932 |
 | `lowpass_ideal` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
 | `median_blur` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-| `translate_subpixel` | -0.714 | -0.714 | -0.6 | -0.6 | -0.714 | -0.657 | -0.714 | -0.714 | — |
+| `translate_subpixel` | -0.714 | -0.714 | -0.6 | -0.6 | -0.714 | -0.657 | -0.714 | -0.714 | 0 |
 | `translate_x` | — | — | — | — | — | — | — | — | — |
 
 **density, change from clean at the harshest strength:** not defined at any coordinate. The curve's value on the undegraded field is zero, as a comparison curve's is, so there is no clean value to divide by.
@@ -489,7 +489,7 @@ not see.
 | `lowpass_butterworth` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.919 |
 | `lowpass_ideal` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
 | `median_blur` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-| `translate_subpixel` | -0.714 | -0.714 | -0.6 | -0.714 | -0.6 | -0.714 | -0.714 | -0.714 | — |
+| `translate_subpixel` | -0.714 | -0.714 | -0.6 | -0.714 | -0.6 | -0.714 | -0.714 | -0.714 | 0 |
 | `translate_x` | — | — | — | — | — | — | — | — | — |
 
 **velocity, change from clean at the harshest strength:** not defined at any coordinate. The curve's value on the undegraded field is zero, as a comparison curve's is, so there is no clean value to divide by.
@@ -508,7 +508,7 @@ not see.
 | `lowpass_butterworth` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.578 |
 | `lowpass_ideal` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.472 |
 | `median_blur` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-| `translate_subpixel` | -0.6 | -0.543 | -0.543 | -0.543 | -0.543 | -0.6 | -0.6 | -0.6 | — |
+| `translate_subpixel` | -0.6 | -0.543 | -0.543 | -0.543 | -0.543 | -0.6 | -0.6 | -0.6 | 0 |
 | `translate_x` | — | — | — | — | — | — | — | — | — |
 
 **vorticity, change from clean at the harshest strength:** not defined at any coordinate. The curve's value on the undegraded field is zero, as a comparison curve's is, so there is no clean value to divide by.
@@ -520,9 +520,10 @@ Each coordinate of the curve read as a metric of its own, with the same statisti
 Coordinate by coordinate, every degradation but the sub-pixel shift is followed at every
 separation. The dominance column is what the curve adds. Where it is 1, every summary that grows
 with the departure at each separation orders the strengths alike, so the convention of Equation
-(3) does not decide the trend. It is lowest for the low-pass filters on vorticity (0.47 and 0.58),
-where a summary weighting other separations could order the weakest pair of strengths
-differently in about half the frames (`issues/098`).
+(3) does not decide the trend. Among the degradations it follows, it is lowest for the low-pass
+filters on vorticity (0.47 and 0.58), where a summary weighting other separations could order the
+weakest pair of strengths differently in about half the frames (`issues/098`). Under the sub-pixel
+shift it is 0, as it must be for a curve that returns to zero at whole-cell strengths.
 
 ## References
 
