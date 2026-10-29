@@ -82,7 +82,13 @@ ladder:
   # IN-4. ordinal=False by declaration: excluded from every rank correlation.
   gaussian_impostor:   {enabled: true, severities: [0]}
 
-  # Measures the value a metric gives two statistically identical but positionally
-  # unrelated fields. This defines D = 1 for the dimensionless damage score, so it is a
-  # reference measurement rather than a severity level; several draws average out its variance.
+  # The anchor: the field's spatial mean, the climatological reference forecast. Its median
+  # value defines D = 1 for the dimensionless damage score (`analysis.anchor` in config.yaml),
+  # so it is a reference measurement rather than a severity level. See judgements/001.
+  mean_field:          {enabled: true, severities: [0]}
+
+  # A probe: the reference moved by a large random offset, the right statistics in the wrong
+  # place, scored on the damage scale like the impostor above. Six draws, whose median is
+  # reported. Not an anchor: on fields whose energy sits in the largest scales the moved copy
+  # is anti-correlated with the reference rather than unrelated to it (judgements/001).
   uncorrelated:        {enabled: true, op: random_large_translation, severities: [0, 1, 2, 3, 4, 5]}

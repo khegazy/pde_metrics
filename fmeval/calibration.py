@@ -7,7 +7,7 @@ needs wavenumber 63, and the energy-weighted characteristic scale differs by a f
 about five (~136 cells against ~29). One fixed list therefore cannot serve both: the
 configured high-pass cutoffs saturated by the second severity level on density, making two of four
 severity levels the same experiment, while the configured blur reached only 1.2% of the
-unrelated-field level there, making that axis carry no signal at all.
+level of the damage anchor there, making that axis carry no signal at all.
 
 So those severities are expressed relative to a property of the field and resolved against a
 measurement. This module is that measurement. An operator declares which property

@@ -16,33 +16,43 @@ from tests.conftest import make_frame
 # --- normalisation --------------------------------------------------------------------
 
 
-def test_uncorrelated_anchor_is_measured_when_present():
-    df = make_frame(axes={"a": [1.0, 2.0], "uncorrelated": [10.0, 10.0, 10.0]})
+def test_anchor_is_measured_when_present():
+    df = make_frame(axes={"a": [1.0, 2.0], "mean_field": [10.0, 10.0, 10.0]})
     norm = an.normalisation(df)
     row = norm.iloc[0]
-    assert row["anchor_source"] == "uncorrelated"
+    assert row["anchor_source"] == "mean_field"
     assert row["value_clean"] == 0.0
-    assert row["value_uncorrelated"] == pytest.approx(10.0)
+    assert row["value_anchor"] == pytest.approx(10.0)
     assert row["span"] == pytest.approx(10.0)
     assert not row["degenerate"]
 
 
 def test_damage_is_one_at_the_anchor_and_zero_when_clean():
-    df = make_frame(axes={"a": [1.0, 5.0], "uncorrelated": [10.0, 10.0]})
+    df = make_frame(axes={"a": [1.0, 5.0], "mean_field": [10.0, 10.0]})
     scored = an.add_damage(df, an.normalisation(df))
     assert scored.loc[scored["level"] == 0, "damage"].eq(0.0).all()
-    unc = scored[scored["degradation"] == "uncorrelated"]
+    unc = scored[scored["degradation"] == "mean_field"]
     assert unc["damage"].median() == pytest.approx(1.0)
     a2 = scored[(scored["degradation"] == "a") & (scored["level"] == 2)]
     assert a2["damage"].median() == pytest.approx(0.5)
 
 
+def test_a_translation_invariant_metric_has_a_scale_against_the_mean_field_only():
+    """A metric that scores every translation at its clean value has no span against the
+    large-translation probe, but the mean field removes the fluctuation it measures."""
+    df = make_frame(axes={"a": [1.0, 2.0], "translate_x": [0.0] * 3, "uncorrelated": [0.0] * 2,
+                          "mean_field": [4.0]})
+    assert not bool(an.normalisation(df).iloc[0]["degenerate"])
+    assert bool(an.normalisation(df, anchor_label="uncorrelated").iloc[0]["degenerate"])
+
+
 def test_anchor_falls_back_to_the_largest_translation_and_says_so():
-    """Without a measured anchor the fallback understates it, so the source is recorded."""
+    """Without its anchor entry a run is scaled against a different reference, so the source is
+    recorded."""
     df = make_frame(axes={"translate_x": [1.0, 2.0, 6.0]})
     row = an.normalisation(df).iloc[0]
     assert row["anchor_source"] == "translate_x@max"
-    assert row["value_uncorrelated"] == pytest.approx(6.0)
+    assert row["value_anchor"] == pytest.approx(6.0)
 
 
 def test_a_second_row_under_one_key_is_refused():
@@ -100,9 +110,9 @@ def test_probe_axes_get_no_rank_correlation():
     """The IN-4 field and the anchor are not severity levels; correlating them would be
     meaningless."""
     df = make_frame(axes={"a": [1.0, 2.0], "gaussian_impostor": [9.0],
-                          "uncorrelated": [10.0, 10.0]})
+                          "mean_field": [10.0, 10.0]})
     axes = an.summarise_axes(df, n_bootstrap=0)
-    for label in ("gaussian_impostor", "uncorrelated"):
+    for label in ("gaussian_impostor", "mean_field"):
         row = axes[axes["degradation"] == label].iloc[0]
         assert bool(row["is_probe"])
         assert np.isnan(row["rho"])
@@ -136,13 +146,13 @@ def test_bootstrap_is_skipped_when_there_are_too_few_frames():
 def test_probe_summary_reports_damage_and_the_nearest_level():
     df = make_frame(
         axes={"a": [2.0, 5.0, 8.0], "gaussian_impostor": [5.0],
-              "uncorrelated": [10.0, 10.0]}
+              "mean_field": [10.0, 10.0]}
     )
     probes = an.probe_summary(df, an.normalisation(df))
     row = probes.iloc[0]
     assert row["gaussian_impostor_damage"] == pytest.approx(0.5)
     assert row["gaussian_impostor_nearest_level"] == "a=2"
-    assert row["uncorrelated_damage"] == pytest.approx(1.0)
+    assert row["mean_field_damage"] == pytest.approx(1.0)
 
 
 # --- roll-up and flagging ------------------------------------------------------------------
@@ -156,7 +166,7 @@ def _card(axes_values: dict[str, list[float]]) -> pd.DataFrame:
 
 def test_report_card_reports_the_worst_axis():
     card = _card({"good": [1.0, 2.0, 3.0], "bad": [1.0, 3.0, 2.0],
-                  "uncorrelated": [10.0, 10.0]})
+                  "mean_field": [10.0, 10.0]})
     row = card.iloc[0]
     assert row["worst_axis"] == "bad"
     assert row["rho_min"] < row["rho_median"]
@@ -165,26 +175,26 @@ def test_report_card_reports_the_worst_axis():
 
 def test_report_card_has_no_verdict_column():
     """The suite reports measurements; the panel decision is made by people."""
-    card = _card({"a": [1.0, 2.0], "uncorrelated": [10.0, 10.0]})
+    card = _card({"a": [1.0, 2.0], "mean_field": [10.0, 10.0]})
     assert "verdict" not in card.columns
     assert "accept" not in " ".join(card.columns)
 
 
 def test_flags_name_the_thresholds_that_were_not_met():
-    card = _card({"a": [1.0, 3.0, 2.0], "uncorrelated": [10.0, 10.0]})
+    card = _card({"a": [1.0, 3.0, 2.0], "mean_field": [10.0, 10.0]})
     flags = card.iloc[0]["flags"]
     assert "spearman=" in flags
 
 
 def test_empty_flags_when_everything_clears_the_thresholds():
     card = _card({"a": [1.0, 2.0, 3.0], "gaussian_impostor": [9.0],
-                  "uncorrelated": [10.0, 10.0]})
+                  "mean_field": [10.0, 10.0]})
     assert card.iloc[0]["flags"] == ""
 
 
 def test_flagging_is_separate_from_computation():
     """Re-flagging with different thresholds must need no recomputation."""
-    df = make_frame(axes={"a": [1.0, 2.0, 3.0], "uncorrelated": [10.0, 10.0]})
+    df = make_frame(axes={"a": [1.0, 2.0, 3.0], "mean_field": [10.0, 10.0]})
     norm = an.normalisation(df)
     card = an.report_card(an.summarise_axes(df, n_bootstrap=0),
                           an.probe_summary(df, norm), norm)
@@ -277,11 +287,11 @@ def test_golden_rho_ci_is_unchanged():
 
 def test_response_columns_exist_and_are_withheld_for_probes():
     df = make_frame(axes={"a": [1.0, 2.0, 3.0, 4.0], "gaussian_impostor": [9.0],
-                          "uncorrelated": [10.0, 10.0]})
+                          "mean_field": [10.0, 10.0]})
     scored, norm = _scored(df)
     axes = an.summarise_axes(scored, norm=norm, n_bootstrap=0)
     assert set(an.RESPONSE_COLUMNS) <= set(axes.columns)
-    for label in ("gaussian_impostor", "uncorrelated"):
+    for label in ("gaussian_impostor", "mean_field"):
         row = _axis(axes, label)
         for column in an.RESPONSE_COLUMNS:
             value = row[column]
@@ -323,7 +333,7 @@ def _with_severity(df: pd.DataFrame, axis: str, severity: dict[int, float], *,
 def test_calibrated_axis_uses_the_nominal_severity():
     """A low-pass records the resolved cutoff, which FALLS with level (33 -> 4.7 on vorticity in the
     pinned run) and differs per field; a slope against it has the wrong sign and the wrong label."""
-    df = _with_severity(make_frame(axes={"a": [1.0, 2.0, 3.0, 4.0], "uncorrelated": [10.0, 10.0]}),
+    df = _with_severity(make_frame(axes={"a": [1.0, 2.0, 3.0, 4.0], "mean_field": [10.0, 10.0]}),
                         "a", {1: 32.0, 2: 16.0, 3: 8.0, 4: 4.0},
                         nominal={1: 0.05, 2: 0.15, 3: 0.30, 4: 0.45},
                         calibration="energy_above", name="energy removed")
@@ -351,12 +361,12 @@ def test_cliffs_delta_is_two_auc_minus_one():
 
 
 def test_severity_10_and_50_interpolate_in_physical_units():
-    df = make_frame(axes={"a": [0.05, 0.2, 0.95, 1.0], "uncorrelated": [1.0, 1.0]})
+    df = make_frame(axes={"a": [0.05, 0.2, 0.95, 1.0], "mean_field": [1.0, 1.0]})
     scored, norm = _scored(df)
     row = _axis(an.summarise_axes(scored, norm=norm, n_bootstrap=0))
     assert row["severity_10"] == pytest.approx(2 ** (1 / 3)), "log-linear between levels 1 and 2"
     assert 2.0 < row["severity_50"] < 3.0
-    short = make_frame(axes={"a": [0.05, 0.1, 0.2, 0.3], "uncorrelated": [1.0, 1.0]})
+    short = make_frame(axes={"a": [0.05, 0.1, 0.2, 0.3], "mean_field": [1.0, 1.0]})
     scored, norm = _scored(short)
     assert np.isnan(_axis(an.summarise_axes(scored, norm=norm, n_bootstrap=0))["severity_50"])
 
@@ -371,8 +381,8 @@ def test_onset_severities_need_a_damage_scale():
 def test_higher_is_better_metric_gets_the_same_onset_as_its_mirror():
     """The onset target must be built from the SIGNED span: for a similarity metric it lies below
     the clean value, and an unsigned span puts it where the clean point already reaches it."""
-    error = make_frame(axes={"a": [0.2, 0.4, 0.6, 0.8], "uncorrelated": [1.0, 1.0]})
-    similarity = make_frame(axes={"a": [0.8, 0.6, 0.4, 0.2], "uncorrelated": [0.0, 0.0]},
+    error = make_frame(axes={"a": [0.2, 0.4, 0.6, 0.8], "mean_field": [1.0, 1.0]})
+    similarity = make_frame(axes={"a": [0.8, 0.6, 0.4, 0.2], "mean_field": [0.0, 0.0]},
                             reference=1.0)
     similarity["higher_is_better"] = True
     rows = []
@@ -385,14 +395,14 @@ def test_higher_is_better_metric_gets_the_same_onset_as_its_mirror():
 
 
 def test_severity_resolution_is_sigma_over_slope():
-    noisy = make_frame(axes={"a": [1.0, 2.0, 3.0, 4.0], "uncorrelated": [10.0, 10.0]},
+    noisy = make_frame(axes={"a": [1.0, 2.0, 3.0, 4.0], "mean_field": [10.0, 10.0]},
                        noise=0.1, n_frames=40)
     resolution = _axis(an.summarise_axes(noisy, n_bootstrap=0))["severity_resolution"]
     assert 0.05 < resolution < 0.2, f"expected about sqrt(2)*0.1 per unit step, got {resolution}"
-    clean = make_frame(axes={"a": [1.0, 2.0, 3.0, 4.0], "uncorrelated": [10.0, 10.0]})
+    clean = make_frame(axes={"a": [1.0, 2.0, 3.0, 4.0], "mean_field": [10.0, 10.0]})
     exact = _axis(an.summarise_axes(clean, n_bootstrap=0))["severity_resolution"]
     assert exact == pytest.approx(0.0, abs=1e-12), "no scatter: only round-off from scaling"
-    flat = make_frame(axes={"flat": [1.0, 1.0, 1.0, 1.0], "uncorrelated": [10.0, 10.0]},
+    flat = make_frame(axes={"flat": [1.0, 1.0, 1.0, 1.0], "mean_field": [10.0, 10.0]},
                       noise=0.1, n_frames=40)
     assert _axis(an.summarise_axes(flat, n_bootstrap=0), "flat")["severity_resolution"] > 1.0, (
         "an axis the metric does not move along cannot resolve even one ladder step"
@@ -411,7 +421,7 @@ def test_field_change_max_is_the_median_energy_changed_at_the_harshest_level():
 
 def test_flat_axis_is_provably_blind_and_a_responsive_one_is_not():
     axes = an.analyse(make_frame(axes={"flat": [1e-3] * 4, "steep": [1.0, 2.0, 3.0, 4.0],
-                                       "uncorrelated": [10.0, 10.0]}, noise=1e-4, n_frames=40),
+                                       "mean_field": [10.0, 10.0]}, noise=1e-4, n_frames=40),
                       n_bootstrap=100).axes
     flat, steep = _axis(axes, "flat"), _axis(axes, "steep")
     assert flat["damage_max_ucb"] < an.BLINDNESS_MARGIN
@@ -430,7 +440,7 @@ def test_bound_is_relative_to_the_largest_response_when_the_anchor_is_degenerate
     anchor's operator is exactly the finding. The bound is then read against its largest ladder
     response, and the norm frame's `degenerate` says which scale was used."""
     df = make_frame(axes={"gaussian_blur": [0.1, 0.3], "translate_x": [1.5e-16] * 3,
-                          "uncorrelated": [1.5e-16] * 3})
+                          "mean_field": [1.5e-16] * 3})
     scored, norm = _scored(df)
     assert bool(norm.iloc[0]["degenerate"])
     axes = an.summarise_axes(scored, norm=norm, n_bootstrap=50)
@@ -440,7 +450,7 @@ def test_bound_is_relative_to_the_largest_response_when_the_anchor_is_degenerate
 
 def test_bound_is_withheld_for_a_target_valued_metric():
     """Damage is on the raw ratio for a two-sided metric, so a bound on it would not be oriented."""
-    df = make_frame(axes={"a": [1.2, 1.5, 2.0, 3.0], "uncorrelated": [3.0, 3.0]}, n_frames=20,
+    df = make_frame(axes={"a": [1.2, 1.5, 2.0, 3.0], "mean_field": [3.0, 3.0]}, n_frames=20,
                     reference=1.0)
     df["target_value"] = 1.0
     row = _axis(an.analyse(df, n_bootstrap=100).axes)
@@ -449,11 +459,11 @@ def test_bound_is_withheld_for_a_target_valued_metric():
 
 def test_blindness_q_grows_with_the_number_of_rows_it_is_adjusted_over():
     """Benjamini-Yekutieli across every row of the run: more rows, a larger adjustment."""
-    edge = {"edge": [0.02, 0.03, 0.04, 0.05], "uncorrelated": [1.0, 1.0]}
+    edge = {"edge": [0.02, 0.03, 0.04, 0.05], "mean_field": [1.0, 1.0]}
     alone = make_frame(axes=edge, noise=0.01, n_frames=40, seed=4)
     crowded = pd.concat(
         [alone] + [make_frame(metric=m, axes={"x": [1.0, 2.0], "y": [2.0, 3.0],
-                                              "uncorrelated": [1.0, 1.0]}, n_frames=40)
+                                              "mean_field": [1.0, 1.0]}, n_frames=40)
                    for m in ("p", "q", "r")],
         ignore_index=True,
     )
@@ -468,7 +478,7 @@ def test_blindness_q_grows_with_the_number_of_rows_it_is_adjusted_over():
 def test_block_length_is_estimated_on_the_frame_scaled_trace():
     """A metric whose magnitude drifts along the trajectory (density grows six orders) must not
     have that drift read as persistence: the block length comes from the frame-scaled trace."""
-    df = make_frame(axes={"a": [1.0, 2.0, 3.0, 4.0], "uncorrelated": [10.0, 10.0]}, n_frames=40)
+    df = make_frame(axes={"a": [1.0, 2.0, 3.0, 4.0], "mean_field": [10.0, 10.0]}, n_frames=40)
     df["value"] = df["value"] * 1.2 ** df["frame_index"]
     row = _axis(an.analyse(df, n_bootstrap=100).axes)
     assert row["blindness_block_length"] <= 3, (
@@ -482,7 +492,7 @@ def test_block_length_is_estimated_on_the_frame_scaled_trace():
 def _profile_frame(per_unit: dict[str, float]) -> pd.DataFrame:
     """Axes with the same damage but different field change, so damage per unit change differs."""
     ladder = {a: [1.0, 2.0, 3.0, 4.0] for a in per_unit}
-    df = make_frame(axes={**ladder, "uncorrelated": [10.0, 10.0]})
+    df = make_frame(axes={**ladder, "mean_field": [10.0, 10.0]})
     change = df["degradation"].map(per_unit).astype(float)
     df["energy_changed"] = np.where(df["level"] > 0, df["value"] / 10 / change.fillna(1.0), 0.0)
     return df
@@ -503,20 +513,20 @@ def test_selectivity_is_high_when_one_degradation_dominates_per_unit_change():
 
 def test_blind_axes_lists_only_axes_below_the_fdr_level():
     card = an.analyse(make_frame(axes={"flat": [1e-3] * 4, "steep": [1.0, 2.0, 3.0, 4.0],
-                                       "uncorrelated": [10.0, 10.0]}, noise=1e-4, n_frames=40),
+                                       "mean_field": [10.0, 10.0]}, noise=1e-4, n_frames=40),
                       n_bootstrap=100).card.iloc[0]
     assert card["blind_axes"] == "flat"
     none = an.analyse(make_frame(axes={"steep": [1.0, 2.0, 3.0, 4.0],
-                                       "uncorrelated": [10.0, 10.0]}, noise=1e-4, n_frames=40),
+                                       "mean_field": [10.0, 10.0]}, noise=1e-4, n_frames=40),
                       n_bootstrap=100).card.iloc[0]
     assert none["blind_axes"] == ""
 
 
 def test_elasticity_displacement_reads_translate_subpixel():
     card = an.analyse(make_frame(axes={"translate_subpixel": [1.0, 4.0, 9.0, 16.0],
-                                       "uncorrelated": [100.0, 100.0]}), n_bootstrap=0).card
+                                       "mean_field": [100.0, 100.0]}), n_bootstrap=0).card
     assert card.iloc[0]["elasticity_displacement"] == pytest.approx(2.0, abs=1e-9)
-    other = an.analyse(make_frame(axes={"a": [1.0, 2.0], "uncorrelated": [9.0, 9.0]}),
+    other = an.analyse(make_frame(axes={"a": [1.0, 2.0], "mean_field": [9.0, 9.0]}),
                        n_bootstrap=0).card
     assert np.isnan(other.iloc[0]["elasticity_displacement"])
 
@@ -530,7 +540,7 @@ def test_report_card_survives_an_all_nan_damage_profile():
 
 def test_analyse_returns_what_both_call_sites_need():
     df = make_frame(axes={"a": [1.0, 2.0, 3.0], "gaussian_impostor": [9.0],
-                          "uncorrelated": [10.0, 10.0]})
+                          "mean_field": [10.0, 10.0]})
     result = an.analyse(df, n_bootstrap=0)
     assert "damage" in result.scored.columns
     assert set(an.RESPONSE_COLUMNS) <= set(result.axes.columns)
@@ -548,8 +558,8 @@ def _two_metrics(a: dict, b: dict, **kwargs) -> pd.DataFrame:
 
 
 def test_damage_by_level_has_one_row_per_level_and_one_column_per_metric():
-    df = _two_metrics({"x": [1.0, 2.0], "translate_x": [3.0, 4.0], "uncorrelated": [10.0, 10.0]},
-                      {"x": [2.0, 4.0], "translate_x": [6.0, 8.0], "uncorrelated": [20.0, 20.0]})
+    df = _two_metrics({"x": [1.0, 2.0], "translate_x": [3.0, 4.0], "mean_field": [10.0, 10.0]},
+                      {"x": [2.0, 4.0], "translate_x": [6.0, 8.0], "mean_field": [20.0, 20.0]})
     wide = an.damage_by_level(_scored(df)[0])
     assert {"field", "degradation", "level", "severity", "a", "b"} <= set(wide.columns)
     assert (wide["level"] > 0).all()
@@ -562,9 +572,9 @@ def test_damage_by_level_has_one_row_per_level_and_one_column_per_metric():
 def test_per_level_response_records_every_level_once_with_its_quartiles():
     """The curve record a figure draws: one row per field, degradation and level, probes out."""
     df = _two_metrics({"x": [1.0, 2.0, 3.0], "translate_x": [3.0, 4.0],
-                       "gaussian_impostor": [9.0], "uncorrelated": [10.0, 10.0]},
+                       "gaussian_impostor": [9.0], "mean_field": [10.0, 10.0]},
                       {"x": [2.0, 4.0, 6.0], "translate_x": [6.0, 8.0],
-                       "gaussian_impostor": [9.0], "uncorrelated": [20.0, 20.0]},
+                       "gaussian_impostor": [9.0], "mean_field": [20.0, 20.0]},
                       noise=0.05, seed=3)
     curve = an.per_level_response(_scored(df)[0], metric="a")
     keys = curve[["field", "degradation", "level"]].apply(tuple, axis=1)
@@ -581,8 +591,8 @@ def test_per_level_response_records_every_level_once_with_its_quartiles():
 
 def test_per_level_response_agrees_with_damage_by_level():
     """Two ways to get a median per level is how a figure and its table drift apart."""
-    df = _two_metrics({"x": [1.0, 2.0], "translate_x": [3.0, 4.0], "uncorrelated": [10.0, 10.0]},
-                      {"x": [2.0, 4.0], "translate_x": [6.0, 8.0], "uncorrelated": [20.0, 20.0]},
+    df = _two_metrics({"x": [1.0, 2.0], "translate_x": [3.0, 4.0], "mean_field": [10.0, 10.0]},
+                      {"x": [2.0, 4.0], "translate_x": [6.0, 8.0], "mean_field": [20.0, 20.0]},
                       noise=0.1, seed=5)
     scored = _scored(df)[0]
     scored.loc[(scored["degradation"] == "x") & (scored["level"] == 2),
@@ -619,8 +629,8 @@ def test_concordance_penalises_shape_disagreement_where_spearman_does_not():
     """MAE and MSE on the pinned run: rank correlation 0.986, concordance 0.699. The same pattern
     in miniature: b is a monotone but curved function of a."""
     x = [1.0, 2.0, 3.0, 4.0]
-    df = _two_metrics({"s": x, "uncorrelated": [10.0, 10.0]},
-                      {"s": list(np.sqrt(x)), "uncorrelated": [np.sqrt(10.0)] * 2})
+    df = _two_metrics({"s": x, "mean_field": [10.0, 10.0]},
+                      {"s": list(np.sqrt(x)), "mean_field": [np.sqrt(10.0)] * 2})
     rho = an.cross_metric_correlation(df)
     rc = an.concordance_matrix(_scored(df)[0])
     assert rho.loc["a", "b"] == pytest.approx(1.0)
@@ -633,15 +643,15 @@ def test_concordance_is_one_for_a_proportional_twin():
     """A metric that is exactly twice another, anchor included, has identical damage: the scale
     removes the factor. Pinned so nobody 'fixes' a concordance test by breaking D = 1."""
     x = [1.0, 2.0, 3.0, 4.0]
-    df = _two_metrics({"s": x, "uncorrelated": [10.0, 10.0]},
-                      {"s": [2 * v for v in x], "uncorrelated": [20.0, 20.0]})
+    df = _two_metrics({"s": x, "mean_field": [10.0, 10.0]},
+                      {"s": [2 * v for v in x], "mean_field": [20.0, 20.0]})
     assert an.concordance_matrix(_scored(df)[0]).loc["a", "b"] == pytest.approx(1.0)
 
 
 def test_concordance_and_participation_ratio_tolerate_a_missing_level():
     x = [1.0, 2.0, 3.0, 4.0]
-    df = _two_metrics({"s": x, "t": x, "uncorrelated": [10.0, 10.0]},
-                      {"s": list(np.sqrt(x)), "t": x, "uncorrelated": [10.0, 10.0]})
+    df = _two_metrics({"s": x, "t": x, "mean_field": [10.0, 10.0]},
+                      {"s": list(np.sqrt(x)), "t": x, "mean_field": [10.0, 10.0]})
     df = df[~((df["metric"] == "b") & (df["degradation"] == "s") & (df["level"] == 2))]
     scored = _scored(df)[0]
     assert np.isfinite(an.concordance_matrix(scored).loc["a", "b"])
@@ -649,16 +659,16 @@ def test_concordance_and_participation_ratio_tolerate_a_missing_level():
 
 
 def test_participation_ratio_counts_independent_responses():
-    same = _two_metrics({"p": [1.0, 2.0, 3.0, 4.0], "uncorrelated": [10.0, 10.0]},
-                        {"p": [1.0, 2.0, 3.0, 4.0], "uncorrelated": [10.0, 10.0]})
-    apart = _two_metrics({"p": [1.0, 2.0, 3.0, 4.0], "q": [0.0] * 4, "uncorrelated": [10.0] * 2},
-                         {"p": [0.0] * 4, "q": [1.0, 2.0, 3.0, 4.0], "uncorrelated": [10.0] * 2})
+    same = _two_metrics({"p": [1.0, 2.0, 3.0, 4.0], "mean_field": [10.0, 10.0]},
+                        {"p": [1.0, 2.0, 3.0, 4.0], "mean_field": [10.0, 10.0]})
+    apart = _two_metrics({"p": [1.0, 2.0, 3.0, 4.0], "q": [0.0] * 4, "mean_field": [10.0] * 2},
+                         {"p": [0.0] * 4, "q": [1.0, 2.0, 3.0, 4.0], "mean_field": [10.0] * 2})
     one = an.participation_ratio_of_metrics(_scored(same)[0])
     two = an.participation_ratio_of_metrics(_scored(apart)[0])
     assert one == pytest.approx(1.0, abs=0.05), "identical responses span one direction"
     assert one < two <= 2.0
     assert np.isnan(an.participation_ratio_of_metrics(_scored(make_frame(
-        axes={"p": [1.0, 2.0, 3.0], "uncorrelated": [9.0, 9.0]}))[0]))
+        axes={"p": [1.0, 2.0, 3.0], "mean_field": [9.0, 9.0]}))[0]))
 
 
 # --- the declared anchor ---------------------------------------------------------------------
@@ -677,8 +687,8 @@ def test_a_probe_under_a_new_label_is_not_ranked_as_an_axis():
 def test_probe_summary_follows_the_declared_anchor():
     df = make_frame(axes={"a": [2.0, 5.0], "gaussian_impostor": [5.0], "flat": [10.0, 10.0]})
     labels = frozenset({"gaussian_impostor", "flat"})
-    norm = an.normalisation(df, uncorrelated_label="flat", probe_labels=labels)
-    row = an.probe_summary(df, norm, uncorrelated_label="flat", probe_labels=labels).iloc[0]
+    norm = an.normalisation(df, anchor_label="flat", probe_labels=labels)
+    row = an.probe_summary(df, norm, anchor_label="flat", probe_labels=labels).iloc[0]
     assert row["flat_damage"] == pytest.approx(1.0)
     assert "flat_nearest_level" not in row.index, "the anchor's nearest level carries nothing"
     assert row["gaussian_impostor_nearest_level"] == "a=2"
@@ -702,7 +712,7 @@ def test_analyse_follows_the_run_declaration():
 
 def test_impostor_relative_response_is_a_fraction_of_the_largest_ladder_response():
     df = make_frame(n_frames=6, axes={"gaussian_blur": [0.1, 0.3], "gaussian_impostor": [0.15],
-                                      "uncorrelated": [1.5e-16] * 3})
+                                      "mean_field": [1.5e-16] * 3})
     row = an.probe_summary(df, an.normalisation(df)).iloc[0]
     assert row["gaussian_impostor_relative"] == pytest.approx(0.5)
 
@@ -714,11 +724,11 @@ def _single_field(axes: dict, clean: float = 5.0, drift: float = 1.0, n_frames: 
                   noise: float = 1e-3) -> pd.DataFrame:
     """A single-field quantity: nonzero clean value, anchor equal to clean (no damage scale),
     optionally drifting along the trajectory by a factor ``drift`` per frame."""
-    df = make_frame(axes={**axes, "uncorrelated": [0.0, 0.0]}, n_frames=n_frames, noise=noise)
+    df = make_frame(axes={**axes, "mean_field": [0.0, 0.0]}, n_frames=n_frames, noise=noise)
     df["value"] = (df["value"] + clean) * drift ** df["frame_index"]
-    # A translated copy has exactly the clean value of a single-field quantity in every frame.
+    # An anchor the quantity cannot see: it has exactly the clean value in every frame.
     clean_by_frame = df[df["level"] == 0].set_index("frame_index")["value"]
-    anchor = df["degradation"] == "uncorrelated"
+    anchor = df["degradation"] == "mean_field"
     df.loc[anchor, "value"] = df.loc[anchor, "frame_index"].map(clean_by_frame).to_numpy()
     return df
 
@@ -744,7 +754,7 @@ def test_the_relative_bound_is_paired_within_each_frame():
 
 
 def test_negative_damage_on_an_error_metric_is_a_response():
-    df = make_frame(axes={"below": [-3.0] * 4, "uncorrelated": [10.0, 10.0]}, noise=1e-3,
+    df = make_frame(axes={"below": [-3.0] * 4, "mean_field": [10.0, 10.0]}, noise=1e-3,
                     n_frames=40)
     assert _axis(an.analyse(df, n_bootstrap=100).axes, "below")["blindness_q"] == pytest.approx(1.0)
 
@@ -775,7 +785,7 @@ def test_onset_is_never_below_the_mildest_strength_tested():
     """A coarsening factor's identity is 1, not 0: interpolating from a clean point at strength 0
     would print factors of 0.18 to 0.88 on the pinned run. The crossing is read between measured
     levels."""
-    ladder = {"coarsen": [0.5, 0.6, 0.7, 0.8], "uncorrelated": [1.0, 1.0]}
+    ladder = {"coarsen": [0.5, 0.6, 0.7, 0.8], "mean_field": [1.0, 1.0]}
     df = _with_severity(make_frame(axes=ladder), "coarsen", {1: 2.0, 2: 4.0, 3: 8.0, 4: 16.0})
     scored, norm = _scored(df)
     row = _axis(an.summarise_axes(scored, norm=norm, n_bootstrap=0), "coarsen")
@@ -804,7 +814,7 @@ def test_a_retained_fraction_is_read_as_the_fraction_removed():
     level. Read through its reciprocal, that level would be infinite and drop out of the onset and
     the slope; its complement, the fraction removed, is finite and rises with damage."""
     df = _with_severity(make_frame(axes={"band": [0.01, 0.02, 0.05, 0.5],
-                                         "uncorrelated": [1.0, 1.0]}),
+                                         "mean_field": [1.0, 1.0]}),
                         "band", {1: 0.8, 2: 0.5, 3: 0.2, 4: 0.0})
     scored, norm = _scored(df)
     row = _axis(an.summarise_axes(scored, norm=norm, n_bootstrap=0), "band")
@@ -948,7 +958,7 @@ def _curve_rows(coordinates=(1, 2, 4), axes=None, n_frames: int = 10) -> pd.Data
     frames = []
     for i, coordinate in enumerate(coordinates):
         scaled = {label: [v * (1 + 0.1 * i) for v in values] for label, values in axes.items()}
-        frames.append(make_frame(axes={**scaled, "uncorrelated": [10.0, 10.0]},
+        frames.append(make_frame(axes={**scaled, "mean_field": [10.0, 10.0]},
                                  n_frames=n_frames).assign(coordinate=coordinate))
     return pd.concat(frames, ignore_index=True)
 
@@ -997,8 +1007,8 @@ def test_a_strength_growing_in_time_is_still_one_row_per_level():
     records are still one row per level: the strength is the median over the frames used, and a
     frame in which the level did nothing is left out as the trend statistics leave it out, not
     taken to flag the whole level."""
-    df = _two_metrics({"drift": [1.0, 2.0, 3.0], "uncorrelated": [10.0, 10.0]},
-                      {"drift": [2.0, 4.0, 6.0], "uncorrelated": [20.0, 20.0]}, noise=0.1, seed=2)
+    df = _two_metrics({"drift": [1.0, 2.0, 3.0], "mean_field": [10.0, 10.0]},
+                      {"drift": [2.0, 4.0, 6.0], "mean_field": [20.0, 20.0]}, noise=0.1, seed=2)
     drift = df["degradation"] == "drift"
     df.loc[drift, "severity"] = df.loc[drift, "severity_nominal"] * df.loc[drift, "time"]
     df.loc[drift & (df["time"] == 0.0), ["severity_degenerate", "value"]] = [True, 0.0]

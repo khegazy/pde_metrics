@@ -1,0 +1,37 @@
+schema_version: 1
+
+name: mean_field
+kind: degradation
+category: smoothing
+
+summary: >-
+  Replaces every cell with the field's spatial mean: the climatological reference forecast,
+  and the default anchor that defines damage 1.
+
+status: candidate
+owners: [khegazy]
+
+failure_mode: >-
+  Not a model failure at all: this is the anchor that defines what damage 1 means, a
+  prediction that knows the field's mean and nothing else.
+
+output:
+  description: >-
+    No severity. There is one level, and it removes every fluctuation.
+  bounds:
+    lower: 0.0
+    upper: null
+
+exemplars:
+  mode: draws
+  n_draws: 1
+  field_name: vorticity
+  diagnostics: [difference, pdf]
+  rationale: >-
+    The original beside its mean field. There is one level and nothing random, so one
+    column is the whole operator. The difference row is the reference's own fluctuation,
+    which is exactly what damage 1 measures a metric against; the pdf row collapses to a
+    single value.
+
+references: []
+review: null

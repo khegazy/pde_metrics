@@ -72,6 +72,12 @@ evidence in the resolving commit's message, and rewrite every reference to the i
 (`git grep issues/<id>`) so it states the reason itself. An issue resolved only in part stays,
 and its status says first what is still open.
 
+**Record a judgement only where you would have stopped to ask Kareem.** When a method question
+has no answer in the rules, research the standard practice, decide, proceed, and write one file
+in `judgements/`: the question, the choice, the evidence and sources, what it changes, and how
+to reverse it. Routine choices are never recorded there; a log of every choice would not be
+read. `judgements/README.md` is the index.
+
 ### One source of truth, least new code
 
 Every rule below exists because a second copy of something drifted from the first while every
@@ -183,8 +189,9 @@ develops — so never draw a physical conclusion from it. Use `dataset=kinet_re5
 
 Two size knobs, both recorded with the results: `dataset.time.reduction` (evaluate every Nth
 frame) and `analysis_grid.resolution` (the common analysis grid). One analysis setting,
-`analysis.anchor`, names the ladder entry that defines damage 1; it is recorded as
-`anchor_label` in `run_meta.json`, and changing it changes what every damage number means.
+`analysis.anchor`, names the ladder entry that defines damage 1 (`mean_field`, the field's
+spatial mean, by default: `judgements/001`); it is recorded as `anchor_label` in
+`run_meta.json`, and changing it changes what every damage number means.
 
 **The linter is not a style opinion.** Its rules are chosen one at a time in
 `pyproject.toml` under `[tool.ruff.lint]`, each on the evidence of what it actually caught
@@ -530,7 +537,7 @@ written `[64, 32, 16, 8]` produces a perfectly inverted ladder and a rank correl
 with nothing else in the pipeline noticing. A test *verifies* your declaration by measuring
 that damage really rises with level.
 
-**`ordinal=False` for probes.** The Gaussian impostor and the unrelated-field anchor are not
+**`ordinal=False` for probes.** The Gaussian impostor, the large-translation probe and the anchor are not
 severity levels on any monotone axis. Folding a probe into a family as "level 6" silently corrupts every
 rank correlation it touches.
 
@@ -913,7 +920,8 @@ listed so nobody has to rediscover them.
 | **Forgetting that spacing scales with the coarsening factor** | A spectral derivative at a coarse grid with fine spacing is inflated by exactly the factor | `GridSpec.coarsened` |
 | **Deleting k=0 in a high-pass filter** | On density that removes a component four orders of magnitude larger than the cutoff controls; every severity level returned an identical damage of 2.7e7 | `keep_mean` in `degradations/_shared/filters.py` |
 | **Drawing impostor phases directly** | Violates Hermitian symmetry at the self-conjugate modes, so `irfftn` discards the imaginary part and corrupts the spectrum. Gives flatness 47.9 instead of 3 | `degradations/gaussian_impostor/degradation.py` |
-| **Scavenging the unrelated-field anchor from a ladder severity_level** | A 16-cell translation reaches only ~0.6 of the true value, inflating every damage score by ~1.6x | `analysis.py::normalisation` |
+| **Scavenging the anchor from a ladder severity_level** | A 16-cell translation reaches only ~0.6 of a large translation's value, inflating every damage score by ~1.6x | `analysis.py::normalisation` |
+| **Treating a large translation as an unrelated field** | Where a field's energy sits in its largest scales the moved copy stays correlated or anti-correlated with the reference; its `energy_changed` is 1.64–3.05 on kinet, not 2, and on a domain with walls it is a mirrored window. It set a scale off by up to ~1.7x | `mean_field` is the anchor (`judgements/001`) |
 | **Using a distant frame as a statistical twin** | The flow decays: 4000 steps away has 0.70 of the variance and a different flatness, and scores *closer* than a true twin | `degradations/random_large_translation/degradation.py` |
 | **Writing maths or includes that render in only one reader** | `\begin{equation}` and include directives typeset on the site and appear as raw text on GitHub, with no error anywhere | the math checker in `fmeval/cards/prose.py`; generated blocks live in `card.md` between markers |
 | **Typing measured numbers into prose** | A sentence citing values from an earlier run looks exactly as authoritative as the generated table beside it; impostor damages 0.80/0.51 sat in a card while the pinned run measured 0.90/0.66/1.23 | `issues/032`, and step 3 of `docs/recipes/refresh-the-evidence.md` |
@@ -939,8 +947,8 @@ do to them. The check is aimed at quantities that are functions of `|F(f)|` alon
 spectrum, a two-point correlation — which score it *perfectly*. A report where everything
 passes is not reassuring; it means nothing in the panel can be caught by it yet.
 
-**High rank correlation does not mean two metrics agree.** MAE and MSE correlate at 0.995 across
-the ladder yet differ by 55× in displacement damage at an eighth of a cell, because one is
+**High rank correlation does not mean two metrics agree.** MAE and MSE correlate at 0.98 to 0.997
+across the ladder yet differ by 38× to 192× in displacement damage at an eighth of a cell, because one is
 linear and the other quadratic in the displacement. For ranking they are duplicates; as losses
 they are not.
 
@@ -977,6 +985,7 @@ GIT_SSH_COMMAND="ssh -x -o BatchMode=yes" git push origin <branch>
 | `CLAUDE.md` | Scientific context: the problem framing and the evaluation protocol |
 | `TEST_DESCRIPTION.md` | Every quantity the suite reports, in plain language. **Update it when you add a reported quantity — a test enforces this** |
 | `issues/README.md` | Open items with their evidence |
+| `judgements/README.md` | The few consequential method choices an agent made without asking, each with its sources and how to reverse it |
 | `README.md` | Setup, and the NERSC specifics |
 | `.github/workflows/tests.yml` | CI. Runs the default suite on every push to a PR; cannot run `-m data` or `-m slow` |
 | `docs/catalog.json` | **Read this for anything structural** — what metrics exist, what they return, what properties they have, how they behaved. Do not parse prose for it |

@@ -36,12 +36,19 @@ from .context import derive_rng
 
 log = logging.getLogger(__name__)
 
-#: Label of the measured anchor: the value a metric gives two statistically identical but
-#: positionally unrelated fields. Defines D = 1.
+#: Label of the default anchor, the field's spatial mean (the climatological reference
+#: forecast, judgements/001). Its median value defines D = 1 unless a run sets another
+#: ``analysis.anchor``.
+MEAN_FIELD_LABEL: str = "mean_field"
+
+#: Label of the large-random-translation probe: the right statistics in the wrong place. It was
+#: the anchor of every run recorded before ``anchor_label`` existed, so :func:`run_labels`
+#: falls back to it for those.
 UNCORRELATED_LABEL: str = "uncorrelated"
 
 #: Ladder labels that are probes or reference measurements, not monotone axes.
-PROBE_LABELS: frozenset[str] = frozenset({"gaussian_impostor", UNCORRELATED_LABEL})
+PROBE_LABELS: frozenset[str] = frozenset({"gaussian_impostor", MEAN_FIELD_LABEL,
+                                          UNCORRELATED_LABEL})
 
 #: The unit every per-metric statistic is computed over. A list, not a tuple: pandas reads a
 #: tuple passed to ``groupby`` as one key.
@@ -68,14 +75,14 @@ BLOCK_LENGTH: int = 10
 PROFILE_COLUMNS: tuple[str, ...] = ("selectivity", "most_sensitive_axis", "least_sensitive_axis",
                                     "blind_axes", "elasticity_displacement")
 
-#: Fraction of the clean-to-uncorrelated range at which a metric counts as having
+#: Fraction of the clean-to-anchor span at which a metric counts as having
 #: departed from clean. Fixed once here and never tuned per metric.
 SENSITIVITY_FRACTION: float = 0.10
 
-#: Fraction of the uncorrelated limit at which a metric counts as saturated.
+#: Fraction of the clean-to-anchor span at which a metric counts as saturated.
 SATURATION_FRACTION: float = 0.90
 
-#: Fraction of the clean-to-unrelated span at which the half-damage severity is read. Fixed
+#: Fraction of the clean-to-anchor span at which the half-damage severity is read. Fixed
 #: once here, like the two fractions above.
 HALF_DAMAGE_FRACTION: float = 0.5
 
@@ -109,10 +116,10 @@ _TEXT_COLUMNS = frozenset({"elasticity_x", "response_shape"})
 #: Relative size below which a quantity counts as round-off rather than signal, measured
 #: against the largest value in the same group.
 #:
-#: Two things use it. The damage score needs its ``clean``-to-``uncorrelated`` span to be a
-#: real span, and a metric invariant to the operator the anchor is built from has no span at
-#: all -- most of the position-tolerant family this project exists to develop is invariant to
-#: translation, which is how the anchor is constructed. The rank correlation needs the values
+#: Two things use it. The damage score needs its clean-to-anchor span to be a real span, and a
+#: metric invariant to the operator the anchor is built from has no span at all -- under an
+#: anchor built by translation, that is most of the position-tolerant family this project
+#: exists to develop. The rank correlation needs the values
 #: it is ranking to differ by more than the last few bits, and ``np.roll`` changes the
 #: summation order inside ``np.mean`` even when it cannot change the quantity
 #: (:func:`_is_round_off`). Both are round-off presented as measurement.
@@ -133,7 +140,8 @@ def run_labels(meta: Mapping, config: Mapping | None = None) -> tuple[str, froze
     ``evaluate.py`` records both in ``run_meta.json``: the anchor is ``analysis.anchor`` from the
     configuration, the probes every ladder entry whose operator is declared ``ordinal=False``.
     A folder written before that falls back to the resolved configuration, then to
-    :data:`UNCORRELATED_LABEL` and :data:`PROBE_LABELS`, so it keeps rendering as it did.
+    :data:`UNCORRELATED_LABEL` (the anchor every such run used) and :data:`PROBE_LABELS`, so it
+    keeps rendering as it did.
     """
     configured = ((config or {}).get("analysis") or {}).get("anchor")
     anchor = meta.get("anchor_label") or configured or UNCORRELATED_LABEL
@@ -141,31 +149,29 @@ def run_labels(meta: Mapping, config: Mapping | None = None) -> tuple[str, froze
     return str(anchor), (frozenset(recorded) if recorded is not None else PROBE_LABELS)
 
 
-def normalisation(df: pd.DataFrame, *, uncorrelated_label: str = UNCORRELATED_LABEL,
+def normalisation(df: pd.DataFrame, *, anchor_label: str = MEAN_FIELD_LABEL,
                   probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
     """Anchors that put every metric on one dimensionless scale.
 
     Raw mean squared error and a raw transport distance are not comparable, so a *damage
     score* is defined per (dataset, metric, field):
 
-        D = (v - clean) / (uncorrelated - clean)
+        D = (v - clean) / (anchor - clean)
 
-    ``clean`` is the median value on the reference severity level. ``uncorrelated`` is *measured*,
-    not inferred: the ``uncorrelated`` ladder entry applies several large random
-    translations, which preserve every statistic exactly while destroying alignment, and
-    the metric is evaluated against those. D = 1 then means "as different as two unrelated
-    fields", which is what makes the score readable across metrics with different units.
-
-    Scavenging the largest configured translation severity level instead would understate the anchor
-    badly: on the real data a 16-cell displacement only reaches about 0.6 of the true
-    uncorrelated value, so every damage score would be inflated by roughly 1.6x.
+    ``clean`` is the median value on the reference severity level. ``anchor`` is the median value
+    on the ladder entry ``anchor_label`` (``analysis.anchor``). By default that is ``mean_field``,
+    the field's spatial mean: the climatological reference forecast against which skill scores
+    are conventionally measured (Murphy 1988, Mon. Wea. Rev. 116(12), 2417-2424). D = 1 then
+    means "as far from the truth as the field's own mean", which is what makes the score readable
+    across metrics with different units. For the mean squared error the anchor is exactly the
+    reference's spatial variance.
 
     A ratio to the clean value is not usable here: mean squared error on the reference severity
     level is exactly zero. Per-figure min-max scaling is not usable either, because the figure would
     change whenever a severity level is added.
 
     Returns:
-        One row per (dataset, metric, field) with ``value_clean``, ``value_uncorrelated``,
+        One row per (dataset, metric, field) with ``value_clean``, ``value_anchor``,
         ``span``, ``anchor_source`` and ``degenerate``.
 
     Raises:
@@ -184,21 +190,21 @@ def normalisation(df: pd.DataFrame, *, uncorrelated_label: str = UNCORRELATED_LA
     rows = []
     for key, g in df.groupby(GROUP_KEYS, observed=True):
         clean = float(g.loc[g["level"] == 0, "value"].median())    # NaN with no reference rows
-        high, source = _uncorrelated_anchor(g, uncorrelated_label, probe_labels)
+        high, source = _anchor(g, anchor_label, probe_labels)
         span = high - clean
         # The scale is the LARGEST value anywhere in the group, not the median. The median is
         # defeated in exactly the case this guard exists for: a metric invariant to the
         # operator the anchor is built from returns round-off on the anchor, on the impostor
-        # and on every translation severity level, so more than half the rows are round-off and
-        # the median collapses to round-off with them -- the guard then compares noise against
-        # noise and passes, and the impostor reads as "worse than two unrelated fields" for a
-        # metric that cannot separate any of them.
+        # and on every severity level of that operator, so more than half the rows can be
+        # round-off and the median collapses to round-off with them -- the guard then compares
+        # noise against noise and passes, and the impostor reads as "worse than the anchor"
+        # for a metric that cannot separate any of them.
         scale = float(np.nanmax(np.abs(g["value"].to_numpy()))) or 1.0
         rows.append(
             {
                 **dict(zip(GROUP_KEYS, key, strict=True)),
                 "value_clean": clean,
-                "value_uncorrelated": high,
+                "value_anchor": high,
                 "span": span,
                 "anchor_source": source,
                 "degenerate": not np.isfinite(span) or abs(span) < DEGENERATE_SPAN * scale,
@@ -207,15 +213,16 @@ def normalisation(df: pd.DataFrame, *, uncorrelated_label: str = UNCORRELATED_LA
     return pd.DataFrame(rows)
 
 
-def _uncorrelated_anchor(g: pd.DataFrame, preferred: str,
-                         probe_labels: frozenset[str] = PROBE_LABELS) -> tuple[float, str]:
-    """Estimate the value two statistically identical but unaligned fields would give."""
+def _anchor(g: pd.DataFrame, preferred: str,
+            probe_labels: frozenset[str] = PROBE_LABELS) -> tuple[float, str]:
+    """The anchor value of one group and where it came from."""
     if preferred and (g["degradation"] == preferred).any():
         sub = g[g["degradation"] == preferred]
         return float(sub["value"].median()), preferred
 
-    # Fall back to the largest configured translation. This UNDERSTATES the anchor (see
-    # :func:`normalisation`), so the source is recorded and the report says so.
+    # A run without its anchor entry falls back to the largest configured translation. That is
+    # a different reference, not an estimate of the anchor, so the source is recorded and the
+    # report says so.
     for label in ("translate_x", "translate_subpixel", "translate_y"):
         sub = g[g["degradation"] == label]
         if not sub.empty:
@@ -344,7 +351,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
     Args:
         df: The tidy result frame, with or without a ``damage`` column.
         norm: Normalisation anchors. When given, the sensitivity and saturation levels are
-            measured against the shared clean-to-unrelated span, which makes them
+            measured against the shared clean-to-anchor span, which makes them
             comparable across axes; without it each axis is measured against its own
             range and the numbers mean different things on different rows.
         block_length: Moving-block bootstrap block length, in frames (see :data:`N_BOOTSTRAP`).
@@ -365,7 +372,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
     spans = _anchor_by_group(norm, "span")
     # The anchor itself, for a target-valued metric: its onset span must be measured on the same
     # |log(value / target)| scale its ordering statistics run on, not in raw units.
-    highs = _anchor_by_group(norm, "value_uncorrelated")
+    highs = _anchor_by_group(norm, "value_anchor")
     rows = []
 
     # Severity levels that resolved to the same experiment as a milder one are not independent
@@ -503,7 +510,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
         if "damage" in g.columns:
             damage = g["damage"].to_numpy()
             # All-NaN whenever the anchor is degenerate, which is the documented outcome for a
-            # metric that cannot tell the unrelated field from the reference.
+            # metric that cannot tell the anchor from the reference.
             record["damage_max"] = (
                 float(np.nanmax(damage)) if np.isfinite(damage).any() else np.nan
             )
@@ -559,7 +566,7 @@ def _largest_responses(rows: pd.DataFrame, keys: list[str],
                        probe_labels: frozenset[str] = PROBE_LABELS) -> dict[tuple, float]:
     """The largest absolute paired departure from clean any ordinal level produces, per group.
 
-    The scale the blindness bound falls back to when the unrelated-field anchor is degenerate
+    The scale the blindness bound falls back to when the anchor is degenerate
     (issues/037), so that a metric which cannot see the anchor can still be shown not to respond
     to that anchor's operator.
     """
@@ -613,7 +620,7 @@ def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean
 
     Everything is read on the oriented scale the ordering statistics use, so a metric where larger
     is better and a target-valued metric are handled as the other statistics handle them; ``span``
-    is the clean-to-unrelated span on that scale (NaN when the anchor is degenerate).
+    is the clean-to-anchor span on that scale (NaN when the anchor is degenerate).
 
     * ``cliffs_delta_min`` -- ``2 A - 1`` of the weakest adjacent pair, so 0 is no separation
       (Cliff 1993, *Psychol. Bull.* 114(3):494-509; Vargha & Delaney 2000, *J. Educ. Behav. Stat.*
@@ -846,7 +853,7 @@ def _min_adjacent_auc(g: pd.DataFrame) -> float:
 def _threshold_level(g: pd.DataFrame, clean: float, fraction: float,
                      shared_span: float | None = None,
                      scale: float | None = None) -> float:
-    """First level whose median reaches ``fraction`` of the way to the unrelated limit.
+    """First level whose median reaches ``fraction`` of the way to the anchor.
 
     Measured against the shared span when one is available, so "fires at severity level 2" means the
     same thing on every axis. Falling back to each axis's own range would make an axis that
@@ -900,7 +907,7 @@ def _block_bootstrap_rho(per_frame: Mapping[int, float], frames: np.ndarray,
 
 
 def probe_summary(df: pd.DataFrame, norm: pd.DataFrame, *,
-                  uncorrelated_label: str = UNCORRELATED_LABEL,
+                  anchor_label: str = MEAN_FIELD_LABEL,
                   probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
     """One row per (dataset, metric, field) for the non-monotone probes.
 
@@ -936,9 +943,9 @@ def probe_summary(df: pd.DataFrame, norm: pd.DataFrame, *,
             damage = float(sub["damage"].median())
             record[f"{label}_value"] = float(sub["value"].median())
             record[f"{label}_damage"] = damage
-            if label != uncorrelated_label:
-                # The anchor's nearest severity level is the largest translation by construction,
-                # so reporting it would add a column that carries no information.
+            if label != anchor_label:
+                # The anchor's damage is 1 by construction, so the level nearest it says nothing
+                # about the anchor and reporting it would add a column with no information.
                 record[f"{label}_nearest_level"] = _nearest_level(g, damage, probe_labels)
         if "gaussian_impostor" in present:
             record["gaussian_impostor_relative"] = (
@@ -1033,7 +1040,7 @@ def report_card(axes: pd.DataFrame, probes: pd.DataFrame,
                     for key, g in ordinal.groupby(GROUP_KEYS, observed=True)]
         base = base.merge(pd.DataFrame(profiles), on=GROUP_KEYS, how="left")
 
-    for extra in (probes, norm[[*GROUP_KEYS, "value_clean", "value_uncorrelated", "span",
+    for extra in (probes, norm[[*GROUP_KEYS, "value_clean", "value_anchor", "span",
                                 "anchor_source", "degenerate"]]):
         if not extra.empty:
             base = base.merge(extra, on=GROUP_KEYS, how="left")
@@ -1205,22 +1212,26 @@ def analyse(rows: pd.DataFrame, *, companions: pd.DataFrame | None = None,
     The report driver and the card evidence loader both call this, so a card carries exactly the
     statistics its report shows. ``meta`` and ``config`` are the run's ``run_meta.json`` and
     resolved configuration, from which the anchor and probe labels are read (:func:`run_labels`).
+    Called with neither, on rows that come from no run folder, it uses the current defaults:
+    :data:`MEAN_FIELD_LABEL` and :data:`PROBE_LABELS`.
 
     ``companions`` are the run's curve-companion rows. Each coordinate is analysed as a metric of
     its own (:func:`per_coordinate`) by the same functions as the panel, with no bootstrap, into
     tables of their own beside it. Adjacent coordinates of one curve are strongly correlated, so a
     curve of per-coordinate statistics localises the evidence and does not multiply it.
     """
-    anchor, probe_labels = run_labels(meta or {}, config)
-    norm = normalisation(rows, uncorrelated_label=anchor, probe_labels=probe_labels)
+    anchor, probe_labels = (run_labels(meta or {}, config)
+                            if meta is not None or config is not None
+                            else (MEAN_FIELD_LABEL, PROBE_LABELS))
+    norm = normalisation(rows, anchor_label=anchor, probe_labels=probe_labels)
     scored = add_damage(rows, norm)
     axes = summarise_axes(scored, norm=norm, block_length=block_length, n_bootstrap=n_bootstrap,
                           seed=seed, probe_labels=probe_labels)
-    probes = probe_summary(scored, norm, uncorrelated_label=anchor, probe_labels=probe_labels)
+    probes = probe_summary(scored, norm, anchor_label=anchor, probe_labels=probe_labels)
     extra = {}
     if companions is not None and not companions.empty:
         labelled = per_coordinate(companions)
-        curve_norm = normalisation(labelled, uncorrelated_label=anchor, probe_labels=probe_labels)
+        curve_norm = normalisation(labelled, anchor_label=anchor, probe_labels=probe_labels)
         curve_scored = add_damage(labelled, curve_norm)
         curve_axes = summarise_axes(curve_scored, norm=curve_norm, n_bootstrap=0, seed=seed,
                                     probe_labels=probe_labels)

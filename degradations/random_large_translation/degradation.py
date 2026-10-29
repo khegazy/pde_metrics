@@ -17,20 +17,18 @@ from ..registry import degradation
     severity_name="draw",
     severity_units="",
     severity_direction="increasing",
-    ordinal=False,   # a reference measurement, not a severity level on a monotone axis
+    ordinal=False,   # a probe, not a severity level on a monotone axis
     stochastic=True,
     preserves=("single_point_statistics", "amplitude_spectrum", "spatial_mean", "shape"),
     zero_is_identity=False,
 )
 def random_large_translation(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
-    """Translate by a large random offset on every axis: the statistically identical,
-    positionally unrelated field.
+    """Translate by a large random offset on every axis: the right statistics in the wrong place.
 
-    Used to *measure* the value a metric gives two fields that share all statistics but no
-    alignment, which is the anchor the dimensionless damage score is defined against. On a
-    periodic domain a translation preserves every single- and multi-point statistic
-    exactly, so this is a perfect statistical match by construction -- verified on the real
-    data as variance ratio 1.000000 and flatness matching the reference to three decimals.
+    A probe, scored on the damage scale like the impostor. It keeps every statistic that does not
+    depend on position and removes the alignment, so its damage says how a metric scores a field
+    that is the right kind of field somewhere else. It is not the damage anchor, for the reason
+    below; the anchor is the field's spatial mean (``mean_field``, judgements/001).
 
     A distant frame of the same trajectory would be the obvious alternative and is wrong:
     the flow decays, so from t=5000 to t=9000 the vorticity variance falls to 0.70 of its
@@ -39,18 +37,18 @@ def random_large_translation(x: np.ndarray, severity: float, *, ctx) -> np.ndarr
     purely because it has weakened.
 
     Offsets are drawn from the middle half of each axis, and ``severity`` is just the draw
-    index so that several independent draws can be averaged -- which is how the anchor is
-    actually estimated. Six draws on the real vorticity field agree to within 0.96-1.03,
-    so the estimate is well determined there.
+    index so that several independent draws can be taken; the analysis reports their median.
 
-    **Caveat: this decorrelates only a broadband field.** For a field dominated by a single
-    large-scale mode the residual correlation after translation is ``cos(2*pi*d/L)``, which
-    no choice of offset makes reliably small, so the anchor would be biased and would swing
-    between draws. Real turbulence is broadband and this is not a concern for the datasets
-    here, but a strongly single-mode field would need a different construction -- an
-    independent realisation of the same physics, which the data does not currently provide
-    (see issues/004-independent-realizations.md). The spread across draws is the diagnostic:
-    if it is wide, the anchor is not trustworthy for that field.
+    **It is not an unrelated field.** A translation by d multiplies the mode at wavenumber k by
+    the phase k*d, and a field whose energy sits in a few large-scale modes does not average that
+    phase away, so the moved copy stays partly correlated or anti-correlated with the reference.
+    Measured on kinet_re5e4 (pinned run comparison_1793302178), the median ``energy_changed`` of
+    these rows -- 2 for an unrelated field of the same variance -- is 1.64 on density, 3.05 on
+    velocity and 2.25 on vorticity, and density's six draws differ by a median factor of 3.2
+    within a frame. Its declared ``preserves`` hold on periodic axes only. On an axis with walls
+    the harness rolls the mirror-extended field and crops it, so the result is a mirrored window
+    rather than a copy: on sod_shock_tube it is anti-correlated with the reference and its
+    ``energy_changed`` is 3.46 on density.
     """
     offsets = [
         int(ctx.rng.integers(n // 4, 3 * n // 4 + 1)) for n in x.shape[1:]

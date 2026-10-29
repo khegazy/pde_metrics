@@ -164,8 +164,8 @@
       "sensitivity_level_median": 4.0,
       "separability_auc_min": 1.0,
       "span": 0.2184034254,
+      "value_anchor": 0.3037672147,
       "value_clean": 0.0853637894,
-      "value_uncorrelated": 0.3037672147,
       "worst_axis": "bias"
     }
   ],

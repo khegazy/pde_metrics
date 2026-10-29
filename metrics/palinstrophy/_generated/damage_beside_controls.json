@@ -1,0 +1,461 @@
+{
+  "caption": "Median damage over frames against the applied strength, log-log, for palinstrophy (bold, in colour) and the pointwise controls mae, mse, rmse, nrmse (thin, grey), one column per displacement degradation and one row per field. The grey line is damage 1, the anchor (by default the field's own mean). Parallel lines charge in the same proportion at every strength; a steeper line charges relatively more for the larger shifts, which is what decides whether two metrics are interchangeable as training losses. These are the same numbers as the table beneath.",
+  "dataset": "kinet_re5e4",
+  "figure": "damage_beside_controls",
+  "metric": "palinstrophy",
+  "panels": {
+    "vorticity": [
+      {
+        "damage": 0.0,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": true,
+        "level": 1,
+        "metric": "palinstrophy",
+        "severity": 0.125
+      },
+      {
+        "damage": 0.0,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": true,
+        "level": 2,
+        "metric": "palinstrophy",
+        "severity": 0.25
+      },
+      {
+        "damage": 0.0,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": true,
+        "level": 3,
+        "metric": "palinstrophy",
+        "severity": 0.5
+      },
+      {
+        "damage": -2.290165437e-16,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": true,
+        "level": 4,
+        "metric": "palinstrophy",
+        "severity": 1.0
+      },
+      {
+        "damage": -2.290165437e-16,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": true,
+        "level": 5,
+        "metric": "palinstrophy",
+        "severity": 2.0
+      },
+      {
+        "damage": -2.290165437e-16,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": true,
+        "level": 6,
+        "metric": "palinstrophy",
+        "severity": 4.0
+      },
+      {
+        "damage": 0.0428066346,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 1,
+        "metric": "mae",
+        "severity": 0.125
+      },
+      {
+        "damage": 0.0854251889,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 2,
+        "metric": "mae",
+        "severity": 0.25
+      },
+      {
+        "damage": 0.1693540284,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 3,
+        "metric": "mae",
+        "severity": 0.5
+      },
+      {
+        "damage": 0.3275495707,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 4,
+        "metric": "mae",
+        "severity": 1.0
+      },
+      {
+        "damage": 0.5817802362,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 5,
+        "metric": "mae",
+        "severity": 2.0
+      },
+      {
+        "damage": 0.8602038362,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 6,
+        "metric": "mae",
+        "severity": 4.0
+      },
+      {
+        "damage": 0.0011232866,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 1,
+        "metric": "mse",
+        "severity": 0.125
+      },
+      {
+        "damage": 0.0044753727,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 2,
+        "metric": "mse",
+        "severity": 0.25
+      },
+      {
+        "damage": 0.0176210616,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 3,
+        "metric": "mse",
+        "severity": 0.5
+      },
+      {
+        "damage": 0.0659981684,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 4,
+        "metric": "mse",
+        "severity": 1.0
+      },
+      {
+        "damage": 0.2096932275,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 5,
+        "metric": "mse",
+        "severity": 2.0
+      },
+      {
+        "damage": 0.43985146,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 6,
+        "metric": "mse",
+        "severity": 4.0
+      },
+      {
+        "damage": 0.0335154677,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 1,
+        "metric": "rmse",
+        "severity": 0.125
+      },
+      {
+        "damage": 0.0668982262,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 2,
+        "metric": "rmse",
+        "severity": 0.25
+      },
+      {
+        "damage": 0.1327443469,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 3,
+        "metric": "rmse",
+        "severity": 0.5
+      },
+      {
+        "damage": 0.2569010868,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 4,
+        "metric": "rmse",
+        "severity": 1.0
+      },
+      {
+        "damage": 0.4579227309,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 5,
+        "metric": "rmse",
+        "severity": 2.0
+      },
+      {
+        "damage": 0.6632129824,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 6,
+        "metric": "rmse",
+        "severity": 4.0
+      },
+      {
+        "damage": 0.0327770573,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 1,
+        "metric": "nrmse",
+        "severity": 0.125
+      },
+      {
+        "damage": 0.0654483906,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 2,
+        "metric": "nrmse",
+        "severity": 0.25
+      },
+      {
+        "damage": 0.1300593052,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 3,
+        "metric": "nrmse",
+        "severity": 0.5
+      },
+      {
+        "damage": 0.2530413167,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 4,
+        "metric": "nrmse",
+        "severity": 1.0
+      },
+      {
+        "damage": 0.4558949857,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 5,
+        "metric": "nrmse",
+        "severity": 2.0
+      },
+      {
+        "damage": 0.6698926547,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 6,
+        "metric": "nrmse",
+        "severity": 4.0
+      },
+      {
+        "damage": 0.3275495707,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 1,
+        "metric": "mae",
+        "severity": 1.0
+      },
+      {
+        "damage": 0.5817802362,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 2,
+        "metric": "mae",
+        "severity": 2.0
+      },
+      {
+        "damage": 0.8602038362,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 3,
+        "metric": "mae",
+        "severity": 4.0
+      },
+      {
+        "damage": 1.1045222145,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 4,
+        "metric": "mae",
+        "severity": 8.0
+      },
+      {
+        "damage": 1.3108154005,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 5,
+        "metric": "mae",
+        "severity": 16.0
+      },
+      {
+        "damage": 0.0659981684,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 1,
+        "metric": "mse",
+        "severity": 1.0
+      },
+      {
+        "damage": 0.2096932275,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 2,
+        "metric": "mse",
+        "severity": 2.0
+      },
+      {
+        "damage": 0.43985146,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 3,
+        "metric": "mse",
+        "severity": 4.0
+      },
+      {
+        "damage": 0.6786812267,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 4,
+        "metric": "mse",
+        "severity": 8.0
+      },
+      {
+        "damage": 1.1023984518,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 5,
+        "metric": "mse",
+        "severity": 16.0
+      },
+      {
+        "damage": 0.2569010868,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 1,
+        "metric": "rmse",
+        "severity": 1.0
+      },
+      {
+        "damage": 0.4579227309,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 2,
+        "metric": "rmse",
+        "severity": 2.0
+      },
+      {
+        "damage": 0.6632129824,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 3,
+        "metric": "rmse",
+        "severity": 4.0
+      },
+      {
+        "damage": 0.8238211133,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 4,
+        "metric": "rmse",
+        "severity": 8.0
+      },
+      {
+        "damage": 1.0499516426,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 5,
+        "metric": "rmse",
+        "severity": 16.0
+      },
+      {
+        "damage": 0.2530413167,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 1,
+        "metric": "nrmse",
+        "severity": 1.0
+      },
+      {
+        "damage": 0.4558949857,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 2,
+        "metric": "nrmse",
+        "severity": 2.0
+      },
+      {
+        "damage": 0.6698926547,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 3,
+        "metric": "nrmse",
+        "severity": 4.0
+      },
+      {
+        "damage": 0.8319039609,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 4,
+        "metric": "nrmse",
+        "severity": 8.0
+      },
+      {
+        "damage": 1.0523486496,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "is_this_metric": false,
+        "level": 5,
+        "metric": "nrmse",
+        "severity": 16.0
+      }
+    ]
+  },
+  "run": "comparison_1793302178"
+}

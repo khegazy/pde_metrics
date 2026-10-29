@@ -98,9 +98,9 @@ This page puts every metric on the same figures, drawn from one recorded evaluat
 the same code that draws the report, so that the question a reader choosing a metric
 actually has -- *which of these sees the failure I care about?* -- can be answered by eye.
 
-Nothing here is a ranking. Damage is on one 0-to-1 scale throughout, where 0 is the
-undegraded reference and 1 is a field with the right statistics and no relation to the
-truth; the figures show what each metric sees and what each metric misses, and a metric
+Nothing here is a ranking. Damage is on one scale throughout, where 0 is the undegraded
+reference and 1 is the reference's own spatial mean, a prediction that knows the mean and
+nothing else; the figures show what each metric sees and what each metric misses, and a metric
 that is flat on one degradation and steep on another is exactly the information a reader
 needs. The numbers behind each figure are linked beside it. For how to read a single
 metric's page, see [How to read a metric page](reading-guide.md).

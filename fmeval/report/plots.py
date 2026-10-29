@@ -93,7 +93,7 @@ def ladder_curves(ctx, df, opts) -> PlotResult:
     anchor = df[df["degradation"] == ctx.anchor_label]
     if not anchor.empty:
         ax.axhline(float(anchor["value"].median()), color="0.4", ls=":", lw=1)
-        text = (" unrelated fields" if ctx.anchor_label == an.UNCORRELATED_LABEL
+        text = (" the field's mean (damage 1)" if ctx.anchor_label == an.MEAN_FIELD_LABEL
                 else f" {ctx.label(ctx.anchor_label)} (damage 1)")
         ax.text(0.99, float(anchor["value"].median()), text,
                 transform=ax.get_yaxis_transform(), va="bottom", ha="right",
@@ -114,8 +114,7 @@ def ladder_curves(ctx, df, opts) -> PlotResult:
         [FigureItem(fig, {"metric": metric, "field": field},
                     caption=f"{metric} against severity_level for each ladder axis, on {field}. "
                             "Line is the median over frames, band the interquartile "
-                            "range. The dotted line marks the value two statistically "
-                            "identical but positionally unrelated fields receive.",
+                            "range. The dotted line marks the anchor's value, damage 1.",
                     data=pd.concat(tidy, ignore_index=True) if tidy else None)]
     )
 
@@ -137,8 +136,8 @@ def companion_curves(ctx, df, opts) -> PlotResult:
 
     The literature's own values, untransformed: in each panel the clean curve in black, one line
     per strength in the degradation's colour, darker with strength, and in every panel the
-    unrelated-field anchor dashed and the impostor dotted, so a reader sees which coordinates a
-    degradation moves and how far toward an unrelated field. A second figure gives the
+    anchor dashed and the impostor dotted, so a reader sees which coordinates a degradation moves
+    and how far toward the anchor. A second figure gives the
     per-coordinate trend and change from clean that :func:`fmeval.analysis.analyse` computes.
     """
     metric, field = str(df["metric"].iloc[0]), str(df["field"].iloc[0])
@@ -187,7 +186,7 @@ def companion_curves(ctx, df, opts) -> PlotResult:
     items = [FigureItem(fig, {"metric": metric, "field": field},
                         caption=f"The curve behind {metric} on {field}: the median over frames "
                                 "at every strength of every degradation, the clean curve in "
-                                "black, an unrelated field dashed and the impostor dotted. "
+                                "black, the anchor dashed and the impostor dotted. "
                                 "Values are the literature's own, untransformed.",
                         data=medians)]
 
@@ -428,10 +427,11 @@ def response_curves(ctx, df, opts) -> PlotResult:
     caption = (
         f"Median damage over frames against severity level for {metric}, one row per family "
         "of degradation and one column per field, on one shared scale. The solid grey line is "
-        "damage 1, an unrelated field; the dotted black line is the damage assigned to the fake "
+        "damage 1, the anchor (by default the field's own mean); the dotted black line is the "
+        "damage assigned to the fake "
         "prediction with the right spectrum, where the run included it. The hollow black ring "
-        "marks the first level at which the metric has moved a tenth of the way to an unrelated "
-        "field. Hollow grey markers are strengths excluded for repeating a milder one or for "
+        "marks the first level at which the metric has moved a tenth of the way to the anchor. "
+        "Hollow grey markers are strengths excluded for repeating a milder one or for "
         "doing nothing. Degradations with three or fewer usable levels are drawn as markers "
         f"only; points above {clip:g} are drawn as triangles at the top."
         + (f" No damage scale on {', '.join(unscaled)}: the grey panels show the raw value "
@@ -1031,10 +1031,10 @@ def response_sparklines(ctx, df, opts) -> PlotResult:
     caption = (
         f"Median damage over frames against severity level for every metric (rows) and "
         f"degradation (columns) on {field}, all on one 0-1 scale, starting from the undamaged "
-        "reference at the left of every curve. The dotted line is damage 1, an unrelated "
-        "field. Degradations with three or fewer usable levels are drawn as dots. The red dot "
-        "is the first level at which the metric has moved a tenth of the way to an unrelated "
-        "field. The number is the elasticity over the mildest levels, against the severity each "
+        "reference at the left of every curve. The dotted line is damage 1, the anchor (by "
+        "default the field's own mean). Degradations with three or fewer usable levels are drawn as dots. The red dot "
+        "is the first level at which the metric has moved a tenth of the way to the anchor. "
+        "The number is the elasticity over the mildest levels, against the severity each "
         "degradation names: near 0 blind, 1 linear, 2 quadratic. Grey cells are metrics with "
         f"no damage scale on this field. Points above {clip:g} are clipped and drawn as "
         "triangles. Below each column is the range of the severity actually applied."
@@ -1095,9 +1095,8 @@ def deception_panel(ctx, df, opts) -> PlotResult:
 
     The spectrum-matched Gaussian field preserves the energy spectrum and the two-point
     correlation exactly while destroying all phase information, so a metric built only on
-    second-order statistics scores it as perfect. The positionally unrelated field
-    preserves every statistic while destroying alignment, so it defines a damage of 1.
-    Both hold exactly on a periodic domain only.
+    second-order statistics scores it as perfect. Damage 1 is the anchor, by default the
+    reference's spatial mean. The spectrum match holds exactly on a periodic domain only.
     """
     field = str(df["field"].iloc[0])
     metrics = sorted(df["metric"].unique())
@@ -1128,12 +1127,12 @@ def deception_panel(ctx, df, opts) -> PlotResult:
                      "has_scale": has_scale})
 
     ax.axvline(1.0, color="0.3", lw=1)
-    ax.text(1.0, -0.7, " unrelated fields", fontsize="x-small", color="0.3", va="top")
+    ax.text(1.0, -0.7, " anchor", fontsize="x-small", color="0.3", va="top")
     limit = float(ctx.thresholds.get("impostor_damage", np.nan))
     if np.isfinite(limit):
         ax.axvline(limit, color="0.5", ls="--", lw=1)
     ax.set_yticks(range(len(metrics)), metrics)
-    ax.set_xlabel("damage (0 = clean, 1 = unrelated fields)")
+    ax.set_xlabel("damage (0 = clean, 1 = the anchor)")
     ax.set_title(f"Misleading fields — {field}")
     ax.set_ylim(-1.0, len(metrics) - 0.4)
     if labelled:
@@ -1145,7 +1144,7 @@ def deception_panel(ctx, df, opts) -> PlotResult:
                             "(star) against the ordinary ladder severity levels (open circles), "
                             "one row per metric. A metric that places the star near zero is "
                             "responding only to second-order statistics. Rows marked 'no damage "
-                            "scale' are metrics whose clean and unrelated values coincide, so no "
+                            "scale' are metrics whose clean and anchor values coincide, so no "
                             "damage can be defined for them.",
                     data=pd.DataFrame(tidy))],
         notes=["A metric near the origin here sees only the energy spectrum."],
@@ -1166,7 +1165,7 @@ def displacement_response(ctx, df, opts) -> PlotResult:
 
     A pure translation leaves shape and amplitude exactly correct and changes only
     position, so this isolates position sensitivity from every other kind. A metric that
-    reaches the unrelated-field level after a displacement much smaller than the structures
+    reaches damage 1 after a displacement much smaller than the structures
     in the field is exhibiting the double penalty.
     """
     field = str(df["field"].iloc[0])
@@ -1211,14 +1210,14 @@ def displacement_response(ctx, df, opts) -> PlotResult:
     ctx.require(
         any(np.isfinite(row["damage"]) for row in tidy),
         "no finite damage on the displacement axis: the metric has no dynamic range between "
-        "clean and the unrelated-field anchor, so there is nothing to plot against distance",
+        "clean and the anchor, so there is nothing to plot against distance",
     )
 
     for panel in grid[0]:
         panel.axhline(1.0, color="0.3", lw=1)
         panel.set_xscale("log")
         panel.set_ylabel("damage")
-    ax.text(0.01, 1.0, "unrelated fields", fontsize="x-small", color="0.3",
+    ax.text(0.01, 1.0, "anchor (damage 1)", fontsize="x-small", color="0.3",
             va="bottom", transform=ax.get_yaxis_transform())
     ax.set_xlabel("displacement [cells]")
     ax.set_title(f"Pure displacement — {field}")
@@ -1339,8 +1338,8 @@ def damage_beside_controls(ctx, df, opts) -> PlotResult:
     caption = (
         f"Median damage over frames against the applied strength, log-log, for {metric} (bold, "
         f"in colour) and the pointwise controls {', '.join(controls)} (thin, grey), one column "
-        "per displacement degradation and one row per field. The grey line is damage 1, an "
-        "unrelated field. Parallel lines charge in the same proportion at every strength; a "
+        "per displacement degradation and one row per field. The grey line is damage 1, the "
+        "anchor (by default the field's own mean). Parallel lines charge in the same proportion at every strength; a "
         "steeper line charges relatively more for the larger shifts, which is what decides "
         "whether two metrics are interchangeable as training losses. These are the same numbers "
         "as the table beneath."

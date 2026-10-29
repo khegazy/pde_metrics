@@ -371,7 +371,7 @@
     "vorticity": [
       {
         "blind": false,
-        "blindness_q": 0.5475987904,
+        "blindness_q": 0.7992976063,
         "cliffs_delta_min": 0.6249373095,
         "damage_max_ucb": 0.0414377283,
         "damage_per_change": null,
@@ -386,7 +386,7 @@
       },
       {
         "blind": false,
-        "blindness_q": 0.4205954565,
+        "blindness_q": 0.6088399736,
         "cliffs_delta_min": -0.0413178504,
         "damage_max_ucb": 0.0439216537,
         "damage_per_change": null,
@@ -491,7 +491,7 @@
       },
       {
         "blind": false,
-        "blindness_q": 0.4205954565,
+        "blindness_q": 0.6088399736,
         "cliffs_delta_min": -0.3060452915,
         "damage_max_ucb": 0.0419651258,
         "damage_per_change": null,
@@ -551,5 +551,5 @@
       }
     ]
   },
-  "run": "comparison_1790639359"
+  "run": "comparison_1793302178"
 }

@@ -42,7 +42,7 @@ def test_the_empty_result_still_carries_the_key_columns():
 
 def test_a_probe_row_still_appears_when_the_probe_ran():
     df = make_frame(axes={"gaussian_blur": [0.1, 0.2], "gaussian_impostor": [0.5],
-                          "uncorrelated": [1.0]}, n_frames=3)
+                          "mean_field": [1.0]}, n_frames=3)
     summary = probe_summary(df, normalisation(df))
     assert len(summary) == 1
     assert "gaussian_impostor_damage" in summary.columns

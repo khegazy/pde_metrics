@@ -1,0 +1,55 @@
+{
+  "applied": {
+    "mode": "draws",
+    "resolved": [],
+    "severities": [
+      0
+    ]
+  },
+  "dataset": "kinet_re5e4",
+  "degradation": "mean_field",
+  "field": "vorticity",
+  "frame_index": 5000,
+  "panels": {
+    "difference": {
+      "draw 1": {
+        "max_abs": 0.016423012740206674,
+        "mean": 0.0,
+        "rms": 0.0025733478577632486
+      },
+      "original": {
+        "max_abs": 0.0,
+        "mean": 0.0,
+        "rms": 0.0
+      }
+    },
+    "field": {
+      "draw 1": {
+        "max": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "rms": 0.0
+      },
+      "original": {
+        "max": 0.016398680732182837,
+        "mean": 0.0,
+        "min": -0.016423012740206674,
+        "rms": 0.0025733478577632486
+      }
+    },
+    "pdf": {
+      "draw 1": {
+        "flatness": null,
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "original": {
+        "flatness": 17.057721889155673,
+        "mean": 0.0,
+        "std": 0.0025733478577632486
+      }
+    }
+  },
+  "seed": 20260807,
+  "time": 1.1276372445109877
+}

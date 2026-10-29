@@ -75,7 +75,7 @@ non-periodic axis, such as the Sod shock tube; it reports why in the run log.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1793302178`, do not edit -->
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -83,7 +83,7 @@ Four measured statistics for increment_flatness, one row per degradation grouped
 
 ![median damage against severity level, one panel per degradation family and field, on one shared scale](_generated/response_curves.svg)
 
-Median damage over frames against severity level for increment_flatness, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, an unrelated field; the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to an unrelated field. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points above 2 are drawn as triangles at the top. No damage scale on density, velocity, vorticity: the grey panels show the raw value instead.
+Median damage over frames against severity level for increment_flatness, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, the anchor (by default the field's own mean); the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to the anchor. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points above 2 are drawn as triangles at the top. No damage scale on density, velocity, vorticity: the grey panels show the raw value instead.
 
 **Trend: does the response follow the degradation?**
 
@@ -148,7 +148,7 @@ Median damage over frames against severity level for increment_flatness, one row
 | Noise | velocity | 0.0246 | 19 |
 | Noise | vorticity | 0.129 | 20 |
 
-One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to a field with no relation to the truth; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
+One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
 
 These tables report what was measured and grade none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
 
@@ -156,9 +156,9 @@ These tables report what was measured and grade none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift, against severity (distance) | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| density | — | — | — | `coarsen_bandlimited` `median_blur` `translate_subpixel` `translate_x` | 1.36 | 31.5 |
-| velocity | — | — | — | `coarsen_bandlimited` `highpass_butterworth` `highpass_ideal` `median_blur` `translate_subpixel` `translate_x` | 10.2 | 62.9 |
-| vorticity | — | — | — | `highpass_butterworth` `highpass_ideal` `translate_subpixel` `translate_x` | 1.15 | 32 |
+| density | — | — | — | `coarsen_bandlimited` `median_blur` `translate_subpixel` `translate_x` | 1.36 | 27.6 |
+| velocity | — | — | — | `coarsen_bandlimited` `highpass_butterworth` `highpass_ideal` `median_blur` `translate_subpixel` `translate_x` | 10.2 | 55.1 |
+| vorticity | — | — | — | `highpass_butterworth` `highpass_ideal` `translate_subpixel` `translate_x` | 1.15 | 28.2 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
@@ -259,11 +259,11 @@ tripwire that says intermittency has changed, never as an ordering of how much.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1793302178`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `ce78cb2d30d8` (working tree dirty). Run `comparison_1790639359`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `b59bbde617d1` (working tree dirty). Run `comparison_1793302178`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1790639359`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793302178`.
 
 <!-- END GENERATED run -->
 
@@ -272,7 +272,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 [gaussian_blur](../../degradations/gaussian_blur/card.md) ·
 [box_blur](../../degradations/box_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1793302178`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -304,7 +304,7 @@ rather than through a blur sweep on one frame.
 [lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
 [highpass_ideal](../../degradations/highpass_ideal/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1793302178`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -338,7 +338,7 @@ both alike. Nothing here should be read as this metric ranking spectral damage.
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1793302178`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -359,15 +359,14 @@ off clean and comes back: correlations between -0.52 and -0.03, no frame in orde
 gaps of 0.35 to 0.41, below the chance value of 0.5.
 
 For this metric the invariance is incidental rather than the point — it is a consequence of
-reading only the distribution of increments — but it has the same protocol consequence
-described in `issues/037-position-blind-metrics-have-no-damage-anchor.md`.
+reading only the distribution of increments.
 
 ### Resolution loss
 
 [coarsen](../../degradations/coarsen/card.md) ·
 [coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1793302178`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -397,7 +396,7 @@ the one family this metric handles cleanly. It was a response to the operator's 
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1793302178`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -422,36 +421,37 @@ in the direction the definition predicts.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1793302178`, do not edit -->
 
-| field | damage assigned to the fake prediction | closest real degradation | value on an unrelated field |
-|---|---|---|---|
-| density | — | — | 15.2 |
-| velocity | — | — | 9.23 |
-| vorticity | — | — | 9.34 |
+| field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
+|---|---|---|---|---|
+| density | — | — | — | — |
+| velocity | — | — | — | — |
+| vorticity | — | — | — | — |
 
-The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage of 1 is what a field with no relation to the truth scores, so the damage column says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture.
+The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_canaries -->
 
-Neither trap can be scored, and the reason is the one `AGENTS.md` already gives for
-single-field quantities: the damage scale is anchored between the reference and a
-positionally unrelated but statistically identical field, and a quantity that does not depend
-on position takes the same value at both anchors. The span is zero, so the damage column is
-absent rather than zero. That is the honest outcome, not a gap to be filled.
+Neither trap can be scored on the damage scale, because this metric has none. The anchor is
+the field's spatial mean, a constant field whose increments are all zero, so its flatness is
+zero over zero and the span is undefined
+(`issues/037-increment-flatness-has-no-damage-scale.md`). The damage columns are therefore
+absent rather than zero.
 
-The raw values on an unrelated field are recorded in the table — 15.2, 9.23 and 9.34 on
-density, velocity and vorticity — and are of the same order as the reference values, which is
-what "statistically identical twin" means and is the direct confirmation that the anchor is
-doing its job.
+The reference moved far away scores 15.2, 9.23 and 9.34 on density, velocity and vorticity,
+exactly the reference's own values: a translation permutes the increments without changing
+them, and this metric reads only their distribution. The fake prediction scores 2.86, 2.89
+and 3.00, close to the Gaussian value of 3, because it has the reference's spectrum and
+Gaussian statistics.
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1793302178`, do not edit -->
 
 | compared with | rank correlation over every degradation |
 |---|---|
-| `palinstrophy` | 0.468 |
+| `palinstrophy` | 0.459 |
 | `kinetic_energy` | 0.161 |
 | `enstrophy` | 0.0202 |
 | `h_minus_one` | -0.0907 |
@@ -461,6 +461,7 @@ doing its job.
 | `mse` | -0.135 |
 | `h1_seminorm` | -0.139 |
 | `spectrum_l2` | -0.234 |
+| `increment_w1_by_separation` | -0.408 |
 | `increment_w1` | -0.489 |
 
 Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
@@ -478,16 +479,16 @@ this does not qualify; `issues/036` sets out what should be done about it.
 
 Read as a tripwire, the picture is different and more favourable. It correlates -0.10 to
 -0.14 with the four pointwise baselines and -0.09 with `h_minus_one`, so it is close to
-independent of everything else in the panel and is carrying information none of them carry.
-Its correlation with `increment_w1` is -0.49, which is the only substantial relationship it
-has with another metric here and is expected, since both read the same increment
-distribution. The case for keeping it is that a drift in this number means something specific
-that no other metric reports; the case against using it to choose between models is the sign
+independent of all five and is carrying information none of them carry.
+Its correlations with `increment_w1` and `increment_w1_by_separation` are -0.49 and -0.41,
+which is expected, since all three read increment distributions; the only other substantial
+relationship is 0.46 with `palinstrophy`. The case for keeping it is that a drift in this
+number means something specific that no other metric reports; the case against using it to choose between models is the sign
 change above.
 
 ### Damage beside the other metrics
 
-<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1793302178`, do not edit -->
 
 No damage beside the pointwise controls figure: increment_flatness has no damage scale on any field for these degradations.
 
@@ -496,62 +497,62 @@ No damage beside the pointwise controls figure: increment_flatness has no damage
 | metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
 |---|---|---|---|---|---|---|
 | `increment_flatness` | — | — | — | — | — | — |
-| `mae` | 0.00328 | 0.00655 | 0.0131 | 0.0262 | 0.0521 | 0.103 |
-| `mse` | 1.49e-05 | 5.97e-05 | 0.000238 | 0.000952 | 0.00379 | 0.015 |
-| `rmse` | 0.00386 | 0.00772 | 0.0154 | 0.0309 | 0.0616 | 0.123 |
-| `nrmse` | 0.00362 | 0.00723 | 0.0145 | 0.0289 | 0.0576 | 0.115 |
+| `mae` | 0.00383 | 0.00767 | 0.0153 | 0.0306 | 0.061 | 0.121 |
+| `mse` | 2.17e-05 | 8.68e-05 | 0.000347 | 0.00138 | 0.00551 | 0.0219 |
+| `rmse` | 0.00466 | 0.00931 | 0.0186 | 0.0372 | 0.0743 | 0.148 |
+| `nrmse` | 0.00463 | 0.00926 | 0.0185 | 0.037 | 0.0738 | 0.147 |
 
 **Displacement, density, `translate_x`** (strength: distance).
 
 | metric | 1 | 2 | 4 | 8 | 16 |
 |---|---|---|---|---|---|
 | `increment_flatness` | — | — | — | — | — |
-| `mae` | 0.0262 | 0.0521 | 0.103 | 0.205 | 0.401 |
-| `mse` | 0.000952 | 0.00379 | 0.015 | 0.0584 | 0.211 |
-| `rmse` | 0.0309 | 0.0616 | 0.123 | 0.242 | 0.46 |
-| `nrmse` | 0.0289 | 0.0576 | 0.115 | 0.226 | 0.43 |
+| `mae` | 0.0306 | 0.061 | 0.121 | 0.24 | 0.469 |
+| `mse` | 0.00138 | 0.00551 | 0.0219 | 0.0849 | 0.307 |
+| `rmse` | 0.0372 | 0.0743 | 0.148 | 0.291 | 0.555 |
+| `nrmse` | 0.037 | 0.0738 | 0.147 | 0.29 | 0.55 |
 
 **Displacement, velocity, `translate_subpixel`** (strength: distance).
 
 | metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
 |---|---|---|---|---|---|---|
 | `increment_flatness` | — | — | — | — | — | — |
-| `mae` | 0.00163 | 0.00325 | 0.0065 | 0.013 | 0.0257 | 0.05 |
-| `mse` | 4.76e-06 | 1.91e-05 | 7.61e-05 | 0.000303 | 0.00118 | 0.00445 |
-| `rmse` | 0.00218 | 0.00437 | 0.00873 | 0.0174 | 0.0344 | 0.0667 |
-| `nrmse` | 0.00219 | 0.00437 | 0.00873 | 0.0174 | 0.0343 | 0.0667 |
+| `mae` | 0.00279 | 0.00559 | 0.0112 | 0.0223 | 0.0441 | 0.0859 |
+| `mse` | 1.45e-05 | 5.81e-05 | 0.000232 | 0.000924 | 0.0036 | 0.0136 |
+| `rmse` | 0.00381 | 0.00762 | 0.0152 | 0.0304 | 0.06 | 0.117 |
+| `nrmse` | 0.00382 | 0.00763 | 0.0153 | 0.0304 | 0.06 | 0.117 |
 
 **Displacement, velocity, `translate_x`** (strength: distance).
 
 | metric | 1 | 2 | 4 | 8 | 16 |
 |---|---|---|---|---|---|
 | `increment_flatness` | — | — | — | — | — |
-| `mae` | 0.013 | 0.0257 | 0.05 | 0.0951 | 0.18 |
-| `mse` | 0.000303 | 0.00118 | 0.00445 | 0.016 | 0.0541 |
-| `rmse` | 0.0174 | 0.0344 | 0.0667 | 0.127 | 0.233 |
-| `nrmse` | 0.0174 | 0.0343 | 0.0667 | 0.127 | 0.232 |
+| `mae` | 0.0223 | 0.0441 | 0.0859 | 0.163 | 0.31 |
+| `mse` | 0.000924 | 0.0036 | 0.0136 | 0.0489 | 0.165 |
+| `rmse` | 0.0304 | 0.06 | 0.117 | 0.221 | 0.406 |
+| `nrmse` | 0.0304 | 0.06 | 0.117 | 0.221 | 0.406 |
 
 **Displacement, vorticity, `translate_subpixel`** (strength: distance).
 
 | metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
 |---|---|---|---|---|---|---|
 | `increment_flatness` | — | — | — | — | — | — |
-| `mae` | 0.0225 | 0.045 | 0.0892 | 0.172 | 0.306 | 0.453 |
-| `mse` | 0.000476 | 0.0019 | 0.00747 | 0.028 | 0.0889 | 0.187 |
-| `rmse` | 0.0218 | 0.0436 | 0.0865 | 0.167 | 0.298 | 0.432 |
-| `nrmse` | 0.0219 | 0.0437 | 0.0868 | 0.169 | 0.304 | 0.447 |
+| `mae` | 0.0428 | 0.0854 | 0.169 | 0.328 | 0.582 | 0.86 |
+| `mse` | 0.00112 | 0.00448 | 0.0176 | 0.066 | 0.21 | 0.44 |
+| `rmse` | 0.0335 | 0.0669 | 0.133 | 0.257 | 0.458 | 0.663 |
+| `nrmse` | 0.0328 | 0.0654 | 0.13 | 0.253 | 0.456 | 0.67 |
 
 **Displacement, vorticity, `translate_x`** (strength: distance).
 
 | metric | 1 | 2 | 4 | 8 | 16 |
 |---|---|---|---|---|---|
 | `increment_flatness` | — | — | — | — | — |
-| `mae` | 0.172 | 0.306 | 0.453 | 0.581 | 0.69 |
-| `mse` | 0.028 | 0.0889 | 0.187 | 0.288 | 0.468 |
-| `rmse` | 0.167 | 0.298 | 0.432 | 0.537 | 0.684 |
-| `nrmse` | 0.169 | 0.304 | 0.447 | 0.555 | 0.702 |
+| `mae` | 0.328 | 0.582 | 0.86 | 1.1 | 1.31 |
+| `mse` | 0.066 | 0.21 | 0.44 | 0.679 | 1.1 |
+| `rmse` | 0.257 | 0.458 | 0.663 | 0.824 | 1.05 |
+| `nrmse` | 0.253 | 0.456 | 0.67 | 0.832 | 1.05 |
 
-Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 an unrelated field; a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
+Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 the anchor (by default the field's own mean); a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
 
 <!-- END GENERATED results_damage_by_level -->
 

@@ -5,15 +5,15 @@ kind: degradation
 category: geometric
 
 summary: >-
-  Shifts the field by a large random displacement, producing a field that is statistically
-  identical to the reference but positionally unrelated to it.
+  Shifts the field by a large random displacement: on a periodic domain, the right statistics
+  in the wrong place. A probe, not the damage anchor.
 
 status: candidate
 owners: [khegazy]
 
 failure_mode: >-
-  Not a model failure at all: this is the anchor that defines what maximal damage means,
-  by supplying a field with the right statistics and no correspondence.
+  The double penalty at its limit: a field with the right statistics and no correspondence
+  to the truth's positions.
 
 output:
   description: >-
@@ -31,8 +31,8 @@ exemplars:
   rationale: >-
     Three independent draws beside the original, because there is no weak-to-strong
     ordering to show. The pdf row is the point: every draw has exactly the reference's
-    distribution of values, which is what makes it a fair anchor rather than merely a bad
-    field.
+    distribution of values, which is what makes it the right kind of field in the wrong
+    place rather than merely a bad field.
 
 references: []
 review: null

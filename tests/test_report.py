@@ -186,7 +186,8 @@ def _write_run(path: Path, df: pd.DataFrame) -> RunFolder:
     write_run_meta(folder, run_id=1, config_hash=digest, metric="mse",
                    dataset="synthetic_d", n_frames=8, fields=list(SYNTHETIC_FIELDS),
                    analysis_grid=16, ladder_axes=sorted(SYNTHETIC_LADDER), n_severity_levels=15,
-                   seed=1,
+                   seed=1, anchor_label=analysis.MEAN_FIELD_LABEL,
+                   probe_labels=sorted(analysis.PROBE_LABELS),
                    command="python evaluate.py metrics=[mse]")
     return folder
 
@@ -349,7 +350,7 @@ def test_displacement_prose_names_what_each_geometric_axis_leaves_unchanged(tmp_
     by 0.89, so quoting the periodic invariants there would be false.
     """
     df = pd.concat([make_frame(metric=m, field="vorticity", n_frames=8,
-                               axes={"translate_x": [1.0, 3.0, 6.0], "uncorrelated": [10.0] * 2})
+                               axes={"translate_x": [1.0, 3.0, 6.0], "mean_field": [10.0] * 2})
                     for m in ("mse", "mae")], ignore_index=True)
     df["degradation_op"] = df["degradation_op"].astype(str).replace({
         "translate_x": "translate", "uncorrelated": "random_large_translation"})

@@ -329,8 +329,8 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
             if np.isfinite(row.get("gaussian_impostor_damage", np.nan)):
                 bits.append(
                     "the spectrum-matched Gaussian field is assigned a damage of "
-                    f"{_fmt(row['gaussian_impostor_damage'])}, where 1 is the value two "
-                    "unrelated fields receive"
+                    f"{_fmt(row['gaussian_impostor_damage'])}, where 1 is the value the "
+                    "anchor receives"
                 )
             elif np.isfinite(row.get("gaussian_impostor_relative", np.nan)):
                 bits.append(
@@ -411,7 +411,7 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
             "the far end of the domain, so it changes the field's values as well as their "
             "position, and no operator's declared invariants are quoted here. "
         ) + (
-            "A metric that approaches the unrelated-field level after a "
+            "A metric that approaches damage 1 after a "
             "displacement much smaller than the structures in the flow is exhibiting the "
             "double penalty: it is reporting a large error for a field that is correct in "
             "shape and amplitude."
@@ -437,9 +437,11 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
             "two-point correlation are identical to the reference to machine precision "
             "while its flatness collapses to the Gaussian value of three. A metric built "
             "only on second-order statistics cannot distinguish it from the reference. "
-            "The positionally unrelated field is the reference translated by a large "
-            "random offset, which preserves every statistic exactly while removing "
-            "alignment, and therefore defines a damage of one."
+            "The reference translated by a large random offset keeps every statistic that "
+            "does not depend on position and loses the alignment: it shows how a metric "
+            "scores the right statistics in the wrong place. Where a field's energy sits in "
+            "its largest scales the moved copy stays partly correlated, or anti-correlated, "
+            "with the reference, so it is a probe and not a stand-in for an unrelated field."
         )
         if not ctx.periodic:
             text += (
@@ -447,15 +449,20 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
                 f"{escape(walls)}, and both fields are built on its extension across them and "
                 "cropped back to the domain, so neither keeps the reference's statistics "
                 "exactly: the Gaussian field keeps the Fourier amplitudes of the extension, "
-                "and the unrelated field is a window onto the displaced extension, so part of "
+                "and the moved copy is a window onto the displaced extension, so part of "
                 "what it shows is the extension rather than the reference."
             )
-        if ctx.anchor_label != an.UNCORRELATED_LABEL:
+        if ctx.anchor_label == an.MEAN_FIELD_LABEL:
             text += (
-                " In this run the damage scale is anchored instead on the ladder entry "
+                " A damage of one is the value the metric gives the reference's spatial mean, "
+                "the prediction that knows the field's mean and nothing else."
+            )
+        else:
+            text += (
+                " In this run the damage scale is anchored on the ladder entry "
                 f"{code(ctx.anchor_label)} (set by \\texttt{{analysis.anchor}}), "
                 "so a damage of one is the value that entry receives rather than the value of "
-                "an unrelated field."
+                "the reference's spatial mean."
             )
         return text
 

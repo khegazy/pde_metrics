@@ -56,7 +56,7 @@ def test_degeneracy_guard_fires_when_most_levels_are_round_off():
             "gaussian_blur": [1e-1, 3e-1],
             "translate_x": [1.1e-16, 1.3e-16, 0.9e-16],
             "gaussian_impostor": [1.8e-16],
-            "uncorrelated": [1.5e-16, 1.5e-16, 1.5e-16],
+            "mean_field": [1.5e-16, 1.5e-16, 1.5e-16],
         },
     )
     norm = an.normalisation(df)
@@ -94,7 +94,7 @@ def test_damage_is_not_reported_against_an_anchor_the_metric_cannot_see():
         axes={
             "gaussian_blur": [1e-1, 3e-1],
             "gaussian_impostor": [1.8e-16],
-            "uncorrelated": [1.5e-16, 1.5e-16, 1.5e-16],
+            "mean_field": [1.5e-16, 1.5e-16, 1.5e-16],
         },
     )
     norm = an.normalisation(df)
@@ -103,12 +103,12 @@ def test_damage_is_not_reported_against_an_anchor_the_metric_cannot_see():
 
     assert not np.isfinite(damage), (
         f"impostor damage reported as {damage:.3f} against an anchor of "
-        f"{norm['value_uncorrelated'].iloc[0]:.3e}, which is round-off. A damage score "
+        f"{norm['value_anchor'].iloc[0]:.3e}, which is round-off. A damage score "
         "computed from an anchor the metric cannot see must be NaN, not a number."
     )
     assert row["gaussian_impostor_relative"] < 1e-12
     usable = make_frame(axes={"a": [2.0, 5.0, 8.0], "gaussian_impostor": [5.0],
-                              "uncorrelated": [10.0, 10.0]})
+                              "mean_field": [10.0, 10.0]})
     row = an.probe_summary(usable, an.normalisation(usable)).iloc[0]
     assert np.isnan(row["gaussian_impostor_relative"]), "never printed beside a usable damage"
 
@@ -201,7 +201,7 @@ def test_threshold_levels_are_withheld_when_the_anchor_span_is_round_off():
         n_frames=6,
         axes={
             "gaussian_blur": [1e-2, 1e-1, 6e-1],
-            "uncorrelated": [1.5e-16, 1.6e-16, 1.4e-16],
+            "mean_field": [1.5e-16, 1.6e-16, 1.4e-16],
         },
     )
     norm = an.normalisation(df)
@@ -230,7 +230,7 @@ def test_report_card_survives_an_all_nan_rank_correlation():
     figure, *after* the expensive evaluation has been paid for.
     """
     df = make_frame(metric="enstrophy", field="vorticity", n_frames=6, reference=1.0,
-                    axes={"translate_x": [1.0] * 3, "uncorrelated": [1.0] * 2})
+                    axes={"translate_x": [1.0] * 3, "mean_field": [1.0] * 2})
     norm = an.normalisation(df)
     axes = an.summarise_axes(df, norm=norm, n_bootstrap=0)
     probes = an.probe_summary(df, norm)
@@ -265,9 +265,9 @@ def test_a_similarity_metric_is_scored_in_its_own_direction():
     the report card flagged on three criteria at once.
     """
     df = make_frame(metric="similarity", field="v", n_frames=8, reference=1.0,
-                    axes={"gaussian_blur": [0.8, 0.6, 0.4, 0.2], "uncorrelated": [0.0]})
+                    axes={"gaussian_blur": [0.8, 0.6, 0.4, 0.2], "mean_field": [0.0]})
     # A small per-frame offset on the ladder, so the ranks are well defined.
-    df["value"] += np.where(df["degradation"] == "uncorrelated", 0.0, 0.001 * df["frame_index"])
+    df["value"] += np.where(df["degradation"] == "mean_field", 0.0, 0.001 * df["frame_index"])
     # No declared direction, as in a folder that predates the column, so it is measured from
     # the anchor: the case with nothing to lean on.
     df = df.drop(columns="higher_is_better")
@@ -456,7 +456,7 @@ def test_the_displacement_figure_declines_rather_than_crashes_without_damage(tmp
     """
     # A metric that cannot tell the anchor from clean: span = 0, so damage is all NaN.
     df = make_frame(metric="enstrophy", field="vorticity", n_frames=8,
-                    axes={"translate_x": [1.0] * 4, "uncorrelated": [1.0] * 3})
+                    axes={"translate_x": [1.0] * 4, "mean_field": [1.0] * 3})
     folder = RunFolder(tmp_path / "enstrophy_1").create()
     write_results(folder, df)
     digest = write_config(folder, {"metrics": ["enstrophy"], "seed": 1}, [])

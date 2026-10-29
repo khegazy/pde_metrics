@@ -232,7 +232,7 @@ def performance_block(run: Run, metric: str, figures: Sequence[CardFigure] = (),
            "damage below is its relative reading. " if no_relative else "")
         + "The elasticity is the percentage change of that departure per percentage change in "
         "strength over the mildest strengths. First strength detected is the mildest at which "
-        "the metric has moved a tenth of the way to a field with no relation to the truth; "
+        "the metric has moved a tenth of the way to the anchor; "
         "**damage** reads that 0-to-1 scale as a number. A dash means the measurement is not "
         "defined there. A metric's reactivity scales with the power it is expressed in: mean "
         "squared error's elasticity is twice root-mean-square error's, though the two carry "
@@ -371,7 +371,8 @@ def damage_by_level_block(run: Run, metric: str, figures: Sequence[CardFigure] =
     lines.append(
         "Median damage over frames at every strength, this metric in the first row and the "
         "pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded "
-        "reference and 1 an unrelated field; a dash means no damage scale on that field. The "
+        "reference and 1 the anchor (by default the field's own mean); a dash means no damage "
+        "scale on that field. The "
         "rank correlations under *Compared with the other metrics* say whether two metrics put "
         "the strengths in the same order; this table says how much each one charges for the same "
         "strength, which decides whether two metrics are interchangeable as training losses."
@@ -399,27 +400,34 @@ def family_block(run: Run, metric: str, family: str) -> str:
 
 
 def canaries_block(run: Run, metric: str) -> str:
-    """What the metric assigns to the fake prediction and to an unrelated field."""
+    """What the metric assigns to the fake prediction, to the reference moved far away, and to
+    the anchor."""
     probes = run.probes[run.probes["metric"] == metric]
     if probes.empty:
         return NOT_MEASURED
     lines = _header("field", "damage assigned to the fake prediction",
-                    "closest real degradation", "value on an unrelated field")
+                    "closest real degradation", "damage of the reference moved far away",
+                    "value on the anchor")
     for _, row in probes.sort_values("field").iterrows():
         nearest = _cell(row, "gaussian_impostor_nearest_level")
         lines.append(
             f"| {row['field']} | {_fmt(_cell(row, 'gaussian_impostor_damage'))} | "
             f"{'`' + nearest + '`' if isinstance(nearest, str) and nearest else '—'} | "
+            f"{_fmt(_cell(row, f'{an.UNCORRELATED_LABEL}_damage'))} | "
             f"{_fmt(_cell(row, f'{run.anchor_label}_value'))} |"
         )
     lines += [
         "",
         "The fake prediction here has exactly the reference field's amplitude spectrum "
-        "and completely scrambled structure. Damage of 1 is what a field with no relation "
-        "to the truth scores, so the damage column says how close to useless this metric "
-        "considers that fake prediction: a low number means the metric was fooled. The "
-        "third column translates the same number into an ordinary degradation whose "
-        "damage the fake prediction matches, which is easier to picture.",
+        "and completely scrambled structure. Damage 1 is what the anchor scores, by default "
+        "the reference's own spatial mean, a prediction that knows the mean and nothing else. "
+        "The damage column therefore says how close to useless this metric considers that "
+        "fake prediction: a low number means the metric was fooled. The third column "
+        "translates the same number into an ordinary degradation whose damage the fake "
+        "prediction matches, which is easier to picture. The fourth is the reference moved by "
+        "a large random offset, the right statistics in the wrong place; where a field's "
+        "energy sits in its largest scales that copy stays partly correlated with the "
+        "reference, so it is not the score of an unrelated field.",
     ]
     return "\n".join(lines)
 

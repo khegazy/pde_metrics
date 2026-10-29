@@ -26,7 +26,7 @@ boundary condition can enter.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793302178`, do not edit -->
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -34,7 +34,7 @@ Four measured statistics for kinetic_energy, one row per degradation grouped by 
 
 ![median damage against severity level, one panel per degradation family and field, on one shared scale](_generated/response_curves.svg)
 
-Median damage over frames against severity level for kinetic_energy, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, an unrelated field; the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to an unrelated field. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points above 2 are drawn as triangles at the top. No damage scale on velocity: the grey panels show the raw value instead.
+Median damage over frames against severity level for kinetic_energy, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, the anchor (by default the field's own mean); the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to the anchor. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points above 2 are drawn as triangles at the top.
 
 **Trend: does the response follow the degradation?**
 
@@ -52,10 +52,10 @@ Median damage over frames against severity level for kinetic_energy, one row per
 |---|---|---|---|---|
 | Displacement | velocity | 0 | — | level — |
 | Resolution loss | velocity | -0.0298 to -0.00169 | 2.08 to 5.2 | level — |
-| Smoothing | velocity | -0.636 to -0.112 | 1.61 to 1.8 | level — |
-| Spectral filtering | velocity | -0.981 to -0.147 | 0.541 to 1.41 | level — |
-| Noise | velocity | 0.25 | 1.86 | level — |
-| trap test: fake prediction, right spectrum | velocity | — | — | damage — |
+| Smoothing | velocity | -0.636 to -0.112 | 1.61 to 1.8 | level 3 |
+| Spectral filtering | velocity | -0.981 to -0.147 | 0.541 to 1.41 | level 1 |
+| Noise | velocity | 0.25 | 1.86 | level 4 |
+| trap test: fake prediction, right spectrum | velocity | — | — | damage 0 |
 
 **Consistency: how much does it vary from snapshot to snapshot?**
 
@@ -67,7 +67,7 @@ Median damage over frames against severity level for kinetic_energy, one row per
 | Spectral filtering | velocity | 0.00388 to 0.0191 | 22 |
 | Noise | velocity | 0.00524 | 1 |
 
-One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to a field with no relation to the truth; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
+One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
 
 These tables report what was measured and grade none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
 
@@ -75,7 +75,7 @@ These tables report what was measured and grade none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift, against severity (distance) | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| velocity | — | — | — | `coarsen` `coarsen_bandlimited` `translate_subpixel` `translate_x` | — | 1.69 |
+| velocity | 0.62 | `median_blur` | `additive_noise` | `coarsen` `coarsen_bandlimited` `translate_subpixel` `translate_x` | — | 1.68 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
@@ -145,18 +145,21 @@ form is the one to reach for.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793302178`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `ce78cb2d30d8` (working tree dirty). Run `comparison_1790639359`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `b59bbde617d1` (working tree dirty). Run `comparison_1793302178`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1790639359`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793302178`.
 
 <!-- END GENERATED run -->
 
 Each subsection links to the degradations that subsection reports. What those degradations
 do, and what their strength numbers mean, is documented on their own pages. A single-field
 diagnostic is evaluated on the reference and on every degraded variant alike, so what is
-read here is the drift away from the reference value rather than an error.
+read here is the drift away from the reference value rather than an error. On the damage scale
+the anchor is the field's own spatial mean, whose kinetic energy is 2.5e-8 against the
+reference's 1.6e-3, so damage is the fraction of the reference's energy lost: positive when the
+value falls and negative when it rises.
 
 ### Smoothing
 
@@ -164,7 +167,7 @@ read here is the drift away from the reference value rather than an error.
 [box_blur](../../degradations/box_blur/card.md) ·
 [median_blur](../../degradations/median_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793302178`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -181,7 +184,7 @@ read here is the drift away from the reference value rather than an error.
 [highpass_ideal](../../degradations/highpass_ideal/card.md) ·
 [highpass_butterworth](../../degradations/highpass_butterworth/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793302178`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -197,7 +200,7 @@ read here is the drift away from the reference value rather than an error.
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793302178`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -216,7 +219,7 @@ should — which is one of the things a reference-free diagnostic is useful for.
 [coarsen](../../degradations/coarsen/card.md) ·
 [coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793302178`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -235,7 +238,7 @@ each block, which its staircase flattens.
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793302178`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -248,24 +251,30 @@ each block, which its staircase flattens.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793302178`, do not edit -->
 
-| field | damage assigned to the fake prediction | closest real degradation | value on an unrelated field |
-|---|---|---|---|
-| velocity | — | — | 0.00157 |
+| field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
+|---|---|---|---|---|
+| velocity | 0 | `translate_subpixel=1` | 0 | 2.54e-08 |
 
-The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage of 1 is what a field with no relation to the truth scores, so the damage column says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture.
+The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_canaries -->
 
+Both score exactly the reference's kinetic energy, damage 0. The fake prediction has the
+reference's amplitude spectrum, and by Parseval's theorem Equation (1) is proportional to the
+sum of that spectrum's squares, so the two cannot differ; the moved copy is a translation of
+the reference. The trap therefore records this metric as fooled, which for a single-field
+quantity follows from the definition rather than from the data.
+
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793302178`, do not edit -->
 
 | compared with | rank correlation over every degradation |
 |---|---|
 | `enstrophy` | 0.86 |
-| `palinstrophy` | 0.807 |
+| `palinstrophy` | 0.805 |
 | `increment_flatness` | 0.161 |
 | `h1_seminorm` | 0.147 |
 | `mae` | -0.208 |
@@ -274,6 +283,7 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 | `nrmse` | -0.284 |
 | `h_minus_one` | -0.292 |
 | `increment_w1` | -0.552 |
+| `increment_w1_by_separation` | -0.669 |
 | `spectrum_l2` | -0.883 |
 
 Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
@@ -282,71 +292,73 @@ Computed on the median value at each combination of degradation and strength, ov
 
 ### Damage beside the other metrics
 
-<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1790639359`, do not edit -->
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793302178`, do not edit -->
 
-No damage beside the pointwise controls figure: kinetic_energy has no damage scale on any field for these degradations.
+![damage against applied strength for this metric beside the pointwise controls, log-log, one panel per displacement degradation and field](_generated/damage_beside_controls.svg)
+
+Median damage over frames against the applied strength, log-log, for kinetic_energy (bold, in colour) and the pointwise controls mae, mse, rmse, nrmse (thin, grey), one column per displacement degradation and one row per field. The grey line is damage 1, the anchor (by default the field's own mean). Parallel lines charge in the same proportion at every strength; a steeper line charges relatively more for the larger shifts, which is what decides whether two metrics are interchangeable as training losses. These are the same numbers as the table beneath.
 
 **Displacement, density, `translate_subpixel`** (strength: distance).
 
 | metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
 |---|---|---|---|---|---|---|
 | `kinetic_energy` | — | — | — | — | — | — |
-| `mae` | 0.00328 | 0.00655 | 0.0131 | 0.0262 | 0.0521 | 0.103 |
-| `mse` | 1.49e-05 | 5.97e-05 | 0.000238 | 0.000952 | 0.00379 | 0.015 |
-| `rmse` | 0.00386 | 0.00772 | 0.0154 | 0.0309 | 0.0616 | 0.123 |
-| `nrmse` | 0.00362 | 0.00723 | 0.0145 | 0.0289 | 0.0576 | 0.115 |
+| `mae` | 0.00383 | 0.00767 | 0.0153 | 0.0306 | 0.061 | 0.121 |
+| `mse` | 2.17e-05 | 8.68e-05 | 0.000347 | 0.00138 | 0.00551 | 0.0219 |
+| `rmse` | 0.00466 | 0.00931 | 0.0186 | 0.0372 | 0.0743 | 0.148 |
+| `nrmse` | 0.00463 | 0.00926 | 0.0185 | 0.037 | 0.0738 | 0.147 |
 
 **Displacement, density, `translate_x`** (strength: distance).
 
 | metric | 1 | 2 | 4 | 8 | 16 |
 |---|---|---|---|---|---|
 | `kinetic_energy` | — | — | — | — | — |
-| `mae` | 0.0262 | 0.0521 | 0.103 | 0.205 | 0.401 |
-| `mse` | 0.000952 | 0.00379 | 0.015 | 0.0584 | 0.211 |
-| `rmse` | 0.0309 | 0.0616 | 0.123 | 0.242 | 0.46 |
-| `nrmse` | 0.0289 | 0.0576 | 0.115 | 0.226 | 0.43 |
+| `mae` | 0.0306 | 0.061 | 0.121 | 0.24 | 0.469 |
+| `mse` | 0.00138 | 0.00551 | 0.0219 | 0.0849 | 0.307 |
+| `rmse` | 0.0372 | 0.0743 | 0.148 | 0.291 | 0.555 |
+| `nrmse` | 0.037 | 0.0738 | 0.147 | 0.29 | 0.55 |
 
 **Displacement, velocity, `translate_subpixel`** (strength: distance).
 
 | metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
 |---|---|---|---|---|---|---|
-| `kinetic_energy` | — | — | — | — | — | — |
-| `mae` | 0.00163 | 0.00325 | 0.0065 | 0.013 | 0.0257 | 0.05 |
-| `mse` | 4.76e-06 | 1.91e-05 | 7.61e-05 | 0.000303 | 0.00118 | 0.00445 |
-| `rmse` | 0.00218 | 0.00437 | 0.00873 | 0.0174 | 0.0344 | 0.0667 |
-| `nrmse` | 0.00219 | 0.00437 | 0.00873 | 0.0174 | 0.0343 | 0.0667 |
+| `kinetic_energy` | 4.92e-12 | 1.69e-11 | 3.37e-11 | -0 | -0 | -0 |
+| `mae` | 0.00279 | 0.00559 | 0.0112 | 0.0223 | 0.0441 | 0.0859 |
+| `mse` | 1.45e-05 | 5.81e-05 | 0.000232 | 0.000924 | 0.0036 | 0.0136 |
+| `rmse` | 0.00381 | 0.00762 | 0.0152 | 0.0304 | 0.06 | 0.117 |
+| `nrmse` | 0.00382 | 0.00763 | 0.0153 | 0.0304 | 0.06 | 0.117 |
 
 **Displacement, velocity, `translate_x`** (strength: distance).
 
 | metric | 1 | 2 | 4 | 8 | 16 |
 |---|---|---|---|---|---|
-| `kinetic_energy` | — | — | — | — | — |
-| `mae` | 0.013 | 0.0257 | 0.05 | 0.0951 | 0.18 |
-| `mse` | 0.000303 | 0.00118 | 0.00445 | 0.016 | 0.0541 |
-| `rmse` | 0.0174 | 0.0344 | 0.0667 | 0.127 | 0.233 |
-| `nrmse` | 0.0174 | 0.0343 | 0.0667 | 0.127 | 0.232 |
+| `kinetic_energy` | -0 | -0 | -0 | -0 | -0 |
+| `mae` | 0.0223 | 0.0441 | 0.0859 | 0.163 | 0.31 |
+| `mse` | 0.000924 | 0.0036 | 0.0136 | 0.0489 | 0.165 |
+| `rmse` | 0.0304 | 0.06 | 0.117 | 0.221 | 0.406 |
+| `nrmse` | 0.0304 | 0.06 | 0.117 | 0.221 | 0.406 |
 
 **Displacement, vorticity, `translate_subpixel`** (strength: distance).
 
 | metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
 |---|---|---|---|---|---|---|
 | `kinetic_energy` | — | — | — | — | — | — |
-| `mae` | 0.0225 | 0.045 | 0.0892 | 0.172 | 0.306 | 0.453 |
-| `mse` | 0.000476 | 0.0019 | 0.00747 | 0.028 | 0.0889 | 0.187 |
-| `rmse` | 0.0218 | 0.0436 | 0.0865 | 0.167 | 0.298 | 0.432 |
-| `nrmse` | 0.0219 | 0.0437 | 0.0868 | 0.169 | 0.304 | 0.447 |
+| `mae` | 0.0428 | 0.0854 | 0.169 | 0.328 | 0.582 | 0.86 |
+| `mse` | 0.00112 | 0.00448 | 0.0176 | 0.066 | 0.21 | 0.44 |
+| `rmse` | 0.0335 | 0.0669 | 0.133 | 0.257 | 0.458 | 0.663 |
+| `nrmse` | 0.0328 | 0.0654 | 0.13 | 0.253 | 0.456 | 0.67 |
 
 **Displacement, vorticity, `translate_x`** (strength: distance).
 
 | metric | 1 | 2 | 4 | 8 | 16 |
 |---|---|---|---|---|---|
 | `kinetic_energy` | — | — | — | — | — |
-| `mae` | 0.172 | 0.306 | 0.453 | 0.581 | 0.69 |
-| `mse` | 0.028 | 0.0889 | 0.187 | 0.288 | 0.468 |
-| `rmse` | 0.167 | 0.298 | 0.432 | 0.537 | 0.684 |
-| `nrmse` | 0.169 | 0.304 | 0.447 | 0.555 | 0.702 |
+| `mae` | 0.328 | 0.582 | 0.86 | 1.1 | 1.31 |
+| `mse` | 0.066 | 0.21 | 0.44 | 0.679 | 1.1 |
+| `rmse` | 0.257 | 0.458 | 0.663 | 0.824 | 1.05 |
+| `nrmse` | 0.253 | 0.456 | 0.67 | 0.832 | 1.05 |
 
-Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 an unrelated field; a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
+Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 the anchor (by default the field's own mean); a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
 
 <!-- END GENERATED results_damage_by_level -->
 

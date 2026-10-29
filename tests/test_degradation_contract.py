@@ -116,6 +116,7 @@ LADDERS: dict[str, list[float]] = {
     "multiplicative_noise": [0.01, 0.1, 0.5],
     "gaussian_impostor": [0],
     "random_large_translation": [0, 1, 2],   # draw indices, not damage levels
+    "mean_field": [0],
     "gain": [0.05, 0.2, 0.5],
     "bias": [0.05, 0.2, 0.5],
     # Ensemble dispersion. Severities are fractions of the calibrated spread: excess for
