@@ -70,3 +70,11 @@ def test_a_separation_with_no_reference_increments_is_zero_or_infinite():
     flat = np.zeros((1, 4, 4))
     assert increment_w1_by_separation(flat, flat) == 0.0
     assert increment_w1_by_separation(flat, alternating_field()) == np.inf
+
+
+@pytest.mark.parametrize("shape", [(1, 3, 1), (1, 1)])
+def test_a_grid_too_small_for_any_separation_is_refused(shape: tuple[int, ...]):
+    """An axis of one cell admits no separation, and a mean over none is NaN, not a number."""
+    field = np.arange(np.prod(shape), dtype=float).reshape(shape)
+    with pytest.raises(ValueError, match="at least two cells"):
+        increment_w1_by_separation(field, field + 1.0)

@@ -26,9 +26,17 @@ REFERENCE_SCALE = "increment_w1_by_separation/reference_scale"
 
 
 def octave_separations(shape: tuple[int, ...]) -> NDArray[np.int64]:
-    """1, 2, 4, ... cells, up to half the smallest spatial extent of ``shape``."""
+    """1, 2, 4, ... cells, up to half the smallest spatial extent of ``shape``.
+
+    Raises:
+        ValueError: If an axis has fewer than two cells: there is no separation to read, and the
+            mean over none would be NaN rather than a number.
+    """
     largest = min(shape) // 2
-    return 2 ** np.arange(int(np.log2(largest)) + 1) if largest >= 1 else np.array([], dtype=int)
+    if largest < 1:
+        raise ValueError(f"increment separations need at least two cells along every spatial "
+                         f"axis; the spatial shape is {tuple(shape)}")
+    return 2 ** np.arange(int(np.log2(largest)) + 1)
 
 
 def mean_absolute_increment(x: NDArray[np.floating],
