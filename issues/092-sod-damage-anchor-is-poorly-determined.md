@@ -26,7 +26,8 @@ before this issue was filed.
 ## Evidence
 
 `python evaluate.py metrics=[mse] dataset=sod_shock_tube paths.data_url=null` at commit
-`44e2077` with a clean tree, run `mse_1792825406` (default ladder, the reader's own 10 frames,
+`44e2077` (on the branch of PR #17, which reached `main` squashed as `379c9b8`) with a clean
+tree, run `mse_1792825406` (default ladder, the reader's own 10 frames,
 2048 cells). Per frame, the ratio of the largest to the smallest `mse` over the six anchor draws:
 
 | field | median over frames | largest |
