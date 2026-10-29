@@ -359,8 +359,8 @@ fact about the metric for the catalog, and the contract test checks it against a
 ladder. The ordering statistics are one-sided — monotonicity asks whether the value rises, the
 separability AUC is taken with `alternative="greater"`, the threshold levels look for the first
 median to exceed a target — so `analysis.py::response_direction` measures one direction per
-(metric, field, degradation), the sign of the median departure from clean at the harshest usable
-level, and every ordering statistic runs on the departure from the clean value of the same frame
+(metric, field, degradation), the sign of the median departure from clean at the harshest level
+whose median departure is more than round-off, and every ordering statistic runs on the departure from the clean value of the same frame
 times that sign. One sign per degradation, never per point: ordering the size of each departure on
 its own reads a response that scatters to both sides of clean as a perfect trend. The clean level is
 not a point of the trend. A target-valued metric is ordered by its distance from the target.

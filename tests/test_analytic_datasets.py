@@ -348,17 +348,39 @@ def test_blobs_at_distinct_speeds_change_the_error_from_frame_to_frame():
 
 
 def test_per_unit_time_grows_the_applied_severity_linearly_in_time():
-    """A rate times each frame's time, recorded beside the rate; at t = 0 it does nothing and the
-    rows say so. A calibrated operator's severity is not a rate and refuses the option."""
+    """A rate times the time since the trajectory's first frame, recorded beside the rate; on that
+    frame it does nothing and the rows say so, whatever the first frame's time."""
     ladder = build_ladder({"drift": {"op": "translate_subpixel", "severities": [0.5, 1.0],
                                      "per_unit_time": True}})
-    rows = run(AdvectingBlobs(n_frames=5, t_end=4.0), [metric_registry.get("mse")], ladder,
-               fields=["density"], dataset=DatasetInfo(name="advecting_blobs")).rows
+    rows = run(AdvectingBlobs(n_frames=5, t_start=2.0, t_end=6.0), [metric_registry.get("mse")],
+               ladder, fields=["density"], dataset=DatasetInfo(name="advecting_blobs")).rows
     drift = rows[rows["degradation"] == "drift"]
     assert drift["severity"].to_numpy() == pytest.approx(
-        (drift["severity_nominal"] * drift["time"]).to_numpy(), rel=1e-12)
-    assert drift.loc[drift["time"] == 0.0, "severity_degenerate"].all()
-    assert not drift.loc[drift["time"] > 0.0, "severity_degenerate"].any(), (
-        "a level that is a no-op only at t = 0 must not be excluded at later times")
-    with pytest.raises(ValueError, match="calibrated"):
-        build_ladder({"blur": {"op": "gaussian_blur", "severities": [0.1], "per_unit_time": True}})
+        (drift["severity_nominal"] * (drift["time"] - 2.0)).to_numpy(), rel=1e-12)
+    assert drift.loc[drift["time"] == 2.0, "severity_degenerate"].all()
+    assert not drift.loc[drift["time"] > 2.0, "severity_degenerate"].any(), (
+        "a level that is a no-op only on the first frame must not be excluded at later times")
+
+
+@pytest.mark.parametrize("op, reason", [
+    ("gaussian_blur", "calibrated"),                # a fraction of a spectrum, not a rate
+    ("band_attenuate", "unchanged at severity 0"),  # severity 0 damages; damage falls with it
+    ("gaussian_impostor", "not ordinal"),           # a probe's severity is not a strength
+])
+def test_per_unit_time_is_refused_where_a_rate_times_a_time_is_no_strength(op, reason):
+    """Only an ordinal, uncalibrated operator whose severity 0 is the identity and whose damage
+    grows with its severity starts undamaged and is damaged more as time passes."""
+    with pytest.raises(ValueError, match=reason):
+        build_ladder({"grow": {"op": op, "severities": [0.1], "per_unit_time": True}})
+
+
+def test_a_per_unit_time_strength_the_grid_cannot_take_is_dropped_before_the_run():
+    """Coarsening by 2 per unit time reaches a factor of 3 at t = 1.5, which does not divide the
+    64-cell grid. The level is tried at every frame's time before the loop and dropped, as any
+    unsupported strength is, rather than stopping the run inside it at that frame."""
+    ladder = build_ladder({"grow": {"op": "coarsen", "severities": [2.0], "per_unit_time": True},
+                           "translate_x": {"op": "translate", "severities": [1]}})
+    rows = run(AdvectingBlobs(n_frames=4, t_end=1.5), [metric_registry.get("mse")], ladder,
+               fields=["density"], dataset=DatasetInfo(name="advecting_blobs")).rows
+    assert "grow" not in set(rows["degradation"].astype(str))
+    assert "translate_x" in set(rows["degradation"].astype(str))

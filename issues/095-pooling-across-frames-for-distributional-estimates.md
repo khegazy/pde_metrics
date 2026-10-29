@@ -36,6 +36,6 @@ needs.
 
 ## Related
 
-Written with the harness change of the metric-evaluation design (rev. 4, §3.9), 2026-10-28.
+Written with the harness change of pull request #19, 2026-10-28.
 The dynamics family ([094](094-dynamics-family-has-a-test-bed-but-no-rollout-input.md)) needs
 the same kind of input.

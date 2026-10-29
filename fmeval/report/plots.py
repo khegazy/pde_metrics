@@ -168,10 +168,13 @@ def companion_curves(ctx, df, opts) -> PlotResult:
                     marker="o", ms=2.5, label=f"level {level}")
         ax.plot(clean["coordinate"], clean["value_median"], color="k", lw=1.6, label="clean")
         for label, ls in ((ctx.anchor_label, "--"), ("gaussian_impostor", ":")):
-            probe = medians[medians["degradation"] == label].sort_values("coordinate")
-            if not probe.empty:
-                ax.plot(probe["coordinate"], probe["value_median"], color="0.45", ls=ls, lw=1,
-                        label=ctx.label(label))
+            # One line per draw: the anchor's draws are levels of one label, and a single line
+            # through all of them would zigzag between draws at every coordinate.
+            probe = medians[medians["degradation"] == label]
+            for n, (_, draw) in enumerate(probe.groupby("level", observed=True)):
+                draw = draw.sort_values("coordinate")
+                ax.plot(draw["coordinate"], draw["value_median"], color="0.45", ls=ls, lw=1,
+                        label=ctx.label(label) if n == 0 else None)
         if positive and medians["coordinate"].max() / medians["coordinate"].min() > 10:
             ax.set_xscale("log", base=2)
         ax.set_title(ctx.label(name), fontsize="small")
@@ -240,8 +243,11 @@ def response_along_time(ctx, df, opts) -> PlotResult:
     for ax, name in zip(grid[0], names, strict=True):
         block = df[(df["degradation"] == name) | (df["level"] == 0)]
         levels = sorted(block["level"].unique())
-        colours = ["k", *ctx.style.level_colours(ctx.style.axis_colour(name), len(levels) - 1)]
-        for level, colour in zip(levels, colours, strict=True):
+        damaged = [level for level in levels if level > 0]
+        colours = {0: "k", **dict(zip(damaged, ctx.style.level_colours(
+            ctx.style.axis_colour(name), len(damaged)), strict=True))}
+        for level in levels:
+            colour = colours[level]
             line = (block[block["level"] == level].groupby("time", observed=True)["value"]
                     .median().reset_index())
             ax.plot(line["time"], line["value"], color=colour, marker="o", ms=2.5,

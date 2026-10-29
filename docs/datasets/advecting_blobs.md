@@ -49,11 +49,12 @@ round-off size there.
 
 ## What it is for
 
-- **Time-dependent degradations.** A ladder entry of an uncalibrated operator may set
-  `per_unit_time: true`. Its severity is then a rate, multiplied by each frame's time: a
-  translation becomes a wrong advection speed, a displacement growing linearly in time, and
-  noise an error growing in time. At $t = 0$ such an entry does nothing, and its rows there are
-  flagged as no experiment. The `response_along_time` figure shows the result, one line per
+- **Time-dependent degradations.** A ladder entry of an ordinal, uncalibrated operator whose
+  severity 0 is the identity may set `per_unit_time: true`. Its severity is then a rate,
+  multiplied by the time elapsed since the trajectory's first frame: a translation becomes a
+  wrong advection speed, a displacement growing linearly in time, and noise an error growing in
+  time. On the first frame such an entry does nothing, and its rows there are flagged as no
+  experiment. The `response_along_time` figure shows the result, one line per
   level against time.
 - **The dynamics family.** The valid prediction time, the decorrelation time, the temporal
   autocorrelation and the invariant measure are recorded in

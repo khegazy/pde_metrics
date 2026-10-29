@@ -288,11 +288,13 @@ def run(
         trajectory, fields, indices, factor, remap_method, calibration_frames
     )
 
+    # A per_unit_time level is a rate times the time since the trajectory's first frame.
+    time_origin = float(trajectory.times[0])
     probe = remap_frame(trajectory.frame(int(indices[0]), fields), factor,
                         method=remap_method)
     severity_levels = _runnable_levels(
         severity_levels, probe, fields, seed=seed, calibration=calibration,
-        analysis_grid=grid_size,
+        analysis_grid=grid_size, times=trajectory.times[indices], time_origin=time_origin,
     )
 
     run_columns = {**dataset.row(), "analysis_grid": grid_size, "remap_op": remap_method,
@@ -317,7 +319,7 @@ def run(
                 severity_level,
                 apply_severity_level(
                     severity_level, frame, available, seed=seed,
-                    reference_rms=ref_rms, calibration=calibration,
+                    reference_rms=ref_rms, calibration=calibration, time_origin=time_origin,
                 ),
             )
             for severity_level in severity_levels
@@ -400,7 +402,7 @@ def run(
     # A metric may accept none of the available fields, which is a legitimate no-op
     # rather than an error -- but pd.DataFrame([]) has no columns to coerce.
     df = _coerce(pd.DataFrame(rows)) if rows else empty_results()
-    df = _flag_repeated_levels(df)
+    df = _flag_repeated_levels(df, {level.label for level in severity_levels if level.ordinal})
     companions = pd.DataFrame()
     if curve_rows:
         companions = pd.DataFrame(curve_rows)
@@ -421,15 +423,20 @@ def run(
     )
 
 
-def _flag_repeated_levels(df: pd.DataFrame) -> pd.DataFrame:
+def _flag_repeated_levels(df: pd.DataFrame, ordinal: set[str]) -> pd.DataFrame:
     """Mark severity levels that repeat a milder one as the same experiment, and log them.
 
     Detected by measurement rather than by declaration: two severity levels whose
     severities resolve to the same quantised operation produce a bitwise identical field,
-    hence an exactly equal ``energy_changed`` in every frame. That is a stronger test than
+    hence an exactly equal ``energy_changed``. That is a stronger test than
     asking each operator to describe how it rounds, and it needs no such description -- it
     catches a sharp filter landing twice on the same set of modes, and a windowed kernel landing
-    twice on the same odd width, alike.
+    twice on the same odd width, alike. It is applied frame by frame: a ``per_unit_time`` entry's
+    levels are distinct experiments at most times and can coincide at one (whole-cell shifts of
+    1.0 and 1.4 cells per unit time, both one cell at t = 1), and only that frame's tie is the
+    same experiment twice. Only the ``ordinal`` ladder labels are checked: the draws of a probe or
+    an anchor are samples, not strengths, and two random draws that happen to coincide in one
+    frame are not an ordering to protect.
 
     Such a severity level is not padding, it is corruption: the rank correlation would
     score the tie as agreement and the adjacent-severity level separability would compare
@@ -444,30 +451,26 @@ def _flag_repeated_levels(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return df
 
-    repeated = pd.Series(False, index=df.index)
-    for (field, axis), g in df[df["level"] > 0].groupby(
-        ["field", "degradation"], observed=True
-    ):
-        # Equal in every frame, not just the first: a per_unit_time entry is a no-op at t = 0,
-        # where every level is the same experiment, and a distinct one at every later time.
-        effects = g.pivot_table(index="frame_index", columns="level", values="energy_changed",
-                                aggfunc="first")
-        seen: dict[tuple[float, ...], int] = {}
-        levels = []
-        for level in effects.columns:
-            effect = tuple(effects[level].to_numpy(float))
-            if effect in seen:
-                repeated.loc[g.index[g["level"] == level]] = True
-                levels.append((int(level), seen[effect]))
-            else:
-                seen[effect] = int(level)
-        if levels:
-            log.warning(
-                "%s / %s: level(s) %s repeat the experiment of level(s) %s and are excluded "
-                "from the acceptance statistics. The field's spectrum cannot resolve that many "
-                "distinct severity levels for this operator.",
-                field, axis, [a for a, _ in levels], [b for _, b in levels],
-            )
+    # One row per (field, degradation, frame, level): the experiment, whichever metric scored it.
+    keys = ["field", "degradation", "frame_index"]
+    ladder = df[(df["level"] > 0) & df["degradation"].isin(ordinal)]
+    effects = ladder.drop_duplicates([*keys, "level"])
+    # The mildest level with the same energy change in the same frame; NaN never repeats.
+    first = effects.groupby([*keys, "energy_changed"], observed=True)["level"].transform("min")
+    repeats = effects[effects["level"] > first].assign(first=first)
+    repeated = pd.Series(pd.MultiIndex.from_frame(ladder[[*keys, "level"]]).isin(
+        pd.MultiIndex.from_frame(repeats[[*keys, "level"]])), index=ladder.index
+    ).reindex(df.index, fill_value=False)
+    for (field, axis), g in repeats.groupby(["field", "degradation"], observed=True):
+        pairs = g.groupby(["level", "first"], observed=True)["frame_index"].nunique()
+        log.warning(
+            "%s / %s: level(s) %s repeat the experiment of level(s) %s in %s of %d frame(s) "
+            "and are excluded there from the acceptance statistics. The field's spectrum cannot "
+            "resolve that many distinct severity levels for this operator.",
+            field, axis, [int(a) for a, _ in pairs.index], [int(b) for _, b in pairs.index],
+            pairs.tolist(), ladder.loc[ladder["field"].eq(field)
+                                       & ladder["degradation"].eq(axis), "frame_index"].nunique(),
+        )
 
     flagged = df[(df["level"] > 0) & df["severity_degenerate"]]
     for (field, axis), g in flagged.groupby(["field", "degradation"], observed=True):
@@ -532,6 +535,8 @@ def _runnable_levels(
     seed: int,
     calibration: Calibration,
     analysis_grid: int,
+    times: Sequence[float] = (),
+    time_origin: float = 0.0,
 ) -> list[SeverityLevel]:
     """Drop severity levels that cannot run on the analysis grid, before the frame loop starts.
 
@@ -546,14 +551,23 @@ def _runnable_levels(
     the rest: an unsupported
     severity level is one missing experiment, not a reason to discard the others.
 
+    A ``per_unit_time`` level applies a different strength in every frame, its rate times the
+    frame's time since ``time_origin``, so it is tried at each of the selected frames' ``times``:
+    a coarsening factor that does not divide the grid at one of them would otherwise stop the run
+    inside the frame loop.
+
     Raises:
         ValueError: If no severity level survives, since there is then nothing to measure.
     """
     keep: list[SeverityLevel] = []
     dropped: list[str] = []
     for severity_level in severity_levels:
+        trials = ([replace(probe, time=float(t)) for t in times]
+                  if severity_level.per_unit_time and len(times) else [probe])
         try:
-            apply_severity_level(severity_level, probe, fields, seed=seed, calibration=calibration)
+            for trial in trials:
+                apply_severity_level(severity_level, trial, fields, seed=seed,
+                                     calibration=calibration, time_origin=time_origin)
         except _OPERATOR_DEFECTS as exc:
             raise RuntimeError(
                 f"the {severity_level.label!r} operator is broken: {type(exc).__name__}: {exc}.\n"

@@ -687,8 +687,10 @@ clean, consistency) with no resampling interval. The results form a table of the
 the panel, never inside it. They never enter the summary card, the advisory flags, the
 cross-metric matrices or the false-discovery adjustment.
 
-**Caveats.** Neighbouring coordinates of one curve are strongly correlated: the step-to-step
-correlation was 0.85 to 1.0 in the review of the curve design. A curve of per-coordinate rank
+**Caveats.** Neighbouring coordinates of one curve are strongly correlated. Measured on
+`increment_w1_by_separation`'s evidence run (`comparison_1793262246`): across frames, the change
+between the two mildest strengths at one separation and at the next correlates with a median of
+0.97 to 0.99 on each field, and above 0.67 for nine in ten such pairs. A curve of per-coordinate rank
 correlations therefore localises the evidence and does not multiply it. Where the clean curve
 crosses zero along its coordinate, the change from clean is large by construction near the
 crossing, and the raw curve is the reading there.
@@ -1014,7 +1016,7 @@ The index into the source trajectory, and the corresponding physical time.
 ### `metric`, `arity`, `field`
 
 Which metric, whether it compares two fields or characterises one, and which physical field.
-`results.csv` holds exactly one row per (dataset, trajectory, frame, field, metric, variant);
+`results.csv` holds exactly one row per (dataset, frame, field, metric, variant);
 the analysis refuses a file that does not, because every statistic reads a row as one point of
 one trace. A run written before this rule may carry an empty `component` column, which is
 ignored.
@@ -1069,12 +1071,15 @@ and re-flagging needs no recomputation, so changing your mind is a config edit.
 
 ## The degradations
 
-**Strength that grows with time.** A ladder entry of an uncalibrated operator may set
-`per_unit_time: true`. Its strength is then a rate, multiplied by each frame's physical time:
-the applied value is recorded in `severity` and the rate in `severity_nominal`. A translation then
-becomes a wrong advection speed and noise an error growing in time. At time 0 such an entry does
-nothing, and its rows there are flagged `severity_degenerate`. A calibrated operator refuses it,
-because its strength is a fraction of a measured spectrum, not a rate.
+**Strength that grows with time.** A ladder entry may set `per_unit_time: true`. Its strength
+is then a rate, multiplied by the time elapsed since the trajectory's first frame: the applied
+value is recorded in `severity` and the rate in `severity_nominal`. A translation then becomes a
+wrong advection speed and noise an error growing in time. On the trajectory's first frame such an
+entry does nothing, and its rows there are flagged `severity_degenerate`. Only an ordinal,
+uncalibrated operator whose strength 0 leaves the field unchanged and whose damage grows with its
+strength accepts it; any other refuses it, because a rate times a time is then not a strength
+that starts at no damage and grows. A level whose strength the grid cannot take at some frame's
+time is dropped before the run, as any unsupported strength is.
 
 Every operator also declares what it provably leaves unchanged — the multiset of values, the
 fluctuation's amplitude spectrum, the spatial mean, or the shape up to a rigid displacement — and

@@ -109,7 +109,7 @@ def test_a_curve_companion_runs_end_to_end_through_a_run_folder(temporary_metric
     """A metric with a curve: one result row per comparison, one companion row per coordinate,
     both through a run folder and back into the analysis.
 
-    Pins the contract of the curve companion (metric-evaluation design, §3.7): the round trip;
+    Pins the contract of the curve companion: the round trip;
     a one-field curve on the clean level is the reference's own; the curve's coordinates are
     analysed one by one, so two coordinates moving in opposite directions each follow the blur
     perfectly, which no single trace pooling both could; and results.csv keeps one row per key.

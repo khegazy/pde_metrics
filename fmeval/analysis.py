@@ -48,9 +48,11 @@ PROBE_LABELS: frozenset[str] = frozenset({"gaussian_impostor", UNCORRELATED_LABE
 GROUP_KEYS: list[str] = ["dataset", "metric", "field"]
 
 #: What identifies one result row: one metric evaluation of one variant of one frame. Every
-#: statistic reads a row as one point on one trace, so a second row under the same key would be
-#: merged into it silently; :func:`normalisation` refuses that.
-ROW_KEYS: list[str] = [*GROUP_KEYS, "trajectory", "frame_index", "variant_label"]
+#: statistic reads a row as one point on one trace, and pairs a frame's levels with that frame's
+#: clean value by ``frame_index`` within a :data:`GROUP_KEYS` group, so a second row under the
+#: same key -- another trajectory's frame of the same index included -- would be merged into it
+#: silently; :func:`normalisation` refuses that.
+ROW_KEYS: list[str] = [*GROUP_KEYS, "frame_index", "variant_label"]
 
 #: The ladder entry the profile's displacement elasticity is read from: a sub-pixel shift, the
 #: smallest displacement the ladder applies and the regime of the double penalty.
@@ -175,8 +177,9 @@ def normalisation(df: pd.DataFrame, *, uncorrelated_label: str = UNCORRELATED_LA
         raise ValueError(
             f"{int(repeated.sum())} result rows share a key of {ROW_KEYS} with another row, "
             f"e.g. {df.loc[repeated, keys].head(2).to_dict('records')}. "
-            "Every statistic reads one row as one point of one trace; concatenate runs with "
-            "distinct dataset or trajectory names, or analyse them separately."
+            "Every statistic reads one row as one point of one trace and pairs frames by "
+            "frame_index within a dataset; concatenate runs under distinct dataset names, or "
+            "analyse them separately."
         )
     rows = []
     for key, g in df.groupby(GROUP_KEYS, observed=True):
@@ -270,24 +273,25 @@ def response_direction(df: pd.DataFrame) -> dict[tuple, int]:
     The only place a direction comes from. The ordering statistics read a degradation's trace as
     a *departure from clean* in a fixed direction (:func:`summarise_axes`), so a metric that falls
     steadily under blur and one that rises steadily under noise both read as following their
-    degradation; which way a metric moves carries no weight (the design's D6).
+    degradation; which way a metric moves carries no weight.
 
     One sign per (dataset, metric, field, degradation): the sign of the median over frames of
-    ``v(L) - v(0)``, the departure at the harshest usable level ``L`` from the clean value of the
-    same frame. One sign per row, never one per point: choosing the sign point by point (ranking
-    the absolute departure) lets a response that scatters to both sides of clean, more widely at
-    each level, read as a perfect trend. A two-field error metric is exactly zero on the clean
-    field, so its sign is ``+1`` and its statistics are those of its raw values.
+    ``v(L) - v(0)``, the departure at level ``L`` from the clean value of the same frame. One
+    sign per row, never one per point: choosing the sign point by point (ranking the absolute
+    departure) lets a response that scatters to both sides of clean, more widely at each level,
+    read as a perfect trend. A two-field error metric is exactly zero on the clean field, so its
+    sign is ``+1`` and its statistics are those of its raw values.
 
-    A level is usable when its median departure is finite and more than round-off against the
-    metric's largest value: round-off carries no direction. So ``L`` is the harshest level that
-    moved the metric at all. A translation-invariant quantity under a sub-pixel shift is the case
-    that needs it: it moves at fractional distances and is back on its clean value to round-off at
-    whole cells, the harshest levels (``increment_flatness`` on density, comparison_1790639359);
-    a sign defaulted at ``+1`` there would decide the sign of its ``rho`` by convention.
+    ``L`` is the harshest usable level (not flagged ``severity_degenerate``) whose median
+    departure is finite and more than round-off against the metric's largest value: round-off
+    carries no direction, so ``L`` is the harshest level that moved the metric at all. A
+    translation-invariant quantity under a sub-pixel shift is the case that needs it: it moves at
+    fractional distances and is back on its clean value to round-off at whole cells, the harshest
+    levels (``increment_flatness`` on density, comparison_1790639359); a sign defaulted at ``+1``
+    there would decide the sign of its ``rho`` by convention.
 
     Returns:
-        ``{(dataset, metric, field, degradation): +1 or -1}``. A row with no usable level, every
+        ``{(dataset, metric, field, degradation): +1 or -1}``. A row with no such level, every
         median departure round-off, has no direction and no key; its callers default to ``+1``,
         and the round-off guard of the ordering statistics withholds it.
     """
@@ -434,7 +438,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
             "value_max": float(values.max()),
             "cost_s": float(g["wall_time_s"].mean()),
             "direction": sign,
-            # Reactivity relative to clean, Eq. (2) of the design, at the harshest usable level.
+            # Reactivity relative to clean, (v - v(0)) / |v(0)|, at the harshest usable level.
             "relative_change_max": float(relative.loc[g.index[levels == levels.max()]].median()),
         }
 
@@ -1108,17 +1112,20 @@ def coordinate_label(coordinate: object) -> str:
 def dominance(curve: pd.DataFrame, probe_labels: frozenset[str] = PROBE_LABELS) -> pd.DataFrame:
     """Whether a curve's ordering of neighbouring strengths can depend on the summary chosen.
 
-    For each frame and each pair of neighbouring usable levels, the harsher level's curve
-    dominates the milder one's when every coordinate has moved at least as far from clean, in that
-    coordinate's own measured direction (:func:`response_direction`). Any registered number that is
+    For each frame and each pair of neighbouring usable damaged levels (the clean level is not a
+    point of the trend), the harsher level's curve dominates the milder one's when every
+    coordinate has moved at least as far from clean, in that coordinate's own measured direction
+    (:func:`response_direction`); a difference within round-off of the coordinate's largest value
+    in the frame is a tie, as :func:`_is_round_off` reads one, so noise in the last bits cannot
+    decide a pair. Any registered number that is
     non-decreasing in every coordinate's oriented departure -- a root-mean-square, a largest
     difference -- then orders the pair the same way; a fitted slope need not. The fraction of frames
-    in which the harsher dominates is computed per pair (Eq. 4 of the metric-evaluation design,
-    after the forecast dominance of Ehm et al. 2016, J. R. Stat. Soc. B 78(3):505-562), and
-    ``dominance_min`` is the smallest over pairs. Coordinates without a measured direction on a
-    degradation (round-off departures) are left out of it, since round-off cannot dominate. A
-    frame in which either curve of a pair lacks a finite value at one of those coordinates does
-    not enter that pair's fraction: an unknown departure neither dominates nor fails to.
+    in which the harsher dominates is computed per pair, after the forecast dominance of Ehm et
+    al. (2016, J. R. Stat. Soc. B 78(3):505-562), and ``dominance_min`` is the smallest over pairs.
+    Coordinates without a measured direction on a degradation (round-off departures) are left out
+    of it, since round-off cannot dominate. A frame in which either curve of a pair lacks a finite
+    value at one of those coordinates does not enter that pair's fraction: an unknown departure
+    neither dominates nor fails to.
 
     Returns:
         One row per (dataset, metric, field, ordinal degradation) with ``dominance_min`` and
@@ -1126,6 +1133,9 @@ def dominance(curve: pd.DataFrame, probe_labels: frozenset[str] = PROBE_LABELS) 
     """
     directions = response_direction(per_coordinate(curve))
     clean = dict(list(curve[curve["level"] == 0].groupby(GROUP_KEYS, observed=True)))
+    scales = {key: g.assign(value=g["value"].abs()).pivot_table(
+                  index="frame_index", columns="coordinate", values="value", aggfunc="max")
+              for key, g in curve.groupby(GROUP_KEYS, observed=True)}
     ladder = curve[(curve["level"] > 0) & ~curve["degradation"].isin(probe_labels)
                    & ~_degenerate_severities(curve)]
     rows = []
@@ -1149,7 +1159,9 @@ def dominance(curve: pd.DataFrame, probe_labels: frozenset[str] = PROBE_LABELS) 
         oriented = cube * np.array([signs[c] for c in coordinates], dtype=float)
         complete = np.isfinite(oriented).all(axis=2)
         read = complete[:, 1:] & complete[:, :-1]          # (frame, pair) comparisons made
-        dominated = (oriented[:, 1:, :] >= oriented[:, :-1, :]).all(axis=2) & read
+        tie = DEGENERATE_SPAN * scales[key].reindex(index=frames, columns=coordinates).to_numpy(
+            float)[:, None, :]
+        dominated = (oriented[:, 1:, :] >= oriented[:, :-1, :] - tie).all(axis=2) & read
         counted = read.sum(axis=0)
         made = counted > 0
         rows.append({**dict(zip(GROUP_KEYS, key, strict=True)), "degradation": axis,
@@ -1209,13 +1221,14 @@ def analyse(rows: pd.DataFrame, *, companions: pd.DataFrame | None = None,
     if companions is not None and not companions.empty:
         labelled = per_coordinate(companions)
         curve_norm = normalisation(labelled, uncorrelated_label=anchor, probe_labels=probe_labels)
-        curve_axes = summarise_axes(add_damage(labelled, curve_norm), norm=curve_norm,
-                                    n_bootstrap=0, seed=seed, probe_labels=probe_labels)
+        curve_scored = add_damage(labelled, curve_norm)
+        curve_axes = summarise_axes(curve_scored, norm=curve_norm, n_bootstrap=0, seed=seed,
+                                    probe_labels=probe_labels)
         bundle = dict(zip(labelled["metric"], zip(companions["metric"].astype(str),
                                                   companions["coordinate"], strict=True)))
         curve_axes.insert(1, "coordinate", curve_axes["metric"].map(lambda m: bundle[m][1]))
         curve_axes["metric"] = curve_axes["metric"].map(lambda m: bundle[m][0])
-        extra = {"companion_scored": add_damage(labelled, curve_norm),
+        extra = {"companion_scored": curve_scored,
                  "companion_axes": curve_axes,
                  "dominance": dominance(companions, probe_labels)}
     return Analysis(norm=norm, scored=scored, axes=axes, probes=probes,
@@ -1353,7 +1366,7 @@ def per_level_response(scored: pd.DataFrame, *, metric: str,
         if column not in sub.columns:
             sub[column] = default
     # A level is flagged when no frame of it is a usable experiment. A level usable in some
-    # frames (a per_unit_time level is a no-op at t = 0 only) is read over those frames, as
+    # frames (a per_unit_time level is a no-op on the first frame only) is read over those, as
     # summarise_axes reads it.
     flagged = _degenerate_severities(sub)
     level_flagged = flagged.groupby([sub[k] for k in RESPONSE_KEYS], observed=True).transform("all")

@@ -25,20 +25,6 @@ from metrics.registry import companion, metric
 REFERENCE_SCALE = "increment_w1_by_separation/reference_scale"
 
 
-def octave_separations(shape: tuple[int, ...]) -> NDArray[np.int64]:
-    """1, 2, 4, ... cells, up to half the smallest spatial extent of ``shape``.
-
-    Raises:
-        ValueError: If an axis has fewer than two cells: there is no separation to read, and the
-            mean over none would be NaN rather than a number.
-    """
-    largest = min(shape) // 2
-    if largest < 1:
-        raise ValueError(f"increment separations need at least two cells along every spatial "
-                         f"axis; the spatial shape is {tuple(shape)}")
-    return 2 ** np.arange(int(np.log2(largest)) + 1)
-
-
 def mean_absolute_increment(x: NDArray[np.floating],
                             separations: NDArray[np.int64]) -> NDArray[np.float64]:
     """The mean of ``|x(r + l) - x(r)|`` at each separation ``l``, averaged over channels and
@@ -96,7 +82,17 @@ def increment_w1_by_separation(reference: NDArray[np.floating], candidate: NDArr
 def increment_w1_curve(reference: NDArray[np.floating],
                        candidate: NDArray[np.floating]) -> tuple[NDArray, NDArray]:
     """(separations, W1(l)): the transport distance between increment distributions at each
-    octave separation, in the field's units. At one cell it is ``increment_w1`` itself."""
-    separations = octave_separations(reference.shape[1:])
+    octave separation, 1, 2, 4, ... cells up to half the smallest side of the grid, in the field's
+    units. At one cell it is ``increment_w1`` itself.
+
+    Raises:
+        ValueError: If an axis has fewer than two cells: there is no separation to read, and the
+            mean over none would be NaN rather than a number.
+    """
+    largest = min(reference.shape[1:]) // 2
+    if largest < 1:
+        raise ValueError(f"increment separations need at least two cells along every spatial "
+                         f"axis; the spatial shape is {tuple(reference.shape[1:])}")
+    separations = 2 ** np.arange(int(np.log2(largest)) + 1)
     return separations, np.array([increment_w1(reference, candidate, separation=int(l))
                                   for l in separations])

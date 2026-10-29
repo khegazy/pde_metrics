@@ -12,8 +12,8 @@ the consistency (`severity_resolution`). Only the trend compares exactly across 
 rank statistics are unchanged by any monotone re-expression of a metric, and the magnitudes are
 not.
 
-**Measured** on the pinned run `comparison_1790639359` (metric-evaluation design rev. 4, §2.1;
-re-measured for this issue with the analysis of this change), MSE against RMSE, which carry identical information, over 36 (field, degradation) rows:
+**Measured** on the pinned run `comparison_1790639359` (measured with the analysis
+of pull request #19), MSE against RMSE, which carry identical information, over 36 (field, degradation) rows:
 `rho` and `cliffs_delta_min` agree on 36 of 36, `elasticity` on 2 of 36, with RMSE's exactly half
 of MSE's, and `severity_resolution` on 0 of 36, with a ratio between 0.31 and 1.16. A metric
 raised to a power `p` has `p` times the elasticity, so no relative magnitude escapes this.
@@ -29,10 +29,9 @@ choice inside a deterministic one, and it multiplies the run's cost by the numbe
 
 ## Why it is not built
 
-The design records it as the experiment that would make magnitudes comparable, with no priority
-set. [004](004-independent-realizations.md), a second realisation of the flow, is the
+It is recorded as the experiment that would make magnitudes comparable, with no priority set. [004](004-independent-realizations.md), a second realisation of the flow, is the
 physical-data counterpart.
 
 ## Related
 
-Written with the harness change of the metric-evaluation design (rev. 4, §3.9), 2026-10-28.
+Written with the harness change of pull request #19, 2026-10-28.

@@ -187,7 +187,9 @@ The number is zero and unbounded above, and dimensionless. Lower means closer in
 statistics, and zero means they match at every separation, not that the fields match. A
 prediction that is the reference multiplied by $c$ scores exactly $|c - 1|$. Because it is
 divided by the reference's own scale, it can be compared across fields, which the raw
-distances of `increment_w1` cannot.
+distances of `increment_w1` cannot. That is also why it is a bundle beside `increment_w1` rather
+than a replacement of that metric's number: it registers a different, dimensionless quantity,
+and `increment_w1` keeps its one-cell distance in the field's units.
 
 The companion is the curve of Equation (2): a `coordinate` column holding the separation in
 cells and a `value` column holding $W_1(\ell)$ in the field's units, one row per separation for

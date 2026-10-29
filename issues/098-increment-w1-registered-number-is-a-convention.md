@@ -19,8 +19,8 @@ $$
 $$
 
 the mean over separations of each distance divided by the reference's mean absolute increment
-at that separation. That choice is the repository's, decision D8 of the metric-evaluation
-design: build the number, label it a convention, and record it here.
+at that separation. That choice is the repository's, by Kareem's decision of 2026-10-28:
+build the number, label it a convention, and record it here.
 
 ## Why this convention and not a plain mean
 
@@ -32,8 +32,7 @@ and 9% by the three smallest; divided by the reference's mean absolute increment
 separation, the shares become 11% and 51%. The reference rebuilt for this measurement reproduces
 the registered value of that row exactly. On vorticity ($\sigma = 1.63$) the same shares are 36%
 and 18% plain, 18% and 50% normalised; there the rebuilt reference reproduces the registered
-value only to 1.8%, so those four numbers are approximate. The review of the curve design
-reported 18 times, 46% and 9%, then 11% and 50%, on density. The normalisation weighs every
+value only to 1.8%, so those four numbers are approximate. The normalisation weighs every
 separation alike; it does not say which separations matter more.
 
 ## What is measured about it
@@ -56,5 +55,4 @@ a change to this one.
 
 ## Related
 
-Written with the first curve metric (metric-evaluation design rev. 4, build step 2, D8, D10),
-2026-10-28.
+Written with the first curve metric (pull request #19), 2026-10-28.

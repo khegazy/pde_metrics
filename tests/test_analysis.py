@@ -49,12 +49,15 @@ def test_a_second_row_under_one_key_is_refused():
     """Two rows for one (frame, field, metric, variant) would be read as one point, merged.
 
     That is what a metric writing several numbers per evaluation into ``results.csv`` produced:
-    every statistic averaged or ranked its components together. The guard names the key.
+    every statistic averaged or ranked its components together. The guard names the key. A second
+    trajectory's frame of the same index under one dataset is the same collision: every statistic
+    pairs a level with its frame's clean value by frame index alone.
     """
     df = make_frame(axes={"a": [1.0, 2.0]})
     assert not an.normalisation(df).empty
-    with pytest.raises(ValueError, match="share a key"):
-        an.normalisation(pd.concat([df, df.iloc[:1]], ignore_index=True))
+    for repeated in (df.iloc[:1], df.assign(trajectory="another")):
+        with pytest.raises(ValueError, match="share a key"):
+            an.normalisation(pd.concat([df, repeated], ignore_index=True))
 
 
 def test_degenerate_metric_is_marked_and_produces_no_damage():
@@ -816,7 +819,7 @@ _TREND = ("rho", "rho_frame_min", "monotone_fraction", "separability_auc_min", "
 
 
 def test_scatter_around_clean_scores_far_below_a_real_response():
-    """A response that only scatters, more widely at each level, is not a trend (the design's D1).
+    """A response that only scatters, more widely at each level, is not a trend.
 
     Ranking the *absolute* departure would pick a sign per point and read this null as ordered,
     because the spread grows with the level. One sign per degradation cannot follow the scatter.
@@ -835,7 +838,7 @@ def test_scatter_around_clean_scores_far_below_a_real_response():
 
 
 def test_a_falling_and_a_rising_response_both_follow_their_degradation():
-    """Which way a metric moves carries no weight (D6): falling under one degradation and rising
+    """Which way a metric moves carries no weight: falling under one degradation and rising
     under another both score a perfect trend, and ``direction`` records which it was."""
     axes = an.summarise_axes(_single_field({"blur": [-0.4, -0.8, -1.2, -1.6],
                                             "noise": [0.4, 0.8, 1.2, 1.6]}), n_bootstrap=0)
@@ -847,7 +850,7 @@ def test_a_falling_and_a_rising_response_both_follow_their_degradation():
 
 
 def test_a_steady_response_that_crosses_its_clean_value_follows_the_trend():
-    """The clean level is not a point of the trend (D9). Palinstrophy under coarsening moves
+    """The clean level is not a point of the trend. Palinstrophy under coarsening moves
     +77%, +20%, -25%, -53% from clean on the pinned run: steadily one way, through clean."""
     df = _single_field({"coarsen": [0.77 * 5, 0.20 * 5, -0.25 * 5, -0.53 * 5]})
     row = _axis(an.summarise_axes(df, n_bootstrap=0), "coarsen")
@@ -975,6 +978,17 @@ def test_dominance_reads_only_frames_where_both_curves_are_complete():
         row = an.dominance(broken).iloc[0]
         assert row["dominance_min"] == pytest.approx(1.0), row.to_dict()
         assert row["n_coordinates"] == 3
+
+
+def test_dominance_reads_a_round_off_difference_as_a_tie():
+    """Where the damage has stopped moving a coordinate, the harsher curve sits on the milder one
+    to the last bits; that difference is a tie, which dominates, not a coin toss. Here every
+    coordinate stops at level 2, and the largest carries noise of a few ulps from there on."""
+    curve = _curve_rows(axes={"a": [1.0, 2.0, 2.0, 2.0]})
+    stopped = (curve["coordinate"] == 4) & (curve["degradation"] == "a") & (curve["level"] > 2)
+    curve.loc[stopped, "value"] *= 1 + 1e-15 * np.random.default_rng(0).standard_normal(
+        int(stopped.sum()))
+    assert an.dominance(curve)["dominance_min"].iloc[0] == 1.0
 
 
 def test_a_strength_growing_in_time_is_still_one_row_per_level():

@@ -21,11 +21,12 @@ built. This one records what now exists to test them and what the harness still 
   Because the speeds differ, the blobs' relative positions change, so an error measured on it
   varies from frame to frame. A single blob would give the same error in every frame. It tests
   the machinery, not physics.
-- **`per_unit_time: true`** on a ladder entry of an uncalibrated operator
-  (`fmeval/ladder.py::build_ladder`). It multiplies the entry's severity by the frame's physical
-  time. A translation then becomes a wrong advection speed, a displacement growing linearly in
-  time, and noise an error growing in time. A calibrated operator refuses it, because its
-  severity is a fraction of a spectrum and is not a rate.
+- **`per_unit_time: true`** on a ladder entry of an ordinal, uncalibrated operator whose
+  severity 0 is the identity and whose damage grows with it (`fmeval/ladder.py::build_ladder`).
+  It multiplies the entry's severity by the time elapsed since the trajectory's first frame. A
+  translation then becomes a wrong advection speed, a displacement growing linearly in time, and
+  noise an error growing in time. Any other operator refuses it: a calibrated severity is a
+  fraction of a spectrum and is not a rate.
 - **The `response_along_time` figure**, one line per severity level against the frame's time:
   how a reader sees an error grow along a trajectory.
 
@@ -54,5 +55,5 @@ trajectory-level input, built with this test bed as its evidence.
 
 ## Related
 
-Written with the harness change that added the test bed (metric-evaluation design rev. 4, §3.6,
-decision D4), 2026-10-28.
+Written with the harness change that added the test bed (pull request #19), 2026-10-28. The
+test bed is deliberately small; Kareem replaces it with real data later.
