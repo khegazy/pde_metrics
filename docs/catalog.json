@@ -11987,7 +11987,7 @@
             "axis": "additive_noise",
             "blindness_q": 1.0,
             "cliffs_delta": 0.0,
-            "detection_onset_severity": 0.0678449668,
+            "detection_onset_severity": 0.0683018525,
             "elasticity": null,
             "elasticity_x": "severity (amplitude)",
             "family": "stochastic",
@@ -11995,12 +11995,12 @@
             "first_detected_level": 3.0,
             "half_damage_severity": null,
             "is_probe": false,
-            "largest_response_upper_bound": 0.1668076665,
+            "largest_response_upper_bound": 0.1974586422,
             "levels": 4,
             "monotone_fraction": 0.0,
             "rank_correlation": 0.9486832981,
             "response_shape": "linear",
-            "severity_resolution": 0.1689496308,
+            "severity_resolution": 0.1405926363,
             "weakest_separation": 0.5
           },
           {
@@ -12297,10 +12297,10 @@
             "field": "pressure",
             "least_sensitive_axis": "additive_noise",
             "most_sensitive_axis": "coarsen_bandlimited",
-            "selectivity": 0.8975702188
+            "selectivity": 0.8975654736
           }
         ],
-        "run": "shock_set_distance_1793350452"
+        "run": "shock_set_distance_1793381550"
       },
       "kind": "metric",
       "math": {

@@ -9,8 +9,8 @@
         "blind": false,
         "blindness_q": 1.0,
         "cliffs_delta_min": 0.0,
-        "damage_max_ucb": 0.1668076665,
-        "damage_per_change": 0.6550840773,
+        "damage_max_ucb": 0.1974586422,
+        "damage_per_change": 0.739572622,
         "degradation": "additive_noise",
         "degradation_family": "stochastic",
         "field": "pressure",
@@ -172,5 +172,5 @@
       }
     ]
   },
-  "run": "shock_set_distance_1793350452"
+  "run": "shock_set_distance_1793381550"
 }

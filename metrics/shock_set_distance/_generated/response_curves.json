@@ -1207,9 +1207,9 @@
       },
       {
         "calibration": "",
-        "damage_median": 0.1202620316,
-        "damage_q25": 0.0969313263,
-        "damage_q75": 0.1328575125,
+        "damage_median": 0.1198419309,
+        "damage_q25": 0.0985531413,
+        "damage_q75": 0.1336993865,
         "degradation": "additive_noise",
         "degradation_family": "stochastic",
         "energy_changed_median": 0.010165297,
@@ -1226,15 +1226,15 @@
         "severity_degenerate": false,
         "severity_name": "amplitude",
         "severity_nominal": 0.1,
-        "value_median": 0.1202620316,
-        "value_q25": 0.0969313263,
-        "value_q75": 0.1328575125
+        "value_median": 0.1198419309,
+        "value_q25": 0.0985531413,
+        "value_q75": 0.1336993865
       },
       {
         "calibration": "",
-        "damage_median": 0.1623990659,
-        "damage_q25": 0.1618346557,
-        "damage_q75": 0.1679874109,
+        "damage_median": 0.1833442564,
+        "damage_q25": 0.1793911919,
+        "damage_q75": 0.2000612148,
         "degradation": "additive_noise",
         "degradation_family": "stochastic",
         "energy_changed_median": 0.2479056835,
@@ -1251,11 +1251,11 @@
         "severity_degenerate": false,
         "severity_name": "amplitude",
         "severity_nominal": 0.5,
-        "value_median": 0.1623990659,
-        "value_q25": 0.1618346557,
-        "value_q75": 0.1679874109
+        "value_median": 0.1833442564,
+        "value_q25": 0.1793911919,
+        "value_q75": 0.2000612148
       }
     ]
   },
-  "run": "shock_set_distance_1793350452"
+  "run": "shock_set_distance_1793381550"
 }
