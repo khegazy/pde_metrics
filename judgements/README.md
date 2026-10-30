@@ -12,3 +12,4 @@ deleted, with the reason in the commit message, as for a resolved issue (`AGENTS
 | # | Question | Choice | Date |
 |---|---|---|---|
 | [001](001-damage-anchor-is-the-spatial-mean.md) | What should damage 1 mean, now that the large translation is shown not to be an unrelated field? | The field's spatial mean, the climatological reference; the translation stays as a probe | 2026-10-29 |
+| [004](004-variogram-score-uses-the-fair-estimator.md) | Should the variogram score use Scheuerer and Hamill's plug-in ensemble estimate, which rewards overconfidence at small ensemble sizes, or the unbiased one? | The unbiased (fair) kernel-score estimate, as `crps` and `energy_score` use | 2026-10-31 |

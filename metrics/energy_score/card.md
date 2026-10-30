@@ -32,11 +32,14 @@ $$
 Pacchiardi and colleagues write the estimator, in their Appendix C.1.1, for twice the score of
 their Equation (33); Equation (2) is half of it. Because its expectation over members drawn
 independently from a distribution is that distribution's score, an ensemble drawn from the
-truth's own distribution scores best on average at any ensemble size, which is what makes the
-score *fair* in Ferro's sense [@ferro2014]. On a single cell Equation (2) is exactly the fair
-estimator `crps` uses. The plug-in form, dividing the pair sum by $2M^2$, would reward
-underdispersed ensembles and depend on $M$. At $M = 1$ the pair term is empty and the score is
-$\|\mathbf{x}_1 - \mathbf{y}\|$.
+truth's own distribution scores best on average at any ensemble size of two or more, which is
+what makes the score *fair* in Ferro's sense [@ferro2014]. On a single cell Equation (2) is
+exactly the fair estimator `crps` uses. The plug-in form, dividing the pair sum by $2M^2$,
+would reward underdispersed ensembles and depend on $M$. At $M = 1$ the pair term cannot be
+estimated and is dropped, so the score is $\|\mathbf{x}_1 - \mathbf{y}\|$, whose
+expectation is the first term of Equation (1) alone. For a calibrated forecast that is exactly
+twice its score with two or more members, since the two expectations of Equation (1) are then
+equal (pinned on Gaussian draws by this bundle's tests), and the term alone is not proper. Ferro shows that no non-trivial score is fair for a one-member ensemble [@ferro2014].
 
 The index $\beta = 1$ is the one at which the score reduces to the CRPS; it is fixed, not a
 parameter. A vector field's components are pooled into one vector, so the norm of a velocity
@@ -151,15 +154,18 @@ values in the field, the expected score is $\sigma\,\Gamma\bigl(\tfrac{d+1}{2}\b
 from the mean of a chi distribution, pinned at $d = 4$ by the bundle's test of the fair
 estimator): the score grows with the square root of the number of values, so it rises with
 resolution and with the number of channels. Compare models only
-on the same analysis grid and field. Comparisons across ensemble sizes are valid because the
-estimator is fair, which is why `n_members` is recorded on every row. The score needs an
-ensemble to judge dispersion; for a deterministic prediction, one member, it is the Euclidean
-distance between the two fields and says nothing a pointwise norm does not.
+on the same analysis grid and field. Comparisons across ensemble sizes of two or more are valid
+because the estimator is fair, which is why `n_members` is recorded on every row. A
+one-member prediction is not comparable with an ensemble: for a deterministic prediction the
+score is the Euclidean distance between the two fields, twice what a calibrated forecast
+would score as an ensemble, and says nothing a pointwise norm does not.
 
 Read it beside `crps`. Both are proper and both reward accuracy and honest spread together;
 `crps` averages the error cell by cell, and the energy score sees how errors in different
-cells combine in one member. When the energy score moves and the mean CRPS does not, the
-change is in how the members' values vary together across the field.
+cells combine in one member. The two weigh the same per-cell errors differently, a norm across
+cells against a mean of absolute values, so they can move apart with no change in how the
+members vary together: three identical members at (1, 1) and at (2, 0) against a reference of
+(0, 0) both have a mean CRPS of 1, while their energy scores are 1.41 and 2.
 
 ## Limitations
 

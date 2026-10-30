@@ -10,10 +10,28 @@
   pages   = {1321--1334},
   year    = {2015},
   doi     = {10.1175/MWR-D-14-00269.1},
-  note    = {Section 2, Equations (3) and (4): the score and its ensemble estimate, Equation
-             (1) here; the inverse-distance weights (Section 2, recommended in Section 3e);
-             the order p = 0.5 (Sections 3a to 3e); propriety without strict propriety and
-             the blindness to a common bias (Section 2); ensemble-size dependence (Section 3a)}
+  note    = {Section 2, Equation (3): the score, Equation (1) here; Equation (4), the
+             plug-in ensemble estimate this bundle replaces by the fair one; the
+             inverse-distance weights (Section 2, recommended in Section 3e); the order
+             p = 0.5 (best in Sections 3a, 3c and 3d, equal with p = 1 in 3b, used alone in
+             3e); propriety without strict propriety and the blindness to a common bias
+             (Section 2); scores improving with ensemble size (Section 3a)}
+}
+
+@article{allen2023,
+  author  = {Allen, Sam and Ginsbourger, David and Ziegel, Johanna},
+  title   = {Evaluating Forecasts for High-Impact Events Using Transformed Kernel Scores},
+  journal = {SIAM/ASA Journal on Uncertainty Quantification},
+  volume  = {11},
+  number  = {3},
+  pages   = {906--940},
+  year    = {2023},
+  doi     = {10.1137/22M1532184},
+  note    = {Definition 1, Equation (3): the kernel score of a conditionally negative
+             definite kernel; Section 4.1 (unnumbered): the variogram score is the kernel score
+             of rho(x, x') = sum_ij h_ij (|x_i - x_j|^p - |x'_i - x'_j|^p)^2, which is what
+             makes the fair estimate of Equation (2) here an estimate of the same score.
+             Numbering read in the arXiv version 1 (arXiv:2202.12732)}
 }
 
 @article{pacchiardi2024,
@@ -27,7 +45,9 @@
   pages   = {1--64},
   year    = {2024},
   url     = {https://jmlr.org/papers/v25/23-0038.html},
-  note    = {Section 3.2.1, Equation (11): the variogram score used on spatial fields of a
-             generative weather model; Appendix C.1.3 calls the ensemble estimate unbiased,
-             which this card corrects}
+  note    = {Section 3.2.1, Equation (11): the variogram score on spatial fields, and its
+             invariance to a change of sign and a common shift; Appendix C.1.2: the unbiased
+             ensemble estimate of a kernel score, the form of Equation (2) here; Appendix
+             C.1.3 calls the plug-in estimate unbiased, which this card corrects; Appendix
+             E.4.1: inverse-distance weights on the globe with p = 1}
 }

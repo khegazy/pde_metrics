@@ -7,8 +7,9 @@ kind: metric
 
 category: probabilistic
 
-summary: Variogram score of order one half with inverse-distance weights, the proper score
-  that compares an ensemble's differences between every pair of cells with the reference's.
+summary: Variogram score of order one half with inverse-distance weights in its fair form, the
+  proper score that compares an ensemble's differences between every pair of cells with the
+  reference's.
 
 status: candidate
 
@@ -16,10 +17,11 @@ owners: [khegazy]
 
 output:
   description: The weighted sum over every ordered pair of cells of the squared mismatch
-    between the reference's and the members' mean square-root differences, summed over
-    channels. Zero when every member equals the reference; larger is worse.
+    between the reference's and the members' mean square-root differences, less the members'
+    variance over M, summed over channels. Zero when every member equals the reference;
+    larger is worse.
   bounds:
-    lower: 0.0
+    lower: null    # the fair estimate can fall slightly below zero on one draw
     upper: null
 
 math:
@@ -27,6 +29,6 @@ math:
   scale_dependent: true
   resolution_dependent: true      # the number of pairs grows as the square of the cells
   complexity: "O(M N^2)"          # N cells, M members: every pair of cells in every member
-references: [scheuererhamill2015, pacchiardi2024]
+references: [scheuererhamill2015, allen2023, pacchiardi2024]
 
 review: null

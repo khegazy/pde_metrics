@@ -13380,8 +13380,8 @@
       },
       "name": "variogram_score",
       "output": {
-        "description": "The weighted sum over every ordered pair of cells of the squared mismatch between the reference's and the members' mean square-root differences, summed over channels. Zero when every member equals the reference; larger is worse.",
-        "lower_bound": 0.0,
+        "description": "The weighted sum over every ordered pair of cells of the squared mismatch between the reference's and the members' mean square-root differences, less the members' variance over M, summed over channels. Zero when every member equals the reference; larger is worse.",
+        "lower_bound": null,
         "upper_bound": null
       },
       "owners": [
@@ -13392,7 +13392,7 @@
       "reviewed_at": null,
       "reviewed_by": null,
       "status": "candidate",
-      "summary": "Variogram score of order one half with inverse-distance weights, the proper score that compares an ensemble's differences between every pair of cells with the reference's."
+      "summary": "Variogram score of order one half with inverse-distance weights in its fair form, the proper score that compares an ensemble's differences between every pair of cells with the reference's."
     }
   ],
   "schema_version": 4

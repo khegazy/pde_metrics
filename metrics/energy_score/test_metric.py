@@ -65,14 +65,14 @@ def test_one_member_is_the_euclidean_distance():
 
 
 @pytest.mark.parametrize("n_members", [2, 8])
-def test_the_fair_estimator_is_unbiased_at_any_ensemble_size(n_members):
+def test_the_fair_estimator_is_unbiased_from_two_members(n_members):
     """Reference and members drawn independently from N(0, I) in four dimensions.
 
     The difference of two independent draws is N(0, 2I), whose norm has mean
     sqrt(2) * sqrt(2) * Gamma(5/2) / Gamma(2) (the mean of a chi distribution with four
     degrees of freedom, times sqrt(2)). Both expectations in the score are that number, so
-    the score's expectation is half of it, Gamma(5/2) = 3 sqrt(pi) / 4 = 1.3293, whatever
-    the ensemble size. The plug-in estimator, dividing the pair sum by 2M^2, would give
+    the score's expectation is half of it, Gamma(5/2) = 3 sqrt(pi) / 4 = 1.3293, at any
+    ensemble size of two or more. The plug-in estimator, dividing the pair sum by 2M^2, would give
     1.994 at M = 2. The mean over 20 000 independent cases has a standard error near 0.5%.
     """
     rng = np.random.default_rng(11)
@@ -81,6 +81,35 @@ def test_the_fair_estimator_is_unbiased_at_any_ensemble_size(n_members):
     ensembles = rng.standard_normal((cases, n_members, 1, 4))
     mean = np.mean([energy_score(references[k], ensembles[k]) for k in range(cases)])
     assert mean == pytest.approx(float(gamma(2.5)), rel=0.02)
+
+
+def test_one_member_scores_twice_a_calibrated_ensemble():
+    """At M = 1 the pair term is dropped, so the score is not fair (Ferro 2014, Sect. 2.1).
+
+    The same draws as the test above, with one member: the expectation is the distance term
+    alone, 2 * Gamma(5/2) = 3 sqrt(pi) / 2 = 2.6587, twice the score at two or more members.
+    """
+    rng = np.random.default_rng(11)
+    cases = 20_000
+    references = rng.standard_normal((cases, 1, 4))
+    ensembles = rng.standard_normal((cases, 1, 1, 4))
+    mean = np.mean([energy_score(references[k], ensembles[k]) for k in range(cases)])
+    assert mean == pytest.approx(2.0 * float(gamma(2.5)), rel=0.02)
+
+
+def test_can_move_apart_from_the_mean_crps_without_any_covariation():
+    """Three identical members, so nothing varies together, against a reference of (0, 0).
+
+    Members all at (1, 1): mean CRPS (1 + 1) / 2 = 1, energy score sqrt(2) = 1.4142. Members
+    all at (2, 0): mean CRPS (2 + 0) / 2 = 1, energy score 2. The pair terms are zero, so both
+    scores are the distance terms: a mean of absolute errors against a Euclidean norm.
+    """
+    reference = np.zeros((2, 1))
+    level = np.tile(np.array([[1.0], [1.0]]), (3, 1, 1))
+    lopsided = np.tile(np.array([[2.0], [0.0]]), (3, 1, 1))
+    assert crps(reference, level) == pytest.approx(1.0) == crps(reference, lopsided)
+    assert energy_score(reference, level) == pytest.approx(np.sqrt(2.0), rel=1e-12)
+    assert energy_score(reference, lopsided) == pytest.approx(2.0, rel=1e-12)
 
 
 def test_an_imperfect_ensemble_can_reach_the_floor_of_zero():

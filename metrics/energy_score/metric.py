@@ -45,8 +45,8 @@ def energy_score(reference: np.ndarray, members: np.ndarray) -> float:
     with :math:`\\mathbf{X}, \\mathbf{X}'` independent draws from :math:`F`, the Euclidean
     norm, and the index beta = 1, which Section 4.3 states reduces Eq. 22 to the CRPS kernel
     form (Eq. 21) in one dimension. Here the vector is the whole field: every channel of every
-    cell, flattened. Both expectations are estimated without bias from the :math:`M` members
-    (Pacchiardi et al. 2024, JMLR 25(45), Appendix C.1.1, there for twice this score),
+    cell, flattened. For :math:`M \\ge 2` both expectations are estimated without bias from the
+    members (Pacchiardi et al. 2024, JMLR 25(45), Appendix C.1.1, there for twice this score),
 
     .. math::
 
@@ -54,8 +54,10 @@ def energy_score(reference: np.ndarray, members: np.ndarray) -> float:
             - \\frac{1}{2M(M-1)}\\sum_{i \\ne j} \\|\\mathbf{x}_i - \\mathbf{x}_j\\|,
 
     which on a single cell is the fair CRPS of ``metrics/crps`` (Ferro 2014, QJRMS
-    140(683):1917). At :math:`M = 1` the pair term is empty and the score is
-    :math:`\\|\\mathbf{x}_1 - \\mathbf{y}\\|`, as ``crps`` defines it.
+    140(683):1917). At :math:`M = 1` the pair term cannot be estimated and is dropped, as
+    ``crps`` does: the score is :math:`\\|\\mathbf{x}_1 - \\mathbf{y}\\|`, which is neither fair
+    nor proper (Ferro 2014, Sect. 2.1: no non-trivial score is fair at one member), and for a
+    calibrated forecast is twice the score the same forecast gets with two or more members.
 
     Args:
         reference: Reference realization on the analysis grid, shape ``(C, *spatial)``.
