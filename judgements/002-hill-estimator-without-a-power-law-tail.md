@@ -22,30 +22,36 @@ on frames 2000 and 5000 of `kinet_re5e4` at k = ceil(n^theta) for theta = 0.1 to
 draw of independent Gaussian noise of the same size (n = 65536). At theta = 0.5, the registered
 order, every field scored below the Gaussian (density 0.052 and 0.064, velocity 0.070 and 0.037,
 vorticity 0.082 and 0.092, Gaussian 0.095); at theta = 0.8 every field scored above it (0.47 to
-1.39 against 0.22). The far tail of these increments is lighter than a Gaussian's, and only the
-shoulder of the distribution is heavier, which is where `increment_flatness` sees intermittency.
-A Gaussian has no power-law tail, so neither, on this evidence, do these increments at the
-registered order. The evidence run `tail_index_1793350342` (161 frames) measured the same thing on
-the ladder: added noise moves every order of the stored curve toward the value of Gaussian
-increments, raising the orders below 0.5 and lowering those above it on every field, and over
-the 161 frames vorticity's median at 0.5 lies on the heavier side, so noise lowers it there while it
-raises density and velocity (the card's Results, "Noise").
+1.39 against 0.22). Taken alone, that would say the far tail of these increments is lighter than a
+Gaussian's. It does not show that: the largest increments of a smooth field sit side by side, and
+that clustering lowers the Hill estimate of a field whose tail is a power law too. Blurring an
+independent Pareto field (alpha = 1, true index 1) by two cells lowers its estimate from a mean of
+1.039 to 0.481 over eight 128 x 64 draws, while a blurred independent Gaussian field keeps its
+value (`metrics/tail_index/test_metric.py`). So the measurement leaves open whether these
+increments have a power-law tail; what it shows is that the Hill estimate here is set by the
+clustering as much as by the tail, and is not a tail index. The evidence run
+`tail_index_1793350342` (161 frames) adds that noise raises the orders below theta = 0.5 and lowers
+those above it on every field, and that over the 161 frames vorticity's median at 0.5 lies above
+the noise-dominated value, so noise lowers it there while it raises density and velocity (the
+card's Results, "Noise").
 
 ## The choice
 
 **Build it, as the Hill estimate at the fixed order k = ceil(sqrt(n)), and say on the card what
 the number is when the tail is not a power law.** Equation (2) of the card is defined and
 scale-free for any sample; at a fixed order it is the mean log-excess of the largest values over
-the next one, a well-defined statistic of the largest increments whose drift from the reference
+the (k+1)-th largest, a well-defined statistic of the largest increments whose drift from the reference
 is what a single-field metric reports. Not building it would leave the idea page's named estimator
 unbuilt for a reason that is itself a finding worth recording, and the curve over k that the
 metric stores shows where on the distribution each order sits.
 
 - **What the alternative would have been.** An estimator defined for every sign of the index —
   the moment estimator (abstract of Dekkers, Einmahl & de Haan 1989, *Annals of Statistics* 17(4),
-  1833–1855, doi:10.1214/aos/1176347397), or a generalised Pareto fit — would estimate an index
-  near or below zero here. It is proposed as a variant, not built, because the idea page names
+  1833–1855, doi:10.1214/aos/1176347397), or a generalised Pareto fit — would remove the
+  restriction to positive indices, but not the clustering, which any estimator built for
+  independent samples shares. It is proposed as a variant, not built, because the idea page names
   Hill's estimator and its full text was not read.
 - **What it changes.** The card calls the value a tail index only for a power-law tail and
   otherwise "the mean log-ratio at the stated k"; its Limitations say not to read two values as two
-  exponents. Nothing in the harness changes.
+  exponents, and that a value below independent Gaussian noise's does not show a lighter tail.
+  Nothing in the harness changes.

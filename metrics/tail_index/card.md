@@ -22,14 +22,19 @@ $$
 the form printed by Boucheron and Thomas [@boucheron2015], Section 1, of the estimator of Hill
 [@hill1975]; the copy of the first that was read shows no number on the definition, and the
 second was read only through its abstract, so neither is cited by equation. It is the mean
-log-ratio of the $k$ largest values to the next one. When the tail is a power law,
-$P(X > x) \propto x^{-\alpha}$, it estimates the extreme-value index $\gamma = 1/\alpha$:
-Boucheron and Thomas state that $H(k)$ converges to $\gamma$ for every $k$ that grows with $n$
-while $k/n$ shrinks, exactly when the tail lies in the domain of attraction with $\gamma > 0$.
-It is equivalent to the power-law maximum-likelihood estimator of Clauset, Shalizi and Newman
-[@clauset2009], Eq. (3.1). When the tail is not a power law, Equation (2) is still defined and
-still scale-free, but it no longer estimates a tail index; it is then the mean log-excess of the
-$k$ largest values over the next one, and depends on $k$.
+log-ratio of each of the $k$ largest values to one threshold, the $(k+1)$-th largest. When the
+tail is a power law, $P(X > x) \propto x^{-\alpha}$, it estimates the extreme-value index
+$\gamma = 1/\alpha$: Boucheron and Thomas state that $H(k)$ converges to $\gamma$ for every $k$
+that grows with $n$ while $k/n$ shrinks, exactly when the tail lies in the domain of attraction
+with $\gamma > 0$. It is the power-law maximum-likelihood estimator of Clauset, Shalizi and
+Newman [@clauset2009], Eq. (3.1), $\hat\alpha_{\mathrm{C}} = 1 + m \bigl[\sum_i
+\ln(x_i / x_{\min})\bigr]^{-1}$, rewritten. Their exponent is that of the density,
+$p(x) \propto x^{-\alpha_{\mathrm{C}}}$ (their Eq. (1.1)), so $\alpha_{\mathrm{C}} = \alpha + 1$,
+and with $x_{\min} = X_{(k+1)}$ and the $m = k$ values above it, $\hat\alpha_{\mathrm{C}} - 1 =
+1/H(k)$; counting $x_{\min}$ itself among the $m$ values, as their "$x_i \ge x_{\min}$" allows,
+gives $(k+1)/(k\,H(k))$ instead. When the tail is not a power law, Equation (2) is still defined
+and still scale-free, but it no longer estimates a tail index; it is then the mean log-excess of
+the $k$ largest values over the $(k+1)$-th, and depends on $k$.
 
 The order $k$ is set on a logarithmic scale,
 
@@ -38,7 +43,9 @@ k(\theta) = \min\bigl(\lceil n^{\theta} \rceil,\; n - 1\bigr), \qquad
 \theta \in \{0.1, 0.2, \dots, 0.9\} \tag{3}
 $$
 
-the cap leaving an $X_{(k+1)}$ to divide by. The reported value is the mean of Equation (2) at
+the cap leaving an $X_{(k+1)}$ to divide by. $k(\theta)$ is computed exactly in integers, as the
+least $k$ with $k^{10} \ge n^{10\theta}$, because a floating-point power can land just above an
+exact root and make the ceiling one too large. The reported value is the mean of Equation (2) at
 $\theta = 1/2$ over the set $A$ of channel-and-axis pairs whose $X_{(k+1)}$ is positive,
 
 $$
@@ -59,21 +66,28 @@ Section 3.3 and Eq. (3.9), would choose it, so that the reference and every vari
 the same order. The quantity whose tail is read is the absolute one-cell increment, because
 increment statistics are the physics criteria Granero-Belinchón and Cabeza Gallucci
 [@granero2024] train a generative turbulence model against; both signs of increment are pooled
-into one tail. Equation (4) averages per-pair estimates rather than pooling every increment, the
-rule `increment_flatness` gives for its Equation (3), so an anisotropic field is not read as a
-mixture. The nine values of $\theta$ in Equation (3), a tenth apart, are this bundle's choice.
+into one tail. Equation (4) averages per-pair estimates rather than estimating once from every
+pair's increments pooled, so that each channel and axis has an equal say: pooled, the $k$
+largest values come from whichever pair has the largest increments, and on kinet velocity at
+frames 2000 and 8000 a single pair of the four supplies all of them. The mean is itself a
+mixture of pairs whose estimates differ, by a factor of 4 to 7 across the four velocity pairs of
+those frames. The coordinate $\theta$ of Equation (3), which puts $k$ on a logarithmic scale, and
+its nine values a tenth apart, are this bundle's choice. Boucheron and Thomas [@boucheron2015],
+Section 2.3, mention "alternative Hill plots", but the source that defines one was not read, so
+the coordinate is not attributed to it.
 
 **The curve behind the number** is Equation (2), averaged as in Equation (4), at every $\theta$
 of Equation (3): a Hill plot, as Section 3.5 of Clauset, Shalizi and Newman [@clauset2009] names
-it, with $k$ on a logarithmic scale, the form Boucheron and Thomas [@boucheron2015] read $k$ off
-in Section 2.3. It is stored on every row; the registered number is its value at
-$\theta = 1/2$.
+the estimate plotted against its threshold, here with $k$ on a logarithmic scale. It is stored
+on every row; the registered number is its value at $\theta = 1/2$.
 
 ### Boundary handling
 
 Periodic wrap on every axis: the increment of the last cell along an axis is taken against the
-first, as in `increment_flatness`. A pair whose $(k+1)$-th largest absolute increment is zero
-has no estimate at that $k$ and is left out of Equation (4) rather than given one. The metric
+first, as in `increment_flatness`. A pair whose $(k+1)$-th largest absolute increment is exactly
+zero has no estimate at that $k$ and is left out of Equation (4) rather than given one; that rule
+is discontinuous, as the Limitations say. A field holding NaN or an infinity is refused with an
+error rather than scored. The metric
 declares `requires_periodic`, so the harness does not run it on a dataset with a non-periodic
 axis, such as the Sod shock tube.
 
@@ -173,14 +187,19 @@ One row per physical field. **Selectivity** is how concentrated the metric's res
 This metric asks how far the very largest jumps between neighbouring cells stand out from the
 slightly smaller ones. It collects the size of every difference between a cell and its
 neighbour, keeps the biggest few, as many as the square root of the number of cells, and takes
-the average of how many times larger each of them is than the next one down, measured on a
-logarithmic scale. If the biggest jumps are all about the same size, the answer is near zero. If
-a few jumps are many times larger than the rest of the biggest ones, the answer is large. For
-values that follow a power law, where the chance of exceeding a size falls as one over that size
-raised to some power, the answer is one over that power, so a heavier tail scores higher.
+the average of how many times larger each of them is than the first size just below the kept
+group, measured on a logarithmic scale. If the biggest jumps are all about the same size, the
+answer is near zero. If a few jumps are many times larger than the rest of the biggest ones, the
+answer is large. For independent values that follow a power law, where the chance of exceeding a
+size falls as one over that size raised to some power, the answer is one over that power, so a
+heavier tail scores higher.
 
-What it reveals is a change in how the largest local gradients are distributed: a prediction
-that has smoothed away the rarest, sharpest events, or that has manufactured spurious ones.
+What it reveals is a change in how the largest local gradients are spread out relative to one
+another. On a real flow field the answer is not a simple heaviness score, because the largest
+jumps sit side by side in a few sharp structures, and neighbours of similar size pull the answer
+down. Replacing the field's structures by random values with the same spectrum, or adding noise,
+can therefore raise it, so a value moving away from the reference's says that the largest
+gradients changed, not which way the field's intermittency went.
 
 A worked example, four cells by four cells. On the left, a sawtooth down each column: the values
 0, 3, 2, 1, wrapping back to 0, so going down a column the field jumps up by 3 once and steps
@@ -197,8 +216,8 @@ sawtooth          alternating
 ```
 
 Sixteen cells means the four largest steps are kept. In the sawtooth those are the four jumps of
-3, one per column, and the next largest step is 1, so each is 3 times the next one down and the
-answer is the natural logarithm of 3, 1.0986. In the alternating field the four largest steps and
+3, one per column, and the first step below them is 1, so each kept step is 3 times that
+threshold and the answer is the natural logarithm of 3, 1.0986. In the alternating field the four largest steps and
 the next one are all 1, so the answer is 0. Along the rows both fields are constant, so that
 direction has no steps at all and is left out.
 
@@ -211,7 +230,9 @@ Dimensionless, zero or positive, and unbounded above. There is no direction in w
 is better: what is read is the drift of a prediction's value from the reference field's own value,
 in either direction. A value above the reference's means the prediction's largest increments are
 more spread out relative to one another than the reference's are; a value below means they are
-more uniform.
+more uniform. It does not mean a heavier or a lighter tail on a spatially correlated field: on the
+evidence run the reference scores below the fake prediction that keeps its spectrum and scrambles
+its structure, on velocity (see the trap tests under Results).
 
 Because Equation (2) uses only ratios of increments, multiplying a field by a constant or adding
 one to it changes nothing, so values can be compared across fields of different magnitude. For a
@@ -237,9 +258,20 @@ tail index changed. A reader who sees two values and reads off two exponents is 
 
 The theory behind Equation (2) assumes independent samples, and the increments of a smooth field
 are not: the largest increments of one frame tend to sit side by side across a few sharp
-structures, so the largest few hundred are a handful of events counted many times. The value is
-then a property of those few structures and can jump from frame to frame when one of them grows or
-decays.
+structures, so the largest few hundred are a handful of events counted many times. That lowers
+the value even when the tail is a power law: on a 128 by 64 independent power-law field, a
+two-cell blur halves it in the mean over eight seeds (a test in `test_metric.py` pins this),
+while a blurred independent Gaussian field keeps its value. A value below that of independent Gaussian noise therefore does not show that the
+tail is lighter than Gaussian; it may show only that the largest increments are clustered. The
+value is also a property of those few structures and can jump from frame to frame when one of
+them grows or decays.
+
+A channel and axis along which the field is exactly constant is left out of the mean, but the
+same axis with round-off-sized variation is not, and because Equation (2) is scale-free it then
+counts as much as any other pair. On a field that is constant along one axis, a perturbation of
+one part in a million million can change the value by a third (`issues/103`). For the same
+reason the derivative of the value with respect to the field grows without bound as the
+$(k+1)$-th largest increment approaches zero, which matters if it is used as a training loss.
 
 The number depends on $k$, and $\sqrt{n}$ is one rule among several. The stored curve shows how
 the value moves with $k$; where the curve is steep, a different rule would give a different
@@ -389,14 +421,21 @@ This is the axis the metric was declared on, before the run: the value was to ri
 on every field. It rose on density and velocity (direction +1 in the fingerprint, with a change
 from clean at the harshest strength of 0.347 and 0.73) and fell on vorticity (direction -1, change
 -0.154), so **the declaration holds on two fields and is contradicted on vorticity.** The
-curve tables below show why. Noise moves every order toward the value of Gaussian increments: at
-orders 0.1 to 0.4 it raises the value on every field and at 0.6 to 0.9 it lowers it on every field.
-The registered order, 0.5, lies between, on the side where density and velocity (clean values
-0.0695 and 0.0542) are still lighter-tailed than Gaussian increments and vorticity (0.131) already
-heavier, which is why noise lowers it there. The declaration was made from two frames whose
-vorticity values lay below the noise-dominated value; over the 161 frames the median lies above. The rank correlation is 0.8 on every field and
-the fraction of frames in order 0.137 to 0.217, because the two harshest strengths both leave the
-increments close to Gaussian and are often out of order.
+curve tables below show the pattern. At orders 0.1 to 0.4 noise raises the value on every field
+and at 0.6 to 0.9 it lowers it on every field, so the direction at an order depends on which side
+of the noise-dominated value the clean field sits there. The registered order, 0.5, lies between:
+density and velocity (clean values 0.0695 and 0.0542) sit below the noise-dominated value and
+vorticity (0.131) above it, which is why noise lowers it on vorticity. Sitting below does not mean
+a lighter tail than Gaussian increments, since the clustering of the largest increments lowers
+the value (Limitations). The declaration was made from two frames whose vorticity values lay
+below the noise-dominated value; over the 161 frames the median lies above.
+
+The response is also not steady in the noise amplitude. The rank correlation is 0.8 on every field,
+with 0.137 to 0.217 of frames in order. On density and velocity, in most frames the third strength
+raises the value further than the fourth: it overshoots the noise-dominated value and the
+harshest strength brings it back, so the declared rise holds in direction there but not as a
+steady rise. On vorticity the two mildest strengths barely move the value and leave it above
+clean in about half the frames, before the harsher two lower it.
 
 
 ### Trap tests
@@ -421,7 +460,10 @@ a constant, on which the value is NaN, as Equation (4) defines it. The fingerpri
 the raw values. The fake prediction with the right spectrum scores 0.0500, 0.0807 and 0.0923 on
 density, velocity and vorticity, against clean values of 0.0695, 0.0542 and 0.131, a departure of
 0.0365 to 0.0767 of the metric's largest response on the ladder; the reference moved far away
-scores exactly its clean value, since a translation does not change the increments.
+scores exactly its clean value, since a translation does not change the increments. On velocity
+the fake prediction, which has no intermittency of its own, scores above the intermittent
+reference, 0.0807 against 0.0542: a higher value here is not a heavier-tailed or more
+intermittent field.
 
 
 ### Compared with the other metrics

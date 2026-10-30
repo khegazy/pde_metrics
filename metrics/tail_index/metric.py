@@ -21,10 +21,11 @@ from fmeval.context import COMPANION_KEY, FieldContext
 from metrics.increment_flatness.metric import increments
 from metrics.registry import companion, metric
 
-#: Coordinates of the curve: k = ceil(n ** theta) order statistics at theta = 0.1, 0.2, ..., 0.9,
-#: the order on a logarithmic scale. The spacing of a tenth is this bundle's choice; theta = 1/2
-#: is the registered number's k.
-THETAS = np.arange(1, 10) / 10
+#: The curve's coordinates in tenths: theta = j / 10 for j = 1, ..., 9, so k = ceil(n ** theta)
+#: puts the order on a logarithmic scale. The coordinate and its spacing are this bundle's choice;
+#: theta = 1/2 is the registered number's k.
+THETA_TENTHS = np.arange(1, 10)
+THETAS = THETA_TENTHS / 10
 
 #: The registered number's exponent: k = ceil(n ** (1/2)), the largest sqrt(n) observations,
 #: Clauset, Shalizi & Newman (2009), SIAM Rev. 51(4), Sect. 3.5.
@@ -81,11 +82,18 @@ def tail_index_curve(x: NDArray[np.floating]) -> tuple[NDArray, NDArray]:
         H(k) = (1/k) * sum_{i=1..k} ln(X_(i) / X_(k+1))
 
     the Hill estimator in the form of Boucheron and Thomas (2015, Electron. J. Stat. 9(2),
-    2751-2792, Sect. 1; Hill 1975, Ann. Stat. 3(5), 1163-1174). ``k`` is ``ceil(n ** theta)``,
-    capped at ``n - 1`` so that ``X_(k+1)`` exists. A pair whose ``X_(k+1)`` is zero has no
-    finite estimate at that ``k`` and is left out of the mean over pairs, as
-    ``increment_flatness`` leaves out an axis with no increments; the mean over pairs, rather than
-    one pooled sample, is that bundle's rule too, so an anisotropic field is not read as a mixture.
+    2751-2792, Sect. 1; Hill 1975, Ann. Stat. 3(5), 1163-1174). ``k`` is :func:`orders`.
+
+    A pair whose ``X_(k+1)`` is exactly zero has no finite estimate at that ``k`` and is left out
+    of the mean over pairs, as ``increment_flatness`` leaves out an axis with no increments. The
+    rule is discontinuous: an axis along which the field is constant up to round-off is not left
+    out, and its estimate, which is scale-free, counts as much as any other (``issues/103``).
+
+    The mean over pairs, rather than one estimate from every pair's increments pooled, gives each
+    channel and axis an equal say. Pooled, the k largest values come from whichever pair has the
+    largest increments: on kinet velocity at frames 2000 and 8000 a single pair supplies all of
+    them. Averaging over pairs whose estimates differ (0.018 to 0.121 across the four velocity
+    pairs at frame 2000) is itself a mixture, which the card states.
 
     Args:
         x: The field, shape ``(C, *spatial)`` on the analysis grid.
@@ -94,15 +102,18 @@ def tail_index_curve(x: NDArray[np.floating]) -> tuple[NDArray, NDArray]:
         ``(THETAS, values)``; a value is NaN where no pair has a finite estimate.
 
     Raises:
-        ValueError: If the field has fewer than two cells, so no k can be formed.
+        ValueError: If the field has fewer than two cells, so no k can be formed, or holds a
+            non-finite value, which would otherwise silently remove its pair from the mean.
     """
     n = int(np.prod(x.shape[1:]))
     if n < 2:
         raise ValueError(f"the Hill estimator needs at least two cells; the spatial shape is "
                          f"{tuple(x.shape[1:])}")
-    # k = ceil(n^theta), capped so X_(k+1) exists (this bundle's choice); theta = 1/2 is the
-    # largest-sqrt(n) rule of Clauset, Shalizi & Newman (2009), SIAM Rev. 51(4), Sect. 3.5.
-    ks = np.minimum(np.ceil(n ** THETAS).astype(int), n - 1)
+    if not np.isfinite(x).all():
+        bad = int(np.size(x) - np.isfinite(x).sum())
+        raise ValueError(f"tail_index needs a finite field; {bad} of {np.size(x)} values are "
+                         f"NaN or infinite")
+    ks = orders(n)
     estimates = []
     for channel in x:
         for axis in range(-(x.ndim - 1), 0):
@@ -112,11 +123,38 @@ def tail_index_curve(x: NDArray[np.floating]) -> tuple[NDArray, NDArray]:
                 # Boucheron & Thomas (2015), Sect. 1: mean of ln X_(i), i <= k, minus ln X_(k+1).
                 hill = np.cumsum(logs)[ks - 1] / ks - logs[ks]
             estimates.append(np.where(top[ks] > 0, hill, np.nan))
-    # Mean over the pairs with an estimate, increment_flatness's Eq. (3) rule (this bundle's
-    # choice to follow it); NaN at a theta where no pair has one.
+    # Mean over the pairs with an estimate (this bundle's choice; the reason is in the
+    # docstring); NaN at a theta where no pair has one.
     estimates = np.array(estimates)
     defined = np.isfinite(estimates)
     counts = defined.sum(axis=0)
     sums = np.where(defined, estimates, 0.0).sum(axis=0)
     values = np.divide(sums, counts, out=np.full(len(THETAS), np.nan), where=counts > 0)
     return THETAS, values
+
+
+def orders(n: int) -> NDArray[np.int64]:
+    """The order k = ceil(n ** theta) at each theta of ``THETAS``, exactly, capped at ``n - 1``.
+
+    For theta = j/10, ``ceil(n ** theta)`` is the least integer k with ``k ** 10 >= n ** j``,
+    found here in Python integers. A floating-point power can land just above an exact root
+    (``1024 ** 0.4`` evaluates to 16.000000000000004), and its ceiling is then one too large. The
+    cap leaves an ``X_(k+1)`` to divide by. theta = 1/2 is the largest-sqrt(n) rule of Clauset,
+    Shalizi & Newman (2009), SIAM Rev. 51(4), 661-703, Sect. 3.5; the cap and the theta grid are
+    this bundle's choice.
+
+    Args:
+        n: The number of increments per (channel, axis) pair, at least 2.
+
+    Returns:
+        One order per theta, as integers.
+    """
+    ks = []
+    for j in THETA_TENTHS.tolist():
+        k = int(np.ceil(n ** (j / 10)))   # within one of the exact value; corrected below
+        while k > 1 and (k - 1) ** 10 >= n ** j:
+            k -= 1
+        while k ** 10 < n ** j:
+            k += 1
+        ks.append(min(k, n - 1))
+    return np.array(ks, dtype=np.int64)
