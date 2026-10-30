@@ -16,8 +16,8 @@ cutoff, so the spatial mean survives the filter.
 
 That exception is essential rather than cosmetic. Deleting $k = 0$ on the density field
 would remove a component four orders of magnitude larger than anything the cutoff
-controls: every severity then produced an identical damage of 2.7e7 and the degradation
-carried no ordering at all.
+controls: every severity then produced an identical damage of 2.7e7 (measured against the
+large-translation anchor then in use) and the degradation carried no ordering at all.
 
 The wavenumber magnitude $|k|$ is the single definition shared with the severity
 calibration, in ``fmeval.wavenumbers``. That sharing is not incidental: the filters and
