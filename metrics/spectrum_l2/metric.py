@@ -34,9 +34,15 @@ from metrics.registry import metric
 
 
 def radial_energy_spectrum(
-    field: NDArray[np.floating], ctx: FieldContext
+    field: NDArray[np.floating], ctx: FieldContext,
+    other: NDArray[np.floating] | None = None,
 ) -> NDArray[np.floating]:
     """Fluctuation energy of ``field`` summed into unit-width shells, ``rint(|k|)``.
+
+    With ``other``, the same shells hold the real part of the cross-spectrum instead,
+    ``Re[conj(F field) * F other]`` summed over channels: the co-spectrum of two fields of
+    the same shape, which ``spectral_energy_flux`` bins its energy transfer with. Without
+    it, the energy spectrum ``|F field|^2``.
 
     The magnitude ``|k|`` is the repository's one definition, from ``fmeval/wavenumbers.py``;
     only the grouping is local. One definition matters where two operators must agree about
@@ -61,12 +67,24 @@ def radial_energy_spectrum(
     Args:
         field: Array of shape ``(C, *spatial)`` on the analysis grid.
         ctx: Supplies the analysis grid, which sets the shells.
+        other: Optional second field of ``field``'s shape; its mean is removed too.
 
     Returns:
-        1-D array of energy per shell, summed over channels, ascending in ``|k|``.
+        1-D array of energy per shell, summed over channels, ascending in ``|k|``; the
+        co-spectrum per shell when ``other`` is given.
+
+    Raises:
+        ValueError: If ``other`` does not have ``field``'s shape.
     """
     shell = np.rint(wavenumber_magnitude(tuple(ctx.grid.shape))).astype(np.int64)
-    power = sum(np.abs(np.fft.fftn(channel)) ** 2 for channel in fluctuation(field))
+    if other is None:
+        power = sum(np.abs(np.fft.fftn(channel)) ** 2 for channel in fluctuation(field))
+    elif other.shape != field.shape:
+        raise ValueError(f"a co-spectrum needs two fields of one shape, got {field.shape} "
+                         f"and {other.shape}")
+    else:
+        power = sum(np.real(np.conj(np.fft.fftn(a)) * np.fft.fftn(b))
+                    for a, b in zip(fluctuation(field), fluctuation(other), strict=True))
     return np.bincount(shell.ravel(), power.ravel(), minlength=int(shell.max()) + 1)
 
 

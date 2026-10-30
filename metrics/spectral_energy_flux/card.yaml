@@ -1,0 +1,37 @@
+schema_version: 1
+
+name: spectral_energy_flux
+kind: metric
+
+# "Compares scale by scale, in wavenumber": the flux is resolved by wavenumber and compared
+# octave by octave.
+category: spectral
+
+summary: >-
+  Relative distance between the spectral energy flux curves of two velocity fields: how fast
+  the nonlinear term moves kinetic energy across each octave of wavenumber, which a field with
+  the right energy spectrum but the wrong phases does not reproduce.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    L2 distance between the candidate's and the reference's spectral energy flux, sampled at
+    the octave wavenumbers 1, 2, 4, ... up to half the grid, divided by the L2 norm of the
+    reference's; dimensionless. Zero when the curves coincide and 1 when the candidate carries
+    no flux. The sampling and the summary are repository conventions (issues/105); the curve is
+    stored beside the number.
+  bounds:
+    lower: 0.0
+    upper: null
+
+math:
+  # Normalised by the reference's curve, so neither symmetric nor subadditive.
+  triangle_inequality: false
+  # Scaling both velocities by c scales both curves by c^3, which cancels in the ratio.
+  scale_dependent: false
+  resolution_dependent: true   # the octaves and the shells are set by the analysis grid
+  complexity: "O(N log N)"     # a fixed number of FFTs per component, then a bincount
+references: [alexakis2018, aluie2011, aluie2013, aluieli2012, kraichnan1967]
+review: null
