@@ -278,8 +278,8 @@ def test_h_minus_one_is_more_displacement_tolerant_than_the_l2_baseline(temporar
     (t = 5000..6000, vorticity), damage relative to the mean-field anchor:
 
         displacement   1 cell   4 cells   16 cells
-        mse             0.068     0.559      1.167
-        h_minus_one     0.031     0.119      0.408
+        mse             0.095     0.657      1.196
+        h_minus_one     0.032     0.121      0.409
 
     The gap widens with distance, which is the double penalty being softened rather than
     merely rescaled -- so the ordering is a property, not a normalisation artefact, and
@@ -290,7 +290,7 @@ def test_h_minus_one_is_more_displacement_tolerant_than_the_l2_baseline(temporar
     shift depends on where the field keeps its energy. On the conftest synthetic field --
     two sine modes on a 32-cell grid, where one cell is 3% of the domain and there is
     almost no small-scale content for the ``|k|^-1`` weight to suppress -- the ordering
-    reverses (H^-1 damage 0.52 against L2's 0.44 at one cell). Pinning this on a synthetic
+    reverses (H^-1 damage 0.27 against L2's 0.13 at one cell). Pinning this on a synthetic
     fixture would mean tuning the fixture until it agreed, which is the opposite of
     evidence.
     """

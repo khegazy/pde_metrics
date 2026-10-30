@@ -452,7 +452,18 @@ def _section_prose(key: str, ctx: ReportContext) -> str:
                 "and the moved copy is a window onto the displaced extension, so part of "
                 "what it shows is the extension rather than the reference."
             )
-        if ctx.anchor_label == an.MEAN_FIELD_LABEL:
+        # What set the scale, as measured: a ladder without the configured entry falls back to
+        # another reference (`analysis._anchor`), and the text must not name the one it lacked.
+        fallback = sorted(set(ctx.norm["anchor_source"].astype(str)) - {ctx.anchor_label}
+                          if "anchor_source" in ctx.norm.columns else ())
+        if fallback:
+            text += (
+                f" The configured anchor, the ladder entry {code(ctx.anchor_label)}, is missing "
+                "from this run, so a damage of one is the value of "
+                + ", ".join(code(s) for s in fallback)
+                + " instead: a different reference, not comparable with the damage of other runs."
+            )
+        elif ctx.anchor_label == an.MEAN_FIELD_LABEL:
             text += (
                 " A damage of one is the value the metric gives the reference's spatial mean, "
                 "the prediction that knows the field's mean and nothing else."

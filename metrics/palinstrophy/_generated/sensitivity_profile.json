@@ -10,7 +10,7 @@
         "blindness_q": 1.0,
         "cliffs_delta_min": 1.0,
         "damage_max_ucb": 13.4429487305,
-        "damage_per_change": -43.6062974882,
+        "damage_per_change": 43.6062974882,
         "degradation": "additive_noise",
         "degradation_family": "stochastic",
         "field": "vorticity",

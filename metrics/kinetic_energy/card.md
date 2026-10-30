@@ -34,7 +34,7 @@ Four measured statistics for kinetic_energy, one row per degradation grouped by 
 
 ![median damage against severity level, one panel per degradation family and field, on one shared scale](_generated/response_curves.svg)
 
-Median damage over frames against severity level for kinetic_energy, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, the anchor (by default the field's own mean); the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to the anchor. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points above 2 are drawn as triangles at the top.
+Median damage over frames against severity level for kinetic_energy, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, the anchor (by default the field's own mean); the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to the anchor. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points beyond 2 either side are drawn as triangles at the edge. Damage is negative where a degradation moves the metric away from the anchor, as noise raises a single-field quantity the field's mean sets to zero.
 
 **Trend: does the response follow the degradation?**
 
@@ -75,7 +75,7 @@ These tables report what was measured and grade none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift, against severity (distance) | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| velocity | 0.62 | `median_blur` | `additive_noise` | `coarsen` `coarsen_bandlimited` `translate_subpixel` `translate_x` | — | 1.68 |
+| velocity | 0.588 | `median_blur` | `translate_subpixel` | `coarsen` `coarsen_bandlimited` `translate_subpixel` `translate_x` | — | 1.68 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
@@ -324,7 +324,7 @@ Median damage over frames against the applied strength, log-log, for kinetic_ene
 
 | metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
 |---|---|---|---|---|---|---|
-| `kinetic_energy` | 4.92e-12 | 1.69e-11 | 3.37e-11 | -0 | -0 | -0 |
+| `kinetic_energy` | 2.17e-12 | 7.35e-12 | 1.47e-11 | -0 | -0 | -0 |
 | `mae` | 0.00279 | 0.00559 | 0.0112 | 0.0223 | 0.0441 | 0.0859 |
 | `mse` | 1.45e-05 | 5.81e-05 | 0.000232 | 0.000924 | 0.0036 | 0.0136 |
 | `rmse` | 0.00381 | 0.00762 | 0.0152 | 0.0304 | 0.06 | 0.117 |

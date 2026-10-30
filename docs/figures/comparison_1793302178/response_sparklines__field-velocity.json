@@ -1,5 +1,5 @@
 {
-  "caption": "Median damage over frames against severity level for every metric (rows) and degradation (columns) on velocity, all on one 0-1 scale, starting from the undamaged reference at the left of every curve. The dotted line is damage 1, the anchor (by default the field's own mean). Degradations with three or fewer usable levels are drawn as dots. The red dot is the first level at which the metric has moved a tenth of the way to the anchor. The number is the elasticity over the mildest levels, against the severity each degradation names: near 0 blind, 1 linear, 2 quadratic. Grey cells are metrics with no damage scale on this field. Points above 1.25 are clipped and drawn as triangles. Below each column is the range of the severity actually applied.",
+  "caption": "Median damage over frames against severity level for every metric (rows) and degradation (columns) on velocity, all on one 0-1 scale, starting from the undamaged reference at the left of every curve. The dotted line is damage 1, the anchor (by default the field's own mean). Degradations with three or fewer usable levels are drawn as dots. The red dot is the first level at which the metric has moved a tenth of the way to the anchor. The number is the elasticity over the mildest levels, against the severity each degradation names: near 0 blind, 1 linear, 2 quadratic. Grey cells are metrics with no damage scale on this field. Points beyond 1.25 either side are clipped and drawn as triangles; damage is negative where a degradation moves the metric away from the anchor. Below each column is the range of the severity actually applied.",
   "dataset": "kinet_re5e4",
   "figure": "response_sparklines",
   "keys": {
@@ -2893,7 +2893,7 @@
     ],
     "kinetic_energy": [
       {
-        "damage_median": -5.1221e-06,
+        "damage_median": -1.9273e-06,
         "degradation": "additive_noise",
         "elasticity": 1.8587475404,
         "elasticity_x": "severity (amplitude)",
@@ -2906,7 +2906,7 @@
         "severity": 0.001
       },
       {
-        "damage_median": -9.35104e-05,
+        "damage_median": -9.87283e-05,
         "degradation": "additive_noise",
         "elasticity": 1.8587475404,
         "elasticity_x": "severity (amplitude)",
@@ -2919,7 +2919,7 @@
         "severity": 0.01
       },
       {
-        "damage_median": -0.0098814156,
+        "damage_median": -0.0100561882,
         "degradation": "additive_noise",
         "elasticity": 1.8587475404,
         "elasticity_x": "severity (amplitude)",
@@ -2932,7 +2932,7 @@
         "severity": 0.1
       },
       {
-        "damage_median": -0.2503658737,
+        "damage_median": -0.2502430879,
         "degradation": "additive_noise",
         "elasticity": 1.8587475404,
         "elasticity_x": "severity (amplitude)",
@@ -2945,7 +2945,7 @@
         "severity": 0.5
       },
       {
-        "damage_median": 0.0159147132,
+        "damage_median": 0.0153369688,
         "degradation": "box_blur",
         "elasticity": 1.7147913011,
         "elasticity_x": "severity_nominal (width)",
@@ -2958,7 +2958,7 @@
         "severity": 11.3262905423
       },
       {
-        "damage_median": 0.0726839088,
+        "damage_median": 0.0727141263,
         "degradation": "box_blur",
         "elasticity": 1.7147913011,
         "elasticity_x": "severity_nominal (width)",
@@ -2971,7 +2971,7 @@
         "severity": 26.4280112653
       },
       {
-        "damage_median": 0.1746831496,
+        "damage_median": 0.1748102761,
         "degradation": "box_blur",
         "elasticity": 1.7147913011,
         "elasticity_x": "severity_nominal (width)",
@@ -2984,7 +2984,7 @@
         "severity": 47.1928772595
       },
       {
-        "damage_median": 0.3528685309,
+        "damage_median": 0.3529962816,
         "degradation": "box_blur",
         "elasticity": 1.7147913011,
         "elasticity_x": "severity_nominal (width)",
@@ -2997,7 +2997,7 @@
         "severity": 75.5086036153
       },
       {
-        "damage_median": 0.0004945817,
+        "damage_median": 0.0004833215,
         "degradation": "coarsen",
         "elasticity": 2.0771737193,
         "elasticity_x": "severity (factor)",
@@ -3010,7 +3010,7 @@
         "severity": 2.0
       },
       {
-        "damage_median": 0.0023070319,
+        "damage_median": 0.0022782703,
         "degradation": "coarsen",
         "elasticity": 2.0771737193,
         "elasticity_x": "severity (factor)",
@@ -3023,7 +3023,7 @@
         "severity": 4.0
       },
       {
-        "damage_median": 0.0085934867,
+        "damage_median": 0.0086063562,
         "degradation": "coarsen",
         "elasticity": 2.0771737193,
         "elasticity_x": "severity (factor)",
@@ -3036,7 +3036,7 @@
         "severity": 8.0
       },
       {
-        "damage_median": 0.0302224049,
+        "damage_median": 0.0298368763,
         "degradation": "coarsen",
         "elasticity": 2.0771737193,
         "elasticity_x": "severity (factor)",
@@ -3049,7 +3049,7 @@
         "severity": 16.0
       },
       {
-        "damage_median": 3.796e-07,
+        "damage_median": 3.915e-07,
         "degradation": "coarsen_bandlimited",
         "elasticity": 5.2011708249,
         "elasticity_x": "severity (factor)",
@@ -3062,7 +3062,7 @@
         "severity": 2.0
       },
       {
-        "damage_median": 9.66489e-05,
+        "damage_median": 4.62541e-05,
         "degradation": "coarsen_bandlimited",
         "elasticity": 5.2011708249,
         "elasticity_x": "severity (factor)",
@@ -3075,7 +3075,7 @@
         "severity": 4.0
       },
       {
-        "damage_median": 0.0006550725,
+        "damage_median": 0.0005298559,
         "degradation": "coarsen_bandlimited",
         "elasticity": 5.2011708249,
         "elasticity_x": "severity (factor)",
@@ -3088,7 +3088,7 @@
         "severity": 8.0
       },
       {
-        "damage_median": 0.00247234,
+        "damage_median": 0.0016839831,
         "degradation": "coarsen_bandlimited",
         "elasticity": 5.2011708249,
         "elasticity_x": "severity (factor)",
@@ -3101,7 +3101,7 @@
         "severity": 16.0
       },
       {
-        "damage_median": 0.0213207641,
+        "damage_median": 0.0207758615,
         "degradation": "gaussian_blur",
         "elasticity": 1.6087325351,
         "elasticity_x": "severity_nominal (sigma)",
@@ -3114,7 +3114,7 @@
         "severity": 3.7754301808
       },
       {
-        "damage_median": 0.097495302,
+        "damage_median": 0.09756107,
         "degradation": "gaussian_blur",
         "elasticity": 1.6087325351,
         "elasticity_x": "severity_nominal (sigma)",
@@ -3127,7 +3127,7 @@
         "severity": 9.4385754519
       },
       {
-        "damage_median": 0.2746353663,
+        "damage_median": 0.274763117,
         "degradation": "gaussian_blur",
         "elasticity": 1.6087325351,
         "elasticity_x": "severity_nominal (sigma)",
@@ -3140,7 +3140,7 @@
         "severity": 18.8771509038
       },
       {
-        "damage_median": 0.6363026621,
+        "damage_median": 0.6364304128,
         "degradation": "gaussian_blur",
         "elasticity": 1.6087325351,
         "elasticity_x": "severity_nominal (sigma)",
@@ -3153,7 +3153,7 @@
         "severity": 37.7543018076
       },
       {
-        "damage_median": 0.6407676055,
+        "damage_median": 0.6408953561,
         "degradation": "highpass_butterworth",
         "elasticity": 0.5406897276,
         "elasticity_x": "severity_nominal (energy removed)",
@@ -3166,7 +3166,7 @@
         "severity": 1.0
       },
       {
-        "damage_median": 0.9189935993,
+        "damage_median": 0.91912135,
         "degradation": "highpass_butterworth",
         "elasticity": 0.5406897276,
         "elasticity_x": "severity_nominal (energy removed)",
@@ -3179,7 +3179,7 @@
         "severity": 2.1441232402
       },
       {
-        "damage_median": 0.9810728294,
+        "damage_median": 0.9810030985,
         "degradation": "highpass_butterworth",
         "elasticity": 0.5406897276,
         "elasticity_x": "severity_nominal (energy removed)",
@@ -3192,7 +3192,7 @@
         "severity": 4.0229303936
       },
       {
-        "damage_median": 0.8565945582,
+        "damage_median": 0.8555858256,
         "degradation": "highpass_ideal",
         "elasticity": null,
         "elasticity_x": "severity_nominal (energy removed)",
@@ -3205,7 +3205,7 @@
         "severity": 2.1441232402
       },
       {
-        "damage_median": 0.9751530335,
+        "damage_median": 0.9743276372,
         "degradation": "highpass_ideal",
         "elasticity": null,
         "elasticity_x": "severity_nominal (energy removed)",
@@ -3218,7 +3218,7 @@
         "severity": 4.0229303936
       },
       {
-        "damage_median": 0.064490823,
+        "damage_median": 0.0646185737,
         "degradation": "lowpass_butterworth",
         "elasticity": 1.4098837972,
         "elasticity_x": "severity_nominal (energy removed)",
@@ -3231,7 +3231,7 @@
         "severity": 2.9752735436
       },
       {
-        "damage_median": 0.3582599962,
+        "damage_median": 0.3583877469,
         "degradation": "lowpass_butterworth",
         "elasticity": 1.4098837972,
         "elasticity_x": "severity_nominal (energy removed)",
@@ -3244,7 +3244,7 @@
         "severity": 1.2638882905
       },
       {
-        "damage_median": 0.7866259051,
+        "damage_median": 0.7867276777,
         "degradation": "lowpass_butterworth",
         "elasticity": 1.4098837972,
         "elasticity_x": "severity_nominal (energy removed)",
@@ -3257,7 +3257,7 @@
         "severity": 1.0
       },
       {
-        "damage_median": 0.0522658952,
+        "damage_median": 0.0523936459,
         "degradation": "lowpass_ideal",
         "elasticity": null,
         "elasticity_x": "severity_nominal (energy removed)",
@@ -3270,7 +3270,7 @@
         "severity": 2.9752735436
       },
       {
-        "damage_median": 0.1466366673,
+        "damage_median": 0.1465821543,
         "degradation": "lowpass_ideal",
         "elasticity": null,
         "elasticity_x": "severity_nominal (energy removed)",
@@ -3283,7 +3283,7 @@
         "severity": 1.2638882905
       },
       {
-        "damage_median": 0.0118691687,
+        "damage_median": 0.010978419,
         "degradation": "median_blur",
         "elasticity": 1.8033762082,
         "elasticity_x": "severity_nominal (width)",
@@ -3296,7 +3296,7 @@
         "severity": 11.3262905423
       },
       {
-        "damage_median": 0.0556251364,
+        "damage_median": 0.0551116175,
         "degradation": "median_blur",
         "elasticity": 1.8033762082,
         "elasticity_x": "severity_nominal (width)",
@@ -3309,7 +3309,7 @@
         "severity": 26.4280112653
       },
       {
-        "damage_median": 0.1122179702,
+        "damage_median": 0.112139415,
         "degradation": "median_blur",
         "elasticity": 1.8033762082,
         "elasticity_x": "severity_nominal (width)",

@@ -238,11 +238,19 @@ def _anchor(g: pd.DataFrame, preferred: str,
 
 
 def add_damage(df: pd.DataFrame, norm: pd.DataFrame) -> pd.DataFrame:
-    """Attach the dimensionless damage score ``D`` to every row."""
+    """Attach the dimensionless damage score ``D`` to every row.
+
+    Each row's departure is read against the clean value of its own frame, as every per-frame
+    statistic here is (:func:`_paired_medians`), and divided by the shared ``span``. A
+    single-field quantity drifts along the trajectory, and against the trajectory's median clean
+    value that drift reads as damage, even on an operator that cannot change the quantity. A
+    frame with no clean row is read against that median instead.
+    """
     out = df.merge(norm[[*GROUP_KEYS, "value_clean", "span", "degenerate"]], on=GROUP_KEYS,
                    how="left")
+    clean = _frame_clean(out).fillna(out["value_clean"])
     with np.errstate(invalid="ignore", divide="ignore"):
-        out["damage"] = (out["value"] - out["value_clean"]) / out["span"]
+        out["damage"] = (out["value"] - clean) / out["span"]
     out.loc[out["degenerate"], "damage"] = np.nan
     return out.drop(columns=["value_clean", "span", "degenerate"])
 
@@ -333,11 +341,18 @@ def _relative_change(rows: pd.DataFrame) -> pd.Series:
     holds.
     """
     keys = [rows[k] for k in (*GROUP_KEYS, "frame_index")]
-    clean = rows["value"].where(rows["level"] == 0).groupby(keys, observed=True).transform("median")
+    clean = _frame_clean(rows)
     scale = rows["value"].abs().groupby(keys, observed=True).transform("max")
     with np.errstate(divide="ignore", invalid="ignore"):
         relative = (rows["value"] - clean) / clean.abs()
     return relative.where(clean.abs() > DEGENERATE_SPAN * scale)
+
+
+def _frame_clean(rows: pd.DataFrame) -> pd.Series:
+    """Each row's clean value: the median reference-level value of its own (dataset, metric,
+    field, frame), aligned to ``rows``; NaN for a frame with no reference row."""
+    keys = [rows[k] for k in (*GROUP_KEYS, "frame_index")]
+    return rows["value"].where(rows["level"] == 0).groupby(keys, observed=True).transform("median")
 
 
 # --- per-axis criteria ------------------------------------------------------------------
@@ -635,8 +650,10 @@ def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean
       the flow along the trajectory (six orders on density) from what would otherwise be counted as
       scatter. A target-valued metric is already on a drift-free scale and is not divided.
     * ``field_change_max`` -- the median ``energy_changed`` at the harshest usable level.
-    * ``damage_per_change`` -- the median damage at that level over ``field_change_max``: the
-      per-degradation response behind ``selectivity``. Both are medians at the same level.
+    * ``damage_per_change`` -- the size of the median damage at that level over
+      ``field_change_max``: the per-degradation response behind ``selectivity``. Both are medians
+      at the same level. A size, because a single-field quantity's damage is negative where the
+      degradation raises it, and a rise is as much a response as a fall.
     * ``blindness_block_length``, ``damage_max_ucb``, ``blindness_q`` -- see
       :func:`_blindness_bound`.
       Computed on round-off axes too: a response that is round-off against a finite span is
@@ -683,7 +700,7 @@ def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean
             harshest = float(np.nanmedian(damage[:, -1]))
         change = out["field_change_max"]
         if np.isfinite(harshest) and np.isfinite(change) and change > 0:
-            out["damage_per_change"] = harshest / change
+            out["damage_per_change"] = abs(harshest) / change
     if damage is not None and n_bootstrap > 0:
         if (not np.isfinite(damage).any() and np.isfinite(largest_response)
                 and largest_response > 0):

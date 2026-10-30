@@ -55,7 +55,9 @@ units:
 gives the reference's own spatial mean: a prediction that knows the field's mean and nothing
 else. Forecast verification calls that the climatological reference, and skill scores are
 conventionally measured against it (Murphy 1988, *Monthly Weather Review* 116(12),
-2417–2424). Both numbers are *measured*, never assumed. D = 0 is a perfect match and D = 1 is
+2417–2424). The denominator uses the medians of both over frames; the `clean` subtracted in the
+numerator is the one of the same frame, because a single-field quantity such as enstrophy drifts
+along the trajectory and against a median over frames the drift would read as damage. Both numbers are *measured*, never assumed. D = 0 is a perfect match and D = 1 is
 "as far from the truth as the field's own mean"; for mean squared error the anchor is exactly
 the reference's spatial variance, so D is the error as a fraction of the fluctuation energy.
 Dividing by the clean value instead would not work, because mean squared error is exactly
@@ -401,10 +403,12 @@ estimated block length (`blindness_block_length`) is shown beside this number fo
 
 ### `damage_per_change` — damage per unit of field change at the harshest strength
 
-**What it is.** The median damage at the harshest usable strength divided by `field_change_max`, the
-median field change there: the response on one degradation that `selectivity` compares across
-degradations. Both are medians at the same strength, so one extreme frame cannot dominate it.
-Empty for a metric with no damage scale and for a metric with a target value.
+**What it is.** The size of the median damage at the harshest usable strength divided by
+`field_change_max`, the median field change there: the response on one degradation that
+`selectivity` compares across degradations. Both are medians at the same strength, so one extreme
+frame cannot dominate it. It is a size because a single-field quantity's damage is negative where
+the degradation raises the quantity (noise raises enstrophy), and a rise is as much a response as a
+fall. Empty for a metric with no damage scale and for a metric with a target value.
 
 **Where it appears.** `axis_response__field-*.csv`.
 
@@ -545,8 +549,10 @@ anchor is degenerate.
 ### `mean_field_value`, `mean_field_damage` — the field's mean, which anchors the damage scale
 
 **What it is.** The value the metric gives the reference's spatial mean, a constant field in
-each channel. This is the anchor that defines D = 1, so `mean_field_damage` reads exactly 1.000
-by construction and serves as a consistency check rather than a result.
+each channel. This is the anchor that defines D = 1, so `mean_field_damage` reads 1 by
+construction and serves as a consistency check rather than a result. It is exactly 1 when the
+clean value or the anchor value is the same in every frame, as for every pairwise error metric,
+whose clean value is zero, and for enstrophy, whose anchor value is zero.
 
 **Caveats.** A metric undefined on a constant field has no anchor value: the increment
 flatness, whose increments are then all zero, is zero over zero. Its `degenerate` is true and its
@@ -779,7 +785,9 @@ and every normalised quantity is suppressed. The `flags` column reads `no dynami
 
 Against the mean-field anchor this is rare, because removing every fluctuation changes almost
 any quantity: a single-field metric such as enstrophy falls to zero there, so its damage reads
-the fraction of its clean value it has lost. The case that remains is a metric undefined on a
+the fraction of its clean value it has lost, scaled by that frame's clean value over the median
+one. Where the quantity drifts along the trajectory the two differ, and `relative_change` is the
+fraction itself. The case that remains is a metric undefined on a
 constant field, such as the increment flatness (zero over zero). Under the earlier translation
 anchor every translation-invariant metric — enstrophy, the spectrum, the increment
 distributions — was degenerate here, because a translated copy leaves every such statistic

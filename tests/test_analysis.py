@@ -766,6 +766,36 @@ def test_impostor_relative_response_is_paired_within_each_frame():
         "an impostor that changes nothing in any frame has no relative response, drift or not")
 
 
+def test_damage_is_read_against_the_clean_value_of_the_same_frame():
+    """A single-field quantity drifts along the trajectory and has a real span against the mean
+    field. Against the median clean value over frames the drift reads as damage, so an operator
+    that cannot change the quantity would be charged one."""
+    df = make_frame(axes={"nothing": [0.0] * 3, "falls": [-1.0, -2.0, -3.0],
+                          "mean_field": [-5.0]}, n_frames=20)
+    df["value"] = (df["value"] + 5.0) * 1.05 ** df["frame_index"]
+    result = an.analyse(df, n_bootstrap=0)
+    assert not bool(result.norm.iloc[0]["degenerate"])
+    nothing = result.scored[result.scored["degradation"] == "nothing"]
+    assert nothing["damage"].abs().max() < 1e-12, "the drift is not damage"
+    assert _axis(result.axes, "nothing")["damage_max"] == pytest.approx(0.0, abs=1e-12)
+    assert _axis(result.axes, "falls")["damage_max"] > 0.0
+
+
+def test_a_rise_is_as_much_a_response_as_a_fall_in_the_selectivity_profile():
+    """A single-field quantity falls toward the mean field's zero under blur and rises under noise,
+    so its damage is negative on noise. The profile reads the size of the response: the axis that
+    moves the quantity most per unit of field change is the most sensitive, whichever way."""
+    df = make_frame(axes={"noise": [1.0, 2.0, 4.0, 8.0], "blur": [-0.5, -1.0, -1.5, -2.0],
+                          "mean_field": [-5.0]})
+    df["value"] += 5.0
+    df["energy_changed"] = np.where(df["level"] > 0, 1.0, 0.0)
+    result = an.analyse(df, n_bootstrap=0)
+    assert _axis(result.axes, "noise")["damage_per_change"] == pytest.approx(1.6)
+    assert _axis(result.axes, "blur")["damage_per_change"] == pytest.approx(0.4)
+    card = result.card.iloc[0]
+    assert (card["most_sensitive_axis"], card["least_sensitive_axis"]) == ("noise", "blur")
+
+
 # --- selectivity, onset and severity orientation ---------------------------------------------
 
 

@@ -76,7 +76,7 @@ Four measured statistics for palinstrophy, one row per degradation grouped by fa
 
 ![median damage against severity level, one panel per degradation family and field, on one shared scale](_generated/response_curves.svg)
 
-Median damage over frames against severity level for palinstrophy, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, the anchor (by default the field's own mean); the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to the anchor. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points above 2 are drawn as triangles at the top.
+Median damage over frames against severity level for palinstrophy, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, the anchor (by default the field's own mean); the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to the anchor. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points beyond 2 either side are drawn as triangles at the edge. Damage is negative where a degradation moves the metric away from the anchor, as noise raises a single-field quantity the field's mean sets to zero.
 
 **Trend: does the response follow the degradation?**
 
@@ -97,7 +97,7 @@ Median damage over frames against severity level for palinstrophy, one row per f
 | Smoothing | vorticity | -0.98 to -0.734 | 0.432 to 1.07 | level 1 |
 | Spectral filtering | vorticity | -0.99 to -0.517 | 0.21 to 5.14 | level 1 |
 | Noise | vorticity | 10.8 | 2.01 | level 3 |
-| trap test: fake prediction, right spectrum | vorticity | — | — | damage -1.15e-16 |
+| trap test: fake prediction, right spectrum | vorticity | — | — | damage 0 |
 
 **Consistency: how much does it vary from snapshot to snapshot?**
 
@@ -117,7 +117,7 @@ These tables report what was measured and grade none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift, against severity (distance) | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| vorticity | 0.526 | `median_blur` | `additive_noise` | `translate_subpixel` `translate_x` | — | 41.1 |
+| vorticity | 0.803 | `additive_noise` | `translate_subpixel` | `translate_subpixel` `translate_x` | — | 41.1 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
@@ -169,8 +169,11 @@ wavenumbers the grid carries, so changing the resolution changes which scales co
 all. Comparing a run at grid 128 with one at grid 256 measures the grids, not the predictions.
 
 On the damage scale the anchor is the field's own spatial mean, a constant with zero
-palinstrophy, so damage is the fraction of the reference's palinstrophy lost: positive when the
-value falls, 1 when none is left, and negative when the value rises.
+palinstrophy, so damage is the palinstrophy lost as a fraction of the median reference value over
+snapshots: positive when the value falls, 1 when none is left, and negative when the value rises.
+The reference's palinstrophy varies by a factor of 7 over the run, so the fraction of each
+snapshot's own palinstrophy lost, the change from clean in the tables, can differ from the damage
+by a fifth.
 
 ## Limitations
 
@@ -288,7 +291,7 @@ a jump at every block edge, and a jump is exactly the steep gradient this quanti
 Enstrophy falls throughout, by 4% to 40%. The rank correlation of 1 in the table says the value
 moves steadily one way across the four strengths, read as a departure from the clean value; the
 clean value is not one of the points, so the table does not show that the two mildest
-strengths raised palinstrophy above it. The response curve does, as damage of -0.89 and -0.39.
+strengths raised palinstrophy above it. The response curve does, as damage of -0.77 and -0.20.
 For the same reason the first strength detected under `coarsen` is factor 8: detection counts
 movement in the direction the degradation takes the value overall, which here is down.
 `issues/039` records the same mechanism for `h1_seminorm`.
@@ -328,7 +331,7 @@ from one frame to the next.
 
 | field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
 |---|---|---|---|---|
-| vorticity | -1.15e-16 | `translate_x=4` | -5.73e-17 | 0 |
+| vorticity | 0 | `translate_subpixel=1` | 0 | 0 |
 
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
@@ -422,7 +425,7 @@ Median damage over frames against the applied strength, log-log, for palinstroph
 
 | metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
 |---|---|---|---|---|---|---|
-| `palinstrophy` | 9.61e-14 | 3.28e-13 | 6.56e-13 | -2.29e-16 | -2.29e-16 | -2.29e-16 |
+| `palinstrophy` | 9.8e-13 | 3.35e-12 | 6.69e-12 | -0 | -0 | -0 |
 | `mae` | 0.0428 | 0.0854 | 0.169 | 0.328 | 0.582 | 0.86 |
 | `mse` | 0.00112 | 0.00448 | 0.0176 | 0.066 | 0.21 | 0.44 |
 | `rmse` | 0.0335 | 0.0669 | 0.133 | 0.257 | 0.458 | 0.663 |
@@ -432,7 +435,7 @@ Median damage over frames against the applied strength, log-log, for palinstroph
 
 | metric | 1 | 2 | 4 | 8 | 16 |
 |---|---|---|---|---|---|
-| `palinstrophy` | -0 | -0 | -1.15e-16 | -0 | -0 |
+| `palinstrophy` | -0 | -0 | -0 | -0 | -0 |
 | `mae` | 0.328 | 0.582 | 0.86 | 1.1 | 1.31 |
 | `mse` | 0.066 | 0.21 | 0.44 | 0.679 | 1.1 |
 | `rmse` | 0.257 | 0.458 | 0.663 | 0.824 | 1.05 |

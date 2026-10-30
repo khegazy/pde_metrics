@@ -1813,7 +1813,7 @@
           {
             "field": "vorticity",
             "impostor_damage": 0.0,
-            "impostor_nearest_level": "translate_x=1",
+            "impostor_nearest_level": "translate_subpixel=1",
             "translation_probe_value": 3.0785e-06
           }
         ],
@@ -1825,9 +1825,9 @@
             ],
             "elasticity_displacement": null,
             "field": "vorticity",
-            "least_sensitive_axis": "additive_noise",
+            "least_sensitive_axis": "translate_subpixel",
             "most_sensitive_axis": "median_blur",
-            "selectivity": 0.3814518025
+            "selectivity": 0.3102688803
           }
         ],
         "run": "comparison_1793302178"
@@ -7336,9 +7336,9 @@
             ],
             "elasticity_displacement": null,
             "field": "velocity",
-            "least_sensitive_axis": "additive_noise",
+            "least_sensitive_axis": "translate_subpixel",
             "most_sensitive_axis": "median_blur",
-            "selectivity": 0.6201596125
+            "selectivity": 0.5881340263
           }
         ],
         "run": "comparison_1793302178"
@@ -10769,8 +10769,8 @@
         "probes": [
           {
             "field": "vorticity",
-            "impostor_damage": -1.145082718e-16,
-            "impostor_nearest_level": "translate_x=4",
+            "impostor_damage": 0.0,
+            "impostor_nearest_level": "translate_subpixel=1",
             "translation_probe_value": 4.623e-07
           }
         ],
@@ -10782,9 +10782,9 @@
             ],
             "elasticity_displacement": null,
             "field": "vorticity",
-            "least_sensitive_axis": "additive_noise",
-            "most_sensitive_axis": "median_blur",
-            "selectivity": 0.5262604077
+            "least_sensitive_axis": "translate_subpixel",
+            "most_sensitive_axis": "additive_noise",
+            "selectivity": 0.8032719046
           }
         ],
         "run": "comparison_1793302178"

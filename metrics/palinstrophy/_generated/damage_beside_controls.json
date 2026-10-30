@@ -33,7 +33,7 @@
         "severity": 0.5
       },
       {
-        "damage": -2.290165437e-16,
+        "damage": 0.0,
         "degradation": "translate_subpixel",
         "field": "vorticity",
         "is_this_metric": true,
@@ -42,7 +42,7 @@
         "severity": 1.0
       },
       {
-        "damage": -2.290165437e-16,
+        "damage": 0.0,
         "degradation": "translate_subpixel",
         "field": "vorticity",
         "is_this_metric": true,
@@ -51,7 +51,7 @@
         "severity": 2.0
       },
       {
-        "damage": -2.290165437e-16,
+        "damage": 0.0,
         "degradation": "translate_subpixel",
         "field": "vorticity",
         "is_this_metric": true,

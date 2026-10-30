@@ -346,11 +346,15 @@ def response_curves(ctx, df, opts) -> PlotResult:
         impostor = {f: v for f, v in values.items() if np.isfinite(v)}
 
     # One y-range for every panel that has a damage scale, so a curve's height means the same
-    # thing in every panel. Capped at `clip`; points above it are drawn as triangles.
+    # thing in every panel. Capped at `clip` either side; points beyond it are drawn as
+    # triangles. It reaches below zero because a single-field quantity's damage is negative
+    # where a degradation raises the quantity (noise raises enstrophy).
     on_scale = pd.concat([curve.loc[curve["field"] == f, "damage_median"]
                           for f in fields if scaled[f]] or [pd.Series(dtype=float)])
     top = max(1.1, min(clip, float(np.nanmax([*on_scale.to_numpy(float), *impostor.values(),
                                                1.0])) * 1.08))
+    bottom = min(-0.04 * top, max(-clip, float(np.nanmin([*on_scale.to_numpy(float),
+                                                         *impostor.values(), 0.0])) * 1.08))
 
     fig, grid = ctx.style.figure(len(families), len(fields),
                                  w=ctx.style.panel_w * len(fields) + 1.9,
@@ -380,19 +384,20 @@ def response_curves(ctx, df, opts) -> PlotResult:
                 dropped = block[block["severity_degenerate"]]
                 x = usable["level"].to_numpy(int)
                 y = usable[column].to_numpy(float)
-                shown = np.minimum(y, clip) if has_scale else y
+                shown = np.clip(y, -clip, clip) if has_scale else y
                 ax.plot(x, shown, color=colour, marker="o", ms=3,
                         ls=LINE_STYLES[k % len(LINE_STYLES)] if len(x) > 3 else "none",
                         lw=1.1, label=ctx.label(name))
                 if has_scale and opts["band"]:
-                    ax.fill_between(x, np.minimum(usable["damage_q25"].to_numpy(float), clip),
-                                    np.minimum(usable["damage_q75"].to_numpy(float), clip),
+                    ax.fill_between(x, np.clip(usable["damage_q25"].to_numpy(float), -clip, clip),
+                                    np.clip(usable["damage_q75"].to_numpy(float), -clip, clip),
                                     color=colour, alpha=0.15, lw=0)
-                if has_scale and (y > clip).any():
-                    ax.plot(x[y > clip], shown[y > clip], "^", color=colour, ms=4.5)
+                for beyond, marker in (((y > clip), "^"), ((y < -clip), "v")):
+                    if has_scale and beyond.any():
+                        ax.plot(x[beyond], shown[beyond], marker, color=colour, ms=4.5)
                 if not dropped.empty:
                     ax.plot(dropped["level"].to_numpy(int),
-                            np.minimum(dropped[column].to_numpy(float), clip) if has_scale
+                            np.clip(dropped[column].to_numpy(float), -clip, clip) if has_scale
                             else dropped[column].to_numpy(float),
                             "o", mfc="none", mec="0.55", ms=3.5, ls="none")
                 first = onset.get((field, name), np.nan)
@@ -402,8 +407,9 @@ def response_curves(ctx, df, opts) -> PlotResult:
             if has_scale:
                 ax.axhline(1.0, color="0.3", lw=0.9)
                 if field in impostor:
-                    ax.axhline(min(impostor[field], clip), color="black", ls=":", lw=1.0)
-                ax.set_ylim(-0.04 * top, top)
+                    ax.axhline(np.clip(impostor[field], -clip, clip), color="black", ls=":",
+                               lw=1.0)
+                ax.set_ylim(bottom, top)
             else:
                 _raw_value_axis(ax, curve[(curve["field"] == field)
                                           & (curve["degradation_family"] == family)])
@@ -433,7 +439,9 @@ def response_curves(ctx, df, opts) -> PlotResult:
         "marks the first level at which the metric has moved a tenth of the way to the anchor. "
         "Hollow grey markers are strengths excluded for repeating a milder one or for "
         "doing nothing. Degradations with three or fewer usable levels are drawn as markers "
-        f"only; points above {clip:g} are drawn as triangles at the top."
+        f"only; points beyond {clip:g} either side are drawn as triangles at the edge. Damage "
+        "is negative where a degradation moves the metric away from the anchor, as noise "
+        "raises a single-field quantity the field's mean sets to zero."
         + (f" No damage scale on {', '.join(unscaled)}: the grey panels show the raw value "
            "instead." if unscaled else "")
     )
@@ -974,6 +982,11 @@ def response_sparklines(ctx, df, opts) -> PlotResult:
     }
 
     clip = float(opts["clip"])
+    # Below zero too, capped at -clip: a single-field quantity's damage is negative where a
+    # degradation raises it.
+    shown_metrics = [m for m in metrics if m in wide.columns]
+    lowest = float(np.nanmin([*wide[shown_metrics].to_numpy(float).ravel(), 0.0]))
+    bottom = min(-0.08, max(-clip, 1.08 * lowest))
     fig, grid = ctx.style.figure(len(metrics), len(axes_present), sharey=True,
                                  w=0.85 * len(axes_present) + 1.8, h=0.5 * len(metrics) + 1.2)
     tidy = []
@@ -987,7 +1000,7 @@ def response_sparklines(ctx, df, opts) -> PlotResult:
             ax.grid(False)
             for spine in ax.spines.values():
                 spine.set_visible(False)
-            ax.set_ylim(-0.08, clip)
+            ax.set_ylim(bottom, clip)
             y = (block[metric].to_numpy(float) if metric in block.columns
                  else np.full(len(levels), np.nan))
             row = info.get((metric, axis))
@@ -1000,12 +1013,12 @@ def response_sparklines(ctx, df, opts) -> PlotResult:
                         va="center", fontsize="xx-small", color="0.45")
             else:
                 ax.axhline(1.0, color="0.75", lw=0.6, ls=":")
-                shown = np.minimum(y, clip)
+                shown = np.clip(y, -clip, clip)
                 ax.plot(np.r_[0, levels], np.r_[0.0, shown], color="0.15", marker="o", ms=2.2,
                         lw=0.9, ls="-" if len(levels) > 3 else "none")
-                clipped = y > clip
-                if clipped.any():
-                    ax.plot(levels[clipped], shown[clipped], "^", color="0.15", ms=3)
+                for clipped, marker in (((y > clip), "^"), ((y < -clip), "v")):
+                    if clipped.any():
+                        ax.plot(levels[clipped], shown[clipped], marker, color="0.15", ms=3)
                 if np.isfinite(onset) and onset in levels:
                     ax.plot(onset, shown[list(levels).index(onset)], "o", ms=3.5, zorder=3,
                             color=okabe("vermillion"))
@@ -1036,8 +1049,9 @@ def response_sparklines(ctx, df, opts) -> PlotResult:
         "is the first level at which the metric has moved a tenth of the way to the anchor. "
         "The number is the elasticity over the mildest levels, against the severity each "
         "degradation names: near 0 blind, 1 linear, 2 quadratic. Grey cells are metrics with "
-        f"no damage scale on this field. Points above {clip:g} are clipped and drawn as "
-        "triangles. Below each column is the range of the severity actually applied."
+        f"no damage scale on this field. Points beyond {clip:g} either side are clipped and drawn "
+        "as triangles; damage is negative where a degradation moves the metric away from the "
+        "anchor. Below each column is the range of the severity actually applied."
     )
     return PlotResult([FigureItem(fig, {"field": field}, caption=caption,
                                   data=pd.DataFrame(tidy))])

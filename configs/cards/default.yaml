@@ -13,7 +13,7 @@
 #
 # The dev dataset is absent on purpose and a fingerprint citing it fails the tests. It is
 # the first 100 solver steps, before the flow develops, where a 16-cell translation scores
-# an mse damage of about 2e-4 on vorticity against 1.2 at t=5000 -- numbers that mean nothing
+# an mse damage of about 2e-4 on vorticity against 1.4 at t=5000 -- numbers that mean nothing
 # physically and would be indistinguishable, once written into a card, from ones that do.
 # `taylor_green_2d` stays absent: it is a single Fourier mode, every frame a scalar multiple
 # of the first, so its frames are not independent evidence (docs/decisions.md).

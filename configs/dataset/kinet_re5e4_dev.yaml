@@ -3,7 +3,7 @@
 #
 # NOT PHYSICALLY REPRESENTATIVE. These are the first 100 solver steps, before the flow has
 # developed: structures still span the domain, so a 16-cell translation scores an mse
-# damage of about 2e-4 on vorticity, against 1.2 at t=5000 on the full trajectory. Use this
+# damage of about 2e-4 on vorticity, against 1.4 at t=5000 on the full trajectory. Use this
 # config to exercise the code path quickly; use kinet_re5e4 for any physical conclusion.
 defaults:
   - _re5e4_simulation

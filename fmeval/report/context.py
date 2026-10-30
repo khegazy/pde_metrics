@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 
 from degradations import registry as deg_registry
-from fmeval.analysis import PROBE_LABELS, UNCORRELATED_LABEL, Analysis
+from fmeval.analysis import MEAN_FIELD_LABEL, PROBE_LABELS, Analysis
 
 from .registry import RendererUnavailable
 from .style import Style
@@ -88,7 +88,7 @@ class ReportContext:
     config: dict[str, Any] = dc_field(default_factory=dict)
     style: Style = dc_field(default_factory=Style)
     thresholds: Mapping[str, float] = dc_field(default_factory=dict)
-    anchor_label: str = UNCORRELATED_LABEL
+    anchor_label: str = MEAN_FIELD_LABEL
     """The ladder entry that defines damage 1 in this run (``analysis.anchor``)."""
     probe_labels: frozenset[str] = PROBE_LABELS
     """Ladder entries that are probes or anchors rather than monotone axes, as the run declared."""
