@@ -114,6 +114,7 @@ Designed, hooks in place, not built.
 | [032](032-prose-numbers-can-go-stale.md) | Numbers written into card prose can go stale unnoticed | medium |
 | [033](033-link-rewriting-is-only-checked-for-deadness.md) | Site link rewriting is checked for dead links, not correct destinations | medium |
 | [100](100-site-shows-citations-as-raw-text.md) | The documentation site shows a card's citations as raw `[@key]` and `\bibliography`, and a bundle's three reference lists disagree | medium |
+| [107](107-increment-flatness-drops-a-non-finite-channel.md) | `increment_flatness` silently scores the other channels when one channel holds a NaN or an infinity | low |
 | [099](099-derived-field-read-without-its-inputs.md) | A run that reads vorticity without velocity scores the solver's stored vorticity, not the recomputed one, without warning | medium |
 | [036](036-increment-flatness-is-not-monotone-under-smoothing.md) | Increment flatness is not monotone under smoothing on any field, so it fails the stated acceptance rule; needs a decision, not a fix | medium |
 | [022](022-sim-config-parsing.md) | Solver configs carry executable YAML tags | low |
