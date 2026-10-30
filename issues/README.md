@@ -52,7 +52,6 @@ Designed, hooks in place, not built.
 | [024](024-leray-projection.md) | Solenoidal projection for the spectral operators | low |
 | [066](066-wasserstein-needs-a-transport-library.md) | Wasserstein distance for horizontal displacement needs a transport library | high |
 | [067](067-sinkhorn-waits-on-wasserstein.md) | Sinkhorn divergences wait on the Wasserstein distance | medium |
-| [068](068-shock-mask-overlap-waits-on-the-detector.md) | Overlap of shock masks waits on the shock detector | medium |
 | [069](069-solver-consistency-needs-a-trusted-solver.md) | Consistency with one step of a trusted solver needs the solver | high |
 | [070](070-admissibility-checks-are-untestable.md) | Admissibility checks: no existing experiment violates an admissibility condition | unset |
 | [071](071-equivariance-needs-the-model.md) | Galilean and rotational equivariance needs the model | unset |
@@ -103,6 +102,7 @@ Designed, hooks in place, not built.
 | [095](095-pooling-across-frames-for-distributional-estimates.md) | Pooling across frames for a distributional estimate; the contract of a series-level procedure, should a metric need one | unset |
 | [097](097-stochastic-ladder-for-comparable-magnitudes.md) | A stochastic ladder (several draws per severity) would make response magnitudes comparable across a metric's functional forms | none set |
 | [098](098-increment-w1-registered-number-is-a-convention.md) | The number `increment_w1_by_separation` registers, a normalised mean over separations, is a convention with no source | unset |
+| [102](102-shock-set-distance-empty-and-non-positive-conventions.md) | The scores `shock_set_distance` gives an empty shock set and a non-positive pressure are conventions | unset |
 
 ## Technical debt
 

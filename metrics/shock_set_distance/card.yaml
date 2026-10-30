@@ -1,0 +1,38 @@
+schema_version: 1
+
+name: shock_set_distance
+kind: metric
+
+# "Where features are, and what shape they have": the metric finds the shocks in each field
+# and measures how far apart they lie, never comparing values cell by cell.
+category: geometric
+
+summary: >-
+  Average distance between the shocks detected in the reference and in the candidate
+  pressure, each shocked cell measured to the nearest shocked cell of the other field.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    The average symmetric surface distance between the two sets of shocked cells, in the
+    units of the grid spacing; zero when the sets coincide or both are empty, and the length
+    of the domain's diagonal when only one field has a shock.
+  bounds:
+    lower: 0.0
+    upper: null    # the diagonal of the domain, which depends on the grid
+
+math:
+  # The average symmetric surface distance is not a metric on sets. On a line, A = {0},
+  # B = {0, 10}, C = {10} give ASSD(A, C) = 10 but ASSD(A, B) + ASSD(B, C) = 10/3 + 10/3.
+  # And two distinct fields with the same shock set score zero.
+  triangle_inequality: false
+  # The detector reads pressure ratios, so scaling both fields by a positive constant
+  # flags the same cells and leaves the distance unchanged.
+  scale_dependent: false
+  # Which cells are flagged, and the width of a flagged shock, depend on the grid.
+  resolution_dependent: true
+  complexity: "O(N)"    # one stencil pass and two exact Euclidean distance transforms
+references: [schaal2015, yeghiazaryan2018, taha2015, maierhein2024, ducros1999, davis2006a]
+review: null

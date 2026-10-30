@@ -6,14 +6,18 @@
 
 ## What it is
 
-Once a [shock detector](shock_detector.md) has produced a mask of shocked cells for each
-field, overlap measures score how much the two masks coincide. Intersection-over-union is the
+Once a shock detector has produced a mask of shocked cells for each field, overlap measures score how much the two masks coincide. Intersection-over-union is the
 number of cells shocked in both masks divided by the number shocked in either. The Dice
 coefficient is twice the number shocked in both, divided by the total number of shocked cells
 in the two masks. Both are cheap and easy to compute. The boundary F-score compares only the
 boundaries of the two masks, counting a boundary point as matched when the other boundary
 lies within a small tolerance of it. It is the variant aware of thin structures, and the one
 to prefer.
+
+The detector is built: `shock_mask` in the built
+[shock_set_distance](../../metrics/shock_set_distance.md) produces those masks, and a metric
+built on it imports that function. It is testable on `sod_shock_tube` with `translate_x`,
+which moves the shock by a known number of cells.
 
 ## Precedent
 
@@ -35,7 +39,8 @@ drawn by people (Martin et al. 2004).
 ## Rationale
 
 *The team's judgement.* Medium priority rather than high, because the
-[distance between extracted shock sets](shock_set_distance.md) dominates it for this purpose.
+[distance between extracted shock sets](../../metrics/shock_set_distance.md) dominates it for
+this purpose.
 
 ## References
 

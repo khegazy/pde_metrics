@@ -1,7 +1,7 @@
 {
   "counts": {
     "degradations": 25,
-    "metrics": 17,
+    "metrics": 18,
     "reviewed": 0,
     "with_measurements": 17
   },
@@ -11961,6 +11961,57 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Square root of the mean squared difference between the candidate and reference fields, carrying the error back into the field's own units."
+    },
+    {
+      "card": "metrics/shock_set_distance/card.md",
+      "category": "geometric",
+      "declared": {
+        "arity": "pairwise",
+        "companion": null,
+        "cost": "cheap",
+        "differentiable": false,
+        "fields": [
+          "pressure"
+        ],
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "mean",
+        "requires_periodic": false,
+        "symmetric": true,
+        "target": null,
+        "units": "length"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N)",
+        "resolution_dependent": true,
+        "scale_dependent": false,
+        "triangle_inequality": false
+      },
+      "name": "shock_set_distance",
+      "output": {
+        "description": "The average symmetric surface distance between the two sets of shocked cells, in the units of the grid spacing; zero when the sets coincide or both are empty, and the length of the domain's diagonal when only one field has a shock.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/shock_set_distance",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Average distance between the shocks detected in the reference and in the candidate pressure, each shocked cell measured to the nearest shocked cell of the other field."
     },
     {
       "card": "metrics/spectrum_l2/card.md",

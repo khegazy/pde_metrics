@@ -57,9 +57,7 @@ regime, protected from data leakage and combined.
 | [Sliced Wasserstein distance](optimal_transport/sliced_wasserstein.md) | [Optimal transport](optimal_transport/README.md) | implementation, [issue 048](https://github.com/khegazy/pde_metrics/blob/main/issues/048-sliced-wasserstein-measure-is-undefined.md) | low | high | |
 | [Entropic relaxation and Sinkhorn divergences](optimal_transport/sinkhorn.md) | [Optimal transport](optimal_transport/README.md) | implementation, [issue 067](https://github.com/khegazy/pde_metrics/blob/main/issues/067-sinkhorn-waits-on-wasserstein.md) | low | medium | |
 | [Increment distances with other stencils, longitudinal and transverse](optimal_transport/gradient_pdf_w1.md) | [Optimal transport](optimal_transport/README.md) | implementation | low | high | |
-| [Shock detector](shock_geometry/shock_detector.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | high | |
-| [Distance between extracted shock sets](shock_geometry/shock_set_distance.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | high | |
-| [Overlap of shock masks](shock_geometry/shock_mask_overlap.md) | [Shock geometry](shock_geometry/README.md) | implementation, [issue 068](https://github.com/khegazy/pde_metrics/blob/main/issues/068-shock-mask-overlap-waits-on-the-detector.md) | low | medium | |
+| [Overlap of shock masks](shock_geometry/shock_mask_overlap.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | medium | |
 | [Shock front position, speed and jump conditions](shock_geometry/shock_front_error.md) | [Shock geometry](shock_geometry/README.md) | both, [issue 051](https://github.com/khegazy/pde_metrics/blob/main/issues/051-shock-front-reference-surface-score.md) | medium | medium | |
 | [Shock–turbulence interaction statistics](shock_geometry/shock_turbulence_interaction.md) | [Shock geometry](shock_geometry/README.md) | implementation, [issue 002](https://github.com/khegazy/pde_metrics/blob/main/issues/002-shocklet-dataset.md) | medium | unset | |
 | [Negative Sobolev norms of general order](norms/negative_sobolev_hs.md) | [Norms](norms/README.md) | math, [issue 049](https://github.com/khegazy/pde_metrics/blob/main/issues/049-negative-sobolev-order-and-length-scale.md) | low | high | |
@@ -133,11 +131,7 @@ judgement.
    LBNL.
 2. **[Tail-index estimators](distributional/tail_index_estimators.md).** It has no positivity
    problem to solve, and it measures intermittency directly.
-3. **The [shock detector](shock_geometry/shock_detector.md) with
-   [distances between shock sets](shock_geometry/shock_set_distance.md).** These close the
-   gap of measuring how far apart two shocks are, using distances imported from medical
-   imaging.
-4. **The [weak-form residual](physics_invariants/weak_residual.md) with
+3. **The [weak-form residual](physics_invariants/weak_residual.md) with
    [solver consistency](physics_invariants/solver_consistency.md).** Both need no reference
    field, and solver consistency is nearly free once a trusted solver is in the repository.
 
