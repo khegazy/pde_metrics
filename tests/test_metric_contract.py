@@ -496,19 +496,25 @@ def test_response_to_a_small_displacement_has_the_declared_power(name: str, rati
     # wavenumber, so it falls by four. On a grid coarsened by a factor, using the native
     # spacing would inflate the result by exactly the square of that factor.
     pytest.param("palinstrophy", 0.25, id="palinstrophy-inverse-length-squared"),
+    # The variogram score weights each pair by its inverse distance, so doubling the cell
+    # size halves every weight and the score.
+    pytest.param("variogram_score", 0.5, id="variogram_score-inverse-length"),
 ])
 def test_doubling_the_spacing_scales_the_value_by_its_power_of_length(name: str, factor: float):
     """A metric carrying a length to some power scales by ``2^power`` when the spacing doubles.
 
     This is why these metrics must read the *analysis* grid's spacing rather than assume unit
     cells. Each is evaluated on a mode-1 cosine along x on an 8x8 grid: a pairwise metric as
-    the error against a zero field, a single-field one on the cosine itself.
+    the error against a zero field, an ensemble one as a one-member ensemble of the cosine
+    against a zero field, a single-field one on the cosine itself.
     """
     spec = registry.get(name)
     shape = (8, 8)
     fields = (cosine_mode(shape, mode=1),)
     if spec.arity == "pairwise":
         fields = (np.zeros((1, *shape)), *fields)
+    elif spec.arity == "ensemble":
+        fields = (np.zeros((1, *shape)), fields[0][None])
     unit = spec.fn(*fields, ctx=make_ctx(shape, spacing=1.0))
     doubled = spec.fn(*fields, ctx=make_ctx(shape, spacing=2.0))
     assert doubled == pytest.approx(factor * unit)

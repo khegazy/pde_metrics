@@ -1,0 +1,32 @@
+# The typed half of this bundle's card. Every field is documented, with the reasoning
+# behind it, in fmeval/cards/schema.py.
+schema_version: 1
+
+name: variogram_score
+kind: metric
+
+category: probabilistic
+
+summary: Variogram score of order one half with inverse-distance weights, the proper score
+  that compares an ensemble's differences between every pair of cells with the reference's.
+
+status: candidate
+
+owners: [khegazy]
+
+output:
+  description: The weighted sum over every ordered pair of cells of the squared mismatch
+    between the reference's and the members' mean square-root differences, summed over
+    channels. Zero when every member equals the reference; larger is worse.
+  bounds:
+    lower: 0.0
+    upper: null
+
+math:
+  triangle_inequality: false
+  scale_dependent: true
+  resolution_dependent: true      # the number of pairs grows as the square of the cells
+  complexity: "O(M N^2)"          # N cells, M members: every pair of cells in every member
+references: [scheuererhamill2015, pacchiardi2024]
+
+review: null
