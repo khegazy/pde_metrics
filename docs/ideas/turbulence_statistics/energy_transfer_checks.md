@@ -67,8 +67,24 @@ checked against it.
   forcing, because energy cascades toward large scales (Kraichnan 1967); a sign test tuned to
   three dimensions misreads it. See
   [helicity, potential vorticity and information transfer across scales](inviscid_invariants.md).
-  Every dataset here is two-dimensional, and `kinet_re5e4` is unforced and decaying, so the
-  first two forms have no target on it.
+- The reference-free form (a flux constant across an inertial range and equal to the
+  dissipation rate) and the backscatter sign fraction both presume a forward cascade with an
+  inertial range. Every dataset here is two-dimensional, and `kinet_re5e4` is also unforced
+  and decaying, so it has no forcing scale and neither form has a target on it; the same
+  limit blocks the two-dimensional cascade checks
+  ([issue 085](https://github.com/khegazy/pde_metrics/blob/main/issues/085-inviscid-invariants-need-other-data.md)).
+  On that dataset the velocity-only flux through the low octaves is negative in most frames
+  but not in all, as measured for the built
+  [spectral_energy_flux](../../metrics/spectral_energy_flux.md). (Added by the agent building
+  `spectral_energy_flux`, 2026-10-31.)
+- Unresolved: the sign of the large-scale pressure-dilatation term in Aluie (2013). In the
+  arXiv copy (arXiv:1012.5877, read as HTML on ar5iv), Equation (13) was reported to print the
+  term as $+\bar{P}_\ell \nabla \cdot \bar{\mathbf{u}}_\ell$ while the text calls
+  $-\bar{P}_\ell \nabla \cdot \bar{\mathbf{u}}_\ell$ the large-scale pressure dilatation. This
+  may be a sign convention (the term as a source rather than a sink) or an artefact of the
+  HTML conversion. It was not checked against the published version, and whoever builds the
+  compressible budget should check it there first. (Added by the agent building
+  `spectral_energy_flux`, 2026-10-31.)
 
 ## Rationale
 

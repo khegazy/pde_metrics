@@ -18,6 +18,14 @@ range". Two things in the built metric come from no source:
    $256^2$). Because $\Pi$ is cumulative, each sampled value still counts every mode inside it,
    so no transfer is dropped; the sampling decides how often each range of scales is counted.
    One column per shell would also make the card's per-coordinate table 182 columns wide.
+
+   That table is the reason for sampling at all. A curve companion is stored at every
+   coordinate it returns. `fmeval/cards/evidence.py::companion_block` renders one table column
+   per coordinate, and `fmeval/analysis.py` analyses each coordinate as a metric of its own
+   (`metric[coordinate]`). On unit shells `rint(|k|)` a $256^2$ grid has 182 coordinates, so a
+   spectral curve companion needs a sampled coordinate set to stay readable and to keep the
+   analysis cost bounded. Any later spectral curve, such as a coherence spectrum or
+   `spectrum_l2`'s own curve, meets the same limit.
 2. **The summary.** The number is $\lVert \Pi_{\text{cand}} - \Pi_{\text{ref}} \rVert_2 /
    \lVert \Pi_{\text{ref}} \rVert_2$ over those octaves, the form `spectrum_l2` uses for the
    energy spectrum. The idea page's "inertial range" does not exist on `kinet_re5e4`, which is
