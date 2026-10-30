@@ -222,6 +222,11 @@ fair kernel score a little above the calibrated width at sixteen members (a deri
 this card's, recorded with the bundle's PR; the `crps` card's ladder has the same
 construction).
 
+The profile row above ranks the degradations by damage per unit of field change, but the two
+dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
+round-off; its "charges most for", "charges least for" and selectivity are therefore not
+meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/blob/main/issues/111-damage-per-change-divides-by-round-off-on-ensemble-axes.md)).
+
 On this dataset the noise in every cell is independent of every other cell, so the energy
 score and the mean CRPS have the same dependence on the spread factor up to a constant, and
 their relative changes on the two dispersion axes agree closely. The run therefore shows that

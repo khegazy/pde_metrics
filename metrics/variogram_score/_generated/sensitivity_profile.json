@@ -9,7 +9,7 @@
         "blind": true,
         "blindness_q": 0.0,
         "cliffs_delta_min": null,
-        "damage_max_ucb": 1.030952878e-16,
+        "damage_max_ucb": 0.0,
         "damage_per_change": 0.0,
         "degradation": "bias",
         "degradation_family": "pointwise",
@@ -24,8 +24,8 @@
         "blind": false,
         "blindness_q": 1.0,
         "cliffs_delta_min": 1.0,
-        "damage_max_ucb": 0.0803142327,
-        "damage_per_change": 5.726339912e+30,
+        "damage_max_ucb": 0.1257282893,
+        "damage_per_change": 8.951014643e+30,
         "degradation": "spread_deflate",
         "degradation_family": "ensemble",
         "field": "density",
@@ -39,8 +39,8 @@
         "blind": false,
         "blindness_q": 1.0,
         "cliffs_delta_min": 1.0,
-        "damage_max_ucb": 0.995729339,
-        "damage_per_change": 4.290608153e+30,
+        "damage_max_ucb": 0.9980324322,
+        "damage_per_change": 4.318899827e+30,
         "degradation": "spread_inflate",
         "degradation_family": "ensemble",
         "field": "density",
@@ -52,5 +52,5 @@
       }
     ]
   },
-  "run": "variogram_score_1793357351"
+  "run": "variogram_score_1793396098"
 }

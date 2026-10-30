@@ -95,7 +95,7 @@ metric runs on any boundary the grid declares.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence variogram_score --results results/variogram_score_1793357351`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence variogram_score --results results/variogram_score_1793396098`, do not edit -->
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -116,14 +116,14 @@ Median damage over frames against severity level for variogram_score, one row pe
 
 | test family | field | change from clean at the harshest strength | elasticity | first strength detected |
 |---|---|---|---|---|
-| Ensemble dispersion | density | 0.154 to 1.9 | 1.89 to 1.97 | level 3 |
+| Ensemble dispersion | density | 0.216 to 1.71 | 1.47 | level 3 |
 | Cell-value distortion | density | 0 | — | level — |
 
 **Consistency: how much does it vary from snapshot to snapshot?**
 
 | test family | field | consistency, in the strength's units | snapshots per independent block |
 |---|---|---|---|
-| Ensemble dispersion | density | 0.00281 to 0.0082 | 1 |
+| Ensemble dispersion | density | 0.00246 to 0.00956 | 1 |
 | Cell-value distortion | density | — | 1 |
 
 One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
@@ -134,7 +134,7 @@ These tables report what was measured and grade none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| density | 0.347 | `spread_deflate` | `bias` | `bias` | — | 1 |
+| density | 0.406 | `spread_deflate` | `bias` | `bias` | — | 1 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
@@ -221,11 +221,11 @@ implemented.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence variogram_score --results results/variogram_score_1793357351`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence variogram_score --results results/variogram_score_1793396098`, do not edit -->
 
-Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `d2464fb57bcb`. Run `variogram_score_1793357351`.
+Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `b88d49060f06`. Run `variogram_score_1793396098`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/variogram_score_1793357351`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/variogram_score_1793396098`.
 
 <!-- END GENERATED run -->
 
@@ -234,7 +234,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 [spread_inflate](../../degradations/spread_inflate/card.md) ·
 [spread_deflate](../../degradations/spread_deflate/card.md)
 
-<!-- GENERATED results_ensemble: written by `python -m fmeval.cards evidence variogram_score --results results/variogram_score_1793357351`, do not edit -->
+<!-- GENERATED results_ensemble: written by `python -m fmeval.cards evidence variogram_score --results results/variogram_score_1793396098`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -243,12 +243,20 @@ Every number in this section comes from that one run. Regenerate with `python -m
 
 <!-- END GENERATED results_ensemble -->
 
-Both directions raise the score at every strength and in every frame. Inflation costs far
-more than deflation at the harshest strengths, 1.9 of the clean value against 0.154 in the
-reactivity table: a member widened about its mean adds its excess scatter to every pairwise
-difference, without limit, while a member narrowed toward the mean can lose at most the
-scatter it had, and the ensemble mean's own two-scale pattern still supplies most of each
-pair's difference.
+Both directions raise the score in every frame, at every strength but the mildest inflation,
+whose per-frame median in the run's results sits slightly below the clean value; it is still
+ranked first, because the ordering is of departures from clean. The same dip appears on the
+`energy_score` card and has the same cause: `spread_inflate` scales the members about their
+own sample mean, which carries error of its own, so a fair score's expected minimum lies a
+little above the calibrated width at sixteen members. Inflation costs far more than deflation
+at the harshest strengths, 1.71 of the clean value against 0.216 in the reactivity table; a
+widened member adds its excess scatter to every pairwise difference, while a narrowed one can
+lose at most the scatter it had (this card's reading, not a separate measurement).
+
+The profile row above ranks the degradations by damage per unit of field change, but the two
+dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
+round-off; its "charges most for" and selectivity are therefore not meaningful for this
+metric ([issue 111](https://github.com/khegazy/pde_metrics/blob/main/issues/111-damage-per-change-divides-by-round-off-on-ensemble-axes.md)).
 
 On this dataset each cell's noise is independent of every other cell's, so these axes change
 the members' pairwise differences only through their spread; the run shows that the
@@ -259,7 +267,7 @@ correlation, which no experiment in the repository changes.
 
 [bias](../../degradations/bias/card.md)
 
-<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence variogram_score --results results/variogram_score_1793357351`, do not edit -->
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence variogram_score --results results/variogram_score_1793396098`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
