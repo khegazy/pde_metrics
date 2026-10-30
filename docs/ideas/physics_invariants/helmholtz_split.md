@@ -31,7 +31,7 @@ The dilatational energy is also one of the quantities amplified across a shock, 
 [shock–turbulence interaction statistics](../shock_geometry/shock_turbulence_interaction.md),
 and pressure dilatation, which exchanges kinetic and internal energy and involves only the
 dilatational part because $\nabla \cdot \mathbf{u}_{\text{sol}} = 0$, is one of the exchange
-terms on [spectral energy flux](../turbulence_statistics/spectral_energy_flux.md).
+terms of the compressible budget on [energy-transfer checks](../turbulence_statistics/energy_transfer_checks.md).
 
 ## Precedent
 

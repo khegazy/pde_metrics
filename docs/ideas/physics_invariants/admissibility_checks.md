@@ -61,7 +61,7 @@ scales](../turbulence_statistics/inviscid_invariants.md).
   satisfies all of them, and so does a constant field. They are therefore paired with
   reference-free quantities that such a field cannot reproduce, such as the
   [four-fifths law](../turbulence_statistics/four_fifths_law.md) and the
-  [spectral energy flux](../turbulence_statistics/spectral_energy_flux.md), which pin the
+  reference-free flux constancy on [energy-transfer checks](../turbulence_statistics/energy_transfer_checks.md), which pin the
   amplitude and slope of the inertial range.
 - A reference-free score is trusted where no reference exists only after it has been checked,
   by Spearman rank correlation against the true error, on cases where a reference does exist.

@@ -15,8 +15,9 @@ where that assumption matters.
 
 Built already, and so not listed here: the flatness of one-cell increments
 ([increment_flatness](../../metrics/increment_flatness.md)), the Wasserstein distance between
-one-cell increment distributions ([increment_w1](../../metrics/increment_w1.md)), and the mean
-kinetic energy ([kinetic_energy](../../metrics/kinetic_energy.md)).
+one-cell increment distributions ([increment_w1](../../metrics/increment_w1.md)), the mean
+kinetic energy ([kinetic_energy](../../metrics/kinetic_energy.md)), and the spectral energy flux
+compared against a reference ([spectral_energy_flux](../../metrics/spectral_energy_flux.md)).
 
 ## Ideas in this theme
 
@@ -27,8 +28,8 @@ kinetic energy ([kinetic_energy](../../metrics/kinetic_energy.md)).
   increments at every separation and order, and the exponents that measure intermittency.
 - [Velocity-derivative skewness](derivative_skewness.md): a single cheap number that is zero
   for a Gaussian field and between about $-0.5$ and $-0.7$ in real turbulence.
-- [Spectral energy flux](spectral_energy_flux.md): the rate at which energy passes from large
-  to small scales, which a correct spectrum does not guarantee.
+- [Energy-transfer checks beyond the spectral flux](energy_transfer_checks.md): the compressible
+  terms of the transfer, the local flux at each point, and the reference-free checks of the flux.
 - [Vortex stretching and energy budgets](vortex_stretching.md): the sign of mean enstrophy
   production and the closure of the energy and enstrophy budgets.
 - [Joint distribution of the velocity-gradient invariants Q and R](qr_invariants.md): the
