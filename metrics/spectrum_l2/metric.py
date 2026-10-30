@@ -54,9 +54,9 @@ def radial_energy_spectrum(
     spectrum is the field's fluctuation energy exactly.
 
     The spatial mean is removed before transforming, so the k = 0 shell carries no energy.
-    On this data that is not a detail: density is 1.0 +/- 1.8e-4, so its mean is four orders
-    of magnitude larger than every fluctuation, and a spectrum including it would compare
-    two means and ignore the flow.
+    On this data that is not a detail: density fluctuates by a few thousandths of its mean of
+    1.0, so its mean is two to three orders of magnitude larger than every fluctuation, and a
+    spectrum including it would compare two means and ignore the flow.
 
     Args:
         field: Array of shape ``(C, *spatial)`` on the analysis grid.

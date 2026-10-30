@@ -545,7 +545,8 @@ severity levels on any monotone axis. Folding a probe into a family as "level 6"
 rank correlation it touches.
 
 **Express relative severities against the fluctuation, never the raw value.** Density here is
-`1.0 ± 1.8e-4`. A noise amplitude expressed as a fraction of the raw RMS would make the mildest
+1.0 with a fluctuation RMS of a few thousandths of it (2.1e-3 to 6.7e-3 over frames 2000 to
+10000 of `kinet_re5e4`). A noise amplitude expressed as a fraction of the raw RMS would make the mildest
 severity level total destruction and the ladder flat-topped for every metric.
 
 **`calibration` is how you avoid a severity that means different things on different fields.**

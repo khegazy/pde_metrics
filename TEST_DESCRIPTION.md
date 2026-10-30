@@ -1196,7 +1196,7 @@ only position changes.
 
 | operator | severity | notes |
 |---|---|---|
-| `additive_noise` | fraction of fluctuation RMS | **Relative to the fluctuation, never the raw RMS.** Density here is 1.0 +/- 1.8e-4, so a fraction of the raw RMS would make even the mildest severity level total destruction |
+| `additive_noise` | fraction of fluctuation RMS | **Relative to the fluctuation, never the raw RMS.** Density here fluctuates by a few thousandths of its mean of 1.0, so a fraction of the raw RMS would make even the mildest severity level total destruction |
 | `multiplicative_noise` | relative | Error proportional to the local value |
 | `gaussian_impostor` | — | Not a severity level. See Group B |
 
