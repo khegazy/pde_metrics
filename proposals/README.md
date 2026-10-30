@@ -37,7 +37,7 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 | [MTR-max_error-high-quantile-error.md](MTR-max_error-high-quantile-error.md) | A high quantile of the pointwise absolute error | proposed |
 | [MTR-max_error-mean-of-channel-maxima.md](MTR-max_error-mean-of-channel-maxima.md) | Maximum error averaged over channels (PDEBench's reduction) | proposed |
 | [MTR-max_error-vector-magnitude.md](MTR-max_error-vector-magnitude.md) | Maximum of the error vector's length | proposed |
-| [MTR-shock_set_distance-full-shock-zone-detector.md](MTR-shock_set_distance-full-shock-zone-detector.md) | The full shock-zone detector, with a compression gate and the jump across the zone | proposed |
+| [MTR-shock_set_distance-full-shock-zone-detector.md](MTR-shock_set_distance-full-shock-zone-detector.md) | The full Schaal-Springel shock finder, with a compression gate and a single-layer surface | proposed |
 | [MTR-shock_set_distance-object-matched-shock-distance.md](MTR-shock_set_distance-object-matched-shock-distance.md) | Object-matched shock distance, after MODE | proposed |
 | [MTR-shock_set_distance-other-surface-distance-summaries.md](MTR-shock_set_distance-other-surface-distance-summaries.md) | Hausdorff, quantile-Hausdorff, AVD and MASD summaries of the same shock-set distances | proposed |
 | [MTR-shock_set_distance-shock-thickness-and-overshoot.md](MTR-shock_set_distance-shock-thickness-and-overshoot.md) | Shock thickness and overshoot at the detected shocks | proposed |
