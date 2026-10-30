@@ -102,7 +102,7 @@ Designed, hooks in place, not built.
 | [065](065-bispectrum-distance-is-not-fixed.md) | Bispectrum and bicoherence: the distance between maps is not fixed | unset |
 | [095](095-pooling-across-frames-for-distributional-estimates.md) | Pooling across frames for a distributional estimate; the contract of a series-level procedure, should a metric need one | unset |
 | [104](104-equivalence-test-misreads-a-flag-valued-anchor.md) | The blindness test lists an axis as blind for a metric whose anchor is a worst-case flag value (`shock_set_distance` follows `translate_x` with rho 1 yet is listed blind to it); needs a decision | unset |
-| [106](106-max-error-scores-the-density-impostor-under-the-anchor.md) | `max_error` scores the Gaussian impostor on density at damage 0.955, just under the anchor, where velocity and vorticity score 1.2 to 1.6; unexplained | unset |
+| [106](106-max-error-scores-the-density-impostor-under-the-anchor.md) | `max_error` scores the Gaussian impostor on density near the anchor because density's extreme is one deep minimum on a vortex core; why the harness's 0.955 sits below the per-frame medians near 1.02 is unexplained | unset |
 | [097](097-stochastic-ladder-for-comparable-magnitudes.md) | A stochastic ladder (several draws per severity) would make response magnitudes comparable across a metric's functional forms | none set |
 | [098](098-increment-w1-registered-number-is-a-convention.md) | The number `increment_w1_by_separation` registers, a normalised mean over separations, is a convention with no source | unset |
 
@@ -115,6 +115,8 @@ Designed, hooks in place, not built.
 | [033](033-link-rewriting-is-only-checked-for-deadness.md) | Site link rewriting is checked for dead links, not correct destinations | medium |
 | [100](100-site-shows-citations-as-raw-text.md) | The documentation site shows a card's citations as raw `[@key]` and `\bibliography`, and a bundle's three reference lists disagree | medium |
 | [107](107-increment-flatness-drops-a-non-finite-channel.md) | `increment_flatness` silently scores the other channels when one channel holds a NaN or an infinity | low |
+| [108](108-field-gallery-hides-the-cell-a-maximum-map-is-about.md) | The report's field gallery clips the colour scale at the 0.995 quantile, saturating the worst cell a `max` map is about, and captions every map as a per-cell share | low |
+| [109](109-pointwise-controls-accept-broadcastable-shapes.md) | `mae`, `mse`, `rmse` and `nrmse` return a number for shapes numpy can broadcast, and the contract test's mismatch cannot broadcast | low |
 | [099](099-derived-field-read-without-its-inputs.md) | A run that reads vorticity without velocity scores the solver's stored vorticity, not the recomputed one, without warning | medium |
 | [036](036-increment-flatness-is-not-monotone-under-smoothing.md) | Increment flatness is not monotone under smoothing on any field, so it fails the stated acceptance rule; needs a decision, not a fix | medium |
 | [022](022-sim-config-parsing.md) | Solver configs carry executable YAML tags | low |
