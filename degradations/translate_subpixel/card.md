@@ -31,7 +31,8 @@ This stands in for the same failure as the whole-cell translation -- a feature i
 the wrong place -- at the scale where it matters most for choosing between metrics. Below
 one cell, the cell-by-cell error norms disagree enormously about how bad a small
 displacement is: mean absolute error responds linearly and mean squared error
-quadratically, so at an eighth of a cell one assigns 55 times the damage of the other. Any
+quadratically, so at an eighth of a cell one assigns 38 to 192 times the damage of the other,
+depending on the field. Any
 claim that a metric is tolerant of small displacement has to be measured here.
 
 A band-limited shift does something a whole-cell roll cannot: it produces values that were

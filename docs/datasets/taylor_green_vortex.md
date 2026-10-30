@@ -134,9 +134,10 @@ and the default ladder on 2026-10-20.
 - **The impostor.** The Gaussian impostor keeps each mode's amplitude and randomises its
   phase. On a single mode that is a translation, so the check for phase blindness does not
   test what it is meant to test here.
-- **The damage scale.** The reference point for an unrelated field translates the field by a
-  large random offset. A single mode stays partly correlated with itself after such a
-  translation, so that reference varies strongly between draws. In the measured run, the
+- **The large-translation probe.** It translates the field by a large random offset. A single
+  mode stays partly correlated with itself after such a translation, so the probe varies
+  strongly between draws, which is one reason it is not the damage anchor
+  (`judgements/001`). In the measured run, the
   median mean squared error of the six draws spans a factor of 1.8 for velocity, 1.7 for
   vorticity and 5 for pressure.
 

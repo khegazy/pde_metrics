@@ -275,11 +275,11 @@ def test_h_minus_one_is_more_displacement_tolerant_than_the_l2_baseline(temporar
     ``|k|^-1`` weight suppresses exactly the high wavenumbers a small shift excites.
 
     Measured through the real pipeline on the 256^2 production trajectory
-    (t = 5000..6000, vorticity), damage relative to the unrelated-field anchor:
+    (t = 5000..6000, vorticity), damage relative to the mean-field anchor:
 
         displacement   1 cell   4 cells   16 cells
-        mse             0.028     0.233      0.517
-        h_minus_one     0.018     0.069      0.237
+        mse             0.095     0.657      1.196
+        h_minus_one     0.032     0.121      0.409
 
     The gap widens with distance, which is the double penalty being softened rather than
     merely rescaled -- so the ordering is a property, not a normalisation artefact, and
@@ -290,7 +290,7 @@ def test_h_minus_one_is_more_displacement_tolerant_than_the_l2_baseline(temporar
     shift depends on where the field keeps its energy. On the conftest synthetic field --
     two sine modes on a 32-cell grid, where one cell is 3% of the domain and there is
     almost no small-scale content for the ``|k|^-1`` weight to suppress -- the ordering
-    reverses (H^-1 damage 0.22 against L2's 0.09 at one cell). Pinning this on a synthetic
+    reverses (H^-1 damage 0.27 against L2's 0.13 at one cell). Pinning this on a synthetic
     fixture would mean tuning the fixture until it agreed, which is the opposite of
     evidence.
     """
@@ -307,7 +307,7 @@ def test_h_minus_one_is_more_displacement_tolerant_than_the_l2_baseline(temporar
     severity_levels = build_ladder({
         "translate_x": {"op": "translate", "severities": [1, 2, 4],
                         "options": {"axis": "x"}},
-        "uncorrelated": {"op": "random_large_translation", "severities": [0, 1, 2]},
+        "mean_field": {"severities": [0]},
     })
     trajectory = RecomputingTrajectory(KinetRawTrajectory(path))
     try:
@@ -324,7 +324,7 @@ def test_h_minus_one_is_more_displacement_tolerant_than_the_l2_baseline(temporar
 
     norm = an.normalisation(result.rows)
     assert not norm["degenerate"].any(), (
-        "the translation anchor is degenerate for one of these metrics, so the "
+        "the anchor is degenerate for one of these metrics, so the "
         "comparison below would be a ratio of round-off"
     )
     scored = an.add_damage(result.rows, norm)
@@ -352,8 +352,8 @@ def test_h_minus_one_is_more_displacement_tolerant_than_the_l2_baseline(temporar
 def test_two_metrics_can_rank_identically_and_still_differ_in_magnitude():
     """Rank correlation alone must not be allowed to prune a panel.
 
-    AGENTS.md records this as an interpretive trap: MAE and MSE correlate at 0.995 across
-    the ladder yet differ by 55x in displacement damage, "for ranking they are duplicates;
+    AGENTS.md records this as an interpretive trap: MAE and MSE correlate at 0.98-0.997 across
+    the ladder yet differ by 38x to 192x in displacement damage, "for ranking they are duplicates;
     as losses they are not". The redundancy table is built from
     ``cross_metric_correlation`` alone, so this is the test that the trap is real in the
     harness rather than only in the prose -- if a future change made the two agree in
@@ -364,7 +364,7 @@ def test_two_metrics_can_rank_identically_and_still_differ_in_magnitude():
         "gaussian_blur": {"severities": [0.5, 1.0, 2.0, 4.0]},
         "translate_x": {"op": "translate", "severities": [1, 2, 4],
                         "options": {"axis": "x"}},
-        "uncorrelated": {"op": "random_large_translation", "severities": [0, 1, 2]},
+        "mean_field": {"severities": [0]},
     })
     result = run(SyntheticTrajectory(SHAPE), specs, severity_levels, fields=["density"],
                  dataset=DatasetInfo(name="synthetic"), seed=0)

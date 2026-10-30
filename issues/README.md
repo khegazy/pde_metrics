@@ -25,7 +25,7 @@ These block criteria that are designed and implemented but cannot be exercised.
 | [002](002-shocklet-dataset.md) | No shocklet-populated compressible turbulence | accepted, scheduled |
 | [003](003-ensemble-data.md) | CRPS and spread-to-skill need ensembles — estimators built and validated on a synthetic ensemble; physical data is [004](004-independent-realizations.md) | low |
 | [004](004-independent-realizations.md) | Only one seed per configuration | medium |
-| [037](037-position-blind-metrics-have-no-damage-anchor.md) | A translation-invariant metric scores the unrelated-field anchor at zero, so a whole family of candidates has no damage scale until [004](004-independent-realizations.md) lands | high |
+| [037](037-increment-flatness-has-no-damage-scale.md) | The increment flatness is zero over zero on the mean-field anchor, so it alone has no damage scale | low |
 | [005](005-3d-and-cost-extrapolation.md) | All data is two-dimensional | low |
 | [034](034-the-well-format-copy-is-not-published.md) | The Well-format copy is not published, so that reader's HTTP path is only covered by a fixture | low |
 | [084](084-weak-residual-needs-consecutive-states.md) | Residual of the equations in weak form needs states one solver step apart | high |
@@ -75,8 +75,7 @@ Designed, hooks in place, not built.
 
 | ID | Title | Priority |
 |---|---|---|
-| [031](031-saturation-never-reached.md) | No ladder severity level reaches the unrelated-field level | medium |
-| [040](040-mean-field-anchor.md) | A mean-field anchor for metrics that cannot see the translated one | medium |
+| [031](031-saturation-never-reached.md) | Most ladder axes do not reach 90% of the way to the anchor, so `saturation_level` is blank on most rows | medium |
 | [042](042-rank-interval-block-length-is-half-the-estimate.md) | The rank-correlation interval's fixed 10-frame blocks are half the estimated decorrelation, and its generator is shared across groups | medium |
 | [039](039-h1-seminorm-is-not-monotone-under-coarsening.md) | Under `coarsen_bandlimited`, density is out of order in some frames for several metrics, unexplained; the `coarsen` decisions themselves are acted on | low |
 | [041](041-subpixel-shift-drops-the-nyquist-mode.md) | A fractional Fourier shift drops the Nyquist mode of an even grid; negligible on the production data | low |
@@ -101,7 +100,6 @@ Designed, hooks in place, not built.
 | [063](063-reeb-graph-distance-is-not-standard.md) | Reeb graphs and Morse–Smale complexes: no standard distance between graphs | medium |
 | [064](064-jacobi-set-defines-no-scalar.md) | Jacobi sets define a set, not a number | medium |
 | [065](065-bispectrum-distance-is-not-fixed.md) | Bispectrum and bicoherence: the distance between maps is not fixed | unset |
-| [092](092-sod-damage-anchor-is-poorly-determined.md) | On `sod_shock_tube` the unrelated-field anchor varies by up to 2x across draws on density and pressure and 21x on velocity, so Sod damage numbers are poorly determined; needs a decision | medium |
 | [095](095-pooling-across-frames-for-distributional-estimates.md) | Pooling across frames for a distributional estimate; the contract of a series-level procedure, should a metric need one | unset |
 | [097](097-stochastic-ladder-for-comparable-magnitudes.md) | A stochastic ladder (several draws per severity) would make response magnitudes comparable across a metric's functional forms | none set |
 | [098](098-increment-w1-registered-number-is-a-convention.md) | The number `increment_w1_by_separation` registers, a normalised mean over separations, is a convention with no source | unset |
@@ -113,6 +111,7 @@ Designed, hooks in place, not built.
 | [020](020-import-name-collision.md) | `metrics` is a very generic top-level import name | low |
 | [032](032-prose-numbers-can-go-stale.md) | Numbers written into card prose can go stale unnoticed | medium |
 | [033](033-link-rewriting-is-only-checked-for-deadness.md) | Site link rewriting is checked for dead links, not correct destinations | medium |
+| [099](099-derived-field-read-without-its-inputs.md) | A run that reads vorticity without velocity scores the solver's stored vorticity, not the recomputed one, without warning | medium |
 | [036](036-increment-flatness-is-not-monotone-under-smoothing.md) | Increment flatness is not monotone under smoothing on any field, so it fails the stated acceptance rule; needs a decision, not a fix | medium |
 | [022](022-sim-config-parsing.md) | Solver configs carry executable YAML tags | low |
 | [023](023-vendored-kinet-drift.md) | Vendored kinet code is pinned and may drift | low |

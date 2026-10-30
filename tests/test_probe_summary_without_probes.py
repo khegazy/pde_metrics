@@ -1,6 +1,6 @@
 """A run whose ladder contains no probe must not report a probe.
 
-The trap tests -- the phase-scrambled impostor and the unrelated-field anchor -- are
+The trap tests -- the phase-scrambled impostor and the large-translation probe -- are
 ordinary ladder entries, and a custom ladder is free to omit them. The miscalibration
 ladder does: an impostor built by scrambling the phases of one field says nothing about
 whether an *ensemble* is honestly dispersed, so it is not on that axis.
@@ -42,7 +42,7 @@ def test_the_empty_result_still_carries_the_key_columns():
 
 def test_a_probe_row_still_appears_when_the_probe_ran():
     df = make_frame(axes={"gaussian_blur": [0.1, 0.2], "gaussian_impostor": [0.5],
-                          "uncorrelated": [1.0]}, n_frames=3)
+                          "mean_field": [1.0]}, n_frames=3)
     summary = probe_summary(df, normalisation(df))
     assert len(summary) == 1
     assert "gaussian_impostor_damage" in summary.columns

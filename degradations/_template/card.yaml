@@ -29,7 +29,7 @@ output:
 exemplars:
   # severity -> three severities beside the original, weakest first
   # draws    -> several independent draws beside the original, for a degradation whose
-  #             severity carries no order (a phase randomiser, an unrelated-field anchor)
+  #             severity carries no order (a phase randomiser, a large-translation probe)
   # none     -> no panel; only the identity operator qualifies
   mode: severity
   levels: [0.0, 0.0, 0.0]   # TODO(fill) three severities this ladder actually uses

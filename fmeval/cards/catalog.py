@@ -22,7 +22,7 @@ from fmeval import analysis as an
 
 from .loader import GENERATED_DIR, Bundle, iter_bundles, load_card, write_strict_json
 
-CATALOG_SCHEMA_VERSION = 3
+CATALOG_SCHEMA_VERSION = 4
 """Bump when an entry's shape changes in a way a consumer could not ignore. Not the card
 schema's version (:data:`fmeval.cards.schema.SCHEMA_VERSION`), which versions ``card.yaml``."""
 
@@ -91,7 +91,7 @@ def _measured(bundle: Bundle) -> dict[str, Any]:
             "field": row["field"],
             "impostor_damage": row.get("gaussian_impostor_damage"),
             "impostor_nearest_level": row.get("gaussian_impostor_nearest_level"),
-            "unrelated_field_value": row.get("uncorrelated_value"),
+            "translation_probe_value": row.get("uncorrelated_value"),
         }
         for row in data.get("probes", [])
     ]

@@ -6,19 +6,20 @@
 
 ## Context
 
-The unrelated-field anchor and the statistical-twin comparison are built by translating
-the reference by a large random offset. On a periodic domain that preserves every statistic
-exactly, and it is verified to do so -- variance ratio 1.000000, flatness matching to three
-decimals -- so it is a sound construction.
+The damage anchor is the field's spatial mean (`judgements/001`), the climatological reference.
+What the data cannot provide is the other classical reference, an *independent realisation*: a
+field with every statistic of the reference and none of its positions or phases. The suite
+stands in for it with a probe that translates the reference by a large random offset
+(`uncorrelated`), and that stand-in is measured not to be one: a translation multiplies each
+mode by a phase, which a field whose energy sits in a few large-scale modes does not average
+away. On `kinet_re5e4` the probe's median `energy_changed`, which is 2 for an unrelated field of
+the same variance, is 1.64 on density, 3.05 on velocity and 2.25 on vorticity, and a
+translation-invariant metric scores it at exactly the clean value.
 
-But an *independent realisation* at the same physical parameters would be the stronger test,
-because it separates "wrong phase" from "wrong realisation", which translation cannot. Every
-run in `kinet/doubly_periodic/old/` carries `R0-1`, so there is one seed per configuration.
-
-There is also a known limitation of the translation construction: it only decorrelates a
-broadband field. For a field dominated by a single large-scale mode the residual correlation
-is cos(2 pi d / L), which no offset makes reliably small. Real turbulence is broadband so this
-does not bite here, but the spread across draws is the diagnostic and should be watched.
+An independent realisation at the same physical parameters would separate "wrong phase" from
+"wrong realisation", which translation cannot, and would give every metric — position-blind
+ones included — its genuine score for an unrelated field. Every run in
+`kinet/doubly_periodic/old/` carries `R0-1`, so there is one seed per configuration.
 
 ## What is needed
 
@@ -26,9 +27,9 @@ Two or more runs at identical physical parameters with different initial-conditi
 
 ## Acceptance criteria
 
-A second realisation is available, and the anchor measured from it agrees with the
-translation-based anchor to within the spread across draws.
+A second realisation is available, a ladder entry scores each metric against it, and its
+`energy_changed` against the reference is 2 to within the spread across frames.
 
 ## Related
 
-`degradations/geometric.py::random_large_translation`; `uncorrelated_value` in TEST_DESCRIPTION.md.
+`degradations/random_large_translation`; `uncorrelated_value` in TEST_DESCRIPTION.md; `judgements/001`.

@@ -127,7 +127,7 @@ EXEMPLAR_MODES = ("severity", "draws", "none")
 ``draws``
     Several independent random draws beside the original. For degradations whose
     severity parameter carries no order: the phase-randomised impostor has no severity at
-    all, and the unrelated-field anchor is indexed by draw number.
+    all, and the large-translation probe is indexed by draw number.
 ``none``
     No panel. Only the identity operator, which by definition changes nothing.
 """

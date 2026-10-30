@@ -322,3 +322,36 @@ def test_a_run_with_only_periodic_metrics_on_a_bounded_domain_is_refused():
     with pytest.raises(ValueError, match="needs a periodic domain"):
         run(_WalledTrajectory(), [metric_registry.get("h1_seminorm")], build_ladder(LADDER),
             fields=["density"], dataset=INFO)
+
+
+def test_mse_against_the_mean_field_anchor_is_the_spatial_variance():
+    """The closed form the default anchor rests on, through the whole pipeline: the mean squared
+    error between a frame and its spatial mean is that frame's spatial variance."""
+    traj = SyntheticTrajectory()
+    rows = run(traj, [metric_registry.get("mse")],
+               build_ladder({"mean_field": {"severities": [0]}}), fields=["density"],
+               dataset=INFO, seed=7).rows
+    anchor = rows[rows["degradation"] == "mean_field"]
+    assert len(anchor) == len(traj)
+    for _, row in anchor.iterrows():
+        field = traj.read_frame(int(row["frame_index"]), ["density"])["density"]
+        assert row["value"] == pytest.approx(float(np.var(field)), rel=1e-12)
+
+
+@pytest.mark.xfail(strict=True, reason="issues/099: a derived field read without its inputs "
+                                       "keeps the stored operator")
+def test_a_derived_field_is_the_same_whether_or_not_its_inputs_are_requested(tmp_path):
+    """Vorticity must come from one operator whichever other fields a run reads.
+
+    A run whose metrics accept only vorticity (``metrics=[enstrophy]``) reads no velocity, so
+    there is nothing to recompute from and the solver's lattice-stencil vorticity is scored,
+    where a run that also reads velocity scores the spectral one.
+    """
+    trajectory = KinetRawTrajectory(write_kinet_raw(tmp_path / "k.h5"))
+    try:
+        wrapped = RecomputingTrajectory(trajectory)
+        alone = wrapped.frame(0, ["vorticity"]).fields["vorticity"]
+        with_inputs = wrapped.frame(0, ["velocity", "vorticity"]).fields["vorticity"]
+        np.testing.assert_array_equal(alone, with_inputs)
+    finally:
+        trajectory.close()

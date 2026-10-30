@@ -293,7 +293,7 @@ def test_every_exemplar_strength_is_one_a_ladder_runs():
 
 
 def test_a_degradation_without_an_ordered_severity_uses_draws_instead():
-    """The phase-randomised impostor has no severity, and the unrelated-field anchor is
+    """The phase-randomised impostor has no severity, and the large-translation probe is
     indexed by draw number. Neither can be shown as weak/medium/strong."""
     base = card(kind="degradation", category="stochastic")
     del base["math"]
@@ -1050,7 +1050,7 @@ def test_the_catalog_reads_what_the_evidence_writes(tmp_path, monkeypatch):
         )
         assert axis["levels"] is not None
     probes = measured["probes"]
-    assert probes and probes[0]["unrelated_field_value"] is not None
+    assert probes and probes[0]["translation_probe_value"] is not None
     for axis in ordinary:
         assert axis["cliffs_delta"] is not None and axis["elasticity_x"], axis["axis"]
     assert measured["profile"] and measured["profile"][0]["selectivity"] is not None

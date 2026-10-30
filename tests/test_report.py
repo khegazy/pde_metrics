@@ -33,6 +33,7 @@ from fmeval.pipeline import DatasetInfo, run
 from fmeval.report import latex
 from fmeval.report.context import TableResult
 from fmeval.report.driver import (
+    _section_prose,
     build_context,
     render,
     write_document,
@@ -186,7 +187,8 @@ def _write_run(path: Path, df: pd.DataFrame) -> RunFolder:
     write_run_meta(folder, run_id=1, config_hash=digest, metric="mse",
                    dataset="synthetic_d", n_frames=8, fields=list(SYNTHETIC_FIELDS),
                    analysis_grid=16, ladder_axes=sorted(SYNTHETIC_LADDER), n_severity_levels=15,
-                   seed=1,
+                   seed=1, anchor_label=analysis.MEAN_FIELD_LABEL,
+                   probe_labels=sorted(analysis.PROBE_LABELS),
                    command="python evaluate.py metrics=[mse]")
     return folder
 
@@ -345,11 +347,11 @@ def test_displacement_prose_names_what_each_geometric_axis_leaves_unchanged(tmp_
 
     Only on a periodic domain, which a folder recording no boundary is read as. Across a wall
     the operator acts on the extended field, and on the Sod shock tube a 16-cell translation
-    moved the spatial mean by 0.019 of the standard deviation and the unrelated field moved it
-    by 0.89, so quoting the periodic invariants there would be false.
+    moved the spatial mean by 0.019 of the standard deviation and the large translation moved
+    it by 0.89, so quoting the periodic invariants there would be false.
     """
     df = pd.concat([make_frame(metric=m, field="vorticity", n_frames=8,
-                               axes={"translate_x": [1.0, 3.0, 6.0], "uncorrelated": [10.0] * 2})
+                               axes={"translate_x": [1.0, 3.0, 6.0], "mean_field": [10.0] * 2})
                     for m in ("mse", "mae")], ignore_index=True)
     df["degradation_op"] = df["degradation_op"].astype(str).replace({
         "translate_x": "translate", "uncorrelated": "random_large_translation"})
@@ -448,6 +450,45 @@ def test_response_sparklines_skip_when_no_metric_has_a_scale(tmp_path):
     folder = _write_run(tmp_path / "flat_1", synthetic_rows(metrics=("flat",)))
     outcome = _rendered(folder, "response_sparklines")
     assert outcome.status == "skipped" and "damage scale" in outcome.reason
+
+
+def _single_field_run(tmp_path: Path, axes: dict[str, list[float]]) -> RunFolder:
+    """A run of a single-field quantity worth 5 on the reference and 0 on the field's mean."""
+    df = make_frame(metric="mse", field="vorticity", n_frames=8, reference=5.0,
+                    axes={label: [v + 5.0 for v in values] for label, values in axes.items()})
+    return _write_run(tmp_path / "single_1", df)
+
+
+@pytest.mark.parametrize("name, clip", [("response_curves", 2.0), ("response_sparklines", 1.25)])
+def test_negative_damage_is_drawn_inside_the_axes(tmp_path, name, clip):
+    """Noise raises a single-field quantity away from the mean field's zero, so its damage is
+    negative; a curve below the y-range would vanish from the figure without a mark."""
+    folder = _single_field_run(tmp_path, {"gaussian_blur": [-1.0, -2.0, -3.0, -4.0],
+                                          "additive_noise": [1.0, 3.0, 6.0, 15.0],
+                                          "mean_field": [-5.0]})
+    ctx = build_context(folder, bootstrap=0)
+    spec = PLOTS[name]
+    result = spec.fn(ctx, ctx.df, dict(spec.defaults))
+    fig = result.figures[0].fig
+    drawn = []
+    for ax in fig.axes:
+        low, high = ax.get_ylim()
+        for line in ax.get_lines():
+            y = np.asarray(line.get_ydata(), float)
+            drawn += list(y)
+            assert ((y >= low) & (y <= high))[np.isfinite(y)].all(), (ax.get_title(), y)
+    assert min(drawn) == pytest.approx(-clip), "the damage of -3 is drawn at the lower edge"
+
+
+def test_robustness_prose_names_the_anchor_that_was_actually_used(tmp_path):
+    """A ladder without the configured anchor falls back to another reference, and the report
+    must not say damage one is the field's mean."""
+    folder = _single_field_run(tmp_path, {"translate_x": [-1.0, -2.0, -3.0]})
+    ctx = build_context(folder, bootstrap=0)
+    assert ctx.norm["anchor_source"].eq("translate_x@max").all()
+    text = _section_prose("robustness", ctx)
+    assert "spatial mean, the prediction" not in text
+    assert latex.code("translate_x@max") in text
 
 
 @pytest.mark.parametrize("n", [1, 2, 3, 4])

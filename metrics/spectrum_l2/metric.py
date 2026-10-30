@@ -14,11 +14,10 @@ report where everything passes is not reassuring; it means nothing in the panel 
 caught by it yet." This metric is exactly such a quantity: on ``comparison_1790633480`` it
 scored the impostor at about 1e-15, the same as the undegraded reference.
 
-What the canary cannot yet do is *report* that. Its damage column is normalised by the
-unrelated-field anchor, and that anchor is built from translations, which this metric cannot
-see either, so the anchor is also ~1e-16 and every damage score is withheld as NaN. The raw
-value is the evidence; the normalised column is empty. ``issues/037`` records this for the
-whole position-blind family.
+The damage column reports it: the anchor, the field's spatial mean, has no fluctuation
+spectrum at all, so this metric's span is well defined and the impostor scores damage 0.000
+on every field of ``comparison_1793302178``. The large-translation probe scores 0 too,
+because a translation leaves the amplitude spectrum unchanged.
 
 The two-point correlation is the Fourier transform of this, so the two carry the
 same information and running both is not two independent checks.

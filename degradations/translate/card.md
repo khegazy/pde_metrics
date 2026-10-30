@@ -73,7 +73,7 @@ with different options, and each becomes an independent entry in the configurati
 
 A whole-cell shift cannot test displacements smaller than one cell, which is exactly
 where the interesting behaviour of the L^p family lives -- the damage MSE assigns at an
-eighth of a cell is 55 times smaller than MAE's. Use ``translate_subpixel`` for that
+eighth of a cell is 38 to 192 times smaller than MAE's, depending on the field. Use ``translate_subpixel`` for that
 range; this operator is the coarse companion.
 
 A periodic translation is also a kinder failure than a real displacement error. A real

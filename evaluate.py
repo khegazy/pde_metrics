@@ -94,7 +94,8 @@ def main(cfg: DictConfig) -> None:
     probes = sorted({r.label for r in severity_levels if not r.ordinal})
     if anchor not in {r.label for r in severity_levels}:
         log.warning("analysis.anchor=%r is not an entry of this ladder; the analysis will fall "
-                    "back to the largest translation and record that in anchor_source", anchor)
+                    "back to the largest translation, or without one to the harshest level "
+                    "of an ordinal axis, and record that in anchor_source", anchor)
     elif anchor not in probes:
         log.warning("analysis.anchor=%r is an ordinal axis: D = 1 would be the median over all "
                     "its levels. Anchor on an entry whose operator is ordinal=False.", anchor)

@@ -39,7 +39,7 @@ def report_card(ctx, df, opts) -> TableResult:
         ("separability_auc_min", "level-separation probability, worst pair"),
         ("selectivity", "selectivity"),
         ("blind_axes", f"response provably below {an.BLINDNESS_MARGIN:g} on"),
-        ("gaussian_impostor_damage", "impostor damage (1 = unrelated field)"),
+        ("gaussian_impostor_damage", "impostor damage (1 = the anchor)"),
         ("sensitivity_level_median", "detection onset (level)"),
         ("saturation_level_median", "saturation point (level)"),
         ("cost_relative", "compute cost (x cheapest)"),
@@ -160,29 +160,34 @@ def deception_table(ctx, df, opts) -> TableResult:
     ordinary degradation the metric considers equally bad.
     """
     ctx.require(not ctx.probes.empty, "no probe rows")
-    keep = [c for c in (
+    moved = an.UNCORRELATED_LABEL
+    keep = [c for c in dict.fromkeys((
         "metric", "field",
         "gaussian_impostor_value", "gaussian_impostor_damage",
         "gaussian_impostor_nearest_level", "gaussian_impostor_relative",
+        f"{moved}_damage", f"{moved}_nearest_level",
         f"{ctx.anchor_label}_value", f"{ctx.anchor_label}_damage",
-    ) if c in ctx.probes.columns]
+    )) if c in ctx.probes.columns]
     return TableResult(
         frame=ctx.probes[keep],
         caption="Response to fields built to mislead. The spectrum-matched Gaussian field "
                 "preserves the energy spectrum and two-point correlation exactly while "
-                "removing all phase information. The unrelated field preserves every "
-                "statistic while removing alignment, and therefore defines a damage of 1. "
-                "Both hold exactly on a periodic domain only.",
+                "removing all phase information. The reference moved by a large random "
+                "offset keeps every statistic that does not depend on position and loses the "
+                "alignment. Both hold exactly on a periodic domain only. Damage 1 is the "
+                "anchor's value.",
         headers={"gaussian_impostor_value": "Gaussian value",
-                 "gaussian_impostor_damage": "impostor damage (1 = unrelated field)",
+                 "gaussian_impostor_damage": "impostor damage",
                  "gaussian_impostor_nearest_level": "equivalent severity level",
                  "gaussian_impostor_relative": "Gaussian, fraction of largest response",
+                 f"{moved}_damage": "moved far away, damage",
+                 f"{moved}_nearest_level": "moved far away, equivalent severity level",
                  f"{ctx.anchor_label}_value": "anchor value",
                  f"{ctx.anchor_label}_damage": "anchor damage"},
         formats={"metric": "code", "field": "code",
-                 "gaussian_impostor_nearest_level": "code"},
-        note="A damage near 1 for the unrelated field is expected by construction: it is "
-             "the measurement that sets the scale.",
+                 "gaussian_impostor_nearest_level": "code", f"{moved}_nearest_level": "code"},
+        note="A damage of 1 for the anchor is expected by construction: it is the measurement "
+             "that sets the scale.",
     )
 
 

@@ -116,6 +116,7 @@ LADDERS: dict[str, list[float]] = {
     "multiplicative_noise": [0.01, 0.1, 0.5],
     "gaussian_impostor": [0],
     "random_large_translation": [0, 1, 2],   # draw indices, not damage levels
+    "mean_field": [0],
     "gain": [0.05, 0.2, 0.5],
     "bias": [0.05, 0.2, 0.5],
     # Ensemble dispersion. Severities are fractions of the calibrated spread: excess for
@@ -433,7 +434,7 @@ def test_impostor_matches_moments():
 
 
 def _draws(x, n=8):
-    """``n`` draws of the unrelated-field anchor, each from its own seed."""
+    """``n`` draws of the large-translation probe, each from its own seed."""
     spec = deg.get("random_large_translation")
     return [spec.fn(x, 0, ctx=make_ctx(x, field="v", seed=seed, label="unc"))
             for seed in range(n)]

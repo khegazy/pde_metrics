@@ -179,8 +179,8 @@ python make_report.py results/comparison_<time> --compile
 ```
 
 **Use `kinet_re5e4_dev` only for smoke tests.** It is the first 100 solver steps, before the
-flow develops, so a 16-cell displacement costs about 1e-4 of what an unrelated field costs
-against 0.51 at t=5000. It will run, and its numbers mean nothing physically. Anything you
+flow develops, so a 16-cell displacement scores an `mse` damage of about 2e-4 on vorticity,
+against 1.4 at t=5000. It will run, and its numbers mean nothing physically. Anything you
 intend to report should use `dataset=kinet_re5e4` with `dataset.time.start=2000` or later.
 
 ### Several datasets at once

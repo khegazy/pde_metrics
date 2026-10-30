@@ -54,6 +54,7 @@ extra and nothing currently needs it. Weights & Biases is not wired in yet.
 |---|---|
 | `TEST_DESCRIPTION.md` | Plain-language reference for every quantity the suite reports. A copy is placed in each run folder. A test fails if a reported column, degradation or figure is undocumented |
 | `issues/` | Open items, one file per item with its evidence. `issues/README.md` is the index. Delete an issue once it is fully resolved (`AGENTS.md` §1) |
+| `judgements/` | Consequential method choices an agent made without asking, one file each with its sources and how to reverse it; only those an agent would otherwise have stopped to ask about (`AGENTS.md` §1) |
 | `README.md` | Setup and the NERSC specifics |
 | `docs/ideas/` | The plan for metrics not yet built: one overview table, one page per theme, one page per idea. Published on the site under Metrics |
 
@@ -117,13 +118,13 @@ What to build next is listed, in order, under "What to build next" in `docs/idea
 ## What exists
 
 Three plugin registries, all discovered by name from config, all extended by one decorated
-function: **metrics** (`metrics/`), **degradations** (`degradations/`, 24 operators in 8
+function: **metrics** (`metrics/`), **degradations** (`degradations/`, 25 operators in 8
 families), and **report renderers** (`fmeval/report/`). Readers live in `fmeval/data/` and are
 a closed set with explicit imports, deliberately unlike the other two.
 
 The mistakes that quietly corrupt results here — pooling frames for a rank correlation,
 averaging a derived field after a remap, deleting k=0 in a high-pass filter, scavenging the
-unrelated-field anchor, two definitions of `|k|`, and the rest — are listed once, with where
+damage anchor, two definitions of `|k|`, and the rest — are listed once, with where
 each fix lives, in `AGENTS.md` §9, "Traps that have already caught someone". Severities on the
 smoothing and spectral axes are calibrated per field against a measured spectrum; how, and what
 an operator author must do about it, is in `AGENTS.md` §4.

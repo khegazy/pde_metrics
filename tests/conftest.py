@@ -303,14 +303,15 @@ def make_frame(
 
 
 #: The synthetic ladder every report test renders: an axis of each length the real runs have
-#: (four, three and two usable levels), plus the two probes.
+#: (four, three and two usable levels), plus the anchor and the two probes.
 SYNTHETIC_LADDER = {
     "gaussian_blur": [1.0, 2.0, 3.0, 4.0],
     "translate_x": [1.0, 3.0, 6.0, 9.0],
     "translate_subpixel": [0.5, 1.0, 2.0],
     "median_blur": [2.0, 3.0],
     "gaussian_impostor": [8.0],
-    "uncorrelated": [10.0, 10.0, 10.0],
+    "mean_field": [10.0],
+    "uncorrelated": [12.0, 12.0, 12.0],
 }
 #: The operator behind each ladder label, as the pipeline records it.
 SYNTHETIC_OPERATORS = {"translate_x": "translate", "uncorrelated": "random_large_translation"}

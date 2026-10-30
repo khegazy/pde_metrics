@@ -208,7 +208,7 @@ Not generated yet. Run `python -m fmeval.cards evidence <name>`.
 
 <!-- END GENERATED results_canaries -->
 
-TODO(fill) The phase-scrambled fake prediction and the unrelated-field anchor. State
+TODO(fill) The phase-scrambled fake prediction and the reference moved far away. State
 plainly what your metric does with them, including any trap test it falls for — that is
 information a reader needs, not a mark against the metric.
 

@@ -40,9 +40,10 @@ metrics: [mae, mse, nrmse]
 # The analysis layer. `anchor` is the LADDER ENTRY (a label under degradation.ladder, not an
 # operator) whose median value defines damage D = 1. It must be a non-ordinal entry. Fixed once
 # per run and never per metric; run_meta.json records it as `anchor_label`, and
-# TEST_DESCRIPTION.md `anchor_source` says what D = 1 means for each choice.
+# TEST_DESCRIPTION.md `anchor_source` says what D = 1 means for each choice. The default is the
+# field's spatial mean, the climatological reference (judgements/001).
 analysis:
-  anchor: uncorrelated
+  anchor: mean_field
 
 seed: 20260807
 

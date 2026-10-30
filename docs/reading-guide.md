@@ -66,10 +66,10 @@ metric cannot see at all.
 
 The second figure, the *response curves*, shows median damage against severity level,
 with one row per family of degradation and one column per field, every panel on the same
-0-to-1 scale. The solid grey line is damage 1, an unrelated field. The dotted black line is
+0-to-1 scale. The solid grey line is damage 1, the field's own mean. The dotted black line is
 the damage the metric assigned to the fake prediction with the right spectrum. The hollow
-ring marks the first strength at which the metric moved a tenth of the way to an unrelated
-field. Hollow grey markers are strengths that were excluded because they repeated a milder
+ring marks the first strength at which the metric moved a tenth of the way to the anchor.
+Hollow grey markers are strengths that were excluded because they repeated a milder
 one or did nothing. A grey panel means the field has no damage scale for this metric, and
 the raw value is drawn instead.
 
@@ -92,10 +92,12 @@ you read one.
 
 **Damage** puts every metric on the same 0-to-1 scale. A raw mean squared error and a raw
 transport distance are not comparable numbers, so each metric's raw value is rescaled:
-0 is what the metric gives the undamaged reference, and 1 is what the metric gives a
-field that has the right statistics but no relationship whatsoever to the truth. Damage
+0 is what the metric gives the undamaged reference, and 1 is what the metric gives the
+reference's own spatial mean: a prediction that knows the mean and nothing else. Damage
 is what makes a result on density comparable with a result on vorticity. A damage above 1
-means the metric considers the prediction *worse* than a completely unrelated field.
+means the metric considers the prediction *worse* than knowing only the mean, which a field
+with the right statistics in the wrong place usually is: for mean squared error an unrelated
+field of the same variance scores 2.
 
 **Rank correlation** asks whether the metric puts increasing damage in increasing order.
 It is the Spearman rank correlation between the strength of the damage applied and the
@@ -123,6 +125,6 @@ Results, by the same code that draws the evaluation report, and the numbers behi
 figure are published beside it as a JSON file of the same name. Colour means the family
 of degradation throughout — smoothing is always the same blue — and marker shape means
 the physical field, so the figures can be read in greyscale. Reference lines mark fixed
-conventions of the analysis, never a judgement: damage 1 is what an unrelated field
+conventions of the analysis, never a judgement: damage 1 is what the field's own mean
 scores, and the blindness margin is where a response counts as provably small. Nothing
 on a figure is coloured good or bad.

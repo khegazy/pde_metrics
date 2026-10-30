@@ -4,10 +4,11 @@ Every term this site uses that a first-time reader would have to guess at, in pl
 language. Where a word has an older or shorter name that still appears in the code, that
 name is given too.
 
-**Anchor** — the ladder entry whose value defines a damage of one. By default it is a field
-with the reference's statistics and no relationship to it, so a damage of one reads "as different
-as an unrelated field". A run can declare another entry with `analysis.anchor`, and the recorded
-`anchor_source` says which one a number was measured against.
+**Anchor** — the ladder entry whose value defines a damage of one. By default it is the
+reference's spatial mean, a prediction that knows the field's mean and nothing else (the
+climatological reference of forecast verification), so a damage of one reads "as far from the
+truth as the field's own mean". A run can declare another entry with `analysis.anchor`, and the
+recorded `anchor_source` says which one a number was measured against.
 
 **Analysis grid** — the one common grid that both fields are placed on before anything is
 compared. Two fields stored at different resolutions cannot be compared directly, so both

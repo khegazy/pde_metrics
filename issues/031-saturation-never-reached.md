@@ -1,4 +1,4 @@
-# No ladder severity level reaches the unrelated-field level
+# Most ladder axes do not reach the anchor
 
 **Category:** method
 **Priority:** medium
@@ -6,12 +6,15 @@
 
 ## Context
 
-`saturation_level` is undefined for every axis and metric measured so far: nothing on the
-ladder reaches 90% of the way from clean to the unrelated-field value. The most severe severity_level
-available is a 16-cell translation, which reaches 0.45 for MSE and 0.68 for MAE on vorticity.
+`saturation_level` is the first severity level at which a metric has moved 90% of the way from
+clean to the anchor, the field's spatial mean (`judgements/001`). On the pinned run
+`comparison_1793302178` (`kinet_re5e4`, 13 metrics, 161 frames) it is defined on 88 of the 396
+ordinary rows, `severity_50` on 173 and `severity_10` on 291. Against the earlier translation
+anchor it was defined on 12 of 360, so the change of anchor populated it partly but not for most
+rows.
 
-That is honest -- and it means the saturation column carries no information at present, and a
-reader could mistake a blank column for a computation that failed.
+A blank saturation column carries no information, and a reader could mistake it for a
+computation that failed.
 
 It also means the ladder spans the informative range but does not bracket it. Whether that
 matters depends on the intended use: for ranking models that differ mildly it is fine, and for
@@ -23,9 +26,9 @@ Either extend the severe end of the ladder -- larger translations, coarsening be
 noise above 0.5 -- or state in the report that saturation was not reached rather than leaving
 the column blank. Probably both.
 
-If the ladder is extended, note that a very large translation approaches the anchor by
-construction, so it stops being an independent measurement and starts being a second estimate
-of the same quantity.
+If the ladder is extended, note that the harshest smoothing approaches the anchor by
+construction (a blur wide enough removes every fluctuation), so it stops being an independent
+measurement and starts being a second estimate of the same quantity.
 
 ## Acceptance criteria
 

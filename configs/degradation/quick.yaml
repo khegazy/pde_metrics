@@ -4,4 +4,5 @@ ladder:
   gaussian_blur:      {enabled: true, severities: [0.05, 0.20]}   # fraction of scale
   translate_subpixel: {enabled: true, severities: [0.5, 2.0]}
   gaussian_impostor:  {enabled: true, severities: [0]}
+  mean_field:         {enabled: true, severities: [0]}
   uncorrelated:       {enabled: true, op: random_large_translation, severities: [0, 1, 2]}

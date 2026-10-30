@@ -19,12 +19,14 @@ both decisions were made and acted on 2026-09-28
 Measured on `comparison_1790639359` (`kinet_re5e4`, start 2000, reduction 50, 161 frames,
 grid 256): all twelve kinet metrics on the ladder with both coarsenings. On every axis the
 two runs share, it reproduces each card's previously pinned run bit for bit, so the only new
-evidence is the `coarsen_bandlimited` row.
+evidence is the `coarsen_bandlimited` row. Its damage numbers are on that run's anchor, the
+large translation; on the current anchor, the field's spatial mean (`judgements/001`), each
+is larger by the factor tabulated there (1.38 for `h1_seminorm` on density, 1.45 for `mse`).
 
 | metric, field | under `coarsen` | under `coarsen_bandlimited` |
 |---|---|---|
 | `h1_seminorm`, vorticity | rho 0.2, 0 of 161 frames in order | rho 1, every frame in order |
-| `h1_seminorm`, density, damage at factor 2 | 1.11 (worse than an unrelated field) | 0.053 |
+| `h1_seminorm`, density, damage at factor 2 | 1.11 (beyond the anchor) | 0.053 |
 | `palinstrophy`, change at factors 2 / 4 / 8 / 16 | +89% / +39% / −28% / −59% | −2% / −39% / −84% / −96% |
 | `increment_flatness`, density, factor 2 → 16 | 30 → 177 (reference 15.2) | 15.3 → 13.0 |
 | `increment_w1`, density, factor 2 | 5.2e-5 | 7.2e-7 |
@@ -51,7 +53,7 @@ Three things this settled or showed:
 the pointwise metrics (in order in 59% to 71% of frames), `spectrum_l2` (52%) and
 `h1_seminorm` (32%), although the median ordering is correct. `h_minus_one` and `increment_w1`
 are in order in every frame. The disorder is between factors 2 and 4, where the damage is
-0.002 or less of the unrelated-field value for the pointwise metrics and about 0.05 for
+0.002 or less of the anchor's value for the pointwise metrics and about 0.05 for
 `h1_seminorm`; in 46 of 161 frames `mse` at factor 4 is 1% to
 3% *below* `mse` at factor 2 (for example 3.87e-10 against 3.93e-10). Ruled out so far:
 
@@ -61,7 +63,7 @@ are in order in every frame. The disorder is between factors 2 and 4, where the 
   up about two thirds of it;
 - a white noise floor under a steep spectrum: in order in 40 of 40 synthetic trials.
 
-It is small, 0.002 or less of the unrelated-field value for the pointwise metrics, and it is
+It is small, 0.002 or less of the anchor's value for the pointwise metrics, and it is
 recorded here rather than treated as reopening the issue. What would settle it is decomposing one real density frame's error into its
 out-of-band part and its in-band alias part at factors 2 and 4.
 

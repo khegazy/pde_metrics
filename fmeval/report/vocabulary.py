@@ -52,7 +52,7 @@ def family_label(family: str) -> str:
 #: Plain label for each statistic a figure draws, keyed by its column name. The label says
 #: what the number is and which way it runs, in words the card tables already use.
 LABELS: dict[str, str] = {
-    "damage": "damage (0 = undegraded reference, 1 = unrelated field)",
+    "damage": "damage (0 = undegraded reference, 1 = the anchor)",
     "value": "metric value",
     "level": "severity level (1 = mildest)",
     "rho": "rank correlation with strength (1 = follows the degradation in every frame)",

@@ -199,14 +199,17 @@ default ladder on 2026-10-20. These are facts about this field, not defects.
 - **The spectral filters repeat.** On density and pressure several low- and high-pass levels
   repeat a milder level's experiment, because nearly all of their energy is in a few
   shells.
-- **The damage anchor is poorly determined.** Damage 1 is the mean of six large random
-  translations (`uncorrelated`), which `random_large_translation` itself says decorrelates
-  only a broadband field. Measured with `python evaluate.py metrics=[mse]
-  dataset=sod_shock_tube` on 2026-10-24 (run `mse_1792825406`), the largest of the six
-  draws exceeds the smallest within one frame by a factor of 1.62 for density and 1.73 for
-  pressure (medians over the 10 frames; at most 1.99 and 2.21), and 6.47 for velocity (at
-  most 21.0). On `kinet_re5e4` vorticity the six draws agree within 0.96–1.03. A damage
-  number measured here carries that spread.
+- **The damage anchor is exact here; the large-translation probe is not a twin.** Damage 1 is
+  the value each metric gives the field's spatial mean (`mean_field`), which needs no boundary
+  handling: for mean squared error it is the spatial variance of each frame exactly. The probe
+  that moves the reference by a large random offset (`uncorrelated`) rolls the mirror-extended
+  tube and crops it, which flips the step, so the moved copy is anti-correlated with the
+  reference rather than unrelated to it. Measured with `python evaluate.py
+  'metrics=[mse,mae,nrmse]' dataset=sod_shock_tube paths.data_url=null` on 2026-10-29 (run
+  `comparison_1793302112`): its median `energy_changed`, 2 for an unrelated field of the same
+  variance, is 3.46 on density and 3.49 on pressure, and its mean squared error damage is 3.29
+  on both, against 1.98 and 1.86 for the Gaussian impostor. Read the probe as the score of that
+  mirrored copy, not of an unrelated field (`judgements/001`).
 
 ## Citing it as evidence
 

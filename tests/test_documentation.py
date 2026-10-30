@@ -41,7 +41,7 @@ _GROUPED_HEADINGS = {
     "degradation_op", "degradation_family", "level", "severity", "severity_name",
     "variant_label", "analysis_grid", "remap_op", "rho_median", "rho_min",
     "rho_pooled_min", "monotone_fraction_min", "sensitivity_level_median",
-    "saturation_level_median", "value_uncorrelated", "n_axes", "n_levels", "n_frames",
+    "saturation_level_median", "value_anchor", "n_axes", "n_levels", "n_frames",
 }
 
 
@@ -71,7 +71,7 @@ def test_every_result_column_is_documented(doc):
 def test_every_analysis_column_is_documented(doc):
     """Columns produced by summarise_axes, probe_summary and report_card."""
     df = make_frame(axes={"a": [1.0, 2.0, 3.0], "gaussian_impostor": [9.0],
-                          "uncorrelated": [10.0, 10.0]})
+                          "mean_field": [10.0, 10.0]})
     norm = an.normalisation(df)
     axes = an.summarise_axes(an.add_damage(df, norm), norm=norm, n_bootstrap=0)
     probes = an.probe_summary(df, norm)
