@@ -1,7 +1,7 @@
 {
   "counts": {
     "degradations": 25,
-    "metrics": 17,
+    "metrics": 18,
     "reviewed": 0,
     "with_measurements": 17
   },
@@ -8384,6 +8384,61 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Mean of the absolute difference between the candidate and reference fields, taken cell by cell on a common analysis grid."
+    },
+    {
+      "card": "metrics/max_error/card.md",
+      "category": "pointwise",
+      "declared": {
+        "arity": "pairwise",
+        "companion": {
+          "coordinate": null,
+          "kind": "field",
+          "one_field": false
+        },
+        "cost": "cheap",
+        "differentiable": true,
+        "fields": [
+          "*"
+        ],
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "max",
+        "requires_periodic": false,
+        "symmetric": true,
+        "target": null,
+        "units": "field"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N)",
+        "resolution_dependent": true,
+        "scale_dependent": true,
+        "triangle_inequality": true
+      },
+      "name": "max_error",
+      "output": {
+        "description": "Maximum over all channels and grid cells of the absolute field difference, in the field's own units.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/max_error",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Largest absolute difference between the candidate and reference fields over every cell and channel of a common analysis grid: the worst single cell, which an averaged error dilutes."
     },
     {
       "card": "metrics/mse/card.md",
