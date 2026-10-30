@@ -1,7 +1,7 @@
 {
   "counts": {
     "degradations": 25,
-    "metrics": 17,
+    "metrics": 18,
     "reviewed": 0,
     "with_measurements": 17
   },
@@ -13121,6 +13121,64 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Ratio of the ensemble's own spread to the error of its mean, the standard check for whether a prediction's stated uncertainty is honest. Calibrated at one."
+    },
+    {
+      "card": "metrics/tail_index/card.md",
+      "category": "statistical",
+      "declared": {
+        "arity": "single",
+        "companion": {
+          "coordinate": [
+            "theta",
+            "log k / log n"
+          ],
+          "kind": "curve",
+          "one_field": false
+        },
+        "cost": "cheap",
+        "differentiable": true,
+        "fields": [
+          "*"
+        ],
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "mean",
+        "requires_periodic": true,
+        "symmetric": false,
+        "target": null,
+        "units": "dimensionless"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N log N)",
+        "resolution_dependent": true,
+        "scale_dependent": false,
+        "triangle_inequality": false
+      },
+      "name": "tail_index",
+      "output": {
+        "description": "Mean over channels and spatial axes of the Hill estimate of the absolute one-cell increments at k = ceil(sqrt(n)), the mean log-ratio of the k largest to the (k+1)-th largest. For a power-law tail with exponent alpha it estimates 1/alpha. Dimensionless. NaN on a constant field. The Hill estimate at nine orders k = ceil(n^theta) is stored beside it.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/tail_index",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Hill estimate of how slowly the largest one-cell increments of a field fall off, from the square root of the number of cells largest of them; a single-field statistic whose drift from the reference is what is read."
     }
   ],
   "schema_version": 4
