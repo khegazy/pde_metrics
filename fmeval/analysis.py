@@ -1283,7 +1283,9 @@ def flag(card: pd.DataFrame, thresholds: Mapping[str, float]) -> pd.DataFrame:
     drawing attention, not acceptance criteria.
     """
     out = card.copy()
-    # Every check flags a value BELOW its reference.
+    # Every check flags a value BELOW its reference. The impostor's damage is compared by size:
+    # a single-field quantity the impostor raises has negative damage, and a large rise is as
+    # much a detection as a large fall.
     checks: list[tuple[str, str, float]] = [
         ("rho_min", "spearman", thresholds.get("spearman", np.nan)),
         ("separability_auc_min", "separability_auc", thresholds.get("separability_auc", np.nan)),
@@ -1298,7 +1300,7 @@ def flag(card: pd.DataFrame, thresholds: Mapping[str, float]) -> pd.DataFrame:
             value = row.get(column)
             if value is None or not np.isfinite(value):
                 continue
-            if value < limit:
+            if (abs(value) if name == "impostor_damage" else value) < limit:
                 notes.append(f"{name}={value:.2f} < {limit:g}")
         if bool(row.get("degenerate", False)):
             notes.append("no dynamic range")

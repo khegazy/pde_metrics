@@ -192,6 +192,15 @@ def test_empty_flags_when_everything_clears_the_thresholds():
     assert card.iloc[0]["flags"] == ""
 
 
+@pytest.mark.parametrize("impostor, flagged", [(-9.0, False), (-2.0, True), (2.0, True)])
+def test_the_impostor_flag_reads_the_size_of_its_damage(impostor, flagged):
+    """A single-field quantity the impostor raises scores negative damage; -0.9 of the way
+    past clean is a detection, not a metric fooled into scoring the fake as the truth."""
+    card = _card({"a": [1.0, 2.0, 3.0], "gaussian_impostor": [impostor],
+                  "mean_field": [10.0, 10.0]})
+    assert ("impostor_damage=" in card.iloc[0]["flags"]) is flagged
+
+
 def test_flagging_is_separate_from_computation():
     """Re-flagging with different thresholds must need no recomputation."""
     df = make_frame(axes={"a": [1.0, 2.0, 3.0], "mean_field": [10.0, 10.0]})

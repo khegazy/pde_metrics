@@ -1080,7 +1080,9 @@ be describing the analysis rather than the metric.
 ### `flags` — advisory notes, never a verdict
 
 **Advisory only.** A semicolon-separated list of the configured reference values a row did not
-meet, for example `spearman=0.40 < 0.9; separability_auc=0.31 < 0.8`. An empty entry means
+meet, for example `spearman=0.40 < 0.9; separability_auc=0.31 < 0.8`. The impostor's damage is
+compared by its size, because a quantity the impostor raises scores a negative damage, and a large
+rise is a detection, not a metric fooled. An empty entry means
 nothing was flagged — **not** that the metric is approved. Thresholds live in one config block
 and re-flagging needs no recomputation, so changing your mind is a config edit.
 
