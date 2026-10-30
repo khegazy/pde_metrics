@@ -1814,7 +1814,7 @@
             "field": "vorticity",
             "impostor_damage": 0.0,
             "impostor_nearest_level": "translate_x=1",
-            "unrelated_field_value": 3.0785e-06
+            "translation_probe_value": 3.0785e-06
           }
         ],
         "profile": [
@@ -2806,19 +2806,19 @@
             "field": "density",
             "impostor_damage": 1.375870854,
             "impostor_nearest_level": "coarsen=2",
-            "unrelated_field_value": 0.0004927607
+            "translation_probe_value": 0.0004927607
           },
           {
             "field": "velocity",
             "impostor_damage": 1.4481662348,
             "impostor_nearest_level": "coarsen=2",
-            "unrelated_field_value": 0.0027088559
+            "translation_probe_value": 0.0027088559
           },
           {
             "field": "vorticity",
             "impostor_damage": 1.3986690025,
             "impostor_nearest_level": "translate_x=16",
-            "unrelated_field_value": 0.0013559029
+            "translation_probe_value": 0.0013559029
           }
         ],
         "profile": [
@@ -3823,19 +3823,19 @@
             "field": "density",
             "impostor_damage": 1.3344657632,
             "impostor_nearest_level": "lowpass_ideal=1.4029",
-            "unrelated_field_value": 0.1898331436
+            "translation_probe_value": 0.1898331436
           },
           {
             "field": "velocity",
             "impostor_damage": 1.421801766,
             "impostor_nearest_level": "highpass_ideal=4.02293",
-            "unrelated_field_value": 2.7070315826
+            "translation_probe_value": 2.7070315826
           },
           {
             "field": "vorticity",
             "impostor_damage": 1.4351947978,
             "impostor_nearest_level": "highpass_ideal=41.6842",
-            "unrelated_field_value": 0.0981953996
+            "translation_probe_value": 0.0981953996
           }
         ],
         "profile": [
@@ -4841,19 +4841,19 @@
             "field": "density",
             "impostor_damage": null,
             "impostor_nearest_level": "",
-            "unrelated_field_value": 15.226150859
+            "translation_probe_value": 15.226150859
           },
           {
             "field": "velocity",
             "impostor_damage": null,
             "impostor_nearest_level": "",
-            "unrelated_field_value": 9.2316841236
+            "translation_probe_value": 9.2316841236
           },
           {
             "field": "vorticity",
             "impostor_damage": null,
             "impostor_nearest_level": "",
-            "unrelated_field_value": 9.3398743212
+            "translation_probe_value": 9.3398743212
           }
         ],
         "profile": [
@@ -5871,19 +5871,19 @@
             "field": "density",
             "impostor_damage": 0.7019172154,
             "impostor_nearest_level": "lowpass_butterworth=1.31656",
-            "unrelated_field_value": 0.0
+            "translation_probe_value": 0.0
           },
           {
             "field": "velocity",
             "impostor_damage": 0.328427423,
             "impostor_nearest_level": "gaussian_blur=9.43858",
-            "unrelated_field_value": 0.0
+            "translation_probe_value": 0.0
           },
           {
             "field": "vorticity",
             "impostor_damage": 0.9369165063,
             "impostor_nearest_level": "coarsen=16",
-            "unrelated_field_value": 0.0
+            "translation_probe_value": 0.0
           }
         ],
         "profile": [
@@ -6900,19 +6900,19 @@
             "field": "density",
             "impostor_damage": 0.605152204,
             "impostor_nearest_level": "highpass_ideal=4.32121",
-            "unrelated_field_value": 0.0
+            "translation_probe_value": 0.0
           },
           {
             "field": "velocity",
             "impostor_damage": 0.2783525462,
             "impostor_nearest_level": "box_blur=47.1929",
-            "unrelated_field_value": 0.0
+            "translation_probe_value": 0.0
           },
           {
             "field": "vorticity",
             "impostor_damage": 0.7645474072,
             "impostor_nearest_level": "lowpass_butterworth=4.71416",
-            "unrelated_field_value": 0.0
+            "translation_probe_value": 0.0
           }
         ],
         "profile": [
@@ -7323,7 +7323,7 @@
             "field": "velocity",
             "impostor_damage": 0.0,
             "impostor_nearest_level": "translate_subpixel=1",
-            "unrelated_field_value": 0.0015656018
+            "translation_probe_value": 0.0015656018
           }
         ],
         "profile": [
@@ -8317,19 +8317,19 @@
             "field": "density",
             "impostor_damage": 1.5917582976,
             "impostor_nearest_level": "highpass_ideal=3.03099",
-            "unrelated_field_value": 0.005206993
+            "translation_probe_value": 0.005206993
           },
           {
             "field": "velocity",
             "impostor_damage": 1.3019856237,
             "impostor_nearest_level": "highpass_ideal=4.02293",
-            "unrelated_field_value": 0.0593217734
+            "translation_probe_value": 0.0593217734
           },
           {
             "field": "vorticity",
             "impostor_damage": 2.6747715453,
             "impostor_nearest_level": "translate_x=16",
-            "unrelated_field_value": 0.0018614191
+            "translation_probe_value": 0.0018614191
           }
         ],
         "profile": [
@@ -9336,19 +9336,19 @@
             "field": "density",
             "impostor_damage": 1.7903589611,
             "impostor_nearest_level": "lowpass_ideal=1.4029",
-            "unrelated_field_value": 6.55894e-05
+            "translation_probe_value": 6.55894e-05
           },
           {
             "field": "velocity",
             "impostor_damage": 2.0157216555,
             "impostor_nearest_level": "highpass_ideal=4.02293",
-            "unrelated_field_value": 0.0047744217
+            "translation_probe_value": 0.0047744217
           },
           {
             "field": "vorticity",
             "impostor_damage": 2.1269561597,
             "impostor_nearest_level": "translate_x=16",
-            "unrelated_field_value": 1.45161e-05
+            "translation_probe_value": 1.45161e-05
           }
         ],
         "profile": [
@@ -10358,19 +10358,19 @@
             "field": "density",
             "impostor_damage": 1.389743548,
             "impostor_nearest_level": "lowpass_ideal=1.4029",
-            "unrelated_field_value": 1.2799587957
+            "translation_probe_value": 1.2799587957
           },
           {
             "field": "velocity",
             "impostor_damage": 1.4202253723,
             "impostor_nearest_level": "highpass_ideal=4.02293",
-            "unrelated_field_value": 1.746644413
+            "translation_probe_value": 1.746644413
           },
           {
             "field": "vorticity",
             "impostor_damage": 1.416599914,
             "impostor_nearest_level": "translate_x=16",
-            "unrelated_field_value": 1.499053454
+            "translation_probe_value": 1.499053454
           }
         ],
         "profile": [
@@ -10771,7 +10771,7 @@
             "field": "vorticity",
             "impostor_damage": -1.145082718e-16,
             "impostor_nearest_level": "translate_x=4",
-            "unrelated_field_value": 4.623e-07
+            "translation_probe_value": 4.623e-07
           }
         ],
         "profile": [
@@ -11896,19 +11896,19 @@
             "field": "density",
             "impostor_damage": 1.3380429594,
             "impostor_nearest_level": "lowpass_ideal=1.4029",
-            "unrelated_field_value": 0.0080987235
+            "translation_probe_value": 0.0080987235
           },
           {
             "field": "velocity",
             "impostor_damage": 1.4197611262,
             "impostor_nearest_level": "highpass_ideal=4.02293",
-            "unrelated_field_value": 0.0690971906
+            "translation_probe_value": 0.0690971906
           },
           {
             "field": "vorticity",
             "impostor_damage": 1.4584087766,
             "impostor_nearest_level": "translate_x=16",
-            "unrelated_field_value": 0.0038099982
+            "translation_probe_value": 0.0038099982
           }
         ],
         "profile": [
@@ -12909,19 +12909,19 @@
             "field": "density",
             "impostor_damage": 0.0,
             "impostor_nearest_level": "translate_subpixel=4",
-            "unrelated_field_value": 1.814604915e-16
+            "translation_probe_value": 1.814604915e-16
           },
           {
             "field": "velocity",
             "impostor_damage": 1.623344068e-16,
             "impostor_nearest_level": "translate_subpixel=1",
-            "unrelated_field_value": 1.611334924e-16
+            "translation_probe_value": 1.611334924e-16
           },
           {
             "field": "vorticity",
             "impostor_damage": 2.013500394e-16,
             "impostor_nearest_level": "translate_subpixel=2",
-            "unrelated_field_value": 1.586065837e-16
+            "translation_probe_value": 1.586065837e-16
           }
         ],
         "profile": [
@@ -13123,5 +13123,5 @@
       "summary": "Ratio of the ensemble's own spread to the error of its mean, the standard check for whether a prediction's stated uncertainty is honest. Calibrated at one."
     }
   ],
-  "schema_version": 3
+  "schema_version": 4
 }

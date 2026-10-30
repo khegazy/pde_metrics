@@ -434,7 +434,7 @@ def test_impostor_matches_moments():
 
 
 def _draws(x, n=8):
-    """``n`` draws of the unrelated-field anchor, each from its own seed."""
+    """``n`` draws of the large-translation probe, each from its own seed."""
     spec = deg.get("random_large_translation")
     return [spec.fn(x, 0, ctx=make_ctx(x, field="v", seed=seed, label="unc"))
             for seed in range(n)]

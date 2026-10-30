@@ -346,8 +346,8 @@ def test_displacement_prose_names_what_each_geometric_axis_leaves_unchanged(tmp_
 
     Only on a periodic domain, which a folder recording no boundary is read as. Across a wall
     the operator acts on the extended field, and on the Sod shock tube a 16-cell translation
-    moved the spatial mean by 0.019 of the standard deviation and the unrelated field moved it
-    by 0.89, so quoting the periodic invariants there would be false.
+    moved the spatial mean by 0.019 of the standard deviation and the large translation moved
+    it by 0.89, so quoting the periodic invariants there would be false.
     """
     df = pd.concat([make_frame(metric=m, field="vorticity", n_frames=8,
                                axes={"translate_x": [1.0, 3.0, 6.0], "mean_field": [10.0] * 2})

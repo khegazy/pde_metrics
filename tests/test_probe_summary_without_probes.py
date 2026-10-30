@@ -1,6 +1,6 @@
 """A run whose ladder contains no probe must not report a probe.
 
-The trap tests -- the phase-scrambled impostor and the unrelated-field anchor -- are
+The trap tests -- the phase-scrambled impostor and the large-translation probe -- are
 ordinary ladder entries, and a custom ladder is free to omit them. The miscalibration
 ladder does: an impostor built by scrambling the phases of one field says nothing about
 whether an *ensemble* is honestly dispersed, so it is not on that axis.

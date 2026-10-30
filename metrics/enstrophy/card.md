@@ -211,9 +211,11 @@ of the reference's enstrophy lost: positive when the value falls and negative wh
 <!-- END GENERATED results_geometric -->
 
 A translation moves the field without changing any of its values, so a quantity built from
-those values alone cannot see it at all. This degradation is expected to be flat, and a
-measurement showing otherwise would indicate the translation is not conserving what it
-should — which is one of the things a reference-free diagnostic is useful for.
+those values alone cannot see it at all. Measured, it is flat: on every frame and at every
+shift the value matches the reference's to within 1e-12 of it, which is why the table has
+no rank correlation. A measurement showing otherwise would indicate the translation is not
+conserving what it should — which is one of the things a reference-free diagnostic is
+useful for.
 
 ### Resolution loss
 

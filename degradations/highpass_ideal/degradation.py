@@ -31,7 +31,7 @@ def highpass_ideal(x: np.ndarray, severity: float, *, ctx) -> np.ndarray:
     **The k=0 mode is preserved deliberately.** Deleting it removes the spatial mean, which
     for a field like density (1.0 with fluctuations of 2e-4) is a change four orders of
     magnitude larger than anything the cutoff controls. Measured with k=0 deleted: every
-    severity level gives an identical damage of 2.7e7 relative to the unrelated-field level, so
+    severity level gives an identical damage of 2.7e7 (against the translation anchor), so
     the axis carries no ordering at all and its rank correlation collapses to 0.10. Keeping
     the mean makes the operator measure what it is named for -- removal of large-scale
     structure -- and gives a monotone ladder on every field.

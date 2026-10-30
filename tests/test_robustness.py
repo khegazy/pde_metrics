@@ -72,18 +72,18 @@ def test_degeneracy_guard_fires_when_most_levels_are_round_off():
 def test_damage_is_not_reported_against_an_anchor_the_metric_cannot_see():
     """Damage must be withheld when the anchor is indistinguishable from clean.
 
-    Measured on the real trajectory (t = 5000..6000, vorticity) with a radially averaged
-    energy-spectrum metric of the BD-1 family:
+    A radially averaged energy spectrum scored against an anchor it cannot see (on the real
+    trajectory, t = 5000..6000, vorticity, against the large translation):
 
         clean value             0.0
-        uncorrelated anchor     1.5e-16      <- the whole D = 1 scale
+        anchor                  1.5e-16      <- the whole D = 1 scale
         gaussian_impostor       1.8e-16      -> reported damage 1.17
         translate_x = 4         1.3e-16      -> reported damage 0.86
 
-    An impostor damage of 1.17 would say "worse than two unrelated fields" when the metric
-    cannot separate any of them. Read by the rule AGENTS.md gives for the canary column, a
-    colleague would conclude the spectral metric passes IN-4 -- the exact inversion the
-    canary exists to prevent.
+    An impostor damage of 1.17 would say "further from the truth than the anchor" when the
+    metric cannot separate any of them. Read by the rule AGENTS.md gives for the canary column,
+    a colleague would conclude the spectral metric is not fooled by the impostor -- the exact
+    inversion the canary exists to prevent.
 
     What is reported in its place is the impostor's response relative to the largest ladder
     response (issues/037), about 1e-15 for a phase-blind metric, and only while the damage is
@@ -190,12 +190,12 @@ def test_rank_correlation_is_withheld_when_every_value_on_the_axis_is_round_off(
 def test_threshold_levels_are_withheld_when_the_anchor_span_is_round_off():
     """A tenth of a round-off span is not a detection threshold.
 
-    Measured on ``comparison_1789632054``: ``spectrum_l2``'s unrelated-field anchor is
-    1.6e-16, because the anchor is built from translations and the metric cannot see them.
-    ``normalisation`` marks that span degenerate and withholds damage, and the threshold
-    levels must be withheld with it: any genuine response clears a tenth of 1.6e-16, so the
-    card would read "first strength detected: level 1" on every family and every field, a
-    detection claim measured against nothing.
+    A metric blind to the anchor scores it at round-off: ``spectrum_l2`` against the large
+    translation scored 1.6e-16 (``comparison_1789632054``). ``normalisation`` marks that span
+    degenerate and withholds damage, and the threshold levels must be withheld with it: any
+    genuine response clears a tenth of 1.6e-16, so the card would read "first strength
+    detected: level 1" on every family and every field, a detection claim measured against
+    nothing.
     """
     df = make_frame(
         n_frames=6,

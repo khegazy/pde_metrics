@@ -202,8 +202,9 @@ finer grid measures each at a physically smaller distance.
 
 ## Limitations
 
-It is blind to position, like `increment_w1`. A spatially scrambled or translated prediction
-scores zero, so it must not be read without a pointwise control.
+It is blind to position, like `increment_w1`. A translated prediction scores exactly zero, and
+the fake prediction with the right spectrum but scrambled phases scores a damage of only 0.28
+to 0.77, so it must not be read without a pointwise control.
 
 The number is a convention. Dividing by the reference's scale weighs a small departure at a
 separation where the reference barely changes as heavily as a large one where it changes a lot,

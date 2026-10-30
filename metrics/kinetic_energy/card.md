@@ -133,11 +133,11 @@ takes, so a prediction can match it exactly while getting the flow entirely wron
 here is not evidence of a good prediction, only the absence of one particular kind of bad
 one.
 
-It is also the least sensitive diagnostic in the panel to the failures this project cares
-about. Smoothing, which destroys the small scales a surrogate is most likely to lose,
-removes very little energy, so a flat kinetic energy across the smoothing degradations
-should be read as this metric being the wrong instrument rather than as the prediction
-being sound.
+It sees the loss of small scales only through the energy that goes with them. At the
+strongest smoothing levels the median loss is 11% (median blur) to 64% (Gaussian blur), but
+coarsening by a factor of 16, which destroys the same small scales, removes 3%. A kinetic
+energy that matches should therefore be read as the absence of one kind of failure, not as
+the prediction being sound.
 
 Finally, this is specific energy, not the conserved density-weighted quantity. At higher
 Mach number, or in a flow with real density contrast, the two separate and the conserved
@@ -210,9 +210,11 @@ value falls and negative when it rises.
 <!-- END GENERATED results_geometric -->
 
 A translation moves the field without changing any of its values, so a quantity built from
-those values alone cannot see it at all. This degradation is expected to be flat, and a
-measurement showing otherwise would indicate the translation is not conserving what it
-should — which is one of the things a reference-free diagnostic is useful for.
+those values alone cannot see it at all. Measured, it is flat: on every frame and at every
+shift the value matches the reference's to within 2e-10 of it, which is why the table has
+no rank correlation. A measurement showing otherwise would indicate the translation is not
+conserving what it should — which is one of the things a reference-free diagnostic is
+useful for.
 
 ### Resolution loss
 

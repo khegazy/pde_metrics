@@ -2,8 +2,8 @@
 # a full run over it takes seconds.
 #
 # NOT PHYSICALLY REPRESENTATIVE. These are the first 100 solver steps, before the flow has
-# developed: structures still span the domain, so a 16-cell translation costs about 1e-4 of
-# what an unrelated field costs, against 0.51 at t=5000 on the full trajectory. Use this
+# developed: structures still span the domain, so a 16-cell translation scores an mse
+# damage of about 2e-4 on vorticity, against 1.2 at t=5000 on the full trajectory. Use this
 # config to exercise the code path quickly; use kinet_re5e4 for any physical conclusion.
 defaults:
   - _re5e4_simulation
