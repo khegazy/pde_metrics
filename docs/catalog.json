@@ -1337,7 +1337,7 @@
       "declared": {
         "arity": "pairwise",
         "companion": null,
-        "cost": "cheap",
+        "cost": "moderate",
         "differentiable": true,
         "fields": [
           "*"

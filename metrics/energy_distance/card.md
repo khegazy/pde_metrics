@@ -45,8 +45,10 @@ V-statistic is used rather than the unbiased U-statistic because it is never neg
 ([@szekely2013], Sect. 1) and is zero for identical samples, where the U-statistic is
 negative; the increments of one frame are, besides, the whole population compared, not a
 random sample of it. Both empirical cumulative functions are step functions, so Equation (4)
-is exact: it is evaluated by one merge of the two sorted samples, by
-`scipy.stats.energy_distance` [@scipyenergy]. The reported value averages Equation (4) over
+is exact. `scipy.stats.energy_distance` [@scipyenergy] evaluates it: its documentation gives
+the identity, and its source (`scipy.stats._stats_py._cdf_distance`) sorts the pooled
+samples and evaluates both empirical cumulative functions between consecutive values by
+binary search, so the cost is a few sorts of $2N$ values. The reported value averages Equation (4) over
 every channel and spatial axis, as `increment_w1` averages its transport distances:
 
 $$
@@ -69,14 +71,26 @@ Its only parameter is the exponent on $|x - y|$, which may lie anywhere in $(0, 
 1-Wasserstein distance is the integral of the *absolute* gap $|F - G|$, where Equation (3)
 integrates its *square*. A rare increment far out in a tail moves the cumulative functions by
 only $1/N$ per atom, and squaring shrinks that further. The following derivation is mine,
-not a source's, and `test_metric.py` pins it. Moving two of $N$ atoms outward by $h$, one in
-each tail, costs $2h/N$ in transport distance and $4h/N^2$ in Equation (3), a ratio of $2/N$
-whatever the size of $h$. For a change spread over all atoms the ratio is instead set by the
-size of the change against the spread of the distribution; in the test's example, a
-two-valued reference whose every increment grows by one unit, it is 1. So at equal transport
-cost that test charges the change confined to two extreme increments $2/N = 1/8$ as much in
-Equation (3) as the change spread over all sixteen. This is the sense in which the energy
-distance averages, and is the property it is registered beside `increment_w1` to expose.
+not a source's, and `test_metric.py` pins both halves of it.
+
+1. *A change confined to the tails.* Moving two of $N$ atoms outward by $h$, one in each
+   tail, costs $W_1 = 2h/N$ in transport distance and $D^2 = 4h/N^2$ in Equation (3), so
+   $D^2/W_1 = 2/N$ whatever the size of $h$.
+2. *A broad change.* Stretching every increment by a factor $1 + \epsilon$ moves the
+   cumulative function by about $\epsilon x f(x)$ at each value $x$, where $f$ is the
+   density, so $D^2 \approx 2\epsilon^2 \int x^2 f(x)^2 \, dx$ while
+   $W_1 = \epsilon\,\mathbb{E}|X|$. A broad change is suppressed too, by its own relative
+   size: for a Gaussian $f$, $D^2/W_1 = \epsilon/(2\sqrt{2})$.
+3. *At equal transport cost*, the tail change therefore costs
+   $(2/N)/(\epsilon/(2\sqrt{2})) = 4\sqrt{2}/(N\epsilon)$ of the broad change in Equation (3),
+   and the square root of that in the registered $D$.
+
+On one axis of a 256 by 256 grid with a Gaussian bulk, a tail change of the same transport
+cost as a 1% to 10% stretch of the whole distribution is charged about 9% to 3% of what the
+stretch is charged in $D$ (about 0.9% to 0.09% in $D^2$). This is the sense in which the
+energy distance averages, and is the property it is registered beside `increment_w1` to
+expose. Two caveats: the ratio depends on the shape of the bulk, and it is a statement about
+one (channel, axis) term; the registered mean over terms can mix terms of different sizes.
 
 ### Boundary handling
 
@@ -191,8 +205,9 @@ the fraction of values below each level. The metric squares the gap between the 
 adds it up over all levels, and takes a square root at the end. Squaring is what sets it apart
 from a transport distance on the same piles, which adds up the gap itself. A handful of
 extreme values in one pile shift its tally by only a sliver, and the square of a sliver is
-smaller still, so a difference confined to the rare extremes counts for little here while a
-broad change in the typical size of the differences counts in full.
+smaller still. A broad change in the typical size of the differences is squared too, but it
+shifts the tally by a little everywhere rather than by a sliver in one place, so for the same
+amount of moving it counts for far more than a difference confined to the rare extremes.
 
 A worked example, four cells by four cells. On the left the reference: the top row is zero and
 the rest is one, so reading down any column there is a single step. On the right the
@@ -229,9 +244,11 @@ this data density fluctuates by parts in ten thousand while vorticity is of orde
 cannot be compared with `increment_w1`, which is in the field's own units, so only the
 normalised damage columns of an evaluation put the two side by side. And because some
 implementations, and [@szekely2013] itself, report the squared form of Equation (2) under
-the same name, a value from another code must be checked for which of the two it is; the
-rank correlations do not depend on that choice, but the damage and elasticity do, by a
-factor of two in the elasticity.
+the same name, a value from another code must be checked for which of the two it is. For a
+single (channel, axis) term the choice changes no ranking and exactly doubles the
+elasticity; for the registered mean over several terms, the mean of square roots and the mean
+of squares can in principle order two strengths differently, so neither statement is exact
+there.
 
 Comparison across analysis-grid resolutions is invalid for the same reason as for
 `increment_w1`: the separation in Equation (1) is one cell, so a finer grid compares
@@ -255,9 +272,10 @@ field perfectly.
 
 It is weak exactly where intermittency lives. A prediction that has lost the rare, extreme
 increments of the reference, the intense thin structures, and kept the bulk of the
-distribution right, is charged a factor of order $1/N$ less here than by `increment_w1` for
-the same transport cost (the derivation under Definition). On a 256 by 256 grid that factor
-is a few parts in a hundred thousand. Read a small value as "the typical increments match",
+distribution right, is charged far less than a prediction whose whole increment distribution
+is slightly too wide or too narrow, even when `increment_w1` charges the two the same: on one
+axis of a 256 by 256 grid with a Gaussian bulk, a few percent to about a tenth as much (the
+derivation under Definition). Read a small value as "the typical increments match",
 never as "the tails match".
 
 Within one axis, a prediction too smooth in one region and too noisy in another can produce
@@ -406,9 +424,10 @@ degradations with a provably small response, although its ordering is still perf
 Ordered perfectly on every field, as pre-registered, with no overlap between neighbouring
 strengths on density and velocity. Noise is the degradation this metric charges most for on
 density and vorticity (the profile table), and at the harshest amplitude it goes far past the
-anchor, to a largest damage of 6.37 on density: noise widens the whole increment distribution,
-the broad change Equation (3) weighs in full, while the anchor's point mass at zero differs from
-the reference only by the spread of the increments.
+anchor, to a largest damage of 6.37 on density. The anchor's distance is fixed by the
+reference: its increments are a point mass at zero, whose distance from the reference's
+increment distribution is set by that distribution alone. Noise of growing amplitude widens the
+whole increment distribution without bound, so its distance is not capped by the anchor's.
 
 ### Trap tests
 
@@ -429,12 +448,14 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 
 The fake prediction with the right spectrum scores a median damage of 0.613 on density, 0.289
 on velocity and 0.871 on vorticity. On velocity the metric is largely fooled: it charges the
-phase-scrambled field about what it charges `highpass_ideal` at strength 2.14 of 4. The fake prediction is a Gaussian
-field, so it lacks the reference's heavy-tailed increments; that it scores lower on velocity
-than on the other fields is consistent with the metric's weak weighting of tails, though this
-run alone cannot separate that cause from velocity's increments being closer to Gaussian to
-begin with. The reference moved far away scores exactly 0 on every field, for the reason given
-under Displacement.
+phase-scrambled field about what it charges `highpass_ideal` at the level whose cutoff resolves
+to wavenumber 2.14 on velocity. This run does not show why velocity scores lower than
+vorticity. A difference in tail weight is not the explanation on the evidence available:
+`increment_flatness`'s card reports nearly the same one-cell increment flatness for the
+velocity and vorticity references, and the fake prediction keeps the reference's spectrum and
+therefore the variance of its increments, so what this metric sees is a difference of shape
+that flatness does not separate between those two fields. The reference moved far away scores
+exactly 0 on every field, for the reason given under Displacement.
 
 This run held only this metric, so the comparison with `increment_w1` on the same samples, the
 point of building it, is not in these tables; it needs a run of both metrics together.

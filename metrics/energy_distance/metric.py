@@ -32,7 +32,9 @@ from metrics.registry import metric
     differentiable=True,     # the square root of an integral of squared differences of step
                              # functions: smooth in the sample values away from ties and from
                              # identical samples, as rmse is smooth away from identical fields
-    cost="cheap",
+    cost="moderate",         # about 0.13 s per 256x256 channel (two axes), some forty times
+                             # increment_w1 on the same samples: scipy re-sorts both samples
+                             # on every call and cannot reuse the reference's sort
     higher_is_better=False,
     symmetric=True,          # D(F, G) = D(G, F): Rizzo & Székely (2016), WIREs 8(1), p. 27
     units="field^(1/2)",     # the square root of a mean of |x - y|
@@ -57,11 +59,13 @@ def energy_distance(reference: NDArray[np.floating],
     The two-sample estimate is the V-statistic, every pair including i = j (Székely & Rizzo
     2013, Eq. (6.1)), which is D^2 between the two empirical distributions themselves. By the
     identity above it is exactly 2 * integral of (F_n - G_n)^2 over the two empirical
-    cumulative functions, which ``scipy.stats.energy_distance`` evaluates by one merge of the
-    sorted samples, returning its square root (SciPy documentation of
-    ``scipy.stats.energy_distance``, Notes). The V-statistic rather than an unbiased
-    U-statistic is used because it is never negative (Székely & Rizzo 2013, Sect. 1), and it
-    is zero for identical samples, where the U-statistic is negative.
+    cumulative functions, which ``scipy.stats.energy_distance`` returns as its square root
+    (SciPy documentation of ``scipy.stats.energy_distance``, Notes, for the identity). Its
+    source, ``scipy.stats._stats_py._cdf_distance``, sorts the pooled samples and evaluates
+    both empirical cumulative functions between consecutive values by binary search, so the
+    result is exact and costs a few sorts of 2N values per call. The V-statistic rather than
+    an unbiased U-statistic is used because it is never negative (Székely & Rizzo 2013,
+    Sect. 1), and it is zero for identical samples, where the U-statistic is negative.
 
     D = sqrt(2) * MMD_b, where MMD_b is the (biased, V-statistic) maximum mean discrepancy of
     Gretton et al. (2012), JMLR 13, 723-773, Eq. (5), for the distance-induced kernel

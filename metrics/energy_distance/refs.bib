@@ -79,7 +79,10 @@
   title        = {scipy.stats.energy\_distance},
   howpublished = {SciPy reference documentation, version 1.18.0},
   url          = {https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.energy_distance.html},
-  note         = {Notes section: returns the square root form between two one-dimensional
-                  empirical distributions, computed exactly from the merged sorted samples.
-                  The implementation this metric calls}
+  note         = {Notes section: the function returns the square root form between two
+                  one-dimensional distributions, and the identity with the integrated squared
+                  difference of the cumulative functions. The implementation this metric
+                  calls; the algorithm (sorts and binary searches, exact for empirical
+                  distributions) is in its source, scipy.stats._stats_py._cdf_distance, not in
+                  the Notes}
 }
