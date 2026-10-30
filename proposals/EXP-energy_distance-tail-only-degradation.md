@@ -27,8 +27,9 @@ else: by construction the bulk below the threshold is unchanged, so a distributi
 follows this axis sees tails. Every current smoothing, filtering and noise axis changes bulk and
 tail together, so no existing degradation can separate a metric that reads tails from one that
 reads only the bulk. The energy distance's own algebra predicts it is weak on exactly this axis
-(card Definition: a change confined to a few extreme increments costs 2/N of its transport cost
-in the squared energy distance), and this experiment is the test that would show it on real data.
+(card Definition: at equal transport cost, a change confined to two extreme increments costs
+4 sqrt 2/(N eps) of a broad stretch by 1 + eps in squared energy distance, for a Gaussian
+bulk), and this experiment is the test that would show it on real data.
 
 ## Metrics it would test
 
