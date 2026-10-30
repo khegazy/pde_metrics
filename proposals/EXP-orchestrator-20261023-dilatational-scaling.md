@@ -1,7 +1,13 @@
-# EXP: Scaling the dilatational part of the velocity
+---
+type: EXP
+kind: degradation
+related: ["issues/057"]
+seen_in: "orchestrator's own"
+doi: "none"
+found_by: "orchestrator, 2026-10-23"
+---
 
-Found by: the orchestrator screening `docs/ideas/`, 2026-10-23. Seen in: the orchestrator's own
-proposal.
+# EXP: Scaling the dilatational part of the velocity
 
 ## What the experiment is
 

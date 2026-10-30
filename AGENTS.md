@@ -989,6 +989,7 @@ GIT_SSH_COMMAND="ssh -x -o BatchMode=yes" git push origin <branch>
 | `TEST_DESCRIPTION.md` | Every quantity the suite reports, in plain language. **Update it when you add a reported quantity — a test enforces this** |
 | `issues/README.md` | Open items with their evidence |
 | `judgements/README.md` | The few consequential method choices an agent made without asking, each with its sources and how to reverse it |
+| `proposals/README.md` | Benchmarks, experiments, metrics and variants found during research and not yet accepted or rejected, one file each |
 | `README.md` | Setup, and the NERSC specifics |
 | `.github/workflows/tests.yml` | CI. Runs the default suite on every push to a PR; cannot run `-m data` or `-m slow` |
 | `docs/catalog.json` | **Read this for anything structural** — what metrics exist, what they return, what properties they have, how they behaved. Do not parse prose for it |

@@ -101,6 +101,7 @@ Designed, hooks in place, not built.
 | [064](064-jacobi-set-defines-no-scalar.md) | Jacobi sets define a set, not a number | medium |
 | [065](065-bispectrum-distance-is-not-fixed.md) | Bispectrum and bicoherence: the distance between maps is not fixed | unset |
 | [095](095-pooling-across-frames-for-distributional-estimates.md) | Pooling across frames for a distributional estimate; the contract of a series-level procedure, should a metric need one | unset |
+| [104](104-equivalence-test-misreads-a-flag-valued-anchor.md) | The blindness test lists an axis as blind for a metric whose anchor is a worst-case flag value (`shock_set_distance` follows `translate_x` with rho 1 yet is listed blind to it); needs a decision | unset |
 | [097](097-stochastic-ladder-for-comparable-magnitudes.md) | A stochastic ladder (several draws per severity) would make response magnitudes comparable across a metric's functional forms | none set |
 | [098](098-increment-w1-registered-number-is-a-convention.md) | The number `increment_w1_by_separation` registers, a normalised mean over separations, is a convention with no source | unset |
 
