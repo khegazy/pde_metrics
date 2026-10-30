@@ -273,8 +273,11 @@ There are no word counts. Say what the section needs to say and stop.
 - **Never write inside a `<!-- GENERATED ... -->` block**, and never edit `_generated/`.
 - **Never set `status: validated`, and never sign a card.** Both are human acts; `sign`
   refuses anyway until measurements exist.
-- **Never edit another bundle** while adding yours. If a change elsewhere seems necessary,
-  stop and say why.
+- **Never edit another bundle** while adding yours, with one exception: a helper another
+  bundle owns may gain an argument whose default keeps its behaviour, so that no number of
+  the owning bundle changes and its tests pass untouched; say so in the pull request. Copying
+  the helper instead is the error the exception prevents. Any other change elsewhere: stop
+  and say why.
 
 ### 3.3 The decorator
 

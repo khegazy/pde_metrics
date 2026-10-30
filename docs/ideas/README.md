@@ -23,7 +23,8 @@ regime, protected from data leakage and combined.
 - **Owner** names whoever is working on an idea. An empty cell means nobody has started it.
 - **No measured numbers appear here.** A claim on an idea page is a citation to published
   work, a derivation shown on the page, or labelled with where it came from: the team's
-  judgement, the field guide, or an addition made during conversion or review.
+  judgement, the field guide, an addition made during conversion or review, or an addition by
+  an agent that built a related metric, named and dated.
 
 ## Columns
 

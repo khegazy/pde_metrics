@@ -157,6 +157,11 @@ known-first-party = ["fmeval", "metrics", "degradations", "tests"]
 # Bundle tests live beside the metric they test, in metrics/<name>/test_metric.py, so
 # that adding a metric means adding one directory and nothing else.
 testpaths = ["tests", "metrics", "degradations"]
+# `tests/` has no __init__.py, so pytest would put `tests/` first on sys.path and import
+# `fmeval` through the editable install, which points at the main checkout. In a worktree
+# that silently tests the wrong code; the rootdir first makes a bare `pytest` test the
+# checkout it runs in.
+pythonpath = ["."]
 # The templates are scaffolding, not bundles: their tests raise NotImplementedError by
 # design, and importing their placeholder implementation would register it as a real
 # metric and break the documentation-coverage check.
