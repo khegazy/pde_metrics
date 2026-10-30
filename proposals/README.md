@@ -23,7 +23,11 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 | [EXP-orchestrator-20261023-temporal-ladder.md](EXP-orchestrator-20261023-temporal-ladder.md) | A degradation ladder for trajectories | proposed |
 | [EXP-shock_set_distance-2d-shock-dataset.md](EXP-shock_set_distance-2d-shock-dataset.md) | A two-dimensional shock dataset for the shock-set distance | proposed |
 | [EXP-sod_evidence-sod-time-offset.md](EXP-sod_evidence-sod-time-offset.md) | The exact Sod solution at a shifted time, as a physically consistent wave-position error | proposed |
+| [EXP-tail_index-pareto-spike-injection.md](EXP-tail_index-pareto-spike-injection.md) | Inject sparse spikes with power-law amplitudes of a known exponent | proposed |
 | [MTR-shock_set_distance-full-shock-zone-detector.md](MTR-shock_set_distance-full-shock-zone-detector.md) | The full shock-zone detector, with a compression gate and the jump across the zone | proposed |
 | [MTR-shock_set_distance-object-matched-shock-distance.md](MTR-shock_set_distance-object-matched-shock-distance.md) | Object-matched shock distance, after MODE | proposed |
 | [MTR-shock_set_distance-other-surface-distance-summaries.md](MTR-shock_set_distance-other-surface-distance-summaries.md) | Hausdorff, quantile-Hausdorff, AVD and MASD summaries of the same shock-set distances | proposed |
 | [MTR-shock_set_distance-shock-thickness-and-overshoot.md](MTR-shock_set_distance-shock-thickness-and-overshoot.md) | Shock thickness and overshoot at the detected shocks | proposed |
+| [MTR-tail_index-hill-by-separation.md](MTR-tail_index-hill-by-separation.md) | Hill estimate of the increments at every octave of separation | proposed |
+| [MTR-tail_index-ks-threshold.md](MTR-tail_index-ks-threshold.md) | Power-law exponent with a Kolmogorov-Smirnov threshold and a goodness-of-fit p-value | proposed |
+| [MTR-tail_index-moment-estimator.md](MTR-tail_index-moment-estimator.md) | Moment (Dekkers-Einmahl-de Haan) estimator of the extreme-value index of increments | proposed |
