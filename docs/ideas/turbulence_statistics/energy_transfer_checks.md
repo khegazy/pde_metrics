@@ -77,14 +77,14 @@ checked against it.
   but not in all, as measured for the built
   [spectral_energy_flux](../../metrics/spectral_energy_flux.md). (Added by the agent building
   `spectral_energy_flux`, 2026-10-31.)
-- Unresolved: the sign of the large-scale pressure-dilatation term in Aluie (2013). In the
-  arXiv copy (arXiv:1012.5877, read as HTML on ar5iv), Equation (13) was reported to print the
-  term as $+\bar{P}_\ell \nabla \cdot \bar{\mathbf{u}}_\ell$ while the text calls
-  $-\bar{P}_\ell \nabla \cdot \bar{\mathbf{u}}_\ell$ the large-scale pressure dilatation. This
-  may be a sign convention (the term as a source rather than a sink) or an artefact of the
-  HTML conversion. It was not checked against the published version, and whoever builds the
-  compressible budget should check it there first. (Added by the agent building
-  `spectral_energy_flux`, 2026-10-31.)
+- The sign of the large-scale pressure-dilatation term in Aluie (2013) is a naming convention,
+  not an error. Equation (13) of the arXiv TeX source (arXiv:1012.5877v2) has
+  $+\bar{P}_\ell \nabla \cdot \bar{\mathbf{u}}_\ell$ on its right-hand side, while the text calls
+  $-\bar{P}_\ell \nabla \cdot \bar{\mathbf{u}}_\ell$ the large-scale pressure dilatation, the
+  same term named as a sink. The $+$ sign is the one the momentum equation gives, since
+  $-\mathbf{u} \cdot \nabla P = -\nabla \cdot (P\mathbf{u}) + P \nabla \cdot \mathbf{u}$. Whoever
+  builds the compressible budget should take the sign from the equation, not the name.
+  (Added by the agent building `spectral_energy_flux`, 2026-10-31.)
 
 ## Rationale
 

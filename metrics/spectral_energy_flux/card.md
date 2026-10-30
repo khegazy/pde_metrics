@@ -8,25 +8,36 @@ kind: metric
 Let $\mathbf{u}$ be the velocity on a periodic grid of $M$ cells with $D$ spatial axes, one
 component per axis, $\hat{\mathbf{u}}(\mathbf{k})$ its discrete Fourier transform, and
 $\mathbf{u}^{<K}$ the velocity keeping only the modes with $\mathrm{rint}(|\mathbf{k}|) \le K$,
-$|\mathbf{k}|$ in cycles across the domain. The spectral energy flux through $K$ is the rate at
-which the advective term removes kinetic energy from those modes [@alexakis2018], Section 2.3,
-Equations (16) and (18):
+$|\mathbf{k}|$ in cycles across the domain: the sharp spectral filter of [@aluie2013], Equation
+(21). The spectral energy flux through $K$ is the rate at which the nonlinear terms move kinetic
+energy out of those modes. It is computed as the domain average of the compressible
+"unsubtracted flux" of [@aluie2013], Section 4.1 (an unnumbered display), at uniform density:
 
 $$
-\Pi(K) = \bigl\langle \mathbf{u}^{<K} \cdot (\mathbf{u} \cdot \nabla) \mathbf{u} \bigr\rangle
-= \frac{1}{M^2} \sum_{\mathrm{rint}(|\mathbf{k}|) \le K}
-\mathrm{Re}\bigl[ \hat{\mathbf{u}}^{*}(\mathbf{k}) \cdot \hat{\mathbf{N}}(\mathbf{k}) \bigr],
-\qquad N_i = \sum_j u_j \, \partial_j u_i \tag{1}
+\Pi(K) = \bigl\langle \mathbf{u}^{<K} \cdot \nabla \cdot (\mathbf{u}\mathbf{u}) \bigr\rangle
+- \tfrac12 \bigl\langle |\mathbf{u}^{<K}|^2 \, \nabla \cdot \mathbf{u}^{<K} \bigr\rangle ,
+\qquad \bigl[\nabla \cdot (\mathbf{u}\mathbf{u})\bigr]_i = \sum_j \partial_j (u_i u_j) \tag{1}
 $$
 
-where the angle brackets are the domain average and the second form is Parseval's relation for
-the unnormalised transform. Positive $\Pi$ is energy leaving the modes inside $K$ for smaller
-scales and negative $\Pi$ energy arriving from them; in two dimensions energy moves toward large
-scales, so $\Pi < 0$ is the expected sign over the inverse-cascade range ([@alexakis2018],
-Equations (21)–(22) and Section 3.2.1, after [@kraichnan1967]). Nothing in this metric depends
-on that sign. Equation (1) is the curve, the metric's companion, sampled at the octaves
-$K = 1, 2, 4, \dots$ up to half the smallest side of the grid: eight coordinates, 1 to 128, on
-a $256^2$ grid. The number registered is
+where the angle brackets are the domain average. The first term is the momentum nonlinearity
+and the second the nonlinearity of the continuity equation. Its average equals that of the
+deformation work of [@aluie2013], Equation (14), since the two differ by a total gradient there,
+and it vanishes once every mode is kept, so the curve is a pure exchange between scales. For a
+divergence-free velocity the second term is zero and
+$\nabla \cdot (\mathbf{u}\mathbf{u}) = (\mathbf{u} \cdot \nabla)\mathbf{u}$, so Equation (1) is
+the incompressible flux $\langle \mathbf{u}^{<K} \cdot (\mathbf{u} \cdot \nabla) \mathbf{u}
+\rangle$ of [@alexakis2018], Section 2.3, Equations (16) and (18), the idea page's form. With a
+divergent velocity the incompressible form would not vanish over all modes: it would leave
+$-\langle (\nabla \cdot \mathbf{u}) |\mathbf{u}|^2 \rangle / 2$, a residual that is not a
+transfer.
+
+Positive $\Pi$ is energy leaving the modes inside $K$ for smaller scales and negative $\Pi$
+energy arriving from them; in two dimensions energy moves toward large scales, so $\Pi < 0$ is
+the expected sign over the inverse-cascade range ([@alexakis2018], Equations (21)–(22) and
+Section 3.2.1, after [@kraichnan1967]). Nothing in this metric depends on that sign. Equation
+(1) is the curve, the metric's companion, sampled at the octaves $K = 1, 2, 4, \dots$ up to
+half the smallest side of the grid: eight coordinates, 1 to 128, on a $256^2$ grid. The number
+registered is
 
 $$
 F(\mathbf{u}_{\text{ref}}, \mathbf{u}_{\text{cand}}) =
@@ -37,28 +48,35 @@ $$
 the L2 distance between the two curves over the octaves, divided by the reference's norm, as
 `spectrum_l2` divides for the energy spectrum. No source reduces the flux curve to one number:
 the octave sampling and Equation (2) are this repository's conventions, recorded in
-`issues/105`. Because $\Pi$ is cumulative, the value at each octave counts every mode inside it,
-so the sampling drops no transfer; it weighs each octave of scale once.
+`issues/105`. Because $\Pi$ is cumulative, the value at each octave counts every mode inside it;
+the sampling weighs each octave of scale once. The shells beyond $N/2$, which exist only in the
+corners of a square grid, enter only through the flux out of the last octave.
+
+The number is NaN when the reference's curve is no larger than floating-point round-off, which
+this metric bounds by machine epsilon times the largest speed of the reference cubed times
+$\pi$ over the smallest grid spacing (the highest wavenumber of the grid). The bound is the
+building agent's, not a source's. A uniform velocity falls below it, and so does a steady flow whose advection is
+a pure gradient, such as the Taylor–Green vortex.
 
 Discretisation: the gradients are spectral derivatives on the analysis grid's spacing (the
-repository's one gradient operator, also used to recompute vorticity), the product
-$\mathbf{N}$ is formed in physical space without dealiasing, and the shells are those of
-`spectrum_l2`'s `radial_energy_spectrum`, with each field's spatial mean removed, so the
-$\mathbf{k} = 0$ mode carries no transfer. $\Pi(K)$ is the flux through
-$|\mathbf{k}| = K + \tfrac12$.
+repository's one gradient operator, also used to recompute vorticity), which give the Nyquist
+mode a zero derivative. The products are formed in physical space without dealiasing. The first
+term of Equation (1) is Parseval's co-spectrum
+$\mathrm{Re}[\hat{\mathbf{u}}^{*} \cdot \widehat{\nabla \cdot (\mathbf{u}\mathbf{u})}] / M^2$,
+binned into `spectrum_l2`'s unit shells and summed up to $K$; the second is formed from the
+filtered velocity at each $K$. $\Pi(K)$ is the flux through $|\mathbf{k}| = K + \tfrac12$.
 
-**Compressibility.** Equation (1) is the flux of constant-density flow. In compressible flow the
-coarse-grained budget of the large-scale kinetic energy moves energy across scales through
-deformation work, which reduces to the incompressible flux when density is uniform, and
-baropycnal work, which needs the pressure gradient and the small-scale mass flux; a third term,
-pressure dilatation, exchanges kinetic with internal energy ([@aluie2013], Equations (13)–(15)
-and Sections 4.1–4.3; [@aluie2011], Equations (3)–(5)). This metric reads the velocity alone
-and omits density weighting, baropycnal work and pressure dilatation (`judgements/003`). In
-three-dimensional simulations at an rms Mach number of 0.43, pressure dilatation acts mainly at
-large scales and the kinetic-energy flux is close to constant beyond a transitional range
-[@aluieli2012], Figures 2–3; that evidence is three-dimensional. With a divergent velocity the
-flux through a wavenumber beyond every mode is $-\langle (\nabla \cdot \mathbf{u}) |\mathbf{u}|^2
-\rangle / 2$ rather than zero.
+**Compressibility.** In compressible flow the coarse-grained budget of the large-scale kinetic
+energy moves energy across scales through deformation work and baropycnal work, the latter
+needing the pressure gradient and the small-scale mass flux; a third term, pressure dilatation,
+exchanges kinetic with internal energy ([@aluie2013], Equations (13)–(15) and Sections
+4.1–4.3; [@aluie2011], Equations (3)–(5)). This metric reads the velocity alone: it takes the
+density as uniform in Equation (1), and omits baropycnal work and pressure dilatation
+(`judgements/003`). The transfer it keeps includes that carried by the velocity's compressive
+modes. In three-dimensional simulations at an rms Mach number of 0.43, pressure dilatation acts
+mainly at large scales and the kinetic-energy flux is close to constant beyond a transitional
+range [@aluieli2012], Figures 2–3; that evidence is three-dimensional.
+
 
 ### Boundary handling
 
@@ -129,20 +147,23 @@ In a turbulent flow the motion at each size of eddy feeds energy into other size
 metric measures that traffic: for each octave of size, how fast kinetic energy is carried past
 it, from larger eddies to smaller ones or the other way, and it reports how far a prediction's
 traffic is from the reference's. A prediction can have exactly the right amount of energy at
-every size and still carry none of it between sizes, which is what a field with the right
-spectrum and randomised structure does; this metric sees that and an energy-spectrum
+every size and still carry the wrong traffic between sizes: a field with the right spectrum and
+randomised structure carries none on average over many random draws, and in any one draw
+whatever its random alignment happens to give. This metric sees that and an energy-spectrum
 comparison does not.
 
 The traffic comes from the flow carrying itself along: the velocity times its own rate of
-change in space. Multiplying two waves makes waves of their sum and difference sizes, so three
-sizes interact at a time, and the net rate at which those interactions move energy out of
-everything larger than a given size is the flux through that size. Because it is a product of
-three velocities, it depends on how the waves line up, not only on how strong each one is.
+change in space, plus a correction for the fluid being squeezed or spread where the flow
+converges or diverges, which keeps the traffic a pure exchange that creates no energy.
+Multiplying two waves makes waves of their sum and difference sizes, so three sizes interact at
+a time, and the net rate at which those interactions move energy out of everything larger than
+a given size is the flux through that size. Because it is a product of three velocities, it
+depends on how the waves line up, not only on how strong each one is.
 
 A worked example: along a row of eight cells, the reference's velocity is one wave spanning the
 whole row plus an equally strong wave of half that length. The two exchange energy, and the
-flux through the largest size is -0.196: energy flowing into the long wave from the short one.
-A candidate with the short wave at half strength moves energy at half the rate, -0.098, so the
+flux through the largest size is -0.393: energy flowing into the long wave from the short one.
+A candidate with the short wave at half strength moves energy at half the rate, -0.196, so the
 gap is half the reference's flux and the metric returns 0.5.
 
 ```
@@ -150,7 +171,7 @@ cell                      1      2      3      4      5      6      7      8
 reference velocity     0.00   1.71   1.00  -0.29   0.00   0.29  -1.00  -1.71
 candidate velocity     0.00   1.21   1.00   0.21   0.00  -0.21  -1.00  -1.21
 
-flux through the largest size:   reference -0.196   candidate -0.098   result 0.5
+flux through the largest size:   reference -0.393   candidate -0.196   result 0.5
 ```
 
 (The velocity points along the row and does not vary across it; the grid is eight cells by
@@ -166,8 +187,8 @@ octave. A value of 1 is what a candidate that carries no flux at all scores, so 
 mean the prediction's energy transfer is as far from the reference's as no transfer; values
 above 1 mean it carries flux of the wrong sign or of larger size. Comparisons are valid between
 predictions of the same reference on the same analysis grid. Values on different grids sample
-different octaves and are not comparable, and the number is undefined (NaN) for a reference with
-no flux, such as a uniform velocity.
+different octaves and are not comparable, and the number is undefined (NaN) for a reference
+whose flux is round-off, such as a uniform velocity or a steady Taylor–Green vortex.
 
 The companion is the curve of Equation (1): a `coordinate` column holding the octave wavenumber
 in cycles across the domain and a value column holding $\Pi$ there, in velocity cubed per unit
@@ -177,18 +198,21 @@ octaves the transfer departs and in which direction.
 
 ## Limitations
 
-- **A reference whose flux vanishes only to round-off.** A steady flow whose advection is a pure
-  gradient, such as the Taylor–Green vortex, has $\Pi = 0$ exactly in theory and about $10^{-19}$
-  in floating point. Equation (2) then divides by round-off and returns a huge, meaningless value
-  instead of NaN. Only an exactly zero reference curve is caught.
-- **Not the compressible flux.** At larger Mach number the velocity-only flux misses baropycnal
-  work and the exchange with internal energy, so a prediction with the right total transfer can
-  score badly, and the reverse (`judgements/003`).
+- **A reference with a very small flux.** The NaN bound of the Definition is fixed, not tuned to
+  any field: a reference whose genuine flux lies below machine epsilon times its largest speed
+  cubed times the grid's highest wavenumber is treated as carrying none.
+- **Not the full compressible flux.** At larger Mach number the velocity-only flux misses
+  density weighting, baropycnal work and the exchange with internal energy, so a prediction
+  with the right total transfer can score badly, and the reverse (`judgements/003`). The
+  transfer it keeps includes that through the velocity's compressive modes, so a prediction
+  that gets the divergence wrong is charged here as well.
 - **No reference-free reading.** The constancy of the flux across an inertial range, and its sign,
   are three-dimensional, forced-turbulence expectations; on two-dimensional or decaying flow
   neither gives a target, so the metric only compares against a reference.
-- **Aliasing.** The product is formed without dealiasing, so on a field with energy at the grid
-  scale the highest octaves include aliased transfer, which a coarse or noisy candidate inflates.
+- **Aliasing and the Nyquist mode.** The products are formed without dealiasing, and the spectral
+  derivative gives the Nyquist mode a zero derivative. On a field with energy at the grid scale
+  (noise, a coarsened staircase) the high octaves therefore include aliased transfer and miss the
+  Nyquist mode's, which a coarse or noisy candidate inflates.
 - **Few octaves at the largest scales.** The flux through octave 1 depends on the handful of modes
   in the first shell; on fields whose energy sits there, small changes in those modes move the
   number by a large fraction.

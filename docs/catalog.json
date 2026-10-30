@@ -11975,7 +11975,7 @@
           "kind": "curve",
           "one_field": true
         },
-        "cost": "cheap",
+        "cost": "moderate",
         "differentiable": true,
         "fields": [
           "velocity"

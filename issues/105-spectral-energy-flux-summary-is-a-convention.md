@@ -15,8 +15,10 @@ range". Two things in the built metric come from no source:
 
 1. **The coordinates.** The curve is stored at the octave wavenumbers $K = 1, 2, 4, \dots$ up to
    half the smallest side of the grid (eight on $256^2$), not at every unit shell (182 on
-   $256^2$). Because $\Pi$ is cumulative, each sampled value still counts every mode inside it,
-   so no transfer is dropped; the sampling decides how often each range of scales is counted.
+   $256^2$). Because $\Pi$ is cumulative, each sampled value still counts every mode inside it;
+   the sampling decides how often each range of scales is counted. The shells beyond $N/2$
+   exist only in the corners of a square grid, and they enter only through the flux out of the
+   last octave.
    One column per shell would also make the card's per-coordinate table 182 columns wide.
 
    That table is the reason for sampling at all. A curve companion is stored at every

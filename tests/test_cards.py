@@ -845,9 +845,6 @@ def test_the_catalog_supports_the_query_it_exists_for():
         # quadratic in the field; spectrum_l2 is one FFT and a bincount, smooth away from
         # identical spectra exactly as rmse is away from identical fields.
         "h1_seminorm", "palinstrophy", "spectrum_l2",
-        # spectral_energy_flux is a fixed number of FFTs and products of the velocity, smooth
-        # away from identical curves exactly as spectrum_l2 is.
-        "spectral_energy_flux",
     }
 
 

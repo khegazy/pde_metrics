@@ -33,6 +33,16 @@ from fmeval.wavenumbers import wavenumber_magnitude
 from metrics.registry import metric
 
 
+def radial_shells(shape: tuple[int, ...]) -> NDArray[np.int64]:
+    """The unit-width shell ``rint(|k|)`` of every mode of a grid of ``shape``.
+
+    The grouping `radial_energy_spectrum` bins with, and `spectral_energy_flux` filters with, so
+    the two agree about which shell a diagonal mode belongs to. ``|k|`` is
+    ``fmeval/wavenumbers.py``'s.
+    """
+    return np.rint(wavenumber_magnitude(shape)).astype(np.int64)
+
+
 def radial_energy_spectrum(
     field: NDArray[np.floating], ctx: FieldContext,
     other: NDArray[np.floating] | None = None,
@@ -76,7 +86,7 @@ def radial_energy_spectrum(
     Raises:
         ValueError: If ``other`` does not have ``field``'s shape.
     """
-    shell = np.rint(wavenumber_magnitude(tuple(ctx.grid.shape))).astype(np.int64)
+    shell = radial_shells(tuple(ctx.grid.shape))
     if other is None:
         power = sum(np.abs(np.fft.fftn(channel)) ** 2 for channel in fluctuation(field))
     elif other.shape != field.shape:
