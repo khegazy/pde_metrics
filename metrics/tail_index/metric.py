@@ -100,6 +100,8 @@ def tail_index_curve(x: NDArray[np.floating]) -> tuple[NDArray, NDArray]:
     if n < 2:
         raise ValueError(f"the Hill estimator needs at least two cells; the spatial shape is "
                          f"{tuple(x.shape[1:])}")
+    # k = ceil(n^theta), capped so X_(k+1) exists (this bundle's choice); theta = 1/2 is the
+    # largest-sqrt(n) rule of Clauset, Shalizi & Newman (2009), SIAM Rev. 51(4), Sect. 3.5.
     ks = np.minimum(np.ceil(n ** THETAS).astype(int), n - 1)
     estimates = []
     for channel in x:
@@ -110,6 +112,8 @@ def tail_index_curve(x: NDArray[np.floating]) -> tuple[NDArray, NDArray]:
                 # Boucheron & Thomas (2015), Sect. 1: mean of ln X_(i), i <= k, minus ln X_(k+1).
                 hill = np.cumsum(logs)[ks - 1] / ks - logs[ks]
             estimates.append(np.where(top[ks] > 0, hill, np.nan))
+    # Mean over the pairs with an estimate, increment_flatness's Eq. (3) rule (this bundle's
+    # choice to follow it); NaN at a theta where no pair has one.
     estimates = np.array(estimates)
     defined = np.isfinite(estimates)
     counts = defined.sum(axis=0)

@@ -25,8 +25,11 @@ vorticity 0.082 and 0.092, Gaussian 0.095); at theta = 0.8 every field scored ab
 1.39 against 0.22). The far tail of these increments is lighter than a Gaussian's, and only the
 shoulder of the distribution is heavier, which is where `increment_flatness` sees intermittency.
 A Gaussian has no power-law tail, so neither, on this evidence, do these increments at the
-registered order. The evidence run's noise axis is the ladder's measurement of the same fact: see
-the card's Results.
+registered order. The evidence run `tail_index_1793350342` (161 frames) measured the same thing on
+the ladder: added noise moves every order of the stored curve toward the value of Gaussian
+increments, raising the orders below 0.5 and lowering those above it on every field, and over
+the 161 frames vorticity's median at 0.5 lies on the heavier side, so noise lowers it there while it
+raises density and velocity (the card's Results, "Noise").
 
 ## The choice
 
