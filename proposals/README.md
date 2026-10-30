@@ -17,6 +17,7 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 | File | Title | Status |
 |---|---|---|
 | [EXP-energy_distance-tail-only-degradation.md](EXP-energy_distance-tail-only-degradation.md) | A degradation that damages only the tails of the increment distribution | see also EXP-tail_index-pareto-spike-injection.md |
+| [EXP-energy_score-correlated-synthetic-ensemble.md](EXP-energy_score-correlated-synthetic-ensemble.md) | A synthetic ensemble with a known spatial correlation, and a ladder that miscorrelates it | proposed |
 | [EXP-orchestrator-20261023-anisotropic-blur.md](EXP-orchestrator-20261023-anisotropic-blur.md) | A directional (anisotropic) blur | proposed |
 | [EXP-orchestrator-20261023-constraint-violation.md](EXP-orchestrator-20261023-constraint-violation.md) | Controlled violations of admissibility conditions | proposed |
 | [EXP-orchestrator-20261023-dilatational-scaling.md](EXP-orchestrator-20261023-dilatational-scaling.md) | Scaling the dilatational part of the velocity | proposed |
@@ -30,6 +31,9 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 | [MTR-energy_distance-alpha-exponent.md](MTR-energy_distance-alpha-exponent.md) | Generalised energy distance with exponent alpha | proposed |
 | [MTR-energy_distance-by-separation.md](MTR-energy_distance-by-separation.md) | Energy distance between increment distributions at every octave separation | proposed |
 | [MTR-energy_distance-cramer-loss.md](MTR-energy_distance-cramer-loss.md) | Squared energy (Cramér) distance of increments as a training loss | proposed |
+| [MTR-energy_score-fair-variogram-score.md](MTR-energy_score-fair-variogram-score.md) | A fair variogram score, unbiased at every ensemble size | proposed |
+| [MTR-energy_score-patched-energy-score.md](MTR-energy_score-patched-energy-score.md) | Patched energy score, local in space and cheap on large grids | proposed |
+| [MTR-energy_score-transformed-difference-scores.md](MTR-energy_score-transformed-difference-scores.md) | Proper scores of the vector of weighted pairwise differences | proposed |
 | [MTR-max_error-high-quantile-error.md](MTR-max_error-high-quantile-error.md) | A high quantile of the pointwise absolute error | proposed |
 | [MTR-max_error-mean-of-channel-maxima.md](MTR-max_error-mean-of-channel-maxima.md) | Maximum error averaged over channels (PDEBench's reduction) | proposed |
 | [MTR-max_error-vector-magnitude.md](MTR-max_error-vector-magnitude.md) | Maximum of the error vector's length | proposed |
