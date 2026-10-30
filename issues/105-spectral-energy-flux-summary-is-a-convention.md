@@ -35,20 +35,22 @@ range". Two things in the built metric come from no source:
 
 ## What is measured about it
 
-**Measured** on the evidence run `spectral_energy_flux_1793355291` (`kinet_re5e4`, 161 frames
-from 2000, velocity): the dominance fraction, the share of frames in which the harsher of the
-weakest pair of neighbouring strengths has moved the curve at least as far at every octave, is
-low on every degradation, 0 to 0.342 (the metric's card, "The curve behind the number"). By that
-test the summary, not the curve, decides the order of those strengths in most frames; on
-`increment_w1_by_separation` the same fraction is at least 0.92 on every degradation of density
-and velocity (`issues/098`). Several octaves reverse the direction of the trend that the number
-shows (for example `median_blur` at octaves 32 to 128). The number itself ranks every
-pre-registered axis in the typical frame (rank correlation 1), with between 0.627 and 1 of frames
-fully in order.
+**Measured** on the evidence run `spectral_energy_flux_1793391588` (`kinet_re5e4`, 161 frames
+from 2000, velocity, with the conserving flux of the adversarial review). The dominance fraction
+is the share of frames in which the harsher of the weakest pair of neighbouring strengths has
+moved the curve at least as far at every octave. It is low on every degradation, 0 to 0.168 (the
+metric's card, "The curve behind the number"). By that test the summary, not the curve, decides
+the order of those strengths in most frames. On `increment_w1_by_separation` the same fraction is
+at least 0.92 on every degradation of density and velocity (`issues/098`). Several octaves
+reverse the direction of the trend that the number shows, for example `box_blur` and
+`gaussian_blur` at octave 8. The number itself ranks every pre-registered axis in the typical
+frame, with rank correlation 1 except `lowpass_butterworth` at 0.5, and between 0.46 and 1 of
+frames fully in order.
 
-The reference's own flux changes sign along this decaying trajectory: in that run it is negative
-at octaves 1 to 8 in 63% to 70% of frames (the clean rows of `companions.csv`). So no fixed sign
-convention could replace the comparison either.
+The reference's own flux changes sign along this decaying trajectory. In that run it is negative
+at octaves 1 to 8 in 67% to 80% of frames, and positive at octaves 32 to 128 in at least 90%
+(the clean rows of `companions.csv`). So no fixed sign convention could replace the comparison
+either.
 
 ## What would settle it
 

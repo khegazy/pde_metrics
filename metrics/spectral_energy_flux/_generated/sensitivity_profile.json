@@ -8,9 +8,9 @@
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": 0.9127348482,
-        "damage_max_ucb": 19.4843354125,
-        "damage_per_change": 66.7747706134,
+        "cliffs_delta_min": 0.9531653871,
+        "damage_max_ucb": 5.7725328275,
+        "damage_per_change": 20.067528024,
         "degradation": "additive_noise",
         "degradation_family": "stochastic",
         "field": "velocity",
@@ -23,9 +23,9 @@
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": 0.6334246364,
-        "damage_max_ucb": 0.97412319,
-        "damage_per_change": 9.6104986401,
+        "cliffs_delta_min": 0.6980826357,
+        "damage_max_ucb": 0.995030436,
+        "damage_per_change": 10.020557914,
         "degradation": "box_blur",
         "degradation_family": "smoothing",
         "field": "velocity",
@@ -38,9 +38,9 @@
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": 0.281200571,
-        "damage_max_ucb": 0.5624810661,
-        "damage_per_change": 16.3328922791,
+        "cliffs_delta_min": 0.4333551946,
+        "damage_max_ucb": 0.6749482725,
+        "damage_per_change": 21.4878864142,
         "degradation": "coarsen",
         "degradation_family": "resolution",
         "field": "velocity",
@@ -53,9 +53,9 @@
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": 0.8933683114,
-        "damage_max_ucb": 0.6139478746,
-        "damage_per_change": 144.1532633363,
+        "cliffs_delta_min": 0.8924424212,
+        "damage_max_ucb": 0.3378353419,
+        "damage_per_change": 77.6324595939,
         "degradation": "coarsen_bandlimited",
         "degradation_family": "resolution",
         "field": "velocity",
@@ -68,9 +68,9 @@
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": 0.7754716253,
-        "damage_max_ucb": 0.9975772388,
-        "damage_per_change": 4.3748312099,
+        "cliffs_delta_min": 0.6763242159,
+        "damage_max_ucb": 1.0009567595,
+        "damage_per_change": 4.3963928125,
         "degradation": "gaussian_blur",
         "degradation_family": "smoothing",
         "field": "velocity",
@@ -83,9 +83,9 @@
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": 0.3296554917,
-        "damage_max_ucb": 0.9981424888,
-        "damage_per_change": 1.0309038463,
+        "cliffs_delta_min": 0.2937772462,
+        "damage_max_ucb": 0.9971358089,
+        "damage_per_change": 1.0294652818,
         "degradation": "highpass_butterworth",
         "degradation_family": "spectral",
         "field": "velocity",
@@ -98,9 +98,9 @@
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": 0.1925465839,
-        "damage_max_ucb": 1.007809761,
-        "damage_per_change": 1.0230219808,
+        "cliffs_delta_min": 0.1717912118,
+        "damage_max_ucb": 1.0426866356,
+        "damage_per_change": 1.0211617119,
         "degradation": "highpass_ideal",
         "degradation_family": "spectral",
         "field": "velocity",
@@ -113,23 +113,23 @@
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": 0.4901431272,
-        "damage_max_ucb": 0.9999929403,
-        "damage_per_change": 2.7840384456,
+        "cliffs_delta_min": -0.0475676093,
+        "damage_max_ucb": 1.0000940178,
+        "damage_per_change": 2.7840758995,
         "degradation": "lowpass_butterworth",
         "degradation_family": "spectral",
         "field": "velocity",
         "metric": "spectral_energy_flux",
         "n_levels": 3.0,
-        "rho": 1.0,
+        "rho": 0.5,
         "rho_ci_hi": 1.0,
-        "rho_ci_lo": 1.0
+        "rho_ci_lo": 0.5
       },
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": 0.5527950311,
-        "damage_max_ucb": 1.0,
+        "cliffs_delta_min": 0.3167701863,
+        "damage_max_ucb": 1.0198191146,
         "damage_per_change": 6.8229844996,
         "degradation": "lowpass_ideal",
         "degradation_family": "spectral",
@@ -138,14 +138,14 @@
         "n_levels": 2.0,
         "rho": 1.0,
         "rho_ci_hi": 1.0,
-        "rho_ci_lo": 1.0
+        "rho_ci_lo": -1.0
       },
       {
         "blind": false,
         "blindness_q": 1.0,
-        "cliffs_delta_min": 0.4050383859,
-        "damage_max_ucb": 0.7678971785,
-        "damage_per_change": 53.7060369332,
+        "cliffs_delta_min": 0.407738899,
+        "damage_max_ucb": 0.7989209741,
+        "damage_per_change": 53.3810845818,
         "degradation": "median_blur",
         "degradation_family": "smoothing",
         "field": "velocity",
@@ -158,16 +158,16 @@
       {
         "blind": true,
         "blindness_q": 0.0,
-        "cliffs_delta_min": -0.9554801126,
-        "damage_max_ucb": 2.261e-07,
+        "cliffs_delta_min": -0.9485359361,
+        "damage_max_ucb": 2.958e-07,
         "damage_per_change": 0.0,
         "degradation": "translate_subpixel",
         "degradation_family": "geometric",
         "field": "velocity",
         "metric": "spectral_energy_flux",
         "n_levels": 6.0,
-        "rho": -0.7142857143,
-        "rho_ci_hi": -0.7142857143,
+        "rho": -0.6,
+        "rho_ci_hi": -0.6,
         "rho_ci_lo": -0.7142857143
       },
       {
@@ -187,5 +187,5 @@
       }
     ]
   },
-  "run": "spectral_energy_flux_1793355291"
+  "run": "spectral_energy_flux_1793391588"
 }
