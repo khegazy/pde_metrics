@@ -518,6 +518,9 @@ def test_doubling_the_spacing_scales_the_value_by_its_power_of_length(name: str,
     # CRPS's skill term E|X - y| grows as the members move away from the reference, and the
     # spread term does not move, so the score rises.
     pytest.param("crps", id="crps"),
+    # The energy score is the same two terms over the whole field: the distance term grows
+    # with the shift and the pair term does not move.
+    pytest.param("energy_score", id="energy_score"),
     # The error of the ensemble mean is the bias itself once it dominates the noise.
     pytest.param("ensemble_mean_rmse", id="ensemble_mean_rmse"),
     # A biased ensemble pushes the reference toward one end of the member ranks: the
