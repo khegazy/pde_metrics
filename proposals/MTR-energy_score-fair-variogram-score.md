@@ -35,8 +35,13 @@ needs M >= 2 and can be negative on one draw.
 `variogram_score` implements the plug-in estimate, which Pacchiardi et al. (2024, JMLR 25(45),
 App. C.1.3) call unbiased; it is not, and its expected value falls with ensemble size (measured
 in `metrics/variogram_score/test_metric.py`: mean 1139 at four members against 971 at sixteen
-for one calibrated process). Neither the catalog nor docs/ideas has a fair variant. I found no
-published fair variogram score; this is my own proposal.
+for one calibrated process). Neither the catalog nor docs/ideas has a fair variant.
+
+**Built in pull request 27; delete this proposal when it merges.** It is not new: the `scoringrules`
+Python package implements it as `vs_ensemble(estimator="fair")`, and it is the standard
+unbiased estimate of a kernel score once Allen, Ginsbourger & Ziegel (2023, SIAM/ASA JUQ 11(3),
+906-940, Sect. 4.1) show the variogram score is one. `variogram_score` now uses it
+(`judgements/004`); this proposal is kept only as the record of the finding.
 
 ## How it could be tested
 

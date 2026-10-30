@@ -39,8 +39,8 @@ The correlated synthetic ensemble of EXP-energy_score-correlated-synthetic-ensem
 
 ## Why it is helpful
 
-Building the CRPS member gives a fair score of pairwise structure with no new estimator,
-which removes the ensemble-size bias of `variogram_score` (see MTR-energy_score-fair-variogram-score)
+Building the CRPS member gives a fair score of the whole distribution of each pairwise
+difference, not only its mean as `variogram_score` (now itself fair, `judgements/004`) does,
 by reusing code that already exists.
 
 ## References
