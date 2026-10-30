@@ -16,6 +16,7 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 
 | File | Title | Status |
 |---|---|---|
+| [EXP-energy_distance-tail-only-degradation.md](EXP-energy_distance-tail-only-degradation.md) | A degradation that damages only the tails of the increment distribution | see also EXP-tail_index-pareto-spike-injection.md |
 | [EXP-orchestrator-20261023-anisotropic-blur.md](EXP-orchestrator-20261023-anisotropic-blur.md) | A directional (anisotropic) blur | proposed |
 | [EXP-orchestrator-20261023-constraint-violation.md](EXP-orchestrator-20261023-constraint-violation.md) | Controlled violations of admissibility conditions | proposed |
 | [EXP-orchestrator-20261023-dilatational-scaling.md](EXP-orchestrator-20261023-dilatational-scaling.md) | Scaling the dilatational part of the velocity | proposed |
@@ -23,7 +24,10 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 | [EXP-orchestrator-20261023-temporal-ladder.md](EXP-orchestrator-20261023-temporal-ladder.md) | A degradation ladder for trajectories | proposed |
 | [EXP-shock_set_distance-2d-shock-dataset.md](EXP-shock_set_distance-2d-shock-dataset.md) | A two-dimensional shock dataset for the shock-set distance | proposed |
 | [EXP-sod_evidence-sod-time-offset.md](EXP-sod_evidence-sod-time-offset.md) | The exact Sod solution at a shifted time, as a physically consistent wave-position error | proposed |
-| [EXP-tail_index-pareto-spike-injection.md](EXP-tail_index-pareto-spike-injection.md) | Inject sparse spikes with power-law amplitudes of a known exponent | proposed |
+| [EXP-tail_index-pareto-spike-injection.md](EXP-tail_index-pareto-spike-injection.md) | Inject sparse spikes with power-law amplitudes of a known exponent | see also EXP-energy_distance-tail-only-degradation.md |
+| [MTR-energy_distance-alpha-exponent.md](MTR-energy_distance-alpha-exponent.md) | Generalised energy distance with exponent alpha | proposed |
+| [MTR-energy_distance-by-separation.md](MTR-energy_distance-by-separation.md) | Energy distance between increment distributions at every octave separation | proposed |
+| [MTR-energy_distance-cramer-loss.md](MTR-energy_distance-cramer-loss.md) | Squared energy (Cramér) distance of increments as a training loss | proposed |
 | [MTR-shock_set_distance-full-shock-zone-detector.md](MTR-shock_set_distance-full-shock-zone-detector.md) | The full shock-zone detector, with a compression gate and the jump across the zone | proposed |
 | [MTR-shock_set_distance-object-matched-shock-distance.md](MTR-shock_set_distance-object-matched-shock-distance.md) | Object-matched shock distance, after MODE | proposed |
 | [MTR-shock_set_distance-other-surface-distance-summaries.md](MTR-shock_set_distance-other-surface-distance-summaries.md) | Hausdorff, quantile-Hausdorff, AVD and MASD summaries of the same shock-set distances | proposed |

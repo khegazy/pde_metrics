@@ -57,6 +57,12 @@ negative, so its joint density is symmetric under $R \to -R$: it has no teardrop
 - In compressible flow $P = -\nabla \cdot \mathbf{u}$ is not zero, and the classification of
   Chong, Perry and Cantwell uses all three invariants. The two-dimensional $(Q, R)$ plane is
   then a slice of a three-dimensional space.
+- The `energy_distance` metric (being built in pull request 24) compares one-dimensional
+  samples and is evaluated by sorting, which does not extend to the two-dimensional $(Q, R)$
+  plane: its equality with Cramér's distance holds only on the line (Rizzo & Székely 2016,
+  p. 27). A joint-density energy distance needs the all-pairs statistic, of order $N^2$ in the
+  number of cells (65 536 per frame here), or a subsample, so it cannot reuse that function as
+  it is. (Added by the agent building `energy_distance`, 2026-10-31.)
 
 ## Rationale
 
@@ -75,3 +81,5 @@ critical-point classification.
 - Chong, M. S., Perry, A. E. & Cantwell, B. J. (1990). A general classification of
   three-dimensional flow fields. *Physics of Fluids A* 2, 765–777.
   <https://doi.org/10.1063/1.857730>
+- Rizzo, M. L. & Székely, G. J. (2016). Energy distance. *WIREs Computational Statistics* 8(1),
+  27–38. <https://doi.org/10.1002/wics.1375>
