@@ -154,8 +154,9 @@ def test_agents_api_claims_match_the_code():
         assert name in text, f"metric() parameter {name!r} is undocumented in AGENTS.md"
     for name in inspect.signature(deg_registry.degradation).parameters:
         assert name in text, f"degradation() parameter {name!r} is undocumented in AGENTS.md"
+    # Quoted as code, because a short name such as `max` or `sum` occurs inside ordinary words.
     for name in REDUCTIONS:
-        assert name in text, f"reduction {name!r} is undocumented in AGENTS.md"
+        assert f"`{name}`" in text, f"reduction {name!r} is undocumented in AGENTS.md"
     for package in PACKAGES:
         assert package in text, f"LaTeX package {package!r} is undocumented in AGENTS.md"
 

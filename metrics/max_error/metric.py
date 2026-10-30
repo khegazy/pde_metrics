@@ -14,6 +14,25 @@ from numpy.typing import NDArray
 from metrics.registry import companion, metric
 
 
+def _absolute_error(
+    reference: NDArray[np.floating], candidate: NDArray[np.floating]
+) -> NDArray[np.floating]:
+    """``|reference - candidate|`` cell by cell, refusing shapes that differ.
+
+    Both the metric and its map take their maximum from this array. Numpy would broadcast a
+    one-channel field against a two-channel one, or a ``(X, 1)`` field against ``(X, Y)``, and
+    return a plausible number; a maximum over such an array is meaningless, so it raises.
+
+    Raises:
+        ValueError: If the two shapes differ.
+    """
+    if reference.shape != candidate.shape:
+        raise ValueError(
+            f"max_error needs matching shapes, got {reference.shape} and {candidate.shape}"
+        )
+    return np.abs(reference - candidate)
+
+
 @metric(
     name="max_error",
     arity="pairwise",
@@ -46,10 +65,13 @@ def max_error(reference: NDArray[np.floating], candidate: NDArray[np.floating]) 
 
     Returns:
         The largest ``|reference - candidate|`` over every channel and cell, in the field's
-        own units. Zero for identical fields, unbounded above.
+        own units. Zero for identical fields, unbounded above. NaN if either field holds a NaN.
+
+    Raises:
+        ValueError: If the shapes differ, or if the fields have no cells.
     """
     # Roy (2005) Eq. 7: L_inf = max_n |f_n - f_exact,n|, here over channels and cells pooled.
-    return float(np.abs(reference - candidate).max())
+    return float(_absolute_error(reference, candidate).max())
 
 
 @companion(of="max_error")
@@ -69,4 +91,4 @@ def max_error_map(
         An array of shape ``(*spatial)``: the channel axis is reduced by its maximum, so that
         the maximum of the map is the metric (Roy 2005, Eq. 7, as in :func:`max_error`).
     """
-    return np.abs(reference - candidate).max(axis=0)
+    return _absolute_error(reference, candidate).max(axis=0)

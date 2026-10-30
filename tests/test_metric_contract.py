@@ -61,14 +61,16 @@ def _args_for(
     shape: tuple[int, ...] = GRID,
     seed_a: int = 0,
     seed_b: int = 1,
+    n_channels: int | None = None,
 ) -> tuple[np.ndarray, ...]:
     """Positional arguments of the right *shape* for this metric's arity.
 
     Every generic test below builds its inputs through here, so a metric taking an
     ensemble is handed ``(N, C, *spatial)`` rather than a second field that happens to
-    have the same number of dimensions as one.
+    have the same number of dimensions as one. ``n_channels`` overrides the channel count
+    :func:`_channels_for` picks.
     """
-    c = _channels_for(spec)
+    c = _channels_for(spec) if n_channels is None else n_channels
     a = synthetic_field(shape, c, seed=seed_a)
     if spec.arity == "single":
         return (a,)
@@ -305,15 +307,20 @@ def test_pointwise_map_reduces_to_metric(spec):
     This is the check that the picture you reason from is really what the number is made
     of. It catches the two easy mistakes: forgetting that channel-summed maps reduce as
     mean/C, and assuming rmse's map averages to rmse when it averages to mse.
+
+    A metric that accepts any field is checked on two channels as well. On one channel a
+    map summed over channels and a map maximised over channels are the same array, so only
+    two channels show whether the map collapses channels the way its reduction assumes.
     """
     _field_map(spec)
-    args = _args_for(spec)
-    c = args[0].shape[0]
-    m, want = _call_companion(spec, *args), _call(spec, *args)
-    assert spec.reduce(m, c) == pytest.approx(want, rel=1e-12), (
-        f"{spec.name}: reduction {spec.reduction!r} of the map gives "
-        f"{spec.reduce(m, c)}, but the metric gives {want}"
-    )
+    counts = {_channels_for(spec)} | ({2} if "*" in spec.fields else set())
+    for c in sorted(counts):
+        args = _args_for(spec, n_channels=c)
+        m, want = _call_companion(spec, *args), _call(spec, *args)
+        assert spec.reduce(m, c) == pytest.approx(want, rel=1e-12), (
+            f"{spec.name}: reduction {spec.reduction!r} of the {c}-channel map gives "
+            f"{spec.reduce(m, c)}, but the metric gives {want}"
+        )
 
 
 def test_pointwise_map_is_multichannel_aware():

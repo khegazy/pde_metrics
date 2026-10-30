@@ -21,7 +21,9 @@ For a vector field the channels are pooled, so the maximum runs over every compo
 cell, as `mae` and `mse` pool channels into their means. That choice is this bundle's, not a
 source's. PDEBench's code takes the maximum per channel and then averages over channels; the
 two agree on every one-channel field and differ only on velocity. A maximum carries no cell
-weights, so Equation (1) holds unchanged on a non-uniform grid.
+weights, so the formula of Equation (1) is unchanged on a non-uniform grid, but its value is
+not grid-neutral there: a peak inside a coarse cell is averaged down more than one inside a
+fine cell, so the number depends on where the grid is refined.
 
 The per-cell map stored beside the scalar is the absolute error, reduced over channels by its
 largest value,
@@ -41,9 +43,24 @@ $$
 $$
 
 which is linear in the displacement, like the mean absolute error, but set by the steepest
-gradient in the domain rather than the mean gradient. For a jump of height $h$ moved by one
-cell or more, there is a cell on which one field sits on the high side of the jump and the
-other on the low side, so $\mathrm{MaxE} = h$ whatever the size of the displacement.
+gradient in the domain rather than the mean gradient.
+
+For a jump of height $h$ between two constant states, with its face on a cell boundary, a
+shift by any whole number of cells (short of wrapping a periodic domain onto itself) leaves a
+cell on which one field sits on the high side and the other on the low side, so
+$\mathrm{MaxE} = h$ whatever the size of the displacement. Two departures from that idealised
+case change the number. If the face falls inside a cell, as it generally does once a field is
+averaged onto the analysis grid, that cell holds a fraction $a$ of the high state and a
+one-cell shift gives
+
+$$
+\mathrm{MaxE} = \max(a,\, 1 - a)\, h \tag{4}
+$$
+
+which is as low as $h/2$; a shift of two cells reaches $h$. If the jump sits on a varying
+background, the background's own change over the shift adds to $h$, so the value exceeds $h$
+and keeps growing with the shift. `test_metric.py` tests the cell-face case at shifts of one
+to three cells and Equation (4) at $a = 1/2$; the varying background is not tested.
 
 On the damage scale the anchor is the reference's own spatial mean, taken channel by channel
 (`judgements/001`), so damage 1 is the reference's largest departure from its mean,
@@ -171,8 +188,11 @@ reference      moved one cell   half brightness      one spike
 
 The moved square and the single spike both score the full height of the square, because each
 has at least one cell that is completely wrong. The mean absolute error charges the spike only
-one sixteenth of that. Moving the square by two cells instead of one also scores 1: once a
-sharp feature has left its own cells, the maximum cannot tell a small miss from a large one.
+one sixteenth of that. A sharp edge that sits exactly between two cells, moved by two or three
+cells instead of one, also scores its full height: once such a feature has left its own cells,
+the maximum cannot tell a small miss from a large one. An edge that falls inside a cell, which
+is then half bright, scores only half its height when moved by one cell, and the full height
+from two cells on.
 
 What this metric ignores is everything except the single worst cell: how many cells are
 wrong, and by how much, below that one.
@@ -199,16 +219,31 @@ remaps onto before measuring.
 
 The companion is a per-cell map, Equation (2): the absolute error at each cell, the largest
 over channels. Its brightest cell is the metric. A single isolated bright cell is a local
-excursion; a ridge along a front is a displaced sharp feature.
+excursion; a ridge along a front is a displaced sharp feature. Every other cell contributes
+nothing to the number, so the map shows where the error lies, not shares of the metric. The
+report's `field_gallery` figure clips its colour scale at the 99.5th percentile of the values
+of all its panels, so on a panel whose worst cell lies above that limit the worst cell is drawn
+in the same saturated colour as the other cells above it; read the value from the stored map,
+not from the figure.
 
 ## Limitations
 
 It suffers the double penalty in its most extreme form. A sharp front, a shock or a
 shocklet, with the right shape and strength but sitting one cell from where it should be,
-scores the full height of its jump, exactly as much as a prediction that has no front at all.
-On a field with sharp features the maximum error therefore saturates at the height of the
-largest jump as soon as anything is misplaced, and stops distinguishing a near miss from a
-gross one (the second test in `test_metric.py`).
+scores the full height of its jump when its face lies on a cell boundary, as much as a
+prediction that keeps the low state where the front should be. On a field with sharp features
+the maximum error therefore reaches the height of the largest jump as soon as anything is
+misplaced by a cell or two, and stops distinguishing a near miss from a gross one. A front
+whose face falls inside a cell scores between half and all of its height at a one-cell shift,
+Equation (4), so the same miss scores differently depending on where the front sits within its
+cell.
+
+On a field whose largest excursion is one isolated extremum, both the metric and its anchor
+are set by that extremum. On `kinet_re5e4` density the reference's largest departure from its
+mean is a single deep minimum that sits on the strongest vortex core (measured on frames 2500,
+5000, 8000 and 10000; `issues/106`). There the maximum error largely asks whether that one
+minimum was reproduced in depth and position, and any prediction unrelated to the reference
+that lacks it scores close to the anchor.
 
 It rests on one cell, so it is noisy and depends on the grid. Two predictions that differ
 only in where their noise happens to peak score differently. The largest of many independent
@@ -382,15 +417,36 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 <!-- END GENERATED results_canaries -->
 
 On velocity and vorticity the fake prediction scores worse than the field's mean, with damage
-1.6 and 1.2. On density it scores 0.955, slightly better than the mean, and the reference moved
-far away scores 0.959: by its worst cell, a phase-scrambled density field is rated about as
-close to the truth as the mean is. Its cause is not established here. The maximum error must
-therefore not be the only check against a fake with the right spectrum on a field like this
-density, whose energy sits in a few large-scale modes.
+1.6 and 1.2. On density it scores 0.955 and the reference moved far away 0.959, both close to
+the mean's 1: by its worst cell, a phase-scrambled density field is rated about as far from the
+truth as the mean is. The table holds one draw of the fake per frame, so a value this close to
+1 does not show that the fake scores better than the mean; `issues/106` records a separate
+measurement of the draw-to-draw spread, which straddles 1 on density. The reason the value
+sits near 1 on density, the single deep minimum that sets both this number and the anchor, is
+under Limitations. The maximum error must therefore not be the only check against a fake with
+the right spectrum on a field like this density.
+
+### Compared with the other metrics
+
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence max_error --results results/max_error_1793355020`, do not edit -->
+
+No measurements for this test in the recorded run.
+
+<!-- END GENERATED results_summary -->
 
 This run scored `max_error` alone, one metric per evaluation, so it has no cross-metric
-correlation and no damage beside the pointwise controls; those sections are left out rather
-than shown empty.
+correlation; a run beside the other metrics would fill this table.
+
+### Damage beside the other metrics
+
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence max_error --results results/max_error_1793355020`, do not edit -->
+
+Only one metric in the recorded run; there is nothing to place this one beside.
+
+<!-- END GENERATED results_damage_by_level -->
+
+For the same reason this run has no damage beside the pointwise controls; a run beside `mae`,
+`mse`, `rmse` and `nrmse` would fill this table.
 
 ## References
 
