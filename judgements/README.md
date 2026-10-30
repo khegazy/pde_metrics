@@ -12,3 +12,4 @@ deleted, with the reason in the commit message, as for a resolved issue (`AGENTS
 | # | Question | Choice | Date |
 |---|---|---|---|
 | [001](001-damage-anchor-is-the-spatial-mean.md) | What should damage 1 mean, now that the large translation is shown not to be an unrelated field? | The field's spatial mean, the climatological reference; the translation stays as a probe | 2026-10-29 |
+| [002](002-hill-estimator-without-a-power-law-tail.md) | Should a Hill estimate be reported on fields whose increments may have no power-law tail? | Yes, at the fixed order sqrt(n), read as the mean log-ratio at that order and not as an exponent; `tail_index` | 2026-10-30 |
