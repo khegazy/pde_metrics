@@ -24,6 +24,8 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 | [EXP-orchestrator-20261023-temporal-ladder.md](EXP-orchestrator-20261023-temporal-ladder.md) | A degradation ladder for trajectories | proposed |
 | [EXP-shock_set_distance-2d-shock-dataset.md](EXP-shock_set_distance-2d-shock-dataset.md) | A two-dimensional shock dataset for the shock-set distance | proposed |
 | [EXP-sod_evidence-sod-time-offset.md](EXP-sod_evidence-sod-time-offset.md) | The exact Sod solution at a shifted time, as a physically consistent wave-position error | proposed |
+| [EXP-spectral_energy_flux-forced-2d-compressible-flux-loop.md](EXP-spectral_energy_flux-forced-2d-compressible-flux-loop.md) | Forced two-dimensional compressible turbulence at Mach 0.3 to 0.5 | proposed |
+| [EXP-spectral_energy_flux-graded-phase-randomisation.md](EXP-spectral_energy_flux-graded-phase-randomisation.md) | Graded phase randomisation, an ordinal axis between the reference and the impostor | proposed |
 | [EXP-tail_index-pareto-spike-injection.md](EXP-tail_index-pareto-spike-injection.md) | Inject sparse spikes with power-law amplitudes of a known exponent | see also EXP-energy_distance-tail-only-degradation.md |
 | [MTR-energy_distance-alpha-exponent.md](MTR-energy_distance-alpha-exponent.md) | Generalised energy distance with exponent alpha | proposed |
 | [MTR-energy_distance-by-separation.md](MTR-energy_distance-by-separation.md) | Energy distance between increment distributions at every octave separation | proposed |
@@ -35,6 +37,8 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 | [MTR-shock_set_distance-object-matched-shock-distance.md](MTR-shock_set_distance-object-matched-shock-distance.md) | Object-matched shock distance, after MODE | proposed |
 | [MTR-shock_set_distance-other-surface-distance-summaries.md](MTR-shock_set_distance-other-surface-distance-summaries.md) | Hausdorff, quantile-Hausdorff, AVD and MASD summaries of the same shock-set distances | proposed |
 | [MTR-shock_set_distance-shock-thickness-and-overshoot.md](MTR-shock_set_distance-shock-thickness-and-overshoot.md) | Shock thickness and overshoot at the detected shocks | proposed |
+| [MTR-spectral_energy_flux-enstrophy-flux.md](MTR-spectral_energy_flux-enstrophy-flux.md) | Spectral enstrophy flux of two-dimensional flow | proposed |
+| [MTR-spectral_energy_flux-flux-sign-agreement.md](MTR-spectral_energy_flux-flux-sign-agreement.md) | Direction-of-transfer disagreement, a dimension-neutral backscatter fraction | proposed |
 | [MTR-tail_index-hill-by-separation.md](MTR-tail_index-hill-by-separation.md) | Hill estimate of the increments at every octave of separation | proposed |
 | [MTR-tail_index-ks-threshold.md](MTR-tail_index-ks-threshold.md) | Power-law exponent with a Kolmogorov-Smirnov threshold and a goodness-of-fit p-value | proposed |
 | [MTR-tail_index-moment-estimator.md](MTR-tail_index-moment-estimator.md) | Moment (Dekkers-Einmahl-de Haan) estimator of the extreme-value index of increments | proposed |
