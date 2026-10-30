@@ -6,7 +6,8 @@
 
 ## What it is
 
-Once a shock detector has produced a mask of shocked cells for each field, overlap measures score how much the two masks coincide. Intersection-over-union is the
+Once a shock detector has produced a mask of shocked cells for each field, overlap measures
+score how much the two masks coincide. Intersection-over-union is the
 number of cells shocked in both masks divided by the number shocked in either. The Dice
 coefficient is twice the number shocked in both, divided by the total number of shocked cells
 in the two masks. Both are cheap and easy to compute. The boundary F-score compares only the

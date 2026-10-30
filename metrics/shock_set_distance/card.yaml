@@ -29,7 +29,8 @@ math:
   # And two distinct fields with the same shock set score zero.
   triangle_inequality: false
   # The detector reads pressure ratios, so scaling both fields by a positive constant
-  # flags the same cells and leaves the distance unchanged.
+  # flags the same cells and leaves the distance unchanged. A zero or negative constant is
+  # not a rescaled pressure: it leaves no positive pressure and so no shock (issues/102).
   scale_dependent: false
   # Which cells are flagged, and the width of a flagged shock, depend on the grid.
   resolution_dependent: true

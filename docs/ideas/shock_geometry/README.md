@@ -9,7 +9,7 @@ metric could be gamed. Some of these measures assume isolated fronts that can be
 time, which is not the motivating case: compressible turbulence populated by many small
 shocks, called shocklets. Each page says which of the two it suits.
 
-The first step and the first comparison are built: the built
+The first step and the first comparison exist: the built
 [shock_set_distance](../../metrics/shock_set_distance.md) holds the detector, a pressure-jump
 test, as shared code, and measures the average distance between the two detected sets.
 

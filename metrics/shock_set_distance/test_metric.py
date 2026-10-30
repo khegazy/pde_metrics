@@ -66,13 +66,45 @@ def test_the_walls_are_not_wrapped():
     assert not shock_mask(np.geomspace(1.0, 0.1, 16)).any()
 
 
-def test_a_non_positive_pressure_is_flagged():
-    """The ratio across a zero or negative pressure is unbounded, so the cell beside it is a
-    shock (the convention in the card and issues/102)."""
-    assert shock_mask(np.array([1.0, 1.0, 0.0, 1.0, 1.0])).tolist() == [
-        False, True, False, True, False]
-    assert shock_mask(np.array([1.0, 1.0, -0.5, 1.0, 1.0])).tolist() == [
-        False, True, False, True, False]
+def test_a_non_positive_pressure_is_never_flagged():
+    """The pressure ratio, and so the Mach-number test, is defined only between two positive
+    pressures, so a cell whose neighbour is zero or negative is not flagged (the convention in
+    the card and issues/102). A field of zeros or of a negative constant has no shock."""
+    assert not shock_mask(np.array([1.0, 1.0, 0.0, 1.0, 1.0])).any()
+    assert not shock_mask(np.array([1.0, 1.0, -0.5, 1.0, 1.0])).any()
+    assert not shock_mask(np.zeros(5)).any()
+    assert not shock_mask(np.full(5, -1.0)).any()
+
+
+def test_a_non_positive_candidate_cannot_score_better_than_a_missed_shock():
+    """An all-zero candidate against the step has no shock, so it scores the worst value, the
+    diagonal: 8 cells of unit width give 8. Flagging cells beside a non-positive pressure would
+    instead give it a large shock set covering the true shock and an ordinary distance: with
+    every cell flagged, the reference cells {3, 4} are at 0 and the candidate's eight cells at
+    3, 2, 1, 0, 0, 1, 2, 3, so (0 + 12) / 10 = 1.2, far better than a smeared shock's 8."""
+    assert _score(STEP, np.zeros_like(STEP)) == pytest.approx(8.0)
+    assert _score(STEP, np.full_like(STEP, -1.0)) == pytest.approx(8.0)
+
+
+def test_a_non_finite_field_scores_nan():
+    """A pressure that is NaN or infinite anywhere is not a state the detector can read, so the
+    distance is undefined and the metric returns NaN rather than a confident number. Without
+    this a NaN candidate against a smooth reference would score a perfect 0."""
+    flat = np.full((1, 8), 0.55)
+    broken = flat.copy()
+    broken[0, 2] = np.nan
+    assert np.isnan(_score(flat, np.full_like(flat, np.nan)))
+    assert np.isnan(_score(flat, broken))
+    assert np.isnan(_score(STEP, np.where(STEP > 0.5, np.inf, STEP)))
+    assert np.isnan(_score(broken, flat))
+
+
+def test_float32_and_float64_agree_at_the_threshold():
+    """A step of exactly the threshold ratio, 1.805 = R at Mach 1.3 and gamma 1.4, is flagged or
+    not flagged alike in single and double precision, because the comparison is made in double
+    precision."""
+    step = np.array([1.805, 1.805, 1.0, 1.0])
+    assert shock_mask(step).tolist() == shock_mask(step.astype(np.float32)).tolist()
 
 
 def test_empty_sets_score_zero_together_and_the_diagonal_alone():
@@ -102,14 +134,16 @@ def test_on_the_exact_sod_solution_it_finds_the_shock_and_tracks_its_speed():
     carries no pressure jump and the rarefaction is smooth. S_R is the reader's exact shock
     speed, 1.75216, which ``tests/test_analytic_datasets.py`` checks against the published
     value (``docs/datasets/sod_shock_tube.md``). Between the two times the shock moves
-    S_R * 0.01 = 0.0175, 35.9 cells, so the score is (s - 1/2) cells for the integer number s
-    of cells the jump moved, within one cell of S_R * 0.01 - dx/2.
+    S_R * 0.01 = 0.0175, 35.9 cells, so the flagged pair moves by a whole number s of cells
+    within one cell of that, and the score is exactly (s - 1/2) cells, Equation (3) of the card.
     """
     tube = SodShockTube(n_frames=2, t_start=0.1, t_end=0.11)
     early, late = tube.solution(0.1)["pressure"], tube.solution(0.11)["pressure"]
     dx, speed = tube.grid.spacing[0], tube.speeds["shock"]
     flagged = np.flatnonzero(shock_mask(early[0]))
-    assert flagged.size == 2 and flagged[1] == flagged[0] + 1
+    moved = np.flatnonzero(shock_mask(late[0]))
+    assert flagged.size == moved.size == 2 and flagged[1] == flagged[0] + 1
     assert abs((flagged[0] + 1) * dx - (0.5 + speed * 0.1)) <= dx
-    score = _score(early, late, spacing=dx)
-    assert abs(score - (speed * 0.01 - 0.5 * dx)) <= dx
+    shift = int(moved[0] - flagged[0])
+    assert abs(shift * dx - speed * 0.01) <= dx
+    assert _score(early, late, spacing=dx) == pytest.approx((shift - 0.5) * dx, rel=1e-12)

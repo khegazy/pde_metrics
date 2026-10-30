@@ -24,11 +24,22 @@ one finite number, so it fixes three values that no source fixes for this use.
    applying it to a missing shock is this repository's. It makes the value a flag rather than a
    distance: on `sod_shock_tube` every blur that smears the shock beyond the detector's reach
    scores the same diagonal whatever its width.
-3. **A non-positive pressure is flagged as shocked.** The test is written
-   `max(p-, p+) >= R min(p-, p+)`, which holds whenever the smaller neighbour is zero or
-   negative: the pressure ratio across it is unbounded. A non-positive pressure is not a
-   thermodynamic state, so the alternative, not flagging it, would let a prediction that
-   breaks positivity score as if smooth there.
+3. **A cell beside a non-positive pressure is never flagged.** A pressure ratio, and so a Mach
+   number, exists only between two positive pressures, so the test
+   `max(p-, p+) >= R min(p-, p+)` is applied only where `min(p-, p+) > 0`. The cost is that a
+   prediction which breaks positivity away from the shock scores as if smooth there; positivity
+   is an admissibility property for a separate check. The alternative, flagging every cell
+   beside a non-positive pressure as though the ratio were infinite, was tried and rejected
+   because it inverts the ranking: measured on the exact Sod pressure at t = 0.1 (adversarial
+   review of 2026-10-31, `.agent/adversary/probe5.py` of the builder's records), an all-zero or
+   all-negative candidate then scored 0.280 of the diagonal, a fully flagged field covering the
+   true shock, while the exact shock in the right place smeared by a 3-cell Gaussian scored the
+   worst value, 1. A third option, returning NaN whenever a field has a non-positive value,
+   would fail the repository's contract tests, which run every metric on a signed synthetic
+   field and require a finite number.
+
+A field that is NaN or infinite anywhere is not covered by these conventions: the metric returns
+NaN, as a pointwise error would.
 
 ## What would settle it
 

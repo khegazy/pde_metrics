@@ -41,17 +41,20 @@ def shock_mask(pressure: NDArray[np.floating], *, mach_min: float = MACH_MIN,
     446, 3992-4007, Sect. 2.3.2: a cell is shocked when the jump in log pressure between
     its two neighbours reaches that of a normal shock at ``mach_min``, whose pressure ratio
     is their Eq. (2), the Rankine-Hugoniot relation
-    ``p2/p1 = 2 gamma M^2/(gamma + 1) - (gamma - 1)/(gamma + 1)``. The test is applied along
-    every axis and a cell is shocked if any axis flags it; Schaal and Springel measure the
-    jump along the shock direction instead, which needs the temperature gradient this
-    metric is not given (choice mine). The velocity-divergence and temperature criteria (i)
-    and (ii) need fields a single-field metric does not receive, so only (iii) is applied.
+    ``p2/p1 = 2 gamma M^2/(gamma + 1) - (gamma - 1)/(gamma + 1)``. They take the neighbours
+    along the shock direction, which needs the temperature gradient this metric is not given,
+    so the test is applied along every grid axis and a cell is shocked if any axis flags it
+    (choice mine). Their criteria (i) and (ii), on the velocity divergence and the temperature
+    and density gradients, need fields a single-field metric does not receive, and they warn
+    that the pressure part alone "may not be sufficient"; only it is applied here.
 
-    The jump is tested as ``max(p_-, p_+) >= R min(p_-, p_+)``. Where a neighbour's pressure
-    is zero or negative this always holds, so a non-positive pressure, across which the
-    ratio is unbounded, is flagged as shocked (convention mine, ``issues/102``). The two
-    neighbours of an edge cell are the cell itself and its one inner neighbour: the field
-    is extended by repeating the edge value, a zero-gradient wall, never wrapped.
+    The jump is tested as ``max(p_-, p_+) >= R min(p_-, p_+)`` with ``min(p_-, p_+) > 0``, in
+    double precision. A pressure ratio, and so a Mach number, exists only between two positive
+    pressures, so a cell beside a zero or negative pressure is never flagged (convention mine,
+    ``issues/102``): a field that is not a thermodynamic pressure has no shock, and cannot score
+    better than a missed shock by being flagged everywhere. The two neighbours of an edge cell
+    are the cell itself and its one inner neighbour: the field is extended by repeating the
+    edge value, a zero-gradient wall, never wrapped.
 
     Args:
         pressure: One channel, shape ``(*spatial)``.
@@ -63,16 +66,20 @@ def shock_mask(pressure: NDArray[np.floating], *, mach_min: float = MACH_MIN,
     """
     # Schaal & Springel (2015) Eq. (2): the pressure ratio across a Mach mach_min shock.
     ratio = 2.0 * gamma * mach_min**2 / (gamma + 1.0) - (gamma - 1.0) / (gamma + 1.0)
-    padded = np.pad(pressure, 1, mode="edge")  # zero-gradient wall; the tube has walls
+    # Zero-gradient wall, never wrapped (the tube has walls); double precision, so a float32
+    # field is flagged exactly as its float64 copy is.
+    padded = np.pad(np.asarray(pressure, dtype=np.float64), 1, mode="edge")
     shocked = np.zeros(pressure.shape, dtype=bool)
     for axis in range(pressure.ndim):
         inner = [slice(1, -1)] * pressure.ndim
         ahead, behind = list(inner), list(inner)
         ahead[axis], behind[axis] = slice(2, None), slice(None, -2)
         pair = (padded[tuple(ahead)], padded[tuple(behind)])
+        low = np.minimum(*pair)
         # Schaal & Springel (2015) Sect. 2.3.2 criterion (iii), pressure half:
-        # Delta log p >= log(p2/p1) at M_min, written without the logarithm.
-        shocked |= np.maximum(*pair) >= ratio * np.minimum(*pair)
+        # Delta log p >= log(p2/p1) at M_min, written without the logarithm, between two
+        # positive pressures only (convention mine, issues/102).
+        shocked |= (low > 0) & (np.maximum(*pair) >= ratio * low)
     return shocked
 
 
@@ -130,7 +137,9 @@ def shock_set_distance(reference: NDArray[np.floating], candidate: NDArray[np.fl
     empty set scores the length of the domain's diagonal, the worst-possible value
     Maier-Hein et al. (2024), Nature Methods 21, 195-212, Suppl. Note 2.3, recommend for a
     distance that is undefined, naming the image diagonal; it exceeds every distance two
-    cell centres can have. Both are conventions, ``issues/102``. Channels are averaged.
+    cell centres can have. Both are conventions, ``issues/102``. Channels are averaged. A
+    field that is NaN or infinite anywhere has no readable pressure ratio there, so the
+    distance is undefined and NaN is returned, as a pointwise error would return it.
 
     Args:
         reference: The trusted pressure, shape ``(C, *spatial)`` on the analysis grid.
@@ -139,7 +148,7 @@ def shock_set_distance(reference: NDArray[np.floating], candidate: NDArray[np.fl
 
     Returns:
         The distance in the units of the grid spacing: zero when the two shock sets
-        coincide, and at most the domain's diagonal.
+        coincide, at most the domain's diagonal, and NaN on a non-finite field.
 
     Raises:
         ValueError: If the shapes differ, or do not match the grid in ``ctx``.
@@ -147,6 +156,8 @@ def shock_set_distance(reference: NDArray[np.floating], candidate: NDArray[np.fl
     if reference.shape != candidate.shape or reference.shape[1:] != ctx.grid.shape:
         raise ValueError(f"shock_set_distance needs matching shapes on the grid "
                          f"{ctx.grid.shape}, got {reference.shape} and {candidate.shape}")
+    if not (np.isfinite(reference).all() and np.isfinite(candidate).all()):
+        return float("nan")
     spacing = ctx.grid.spacing
     diagonal = float(np.sqrt(sum((n * dx) ** 2 for n, dx in zip(ctx.grid.shape, spacing))))
     key = "shock_set_distance/reference_masks"

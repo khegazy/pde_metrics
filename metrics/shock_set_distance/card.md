@@ -15,25 +15,33 @@ $M_{\min} = 1.3$:
 
 $$
 \max\bigl(p_{\mathbf{n}-\mathbf{e}_j},\, p_{\mathbf{n}+\mathbf{e}_j}\bigr) \;\ge\; R \,
-\min\bigl(p_{\mathbf{n}-\mathbf{e}_j},\, p_{\mathbf{n}+\mathbf{e}_j}\bigr),
+\min\bigl(p_{\mathbf{n}-\mathbf{e}_j},\, p_{\mathbf{n}+\mathbf{e}_j}\bigr) > 0,
 \qquad
 R = \frac{2\gamma M_{\min}^2}{\gamma + 1} - \frac{\gamma - 1}{\gamma + 1}. \tag{1}
 $$
 
 This is the pressure half of the shock-zone criterion (iii) of [@schaal2015], Sect. 2.3.2,
-$\Delta \log p \ge \log(p_2/p_1)|_{M_{\min}}$, written without the logarithm; $R$ is their
-Rankine-Hugoniot pressure ratio, Eq. (2), and $M_{\min} = 1.3$ is the value of the same
-section. With $\gamma = 1.4$, the ratio of specific heats of the `sod_shock_tube` dataset, read
-from its reader rather than restated, $R = 1.805$.
-Schaal and Springel state that a minimum pressure jump "discriminates against tangential
-discontinuities and contacts": a contact carries a density jump and no pressure jump, so it is
-not flagged. Three choices here are mine, not theirs. The jump is tested along every grid axis
-and any axis flags the cell, where they measure it along the shock direction, which needs a
-temperature gradient this metric is not given. Their criteria (i) and (ii), on the velocity
-divergence and the temperature and density gradients, need fields a metric handed one field
-does not receive, so only criterion (iii) is applied. And a non-positive pressure satisfies
-Equation (1) automatically, so a cell beside one is flagged: the ratio across it is unbounded
-([issue 102](https://github.com/khegazy/pde_metrics/blob/main/issues/102-shock-set-distance-empty-and-non-positive-conventions.md)).
+$\Delta \log p \ge \log(p_2/p_1)|_{M_{\min}}$ with $\Delta$ taken between "neighbouring cells
+along the shock direction", written without the logarithm; $R$ is their Rankine-Hugoniot
+pressure ratio, Eq. (2), and $M_{\min} = 1.3$ is the value of the same section. The metric uses
+$\gamma = 1.4$, the default of the `sod_shock_tube` reader, read from it rather than restated;
+it is fixed, and does not follow a run that passes the reader another $\gamma$. Then
+$R = 1.805$. Schaal and Springel state that a minimum pressure jump "discriminates against
+tangential discontinuities and contacts": a contact carries a density jump and no pressure
+jump, so it is not flagged. They also warn that the pressure part alone "may not be
+sufficient", and it is the only part applied here. Three choices are mine, not theirs. The
+jump is tested along every grid axis and any axis flags the cell, where they take the
+neighbours along the shock direction, which needs a temperature gradient this metric is not
+given. Their criteria (i) and (ii), on the velocity divergence and the temperature and density
+gradients, need fields a metric handed one field does not receive. And a pressure ratio, so a
+Mach number, exists only between two positive pressures, so a cell beside a zero or negative
+pressure is never flagged
+([issue 102](https://github.com/khegazy/pde_metrics/blob/main/issues/102-shock-set-distance-empty-and-non-positive-conventions.md)):
+a field that is not a thermodynamic pressure has no shock, and scores like a missed shock. The
+metric assumes an absolute pressure; on the gauge pressure of an incompressible flow, defined
+only up to an added constant and of either sign, its value means nothing
+([issue 101](https://github.com/khegazy/pde_metrics/blob/main/issues/101-a-metric-cannot-declare-it-needs-an-absolute-positive-field.md)).
+A field that is NaN or infinite anywhere scores NaN.
 
 **The distance.** Let $A$ and $B$ be the shocked cells of the reference and of the candidate,
 each cell standing for its centre, and $d(x, S) = \min_{y \in S} \lVert x - y \rVert$ the
@@ -48,8 +56,10 @@ $$
 $$
 
 Every flagged cell is a point of the set; no boundary is extracted from the mask, because a
-detected shock is already a thin layer (my choice). A sharp jump between two cells flags both
-of them, so moving a sharp step by $s \ge 1$ cells gives, from Equation (2),
+detected shock is already a thin layer (my choice). Schaal and Springel reduce their shock
+zone, "typically 3–4 cells thick", to a shock surface of "a single layer of cells" in Sect. 2.3.3;
+that step is not done here. A sharp jump between two cells therefore flags both of them, so
+moving a sharp step by $s \ge 1$ cells gives, from Equation (2),
 
 $$
 \mathrm{ASSD} = \Bigl(s - \tfrac{1}{2}\Bigr)\Delta x, \tag{3}
@@ -73,9 +83,14 @@ the Hausdorff distance, the larger of the two directed maxima, Eq. (48), which t
 "generally sensitive to outliers"; its quantile form, which they call "one way to handle
 outliers"; and the average distance, the larger of the two directed means, Eq. (50), which they
 call "stable and less sensitive to outliers than the HD". [@maierhein2024], Suppl. Note 2.3,
-recommends the mean of the two directed means over Equation (2) as its default. For a single
-shock in each field all of these are equal; they differ when the detector flags cells away
-from the shock. Each would be a sibling bundle importing `surface_distances`.
+recommends the mean average surface distance (MASD) as its default boundary metric when errors
+should be penalised by distance, because it "has mathematical advantages over" the average
+symmetric surface distance; I did not read its formula there. The summaries differ even for
+one shock in each field: a sharp step moved $s$ cells has a Hausdorff distance of $s$ cells,
+against $s - \tfrac{1}{2}$ for Equation (2) and for the larger of the two directed means; and
+once the two sets differ in size, the pooled mean of Equation (2) weights the larger set more
+than either directed mean does (my derivations). Each would be a sibling bundle importing
+`surface_distances`.
 
 ### Boundary handling
 
@@ -179,7 +194,8 @@ state on either side of it, and every smooth part of the field.
 ## Reading the output
 
 - **Range and units.** From 0 to the length of the domain's diagonal, in the units of the grid
-  spacing: on the unit-length Sod tube, 0 to 1.
+  spacing: on the unit-length Sod tube, 0 to 1. NaN when either field is NaN or infinite
+  anywhere.
 - **Direction.** Lower is better; 0 means the two fields have their shocks in the same cells,
   or both have none.
 - **What a value means.** Below the diagonal, the value is a distance between shocks that
@@ -204,17 +220,24 @@ state on either side of it, and every smooth part of the field.
   the log pressure rises linearly across a shock of width $w$ cells, the two neighbours see
   $2/w$ of its jump, so Sod's shock, a pressure ratio of 3.03, is no longer flagged once it is
   wider than $2 \ln 3.03 / \ln 1.805 = 3.8$ cells (my estimate), and the score jumps to the
-  diagonal. Schaal and Springel measure the jump
-  across the whole shock zone instead [@schaal2015], which would tolerate a wide shock but needs
-  the velocity and temperature this metric does not receive.
+  diagonal. Schaal and Springel's criterion is local in the same way [@schaal2015]; it is their
+  Mach-number estimate, not their detection, that reads the states of the cells just outside
+  the shock zone (their Sect. 2.3.3).
+- **A failure of positivity is invisible.** A cell beside a zero or negative pressure is never
+  flagged, so a prediction whose pressure goes non-positive away from the shock scores as if
+  that region were smooth, and one whose pressure is non-positive everywhere scores like a
+  missed shock. Positivity is an admissibility property for a separate check, not something
+  this distance measures
+  ([issue 102](https://github.com/khegazy/pde_metrics/blob/main/issues/102-shock-set-distance-empty-and-non-positive-conventions.md)).
 - **No compression gate.** Without the velocity divergence, any steep enough pressure change
   is flagged, compressive or not, and noise whose cell-to-cell ratio exceeds 1.805 is flagged
   as shocks. A sensor gated on dilatation, as Ducros et al. propose for shock capturing in
   turbulence [@ducros1999], would reject both, but needs the velocity
   ([issue 096](https://github.com/khegazy/pde_metrics/blob/main/issues/096-several-fields-handed-to-one-metric.md)).
-- **A fixed equation of state.** The threshold uses $\gamma = 1.4$ whatever the gas. For $\gamma$
-  between 1.1 and 2 the ratio $R$ moves only between 1.72 and 1.92, but a dataset of another gas
-  shifts the weakest shock reported.
+- **A fixed equation of state.** The threshold uses $\gamma = 1.4$ whatever the gas, including
+  on a Sod run that overrides the reader's $\gamma$. For $\gamma$ between 1.1 and 2 the ratio $R$
+  moves only between 1.72 and 1.92, but a dataset of another gas shifts the weakest shock
+  reported.
 - **One cell decides between a distance and a flag.** The value jumps from the diagonal to an
   ordinary distance as soon as the candidate has a single flagged cell anywhere. A smeared
   shock that the detector misses scores the diagonal, while a harsher degradation that happens
