@@ -36,7 +36,7 @@ by a gradient scale such as $\langle \|S\|^2 \rangle$ so that shape rather than 
 gradient level is compared, and to measure the distance between the predicted and reference
 densities with a distance between distributions such as the
 [sliced Wasserstein distance](../optimal_transport/sliced_wasserstein.md) or the
-[energy distance](../distributional/energy_distance.md).
+[energy_distance](../../metrics/energy_distance.md).
 
 In turbulence this joint density has a characteristic teardrop shape, with a tail along the
 lower-right branch of the curve (2), where $Q < 0$ and $R > 0$, known as the Vieillefosse

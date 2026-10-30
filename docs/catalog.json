@@ -1,7 +1,7 @@
 {
   "counts": {
     "degradations": 25,
-    "metrics": 17,
+    "metrics": 18,
     "reviewed": 0,
     "with_measurements": 17
   },
@@ -1330,6 +1330,57 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Continuous ranked probability score in its fair ensemble form, the proper scoring rule that generalises mean absolute error to a prediction that is a distribution."
+    },
+    {
+      "card": "metrics/energy_distance/card.md",
+      "category": "statistical",
+      "declared": {
+        "arity": "pairwise",
+        "companion": null,
+        "cost": "cheap",
+        "differentiable": true,
+        "fields": [
+          "*"
+        ],
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "mean",
+        "requires_periodic": true,
+        "symmetric": true,
+        "target": null,
+        "units": "field^(1/2)"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N log N)",
+        "resolution_dependent": true,
+        "scale_dependent": true,
+        "triangle_inequality": true
+      },
+      "name": "energy_distance",
+      "output": {
+        "description": "Mean over channels and spatial axes of the energy distance between the reference's and the candidate's one-cell increment distributions along that axis, in the square root of the field's units. Zero when every increment distribution matches.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/energy_distance",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Energy distance between the one-cell increment distributions of two fields: an averaging distance between distributions, set beside the transport distance of increment_w1 on the same samples, ignoring where in the domain the increments arose."
     },
     {
       "card": "metrics/ensemble_mean_rmse/card.md",

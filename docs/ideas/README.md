@@ -106,7 +106,6 @@ regime, protected from data leakage and combined.
 | [Temporal autocorrelation](dynamics/temporal_autocorrelation.md) | [Dynamics](dynamics/README.md) | implementation, [issue 079](https://github.com/khegazy/pde_metrics/blob/main/issues/079-temporal-autocorrelation-needs-rollouts.md) | low | unset | |
 | [Invariant measure and attractor comparison](dynamics/invariant_measure.md) | [Dynamics](dynamics/README.md) | both, [issue 080](https://github.com/khegazy/pde_metrics/blob/main/issues/080-invariant-measure-needs-long-rollouts.md) | high | unset | |
 | [Modal decompositions and radiated sound](dynamics/modal_decompositions.md) | [Dynamics](dynamics/README.md) | implementation, [issue 081](https://github.com/khegazy/pde_metrics/blob/main/issues/081-modal-decompositions-need-trajectories.md) | medium | unset | |
-| [Energy distance](distributional/energy_distance.md) | [Distributional](distributional/README.md) | implementation | low | medium | |
 | [Tail-index estimators](distributional/tail_index_estimators.md) | [Distributional](distributional/README.md) | implementation | low | high | |
 | [Pair-correlation function of features](distributional/pair_correlation.md) | [Distributional](distributional/README.md) | implementation, [issue 082](https://github.com/khegazy/pde_metrics/blob/main/issues/082-pair-correlation-waits-on-features.md) | medium | medium | |
 | [Energy score, variogram score and calibration](distributional/multivariate_proper_scores.md) | [Distributional](distributional/README.md) | implementation | low | unset | |

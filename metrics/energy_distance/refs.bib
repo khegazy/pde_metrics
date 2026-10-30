@@ -1,0 +1,85 @@
+% References cited by this bundle's card.md, and nothing else. One file per bundle, so a
+% bundle can be added or removed without touching anyone else's citations.
+
+@article{szekely2013,
+  author  = {Sz{\'e}kely, G{\'a}bor J. and Rizzo, Maria L.},
+  title   = {Energy statistics: A class of statistics based on distances},
+  journal = {Journal of Statistical Planning and Inference},
+  volume  = {143},
+  number  = {8},
+  pages   = {1249--1272},
+  year    = {2013},
+  doi     = {10.1016/j.jspi.2013.03.018},
+  note    = {Definition 1, Eq. (2.4): the squared form 2E|X-Y| - E|X-X'| - E|Y-Y'|, which
+             this paper calls the energy distance. The display immediately before Eq. (2.3):
+             on the line it equals 2 times the integral of (F-G)^2. Eq. (6.1): the two-sample
+             V-statistic over all pairs; Sect. 1: V-statistics are used because they are
+             nonnegative. Proposition 2, Eqs. (5.1)-(5.2): the exponent alpha in (0, 2), fixed
+             at 1 here}
+}
+
+@article{rizzo2016,
+  author  = {Rizzo, Maria L. and Sz{\'e}kely, G{\'a}bor J.},
+  title   = {Energy distance},
+  journal = {Wiley Interdisciplinary Reviews: Computational Statistics},
+  volume  = {8},
+  number  = {1},
+  pages   = {27--38},
+  year    = {2016},
+  doi     = {10.1002/wics.1375},
+  note    = {Page 27: the energy distance D(F,G) is the square root of the squared form, and
+             it satisfies the axioms of a metric. That is the number registered. The passage
+             carries no equation numbers}
+}
+
+@article{sejdinovic2013,
+  author  = {Sejdinovic, Dino and Sriperumbudur, Bharath and Gretton, Arthur and Fukumizu, Kenji},
+  title   = {Equivalence of distance-based and {RKHS}-based statistics in hypothesis testing},
+  journal = {The Annals of Statistics},
+  volume  = {41},
+  number  = {5},
+  pages   = {2263--2291},
+  year    = {2013},
+  doi     = {10.1214/13-AOS1140},
+  note    = {Theorem 22: the squared-form energy distance is twice the squared maximum mean
+             discrepancy for a kernel generating the distance; Eq. (4.2): that kernel for
+             |x - y|, which has no bandwidth. Read from arXiv:1207.6076v3}
+}
+
+@article{gretton2012,
+  author  = {Gretton, Arthur and Borgwardt, Karsten M. and Rasch, Malte J. and
+             Sch{\"o}lkopf, Bernhard and Smola, Alexander},
+  title   = {A Kernel Two-Sample Test},
+  journal = {Journal of Machine Learning Research},
+  volume  = {13},
+  pages   = {723--773},
+  year    = {2012},
+  url     = {https://jmlr.org/papers/v13/gretton12a.html},
+  note    = {Definition 2, Eq. (1): the maximum mean discrepancy as an integral probability
+             metric; Lemma 6: its squared population form; Eq. (5): the biased V-statistic
+             estimate, of which this metric is sqrt(2) times for the distance kernel. No DOI}
+}
+
+@article{muller1997,
+  author  = {M{\"u}ller, Alfred},
+  title   = {Integral Probability Metrics and Their Generating Classes of Functions},
+  journal = {Advances in Applied Probability},
+  volume  = {29},
+  number  = {2},
+  pages   = {429--443},
+  year    = {1997},
+  doi     = {10.2307/1428011},
+  note    = {The definition of an integral probability metric, the family the energy distance
+             and the 1-Wasserstein distance both belong to. Only the abstract was read; no
+             equation number is cited}
+}
+
+@misc{scipyenergy,
+  author       = {{The SciPy community}},
+  title        = {scipy.stats.energy\_distance},
+  howpublished = {SciPy reference documentation, version 1.18.0},
+  url          = {https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.energy_distance.html},
+  note         = {Notes section: returns the square root form between two one-dimensional
+                  empirical distributions, computed exactly from the merged sorted samples.
+                  The implementation this metric calls}
+}

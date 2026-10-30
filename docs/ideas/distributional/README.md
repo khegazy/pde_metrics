@@ -12,14 +12,12 @@ positions treated as data.
 Built already, and so not listed here: the continuous ranked probability score
 ([crps](../../metrics/crps.md)), the spread-to-skill ratio
 ([spread_skill](../../metrics/spread_skill.md)), the rank histogram
-([rank_histogram](../../metrics/rank_histogram.md)), and the flatness of increments
-([increment_flatness](../../metrics/increment_flatness.md)).
+([rank_histogram](../../metrics/rank_histogram.md)), the flatness of increments
+([increment_flatness](../../metrics/increment_flatness.md)), and the energy distance between
+increment distributions ([energy_distance](../../metrics/energy_distance.md)).
 
 ## Ideas in this theme
 
-- [Energy distance](energy_distance.md): a cheap kernel distance between two distributions,
-  of the same family as the maximum mean discrepancy, useful mainly as a baseline because its
-  averaging makes it weak on heavy tails.
 - [Tail-index estimators](tail_index_estimators.md): direct comparison of how often large
   values occur, and estimation of how fast the tail of a distribution decays.
 - [Pair-correlation function of features](pair_correlation.md): the distribution of
