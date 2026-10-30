@@ -3,7 +3,7 @@
     "degradations": 25,
     "metrics": 19,
     "reviewed": 0,
-    "with_measurements": 18
+    "with_measurements": 19
   },
   "entries": [
     {
@@ -13279,13 +13279,97 @@
         "units": "field/length"
       },
       "evidence": {
-        "axes": [],
-        "dataset": null,
-        "figures": [],
-        "measured": false,
+        "axes": [
+          {
+            "axis": "bias",
+            "blindness_q": 0.0,
+            "cliffs_delta": null,
+            "detection_onset_severity": null,
+            "elasticity": null,
+            "elasticity_x": "severity (offset)",
+            "family": "pointwise",
+            "field": "density",
+            "first_detected_level": null,
+            "half_damage_severity": null,
+            "is_probe": false,
+            "largest_response_upper_bound": 1.030952878e-16,
+            "levels": 4,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "response_shape": "",
+            "severity_resolution": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "spread_deflate",
+            "blindness_q": 1.0,
+            "cliffs_delta": 1.0,
+            "detection_onset_severity": null,
+            "elasticity": 1.8924327616,
+            "elasticity_x": "severity (lost dispersion)",
+            "family": "ensemble",
+            "field": "density",
+            "first_detected_level": null,
+            "half_damage_severity": null,
+            "is_probe": false,
+            "largest_response_upper_bound": 0.0803142327,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "response_shape": "power",
+            "severity_resolution": 0.002811597,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "spread_inflate",
+            "blindness_q": 1.0,
+            "cliffs_delta": 1.0,
+            "detection_onset_severity": 0.8266692937,
+            "elasticity": 1.9743486214,
+            "elasticity_x": "severity (excess dispersion)",
+            "family": "ensemble",
+            "field": "density",
+            "first_detected_level": 3.0,
+            "half_damage_severity": 1.8712539661,
+            "is_probe": false,
+            "largest_response_upper_bound": 0.995729339,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "response_shape": "power",
+            "severity_resolution": 0.0082042789,
+            "weakest_separation": 1.0
+          }
+        ],
+        "dataset": "synthetic_ensemble",
+        "figures": [
+          {
+            "file": "metrics/variogram_score/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/variogram_score/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/variogram_score/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/variogram_score/_generated/sensitivity_profile.json"
+          }
+        ],
+        "frames": 12,
+        "measured": true,
         "probes": [],
-        "profile": [],
-        "run": null
+        "profile": [
+          {
+            "blind_axes": [
+              "bias"
+            ],
+            "elasticity_displacement": null,
+            "field": "density",
+            "least_sensitive_axis": "bias",
+            "most_sensitive_axis": "spread_deflate",
+            "selectivity": 0.3467533472
+          }
+        ],
+        "run": "variogram_score_1793357351"
       },
       "kind": "metric",
       "math": {

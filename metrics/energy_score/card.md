@@ -152,7 +152,9 @@ from the mean of a chi distribution, pinned at $d = 4$ by the bundle's test of t
 estimator): the score grows with the square root of the number of values, so it rises with
 resolution and with the number of channels. Compare models only
 on the same analysis grid and field. Comparisons across ensemble sizes are valid because the
-estimator is fair, which is why `n_members` is recorded on every row.
+estimator is fair, which is why `n_members` is recorded on every row. The score needs an
+ensemble to judge dispersion; for a deterministic prediction, one member, it is the Euclidean
+distance between the two fields and says nothing a pointwise norm does not.
 
 Read it beside `crps`. Both are proper and both reward accuracy and honest spread together;
 `crps` averages the error cell by cell, and the energy score sees how errors in different
