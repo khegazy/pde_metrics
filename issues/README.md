@@ -103,6 +103,7 @@ Designed, hooks in place, not built.
 | [095](095-pooling-across-frames-for-distributional-estimates.md) | Pooling across frames for a distributional estimate; the contract of a series-level procedure, should a metric need one | unset |
 | [097](097-stochastic-ladder-for-comparable-magnitudes.md) | A stochastic ladder (several draws per severity) would make response magnitudes comparable across a metric's functional forms | none set |
 | [098](098-increment-w1-registered-number-is-a-convention.md) | The number `increment_w1_by_separation` registers, a normalised mean over separations, is a convention with no source | unset |
+| [105](105-spectral-energy-flux-summary-is-a-convention.md) | The number `spectral_energy_flux` registers, a relative L2 distance between flux curves sampled at octaves, is a convention with no source | unset |
 
 ## Technical debt
 

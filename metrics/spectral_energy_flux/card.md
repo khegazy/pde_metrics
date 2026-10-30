@@ -68,9 +68,58 @@ a non-periodic axis.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence spectral_energy_flux`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/spectral_energy_flux_1793355291`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
+![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
+
+Four measured statistics for spectral_energy_flux, one row per degradation grouped by family and one marker per field. From left: the rank correlation between the metric and the applied strength within a frame, with the line showing the resampling interval; the separation of neighbouring strengths as Cliff's delta, where 0 means the metric cannot tell one strength from the next and the faint ticks at 0.12, 0.28 and 0.42 are Vargha and Delaney's small, medium and large anchors, for scale and not as grades; the damage charged per unit of field change at the harshest strength; and the upper confidence bound on the largest damage, beside the fixed margin of 0.05. A hollow marker is a field and degradation on which that bound lies below the margin, so the response is provably small. A missing marker is a statistic the analysis withheld, as the rank correlation is on an axis the metric is invariant to.
+
+![median damage against severity level, one panel per degradation family and field, on one shared scale](_generated/response_curves.svg)
+
+Median damage over frames against severity level for spectral_energy_flux, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, the anchor (by default the field's own mean); the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to the anchor. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points beyond 2 either side are drawn as triangles at the edge. Damage is negative where a degradation moves the metric away from the anchor, as noise raises a single-field quantity the field's mean sets to zero.
+
+**Trend: does the response follow the degradation?**
+
+| test family | field | degradations | rank correlation | fraction of frames in order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| Displacement | velocity | 2 | -0.714 | 0 | 0.0223 |
+| Resolution loss | velocity | 2 | 1 | 0.988 to 0.994 | 0.641 to 0.947 |
+| Smoothing | velocity | 3 | 1 | 0.901 to 0.919 | 0.703 to 0.888 |
+| Spectral filtering | velocity | 4 | 1 | 0.627 to 0.776 | 0.596 to 0.776 |
+| Noise | velocity | 1 | 1 | 1 | 0.956 |
+
+**Reactivity: how far does it move?**
+
+| test family | field | change from clean at the harshest strength | elasticity | first strength detected |
+|---|---|---|---|---|
+| Displacement | velocity | — | 1.17 | level — |
+| Resolution loss | velocity | — | 0.655 to 3.97 | level 1 |
+| Smoothing | velocity | — | 0.887 to 1.03 | level 1 |
+| Spectral filtering | velocity | — | 0.144 to 1.08 | level 1 |
+| Noise | velocity | — | 1.26 | level 3 |
+| trap test: fake prediction, right spectrum | velocity | — | — | damage 2.35 |
+
+**Consistency: how much does it vary from snapshot to snapshot?**
+
+| test family | field | consistency, in the strength's units | snapshots per independent block |
+|---|---|---|---|
+| Displacement | velocity | 0.808 | 1 to 20 |
+| Resolution loss | velocity | 5.24 to 7.06 | 20 to 21 |
+| Smoothing | velocity | 0.0638 to 0.142 | 21 |
+| Spectral filtering | velocity | 0.162 to 0.348 | 21 |
+| Noise | velocity | 0.0436 | 1 |
+
+One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. It does not exist for this metric, whose undegraded value is exactly zero; the damage below is its relative reading. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
+
+These tables report what was measured and grade none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
+
+**Profile.**
+
+| field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift, against severity (distance) | compute cost (x cheapest in this run) |
+|---|---|---|---|---|---|---|
+| velocity | 0.726 | `coarsen_bandlimited` | `translate_x` | `translate_subpixel` `translate_x` | 1.17 | 1 |
+
+One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
 <!-- END GENERATED performance -->
 
@@ -146,9 +195,11 @@ octaves the transfer departs and in which direction.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence spectral_energy_flux`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/spectral_energy_flux_1793355291`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `24929662abcd`. Run `spectral_energy_flux_1793355291`.
+
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/spectral_energy_flux_1793355291`.
 
 <!-- END GENERATED run -->
 
@@ -158,11 +209,21 @@ Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
 [box_blur](../../degradations/box_blur/card.md) ·
 [median_blur](../../degradations/median_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence spectral_energy_flux`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/spectral_energy_flux_1793355291`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `box_blur` | velocity | 4 | 1 | 0.919 | 0.817 |
+| `gaussian_blur` | velocity | 4 | 1 | 0.907 | 0.888 |
+| `median_blur` | velocity | 3 | 1 | 0.901 | 0.703 |
 
 <!-- END GENERATED results_smoothing -->
+
+All three blurs rank their strengths in the typical frame (rank correlation 1), but only 0.901 to
+0.919 of frames have every strength in order: in about one frame in ten a wider blur scores below
+a narrower one. The largest damage on `gaussian_blur` is 1.43 in the fingerprint, above the 1
+that a flux-free velocity scores, so in some frames the blurred velocity's flux is farther from
+the reference's than no flux at all, by a reversed sign or a larger size at some octave.
 
 ### Spectral filtering
 
@@ -171,78 +232,152 @@ Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
 [highpass_ideal](../../degradations/highpass_ideal/card.md) ·
 [highpass_butterworth](../../degradations/highpass_butterworth/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence spectral_energy_flux`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/spectral_energy_flux_1793355291`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `highpass_butterworth` | velocity | 3 | 1 | 0.677 | 0.665 |
+| `highpass_ideal` | velocity | 2 | 1 | 0.627 | 0.596 |
+| `lowpass_butterworth` | velocity | 3 | 1 | 0.739 | 0.745 |
+| `lowpass_ideal` | velocity | 2 | 1 | 0.776 | 0.776 |
 
 <!-- END GENERATED results_spectral -->
+
+The spectral filters keep only two or three distinct strengths on the velocity, and they have the
+fewest frames in order of any family, 0.627 to 0.776. At the harshest strength both low-pass
+filters change the flux by the whole reference value at every octave (1 in the curve table
+below): the velocity's energy sits in the first few shells, so even the mildest cutoff deletes
+most of the triads that carry the transfer. On `highpass_ideal` the pre-registered response is
+not supported: with two strengths the lower end of the rank-correlation interval in the
+fingerprint is −1, though the typical frame ranks them in order.
 
 ### Displacement
 
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence spectral_energy_flux`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/spectral_energy_flux_1793355291`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `translate_subpixel` | velocity | 6 | -0.714 | 0 | 0.0223 |
+| `translate_x` | velocity | 5 | — | — | — |
 
 <!-- END GENERATED results_geometric -->
+
+The flux does not depend on where the flow sits, and the run confirms it: `translate_x` scores 0
+at every strength and both displacements are provably below the 0.05 margin (Profile, above).
+The largest damage of `translate_subpixel` is 1.75e-06, consistent with the sub-pixel shift
+changing the highest mode (`issues/041`); its negative rank correlation orders values far below
+the margin.
 
 ### Resolution loss
 
 [coarsen](../../degradations/coarsen/card.md) ·
 [coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence spectral_energy_flux`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/spectral_energy_flux_1793355291`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `coarsen` | velocity | 4 | 1 | 0.988 | 0.641 |
+| `coarsen_bandlimited` | velocity | 4 | 1 | 0.994 | 0.947 |
 
 <!-- END GENERATED results_resolution -->
+
+Coarsening is where the metric is most consistently ordered apart from noise: 0.988 and 0.994 of
+frames in order. `coarsen_bandlimited` is the degradation it charges most for (Profile). The
+staircase `coarsen` separates its neighbouring strengths less well (weakest gap 0.641 against
+0.947), and its curve moves in both directions across octaves: the change from clean is negative
+at octaves 16 and 32 and positive elsewhere (curve table below).
 
 ### Noise
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence spectral_energy_flux`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/spectral_energy_flux_1793355291`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `additive_noise` | velocity | 4 | 1 | 1 | 0.956 |
 
 <!-- END GENERATED results_stochastic -->
+
+Noise is ordered in every frame. It is also where the metric is least bounded: the largest damage
+is 155 in the fingerprint, because noise gradients are largest at the grid scale and the noisy
+velocity carries transfer at the high octaves many times the reference's (a change of 5.2 to
+6.94 times the clean value at octaves 16 and 32, curve table below).
 
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence spectral_energy_flux`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/spectral_energy_flux_1793355291`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
+| field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
+|---|---|---|---|---|
+| velocity | 2.35 | `lowpass_ideal=1.26389` | 2.59e-15 | 1 |
+
+The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_canaries -->
 
-### Compared with the other metrics
-
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence spectral_energy_flux`, do not edit -->
-
-Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
-
-<!-- END GENERATED results_summary -->
-
-### Damage beside the other metrics
-
-<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence spectral_energy_flux`, do not edit -->
-
-Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
-
-<!-- END GENERATED results_damage_by_level -->
+The metric is not fooled by the fake prediction with the right spectrum: it assigns it damage
+2.35, more than the 1 of a velocity carrying no flux, so the scrambled field moves energy across
+the octaves at a rate and in a direction unrelated to the reference's. The reference moved far
+away scores 2.59e-15, because a translation leaves the flux unchanged.
 
 ### The curve behind the number
 
-<!-- GENERATED results_companion: written by `python -m fmeval.cards evidence spectral_energy_flux`, do not edit -->
+<!-- GENERATED results_companion: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/spectral_energy_flux_1793355291`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
+**velocity, rank correlation, at each coordinate.**
+
+| degradation | 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 | dominance |
+|---|---|---|---|---|---|---|---|---|---|
+| `additive_noise` | 0.2 | 0.2 | 0.2 | 0.2 | 0.2 | 0.2 | 0.2 | 0.2 | 0.0186 |
+| `box_blur` | 0.4 | 1 | 0.4 | -0.2 | 0.8 | 1 | 1 | 1 | 0.13 |
+| `coarsen` | 1 | 1 | 1 | 0.8 | 0.4 | 0.8 | -0.2 | 1 | 0 |
+| `coarsen_bandlimited` | 0.4 | 0.8 | 0.4 | 0.4 | 0.4 | 0.2 | 0.2 | 0.2 | 0.342 |
+| `gaussian_blur` | 0.4 | 0.8 | 0.4 | -0.2 | 0.8 | 1 | 1 | 1 | 0.118 |
+| `highpass_butterworth` | 0.5 | 1 | 0.5 | 0.5 | 0.5 | 0.5 | 0.5 | 0.5 | 0.13 |
+| `highpass_ideal` | — | 1 | 1 | 1 | -1 | 1 | 1 | 1 | 0.199 |
+| `lowpass_butterworth` | -0.5 | 0.5 | 0.5 | 0.5 | 0.5 | 0.5 | 0.5 | 0.5 | 0.236 |
+| `lowpass_ideal` | 1 | -1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.267 |
+| `median_blur` | 1 | 1 | 0.5 | 0.5 | 0.5 | -0.5 | -0.5 | -0.5 | 0 |
+| `translate_subpixel` | 0.714 | -0.714 | -0.714 | -0.6 | 0.0857 | 0.429 | -0.714 | -0.6 | 0.155 |
+| `translate_x` | — | — | — | — | — | — | — | — | — |
+
+**velocity, change from clean at the harshest strength, at each coordinate.**
+
+| degradation | 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 |
+|---|---|---|---|---|---|---|---|---|
+| `additive_noise` | -0.135 | 0.134 | 1.2 | 2.09 | 5.2 | 6.94 | 6.14 | 4.68 |
+| `box_blur` | 0.895 | 0.949 | 0.905 | 0.824 | 0.757 | 0.767 | 0.779 | 0.782 |
+| `coarsen` | 0.343 | 0.367 | 0.546 | 0.327 | -0.229 | -0.195 | 0.00356 | 0.802 |
+| `coarsen_bandlimited` | 0.105 | 0.132 | 0.316 | 0.121 | 0.133 | 0.133 | 0.142 | 0.143 |
+| `gaussian_blur` | 0.986 | 0.995 | 0.988 | 0.978 | 0.969 | 0.969 | 0.971 | 0.972 |
+| `highpass_butterworth` | 1 | 0.998 | 0.925 | 0.845 | 0.862 | 0.982 | 0.98 | 0.98 |
+| `highpass_ideal` | 1 | 1 | 0.907 | 0.868 | 0.818 | 0.983 | 0.988 | 0.988 |
+| `lowpass_butterworth` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+| `lowpass_ideal` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+| `median_blur` | 0.445 | 0.623 | 0.626 | 0.396 | 0.0311 | -0.042 | -0.0274 | -0.0268 |
+| `translate_subpixel` | 0 | -1.41e-16 | -1.28e-16 | -1.14e-16 | 0 | 1.77e-16 | 0 | -1.42e-16 |
+| `translate_x` | 0 | -1.42e-16 | -3.78e-16 | -7.83e-16 | -7.89e-16 | -7.06e-16 | -6.45e-16 | -7.34e-16 |
+
+Each coordinate of the curve read as a metric of its own, with the same statistics as the tables above and no resampling interval. Neighbouring coordinates are strongly correlated, so a row localises the evidence and does not multiply it. **Dominance** is the fraction of frames in which, for the weakest pair of neighbouring strengths, the harsher strength's curve has moved at least as far as the milder one's at every coordinate, each in its own direction: near 1, any summary that grows with every coordinate's departure orders those strengths the same way, so the choice of summary cannot change the trend. None of these numbers enters the tables above.
 
 <!-- END GENERATED results_companion -->
+
+Octave by octave the curve follows the degradations less cleanly than the number does: several
+rows reverse sign at some octaves (`median_blur` at 32 to 128, `highpass_ideal` at 16), and the
+dominance is low on every degradation, 0 to 0.342. In most frames, then, the harsher strength's
+curve has not moved further at every octave, and the registered summary, a repository convention
+(`issues/105`), decides the order of neighbouring strengths. A different summary could order
+them differently. The reference's own curve, the clean rows of the run's `companions.csv`, is
+negative at the low octaves in most frames but not in all, so the direction of transfer through
+a given octave changes along this decaying trajectory; no sign test could have been fixed for it.
 
 ## References
 
