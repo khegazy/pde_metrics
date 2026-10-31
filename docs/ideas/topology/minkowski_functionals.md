@@ -29,10 +29,12 @@ tensor-valued generalisations that restore this sensitivity, so that the anisotr
 structure, such as the alignment of sheets or tubes, can be measured and compared
 (Schröder-Turk et al. 2013).
 
-The Euler characteristic is shared with the topology of
-[persistence diagrams](persistence_diagrams.md): the Euler-characteristic curve described
-there is one of these functionals. The others add geometry, the size and curvature of the
-excursion sets, that topology deliberately ignores.
+The Euler characteristic is shared with the topology of persistence diagrams, built as
+[persistence_distance](../../metrics/persistence_distance.md): the Euler-characteristic
+curve that bundle reads off the diagram (`euler_characteristic_curve`, beside
+`betti_curves`) is one of these functionals, for sublevel rather than superlevel sets. The
+others add geometry, the size and curvature of the excursion sets, that topology deliberately
+ignores.
 
 ## Precedent
 

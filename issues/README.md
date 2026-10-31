@@ -57,7 +57,6 @@ Designed, hooks in place, not built.
 | [071](071-equivariance-needs-the-model.md) | Galilean and rotational equivariance needs the model | unset |
 | [072](072-goal-oriented-error-needs-an-adjoint.md) | Goal-oriented error estimates need an adjoint solver and a declared output | unset |
 | [073](073-eddy-census-waits-on-a-detector.md) | Eddy census waits on a vortex detector | medium |
-| [074](074-persistence-diagrams-need-a-tda-library.md) | Persistence diagrams need a topology library | high |
 | [075](075-two-point-correlation-anisotropy-is-untestable.md) | Two-point correlation: what it adds beyond spectrum_l2 is untestable | medium |
 | [076](076-coherent-vortex-extraction-needs-wavelets.md) | Coherent vortex extraction needs a wavelet library, and its comparison is unspecified | high |
 | [077](077-wavelet-scattering-needs-kymatio.md) | Wavelet scattering needs a scattering-transform library | high |

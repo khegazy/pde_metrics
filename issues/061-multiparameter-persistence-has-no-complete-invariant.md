@@ -12,7 +12,7 @@ The page: "With two or more parameters there is no complete discrete invariant a
 
 ## Why it is not built
 
-The rule this follows: an open question with no obvious answer and no clear published standard is decided by a person, not settled by whoever implements the metric. Which incomplete invariant to compare, and with which distance, is a choice with no standard. The idea also builds on [persistence diagrams](../docs/ideas/topology/persistence_diagrams.md), which are not built, and RIVET is not a Python dependency that can be added now.
+The rule this follows: an open question with no obvious answer and no clear published standard is decided by a person, not settled by whoever implements the metric. Which incomplete invariant to compare, and with which distance, is a choice with no standard. The idea builds on one-parameter persistence diagrams, now built as [persistence_distance](../metrics/persistence_distance/card.md), and RIVET is not a Python dependency that can be added now.
 
 ## What would unblock it
 

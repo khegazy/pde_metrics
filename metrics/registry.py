@@ -27,9 +27,11 @@ common case needs no boilerplate.
 A metric returns one float, the number the literature reports. The object behind that number
 is its **companion**, declared with :func:`companion`: a per-cell map (``kind="field"``) whose
 declared ``reduction`` gives back the number, which the contract test verifies as
-``R(map(a, b)) == metric(a, b)``; or a curve on a named coordinate (``kind="curve"``), the
+``R(map(a, b)) == metric(a, b)``; a curve on a named coordinate (``kind="curve"``), the
 literature's own values, which the pipeline stores on every result row and the analysis
-evaluates coordinate by coordinate beside the panel.
+evaluates coordinate by coordinate beside the panel; or a set of points with named coordinates
+(``kind="points"``), such as a persistence diagram or the positions of detected shocks, which the
+pipeline stores on the frames chosen for the per-cell maps.
 """
 
 from __future__ import annotations
@@ -57,7 +59,7 @@ Arity = Literal["pairwise", "single", "ensemble"]
 ARITY_POSITIONAL: dict[str, int] = {"pairwise": 2, "single": 1, "ensemble": 2}
 Cost = Literal["cheap", "moderate", "expensive"]
 Measures = Literal["error", "calibration"]
-CompanionKind = Literal["field", "curve"]
+CompanionKind = Literal["field", "curve", "points"]
 
 #: How a pointwise map reduces to the metric's scalar value. ``C`` is the channel count of
 #: the *input* field. A map reduced by ``mean``, ``sum`` or ``sqrt_mean`` is summed over
@@ -78,9 +80,11 @@ class Companion:
     fn: Callable[..., Any]
     kind: CompanionKind
     """``"field"``: a per-cell map, ``(*spatial)``, stored on chosen frames. ``"curve"``: a pair
-    ``(coordinates, values)``, stored on every row."""
-    coordinate: tuple[str, str] | None
-    """``(name, units)`` of a curve's coordinate; None for a field map."""
+    ``(coordinates, values)``, stored on every row. ``"points"``: an ``(N, D)`` array, one row
+    per point, stored on chosen frames."""
+    coordinate: tuple[str, str] | tuple[tuple[str, str], ...] | None
+    """``(name, units)`` of a curve's coordinate; one ``(name, units)`` per column of a point set;
+    None for a field map."""
     one_field: bool
     """Whether the companion takes one field where its metric takes two: a property of one
     field, called on the candidate of every variant, which on the clean level is the reference
@@ -89,8 +93,9 @@ class Companion:
     takes_ctx: bool
 
     def describe(self) -> dict[str, Any]:
-        return {"kind": self.kind, "coordinate": list(self.coordinate or []) or None,
-                "one_field": self.one_field}
+        # Plain lists, as JSON reads them back: a point set's coordinates are (name, units) pairs.
+        coordinate = [list(c) if isinstance(c, tuple) else c for c in self.coordinate or []]
+        return {"kind": self.kind, "coordinate": coordinate or None, "one_field": self.one_field}
 
 
 @dataclass(frozen=True)
@@ -279,7 +284,8 @@ def metric(
 
 
 def companion(*, of: str, kind: CompanionKind = "field",
-              coordinate: tuple[str, str] | None = None) -> Callable[[Callable], Callable]:
+              coordinate: tuple[str, str] | tuple[tuple[str, str], ...] | None = None,
+              ) -> Callable[[Callable], Callable]:
     """Attach the object behind a metric's number to an already-registered metric.
 
     One companion per metric. A second number from the literature is a sibling bundle that
@@ -296,13 +302,24 @@ def companion(*, of: str, kind: CompanionKind = "field",
       the curve, and hands it to the metric in ``ctx.cache[COMPANION_KEY]``
       (:data:`fmeval.context.COMPANION_KEY`), so a metric that reads it there computes the curve
       once per row.
+    * ``kind="points"``: returns an ``(N, D)`` array, one row per point and one column per
+      declared coordinate; ``N`` may differ between calls and may be zero. It takes the metric's
+      arguments or, for a pairwise metric, one field. Like a curve it is called before the metric
+      on every row and handed over in ``ctx.cache[COMPANION_KEY]``; like a field map it is
+      stored only on the frames, ladder entries and fields ``report.error_map`` names, and on the
+      clean level of those frames. There a one-field companion gives the set of the undamaged
+      prediction, the reference's on a deterministic dataset and the member mean's on an ensemble
+      one; a two-field companion gives its value on that prediction. The first two
+      coordinates are the axes it is drawn on and a third, if any, colours the points.
 
     Args:
         of: Name of the metric. Must already be registered, so the companion is defined *after*
             its metric in the same module.
-        kind: ``"field"`` or ``"curve"``.
+        kind: ``"field"``, ``"curve"`` or ``"points"``.
         coordinate: ``(name, units)`` of a curve's coordinate, e.g. ``("separation", "cells")``;
-            required for a curve and refused for a field map.
+            for a point set, one ``(name, units)`` per column, at least two, e.g.
+            ``(("birth", "field"), ("death", "field"))``. Required for a curve and a point set,
+            refused for a field map.
 
     Raises:
         ValueError: If the metric is unknown or already has a companion, or the kind and the
@@ -319,15 +336,22 @@ def companion(*, of: str, kind: CompanionKind = "field",
         spec = REGISTRY[of]
         if spec.companion is not None:
             raise ValueError(f"metric {of!r} already has a companion")
-        if kind not in ("field", "curve"):
+        if kind not in ("field", "curve", "points"):
             raise ValueError(f"companion(of={of!r}): unknown kind {kind!r}")
-        if (kind == "curve") != (coordinate is not None):
+        if (kind == "field") != (coordinate is None):
             raise ValueError(
-                f"companion(of={of!r}): a curve names its coordinate as (name, units) and a "
+                f"companion(of={of!r}): a curve or a point set names its coordinates and a "
                 f"field map does not; got kind={kind!r}, coordinate={coordinate!r}"
             )
+        if kind == "points" and (len(coordinate) < 2 or not all(
+                isinstance(c, tuple) and len(c) == 2 for c in coordinate)):
+            raise ValueError(
+                f"companion(of={of!r}): a point set names each of its columns as (name, units), "
+                f"at least two of them; got coordinate={coordinate!r}"
+            )
         n_pos, expected = positional_count(fn), ARITY_POSITIONAL[spec.arity]
-        allowed = {expected, 1} if kind == "curve" and spec.arity == "pairwise" else {expected}
+        allowed = ({expected, 1} if kind != "field" and spec.arity == "pairwise"
+                   else {expected})
         if n_pos not in allowed:
             raise TypeError(
                 f"companion(of={of!r}): takes {n_pos} positional argument(s); a {kind} "

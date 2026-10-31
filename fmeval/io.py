@@ -81,7 +81,7 @@ class RunFolder:
 
     @property
     def maps_path(self) -> Path:
-        """Stored pointwise metric maps, written by :func:`write_maps`."""
+        """Stored per-cell metric maps and point sets, written by :func:`write_maps`."""
         return self.data / "error_maps.npz"
 
     def create(self) -> RunFolder:
@@ -114,7 +114,8 @@ def write_table(folder: RunFolder, df: pd.DataFrame, name: str) -> Path:
 
 
 def write_maps(folder: RunFolder, maps: Mapping[str, np.ndarray]) -> Path | None:
-    """Write pointwise metric maps to a compressed npz, or nothing if there are none."""
+    """Write per-cell metric maps and point sets to a compressed npz, or nothing if there are
+    none."""
     if not maps:
         return None
     np.savez_compressed(folder.maps_path, **maps)
