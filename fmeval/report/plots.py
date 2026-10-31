@@ -256,9 +256,9 @@ def companion_points(ctx, df, opts) -> PlotResult:
         low, high = (float(finite.min()), float(finite.max())) if finite.size else (0.0, 1.0)
         pad = 0.05 * (high - low) or 0.5
         limits.append((low - pad, high + pad))
-    colour = ({"cmap": "viridis", "norm": Normalize(np.nanmin(points[:, 2]),
-                                                     np.nanmax(points[:, 2]))}
-              if len(names) > 2 and len(points) else {})
+    shade = points[:, 2][np.isfinite(points[:, 2])] if len(names) > 2 else np.empty(0)
+    colour = ({"cmap": "viridis", "norm": Normalize(shade.min(), shade.max())}
+              if shade.size else {})
     ncols = min(4, len(panels))
     nrows = -(-len(panels) // ncols)
     fig, grid = ctx.style.figure(nrows, ncols, sharex=True, sharey=True)
