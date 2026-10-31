@@ -31,7 +31,6 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 | [MTR-energy_distance-alpha-exponent.md](MTR-energy_distance-alpha-exponent.md) | Generalised energy distance with exponent alpha | proposed |
 | [MTR-energy_distance-by-separation.md](MTR-energy_distance-by-separation.md) | Energy distance between increment distributions at every octave separation | proposed |
 | [MTR-energy_distance-cramer-loss.md](MTR-energy_distance-cramer-loss.md) | Squared energy (Cramér) distance of increments as a training loss | proposed |
-| [MTR-energy_score-fair-variogram-score.md](MTR-energy_score-fair-variogram-score.md) | A fair variogram score, unbiased at every ensemble size | proposed |
 | [MTR-energy_score-patched-energy-score.md](MTR-energy_score-patched-energy-score.md) | Patched energy score, local in space and cheap on large grids | proposed |
 | [MTR-energy_score-transformed-difference-scores.md](MTR-energy_score-transformed-difference-scores.md) | Proper scores of the vector of weighted pairwise differences | proposed |
 | [MTR-max_error-high-quantile-error.md](MTR-max_error-high-quantile-error.md) | A high quantile of the pointwise absolute error | proposed |

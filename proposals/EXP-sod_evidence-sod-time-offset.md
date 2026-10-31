@@ -1,7 +1,7 @@
 ---
 type: EXP
 kind: benchmark problem
-related: ["docs/ideas/shock_geometry/shock_set_distance.md", "docs/ideas/shock_geometry/shock_mask_overlap.md", "docs/ideas/shock_geometry/shock_front_error.md"]
+related: ["metrics/shock_set_distance", "docs/ideas/shock_geometry/shock_mask_overlap.md", "docs/ideas/shock_geometry/shock_front_error.md"]
 seen_in: "agent's own idea, built on the closed form in fmeval/data/analytic.py (Toro 2009, Sect. 4.5, eqs. 4.55-4.59)"
 doi: "none"
 found_by: "sod_evidence, 2026-10-23"
@@ -44,6 +44,14 @@ It separates "the right shock in the wrong place" from "the wrong shock", the do
 penalty that motivates the repository, with every number known in closed form. A
 translation cannot do this: it moves all waves together, so a metric that tracks only the
 largest jump cannot be told apart from one that tracks all three.
+
+It already works as a known-answer test at one offset. The unit test
+`test_on_the_exact_sod_solution_it_finds_the_shock_and_tracks_its_speed` in
+`metrics/shock_set_distance/test_metric.py` scores the exact solution at t = 0.1 against
+t = 0.11: the detector flags only the two cells at the shock, not the contact or the fan,
+and the score equals `S_R dt - dx/2` to within one cell. What it still lacks is a
+paired-time degradation that makes the offset a ladder axis (found by the agent that built
+`shock_set_distance`, finding 014, 2026-10-30).
 
 ## Cost and requirements
 
