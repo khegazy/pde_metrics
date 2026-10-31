@@ -45,13 +45,15 @@ def persistence_distance(reference: NDArray[np.floating], candidate: NDArray[np.
     the two diagrams, each with the diagonal added at infinite multiplicity, of the largest
     L-infinity displacement of a point (Cohen-Steiner, Edelsbrunner & Harer 2005, Proc. SoCG,
     263-271, Sect. 3.1, Definition of d_B; journal version Discrete Comput. Geom. 37(1),
-    103-120, 2007). Their Main Theorem (Sect. 3.1) bounds it, for each k, by the largest pointwise
-    difference of the two fields, so the maximum over k is bounded by it too. The distance
-    between the diagrams of all dimensions is the supremum over k of the per-dimension distances,
-    each dimension matched on its own (Skraba & Turner 2020, arXiv:2006.16824, Eq. 1), the
-    limit p -> inf of their total p-Wasserstein distance (Definition 2.5). Points that never die
-    are kept and matched among themselves, as Cohen-Steiner et al. place them at infinity in the
-    extended plane.
+    103-120, 2007). The distance between the diagrams of all dimensions is the supremum over k of
+    the per-dimension distances, each dimension matched on its own (Skraba & Turner 2020,
+    arXiv:2006.16824v7, Eq. 1), the limit p -> inf of their total p-Wasserstein distance
+    (Definition 2.5). Their Cellular Wasserstein Stability Theorem (Theorem 4.6(i)), taken to
+    p -> inf, bounds it by the largest difference over the cells of the complex, which is the
+    largest difference over the grid cells because every face takes the minimum of its cubes (the
+    limit and that step are this bundle's). Points that never die are kept and matched among
+    themselves at cost |b - b'|, and are infinitely far from every finite point (Skraba & Turner,
+    Definition 2.4), which is what gudhi computes.
 
     Computed by ``gudhi.bottleneck_distance`` at its default precision, an additive error of the
     smallest positive double and possibly the last two or three bits of the mantissa (GUDHI
@@ -145,9 +147,11 @@ def betti_curves(diagram: NDArray[np.floating], thresholds: NDArray[np.floating]
                  n_dimensions: int) -> NDArray[np.int64]:
     """Betti numbers of the sublevel set at each threshold, one row per homology dimension.
 
-    The k-th Betti number at threshold t is the number of points of the dimension-k diagram
-    with b <= t < d: the k-Triangle Lemma (Cohen-Steiner, Edelsbrunner & Harer 2005, Sect. 2)
-    with x = y = t.
+    The k-th Betti number at threshold t is the dimension of H_k of the sublevel set, the number
+    of intervals of the interval decomposition that contain t (Skraba & Turner 2020,
+    arXiv:2006.16824v7, Sect. 2 and Theorem 2.3: each point has b = inf and d = sup of its
+    interval). The sublevel set holds the cells at or below t, so each interval is [b, d) and the
+    count is of points with b <= t < d (that reading is this bundle's).
 
     Args:
         diagram: Rows (birth, death, dimension), as :func:`persistence_diagram` returns.
@@ -158,7 +162,7 @@ def betti_curves(diagram: NDArray[np.floating], thresholds: NDArray[np.floating]
         An integer array of shape ``(n_dimensions, T)``.
     """
     t = np.asarray(thresholds, dtype=float)[None, :]
-    # Cohen-Steiner et al. (2005), Sect. 2, k-Triangle Lemma at x = y = t: count b <= t < d.
+    # Skraba & Turner (2020), Sect. 2 and Theorem 2.3: beta_k(t) counts intervals [b, d) holding t.
     return np.array([((d[:, :1] <= t) & (t < d[:, 1:2])).sum(axis=0)
                      for k in range(n_dimensions) for d in [diagram[diagram[:, 2] == k]]],
                     dtype=np.int64).reshape(n_dimensions, -1)

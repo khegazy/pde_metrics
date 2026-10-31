@@ -116,20 +116,51 @@ def test_a_whole_cell_translation_on_a_periodic_grid_is_at_distance_zero(shift):
     assert max_error(x, moved) > 0.0
 
 
-def test_the_distance_never_exceeds_the_largest_pointwise_difference():
-    """The Main Theorem of Cohen-Steiner, Edelsbrunner & Harer (2005, Proc. SoCG, Sect. 3.1):
-    d_B(D_k(f), D_k(g)) <= ||f - g||_inf in every dimension k, so their maximum is bounded too.
+@pytest.mark.parametrize("shape, boundary", [
+    ((16, 8), ("periodic", "periodic")),
+    ((16, 8), ("periodic", "neumann")),
+    ((16, 8), ("neumann", "neumann")),
+    ((32,), ("periodic",)),
+    ((32,), ("neumann",)),
+    ((6, 5, 4), ("periodic", "periodic", "periodic")),
+    ((6, 5, 4), ("neumann", "periodic", "neumann")),
+])
+def test_the_distance_never_exceeds_the_largest_pointwise_difference(shape, boundary):
+    """The Cellular Wasserstein Stability Theorem of Skraba & Turner (2020, arXiv:2006.16824v7,
+    Theorem 4.6(i)) taken to p -> inf: the maximum over k of d_B(D_k(f), D_k(g)) is at most the
+    largest difference over the cells of the complex, which for the T-construction is the
+    largest difference over the grid cells, ||f - g||_inf.
 
-    Checked on blurred, noisy and unrelated candidates of a random periodic field.
+    Checked on blurred, noisy and unrelated candidates of a random field, on periodic, walled and
+    mixed grids in one, two and three dimensions; the factor 1 + 1e-12 allows gudhi's last-bits
+    error.
     """
-    x = synthetic_field((16, 8), 1, seed=0)
     rng = np.random.default_rng(1)
-    candidates = [gaussian_filter(x, (0, 1.5, 1.5), mode="wrap"),
+    x = rng.standard_normal((1, *shape))
+    ctx = make_ctx(shape)
+    ctx = replace(ctx, grid=replace(ctx.grid, boundary=boundary))
+    candidates = [gaussian_filter(x, (0, *(1.5,) * len(shape)), mode="wrap"),
                   x + 0.3 * rng.standard_normal(x.shape),
-                  synthetic_field((16, 8), 1, seed=9)]
+                  rng.standard_normal(x.shape)]
     for candidate in candidates:
-        distance = persistence_distance(x, candidate, ctx=make_ctx((16, 8)))
+        distance = persistence_distance(x, candidate, ctx=replace(ctx, cache={}))
         assert 0.0 < distance <= max_error(x, candidate) * (1 + 1e-12)
+
+
+def test_the_first_grid_axis_is_the_first_axis_of_the_complex():
+    """A band of zeros down column 0 of a 4 x 4 field of ones, x[0, :, 0] = 0, runs the whole
+    length of grid axis 0. On a cylinder that wraps axis 0 the band closes a loop around it at
+    threshold 0, so the dimension-1 class that never dies is born at 0: H_1 = [(0, inf)]. On a
+    cylinder that wraps axis 1 instead, a loop around axis 1 needs a whole row, which first
+    exists at threshold 1: H_1 = [(1, inf)]. The two orders give different diagrams, so this pins
+    which axis ``periodic_dimensions`` wraps (the Betti numbers alone, (1, 1, 0) either way,
+    cannot)."""
+    x = np.ones((1, 4, 4))
+    x[0, :, 0] = 0.0
+    for boundary, birth in ((("periodic", "neumann"), 0.0), (("neumann", "periodic"), 1.0)):
+        ctx = replace(make_ctx((4, 4)), grid=GridSpec((4, 4), (1.0, 1.0), boundary))
+        diagram = persistence_diagram(x, ctx=ctx)
+        np.testing.assert_array_equal(diagram[diagram[:, 2] == 1, :2], [[birth, np.inf]])
 
 
 def test_only_the_axes_the_grid_declares_periodic_are_wrapped():

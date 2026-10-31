@@ -19,9 +19,12 @@ As $t$ rises, $K_t$ grows, and in each homology dimension $k$ (connected pieces 
 loops for $k = 1$, enclosed cavities for $k = 2$) a feature is born at some $b$ and dies at some
 $d > b$, when it merges into an older feature or is filled in. The persistence diagram
 $D_k(f)$ is the multiset of these points $(b, d)$; a feature of the whole domain never dies and
-has $d = +\infty$ [@cohensteiner2005], Sect. 2. Points with $d = b$ are not recorded. The
-Betti number of $K_t$ counts the points alive at $t$, by the $k$-Triangle Lemma of the same
-section:
+has $d = +\infty$ [@cohensteiner2005], Sect. 2. Points with $d = b$ are not recorded. Each point
+is an interval of the persistence module's interval decomposition, with $b$ its infimum and $d$
+its supremum [@skraba2020], Sect. 2 and Theorem 2.3, and the dimension of $H_k(K_t)$ is the
+number of intervals that contain $t$. Because $K_t$ holds the cells at or below $t$, a feature
+is present from $b$ and gone at $d$, so each interval is $[b, d)$; that last step is ours, read
+off their definitions. The Betti number of $K_t$ therefore counts the points alive at $t$:
 
 $$
 \beta_k(t) = \#\bigl\{ (b, d) \in D_k(f) : b \le t < d \bigr\} \tag{2}
@@ -51,16 +54,26 @@ $$
 $$
 
 It is the limit $p \to \infty$ of their total $p$-Wasserstein distance, which sums the $p$-th
-powers over dimensions [@skraba2020], Definition 2.5. The Main Theorem of
-[@cohensteiner2005], Sect. 3.1 (the journal version is [@cohensteiner2007]) bounds each term by
-the largest pointwise difference, so
+powers over dimensions [@skraba2020], Definition 2.5. Their Cellular Wasserstein Stability
+Theorem [@skraba2020], Theorem 4.6(i), bounds that total distance between the diagrams of two
+monotone functions on one finite complex by the $p$-norm of the functions' difference over all
+cells. As $p \to \infty$ the left-hand side tends to Equation (4), as their Sect. 2 states for
+Eq. 1, and on a finite complex the right-hand side tends to the largest difference over all
+cells. Every face takes the minimum of the cubes it bounds, and a minimum moves by no more than
+the largest move of its arguments, so that largest difference is the largest over the grid
+cells. The limit and the last step are ours. Hence
+
 
 $$
 \mathrm{PD}(f, g) \le \max_c \lvert f(c) - g(c) \rvert \tag{5}
 $$
 
-the value of [max_error](../../metrics/max_error/card.md). `test_metric.py` checks Equation (5)
-on blurred, noisy and unrelated fields.
+the value of [max_error](../../metrics/max_error/card.md). The Main Theorem of
+[@cohensteiner2005], Sect. 3.1 (the journal version is [@cohensteiner2007]) is the same bound for
+continuous tame functions on a triangulable space; a field that is constant on each cell is not
+continuous, so it is the precedent here, not the proof. `test_metric.py` checks Equation (5) on
+blurred, noisy and unrelated fields, on periodic and walled grids in one, two and three
+dimensions.
 
 The diagrams come from `gudhi.PeriodicCubicalComplex` [@gudhicubical] over the coefficient field
 $\mathbb{Z}/11$, gudhi's default, and Equation (3) from `gudhi.bottleneck_distance`
@@ -70,12 +83,16 @@ dimension are equal as multisets, the term is set to exactly 0 without calling g
 Equation (3) with the identity bijection and is the slowest case for gudhi. The classes that
 never die are kept and matched among themselves; their number is fixed by the grid's topology
 (on a doubly periodic grid one piece, two loops and one cavity, the torus), so both diagrams
-always have the same number of them and their births, which include the global minimum and the
-global maximum, enter Equation (3) like any other point, as points at infinity of the extended
-plane [@cohensteiner2005], Sect. 2.
+always have the same number of them. Two points at infinity are a distance $\lvert b - b' \rvert$
+apart, and a point at infinity is infinitely far from every finite point and from the diagonal
+[@skraba2020], Definition 2.4, which is what gudhi computes. So their births, which include the
+global minimum and the global maximum, enter Equation (3) through their own matching.
 
 Only one-channel scalar fields are accepted: density, and vorticity on a two-dimensional grid.
-A vector field, or a field holding a NaN or an infinite value, raises an error.
+A vector field, or a field holding a NaN or an infinite value, raises an error. The registry
+matches fields by name, not by their number of channels, so on a three-dimensional dataset the
+pipeline would hand this metric the three-component vorticity and the error would stop the
+whole run; there, run it with `fields=[density]` or another list of scalar fields.
 
 Four choices are this bundle's, not a source's. The bottleneck distance is registered rather
 than a Wasserstein distance between diagrams, because it is the distance with the stability
@@ -225,7 +242,8 @@ diagram itself changes with the grid.
 The companion is the persistence diagram of one field, stored as a point set with columns
 `birth`, `death` (both in the field's units, `death` infinite for a class that never dies) and
 `dimension` (0 for pieces, 1 for loops, 2 for cavities). It is computed for the candidate at
-every strength, which on the clean level is the reference, and kept on the frames that
+every strength, which on the clean level is the reference (the member mean, on an ensemble
+dataset), and kept on the frames that
 `report.error_map` names; the `companion_points` figure draws it.
 
 ## Limitations
@@ -250,7 +268,11 @@ every strength, which on the clean level is the reference, and kept on the frame
   that this card's references cover built other objects: a filtration of the flow's trajectory
   in state space [@smith2024], a persistence-based template for locating a vortex core
   [@martinez2026], and threshold sweeps of connected regions in climate data that the authors
-  call inspired by persistence [@muszynski2019]. None compared two fields by a diagram distance.
+  call inspired by persistence [@muszynski2019]. Neither of the two read in full, Smith et al.
+  and Muszynski et al., compared two fields by a diagram distance. Martinez et al. build a
+  similarity field from a distance between persistence features of a template window and a
+  target window, which may be the nearest precedent; only their abstract was read, so whether
+  that distance is one between diagrams is not known here.
   The Topology ToolKit [@tierny2018] is an alternative implementation of the same diagrams.
 
 ## Results
@@ -366,10 +388,15 @@ move its extremes by a little.
 
 Both coarsenings move the metric up with rank correlation 1 on both fields, as pre-registered.
 The staircase `coarsen` is ordered in every frame on density; the band-limited reconstruction
-is ordered in only 0.652 of density frames and 0.584 of vorticity frames, and it charges far
-less on density than the staircase does. A likely reading, not a measured one: rebuilding the
-block means band-limited keeps density's large features and their extremes, which are what this
-metric reads, where the staircase flattens every extreme to its block's mean.
+is ordered in only 0.652 of density frames and 0.584 of vorticity frames. Unlike under smoothing,
+these failures in `results.csv` are mostly reversals, a harsher strength scoring below a milder
+one, not ties; on density they sit at the mildest strengths, where the metric has barely moved.
+At its harshest strength the band-limited reconstruction does far less damage on density than
+the staircase does, though per unit of field change it is the degradation this metric charges
+most for on density (the Profile table): it changes the field very little. A likely reading, not
+a measured one: rebuilding the block means band-limited keeps density's large features and their
+extremes, which are what this metric reads, where the staircase flattens every extreme to its
+block's mean.
 
 ### Noise
 
