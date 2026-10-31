@@ -57,7 +57,7 @@ molecular level, and how the layer's anisotropy evolves.
   structures, the material surfaces that organise the mixing (Shadden et al. 2005; Haller
   2015). Ridges extracted from the prediction and the reference can be compared with the
   surface distances under
-  [distance between extracted shock sets](../shock_geometry/shock_set_distance.md).
+  [distance between extracted shock sets](../../metrics/shock_set_distance.md).
 
 The molecular mixing fraction is
 

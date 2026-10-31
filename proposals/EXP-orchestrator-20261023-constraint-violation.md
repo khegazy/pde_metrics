@@ -1,7 +1,13 @@
-# EXP: Controlled violations of admissibility conditions
+---
+type: EXP
+kind: degradation
+related: ["issues/070"]
+seen_in: "orchestrator's own"
+doi: "none"
+found_by: "orchestrator, 2026-10-23"
+---
 
-Found by: the orchestrator screening `docs/ideas/`, 2026-10-23. Seen in: the orchestrator's own
-proposal.
+# EXP: Controlled violations of admissibility conditions
 
 ## What the experiment is
 
