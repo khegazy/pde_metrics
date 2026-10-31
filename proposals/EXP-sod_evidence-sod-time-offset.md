@@ -1,7 +1,13 @@
-# EXP: The exact Sod solution at a shifted time, as a physically consistent wave-position error
+---
+type: EXP
+kind: benchmark problem
+related: ["docs/ideas/shock_geometry/shock_set_distance.md", "docs/ideas/shock_geometry/shock_mask_overlap.md", "docs/ideas/shock_geometry/shock_front_error.md"]
+seen_in: "agent's own idea, built on the closed form in fmeval/data/analytic.py (Toro 2009, Sect. 4.5, eqs. 4.55-4.59)"
+doi: "none"
+found_by: "sod_evidence, 2026-10-23"
+---
 
-Found by: agent building sod_evidence, 2026-10-23. Seen in: agent's own idea, built on the
-closed form already in `fmeval/data/analytic.py` (Toro 2009, Sect. 4.5, eqs. 4.55-4.59).
+# EXP: The exact Sod solution at a shifted time, as a physically consistent wave-position error
 
 ## What the experiment is
 

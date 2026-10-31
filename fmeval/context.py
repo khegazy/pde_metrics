@@ -34,7 +34,8 @@ class FieldContext:
     time: float
     #: Fluctuation RMS of the *reference* field: the field minus its spatial mean. Noise
     #: amplitudes are specified relative to this rather than to the raw RMS, because
-    #: density is 1.0 +/- 1.8e-4 and a fraction of the raw RMS would be pure destruction.
+    #: density's fluctuation is a few thousandths of its mean and a fraction of the raw RMS
+    #: would be pure destruction.
     fluctuation_rms: float
     rng: np.random.Generator
     #: Work shared across the ladder. The pipeline builds one context per (frame, field, metric)
@@ -58,8 +59,8 @@ def fluctuation(x: np.ndarray) -> np.ndarray:
     """``x`` with each channel's spatial mean removed; ``x`` is ``(C, *spatial)``.
 
     Every energy and RMS in this repository is taken about the mean, because on density the
-    mean is four orders of magnitude larger than the fluctuation: an energy measured about zero
-    would say every operator changed nothing.
+    mean is two to three orders of magnitude larger than the fluctuation: an energy measured
+    about zero would say every operator changed nothing.
     """
     return x - x.mean(axis=tuple(range(1, x.ndim)), keepdims=True)
 

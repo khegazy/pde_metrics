@@ -49,9 +49,9 @@ def test_scaling_both_fields_leaves_it_unchanged():
 def test_adding_a_constant_offset_to_the_reference_leaves_it_unchanged():
     """Normalising by the *fluctuation* is what buys this.
 
-    The kinet density field is 1.0 +/- 1.8e-4. Normalising by the raw RMS would divide by
-    about one and hide four orders of magnitude of relative error; removing the spatial
-    mean first is what keeps density and velocity on the same axis.
+    The kinet density field fluctuates by a few thousandths of its mean of 1.0. Normalising by
+    the raw RMS would divide by about one and hide two to three orders of magnitude of relative
+    error; removing the spatial mean first is what keeps density and velocity on the same axis.
     """
     plain = nrmse(SQUARE_REFERENCE, SQUARE_SHIFTED)
     assert np.isclose(nrmse(SQUARE_REFERENCE + 1000.0, SQUARE_SHIFTED + 1000.0), plain)
