@@ -35,8 +35,13 @@ The idea is to compute the joint probability density of $(Q, R)$ over the domain
 by a gradient scale such as $\langle \|S\|^2 \rangle$ so that shape rather than overall
 gradient level is compared, and to measure the distance between the predicted and reference
 densities with a distance between distributions such as the
-[sliced Wasserstein distance](../optimal_transport/sliced_wasserstein.md) or the
-[energy distance](../distributional/energy_distance.md).
+[sliced Wasserstein distance](../optimal_transport/sliced_wasserstein.md) or the energy
+distance. The built [energy_distance](../../metrics/energy_distance.md) is the
+one-dimensional case on increments and does not apply to $(Q, R)$ pairs as it stands: its
+exact evaluation uses the one-dimensional identity with cumulative distribution functions,
+which does not extend to higher dimensions (Rizzo & Székely 2016, *WIREs Comput. Stat.*
+8(1), 27–38, p. 28), so a joint density needs the all-pairs form of the
+statistic or a subsample.
 
 In turbulence this joint density has a characteristic teardrop shape, with a tail along the
 lower-right branch of the curve (2), where $Q < 0$ and $R > 0$, known as the Vieillefosse

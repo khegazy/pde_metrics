@@ -838,6 +838,8 @@ def test_the_catalog_supports_the_query_it_exists_for():
     assert set(answer) == {
         "mae", "mse", "rmse", "nrmse", "enstrophy", "kinetic_energy",
         "crps", "ensemble_mean_rmse",
+        # energy_score is a sum of Euclidean norms, one per member and per member pair.
+        "energy_score",
         # h_minus_one is one FFT, increment_w1 one sort, increment_flatness one pass, and
         # all three are smooth enough in their inputs to serve as losses.
         "h_minus_one", "increment_flatness", "increment_w1",
@@ -845,6 +847,9 @@ def test_the_catalog_supports_the_query_it_exists_for():
         # quadratic in the field; spectrum_l2 is one FFT and a bincount, smooth away from
         # identical spectra exactly as rmse is away from identical fields.
         "h1_seminorm", "palinstrophy", "spectrum_l2",
+        # max_error is one pass and piecewise linear, so it has a (sub)gradient everywhere, as
+        # mae does; unlike mae's, that gradient reaches only the one entry at the maximum.
+        "max_error",
         # tail_index is one sort and logarithms per channel and axis, piecewise smooth as
         # increment_w1's sort is.
         "tail_index",

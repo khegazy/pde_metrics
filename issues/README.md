@@ -105,6 +105,7 @@ Designed, hooks in place, not built.
 | [112](112-crps-card-overclaims-comparison-at-one-member.md) | The `crps` card says ensemble sizes compare fairly; at one member the score doubles (1.14 against 0.57) | low |
 | [097](097-stochastic-ladder-for-comparable-magnitudes.md) | A stochastic ladder (several draws per severity) would make response magnitudes comparable across a metric's functional forms | none set |
 | [098](098-increment-w1-registered-number-is-a-convention.md) | The number `increment_w1_by_separation` registers, a normalised mean over separations, is a convention with no source | unset |
+| [105](105-spectral-energy-flux-summary-is-a-convention.md) | The number `spectral_energy_flux` registers, a relative L2 distance between flux curves sampled at octaves, is a convention with no source | unset |
 | [102](102-shock-set-distance-empty-and-non-positive-conventions.md) | The scores `shock_set_distance` gives an empty shock set and a non-positive pressure are conventions | unset |
 
 ## Technical debt
@@ -112,6 +113,7 @@ Designed, hooks in place, not built.
 | ID | Title | Priority |
 |---|---|---|
 | [020](020-import-name-collision.md) | `metrics` is a very generic top-level import name | low |
+| [110](110-uniform-reference-nan-guard-needs-round-off-bound.md) | A uniform reference gives NaN only when its floating-point mean is exact (`spectrum_l2`, `nrmse`) | unset |
 | [032](032-prose-numbers-can-go-stale.md) | Numbers written into card prose can go stale unnoticed | medium |
 | [033](033-link-rewriting-is-only-checked-for-deadness.md) | Site link rewriting is checked for dead links, not correct destinations | medium |
 | [101](101-a-metric-cannot-declare-it-needs-an-absolute-positive-field.md) | A metric cannot declare that it needs an absolute, positive field; `shock_set_distance` runs on the gauge pressure of `taylor_green_2d` | low |
@@ -123,6 +125,7 @@ Designed, hooks in place, not built.
 | [114](114-cost-warning-ignores-grid-and-maps-are-computed-twice.md) | The cost warning counts frames, not grid cells, and a stored map is computed beside its metric | low |
 | [099](099-derived-field-read-without-its-inputs.md) | A run that reads vorticity without velocity scores the solver's stored vorticity, not the recomputed one, without warning | medium |
 | [103](103-exact-zero-axis-rule-is-discontinuous.md) | `tail_index` and `increment_flatness` leave out an axis only when it is exactly constant, so round-off on that axis changes the value by a third | unset |
+| [111](111-damage-per-change-divides-by-round-off-on-ensemble-axes.md) | Damage per unit field change divides by round-off on the ensemble-dispersion axes, so the ensemble cards' profile ranking is meaningless | medium |
 | [036](036-increment-flatness-is-not-monotone-under-smoothing.md) | Increment flatness is not monotone under smoothing on any field, so it fails the stated acceptance rule; needs a decision, not a fix | medium |
 | [022](022-sim-config-parsing.md) | Solver configs carry executable YAML tags | low |
 | [023](023-vendored-kinet-drift.md) | Vendored kinet code is pinned and may drift | low |

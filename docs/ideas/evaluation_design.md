@@ -66,14 +66,14 @@ prediction and in the reference.
   for the two point masses above, the Wasserstein-1 distance is $h$. See the
   [Wasserstein distance](optimal_transport/wasserstein.md), the
   [sliced Wasserstein distance](optimal_transport/sliced_wasserstein.md), the
-  [energy distance](distributional/energy_distance.md) and the built
+  built [energy_distance](../metrics/energy_distance.md) and
   [increment_w1](../metrics/increment_w1.md).
 - **Proper scoring rules** judge a predicted distribution against an observed outcome. A
   score is *proper* when its expected value is optimised by predicting the true distribution,
   and *strictly proper* when only the true distribution optimises it (Gneiting & Raftery
-  2007). The built [crps](../metrics/crps.md) is one; the
-  [energy and variogram scores](distributional/multivariate_proper_scores.md) extend it to
-  many variables at once.
+  2007). The built [crps](../metrics/crps.md) is one; the built
+  [energy_score](../metrics/energy_score.md) and [variogram_score](../metrics/variogram_score.md)
+  extend it to many variables at once.
 - **Set overlap and geometric distances** compare extracted objects rather than fields:
   overlap ratios such as intersection over union, and distances between surfaces. See
   [overlap of shock masks](shock_geometry/shock_mask_overlap.md) and
@@ -146,17 +146,17 @@ else.
 |---|---|---|
 | Smooth surrogates, and learned surrogates in general | Built [nrmse](../metrics/nrmse.md); [error by wavenumber band](basis_decompositions/spectral_band_error.md); conservation in [admissibility checks](physics_invariants/admissibility_checks.md); [valid prediction time](dynamics/valid_prediction_time.md) | Decorrelation past the predictability horizon; spectral bias |
 | Shock tubes and blast waves | Jump conditions, position and speed in [shock front error](shock_geometry/shock_front_error.md); [signed entropy production](physics_invariants/entropy_production.md); positivity in [admissibility checks](physics_invariants/admissibility_checks.md); total variation | Over-smeared shocks, which pass one-sided entropy checks |
-| Compressible homogeneous turbulence | Spectra of the [rotational and compressive parts](physics_invariants/helmholtz_split.md); [spectral energy flux](turbulence_statistics/spectral_energy_flux.md), including the pressure–density exchange term; [width of the log-density distribution](distributional/density_log_pdf.md); [four-fifths law](turbulence_statistics/four_fifths_law.md) | Over-dissipated shocklets |
-| Incompressible turbulence, and direct numerical simulation | Built [spectrum_l2](../metrics/spectrum_l2.md); [spectral energy flux](turbulence_statistics/spectral_energy_flux.md); [structure functions](turbulence_statistics/structure_functions.md); built [increment_flatness](../metrics/increment_flatness.md); [four-fifths law](turbulence_statistics/four_fifths_law.md); divergence in [admissibility checks](physics_invariants/admissibility_checks.md) | Whether high-order moments have converged with the sample size ([uncertainty on every metric value](infrastructure/metric_uncertainty.md)) |
+| Compressible homogeneous turbulence | Spectra of the [rotational and compressive parts](physics_invariants/helmholtz_split.md); the compressible terms of the energy transfer, including the pressure–density exchange term, on [energy-transfer checks](turbulence_statistics/energy_transfer_checks.md); [width of the log-density distribution](distributional/density_log_pdf.md); [four-fifths law](turbulence_statistics/four_fifths_law.md) | Over-dissipated shocklets |
+| Incompressible turbulence, and direct numerical simulation | Built [spectrum_l2](../metrics/spectrum_l2.md); built [spectral_energy_flux](../metrics/spectral_energy_flux.md); [structure functions](turbulence_statistics/structure_functions.md); built [increment_flatness](../metrics/increment_flatness.md); [four-fifths law](turbulence_statistics/four_fifths_law.md); divergence in [admissibility checks](physics_invariants/admissibility_checks.md) | Whether high-order moments have converged with the sample size ([uncertainty on every metric value](infrastructure/metric_uncertainty.md)) |
 | Shock–turbulence interaction | Amplification ratios in bins along the shock normal, the spectrum of shock corrugation, and shocklet statistics in [shock–turbulence interaction](shock_geometry/shock_turbulence_interaction.md); [shock detector](../metrics/shock_set_distance.md) | Detector thresholds tuned per model |
 | Wall-bounded flows and aerodynamics | Friction velocity, log law, skin friction, Reynolds stresses and premultiplied spectra in [wall-bounded flows](regime_specific/wall_bounded_flows.md); lift and drag through [goal-oriented error](physics_invariants/goal_oriented_error.md); realizability in [admissibility checks](physics_invariants/admissibility_checks.md) | Error in the form of the turbulence model, which a reference computed with the same model shares |
 | Super-resolution | [Error by wavenumber band](basis_decompositions/spectral_band_error.md); distribution distances such as built [increment_w1](../metrics/increment_w1.md) and [increment_w1_by_separation](../metrics/increment_w1_by_separation.md); [structure functions](turbulence_statistics/structure_functions.md) | |
-| Generative ensembles | Built [crps](../metrics/crps.md), [rank_histogram](../metrics/rank_histogram.md) and [spread_skill](../metrics/spread_skill.md); [energy and variogram scores](distributional/multivariate_proper_scores.md); the distribution of spectra across members | Calibration of each variable separately while correlations between them are wrong |
+| Generative ensembles | Built [crps](../metrics/crps.md), [rank_histogram](../metrics/rank_histogram.md) and [spread_skill](../metrics/spread_skill.md), [energy_score](../metrics/energy_score.md) and [variogram_score](../metrics/variogram_score.md); the [distribution of spectra](distributional/ensemble_calibration.md) across members | Calibration of each variable separately while correlations between them are wrong |
 | Variable-density mixing | Growth-rate exponent, molecular mixing fraction, anisotropy and Lagrangian ridges in [variable-density mixing](regime_specific/variable_density_mixing.md) | |
-| Geophysical and climate flows | Potential vorticity in [inviscid invariants](turbulence_statistics/inviscid_invariants.md); the anomaly correlation coefficient; built [crps](../metrics/crps.md) and [spread_skill](../metrics/spread_skill.md); the two-dimensional cascade through the [spectral energy flux](turbulence_statistics/spectral_energy_flux.md) | Metrics designed for three-dimensional turbulence applied to nearly two-dimensional flow |
+| Geophysical and climate flows | Potential vorticity in [inviscid invariants](turbulence_statistics/inviscid_invariants.md); the anomaly correlation coefficient; built [crps](../metrics/crps.md) and [spread_skill](../metrics/spread_skill.md); the two-dimensional cascade through the built [spectral_energy_flux](../metrics/spectral_energy_flux.md) | Metrics designed for three-dimensional turbulence applied to nearly two-dimensional flow |
 | Combustion | Statistics conditioned on mixture fraction, scalar dissipation rate, flame index and flame surface density in [reacting flows](regime_specific/reacting_flows.md) | A correct mean temperature hiding wrong flame structure |
 | Astrophysical flows | [Width of the log-density distribution](distributional/density_log_pdf.md); [Minkowski functionals](topology/minkowski_functionals.md); [delta-variance](basis_decompositions/delta_variance.md); [bispectrum](basis_decompositions/bispectrum.md); [velocity channel analysis](basis_decompositions/velocity_channel_analysis.md) | The projection along the line of sight, which is the observation operator |
-| Choosing a checkpoint during training | [Valid prediction time](dynamics/valid_prediction_time.md); [spectral energy flux](turbulence_statistics/spectral_energy_flux.md); [four-fifths law](turbulence_statistics/four_fifths_law.md); built [increment_w1_by_separation](../metrics/increment_w1_by_separation.md) or [skewness](turbulence_statistics/derivative_skewness.md) with flatness; the long-time spectrum in the resolved band; [admissibility checks](physics_invariants/admissibility_checks.md). The procedure is in [selecting checkpoints by rollout](infrastructure/checkpoint_selection.md) | One-step validation error that improves while rollouts degrade |
+| Choosing a checkpoint during training | [Valid prediction time](dynamics/valid_prediction_time.md); built [spectral_energy_flux](../metrics/spectral_energy_flux.md); [four-fifths law](turbulence_statistics/four_fifths_law.md); built [increment_w1_by_separation](../metrics/increment_w1_by_separation.md) or [skewness](turbulence_statistics/derivative_skewness.md) with flatness; the long-time spectrum in the resolved band; [admissibility checks](physics_invariants/admissibility_checks.md). The procedure is in [selecting checkpoints by rollout](infrastructure/checkpoint_selection.md) | One-step validation error that improves while rollouts degrade |
 
 The anomaly correlation coefficient is the correlation between predicted and observed
 departures from a long-term mean. It measures phase alignment and is used in weather
@@ -248,7 +248,7 @@ training loss.
   acts as a learned test of statistical realism (Granero Belinchon & Cabeza Gallucci 2024
   apply this to turbulent fields).
 - **Proper scoring rules** such as the built [crps](../metrics/crps.md) and the
-  [energy score](distributional/multivariate_proper_scores.md) train calibrated ensembles
+  [energy_score](../metrics/energy_score.md) train calibrated ensembles
   (Gneiting & Raftery 2007).
 - **Physics-constrained losses** penalise the residual of the equations: physics-informed
   neural networks (Raissi et al. 2019), their weak form for entropy solutions of conservation

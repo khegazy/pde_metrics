@@ -12,23 +12,23 @@ positions treated as data.
 Built already, and so not listed here: the continuous ranked probability score
 ([crps](../../metrics/crps.md)), the spread-to-skill ratio
 ([spread_skill](../../metrics/spread_skill.md)), the rank histogram
-([rank_histogram](../../metrics/rank_histogram.md)), the flatness of increments
-([increment_flatness](../../metrics/increment_flatness.md)), and the Hill estimate of their tail
-index ([tail_index](../../metrics/tail_index.md)).
+([rank_histogram](../../metrics/rank_histogram.md)), the energy score
+([energy_score](../../metrics/energy_score.md)), the variogram score
+([variogram_score](../../metrics/variogram_score.md)), the flatness of increments
+([increment_flatness](../../metrics/increment_flatness.md)), the Hill estimate of their tail
+index ([tail_index](../../metrics/tail_index.md)), and the energy distance between increment
+distributions ([energy_distance](../../metrics/energy_distance.md)).
 
 ## Ideas in this theme
 
-- [Energy distance](energy_distance.md): a cheap kernel distance between two distributions,
-  of the same family as the maximum mean discrepancy, useful mainly as a baseline because its
-  averaging makes it weak on heavy tails.
 - [Tail exceedance and peaks-over-threshold](tail_index_estimators.md): direct comparison of
   how often large values occur, and a generalised Pareto fit to the values above a high
   threshold.
 - [Pair-correlation function of features](pair_correlation.md): the distribution of
   distances between extracted features such as eddy centres, compared between two fields.
-- [Energy score, variogram score and calibration](multivariate_proper_scores.md): proper
-  scores for whole fields rather than single grid values, and the reliability and coverage
-  checks of an ensemble.
+- [Reliability, interval coverage and the distribution of spectra](ensemble_calibration.md):
+  the reliability and coverage checks of an ensemble, and a proper score applied to each
+  member's spectrum rather than to the grid values.
 - [Width of the log-density distribution](density_log_pdf.md): the variance of the
   logarithm of density, which has a physical target set by the Mach number and the driving.
 - [Quality of predictive uncertainty](predictive_uncertainty.md): conformal prediction,

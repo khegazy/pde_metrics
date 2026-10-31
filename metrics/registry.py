@@ -60,11 +60,14 @@ Measures = Literal["error", "calibration"]
 CompanionKind = Literal["field", "curve"]
 
 #: How a pointwise map reduces to the metric's scalar value. ``C`` is the channel count of
-#: the *input* field, because maps are summed over channels before reduction.
+#: the *input* field. A map reduced by ``mean``, ``sum`` or ``sqrt_mean`` is summed over
+#: channels, so ``mean`` divides by ``C``; a map reduced by ``max`` takes the largest value
+#: over channels, so its reduction ignores ``C``.
 REDUCTIONS: dict[str, Callable[[np.ndarray, int], float]] = {
     "mean": lambda m, c: float(m.mean() / c),
     "sum": lambda m, c: float(m.sum()),
     "sqrt_mean": lambda m, c: float(np.sqrt(m.mean() / c)),
+    "max": lambda m, c: float(m.max()),
 }
 
 

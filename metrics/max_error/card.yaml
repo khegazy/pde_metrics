@@ -1,0 +1,30 @@
+schema_version: 1
+
+name: max_error
+kind: metric
+
+# One of the cell-by-cell error norms, the worst case of the family mae and rmse average.
+category: pointwise
+
+summary: >-
+  Largest absolute difference between the candidate and reference fields over every cell and
+  channel of a common analysis grid: the worst single cell, which an averaged error dilutes.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    Maximum over all channels and grid cells of the absolute field difference, in the field's
+    own units.
+  bounds:
+    lower: 0.0
+    upper: null
+
+math:
+  triangle_inequality: true    # the L-infinity distance is a metric in the mathematical sense
+  scale_dependent: true        # scaling both fields by c scales the value by c
+  resolution_dependent: true   # a maximum over cells, so a finer grid offers more cells to it
+  complexity: "O(N)"
+references: [roy2005, takamoto2022]
+review: null

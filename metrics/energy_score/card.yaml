@@ -1,0 +1,31 @@
+# The typed half of this bundle's card. Every field is documented, with the reasoning
+# behind it, in fmeval/cards/schema.py.
+schema_version: 1
+
+name: energy_score
+kind: metric
+
+category: probabilistic
+
+summary: Energy score of an ensemble forecast of a whole field in its fair form, the
+  multivariate proper scoring rule that reduces to the CRPS on a single value.
+
+status: candidate
+
+owners: [khegazy]
+
+output:
+  description: The score in the field's own units, from the Euclidean norm over every
+    channel and cell. Zero when every member equals the reference; larger is worse.
+  bounds:
+    lower: 0.0     # the triangle inequality bounds the pair term by the distance term
+    upper: null
+
+math:
+  triangle_inequality: false
+  scale_dependent: true
+  resolution_dependent: true      # grows with the square root of the number of values
+  complexity: "O(N M^2)"          # N values per field, M members: one norm per member pair
+references: [gneitingraftery2007, pacchiardi2024, ferro2014, scheuererhamill2015]
+
+review: null

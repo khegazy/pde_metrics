@@ -171,9 +171,9 @@ quantities separates the two.
   No Gaussian field satisfies it.
 - **The mean energy flux between scales vanishes.** The flux of energy through wavenumber
   $k$ is a sum over triads of a triple velocity correlation, so it is zero on average for a
-  Gaussian field. A Gaussian field with a perfect $k^{-5/3}$ spectrum carries no cascade; the
-  [spectral energy flux](turbulence_statistics/spectral_energy_flux.md) sees this
-  immediately.
+  Gaussian field. A Gaussian field with a perfect $k^{-5/3}$ spectrum carries no cascade on
+  average, and any one realisation carries a random flux unrelated to the reference's; the
+  built [spectral_energy_flux](../metrics/spectral_energy_flux.md) compares that flux.
 - **The velocity-derivative skewness vanishes.** The skewness
   $\langle(\partial_x u)^3\rangle / \langle(\partial_x u)^2\rangle^{3/2}$ is zero for a
   Gaussian field and in turbulence between about $-0.5$ and $-0.7$, growing slowly in
@@ -264,8 +264,8 @@ the cited literature uses against it. The table is the field guide's synthesis.
 | What is seen in the rollout | Ideas and built metrics that would see it | Training-side remedy |
 |---|---|---|
 | Small scales collapse, so the field blurs | [Error by wavenumber band](basis_decompositions/spectral_band_error.md); [spectral coherence](basis_decompositions/spectral_coherence.md); built [spectrum_l2](../metrics/spectrum_l2.md) and [h1_seminorm](../metrics/h1_seminorm.md) | Spectral or Sobolev losses; refinement-style objectives (Lippe et al. 2023) |
-| Phases decohere while the spectrum stays intact | [Bispectrum and bicoherence](basis_decompositions/bispectrum.md); [spectral energy flux](turbulence_statistics/spectral_energy_flux.md); [spectral coherence](basis_decompositions/spectral_coherence.md) | Unrolled or solver-in-the-loop training (Um et al. 2020; List et al. 2022) |
-| The field becomes Gaussian: fluctuations decay and extremes disappear | [Velocity-derivative skewness](turbulence_statistics/derivative_skewness.md); [four-fifths law](turbulence_statistics/four_fifths_law.md); [spectral energy flux](turbulence_statistics/spectral_energy_flux.md) near zero; built [increment_flatness](../metrics/increment_flatness.md) | Distributional or adversarial losses (Gretton et al. 2012; Granero Belinchon & Cabeza Gallucci 2024) |
+| Phases decohere while the spectrum stays intact | [Bispectrum and bicoherence](basis_decompositions/bispectrum.md); built [spectral_energy_flux](../metrics/spectral_energy_flux.md); [spectral coherence](basis_decompositions/spectral_coherence.md) | Unrolled or solver-in-the-loop training (Um et al. 2020; List et al. 2022) |
+| The field becomes Gaussian: fluctuations decay and extremes disappear | [Velocity-derivative skewness](turbulence_statistics/derivative_skewness.md); [four-fifths law](turbulence_statistics/four_fifths_law.md); built [spectral_energy_flux](../metrics/spectral_energy_flux.md), whose flux is zero on average for a Gaussian field; built [increment_flatness](../metrics/increment_flatness.md) | Distributional or adversarial losses (Gretton et al. 2012; Granero Belinchon & Cabeza Gallucci 2024) |
 | Energy or mass drifts over the rollout | [Admissibility checks](physics_invariants/admissibility_checks.md); [weak residual](physics_invariants/weak_residual.md) | Architectures that conserve by construction; projection steps |
 | The rollout blows up or produces NaN | [Admissibility checks](physics_invariants/admissibility_checks.md); [valid prediction time](dynamics/valid_prediction_time.md) | Pushforward training; noise injection (Brandstetter et al. 2022) |
 
@@ -278,11 +278,11 @@ at all.
 
 | Family | Reference needed | What to keep in mind |
 |---|---|---|
-| Pointwise errors: built [rmse](../metrics/rmse.md) and [nrmse](../metrics/nrmse.md); [maximum pointwise error](norms/maximum_error.md); [valid prediction time](dynamics/valid_prediction_time.md) | Yes, and phase-aligned with the prediction | Carries no information about model quality once the prediction has decorrelated, Equation (4) |
+| Pointwise errors: built [rmse](../metrics/rmse.md), [nrmse](../metrics/nrmse.md) and [max_error](../metrics/max_error.md); [valid prediction time](dynamics/valid_prediction_time.md) | Yes, and phase-aligned with the prediction | Carries no information about model quality once the prediction has decorrelated, Equation (4) |
 | Spectra and band errors: built [spectrum_l2](../metrics/spectrum_l2.md); [error by wavenumber band](basis_decompositions/spectral_band_error.md) | A reference that declares which scales it resolves | The bands worth comparing are a property of the reference's resolution |
 | Admissibility: [admissibility checks](physics_invariants/admissibility_checks.md); [weak residual](physics_invariants/weak_residual.md); [signed entropy production](physics_invariants/entropy_production.md) | No | Computed from the prediction alone; a constant, laminar or over-smoothed field satisfies them |
-| Exact laws: [four-fifths law](turbulence_statistics/four_fifths_law.md); [spectral energy flux](turbulence_statistics/spectral_energy_flux.md); log law in [wall-bounded flows](regime_specific/wall_bounded_flows.md) | No | Remain meaningful after decorrelation; they fix an amplitude and a slope that a degenerate field cannot reproduce |
-| Distributions: [Wasserstein distance](optimal_transport/wasserstein.md); [energy distance](distributional/energy_distance.md); built [increment_w1](../metrics/increment_w1.md) and [crps](../metrics/crps.md); [energy and variogram scores](distributional/multivariate_proper_scores.md) | A reference distribution, not a matched field | Integral probability metrics stay well behaved when the two distributions do not overlap |
+| Exact laws: [four-fifths law](turbulence_statistics/four_fifths_law.md); reference-free [energy-transfer checks](turbulence_statistics/energy_transfer_checks.md); log law in [wall-bounded flows](regime_specific/wall_bounded_flows.md) | No | Remain meaningful after decorrelation; they fix an amplitude and a slope that a degenerate field cannot reproduce |
+| Distributions: [Wasserstein distance](optimal_transport/wasserstein.md); built [energy_distance](../metrics/energy_distance.md), [increment_w1](../metrics/increment_w1.md), [crps](../metrics/crps.md), [energy_score](../metrics/energy_score.md) and [variogram_score](../metrics/variogram_score.md) | A reference distribution, not a matched field | Integral probability metrics stay well behaved when the two distributions do not overlap |
 | Structural checks: [Galilean and rotational equivariance](physics_invariants/equivariance_tests.md); realizability in [admissibility checks](physics_invariants/admissibility_checks.md) | No | Test a symmetry or a bound, independently of the size of the pointwise error |
 
 The admissibility and exact-law rows see different failures. A constant, laminar or
