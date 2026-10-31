@@ -1,9 +1,9 @@
 {
   "counts": {
     "degradations": 25,
-    "metrics": 22,
+    "metrics": 24,
     "reviewed": 0,
-    "with_measurements": 22
+    "with_measurements": 24
   },
   "entries": [
     {
@@ -2348,6 +2348,139 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Energy distance between the one-cell increment distributions of two fields: an averaging distance between distributions, set beside the transport distance of increment_w1 on the same samples, ignoring where in the domain the increments arose."
+    },
+    {
+      "card": "metrics/energy_score/card.md",
+      "category": "probabilistic",
+      "declared": {
+        "arity": "ensemble",
+        "companion": null,
+        "cost": "cheap",
+        "differentiable": true,
+        "fields": [
+          "*"
+        ],
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "mean",
+        "requires_periodic": false,
+        "symmetric": false,
+        "target": null,
+        "units": "field"
+      },
+      "evidence": {
+        "axes": [
+          {
+            "axis": "bias",
+            "blindness_q": 1.0,
+            "cliffs_delta": 1.0,
+            "detection_onset_severity": 0.1533790031,
+            "elasticity": 1.8686411624,
+            "elasticity_x": "severity (offset)",
+            "family": "pointwise",
+            "field": "density",
+            "first_detected_level": 3.0,
+            "half_damage_severity": 0.3604772708,
+            "is_probe": false,
+            "largest_response_upper_bound": 0.9886890837,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "response_shape": "power",
+            "severity_resolution": 0.0011851516,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "spread_deflate",
+            "blindness_q": 1.0,
+            "cliffs_delta": 1.0,
+            "detection_onset_severity": 0.6866507885,
+            "elasticity": 1.7803520435,
+            "elasticity_x": "severity (lost dispersion)",
+            "family": "ensemble",
+            "field": "density",
+            "first_detected_level": 3.0,
+            "half_damage_severity": null,
+            "is_probe": false,
+            "largest_response_upper_bound": 0.135813411,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "response_shape": "power",
+            "severity_resolution": 0.0013939532,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "spread_inflate",
+            "blindness_q": 1.0,
+            "cliffs_delta": 1.0,
+            "detection_onset_severity": 1.4726063665,
+            "elasticity": null,
+            "elasticity_x": "severity (excess dispersion)",
+            "family": "ensemble",
+            "field": "density",
+            "first_detected_level": 3.0,
+            "half_damage_severity": null,
+            "is_probe": false,
+            "largest_response_upper_bound": 0.313737069,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "response_shape": "power",
+            "severity_resolution": 0.0142017297,
+            "weakest_separation": 1.0
+          }
+        ],
+        "dataset": "synthetic_ensemble",
+        "figures": [
+          {
+            "file": "metrics/energy_score/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/energy_score/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/energy_score/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/energy_score/_generated/sensitivity_profile.json"
+          }
+        ],
+        "frames": 12,
+        "measured": true,
+        "probes": [],
+        "profile": [
+          {
+            "blind_axes": [],
+            "elasticity_displacement": null,
+            "field": "density",
+            "least_sensitive_axis": "bias",
+            "most_sensitive_axis": "spread_deflate",
+            "selectivity": 0.5752402886
+          }
+        ],
+        "run": "energy_score_1793356825"
+      },
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N M^2)",
+        "resolution_dependent": true,
+        "scale_dependent": true,
+        "triangle_inequality": false
+      },
+      "name": "energy_score",
+      "output": {
+        "description": "The score in the field's own units, from the Euclidean norm over every channel and cell. Zero when every member equals the reference; larger is worse.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/energy_score",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Energy score of an ensemble forecast of a whole field in its fair form, the multivariate proper scoring rule that reduces to the CRPS on a single value."
     },
     {
       "card": "metrics/ensemble_mean_rmse/card.md",
@@ -16932,6 +17065,145 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Hill estimate of how slowly the largest one-cell increments of a field fall off, from the square root of the number of cells largest of them; a single-field statistic whose drift from the reference is what is read."
+    },
+    {
+      "card": "metrics/variogram_score/card.md",
+      "category": "probabilistic",
+      "declared": {
+        "arity": "ensemble",
+        "companion": {
+          "coordinate": null,
+          "kind": "field",
+          "one_field": false
+        },
+        "cost": "expensive",
+        "differentiable": false,
+        "fields": [
+          "*"
+        ],
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "sum",
+        "requires_periodic": false,
+        "symmetric": false,
+        "target": null,
+        "units": "field/length"
+      },
+      "evidence": {
+        "axes": [
+          {
+            "axis": "bias",
+            "blindness_q": 0.0,
+            "cliffs_delta": null,
+            "detection_onset_severity": null,
+            "elasticity": null,
+            "elasticity_x": "severity (offset)",
+            "family": "pointwise",
+            "field": "density",
+            "first_detected_level": null,
+            "half_damage_severity": null,
+            "is_probe": false,
+            "largest_response_upper_bound": 0.0,
+            "levels": 4,
+            "monotone_fraction": null,
+            "rank_correlation": null,
+            "response_shape": "",
+            "severity_resolution": null,
+            "weakest_separation": null
+          },
+          {
+            "axis": "spread_deflate",
+            "blindness_q": 1.0,
+            "cliffs_delta": 1.0,
+            "detection_onset_severity": 0.676024679,
+            "elasticity": 1.4664542693,
+            "elasticity_x": "severity (lost dispersion)",
+            "family": "ensemble",
+            "field": "density",
+            "first_detected_level": 3.0,
+            "half_damage_severity": null,
+            "is_probe": false,
+            "largest_response_upper_bound": 0.1257282893,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "response_shape": "power",
+            "severity_resolution": 0.0024619108,
+            "weakest_separation": 1.0
+          },
+          {
+            "axis": "spread_inflate",
+            "blindness_q": 1.0,
+            "cliffs_delta": 1.0,
+            "detection_onset_severity": 0.9222806262,
+            "elasticity": null,
+            "elasticity_x": "severity (excess dispersion)",
+            "family": "ensemble",
+            "field": "density",
+            "first_detected_level": 3.0,
+            "half_damage_severity": 1.9122551922,
+            "is_probe": false,
+            "largest_response_upper_bound": 0.9980324322,
+            "levels": 4,
+            "monotone_fraction": 1.0,
+            "rank_correlation": 1.0,
+            "response_shape": "power",
+            "severity_resolution": 0.0095605908,
+            "weakest_separation": 1.0
+          }
+        ],
+        "dataset": "synthetic_ensemble",
+        "figures": [
+          {
+            "file": "metrics/variogram_score/_generated/response_curves.svg",
+            "name": "response_curves",
+            "numbers": "metrics/variogram_score/_generated/response_curves.json"
+          },
+          {
+            "file": "metrics/variogram_score/_generated/sensitivity_profile.svg",
+            "name": "sensitivity_profile",
+            "numbers": "metrics/variogram_score/_generated/sensitivity_profile.json"
+          }
+        ],
+        "frames": 12,
+        "measured": true,
+        "probes": [],
+        "profile": [
+          {
+            "blind_axes": [
+              "bias"
+            ],
+            "elasticity_displacement": null,
+            "field": "density",
+            "least_sensitive_axis": "bias",
+            "most_sensitive_axis": "spread_deflate",
+            "selectivity": 0.4057430211
+          }
+        ],
+        "run": "variogram_score_1793396098"
+      },
+      "kind": "metric",
+      "math": {
+        "complexity": "O(M N^2)",
+        "resolution_dependent": true,
+        "scale_dependent": true,
+        "triangle_inequality": false
+      },
+      "name": "variogram_score",
+      "output": {
+        "description": "The weighted sum over every ordered pair of cells of the squared mismatch between the reference's and the members' mean square-root differences, less the members' variance over M, summed over channels. Zero when every member equals the reference; larger is worse.",
+        "lower_bound": null,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/variogram_score",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Variogram score of order one half with inverse-distance weights in its fair form, the proper score that compares an ensemble's differences between every pair of cells with the reference's."
     }
   ],
   "schema_version": 4
