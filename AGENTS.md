@@ -417,6 +417,14 @@ function, the `rmse` pattern.
       ...
   ```
 
+- **`kind="points"`**, if the number compares two sets of points: a persistence diagram, the
+  positions of detected shocks. It returns an `(N, D)` array, one row per point and one column
+  per coordinate named in `coordinate=(("birth", "field"), ("death", "field"), ...)`, at least
+  two. Like a curve it is called before the metric on every row and handed over under
+  `COMPANION_KEY`; like a field map it is stored in `error_maps.npz` only on the frames
+  `report.error_map` names, plus their clean level, and drawn by the `companion_points` figure.
+  `metrics/persistence_distance` is the worked example.
+
 **Work shared across the ladder** goes in `ctx.cache`, which lives for one (frame, field,
 metric): compute a quantity of the reference once per frame with a membership test,
 `if key not in ctx.cache: ctx.cache[key] = f(reference)`. Not `setdefault(key, f(reference))`,

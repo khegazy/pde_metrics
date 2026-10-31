@@ -23,7 +23,7 @@ The idea depends on features being extracted first, by the
 [winding angle and Poincaré index](../pattern_detection/winding_angle.md) or by the
 [eddy census](../pattern_detection/eddy_census.md).
 
-It belongs to a wider family. [Persistence diagrams](../topology/persistence_diagrams.md),
+It belongs to a wider family. [Persistence diagrams](../../metrics/persistence_distance.md),
 the eddy census, Ripley's K function and the object matching used in weather forecast
 verification all identify features and then compare their distributions. They differ in how a
 feature is defined and in whether features are matched pairwise before the comparison.

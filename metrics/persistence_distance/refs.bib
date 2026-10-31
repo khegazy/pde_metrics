@@ -1,0 +1,135 @@
+@inproceedings{cohensteiner2005,
+  author    = {Cohen-Steiner, David and Edelsbrunner, Herbert and Harer, John},
+  title     = {Stability of persistence diagrams},
+  booktitle = {Proceedings of the Twenty-First Annual Symposium on Computational Geometry
+               (SoCG '05)},
+  publisher = {ACM},
+  pages     = {263--271},
+  year      = {2005},
+  doi       = {10.1145/1064092.1064133},
+  note      = {Read in the authors' copy. The persistence diagram of a tame function for one
+               homology dimension, with points at infinity for classes never killed and the
+               diagonal at infinite multiplicity (Sect. 2, Definition); the k-Triangle Lemma, from
+               which the Betti curves are read (Sect. 2); the bottleneck distance with the
+               L-infinity norm between points (Sect. 3.1, Definition); and the Main Theorem,
+               d_B(D(f), D(g)) <= ||f - g||_inf (Sect. 3.1; inequality (1) in Sect. 1), which
+               bounds the metric by max_error and is checked in test_metric.py}
+}
+
+@article{cohensteiner2007,
+  author  = {Cohen-Steiner, David and Edelsbrunner, Herbert and Harer, John},
+  title   = {Stability of Persistence Diagrams},
+  journal = {Discrete \& Computational Geometry},
+  volume  = {37},
+  number  = {1},
+  pages   = {103--120},
+  year    = {2007},
+  doi     = {10.1007/s00454-006-1276-5},
+  note    = {The journal version of cohensteiner2005, the reference the idea page gave. Not opened
+             (paywalled); every section and theorem this bundle cites is located in the
+             conference version}
+}
+
+@incollection{bleile2022,
+  author    = {Bleile, Bea and Garin, Ad{\'e}lie and Heiss, Teresa and Maggs, Kelly and
+               Robins, Vanessa},
+  title     = {The Persistent Homology of Dual Digital Image Constructions},
+  booktitle = {Research in Computational Topology 2},
+  series    = {Association for Women in Mathematics Series},
+  volume    = {30},
+  publisher = {Springer},
+  pages     = {1--26},
+  year      = {2022},
+  doi       = {10.1007/978-3-030-95519-9_1},
+  note      = {Read as arXiv:2102.11397. The T-construction, in which a voxel is a
+               top-dimensional cube and a lower cube takes the smallest value of its adjacent top
+               cubes (Definition 4.4), against the V-construction, in which a voxel is a vertex
+               (Definition 4.3); the two give different diagrams for one image (Sect. 1). This
+               bundle uses the T-construction, which matches cell-averaged data, and the remark of
+               Sect. 4.2 that a periodic domain makes the complex a torus}
+}
+
+@misc{gudhicubical,
+  author       = {Dlotko, Pawe{\l}},
+  title        = {Cubical complex},
+  howpublished = {GUDHI User and Reference Manual, version 3.13, GUDHI Editorial Board},
+  url          = {https://gudhi.inria.fr/python/latest/cubical_complex_user.html},
+  note         = {The implementation this metric calls: filtrations given on the maximal cubes
+                  and extended to every face, and periodic boundary conditions that identify
+                  opposite sides, so that a complex periodic in every direction is a torus. That
+                  the faces take the minimum of their top cubes, and that periodic_dimensions
+                  follows the numpy axis order, were measured, not read}
+}
+
+@misc{gudhibottleneck,
+  author       = {Godi, Fran{\c{c}}ois},
+  title        = {Bottleneck distance},
+  howpublished = {GUDHI User and Reference Manual, version 3.13, GUDHI Editorial Board},
+  url          = {https://gudhi.inria.fr/python/latest/bottleneck_distance_user.html},
+  note         = {The implementation this metric calls: the sup norm between points, matching to
+                  the diagonal, points at infinity supported, and the default precision e=None,
+                  an additive error of the smallest positive double with the last two or three
+                  bits of the mantissa possibly wrong; e=0 is exact and, measured here, 30 to 80
+                  times slower on a synthetic 256 x 256 field}
+}
+
+@article{muszynski2019,
+  author  = {Muszynski, Grzegorz and Kashinath, Karthik and Kurlin, Vitaliy and Wehner, Michael
+             and Prabhat},
+  title   = {Topological data analysis and machine learning for recognizing atmospheric river
+             patterns in large climate datasets},
+  journal = {Geoscientific Model Development},
+  volume  = {12},
+  number  = {2},
+  pages   = {613--628},
+  year    = {2019},
+  doi     = {10.5194/gmd-12-613-2019},
+  note    = {Precedent for sweeping a threshold through a geophysical scalar field: connected
+             regions of the superlevel sets of integrated water vapour, four-connected and tracked
+             with Union-Find (Sect. 2.2.1, Eqs. 1-2), described by the authors as inspired by
+             persistence rather than as persistent homology; the abstract proposes the
+             threshold-free method for evaluating model biases. No diagram distance is taken}
+}
+
+@article{smith2024,
+  author  = {Smith, Luke and Fukami, Kai and Sedky, Girguis and Jones, Anya and Taira, Kunihiko},
+  title   = {A cyclic perspective on transient gust encounters through the lens of persistent
+             homology},
+  journal = {Journal of Fluid Mechanics},
+  volume  = {980},
+  pages   = {A18},
+  year    = {2024},
+  doi     = {10.1017/jfm.2024.16},
+  note    = {Persistent homology in unsteady aerodynamics, but of a different object: a
+             Vietoris-Rips filtration of the flow's trajectory in state space, each vorticity
+             snapshot one point (Sect. 2.1), with H1 the feature read (Sect. 3.1). Cited on the
+             card to separate that use from the sublevel-set diagram of one snapshot}
+}
+
+@article{martinez2026,
+  author  = {Martinez, Quentin and Jagadeesh, Chetan and Manolesos, Marinos and Omidyeganeh,
+             Mohammad},
+  title   = {Leading-edge vortex monitoring in dynamically stalled flows via persistent homology},
+  journal = {Computers \& Fluids},
+  volume  = {306},
+  pages   = {106931},
+  year    = {2026},
+  doi     = {10.1016/j.compfluid.2025.106931},
+  note    = {Abstract only: persistent homology of sliding windows as a template-similarity
+             field for locating a vortex core. Cited on the card as a use of persistence for
+             locating features, which this metric deliberately does not do}
+}
+
+@article{tierny2018,
+  author  = {Tierny, Julien and Favelier, Guillaume and Levine, Joshua A. and Gueunet, Charles and
+             Michaux, Michael},
+  title   = {The Topology ToolKit},
+  journal = {IEEE Transactions on Visualization and Computer Graphics},
+  volume  = {24},
+  number  = {1},
+  pages   = {832--842},
+  year    = {2018},
+  doi     = {10.1109/TVCG.2017.2743938},
+  note    = {Abstract only. An alternative implementation of persistence diagrams for scalar
+             fields, named on the card; not used here}
+}

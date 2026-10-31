@@ -1,7 +1,7 @@
 {
   "counts": {
     "degradations": 25,
-    "metrics": 24,
+    "metrics": 25,
     "reviewed": 0,
     "with_measurements": 24
   },
@@ -12974,6 +12974,75 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Mean squared vorticity gradient of a single field, a reference-free diagnostic of how sharp the rotational structure is rather than how much of it there is."
+    },
+    {
+      "card": "metrics/persistence_distance/card.md",
+      "category": "topological",
+      "declared": {
+        "arity": "pairwise",
+        "companion": {
+          "coordinate": [
+            [
+              "birth",
+              "field"
+            ],
+            [
+              "death",
+              "field"
+            ],
+            [
+              "dimension",
+              ""
+            ]
+          ],
+          "kind": "points",
+          "one_field": true
+        },
+        "cost": "expensive",
+        "differentiable": false,
+        "fields": [
+          "density",
+          "vorticity"
+        ],
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "mean",
+        "requires_periodic": false,
+        "symmetric": true,
+        "target": null,
+        "units": "field"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "kind": "metric",
+      "math": {
+        "complexity": "measured, not derived: under 0.1 s per diagram and about 0.35 s per matching on a 256 x 256 field",
+        "resolution_dependent": true,
+        "scale_dependent": true,
+        "triangle_inequality": true
+      },
+      "name": "persistence_distance",
+      "output": {
+        "description": "The largest, over homology dimensions, of the bottleneck distance between the two fields' sublevel-set persistence diagrams, in the field's own units.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/persistence_distance",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Bottleneck distance between the persistence diagrams of the reference and the candidate: how far the levels at which the field's connected pieces and loops appear and vanish have to move to match, wherever in the domain those features sit."
     },
     {
       "card": "metrics/rank_histogram/card.md",

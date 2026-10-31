@@ -57,7 +57,6 @@ Designed, hooks in place, not built.
 | [071](071-equivariance-needs-the-model.md) | Galilean and rotational equivariance needs the model | unset |
 | [072](072-goal-oriented-error-needs-an-adjoint.md) | Goal-oriented error estimates need an adjoint solver and a declared output | unset |
 | [073](073-eddy-census-waits-on-a-detector.md) | Eddy census waits on a vortex detector | medium |
-| [074](074-persistence-diagrams-need-a-tda-library.md) | Persistence diagrams need a topology library | high |
 | [075](075-two-point-correlation-anisotropy-is-untestable.md) | Two-point correlation: what it adds beyond spectrum_l2 is untestable | medium |
 | [076](076-coherent-vortex-extraction-needs-wavelets.md) | Coherent vortex extraction needs a wavelet library, and its comparison is unspecified | high |
 | [077](077-wavelet-scattering-needs-kymatio.md) | Wavelet scattering needs a scattering-transform library | high |
@@ -107,6 +106,7 @@ Designed, hooks in place, not built.
 | [098](098-increment-w1-registered-number-is-a-convention.md) | The number `increment_w1_by_separation` registers, a normalised mean over separations, is a convention with no source | unset |
 | [105](105-spectral-energy-flux-summary-is-a-convention.md) | The number `spectral_energy_flux` registers, a relative L2 distance between flux curves sampled at octaves, is a convention with no source | unset |
 | [102](102-shock-set-distance-empty-and-non-positive-conventions.md) | The scores `shock_set_distance` gives an empty shock set and a non-positive pressure are conventions | unset |
+| [115](115-persistence-distance-combines-dimensions-by-a-convention.md) | The number `persistence_distance` registers, the largest bottleneck distance over homology dimensions with the never-dying classes kept, is a convention | unset |
 
 ## Technical debt
 

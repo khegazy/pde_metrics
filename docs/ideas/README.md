@@ -86,7 +86,6 @@ regime, protected from data leakage and combined.
 | [Winding angle and Poincaré index](pattern_detection/winding_angle.md) | [Pattern detection](pattern_detection/README.md) | implementation, [issue 086](https://github.com/khegazy/pde_metrics/blob/main/issues/086-winding-angle-is-untestable.md) | medium | high | |
 | [Eddy census](pattern_detection/eddy_census.md) | [Pattern detection](pattern_detection/README.md) | implementation, [issue 073](https://github.com/khegazy/pde_metrics/blob/main/issues/073-eddy-census-waits-on-a-detector.md) | medium | medium | |
 | [Vortex criteria: Q, λ₂ and Okubo–Weiss](pattern_detection/vortex_criteria.md) | [Pattern detection](pattern_detection/README.md) | implementation, [issue 060](https://github.com/khegazy/pde_metrics/blob/main/issues/060-vortex-criteria-define-no-comparison.md) | low | medium | |
-| [Persistence diagrams](topology/persistence_diagrams.md) | [Topology](topology/README.md) | implementation, [issue 074](https://github.com/khegazy/pde_metrics/blob/main/issues/074-persistence-diagrams-need-a-tda-library.md) | low | high | |
 | [Multiparameter persistence](topology/multiparameter_persistence.md) | [Topology](topology/README.md) | math, [issue 061](https://github.com/khegazy/pde_metrics/blob/main/issues/061-multiparameter-persistence-has-no-complete-invariant.md) | high | low | |
 | [Well groups](topology/well_groups.md) | [Topology](topology/README.md) | math, [issue 062](https://github.com/khegazy/pde_metrics/blob/main/issues/062-well-groups-have-no-computable-definition.md) | high | low | |
 | [Reeb graphs and Morse–Smale complexes](topology/reeb_graphs.md) | [Topology](topology/README.md) | implementation, [issue 063](https://github.com/khegazy/pde_metrics/blob/main/issues/063-reeb-graph-distance-is-not-standard.md) | medium | medium | |
@@ -125,14 +124,11 @@ regime, protected from data leakage and combined.
 These are the high-priority ideas ordered by value per unit of effort. The order is the team's
 judgement.
 
-1. **[Persistence diagrams](topology/persistence_diagrams.md) on vorticity and density.**
-   Off-the-shelf software exists, the stability theory is settled, and there is precedent at
-   LBNL.
-2. **[Tail exceedance and peaks-over-threshold](distributional/tail_index_estimators.md),**
+1. **[Tail exceedance and peaks-over-threshold](distributional/tail_index_estimators.md),**
    what remains of the tail-index idea once its Hill-estimator tier was built as
    [tail_index](../metrics/tail_index.md). It has no positivity problem to solve, and it
    measures intermittency directly.
-3. **The [weak-form residual](physics_invariants/weak_residual.md) with
+2. **The [weak-form residual](physics_invariants/weak_residual.md) with
    [solver consistency](physics_invariants/solver_consistency.md).** Both need no reference
    field, and solver consistency is nearly free once a trusted solver is in the repository.
 
@@ -167,8 +163,10 @@ be imported rather than reinvented.
   scale, using a wavelet decomposition of the error field (Casati et al. 2004). It is the
   verification-side ancestor of
   [coherent vortex extraction](basis_decompositions/coherent_vortex_extraction.md).
-- **Threshold-free topological detection** of atmospheric rivers (Muszynski et al. 2019) is
-  discussed under [persistence diagrams](topology/persistence_diagrams.md).
+- **Threshold-free topological detection** of atmospheric rivers (Muszynski et al. 2019)
+  tracks the connected regions of superlevel sets as the threshold sweeps, a precursor of
+  persistence rather than full persistent homology; it is cited on the card of the built
+  [persistence_distance](../metrics/persistence_distance.md).
 - **Diagnostics and training losses are separate artifacts.** A diagnostic may be
   non-differentiable, expensive and discontinuous. A training loss may not.
 

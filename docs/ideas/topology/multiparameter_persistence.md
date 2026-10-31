@@ -6,7 +6,7 @@
 
 ## What it is
 
-[Persistence diagrams](persistence_diagrams.md) filter a field by one parameter, its value.
+[Persistence diagrams](../../metrics/persistence_distance.md) filter a field by one parameter, its value.
 Multiparameter persistence filters by two parameters at once, for instance the field value
 together with a spatial scale or distance, so that it captures the interplay between distance
 and field value. The motivation is sound.
@@ -34,7 +34,7 @@ algorithms for minimal presentations and Betti numbers were added later (Lesnick
 
 *The team's judgement.* Low priority, because of the theoretical obstruction and the
 research-grade tooling. The idea is parked. If
-[persistence diagrams](persistence_diagrams.md) succeed and their main failure turns out to be
+[persistence diagrams](../../metrics/persistence_distance.md) succeed and their main failure turns out to be
 confounding structures of different scale, this idea should be revisited, starting from
 RIVET.
 

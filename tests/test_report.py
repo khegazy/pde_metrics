@@ -19,6 +19,7 @@ import pandas as pd
 import pytest
 
 from fmeval import analysis
+from fmeval.context import COMPANION_KEY
 from fmeval.data.analytic import AdvectingBlobs
 from fmeval.io import (
     COMPANIONS,
@@ -29,7 +30,7 @@ from fmeval.io import (
     write_run_meta,
 )
 from fmeval.ladder import build_ladder
-from fmeval.pipeline import DatasetInfo, run
+from fmeval.pipeline import DatasetInfo, MapRequest, parse_map_key, run
 from fmeval.report import latex
 from fmeval.report.context import TableResult
 from fmeval.report.driver import (
@@ -819,3 +820,50 @@ def test_a_curve_and_a_growing_error_are_drawn(tmp_path, temporary_metric):
     assert timed.status == "ok", timed.reason
     data = _figure_data(folder, "response_along_time__metric-_curve_l2__field-density")
     assert set(data["degradation"]) == {"drift"}, "only the entry whose strength grows with time"
+
+
+def test_a_point_set_is_stored_on_the_chosen_frames_and_drawn(tmp_path, temporary_metric):
+    """A point-set companion is computed before the metric and handed to it, stored only on the
+    frames and ladder entries ``report.error_map`` names plus the clean level of those frames,
+    and drawn by ``companion_points``, an infinite coordinate on the panel's edge; the gallery
+    of per-cell maps leaves it alone."""
+    seen = []
+
+    def _peaks(reference, candidate, *, ctx):
+        """Count of the candidate's peaks, read from the point set the pipeline handed over."""
+        seen.append(ctx.cache[COMPANION_KEY] is not None)
+        return float(len(ctx.cache[COMPANION_KEY]))
+
+    def _peaks_points(x):
+        """(x, y, height) of every cell above the field's mean, plus one point at infinity."""
+        cells = np.argwhere(x[0] > x[0].mean())
+        return np.vstack([np.column_stack([cells, x[0][tuple(cells.T)]]),
+                          [[0.0, np.inf, 1.0]]])
+
+    temporary_metric(name="_peaks", arity="pairwise", symmetric=False)(_peaks)
+    metric_registry.companion(of="_peaks", kind="points", coordinate=(
+        ("x", "cells"), ("y", "cells"), ("height", "field")))(_peaks_points)
+    ladder = build_ladder({"gaussian_blur": {"severities": [0.1, 0.2]},
+                           "box_blur": {"severities": [0.1]}})
+    result = run(AdvectingBlobs(grid=(16, 8), n_frames=4), [metric_registry.get("_peaks")],
+                 ladder, fields=["density"], dataset=DatasetInfo(name="advecting_blobs"),
+                 maps=MapRequest(enabled=True, frames=[-1], axes=["gaussian_blur"]))
+    assert seen and all(seen)
+    assert {parse_map_key(k)[2] for k in result.maps} == {
+        "reference", "gaussian_blur_l1", "gaussian_blur_l2"}
+    assert {parse_map_key(k)[3] for k in result.maps} == {3}
+    assert all(v.ndim == 2 and v.shape[1] == 3 for v in result.maps.values())
+    folder = RunFolder(tmp_path / "_peaks_1").create()
+    write_results(folder, result.rows)
+    write_maps(folder, result.maps)
+    write_config(folder, {"metrics": ["_peaks"], "seed": 0}, [])
+    write_run_meta(folder, run_id=1, metric="_peaks", dataset="advecting_blobs")
+
+    points = _rendered(folder, "companion_points")
+    assert points.status == "ok", points.reason
+    data = _figure_data(folder, "companion_points__metric-_peaks__field-density")
+    assert set(data["variant"]) == {"reference", "gaussian_blur_l1", "gaussian_blur_l2"}
+    assert list(data.columns[:3]) == ["x", "y", "height"]
+    assert np.isinf(data["y"]).sum() == 3, "the point at infinity is kept, once per panel"
+    gallery = _rendered(folder, "field_gallery")
+    assert gallery.status != "ok", "a point set is not a per-cell map"

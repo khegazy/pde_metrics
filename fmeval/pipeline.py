@@ -119,11 +119,13 @@ class DatasetInfo:
 
 @dataclass
 class MapRequest:
-    """Which pointwise metric maps to keep; also the schema of ``report.error_map``.
+    """Which per-cell maps and point sets to keep; also the schema of ``report.error_map``.
 
     Storing a map for every frame and variant would be gigabytes, so only the named
-    combinations are retained -- enough for the figure, not for the whole run. The defaults
-    here keep nothing, for callers that do not ask.
+    combinations are retained -- enough for the figure, not for the whole run. A point-set
+    companion is kept on the same combinations and on the reference level of the named frames,
+    the set every other one is read against. The defaults here keep nothing, for callers that do
+    not ask.
     """
 
     enabled: bool = False
@@ -141,7 +143,9 @@ class PipelineResult:
 
     rows: pd.DataFrame
     maps: dict[str, np.ndarray] = dc_field(default_factory=dict)
-    """``"<metric>:<field>__<variant>__t<frame>"`` -> pointwise density, for ``error_maps.npz``."""
+    """``"<metric>:<field>__<variant>__t<frame>"`` -> a per-cell map ``(*spatial)`` or a point set
+    ``(N, D)``, for ``error_maps.npz``. The run's registry snapshot says which, by the metric's
+    companion kind."""
     companions: pd.DataFrame = dc_field(default_factory=pd.DataFrame)
     """One row per curve coordinate of every result row whose metric has a curve companion: the
     result row's columns, its ``value`` replaced by the curve's, plus ``coordinate``. Empty when no
@@ -350,7 +354,7 @@ def run(
                 companion_kwargs = ({"ctx": replace(ctx, rng=derive_rng(
                     seed, f"companion/{spec.name}", frame.index, field))}
                     if companion is not None and companion.takes_ctx else {})
-                curve = companion is not None and companion.kind == "curve"
+                kind = None if companion is None else companion.kind
 
                 for label, (severity_level, applied) in variants.items():
                     candidate = applied.fields[field]
@@ -364,30 +368,33 @@ def run(
                     else:
                         args = (candidate,)
                     t1 = time.perf_counter()
-                    if curve:
-                        # First, so the metric reads the curve rather than computing it again;
-                        # both calls are timed, so the row's cost is the whole evaluation.
-                        coordinates, curve_values = companion.fn(
+                    if kind in ("curve", "points"):
+                        # First, so the metric reads the companion rather than computing it
+                        # again; both calls are timed, so the row's cost is the whole evaluation.
+                        ctx.cache[COMPANION_KEY] = companion.fn(
                             *((candidate,) if companion.one_field else args), **companion_kwargs)
-                        ctx.cache[COMPANION_KEY] = (coordinates, curve_values)
                     value = spec.fn(*args, **kwargs)
                     wall = time.perf_counter() - t1
                     t_metric += wall
                     row = _emit(spec, field, frame, severity_level, applied, run_columns,
                                 value, wall, n_members=n_members)
                     rows.append(row)
-                    if curve:
+                    if kind == "curve":
                         curve_rows += [{**row, "coordinate": c, "value": float(v),
                                         "_row": len(rows) - 1}
-                                       for c, v in zip(coordinates, curve_values, strict=True)]
+                                       for c, v in zip(*ctx.cache[COMPANION_KEY], strict=True)]
 
+                    # A point set is kept on the clean level too: every other one is read
+                    # against it, and the reference's own set is not otherwise stored.
                     if (
-                        companion is not None and companion.kind == "field"
+                        kind in ("field", "points")
                         and frame.index in keep_frames
-                        and (not maps.axes or severity_level.label in maps.axes)
+                        and (not maps.axes or severity_level.label in maps.axes
+                             or (kind == "points" and severity_level.is_reference))
                         and (not maps.fields or field in maps.fields)
                     ):
-                        m = companion.fn(*args, **companion_kwargs)
+                        m = (ctx.cache[COMPANION_KEY] if kind == "points"
+                             else companion.fn(*args, **companion_kwargs))
                         stored_maps[map_key(spec.name, field, label, frame.index)] = (
                             np.asarray(m, dtype=np.float64)
                         )
