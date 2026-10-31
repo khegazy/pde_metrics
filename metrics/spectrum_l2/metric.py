@@ -16,7 +16,7 @@ scored the impostor at about 1e-15, the same as the undegraded reference.
 
 The damage column reports it: the anchor, the field's spatial mean, has no fluctuation
 spectrum at all, so this metric's span is well defined and the impostor scores damage 0.000
-on every field of ``comparison_1793302178``. The large-translation probe scores 0 too,
+on every field of ``comparison_1793434653``. The large-translation probe scores 0 too,
 because a translation leaves the amplitude spectrum unchanged.
 
 The two-point correlation is the Fourier transform of this, so the two carry the

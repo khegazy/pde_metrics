@@ -36,7 +36,7 @@ compared on vorticity only:
 | velocity and vorticity | 6.56e-6 | 0.095 / 0.657 / 1.196 | 0.032 / 0.121 / 0.409 |
 
 The same metric on the same frames reports a 40% different damage at one cell depending on
-which other metrics ran beside it. The pinned evidence run (`comparison_1793302178`) reads
+which other metrics ran beside it. The pinned evidence run (`comparison_1793434653`) reads
 velocity, so every committed card uses the spectral vorticity; a single-metric run of a
 vorticity-only metric does not, and its numbers are not comparable with the card's.
 

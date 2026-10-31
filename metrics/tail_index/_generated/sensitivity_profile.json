@@ -142,7 +142,7 @@
       },
       {
         "blind": false,
-        "blindness_q": 0.6831096867,
+        "blindness_q": 1.0,
         "cliffs_delta_min": -0.7101192084,
         "damage_max_ucb": 0.0483775463,
         "damage_per_change": null,
@@ -153,7 +153,7 @@
         "n_levels": 3.0,
         "rho": 0.5,
         "rho_ci_hi": 0.5,
-        "rho_ci_lo": -0.5
+        "rho_ci_lo": 0.475
       },
       {
         "blind": true,
@@ -167,8 +167,8 @@
         "metric": "tail_index",
         "n_levels": 6.0,
         "rho": 0.0857142857,
-        "rho_ci_hi": 0.4285714286,
-        "rho_ci_lo": -0.0287799902
+        "rho_ci_hi": 0.2571428571,
+        "rho_ci_lo": -0.0287904183
       },
       {
         "blind": true,
@@ -350,7 +350,7 @@
         "n_levels": 6.0,
         "rho": 0.0857142857,
         "rho_ci_hi": 0.2571428571,
-        "rho_ci_lo": -0.1142857143
+        "rho_ci_lo": -0.1428571429
       },
       {
         "blind": true,
@@ -397,7 +397,7 @@
         "n_levels": 4.0,
         "rho": 0.8,
         "rho_ci_hi": 1.0,
-        "rho_ci_lo": 0.295
+        "rho_ci_lo": 0.4
       },
       {
         "blind": false,
@@ -442,7 +442,7 @@
         "n_levels": 4.0,
         "rho": 0.8,
         "rho_ci_hi": 1.0,
-        "rho_ci_lo": 0.6
+        "rho_ci_lo": 0.79
       },
       {
         "blind": false,
@@ -471,7 +471,7 @@
         "metric": "tail_index",
         "n_levels": 4.0,
         "rho": 0.4,
-        "rho_ci_hi": 0.6,
+        "rho_ci_hi": 0.7,
         "rho_ci_lo": -0.2
       },
       {
@@ -531,8 +531,8 @@
         "metric": "tail_index",
         "n_levels": 6.0,
         "rho": -0.2029198625,
-        "rho_ci_hi": -0.0731565221,
-        "rho_ci_lo": -0.4172055768
+        "rho_ci_hi": -0.030358837,
+        "rho_ci_lo": -0.3700849303
       },
       {
         "blind": true,
@@ -551,5 +551,5 @@
       }
     ]
   },
-  "run": "tail_index_1793350342"
+  "run": "comparison_1793434653"
 }

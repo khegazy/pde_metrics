@@ -457,7 +457,7 @@
         "n_levels": 4.0,
         "rho": 0.8,
         "rho_ci_hi": 0.8,
-        "rho_ci_lo": 0.8
+        "rho_ci_lo": 0.6
       },
       {
         "blind": false,
@@ -472,7 +472,7 @@
         "n_levels": 4.0,
         "rho": 0.8,
         "rho_ci_hi": 0.8,
-        "rho_ci_lo": 0.6
+        "rho_ci_lo": 0.4
       },
       {
         "blind": false,
@@ -551,5 +551,5 @@
       }
     ]
   },
-  "run": "comparison_1793302178"
+  "run": "comparison_1793434653"
 }

@@ -2256,6 +2256,11 @@
         "dataset": "kinet_re5e4",
         "figures": [
           {
+            "file": "metrics/energy_distance/_generated/damage_beside_controls.svg",
+            "name": "damage_beside_controls",
+            "numbers": "metrics/energy_distance/_generated/damage_beside_controls.json"
+          },
+          {
             "file": "metrics/energy_distance/_generated/response_curves.svg",
             "name": "response_curves",
             "numbers": "metrics/energy_distance/_generated/response_curves.json"
@@ -2324,7 +2329,7 @@
             "selectivity": 0.5162538687
           }
         ],
-        "run": "energy_distance_1793350409"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -2981,7 +2986,7 @@
             "selectivity": 0.3102688803
           }
         ],
-        "run": "comparison_1793302178"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -3998,7 +4003,7 @@
             "selectivity": 0.4553338782
           }
         ],
-        "run": "comparison_1793302178"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -4570,7 +4575,7 @@
           },
           {
             "axis": "median_blur",
-            "blindness_q": 0.2094933242,
+            "blindness_q": 0.2173663094,
             "cliffs_delta": 0.984028394,
             "detection_onset_severity": null,
             "elasticity": 1.9064674675,
@@ -5025,7 +5030,7 @@
             "selectivity": 0.4183842474
           }
         ],
-        "run": "comparison_1793302178"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -5673,7 +5678,7 @@
           },
           {
             "axis": "additive_noise",
-            "blindness_q": 0.7992976063,
+            "blindness_q": 0.8384129078,
             "cliffs_delta": 0.6249373095,
             "detection_onset_severity": null,
             "elasticity": 1.8342376133,
@@ -5693,7 +5698,7 @@
           },
           {
             "axis": "box_blur",
-            "blindness_q": 0.6088399736,
+            "blindness_q": 0.6363857011,
             "cliffs_delta": -0.0413178504,
             "detection_onset_severity": null,
             "elasticity": null,
@@ -5853,7 +5858,7 @@
           },
           {
             "axis": "lowpass_ideal",
-            "blindness_q": 0.6088399736,
+            "blindness_q": 0.6363857011,
             "cliffs_delta": -0.3060452915,
             "detection_onset_severity": null,
             "elasticity": null,
@@ -6050,7 +6055,7 @@
             "selectivity": null
           }
         ],
-        "run": "comparison_1793302178"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -7072,7 +7077,7 @@
             "selectivity": 0.61633244
           }
         ],
-        "run": "comparison_1793302178"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -8102,7 +8107,7 @@
             "selectivity": 0.3944856935
           }
         ],
-        "run": "comparison_1793302178"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -8492,7 +8497,7 @@
             "selectivity": 0.5881340263
           }
         ],
-        "run": "comparison_1793302178"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -9511,7 +9516,7 @@
             "selectivity": 0.1302853919
           }
         ],
-        "run": "comparison_1793302178"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -10465,6 +10470,11 @@
         "dataset": "kinet_re5e4",
         "figures": [
           {
+            "file": "metrics/max_error/_generated/damage_beside_controls.svg",
+            "name": "damage_beside_controls",
+            "numbers": "metrics/max_error/_generated/damage_beside_controls.json"
+          },
+          {
             "file": "metrics/max_error/_generated/response_curves.svg",
             "name": "response_curves",
             "numbers": "metrics/max_error/_generated/response_curves.json"
@@ -10523,7 +10533,7 @@
             "selectivity": 0.1776600308
           }
         ],
-        "run": "max_error_1793355020"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -11549,7 +11559,7 @@
             "selectivity": 0.0011553181
           }
         ],
-        "run": "comparison_1793302178"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -12562,7 +12572,7 @@
             "selectivity": 0.1215066598
           }
         ],
-        "run": "comparison_1793302178"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -12950,7 +12960,7 @@
             "selectivity": 0.8032719046
           }
         ],
-        "run": "comparison_1793302178"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -14100,7 +14110,7 @@
             "selectivity": 0.1204204661
           }
         ],
-        "run": "comparison_1793302178"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -14820,6 +14830,11 @@
         "dataset": "kinet_re5e4",
         "figures": [
           {
+            "file": "metrics/spectral_energy_flux/_generated/damage_beside_controls.svg",
+            "name": "damage_beside_controls",
+            "numbers": "metrics/spectral_energy_flux/_generated/damage_beside_controls.json"
+          },
+          {
             "file": "metrics/spectral_energy_flux/_generated/response_curves.svg",
             "name": "response_curves",
             "numbers": "metrics/spectral_energy_flux/_generated/response_curves.json"
@@ -14853,7 +14868,7 @@
             "selectivity": 0.6684179127
           }
         ],
-        "run": "spectral_energy_flux_1793391588"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -15880,7 +15895,7 @@
             "selectivity": 0.3865689478
           }
         ],
-        "run": "comparison_1793302178"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {
@@ -16288,7 +16303,7 @@
           },
           {
             "axis": "median_blur",
-            "blindness_q": 0.6831096867,
+            "blindness_q": 1.0,
             "cliffs_delta": -0.7101192084,
             "detection_onset_severity": null,
             "elasticity": 0.5765624882,
@@ -17041,7 +17056,7 @@
             "selectivity": null
           }
         ],
-        "run": "tail_index_1793350342"
+        "run": "comparison_1793434653"
       },
       "kind": "metric",
       "math": {

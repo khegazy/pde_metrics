@@ -62,7 +62,7 @@
         "metric": "increment_flatness",
         "n_levels": 4.0,
         "rho": 0.8,
-        "rho_ci_hi": 0.805,
+        "rho_ci_hi": 0.8,
         "rho_ci_lo": 0.8
       },
       {
@@ -167,7 +167,7 @@
         "metric": "increment_flatness",
         "n_levels": 6.0,
         "rho": -0.5161002296,
-        "rho_ci_hi": -0.0573514187,
+        "rho_ci_hi": -0.0289885518,
         "rho_ci_lo": -0.5797710357
       },
       {
@@ -371,7 +371,7 @@
     "vorticity": [
       {
         "blind": false,
-        "blindness_q": 0.7992976063,
+        "blindness_q": 0.8384129078,
         "cliffs_delta_min": 0.6249373095,
         "damage_max_ucb": 0.0414377283,
         "damage_per_change": null,
@@ -386,7 +386,7 @@
       },
       {
         "blind": false,
-        "blindness_q": 0.6088399736,
+        "blindness_q": 0.6363857011,
         "cliffs_delta_min": -0.0413178504,
         "damage_max_ucb": 0.0439216537,
         "damage_per_change": null,
@@ -491,7 +491,7 @@
       },
       {
         "blind": false,
-        "blindness_q": 0.6088399736,
+        "blindness_q": 0.6363857011,
         "cliffs_delta_min": -0.3060452915,
         "damage_max_ucb": 0.0419651258,
         "damage_per_change": null,
@@ -531,8 +531,8 @@
         "metric": "increment_flatness",
         "n_levels": 6.0,
         "rho": -0.0580365614,
-        "rho_ci_hi": 0.030358837,
-        "rho_ci_lo": -0.4928053803
+        "rho_ci_hi": 0.0579771036,
+        "rho_ci_lo": -0.4933877515
       },
       {
         "blind": true,
@@ -551,5 +551,5 @@
       }
     ]
   },
-  "run": "comparison_1793302178"
+  "run": "comparison_1793434653"
 }
