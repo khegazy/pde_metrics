@@ -129,6 +129,8 @@ def persistence_diagram(x: NDArray[np.floating], *, ctx: FieldContext) -> NDArra
     if not np.isfinite(x).all():
         raise ValueError("persistence_distance needs a finite field: a sublevel set is not "
                          "defined at a NaN or infinite cell")
+    # Bleile et al. (2022), Definition 4.4: cells as top-dimensional cubes (the T-construction);
+    # wrapping every periodic axis makes the complex the torus of their Sect. 4.2.
     cubical = gudhi.PeriodicCubicalComplex(
         top_dimensional_cells=np.asarray(x[0], dtype=np.float64),
         periodic_dimensions=[b == "periodic" for b in ctx.grid.boundary])
@@ -156,6 +158,7 @@ def betti_curves(diagram: NDArray[np.floating], thresholds: NDArray[np.floating]
         An integer array of shape ``(n_dimensions, T)``.
     """
     t = np.asarray(thresholds, dtype=float)[None, :]
+    # Cohen-Steiner et al. (2005), Sect. 2, k-Triangle Lemma at x = y = t: count b <= t < d.
     return np.array([((d[:, :1] <= t) & (t < d[:, 1:2])).sum(axis=0)
                      for k in range(n_dimensions) for d in [diagram[diagram[:, 2] == k]]],
                     dtype=np.int64).reshape(n_dimensions, -1)
