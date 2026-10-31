@@ -34,8 +34,8 @@ zero and there is no scale against which a difference could be relative.
 Three points about Equation (1) are choices, not consequences.
 
 The spatial mean is removed, so the $\kappa = 0$ shell carries no energy. On this data that
-is load-bearing rather than cosmetic: density is $1.0 \pm 1.8 \times 10^{-4}$, so its mean is
-four orders of magnitude larger than any fluctuation, and a spectrum retaining it would
+is load-bearing rather than cosmetic: density's fluctuation is a few thousandths of its mean of $1$, so its mean is
+two to three orders of magnitude larger than any fluctuation, and a spectrum retaining it would
 compare two means and ignore the flow entirely.
 
 The shells are unit-width bands. The magnitude $|\mathbf{m}|$ is the repository's one

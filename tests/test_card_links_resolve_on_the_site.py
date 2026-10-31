@@ -12,7 +12,9 @@ links to an issue by relative path breaks the build. Such a link has to be absol
 
 from __future__ import annotations
 
+import io
 import re
+import runpy
 
 import pytest
 
@@ -67,3 +69,30 @@ def test_every_figure_a_card_shows_exists_beside_it(card):
     missing = [t for t in _IMAGE.findall(card.read_text())
                if not t.startswith(("http://", "https://")) and not (card.parent / t).exists()]
     assert not missing, f"{card.parent.name}/card.md shows figures that do not exist: {missing}"
+
+
+@pytest.mark.xfail(strict=True, reason="issues/100: nothing renders refs.bib on the site")
+def test_a_card_reaches_the_site_with_its_citations_rendered(monkeypatch):
+    """The site shows a card's references, not the `[@key]` and `\\bibliography` source.
+
+    Runs `docs/gen_pages.py` with its output captured instead of written by mkdocs, and reads
+    the crps page, whose card cites ferro2014 and gneitingraftery2007.
+    """
+    gen_files = pytest.importorskip("mkdocs_gen_files")
+    pages = {}
+
+    class _Page(io.StringIO):
+        def __init__(self, name):
+            super().__init__()
+            self.name = name
+
+        def close(self):
+            pages[self.name] = self.getvalue()
+            super().close()
+
+    monkeypatch.setattr(gen_files, "open",
+                        lambda name, mode="r": io.BytesIO() if "b" in mode else _Page(name))
+    monkeypatch.setattr(gen_files, "set_edit_path", lambda *args, **kwargs: None)
+    runpy.run_path(str(REPO / "docs" / "gen_pages.py"))
+    page = pages["metrics/crps.md"]
+    assert "\\bibliography" not in page and "[@" not in page

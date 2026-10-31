@@ -50,7 +50,7 @@ one-sided check. Three separate numbers should therefore be reported:
 
 Alongside them, the shock-normal production profile $P_\eta(d)$ averages the production in
 bins of signed distance $d$ from the surface found by the
-[shock detector](../shock_geometry/shock_detector.md), the shock-aligned coordinate also used
+[shock detector](../../metrics/shock_set_distance.md), the shock-aligned coordinate also used
 for [shock–turbulence interaction statistics](../shock_geometry/shock_turbulence_interaction.md).
 The profile shows whether production sits at the shock or is spread around it. Together these
 pinpoint errors in a shock's location, speed and strength, and distinguish genuine dissipation

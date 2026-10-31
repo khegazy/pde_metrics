@@ -530,6 +530,17 @@ def test_the_issues_folder_holds_only_open_items():
         f"on disk only {sorted(on_disk - indexed)}")
 
 
+def test_the_proposals_index_matches_the_files():
+    """Every proposal is indexed and every indexed proposal exists. A proposal is deleted once
+    accepted or rejected, so its row goes with it."""
+    on_disk = {p.name for p in (REPO / "proposals").glob("*.md") if p.name != "README.md"}
+    index = (REPO / "proposals" / "README.md").read_text()
+    indexed = set(re.findall(r"\]\(((?:EXP|MTR)-[^)]+\.md)\)", index))
+    assert indexed == on_disk, (
+        f"proposals/README.md and proposals/ disagree: indexed only {sorted(indexed - on_disk)}, "
+        f"on disk only {sorted(on_disk - indexed)}")
+
+
 def test_no_test_module_imports_from_another_test_module():
     """Shared test helpers live in ``tests/conftest.py``, never in a ``test_*`` module.
 

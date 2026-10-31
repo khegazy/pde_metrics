@@ -2,7 +2,7 @@
 
 **Category:** deferred functionality
 **Priority:** high, the team's priority for the idea
-**Status:** open, waiting on a dependency and on the signed-field decision
+**Status:** open, waiting on the signed-field decision for velocity and vorticity. The dependency is resolved on `metric_build`: `pot` 0.9.7.post1 is a core dependency, so the positive field (density) is buildable once that reaches `main`.
 
 ## Context
 
@@ -12,11 +12,11 @@ The quadratic Wasserstein distance between two fields on the 256 × 256 grid of 
 
 ## Why it is not built
 
-No dependency can be added at present: `uv` is not installed on the login node, and CI installs with `uv sync --locked`, so editing `pyproject.toml` without regenerating `uv.lock` fails every later pull request. Adding the library is a separate change to `pyproject.toml` and `uv.lock`, made once `uv` is available. Solving that problem exactly needs a dedicated solver (for example POT); a general linear-programming solution is far too slow at this size. For velocity and vorticity, which take both signs, the metric also needs the signed-field formulation, which is an open question (issue on transport between signed fields). Density is positive and would not need it.
+Solving that problem exactly needs a dedicated solver (for example POT); a general linear-programming solution is far too slow at this size. For velocity and vorticity, which take both signs, the metric also needs the signed-field formulation, which is an open question (issue on transport between signed fields). Density is positive and would not need it.
 
 ## What would unblock it
 
-A transport library added (`pyproject.toml` and `uv.lock`), and the signed-field decision for the signed fields.
+The signed-field decision (issue 047) for velocity and vorticity. The transport library is done on `metric_build`: POT 0.9.7.post1, whose `emd2` was smoke-tested in the repository's environment.
 
 ## Related
 

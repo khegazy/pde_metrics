@@ -15,8 +15,8 @@ Note the strict inequality on the left: the $k = 0$ mode is **kept** regardless 
 cutoff, so the spatial mean survives the filter.
 
 That exception is essential rather than cosmetic. Deleting $k = 0$ on the density field
-would remove a component four orders of magnitude larger than anything the cutoff
-controls: every severity then produced an identical damage of 2.7e7 (measured against the
+would remove a component two to three orders of magnitude larger than the whole
+fluctuation the cutoff acts on (density fluctuates by a few thousandths of its mean): every severity then produced an identical damage of 2.7e7 (measured against the
 large-translation anchor then in use) and the degradation carried no ordering at all.
 
 The wavenumber magnitude $|k|$ is the single definition shared with the severity

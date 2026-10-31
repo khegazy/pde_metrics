@@ -47,6 +47,13 @@ built. This one records what now exists to test them and what the harness still 
 3. **A controlled temporal experiment on real data is still the temporal-ladder proposal**
    (`proposals/EXP-orchestrator-20261023-temporal-ladder.md`). `per_unit_time` covers only its
    third part, consistent spatial damage, and only for a damage that grows linearly in time.
+4. **The maximum error's growth along a rollout, a worst-case stability diagnostic, is the same
+   kind of reduction.** The frame-wise `max_error` (pull request 25) scores one frame at a time;
+   its use on the idea page as a stability diagnostic needs its value as a function of rollout
+   time, which with `per_unit_time` is again a reduction over `frame_index` of existing rows.
+   PDEBench instead reports the worst case over a batch of samples (Takamoto et al. 2022,
+   NeurIPS 35 Datasets and Benchmarks, Sect. 3.3, doi:10.52202/068431-0117). Found by the
+   agent building `max_error`, 2026-10-31.
 
 ## What would unblock it
 
