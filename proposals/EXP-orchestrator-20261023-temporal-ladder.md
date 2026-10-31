@@ -1,7 +1,13 @@
-# EXP: A degradation ladder for trajectories
+---
+type: EXP
+kind: protocol
+related: ["issues/051", "issues/056", "issues/073", "issues/078", "issues/079", "issues/080", "issues/081", "issues/084"]
+seen_in: "orchestrator's own; no published protocol was consulted"
+doi: "none"
+found_by: "orchestrator, 2026-10-23"
+---
 
-Found by: the orchestrator screening `docs/ideas/`, 2026-10-23. Seen in: the orchestrator's own
-proposal; no published protocol was consulted.
+# EXP: A degradation ladder for trajectories
 
 ## What the experiment is
 

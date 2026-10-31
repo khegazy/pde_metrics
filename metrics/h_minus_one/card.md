@@ -251,7 +251,7 @@ evaluation reports it against measured anchors rather than absolutely. The compa
 carries meaning is between two predictions of the *same* reference field on the *same*
 analysis grid: there the ratio of their values is the ratio of their transport-like error.
 Comparing across fields is invalid without normalising, because density and vorticity here
-differ by four orders of magnitude in fluctuation size. Comparing across analysis-grid
+are different quantities in different units. Comparing across analysis-grid
 resolutions is also invalid: the sum in Equation (3) runs to the grid's Nyquist mode, so a
 finer grid admits modes a coarser one does not have, and the change in value mixes the
 metric's response with the change in how many modes exist. The one comparison that is
