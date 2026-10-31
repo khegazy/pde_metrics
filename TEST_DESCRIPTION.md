@@ -937,7 +937,7 @@ eliminated; `energy_changed` is the fraction of it sitting in the difference bet
 field and the reference.
 
 **How they are computed.** Both about the spatial mean, since on a field like density the mean is
-four orders of magnitude larger than the fluctuation and energies about zero would say nothing
+two to three orders of magnitude larger than the fluctuation and energies about zero would say nothing
 happened:
 
 - `energy_removed` = 1 − var(degraded) / var(reference)
@@ -1160,7 +1160,7 @@ with damage, which they did not when the severity was an absolute cutoff.
 |---|---|---|
 | `lowpass_ideal` | fraction of energy removed | Sharp cutoff, removing the small scales; rings near sharp features |
 | `lowpass_butterworth` | fraction of energy removed | Smooth rolloff; the ringing-free control for the above, and it resolves severity levels a sharp filter cannot |
-| `highpass_ideal` | fraction of energy removed | Removes large scales. **Keeps the spatial mean deliberately** — deleting it removes a component four orders of magnitude larger than anything the cutoff controls, and before this was fixed every severity level gave an identical damage of 2.7e7 and the degradation carried no ordering at all |
+| `highpass_ideal` | fraction of energy removed | Removes large scales. **Keeps the spatial mean deliberately** — deleting it removes a component two to three orders of magnitude larger than the whole fluctuation the cutoff acts on, and before this was fixed every severity level gave an identical damage of 2.7e7 and the degradation carried no ordering at all |
 | `highpass_butterworth` | fraction of energy removed | As above, smooth |
 
 **The high-pass degradation has a narrow usable window on these fields, and that is a property of the

@@ -59,8 +59,8 @@ def fluctuation(x: np.ndarray) -> np.ndarray:
     """``x`` with each channel's spatial mean removed; ``x`` is ``(C, *spatial)``.
 
     Every energy and RMS in this repository is taken about the mean, because on density the
-    mean is four orders of magnitude larger than the fluctuation: an energy measured about zero
-    would say every operator changed nothing.
+    mean is two to three orders of magnitude larger than the fluctuation: an energy measured
+    about zero would say every operator changed nothing.
     """
     return x - x.mean(axis=tuple(range(1, x.ndim)), keepdims=True)
 

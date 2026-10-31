@@ -60,8 +60,8 @@ whole exercise is meant to detect.
 
 **Record the reason, not just the change.** When you fix something subtle, put the evidence in
 the docstring where the code lives. "Preserves the mean" is much less useful than "preserves
-the mean, because deleting k=0 on density removed a component four orders of magnitude larger
-than the cutoff controls and flattened the whole axis".
+the mean, because deleting k=0 on density removed a component two to three orders of magnitude
+larger than the whole fluctuation the cutoff acts on, and flattened the whole axis".
 
 **Write an issue while the evidence is in front of you.** `issues/` holds one file per open
 item with its measurements. An issue written later from memory is worth much less.
@@ -922,7 +922,7 @@ listed so nobody has to rediscover them.
 | **Averaging a derived field after a remap** | Block-averaged vorticity is not the curl of the velocity beside it: 5.6% / 18.3% / 25.9% at factors 2 / 4 / 8 | `fmeval/derived.py` |
 | **Mixing stored and recomputed derived fields** | The solver's lattice stencil and a spectral derivative differ by 8.1% rms, so grid-independence would measure the discretisation, not the grid | `fmeval/derived.py::recompute_frame` |
 | **Forgetting that spacing scales with the coarsening factor** | A spectral derivative at a coarse grid with fine spacing is inflated by exactly the factor | `GridSpec.coarsened` |
-| **Deleting k=0 in a high-pass filter** | On density that removes a component four orders of magnitude larger than the cutoff controls; every severity level returned an identical damage of 2.7e7 | `keep_mean` in `degradations/_shared/filters.py` |
+| **Deleting k=0 in a high-pass filter** | On density that removes a component two to three orders of magnitude larger than the whole fluctuation the cutoff acts on; every severity level returned an identical damage of 2.7e7 | `keep_mean` in `degradations/_shared/filters.py` |
 | **Drawing impostor phases directly** | Violates Hermitian symmetry at the self-conjugate modes, so `irfftn` discards the imaginary part and corrupts the spectrum. Gives flatness 47.9 instead of 3 | `degradations/gaussian_impostor/degradation.py` |
 | **Scavenging the anchor from a ladder severity_level** | A 16-cell translation reaches only ~0.6 of a large translation's value, inflating every damage score by ~1.6x | `analysis.py::normalisation` |
 | **Treating a large translation as an unrelated field** | Where a field's energy sits in its largest scales the moved copy stays correlated or anti-correlated with the reference; its `energy_changed` is 1.64–3.05 on kinet, not 2, and on a domain with walls it is a mirrored window. It set a scale off by up to ~1.7x | `mean_field` is the anchor (`judgements/001`) |
