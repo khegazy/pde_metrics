@@ -2,7 +2,7 @@
 
 **Category:** deferred functionality
 **Priority:** high, the team's priority for the idea
-**Status:** open, waiting on a dependency
+**Status:** open, waiting on a decision on the metric applied to each part. The dependency is resolved on `metric_build`: `pywavelets` 1.10.0 is a core dependency.
 
 ## Context
 
@@ -12,11 +12,11 @@ The method splits a field into a few large wavelet coefficients (coherent part) 
 
 ## Why it is not built
 
-No dependency can be added at present: `uv` is not installed on the login node, and CI installs with `uv sync --locked`, so editing `pyproject.toml` without regenerating `uv.lock` fails every later pull request. Adding the library is a separate change to `pyproject.toml` and `uv.lock`, made once `uv` is available. The split needs an orthogonal wavelet transform (for example PyWavelets). The page also says only that "each part can then be compared with a metric suited to it", without naming the metrics, so once the library exists the comparison is an open question.
+The split needs an orthogonal wavelet transform (for example PyWavelets). The page also says only that "each part can then be compared with a metric suited to it", without naming the metrics, so once the library exists the comparison is an open question.
 
 ## What would unblock it
 
-A wavelet library added, and a decision on the metric applied to each part.
+A decision on the metric applied to each part. The wavelet library is done on `metric_build`: PyWavelets 1.10.0, smoke-tested with a Haar transform in the repository's environment.
 
 ## Related
 

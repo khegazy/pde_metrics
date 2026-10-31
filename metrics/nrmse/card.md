@@ -17,9 +17,10 @@ $$
 where the average runs over channels and cells. The denominator is the root-mean-square
 *fluctuation* of the reference, not its raw root-mean-square.
 
-That choice is not cosmetic. The kinet weakly compressible density field is $1.0 \pm 1.8
-\times 10^{-4}$, so its raw RMS is essentially one; dividing by that would leave the value
-indistinguishable from RMSE and would hide four orders of magnitude of relative error,
+That choice is not cosmetic. The kinet weakly compressible density field fluctuates by a few
+thousandths of its mean of $1$, so its raw RMS is essentially one; dividing by that would leave
+the value indistinguishable from RMSE and would hide two to three orders of magnitude of
+relative error,
 making density and velocity incomparable on the same degradation. Removing the mean first
 is what puts them on one scale.
 
