@@ -385,9 +385,10 @@ an axis index: use `ctx.axis("x")`, because which axis is x depends on the dimen
 `@companion(of=...)`. A second number from the literature is a sibling bundle that imports the
 function, the `rmse` pattern.
 
-- **`kind="field"`**, a per-cell map, if the metric is a reduction of a per-cell density. It is
-  what makes the `field_gallery` figure possible, and for a displaced feature it shows the
-  double penalty as two lobes rather than as an argument.
+- **`kind="field"`**, a per-cell map, if the metric is a reduction of a per-cell quantity (a
+  density for a mean or a sum, the error itself for a maximum). It is what makes the
+  `field_gallery` figure possible, and for a displaced feature it shows the double penalty as
+  two lobes rather than as an argument.
 
   ```python
   @companion(of="h_minus_one")          # must come AFTER the metric it belongs to
@@ -422,13 +423,19 @@ metric): compute a quantity of the reference once per frame with a membership te
 which evaluates `f` on every call.
 
 **Get the reduction right — this is the easy mistake.** The declared `reduction` is verified by
-a test, and two cases catch people:
+a test, on two channels as well as one for a metric that accepts any field, and three cases
+catch people:
 
-- Maps are summed over channels, so a `mean` reduction is `map.mean() / C`, not `map.mean()`.
+- A map reduced by `mean` is summed over channels, so the reduction is `map.mean() / C`, not
+  `map.mean()`.
 - `rmse` uses `sqrt_mean`: its map is the *squared* error and does **not** average to the
   metric value.
+- `max_error` uses `max`: its map takes the largest value over channels instead of their sum,
+  and the reduction is `map.max()`, ignoring `C`. A summed map under `max` agrees on one channel
+  and is wrong on velocity.
 
-Available reductions are in `metrics/registry.py::REDUCTIONS`; add one there if you need it.
+The reductions are `mean`, `sum`, `sqrt_mean` and `max`, in `metrics/registry.py::REDUCTIONS`;
+add one there if you need it.
 
 **Heavy imports go inside the function body.** Every metric module is imported on every run, so
 a module-level `import torch` is a startup cost paid by everyone, including runs that never

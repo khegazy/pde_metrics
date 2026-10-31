@@ -66,7 +66,7 @@ prediction and in the reference.
   for the two point masses above, the Wasserstein-1 distance is $h$. See the
   [Wasserstein distance](optimal_transport/wasserstein.md), the
   [sliced Wasserstein distance](optimal_transport/sliced_wasserstein.md), the
-  [energy distance](distributional/energy_distance.md) and the built
+  built [energy_distance](../metrics/energy_distance.md) and
   [increment_w1](../metrics/increment_w1.md).
 - **Proper scoring rules** judge a predicted distribution against an observed outcome. A
   score is *proper* when its expected value is optimised by predicting the true distribution,

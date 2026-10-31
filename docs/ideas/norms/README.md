@@ -11,8 +11,9 @@ to split a field into a smooth part and a sharp remainder and to compare each pa
 metric suited to it.
 
 Built already, and so not listed here: the $H^1$ seminorm
-([h1_seminorm](../../metrics/h1_seminorm.md)) and the homogeneous $\dot H^{-1}$ norm
-([h_minus_one](../../metrics/h_minus_one.md)).
+([h1_seminorm](../../metrics/h1_seminorm.md)), the homogeneous $\dot H^{-1}$ norm
+([h_minus_one](../../metrics/h_minus_one.md)) and the maximum pointwise error
+([max_error](../../metrics/max_error.md)).
 
 ## Ideas in this theme
 
@@ -21,5 +22,3 @@ Built already, and so not listed here: the $H^1$ seminorm
   distance.
 - [Splitting a field into smooth and sharp parts](mollification_split.md): smooth the field,
   keep the remainder as its sharp part, and compare the two parts with different metrics.
-- [Maximum pointwise error](maximum_error.md): the largest error in any single cell, reported
-  only as a worst-case stability diagnostic beside the averaged pointwise norms.

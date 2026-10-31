@@ -1,0 +1,37 @@
+schema_version: 1
+
+name: energy_distance
+kind: metric
+
+# "Compares distributions or moments of the field: increment PDFs, flatness, structure
+# functions." What is compared is the one-cell increment distribution, as in increment_w1.
+category: statistical
+
+summary: >-
+  Energy distance between the one-cell increment distributions of two fields: an averaging
+  distance between distributions, set beside the transport distance of increment_w1 on the
+  same samples, ignoring where in the domain the increments arose.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    Mean over channels and spatial axes of the energy distance between the reference's and
+    the candidate's one-cell increment distributions along that axis, in the square root of
+    the field's units. Zero when every increment distribution matches.
+  bounds:
+    lower: 0.0
+    upper: null
+
+math:
+  # The energy distance is a metric on distributions (Rizzo & Székely 2016, p. 27), composed
+  # here with a fixed map from field to distribution, so the triangle inequality survives on
+  # each (channel, axis) and in the mean over them. A pseudometric on fields: distinct fields
+  # sharing an increment distribution are at distance zero.
+  triangle_inequality: true
+  scale_dependent: true        # scaling both fields by c scales the distance by sqrt(|c|)
+  resolution_dependent: true   # the separation is one cell, so it is set by the grid
+  complexity: "O(N log N)"     # dominated by the sort inside scipy.stats.energy_distance
+references: [szekely2013, rizzo2016, sejdinovic2013, gretton2012, muller1997, scipyenergy]
+review: null
