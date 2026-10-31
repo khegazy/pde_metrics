@@ -727,8 +727,10 @@ row per point and one column per named coordinate; the names and units are in `r
 under the metric's registry entry. The number of points changes from field to field.
 
 **How it is evaluated.** It is not. A point set is stored for inspection only, on the frames,
-ladder entries and fields that `report.error_map` names, and on the clean level of those frames,
-the set every other one is read against. It shares `data/error_maps.npz` and its key,
+ladder entries and fields that `report.error_map` names, and on the clean level of those frames.
+For a companion of one field, the clean level's set is that of the undamaged prediction: the
+reference's own on a deterministic dataset, the member mean's on an ensemble one. It shares
+`data/error_maps.npz` and its key,
 `metric:field__variant__tframe`, with the per-cell maps.
 
 **Where it appears.** `data/error_maps.npz`; the `companion_points` figure.
@@ -1256,7 +1258,7 @@ translates the ensemble rather than perturbing it, and would leave the spread un
 | `energy_spectrum` | 3 | Cumulative fluctuation energy against wavenumber, per field, with the applied spectral cutoffs drawn on. This sets the resolution of every filter's sequence of strengths: a spectral severity is a fraction of energy to remove and is converted to a cutoff using exactly this curve, so where the curve rises sharply neighbouring severity levels land on the same set of modes and become the same experiment. The density curve is almost a step — 3×10⁻⁵ of its fluctuation energy at or below |k| = 1 and 69% at |k| = √2 — which is why a sharp filter has only a couple of usable severity levels there; vorticity rises gradually, 50% by |k| = 3.2 and 99% by 51, and its cutoffs spread over more than a factor of ten. Dashed lines are cutoffs in use, dotted lines severity levels excluded for repeating a milder severity level or for doing nothing. It says nothing about phase — two fields with identical curves can look entirely different, which is the premise of the trap test above |
 | `ladder_curves` | 3 | Value against severity level for every degradation, with an interquartile band over frames. The curve the correlation summarises. Flat means blind to that failure mode |
 | `companion_curves` | 3 | For a metric with a curve companion: the curve against its coordinate, one panel per degradation, the median over frames at every strength (darker for harsher), the clean curve in black, the anchor dashed and the impostor dotted. The values are the literature's own. A second figure reads each coordinate as a metric of its own: its rank correlation with strength and its change from clean at the harshest strength, one line per degradation |
-| `companion_points` | 3 | For a metric with a point-set companion: the stored sets, one panel per stored variant with the clean level first, on axes shared by every panel so a collapsed set cannot look like the clean one. The first two named coordinates are the axes and a third, if any, the colour. A triangle on a panel's edge is a point with an infinite coordinate, such as a persistence class that never dies |
+| `companion_points` | 3 | For a metric with a point-set companion: the stored sets, one panel per stored variant, frames in time order with each frame's clean level first and at most twelve panels (the caption says when more were stored), on axes shared by every panel so a collapsed set cannot look like the clean one. The first two named coordinates are the axes and a third, if any, the colour. A triangle on a panel's edge is a point with an infinite coordinate, such as a persistence class that never dies |
 | `response_along_time` | 3 | The metric against the frame's physical time, one line per strength, for each degradation whose applied strength changes along the trajectory (`per_unit_time`); the clean field in black. Shows an error growing in time. Not drawn for a run with no such degradation |
 | `monotonicity_heatmap` | 4 | `rho` for every metric against every degradation. Down a column: is this metric monotone? Across a row: what does it detect? Hatched cells fall below the reference value |
 | `severity_level_separation` | 5 | The spread of each severity level across frames, as violins. Where neighbouring violins overlap, the metric cannot rank models one severity level apart |

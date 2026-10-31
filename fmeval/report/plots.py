@@ -119,6 +119,10 @@ def ladder_curves(ctx, df, opts) -> PlotResult:
     )
 
 
+#: Most panels one stored-map or point-set figure draws, so a figure stays legible on a page.
+_MAX_PANELS = 12
+
+
 def _companion(ctx, metric: str) -> dict:
     """A metric's companion (kind, coordinate) as the run's own registry snapshot recorded it;
     empty for a metric without one or a run that predates the record."""
@@ -235,12 +239,13 @@ def companion_curves(ctx, df, opts) -> PlotResult:
 def companion_points(ctx, df, opts) -> PlotResult:
     """The metric's point-set companion on every stored variant, on shared axes.
 
-    One panel per stored variant and frame, the clean level first. The first two declared
-    coordinates are the axes and a third, if declared, colours the points on one scale for the
-    whole figure. The axes are shared for the reason the gallery shares its colour scale: limits
-    fitted to each panel would make a collapsed set look like the clean one. A point with an
-    infinite coordinate, such as a persistence class that never dies, is drawn as a triangle on
-    the edge of the panel rather than dropped.
+    One panel per stored variant and frame, frames in time order and the clean level first in
+    each, at most :data:`_MAX_PANELS`; the caption says when more were stored. The first two
+    declared coordinates are the axes and a third, if declared, colours the points on one scale
+    for the whole figure. The axes are shared for the reason the gallery shares its colour scale:
+    limits fitted to each panel would make a collapsed set look like the clean one. A point with
+    an infinite coordinate, such as a persistence class that never dies, is drawn as a triangle
+    on the edge of the panel rather than dropped.
     """
     metric, field = str(df["metric"].iloc[0]), str(df["field"].iloc[0])
     entry = _companion(ctx, metric)
@@ -248,7 +253,10 @@ def companion_points(ctx, df, opts) -> PlotResult:
     stored = {k: v for k, v in ctx.maps.items() if parse_map_key(k)[:2] == (metric, field)}
     ctx.require(bool(stored), f"no point sets of {metric} on {field} were stored")
     names = [name for name, _ in entry["coordinate"]]
-    panels = sorted(stored, key=lambda k: (parse_map_key(k)[2] != "reference", k))[:12]
+    # Frames in time order, the clean level first within each frame.
+    order = sorted(stored, key=lambda k: (parse_map_key(k)[3], parse_map_key(k)[2] != "reference",
+                                          k))
+    panels = order[:_MAX_PANELS]
     points = np.concatenate([stored[k] for k in panels])
     limits = []
     for column in points[:, :2].T:
@@ -289,8 +297,11 @@ def companion_points(ctx, df, opts) -> PlotResult:
     return PlotResult([FigureItem(
         fig, {"metric": metric, "field": field},
         caption=f"The point set behind {metric} on {field}, one panel per stored variant, the "
-                "clean level first, on shared axes. Triangles on a panel's edge are points with "
-                "an infinite coordinate.",
+                "clean level first in each frame, on shared axes. Triangles on a panel's edge are "
+                "points with an infinite coordinate."
+                + (f" Only the first {len(panels)} of the {len(order)} stored sets are drawn, in "
+                   "time order; every set is in data/error_maps.npz."
+                   if len(order) > len(panels) else ""),
         data=pd.concat(tidy, ignore_index=True))])
 
 
@@ -800,7 +811,7 @@ def field_gallery(ctx, df, opts) -> PlotResult:
     ctx.require(all(m.ndim == 2 for m in stored.values()),
                 f"the gallery draws two-dimensional maps and the maps of {field} are not")
 
-    panels = sorted(stored)[:12]
+    panels = sorted(stored)[:_MAX_PANELS]
     ncols = min(4, len(panels))
     nrows = int(np.ceil(len(panels) / ncols))
     fig, grid = ctx.style.figure(nrows, ncols)

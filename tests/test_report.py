@@ -867,3 +867,32 @@ def test_a_point_set_is_stored_on_the_chosen_frames_and_drawn(tmp_path, temporar
     assert np.isinf(data["y"]).sum() == 3, "the point at infinity is kept, once per panel"
     gallery = _rendered(folder, "field_gallery")
     assert gallery.status != "ok", "a point set is not a per-cell map"
+
+
+def test_point_set_panels_run_in_time_order_and_stop_at_twelve(tmp_path, temporary_metric):
+    """Frames 2 and 10 each store the clean level and six blur levels, 14 sets. The panels run
+    frame by frame in time order, so frame 2 before frame 10 although the key ``t10`` sorts
+    before ``t2`` as a string, with the clean level first in each frame, and stop at twelve:
+    all seven sets of frame 2, then the first five of frame 10."""
+    temporary_metric(name="_count", arity="pairwise", symmetric=False)(
+        lambda reference, candidate, *, ctx: float(len(ctx.cache[COMPANION_KEY])))
+    metric_registry.companion(of="_count", kind="points", coordinate=(
+        ("x", "cells"), ("y", "cells")))(lambda x: np.argwhere(x[0] > x[0].mean()).astype(float))
+    ladder = build_ladder({"gaussian_blur": {"severities": [0.05, 0.1, 0.15, 0.2, 0.25, 0.3]}})
+    result = run(AdvectingBlobs(grid=(16, 8), n_frames=11), [metric_registry.get("_count")],
+                 ladder, fields=["density"], dataset=DatasetInfo(name="advecting_blobs"),
+                 maps=MapRequest(enabled=True, frames=[2, 10]))
+    assert len(result.maps) == 14
+    folder = RunFolder(tmp_path / "_count_1").create()
+    write_results(folder, result.rows)
+    write_maps(folder, result.maps)
+    write_config(folder, {"metrics": ["_count"], "seed": 0}, [])
+    write_run_meta(folder, run_id=1, metric="_count", dataset="advecting_blobs")
+
+    outcome = _rendered(folder, "companion_points")
+    assert outcome.status == "ok", outcome.reason
+    data = _figure_data(folder, "companion_points__metric-_count__field-density")
+    panels = data[["frame_index", "variant"]].drop_duplicates()
+    assert list(panels["frame_index"]) == [2] * 7 + [10] * 5
+    assert list(panels.groupby("frame_index", sort=False)["variant"].first()) == [
+        "reference", "reference"]

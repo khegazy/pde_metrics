@@ -307,7 +307,9 @@ def companion(*, of: str, kind: CompanionKind = "field",
       arguments or, for a pairwise metric, one field. Like a curve it is called before the metric
       on every row and handed over in ``ctx.cache[COMPANION_KEY]``; like a field map it is
       stored only on the frames, ladder entries and fields ``report.error_map`` names, and on the
-      reference level of those frames, which every other point set is read against. The first two
+      clean level of those frames. There a one-field companion gives the set of the undamaged
+      prediction, the reference's on a deterministic dataset and the member mean's on an ensemble
+      one; a two-field companion gives its value on that prediction. The first two
       coordinates are the axes it is drawn on and a third, if any, colours the points.
 
     Args:

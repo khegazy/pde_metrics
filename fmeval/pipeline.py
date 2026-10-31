@@ -123,9 +123,9 @@ class MapRequest:
 
     Storing a map for every frame and variant would be gigabytes, so only the named
     combinations are retained -- enough for the figure, not for the whole run. A point-set
-    companion is kept on the same combinations and on the reference level of the named frames,
-    the set every other one is read against. The defaults here keep nothing, for callers that do
-    not ask.
+    companion is kept on the same combinations and on the clean level of the named frames, the
+    set of the undamaged prediction: the reference on a deterministic dataset, the member mean on
+    an ensemble one. The defaults here keep nothing, for callers that do not ask.
     """
 
     enabled: bool = False
@@ -384,8 +384,9 @@ def run(
                                         "_row": len(rows) - 1}
                                        for c, v in zip(*ctx.cache[COMPANION_KEY], strict=True)]
 
-                    # A point set is kept on the clean level too: every other one is read
-                    # against it, and the reference's own set is not otherwise stored.
+                    # A point set is kept on the clean level too, the undamaged prediction's
+                    # (the reference's on a deterministic dataset, the member mean's on an
+                    # ensemble one), the set the degraded ones are drawn beside.
                     if (
                         kind in ("field", "points")
                         and frame.index in keep_frames
