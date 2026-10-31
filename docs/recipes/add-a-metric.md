@@ -49,6 +49,10 @@ looping over all three; your metric sees two arrays and returns a number.
     when it is there (`fmeval.context`), compute it otherwise, and never write under that key.
     Put a quantity of the reference in `ctx.cache` under a key of your own, behind a membership
     test, so it is computed once per frame. `AGENTS.md` §3.3 has the details.
+  - If the number compares two sets of points (a persistence diagram, the positions of shocks),
+    `@companion(of="<name>", kind="points", coordinate=(("<name>", "<units>"), ...))` returning an
+    `(N, D)` array, one column per named coordinate. It is handed to the metric like a curve and
+    stored, like a map, only on the frames `report.error_map` names.
   - If the number is a summary of the curve that no source fixes, it is a convention: say so in
     the docstring and on the card, and write an issue.
 

@@ -11,7 +11,7 @@ connectivity: it records how the connected pieces of the level sets (the sets wh
 takes a given value) appear, merge, split and vanish as the value changes. The *Morse–Smale
 complex* is a skeleton of the gradient flow: it divides the domain into cells within which
 every path of steepest ascent starts at the same minimum and ends at the same maximum. Both
-say more than a [persistence diagram](persistence_diagrams.md) about *where* structures are
+say more than a [persistence diagram](../../metrics/persistence_distance.md) about *where* structures are
 located.
 
 Two simpler skeletons are closely related. A *merge tree* records only how the connected

@@ -13,11 +13,11 @@ elegant.
 ## Pitfalls
 
 - The computational machinery for well groups is less mature than that for
-  [persistence diagrams](persistence_diagrams.md).
+  [persistence diagrams](../../metrics/persistence_distance.md).
 
 ## Rationale
 
 *The team's judgement.* Low priority, for the same reason as
 [multiparameter persistence](multiparameter_persistence.md): the machinery is immature. The
-idea is parked, to be revisited if [persistence diagrams](persistence_diagrams.md) succeed but
+idea is parked, to be revisited if [persistence diagrams](../../metrics/persistence_distance.md) succeed but
 fail in a way that well groups would explain.

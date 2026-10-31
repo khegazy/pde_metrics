@@ -1,0 +1,35 @@
+schema_version: 1
+
+name: persistence_distance
+kind: metric
+
+# Compares which features exist (pieces, loops) and at which levels they appear and vanish,
+# never where they sit.
+category: topological
+
+summary: >-
+  Bottleneck distance between the persistence diagrams of the reference and the candidate: how
+  far the levels at which the field's connected pieces and loops appear and vanish have to move
+  to match, wherever in the domain those features sit.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    The largest, over homology dimensions, of the bottleneck distance between the two fields'
+    sublevel-set persistence diagrams, in the field's own units.
+  bounds:
+    lower: 0.0
+    upper: null      # bounded by the largest pointwise difference of the two fields
+
+math:
+  triangle_inequality: true    # the bottleneck distance is a metric on diagrams; between fields
+                               # it is a pseudometric, zero for any two fields with one diagram
+  scale_dependent: true        # scaling both fields by c scales every birth and death by c
+  resolution_dependent: true   # the grid sets which features can exist and their extreme values
+  complexity: "measured, not derived: under 0.1 s per diagram and about 0.35 s per matching on a 256 x 256 field"
+references: [bleile2022, cohensteiner2005, cohensteiner2007, gudhibottleneck, gudhicubical,
+             martinez2026, muszynski2019, skraba2020, smith2024, tierny2018]
+
+review: null

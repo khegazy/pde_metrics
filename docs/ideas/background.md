@@ -127,7 +127,7 @@ zero, a *triad*, is what builds shocks, fronts and vortices, and it is recorded 
 [bispectrum](basis_decompositions/bispectrum.md), in
 [phase coherence](basis_decompositions/spectral_coherence.md), in morphology such as the
 [Minkowski functionals](topology/minkowski_functionals.md), and in topology such as
-[persistence diagrams](topology/persistence_diagrams.md). None of it is visible to the
+[persistence diagrams](../metrics/persistence_distance.md). None of it is visible to the
 spectrum.
 
 ## A Gaussian field can match any spectrum
