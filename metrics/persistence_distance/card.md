@@ -7,8 +7,8 @@ kind: metric
 
 Let $f$ be a scalar field on a grid of $N$ cells $c$. Each cell is a closed top-dimensional
 cube, and each lower-dimensional face of a cube takes the smallest value of the cubes it bounds:
-the T-construction [@bleile2022], Definition 4.4, which suits cell-averaged data and connects
-two cells that touch only at a corner. The sublevel set at threshold $t$ is the union of the
+the T-construction [@bleile2022], Definition 4.4, "Method 1" of [@skraba2020], Sect. 5.1, which
+suits cell-averaged data and connects two cells that touch only at a corner. The sublevel set at threshold $t$ is the union of the
 closed cells at or below it,
 
 $$
@@ -42,15 +42,16 @@ $$
 
 over bijections $\gamma$, with $\lVert (p_1, p_2) - (q_1, q_2) \rVert_\infty =
 \max(\lvert p_1 - q_1 \rvert, \lvert p_2 - q_2 \rvert)$. A point matched to the diagonal costs
-half its lifetime, $(d - b)/2$. The registered number is the largest of these distances over
-the homology dimensions $k = 0, \dots, n$ of an $n$-dimensional grid,
+half its lifetime, $(d - b)/2$. The registered number is the bottleneck distance between the
+diagrams of all homology dimensions $k = 0, \dots, n$ of an $n$-dimensional grid, each dimension
+matched on its own [@skraba2020], Eq. 1:
 
 $$
 \mathrm{PD}(f, g) = \max_{0 \le k \le n} d_B\bigl(D_k(f), D_k(g)\bigr) \tag{4}
 $$
 
-Taking the maximum is a convention of this bundle, recorded in `issues/115`: it is the
-bottleneck distance with points matched only within one dimension. The Main Theorem of
+It is the limit $p \to \infty$ of their total $p$-Wasserstein distance, which sums the $p$-th
+powers over dimensions [@skraba2020], Definition 2.5. The Main Theorem of
 [@cohensteiner2005], Sect. 3.1 (the journal version is [@cohensteiner2007]) bounds each term by
 the largest pointwise difference, so
 
@@ -70,7 +71,8 @@ Equation (3) with the identity bijection and is the slowest case for gudhi. The 
 never die are kept and matched among themselves; their number is fixed by the grid's topology
 (on a doubly periodic grid one piece, two loops and one cavity, the torus), so both diagrams
 always have the same number of them and their births, which include the global minimum and the
-global maximum, enter Equation (3) like any other point (`issues/115`).
+global maximum, enter Equation (3) like any other point, as points at infinity of the extended
+plane [@cohensteiner2005], Sect. 2.
 
 Only one-channel scalar fields are accepted: density, and vorticity on a two-dimensional grid.
 A vector field, or a field holding a NaN or an infinite value, raises an error.

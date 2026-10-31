@@ -46,9 +46,12 @@ def persistence_distance(reference: NDArray[np.floating], candidate: NDArray[np.
     L-infinity displacement of a point (Cohen-Steiner, Edelsbrunner & Harer 2005, Proc. SoCG,
     263-271, Sect. 3.1, Definition of d_B; journal version Discrete Comput. Geom. 37(1),
     103-120, 2007). Their Main Theorem (Sect. 3.1) bounds it, for each k, by the largest pointwise
-    difference of the two fields, so the maximum over k is bounded by it too. Taking the maximum
-    over dimensions is this bundle's convention (issues/115): it is the bottleneck distance of
-    the diagrams with points matched only within one dimension.
+    difference of the two fields, so the maximum over k is bounded by it too. The distance
+    between the diagrams of all dimensions is the supremum over k of the per-dimension distances,
+    each dimension matched on its own (Skraba & Turner 2020, arXiv:2006.16824, Eq. 1), the
+    limit p -> inf of their total p-Wasserstein distance (Definition 2.5). Points that never die
+    are kept and matched among themselves, as Cohen-Steiner et al. place them at infinity in the
+    extended plane.
 
     Computed by ``gudhi.bottleneck_distance`` at its default precision, an additive error of the
     smallest positive double and possibly the last two or three bits of the mantissa (GUDHI
@@ -84,6 +87,7 @@ def persistence_distance(reference: NDArray[np.floating], candidate: NDArray[np.
         # Cohen-Steiner et al. (2005), Sect. 3.1: d_B = inf over bijections of the largest
         # L-infinity displacement, the diagonal free to absorb points.
         distances.append(0.0 if same else gudhi.bottleneck_distance(a, b))
+    # Skraba & Turner (2020), Eq. 1: the supremum over dimensions of the per-dimension distances.
     return float(max(distances))
 
 
@@ -95,8 +99,9 @@ def persistence_diagram(x: NDArray[np.floating], *, ctx: FieldContext) -> NDArra
     The field is a cubical complex in which each grid cell is a top-dimensional cube carrying
     the cell's value, and every lower-dimensional face takes the smallest value of the cubes it
     bounds: the T-construction (Bleile, Garin, Heiss, Maggs & Robins 2022, Research in
-    Computational Topology 2, AWM Series 30, 1-26, Definition 4.4), the one that matches cell
-    averages and connects cells that touch at a corner. Each axis the grid declares periodic is
+    Computational Topology 2, AWM Series 30, 1-26, Definition 4.4; "Method 1" of Skraba & Turner
+    2020, arXiv:2006.16824, Sect. 5.1), the one that matches cell averages and connects cells
+    that touch at a corner. Each axis the grid declares periodic is
     wrapped, so on a doubly periodic grid the complex is the torus (their Sect. 4.2) and the full
     complex has Betti numbers 1, 2, 1. Computed with ``gudhi.PeriodicCubicalComplex`` (GUDHI 3.13
     manual, "Cubical complex"), coefficients in gudhi's default field Z/11, and intervals of zero

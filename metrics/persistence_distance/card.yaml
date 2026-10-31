@@ -30,6 +30,6 @@ math:
   resolution_dependent: true   # the grid sets which features can exist and their extreme values
   complexity: "measured, not derived: under 0.1 s per diagram and about 0.35 s per matching on a 256 x 256 field"
 references: [bleile2022, cohensteiner2005, cohensteiner2007, gudhibottleneck, gudhicubical,
-             martinez2026, muszynski2019, smith2024, tierny2018]
+             martinez2026, muszynski2019, skraba2020, smith2024, tierny2018]
 
 review: null
