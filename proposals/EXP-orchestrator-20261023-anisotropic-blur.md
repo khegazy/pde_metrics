@@ -1,7 +1,13 @@
-# EXP: A directional (anisotropic) blur
+---
+type: EXP
+kind: degradation
+related: ["issues/058", "issues/071", "issues/075"]
+seen_in: "orchestrator's own"
+doi: "none"
+found_by: "orchestrator, 2026-10-23"
+---
 
-Found by: the orchestrator screening `docs/ideas/`, 2026-10-23. Seen in: the orchestrator's own
-proposal.
+# EXP: A directional (anisotropic) blur
 
 ## What the experiment is
 

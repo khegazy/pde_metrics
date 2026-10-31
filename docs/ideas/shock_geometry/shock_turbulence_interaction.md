@@ -11,7 +11,7 @@ turbulence wrinkles the shock. These statistics measure both effects, so that a 
 be compared with a reference on the physics of the interaction rather than cell by cell.
 
 - **Shock-aligned coordinate.** For each point, the signed distance $d_s$ to the surface found
-  by the [shock detector](shock_detector.md), negative upstream and positive downstream.
+  by the [shock detector](../../metrics/shock_set_distance.md), negative upstream and positive downstream.
   Statistics are then conditioned on bins of $d_s$, so that they are averaged along the shock
   rather than across it. The same coordinate gives the shock-normal profile of
   [entropy production](../physics_invariants/entropy_production.md).

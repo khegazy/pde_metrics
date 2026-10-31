@@ -499,6 +499,9 @@ def test_response_to_a_small_displacement_has_the_declared_power(name: str, rati
     # The variogram score weights each pair by its inverse distance, so doubling the cell
     # size halves every weight and the score.
     pytest.param("variogram_score", 0.5, id="variogram_score-inverse-length"),
+    # The distance between shock sets is a length: the detector reads only pressure ratios,
+    # so the same cells are flagged at any spacing and every distance between them doubles.
+    pytest.param("shock_set_distance", 2.0, id="shock_set_distance-length"),
 ])
 def test_doubling_the_spacing_scales_the_value_by_its_power_of_length(name: str, factor: float):
     """A metric carrying a length to some power scales by ``2^power`` when the spacing doubles.

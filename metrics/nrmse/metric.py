@@ -28,9 +28,9 @@ def nrmse(reference: np.ndarray, candidate: np.ndarray) -> float:
     """RMSE normalised by the RMS of the reference *fluctuation*.
 
     The spatial mean is removed before normalising. The kinet weakly compressible data has
-    density = 1.0 +/- 1.8e-4, so normalising by the raw RMS (~1.0) would hide four orders
-    of magnitude of relative error and make density and velocity incomparable on the same
-    axis.
+    density fluctuating by a few thousandths of its mean of 1.0, so normalising by the raw RMS
+    (~1.0) would hide two to three orders of magnitude of relative error and make density and
+    velocity incomparable on the same axis.
 
     Parameters
     ----------
