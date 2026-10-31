@@ -7,7 +7,7 @@ curvature defined without any smooth structure, and the Riemannian curvature of 
 all ideal-fluid flows. The first has real precedent in combustion; the others are deeper but
 further from a routine diagnostic. Edge detection with the Canny and Sobel operators, a cheap
 image-processing way to locate shocks, is folded into the
-[shock detector](../shock_geometry/shock_detector.md) as an implementation shortcut rather
+[shock detector](../../metrics/shock_set_distance.md) as an implementation shortcut rather
 than listed here as an idea of its own.
 
 ## Ideas in this theme
