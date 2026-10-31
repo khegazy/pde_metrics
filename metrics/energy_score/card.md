@@ -19,7 +19,7 @@ reversed, so that lower is better [@gneitingraftery2007]. It is strictly proper 
 $\beta \in (0, 2)$: in expectation over the reference, the true distribution of the whole
 field scores lower than any other forecast [@gneitingraftery2007]. With one value per field,
 $\beta = 1$ turns Equation (1) into the kernel form of the continuous ranked probability score,
-their Equation (21), and the score is the [crps](../crps/card.md).
+their Equation (21), and the score is the [crps](../../metrics/crps/card.md).
 
 From an ensemble $\mathbf{x}_1 \dots \mathbf{x}_M$ both expectations are estimated without
 bias, the pair term over distinct members only [@pacchiardi2024]:
