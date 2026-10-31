@@ -23,6 +23,8 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 | [EXP-orchestrator-20261023-dilatational-scaling.md](EXP-orchestrator-20261023-dilatational-scaling.md) | Scaling the dilatational part of the velocity | proposed |
 | [EXP-orchestrator-20261023-known-vortex-field.md](EXP-orchestrator-20261023-known-vortex-field.md) | A field with a known vortex population | proposed |
 | [EXP-orchestrator-20261023-temporal-ladder.md](EXP-orchestrator-20261023-temporal-ladder.md) | A degradation ladder for trajectories | proposed |
+| [EXP-persistence_distance-spurious-feature-injection.md](EXP-persistence_distance-spurious-feature-injection.md) | Injecting isolated spurious features of known depth | proposed |
+| [EXP-persistence_distance-topological-simplification.md](EXP-persistence_distance-topological-simplification.md) | Persistence-sensitive simplification as a degradation | proposed |
 | [EXP-shock_set_distance-2d-shock-dataset.md](EXP-shock_set_distance-2d-shock-dataset.md) | A two-dimensional shock dataset for the shock-set distance | proposed |
 | [EXP-sod_evidence-sod-time-offset.md](EXP-sod_evidence-sod-time-offset.md) | The exact Sod solution at a shifted time, as a physically consistent wave-position error | proposed |
 | [EXP-spectral_energy_flux-forced-2d-compressible-flux-loop.md](EXP-spectral_energy_flux-forced-2d-compressible-flux-loop.md) | Forced two-dimensional compressible turbulence at Mach 0.3 to 0.5 | proposed |
@@ -36,6 +38,9 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 | [MTR-max_error-high-quantile-error.md](MTR-max_error-high-quantile-error.md) | A high quantile of the pointwise absolute error | proposed |
 | [MTR-max_error-mean-of-channel-maxima.md](MTR-max_error-mean-of-channel-maxima.md) | Maximum error averaged over channels (PDEBench's reduction) | proposed |
 | [MTR-max_error-vector-magnitude.md](MTR-max_error-vector-magnitude.md) | Maximum of the error vector's length | proposed |
+| [MTR-persistence_distance-betti-curve-distance.md](MTR-persistence_distance-betti-curve-distance.md) | Distance between Betti curves | proposed |
+| [MTR-persistence_distance-signed-vortex-census.md](MTR-persistence_distance-signed-vortex-census.md) | Signed vortex census from zero-dimensional persistence | proposed |
+| [MTR-persistence_distance-wasserstein-diagram-distance.md](MTR-persistence_distance-wasserstein-diagram-distance.md) | p-Wasserstein distance between persistence diagrams | proposed |
 | [MTR-shock_set_distance-full-shock-zone-detector.md](MTR-shock_set_distance-full-shock-zone-detector.md) | The full Schaal-Springel shock finder, with a compression gate and a single-layer surface | proposed |
 | [MTR-shock_set_distance-object-matched-shock-distance.md](MTR-shock_set_distance-object-matched-shock-distance.md) | Object-matched shock distance, after MODE | proposed |
 | [MTR-shock_set_distance-other-surface-distance-summaries.md](MTR-shock_set_distance-other-surface-distance-summaries.md) | Hausdorff, quantile-Hausdorff, AVD and MASD summaries of the same shock-set distances | proposed |
