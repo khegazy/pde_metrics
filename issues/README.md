@@ -52,7 +52,6 @@ Designed, hooks in place, not built.
 | [024](024-leray-projection.md) | Solenoidal projection for the spectral operators | low |
 | [066](066-wasserstein-needs-a-transport-library.md) | Wasserstein distance for horizontal displacement needs a transport library | high |
 | [067](067-sinkhorn-waits-on-wasserstein.md) | Sinkhorn divergences wait on the Wasserstein distance | medium |
-| [068](068-shock-mask-overlap-waits-on-the-detector.md) | Overlap of shock masks waits on the shock detector | medium |
 | [069](069-solver-consistency-needs-a-trusted-solver.md) | Consistency with one step of a trusted solver needs the solver | high |
 | [070](070-admissibility-checks-are-untestable.md) | Admissibility checks: no existing experiment violates an admissibility condition | unset |
 | [071](071-equivariance-needs-the-model.md) | Galilean and rotational equivariance needs the model | unset |
@@ -106,6 +105,7 @@ Designed, hooks in place, not built.
 | [112](112-crps-card-overclaims-comparison-at-one-member.md) | The `crps` card says ensemble sizes compare fairly; at one member the score doubles (1.14 against 0.57) | low |
 | [097](097-stochastic-ladder-for-comparable-magnitudes.md) | A stochastic ladder (several draws per severity) would make response magnitudes comparable across a metric's functional forms | none set |
 | [098](098-increment-w1-registered-number-is-a-convention.md) | The number `increment_w1_by_separation` registers, a normalised mean over separations, is a convention with no source | unset |
+| [102](102-shock-set-distance-empty-and-non-positive-conventions.md) | The scores `shock_set_distance` gives an empty shock set and a non-positive pressure are conventions | unset |
 
 ## Technical debt
 
@@ -114,6 +114,7 @@ Designed, hooks in place, not built.
 | [020](020-import-name-collision.md) | `metrics` is a very generic top-level import name | low |
 | [032](032-prose-numbers-can-go-stale.md) | Numbers written into card prose can go stale unnoticed | medium |
 | [033](033-link-rewriting-is-only-checked-for-deadness.md) | Site link rewriting is checked for dead links, not correct destinations | medium |
+| [101](101-a-metric-cannot-declare-it-needs-an-absolute-positive-field.md) | A metric cannot declare that it needs an absolute, positive field; `shock_set_distance` runs on the gauge pressure of `taylor_green_2d` | low |
 | [100](100-site-shows-citations-as-raw-text.md) | The documentation site shows a card's citations as raw `[@key]` and `\bibliography`, and a bundle's three reference lists disagree | medium |
 | [107](107-increment-flatness-drops-a-non-finite-channel.md) | `increment_flatness` silently scores the other channels when one channel holds a NaN or an infinity | low |
 | [108](108-field-gallery-hides-the-cell-a-maximum-map-is-about.md) | The report's field gallery clips the colour scale at the 0.995 quantile, saturating the worst cell a `max` map is about, and captions every map as a per-cell share | low |

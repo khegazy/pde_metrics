@@ -34,7 +34,7 @@ contact or the shock separately can be checked wave by wave against the closed-f
 ## Metrics it would test
 
 The shock-geometry chain (`docs/ideas/shock_geometry/`): the distance between extracted
-shock sets, the shock-mask overlap (issue 068), and the Rankine-Hugoniot residual on a
+shock sets, the shock-mask overlap (`docs/ideas/shock_geometry/shock_mask_overlap.md`), and the Rankine-Hugoniot residual on a
 detected surface (issue 051), whose residual should stay at its reference value because the
 jumps are exact while the position error grows.
 
