@@ -77,6 +77,16 @@ plane [@cohensteiner2005], Sect. 2.
 Only one-channel scalar fields are accepted: density, and vorticity on a two-dimensional grid.
 A vector field, or a field holding a NaN or an infinite value, raises an error.
 
+Four choices are this bundle's, not a source's. The bottleneck distance is registered rather
+than a Wasserstein distance between diagrams, because it is the distance with the stability
+theorem of Equation (5), which ties it to the pointwise maximum error; the Wasserstein distance
+counts every feature and is the natural sibling. The filtration is by sublevel sets of the signed
+field, not of its magnitude, so that on vorticity the cores of one sign are born as pieces and,
+on the periodic grid, those of the other sign close loops, and both signs enter the diagram.
+Pressure and other scalar fields are not declared, only because the evidence dataset has none to
+test them on. The metric is declared not differentiable: Equation (4) has a gradient almost
+everywhere, but it moves only the one pair of points that sets the value, and none is computed.
+
 ### Boundary handling
 
 The complex wraps exactly the axes the grid declares periodic, read from the context: on a
