@@ -106,7 +106,7 @@ regime, protected from data leakage and combined.
 | [Invariant measure and attractor comparison](dynamics/invariant_measure.md) | [Dynamics](dynamics/README.md) | both, [issue 080](https://github.com/khegazy/pde_metrics/blob/main/issues/080-invariant-measure-needs-long-rollouts.md) | high | unset | |
 | [Modal decompositions and radiated sound](dynamics/modal_decompositions.md) | [Dynamics](dynamics/README.md) | implementation, [issue 081](https://github.com/khegazy/pde_metrics/blob/main/issues/081-modal-decompositions-need-trajectories.md) | medium | unset | |
 | [Energy distance](distributional/energy_distance.md) | [Distributional](distributional/README.md) | implementation | low | medium | |
-| [Tail-index estimators](distributional/tail_index_estimators.md) | [Distributional](distributional/README.md) | implementation | low | high | |
+| [Tail exceedance and peaks-over-threshold](distributional/tail_index_estimators.md) | [Distributional](distributional/README.md) | implementation | low | high | |
 | [Pair-correlation function of features](distributional/pair_correlation.md) | [Distributional](distributional/README.md) | implementation, [issue 082](https://github.com/khegazy/pde_metrics/blob/main/issues/082-pair-correlation-waits-on-features.md) | medium | medium | |
 | [Energy score, variogram score and calibration](distributional/multivariate_proper_scores.md) | [Distributional](distributional/README.md) | implementation | low | unset | |
 | [Width of the log-density distribution](distributional/density_log_pdf.md) | [Distributional](distributional/README.md) | implementation, [issue 088](https://github.com/khegazy/pde_metrics/blob/main/issues/088-log-density-width-needs-supersonic-data.md) | low | unset | |
@@ -130,8 +130,10 @@ judgement.
 1. **[Persistence diagrams](topology/persistence_diagrams.md) on vorticity and density.**
    Off-the-shelf software exists, the stability theory is settled, and there is precedent at
    LBNL.
-2. **[Tail-index estimators](distributional/tail_index_estimators.md).** It has no positivity
-   problem to solve, and it measures intermittency directly.
+2. **[Tail exceedance and peaks-over-threshold](distributional/tail_index_estimators.md),**
+   what remains of the tail-index idea once its Hill-estimator tier was built as
+   [tail_index](../metrics/tail_index.md). It has no positivity problem to solve, and it
+   measures intermittency directly.
 3. **The [weak-form residual](physics_invariants/weak_residual.md) with
    [solver consistency](physics_invariants/solver_consistency.md).** Both need no reference
    field, and solver consistency is nearly free once a trusted solver is in the repository.
