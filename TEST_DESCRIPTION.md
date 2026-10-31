@@ -642,7 +642,7 @@ share by construction and pull every correlation toward +1.
 degradations the same way. It does **not** mean they weight them the same. Measured on our
 data, MAE and MSE correlate at 0.98 to 0.997 over every degradation, yet MAE assigns 38 (vorticity) to 192
 (velocity) times the damage MSE does at an eighth of a cell of displacement (pinned run
-`comparison_1793302178`), because one is linear and the other quadratic
+`comparison_1793434653`), because one is linear and the other quadratic
 in the displacement. For selecting between models by ranking they are duplicates; as training
 losses they are not. Read this matrix alongside the displacement figure, never alone.
 
