@@ -367,18 +367,31 @@ def test_a_comparison_curve_is_zero_on_identical_fields(spec):
     assert np.allclose(values, 0.0, atol=1e-12), f"{spec.name}: curve on (x, x) is {values}"
 
 
-def test_the_metric_reads_its_curve_from_the_cache(spec):
-    """The pipeline computes a curve once per row and hands it to the metric in the context; the
-    metric must give the same number from that as when it computes the curve itself."""
-    _curve(spec)
+def test_a_point_set_has_one_column_per_declared_coordinate(spec):
+    """An ``(N, D)`` array with ``D`` the number of declared coordinates, on two inputs; ``N`` may
+    change with the fields, ``D`` may not, or the stored sets cannot be drawn on one set of axes."""
+    if spec.companion is None or spec.companion.kind != "points":
+        pytest.skip("no point set declared")
+    for args in (_args_for(spec), _args_for(spec, seed_a=3, seed_b=4)):
+        points = np.asarray(_call_companion(spec, *_companion_args(spec, args)))
+        assert points.ndim == 2 and points.shape[1] == len(spec.companion.coordinate), (
+            f"{spec.name}: point set of shape {points.shape} for the declared coordinates "
+            f"{spec.companion.coordinate}")
+
+
+def test_the_metric_reads_its_companion_from_the_cache(spec):
+    """The pipeline computes a curve or a point set once per row and hands it to the metric in
+    the context; the metric must give the same number from that as when it computes it itself."""
+    if spec.companion is None or spec.companion.kind == "field":
+        pytest.skip("no curve or point set declared")
     if not spec.takes_ctx:
-        pytest.skip("the metric takes no context, so it always computes the curve itself")
+        pytest.skip("the metric takes no context, so it always computes the companion itself")
     args = _args_for(spec)
     ctx = make_ctx(args[0].shape[1:])
     ctx.cache[COMPANION_KEY] = _call_companion(spec, *_companion_args(spec, args))
     direct = spec.fn(*args, ctx=make_ctx(args[0].shape[1:]))
     assert spec.fn(*args, ctx=ctx) == pytest.approx(direct, rel=1e-12), (
-        f"{spec.name}: the number from the cached curve differs from the direct one")
+        f"{spec.name}: the number from the cached companion differs from the direct one")
 
 
 # --- registry mechanics ------------------------------------------------------------
@@ -406,8 +419,9 @@ def test_wrong_arity_signature_raises():
 
 
 def test_a_companion_is_refused_when_its_declaration_contradicts_itself(temporary_metric):
-    """One companion per metric; a curve names its coordinate and a field map does not; and the
-    signature takes the metric's arguments, or one field where a pairwise metric takes two."""
+    """One companion per metric; a curve names its coordinate, a point set names at least two
+    and a field map none; and the signature takes the metric's arguments, or one field where a
+    pairwise metric takes two."""
     temporary_metric(name="_has_curve", arity="pairwise")(lambda a, b: 0.0)
     with pytest.raises(ValueError, match="names its coordinate"):
         registry.companion(of="_has_curve", kind="curve")(lambda a, b: ([0], [0.0]))
@@ -423,6 +437,15 @@ def test_a_companion_is_refused_when_its_declaration_contradicts_itself(temporar
             lambda a, b: ([1], [0.0]))
     with pytest.raises(ValueError, match="not registered"):
         registry.companion(of="_no_such_metric")(lambda a, b: a)
+    temporary_metric(name="_has_points", arity="pairwise")(lambda a, b: 0.0)
+    with pytest.raises(ValueError, match="names its coordinate"):
+        registry.companion(of="_has_points", kind="points")(lambda x: np.zeros((0, 2)))
+    with pytest.raises(ValueError, match="at least two"):
+        registry.companion(of="_has_points", kind="points", coordinate=(("x", "cells"),))(
+            lambda x: np.zeros((0, 1)))
+    registry.companion(of="_has_points", kind="points",
+                       coordinate=(("x", "cells"), ("y", "cells")))(lambda x: np.zeros((0, 2)))
+    assert registry.REGISTRY["_has_points"].companion.one_field
 
 
 def test_unknown_reduction_raises():

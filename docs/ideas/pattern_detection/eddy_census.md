@@ -18,7 +18,7 @@ point-process statistics. It describes how the distances between pairs of point-
 such as eddy centres, are distributed.
 
 The census belongs to a family of methods that identify features and then compare their
-distributions, which also includes [persistence diagrams](../topology/persistence_diagrams.md).
+distributions, which also includes [persistence diagrams](../../metrics/persistence_distance.md).
 The members differ in how a feature is defined and in whether features are matched pairwise
 before comparison.
 

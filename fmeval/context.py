@@ -17,10 +17,11 @@ import numpy as np
 
 from .data.base import GridSpec
 
-#: The ``FieldContext.cache`` key under which the pipeline hands a curve companion's result,
-#: ``(coordinates, values)`` for the variant being scored, to its metric
-#: (:func:`metrics.registry.companion`). Only the pipeline writes it: the cache lives across the
-#: whole ladder, so a curve a metric stored there itself would be read back for the next variant.
+#: The ``FieldContext.cache`` key under which the pipeline hands a curve or point-set
+#: companion's result, ``(coordinates, values)`` or an ``(N, D)`` array, for the variant being
+#: scored, to its metric (:func:`metrics.registry.companion`). Only the pipeline writes it: the
+#: cache lives across the whole ladder, so a companion a metric stored there itself would be read
+#: back for the next variant.
 COMPANION_KEY: str = "companion"
 
 
@@ -42,7 +43,7 @@ class FieldContext:
     #: and hands it to every variant's call, so a quantity of the reference is computed once per
     #: frame by testing membership first: ``if key not in ctx.cache: ctx.cache[key] = f(ref)``.
     #: (``setdefault(key, f(ref))`` would evaluate ``f`` on every call.) Under
-    #: :data:`COMPANION_KEY` it holds the curve of the variant being scored.
+    #: :data:`COMPANION_KEY` it holds the curve or point set of the variant being scored.
     cache: dict[str, Any] = dc_field(default_factory=dict)
 
     @property
