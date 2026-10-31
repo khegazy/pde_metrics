@@ -95,8 +95,8 @@ def test_doubling_the_amplitude_scores_three():
 def test_a_constant_offset_is_invisible():
     """The spatial mean is removed before transforming, so k = 0 carries no energy.
 
-    Stated in the card's Definition, and load-bearing on this data: density is 1.0 +/-
-    1.8e-4, so a spectrum that kept the mean would be comparing two means.
+    Stated in the card's Definition, and load-bearing on this data: density fluctuates by
+    a few thousandths of its mean, so a spectrum that kept the mean would be comparing two means.
     """
     ctx = make_ctx((8, 8))
     field = cosine_mode((8, 8), mode=2)

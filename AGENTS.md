@@ -60,8 +60,8 @@ whole exercise is meant to detect.
 
 **Record the reason, not just the change.** When you fix something subtle, put the evidence in
 the docstring where the code lives. "Preserves the mean" is much less useful than "preserves
-the mean, because deleting k=0 on density removed a component four orders of magnitude larger
-than the cutoff controls and flattened the whole axis".
+the mean, because deleting k=0 on density removed a component two to three orders of magnitude
+larger than the whole fluctuation the cutoff acts on, and flattened the whole axis".
 
 **Write an issue while the evidence is in front of you.** `issues/` holds one file per open
 item with its measurements. An issue written later from memory is worth much less.
@@ -273,8 +273,11 @@ There are no word counts. Say what the section needs to say and stop.
 - **Never write inside a `<!-- GENERATED ... -->` block**, and never edit `_generated/`.
 - **Never set `status: validated`, and never sign a card.** Both are human acts; `sign`
   refuses anyway until measurements exist.
-- **Never edit another bundle** while adding yours. If a change elsewhere seems necessary,
-  stop and say why.
+- **Never edit another bundle** while adding yours, with one exception: a helper another
+  bundle owns may gain an argument whose default keeps its behaviour, so that no number of
+  the owning bundle changes and its tests pass untouched; say so in the pull request. Copying
+  the helper instead is the error the exception prevents. Any other change elsewhere: stop
+  and say why.
 
 ### 3.3 The decorator
 
@@ -542,7 +545,8 @@ severity levels on any monotone axis. Folding a probe into a family as "level 6"
 rank correlation it touches.
 
 **Express relative severities against the fluctuation, never the raw value.** Density here is
-`1.0 ± 1.8e-4`. A noise amplitude expressed as a fraction of the raw RMS would make the mildest
+1.0 with a fluctuation RMS of a few thousandths of it (2.1e-3 to 6.7e-3 over frames 2000 to
+10000 of `kinet_re5e4`). A noise amplitude expressed as a fraction of the raw RMS would make the mildest
 severity level total destruction and the ladder flat-topped for every metric.
 
 **`calibration` is how you avoid a severity that means different things on different fields.**
@@ -918,7 +922,7 @@ listed so nobody has to rediscover them.
 | **Averaging a derived field after a remap** | Block-averaged vorticity is not the curl of the velocity beside it: 5.6% / 18.3% / 25.9% at factors 2 / 4 / 8 | `fmeval/derived.py` |
 | **Mixing stored and recomputed derived fields** | The solver's lattice stencil and a spectral derivative differ by 8.1% rms, so grid-independence would measure the discretisation, not the grid | `fmeval/derived.py::recompute_frame` |
 | **Forgetting that spacing scales with the coarsening factor** | A spectral derivative at a coarse grid with fine spacing is inflated by exactly the factor | `GridSpec.coarsened` |
-| **Deleting k=0 in a high-pass filter** | On density that removes a component four orders of magnitude larger than the cutoff controls; every severity level returned an identical damage of 2.7e7 | `keep_mean` in `degradations/_shared/filters.py` |
+| **Deleting k=0 in a high-pass filter** | On density that removes a component two to three orders of magnitude larger than the whole fluctuation the cutoff acts on; every severity level returned an identical damage of 2.7e7 | `keep_mean` in `degradations/_shared/filters.py` |
 | **Drawing impostor phases directly** | Violates Hermitian symmetry at the self-conjugate modes, so `irfftn` discards the imaginary part and corrupts the spectrum. Gives flatness 47.9 instead of 3 | `degradations/gaussian_impostor/degradation.py` |
 | **Scavenging the anchor from a ladder severity_level** | A 16-cell translation reaches only ~0.6 of a large translation's value, inflating every damage score by ~1.6x | `analysis.py::normalisation` |
 | **Treating a large translation as an unrelated field** | Where a field's energy sits in its largest scales the moved copy stays correlated or anti-correlated with the reference; its `energy_changed` is 1.64–3.05 on kinet, not 2, and on a domain with walls it is a mirrored window. It set a scale off by up to ~1.7x | `mean_field` is the anchor (`judgements/001`) |
@@ -986,6 +990,7 @@ GIT_SSH_COMMAND="ssh -x -o BatchMode=yes" git push origin <branch>
 | `TEST_DESCRIPTION.md` | Every quantity the suite reports, in plain language. **Update it when you add a reported quantity — a test enforces this** |
 | `issues/README.md` | Open items with their evidence |
 | `judgements/README.md` | The few consequential method choices an agent made without asking, each with its sources and how to reverse it |
+| `proposals/README.md` | Benchmarks, experiments, metrics and variants found during research and not yet accepted or rejected, one file each |
 | `README.md` | Setup, and the NERSC specifics |
 | `.github/workflows/tests.yml` | CI. Runs the default suite on every push to a PR; cannot run `-m data` or `-m slow` |
 | `docs/catalog.json` | **Read this for anything structural** — what metrics exist, what they return, what properties they have, how they behaved. Do not parse prose for it |

@@ -20,7 +20,7 @@ $$
 
 Curl-based diagnostics, such as [enstrophy](../../metrics/enstrophy.md), are then computed on
 $\mathbf{u}_{\text{sol}}$ alone, and shock diagnostics, such as the
-[shock detector](../shock_geometry/shock_detector.md), on $\mathbf{u}_{\text{dil}}$.
+[shock detector](../../metrics/shock_set_distance.md), on $\mathbf{u}_{\text{dil}}$.
 
 In compressible turbulence the same split is applied to the energy spectrum. The spectra of
 the solenoidal and dilatational parts, computed from density-weighted (Favre) quantities as

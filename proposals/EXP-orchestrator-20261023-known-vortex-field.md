@@ -1,7 +1,13 @@
-# EXP: A field with a known vortex population
+---
+type: EXP
+kind: benchmark suite or dataset
+related: ["issues/060", "issues/073", "issues/082", "issues/086"]
+seen_in: "orchestrator's own"
+doi: "none"
+found_by: "orchestrator, 2026-10-23"
+---
 
-Found by: the orchestrator screening `docs/ideas/`, 2026-10-23. Seen in: the orchestrator's own
-proposal.
+# EXP: A field with a known vortex population
 
 ## What the experiment is
 
