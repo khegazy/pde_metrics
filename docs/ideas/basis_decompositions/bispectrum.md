@@ -42,7 +42,7 @@ from the reference, and the one a phase-blind check such as the
 [two-point correlation](two_point_correlation.md) cannot.
 
 The bispectrum is the statistical sibling of the
-[spectral energy flux](../turbulence_statistics/spectral_energy_flux.md): the flux through a
+flux compared by the built [spectral_energy_flux](../../metrics/spectral_energy_flux.md): the flux through a
 wavenumber is a triple velocity correlation, a sum over triads of the velocity bispectrum,
 and so it also vanishes for a Gaussian field. The bispectrum is cheaper to compute because it
 needs only the field, not its nonlinear term.

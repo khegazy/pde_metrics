@@ -183,6 +183,12 @@ def test_monotone_on_synthetic_blur_ladder(spec):
     """
     c = _channels_for(spec)
     ref = synthetic_field(GRID, c, seed=0, noise=0.0)
+    # A pairwise metric that is undefined (NaN) on the noise-free field, because the quantity it
+    # normalises by is zero there, is scored from the default, mildly noisy field instead. The
+    # noise-free field is a few Fourier modes, and a statistic that needs more structure than
+    # that, such as energy transfer between wavenumber shells, can be exactly zero on it.
+    if spec.arity == "pairwise" and np.isnan(_call(spec, ref, ref)):
+        ref = synthetic_field(GRID, c, seed=0)
     sigmas = [0.0, 0.5, 1.0, 2.0, 4.0]
 
     if spec.arity == "ensemble":
