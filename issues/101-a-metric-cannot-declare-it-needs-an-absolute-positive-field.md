@@ -45,6 +45,15 @@ handle, and nothing equivalent for the field's meaning. Options:
 Option 2 changes the field vocabulary every reader and metric uses; option 1 is local to the
 decorator, the dataset configs and one check in `fmeval/pipeline.py`.
 
+Whichever option is chosen, the contract tests should exercise such a metric on its real
+domain. `tests/test_metric_contract.py` runs every metric on a signed synthetic field, so a
+detector metric passes only through what it does with values outside its domain. Before the
+fix to `shock_set_distance`, 95% of that field's flagged cells came from non-positive
+neighbours; after it, 38 of 128 cells are flagged by the ratio itself and the blur ladder
+ranks at rho 0.900. A synthetic input with a positive offset, used for any metric that
+declares a positive field, would test the detector's own threshold. Found by the agent that
+built `shock_set_distance` (finding 025, adversarial review 2026-10-30).
+
 ## What would unblock it
 
 A decision for one option, made with the first incompressible evidence dataset that stores
