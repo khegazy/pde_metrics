@@ -845,6 +845,9 @@ def test_the_catalog_supports_the_query_it_exists_for():
         # quadratic in the field; spectrum_l2 is one FFT and a bincount, smooth away from
         # identical spectra exactly as rmse is away from identical fields.
         "h1_seminorm", "palinstrophy", "spectrum_l2",
+        # tail_index is one sort and logarithms per channel and axis, piecewise smooth as
+        # increment_w1's sort is.
+        "tail_index",
     }
 
 

@@ -1,0 +1,41 @@
+schema_version: 1
+
+name: tail_index
+kind: metric
+
+# "Compares distributions or moments of the field": what is read is the upper tail of the
+# distribution of one-cell increments, as increment_flatness reads its fourth moment.
+category: statistical
+
+summary: >-
+  Hill estimate of how slowly the largest one-cell increments of a field fall off, from the
+  square root of the number of cells largest of them; a single-field statistic whose drift from
+  the reference is what is read.
+
+# A tripwire in the same sense as increment_flatness: it characterises one field, so it cannot
+# rank two predictions on its own.
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    Mean over channels and spatial axes of the Hill estimate of the absolute one-cell
+    increments at k = ceil(sqrt(n)), the mean log-ratio of the k largest to the (k+1)-th
+    largest. For a power-law tail with exponent alpha it estimates 1/alpha. Dimensionless. NaN on
+    a constant field. The Hill estimate at nine orders k = ceil(n^theta) is stored beside it.
+  bounds:
+    # Every one of the k largest is at least the (k+1)-th largest, so each log-ratio is >= 0;
+    # 0 is attained when the k + 1 largest are equal.
+    lower: 0.0
+    upper: null
+
+math:
+  triangle_inequality: false   # not a distance: it takes one field
+  # Scaling the field by c scales every increment by c and leaves every ratio unchanged.
+  scale_dependent: false
+  # The separation is one cell and k depends on the number of cells, so it depends on the grid
+  # twice over.
+  resolution_dependent: true
+  complexity: "O(N log N)"     # one sort per channel and axis
+references: [boucheron2015, clauset2009, granero2024, hill1975]
+review: null

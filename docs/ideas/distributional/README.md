@@ -13,13 +13,15 @@ Built already, and so not listed here: the continuous ranked probability score
 ([crps](../../metrics/crps.md)), the spread-to-skill ratio
 ([spread_skill](../../metrics/spread_skill.md)), the rank histogram
 ([rank_histogram](../../metrics/rank_histogram.md)), the flatness of increments
-([increment_flatness](../../metrics/increment_flatness.md)), and the energy distance between
-increment distributions ([energy_distance](../../metrics/energy_distance.md)).
+([increment_flatness](../../metrics/increment_flatness.md)), the Hill estimate of their tail
+index ([tail_index](../../metrics/tail_index.md)), and the energy distance between increment
+distributions ([energy_distance](../../metrics/energy_distance.md)).
 
 ## Ideas in this theme
 
-- [Tail-index estimators](tail_index_estimators.md): direct comparison of how often large
-  values occur, and estimation of how fast the tail of a distribution decays.
+- [Tail exceedance and peaks-over-threshold](tail_index_estimators.md): direct comparison of
+  how often large values occur, and a generalised Pareto fit to the values above a high
+  threshold.
 - [Pair-correlation function of features](pair_correlation.md): the distribution of
   distances between extracted features such as eddy centres, compared between two fields.
 - [Energy score, variogram score and calibration](multivariate_proper_scores.md): proper
