@@ -32,7 +32,7 @@ $E(k) \propto k^{-5/3}$, while enstrophy moves toward small scales with
 $E(k) \propto k^{-3}$ (Kraichnan 1967). A metric tuned to three-dimensional turbulence
 misreads both ranges in quasi-two-dimensional, stratified or rotating flows: it expects a
 forward energy cascade where there is an inverse one, as noted on the
-[four-fifths law](four_fifths_law.md) and [spectral energy flux](spectral_energy_flux.md)
+[four-fifths law](four_fifths_law.md) and [energy-transfer checks](energy_transfer_checks.md)
 pages. For two-dimensional data the natural checks are the direction of each cascade and the
 spectral slope on each side of the forcing scale.
 

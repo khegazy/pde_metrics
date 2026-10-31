@@ -37,9 +37,9 @@ rollouts instead of from the one-step validation loss.
 3. **Score a panel of complementary metrics.**
    - the [valid prediction time](../dynamics/valid_prediction_time.md) and the time until
      correlation with the reference falls below a declared threshold;
-   - the error in the [spectral energy flux](../turbulence_statistics/spectral_energy_flux.md),
+   - the error in the built [spectral_energy_flux](../../metrics/spectral_energy_flux.md),
      or, without a reference, whether the flux is constant and of the right sign across the
-     inertial range;
+     inertial range ([energy-transfer checks](../turbulence_statistics/energy_transfer_checks.md));
    - the deviation from the
      [four-fifths law](../turbulence_statistics/four_fifths_law.md);
    - the built [increment_w1_by_separation](../../metrics/increment_w1_by_separation.md),
