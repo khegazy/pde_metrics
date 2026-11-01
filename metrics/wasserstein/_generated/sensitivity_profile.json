@@ -25,7 +25,7 @@
         "blindness_q": 1.0,
         "cliffs_delta_min": 0.9253115235,
         "damage_max_ucb": 0.2018261735,
-        "damage_per_change": 1.7830355707,
+        "damage_per_change": 1.7830355708,
         "degradation": "box_blur",
         "degradation_family": "smoothing",
         "field": "density",
@@ -55,7 +55,7 @@
         "blindness_q": 0.0,
         "cliffs_delta_min": 0.7295629027,
         "damage_max_ucb": 0.0094040511,
-        "damage_per_change": 4.1530240246,
+        "damage_per_change": 4.1530240277,
         "degradation": "coarsen_bandlimited",
         "degradation_family": "resolution",
         "field": "density",
@@ -145,7 +145,7 @@
         "blindness_q": 1.0,
         "cliffs_delta_min": 0.9420547047,
         "damage_max_ucb": 0.1368411468,
-        "damage_per_change": 3.8855235442,
+        "damage_per_change": 3.8855235443,
         "degradation": "median_blur",
         "degradation_family": "smoothing",
         "field": "density",
@@ -160,7 +160,7 @@
         "blindness_q": 1.0,
         "cliffs_delta_min": 0.920913545,
         "damage_max_ucb": 0.111951419,
-        "damage_per_change": 5.1339530155,
+        "damage_per_change": 5.1339530156,
         "degradation": "translate_subpixel",
         "degradation_family": "geometric",
         "field": "density",
@@ -187,5 +187,5 @@
       }
     ]
   },
-  "run": "wasserstein_1793495645"
+  "run": "wasserstein_1793501169"
 }

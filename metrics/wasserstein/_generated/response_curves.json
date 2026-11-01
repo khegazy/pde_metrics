@@ -7,7 +7,7 @@
     "density": [
       {
         "calibration": "",
-        "damage_median": 0.0034658624,
+        "damage_median": 0.0034658625,
         "damage_q25": 0.0033593472,
         "damage_q75": 0.003575186,
         "degradation": "translate_subpixel",
@@ -108,8 +108,8 @@
       {
         "calibration": "",
         "damage_median": 0.0554345682,
-        "damage_q25": 0.0537282959,
-        "damage_q75": 0.0571844761,
+        "damage_q25": 0.0537282958,
+        "damage_q75": 0.057184476,
         "degradation": "translate_subpixel",
         "degradation_family": "geometric",
         "energy_changed_median": 0.0054399842,
@@ -183,8 +183,8 @@
       {
         "calibration": "",
         "damage_median": 0.0554345682,
-        "damage_q25": 0.0537282959,
-        "damage_q75": 0.0571844761,
+        "damage_q25": 0.0537282958,
+        "damage_q75": 0.057184476,
         "degradation": "translate_x",
         "degradation_family": "geometric",
         "energy_changed_median": 0.0054399842,
@@ -457,7 +457,7 @@
       },
       {
         "calibration": "",
-        "damage_median": 0.008398626,
+        "damage_median": 0.0083986261,
         "damage_q25": 0.0080642013,
         "damage_q75": 0.0096599202,
         "degradation": "coarsen_bandlimited",
@@ -557,7 +557,7 @@
       },
       {
         "calibration": "scale",
-        "damage_median": 0.200051441,
+        "damage_median": 0.2000514411,
         "damage_q25": 0.1965803731,
         "damage_q75": 0.2045147965,
         "degradation": "box_blur",
@@ -583,8 +583,8 @@
       {
         "calibration": "scale",
         "damage_median": 0.0078829718,
-        "damage_q25": 0.0077294836,
-        "damage_q75": 0.0080085733,
+        "damage_q25": 0.0077294835,
+        "damage_q75": 0.0080085732,
         "degradation": "gaussian_blur",
         "degradation_family": "smoothing",
         "energy_changed_median": 0.0003674437,
@@ -628,7 +628,7 @@
         "severity_nominal": 0.05,
         "value_median": 0.0078226836,
         "value_q25": 0.007690743,
-        "value_q75": 0.0079402372
+        "value_q75": 0.0079402373
       },
       {
         "calibration": "scale",
@@ -733,7 +733,7 @@
       {
         "calibration": "scale",
         "damage_median": 0.1356027193,
-        "damage_q25": 0.1330970785,
+        "damage_q25": 0.1330970786,
         "damage_q75": 0.1380072742,
         "degradation": "median_blur",
         "degradation_family": "smoothing",
@@ -782,7 +782,7 @@
       },
       {
         "calibration": "energy_below",
-        "damage_median": 0.4524508261,
+        "damage_median": 0.4524508262,
         "damage_q25": 0.4327420099,
         "damage_q75": 0.4769644503,
         "degradation": "highpass_butterworth",
@@ -1057,7 +1057,7 @@
       },
       {
         "calibration": "energy_above",
-        "damage_median": 0.0826921498,
+        "damage_median": 0.0826921499,
         "damage_q25": 0.0806616658,
         "damage_q75": 0.0860830763,
         "degradation": "lowpass_ideal",
@@ -1078,7 +1078,7 @@
         "severity_nominal": 0.05,
         "value_median": 0.0141922001,
         "value_q25": 0.0138437144,
-        "value_q75": 0.0147741744
+        "value_q75": 0.0147741745
       },
       {
         "calibration": "energy_above",
@@ -1182,7 +1182,7 @@
       },
       {
         "calibration": "",
-        "damage_median": 0.0003561272,
+        "damage_median": 0.0003561273,
         "damage_q25": 0.000339763,
         "damage_q75": 0.00037673,
         "degradation": "additive_noise",
@@ -1257,5 +1257,5 @@
       }
     ]
   },
-  "run": "wasserstein_1793495645"
+  "run": "wasserstein_1793501169"
 }
