@@ -38,6 +38,9 @@ received before. `wasserstein` returns NaN for a field with a non-positive cell,
 
 - Only the inputs of metrics that declare nothing but density. Today that is `wasserstein`
   alone. `persistence_distance` declares density and vorticity, so it is unaffected.
+- Pressure is not in the positive set, although a thermodynamic pressure is positive:
+  issue 101 exists because a dataset may store a gauge pressure with both signs, so
+  `shock_set_distance` keeps its signed input and its own non-positive convention.
 - Issue 101's open choice, a declaration on the decorator or a split of the field vocabulary,
   is not made here. The set of positive fields lives in the test module, where nothing else
   reads it. If issue 101 adds a declaration, the test should read that instead.

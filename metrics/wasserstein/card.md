@@ -27,8 +27,12 @@ $$
 
 where $T_{\#} f = g$ means that $T$ carries the mass of $f$ onto $g$, and distances are taken
 on the torus. For densities bounded away from zero the optimal map is
-$T(x) = x + \nabla u(x)$ with $u$ periodic ([@saumier2015], Theorem 2.1, after
-Cordero-Erausquin), and $u$ solves the Monge–Ampère equation ([@saumier2015], Eq. (4))
+$T(x) = x + \nabla u(x)$ with $u$ periodic. [@saumier2015] state in Theorem 2.1, after
+Cordero-Erausquin, that the optimal map is additive, $\nabla\Psi(x + p) = \nabla\Psi(x) + p$, and
+in the remark after it that this makes $\nabla\Psi - x$ the gradient of a periodic function.
+The test against the exact circle transport below, at shifts where the optimal rotation is
+not zero, would fail if a uniform displacement were missing. $u$ solves the Monge–Ampère
+equation ([@saumier2015], Eq. (4))
 
 $$
 g\bigl(x + \nabla u(x)\bigr) \, \det\bigl(I + D^2 u(x)\bigr) = f(x) \tag{3}
@@ -42,26 +46,36 @@ W_2(f, g) = \bigl\langle f \, |\nabla u|^2 \bigr\rangle^{1/2} \tag{4}
 $$
 
 **How Equation (3) is solved.** By the periodic damped Newton method of [@saumier2015]
-(Eq. (6)), from $u_0 = 0$, with step $1/\tau$ and $\tau = 1$, the value that converged in
-their Sect. 5.1:
+(Eq. (6)), from $u_0 = 0$:
 
 1. **Evaluate.** $f_n = g(x + \nabla u_n) \det(I + D^2 u_n)$, then replace $f_n$ by
    $f_n - \langle f_n \rangle + 1$ so that the residual $f - f_n$ has zero mean
    ([@saumier2015], Eq. (14)).
 2. **Stop** when the root mean square of $f - f_n$ is at most $10^{-12}$, a fraction of the
    mean density, and report Equation (4) with $u_n$.
-3. **Step.** Solve $\Delta \theta_n = f - f_n$ by FFT and set $u_{n+1} = u_n + \theta_n$.
+3. **Step.** Solve $\Delta \theta_n = (f - f_n)/g(x + \nabla u_n)$, re-centred to zero
+   mean, by FFT.
+4. **Damp.** Set $u_{n+1} = u_n + \theta_n/\tau$ with the first of $\tau = 1, 2, 4, \dots$
+   (at most $2^{30}$) that lowers the root mean square residual and keeps $I + D^2 u$
+   positive definite.
 
-Step 3 replaces their linearised operator ([@saumier2015], Eq. (5)) by the Laplacian, its
-value at $u = 0$ and $g = 1$; their Sect. 3.3 notes that a simpler equation works in practice.
-The answer is fixed by the residual of step 1, so this choice changes the number of
-iterations and not the value. Derivatives of $u$ are spectral, with the wavevectors
+Step 3 replaces their linearised operator ([@saumier2015], Eq. (5)) by its leading term,
+$g\,\Delta$, with $g$ divided out cell by cell. That is mine: their Sect. 3.3 says only that a
+simpler equation can *sometimes* replace the full one, and their $\tau = 1$ in Sect. 5.1 was
+obtained with the full operator. Step 4 chooses their damping $\tau$ adaptively, also mine:
+their proof needs $\tau$ large enough and $I + D^2 u_n$ positive definite at every step
+(Sect. 3.3) and gives no value. The answer is fixed by the residual of step 1, so these
+choices change the number of iterations and not the value: on kinet density, the plain
+Laplacian step and this one agree to a relative $4 \times 10^{-9}$, the size the tolerance
+allows. Without step 3's division and step 4's damping the iteration overshoots, and
+diverges, once the candidate density exceeds about twice its mean. Derivatives of $u$ are spectral, with the wavevectors
 $k_j = 2\pi\,\mathrm{fftfreq}(N_j, h_j)$ that [h_minus_one](../../metrics/h_minus_one/card.md)
 uses; [@saumier2015] also solve the linear step by FFT (Sect. 4.2). The candidate is
 evaluated at the displaced points by a periodic cubic B-spline. That is my choice: they use
 nearest-neighbour values and name linear interpolation as the common alternative (Sect. 4).
-If the solve has not converged after 100 iterations the value is NaN with a warning. On the
-contract tests' field, whose density varies by a factor of four, it takes about 30. A cell
+If the solve has not converged after 500 iterations, or no damping lowers the residual,
+the value is NaN with a warning that says which. Kinet density needs 4 to 7 iterations.
+Limitations gives the measured range in which the solve converges. A cell
 that is not positive and finite in either field makes the value NaN: Equation (2) is
 defined between measures, and any value given to a signed field would be one of the
 signed-field formulations that `issues/047` leaves open.
@@ -69,9 +83,10 @@ signed-field formulations that `issues/047` leaves open.
 `test_metric.py` checks the solve against an independent one. For a density that varies
 along one axis only, the transport is one-dimensional, and on a circle its exact value is the
 least, over a rotation of the mass levels, of the mean squared distance between the two
-quantile functions ([@delon2010], Sect. 2). On a 256-cell profile whose density lies between
-0.63 and 1.37 times its mean, moved by an eighth of the domain, the two agree to within the
-test's relative tolerance of $2 \times 10^{-4}$.
+quantile functions ([@delon2010], Sect. 2). On two 256-cell profiles moved by an eighth of
+the domain, one between 0.63 and 1.37 times its mean and one peaking at 2.33 times its mean
+with a maximum ten times its minimum, the two agree to within the test's relative tolerance
+of $2 \times 10^{-4}$.
 
 **Why a continuous solve and not a transport between cells.** Treating each cell as a point
 mass and solving the discrete problem exactly is the standard alternative, but on a density
@@ -79,7 +94,8 @@ whose displacements are smaller than a cell it measures the grid. Mass then move
 cell or not at all, so the squared distance grows with the size of the change rather than
 with its square. For a 1-D density $1 + \epsilon \cos(2\pi x)$ against the uniform one on
 cells of size $h$, the discrete squared distance is about $h\epsilon/\pi^2$ against the
-continuous $\epsilon^2/(8\pi^2)$, a ratio of $8h/\epsilon$. This derivation is mine. It is
+continuous $\epsilon^2/(8\pi^2)$, a ratio of $8h/\epsilon$, while the continuous displacement
+$\epsilon/2\pi$ is below a cell. This derivation is mine. It is
 also unaffordable here: one $256 \times 256$ pair is a $65\,536 \times 65\,536$ cost
 matrix. Equation (3) has neither problem, because the displacement $\nabla u$ is a
 continuous field.
@@ -92,20 +108,30 @@ $$
 b^{-1/2} \, H \;\le\; W_2(f, g) \;\le\; 2\,a^{-1/2} \, H \tag{5}
 $$
 
-with the lower bound for the flat torus, where the Ricci curvature is zero. As $f - g$ shrinks
-the two agree to first order ([@peyre2018], Eq. (5)). `test_metric.py` checks Equation (5).
-On a density whose fluctuation is a small fraction of its mean, $a$ and $b$ are both close
-to 1. The two metrics then differ by the factor $\langle\rho\rangle$, since `h_minus_one` is
-not mass-normalised, and by the narrow interval Equation (5) allows.
+with the lower bound for the flat torus, where the Ricci curvature is zero. These bounds
+alone are loose: on kinet density, whose normalised values lie between about 0.96 and 1.007,
+they allow a ratio between about 1 and 2. What makes the two close is the linearisation:
+as $f - g$ shrinks, $W_2$ equals the $\dot H^{-1}$ norm weighted by the reference density
+([@peyre2018], Eq. (5)), and that weighted norm lies within $b^{-1/2}$ and $a^{-1/2}$ of $H$
+([@peyre2018], Lemma 2), so to first order the factor 2 drops out. This step is my reading of
+Peyre's results, not a theorem he states. `test_metric.py` checks Equation (5), which is a
+consistency check and not a tight one. `h_minus_one` is not mass-normalised, so the two values
+also differ by the factor $\langle\rho\rangle$, which is close to 1 on kinet density.
 
 **Shift and background.** The property that recommends this distance for a displaced
 feature is that $W_2^2$ of a signal moved by $s$ is $s^2$ whatever its profile
 ([@engquistyang2022], Sect. 1; [@engquist2014], Sect. 1). That holds for a signal on an empty
 background. A density is a fluctuation on a large positive background. That is the "linear
-normalisation" of [@yang2018] (Sect. 3.1, Eq. (27)), which they report makes the misfit
-non-convex in shifts. [@engquistyang2022] (Theorem 4.6) show that, with a background $c$, it
-grows as $s^2$ only for shifts below about $1/c$ plus the width of the signal, and as $s$
-beyond.
+normalisation" of [@yang2018] (section "Data normalization", Sect. 3.1 in the arXiv copy,
+Eq. (27)), which they report makes the misfit non-convex in shifts. [@engquistyang2022]
+(Theorem 4.6) show, for a compactly supported one-dimensional signal on a background $c$, that
+$W_2^2$ is $O(s^2)$ only for shifts below about $1/c$ plus the width of the signal and $O(s)$
+beyond. Their theorem does not cover a periodic field that fills the domain, as density does.
+What applies here is the linearisation above. For a shift $s$ along $x$ small against the
+density's scales, $f(x - s) - f \approx -s\,\partial_x f$, and the $\dot H^{-1}$ norm of
+$\partial_x f$ is $(\sum_{\mathbf{k}} (k_x/|\mathbf{k}|)^2 |\hat f_{\mathbf{k}}|^2)^{1/2}$, at most the
+root mean square of $f - 1$. So $W_2$ is about $s$ times a number no larger than the relative
+fluctuation of the density, not $s$ itself (my derivation).
 
 ### Boundary handling
 
@@ -228,23 +254,29 @@ negative, because neither is then a pile of mass.
 - **The total mass is invisible.** Both densities are divided by their own mean, so a
   prediction with the right arrangement and the wrong total scores zero (pinned in
   `test_metric.py`). Pair it with a metric that sees the mean or the amplitude.
-- **On a density with a large mean it is close to `h_minus_one`.** Equation (5) holds the
-  two within $b^{-1/2}$ and $2a^{-1/2}$ of each other, and on a field like kinet's density,
-  which varies by a few percent, those factors are close to 1. Read "Compared with the other
-  metrics" before using both in one panel.
+- **On a density with a large mean it is close to `h_minus_one`.** To first order in the
+  difference the two are within $b^{-1/2}$ and $a^{-1/2}$ of each other (Definition), and on a
+  field like kinet's density, whose values lie within a few percent of its mean, those factors
+  are close to 1. Read "Compared with the other metrics" before using both in one panel.
 - **It does not measure the size of a shift.** The background makes the growth with a
   displacement far weaker than "distance squared": a large shift of the whole density costs
   only the transport needed to rearrange its small fluctuation, so the value is much smaller
-  than the shift ([@yang2018], Sect. 3.1; [@engquistyang2022], Theorem 4.6). Reading the
+  than the shift (Definition, "Shift and background"). Reading the
   number as "how far the features are displaced" is wrong here. That reading is also less
   clean in two dimensions than in one, because the optimal map can move different parts of
   the field in different directions.
 - **A non-positive cell gives NaN, not a large value.** A surrogate that predicts a negative
   density anywhere is scored NaN, which an average over frames can hide.
-- **Near vacuum the solve can fail.** [@saumier2015] (Sect. 3.3) note that the damping their
-  convergence proof needs grows as the source density approaches zero. With $\tau = 1$ fixed,
-  a density with near-empty regions may not converge in 100 iterations, and the value is
-  then NaN with a warning.
+- **At high contrast the solve can fail, and the value is then NaN.** [@saumier2015]
+  (Sect. 3.3) note that the damping their convergence needs grows as the source density
+  approaches zero or as either density becomes rough. Measured against the exact circle
+  transport on 128-cell profiles moved by 1, 8 and 32 cells (my measurement, not a run of the
+  harness): the solve converges and agrees to $10^{-4}$ for every shift when the density
+  peaks at 2.33 times its mean, and for shifts up to 8 cells at 2.94 times; it fails at 2.94
+  times its mean for a 32-cell shift and at 3.53 times for every shift, because no damping of
+  its step then lowers the residual. A strong shock compresses density by more than that, so
+  a shock-dominated field can score NaN with a warning. A full Newton step, solving their
+  linearised operator (Eq. (5)) iteratively as their Sect. 4.2 does, would be the remedy.
 - **Not exactly symmetric.** $W_2$ is symmetric, but solving from the other side gives a value
   that differs by the discretisation error, so the metric declares `symmetric=False`.
 
@@ -309,7 +341,7 @@ All four filters follow the fraction of energy removed on every frame. The high-
 
 <!-- END GENERATED results_geometric -->
 
-Both axes follow the shift on every frame, as pre-registered, and the elasticity of 0.999 to 1 says the distance is proportional to the shift over these ranges. That is not the property the idea was built for. The largest whole-domain shift on the ladder scores a damage of 0.468, and the anchor it is measured against is itself only 0.172 cells: moving the whole density by many cells costs a transport of a small fraction of a cell, because only its fluctuation of a few percent has to be rearranged, not the whole mass. This is the background effect described in the Definition, measured.
+Both axes follow the shift on every frame, as pre-registered, and the elasticity of 0.999 to 1 says the distance is proportional to the shift over these ranges. That is not the property the idea was built for. The largest whole-domain shift on the ladder scores a damage of 0.468, and the anchor it is measured against is itself only 0.172 cells: moving the whole density by many cells costs a transport of a small fraction of a cell, because only its fluctuation, well under a percent of its mean in root mean square, has to be rearranged, not the whole mass. This is the background effect described in the Definition ("Shift and background"), measured; the run shows the size of the effect, not the non-convexity that the seismic papers describe.
 
 ### Resolution loss
 
@@ -366,7 +398,7 @@ No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_summary -->
 
-This run held only this metric, so the generated cross-metric table is empty. Placed beside the committed fingerprint of [h_minus_one](../../metrics/h_minus_one/card.md) on the same frames, every axis's largest damage and elasticity, and both probes, agree to two significant figures, as Equation (5) requires for a density this close to uniform. On kinet density the two metrics carry the same information, and this one costs 0.214 s per evaluation (the fingerprint) where `h_minus_one` takes one FFT. A run of both together would put the correlation in this table.
+This run held only this metric, so the generated cross-metric table is empty. Placed beside the committed fingerprint of [h_minus_one](../../metrics/h_minus_one/card.md) on the same frames, every axis's largest damage and elasticity, and both probes, agree to within about one percent, as the first-order relation in the Definition predicts for a density this close to uniform; Equation (5) alone would allow a factor of two. On kinet density the two metrics carry the same information, and this one costs 0.214 s per evaluation (the fingerprint) where `h_minus_one` takes one FFT. A run of both together would put the correlation in this table.
 
 ### Damage beside the other metrics
 

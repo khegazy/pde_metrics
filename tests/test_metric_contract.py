@@ -52,7 +52,9 @@ def _channels_for(spec: registry.MetricSpec) -> int:
 
 #: Fields positive by definition: a mass density. A metric that declares only these is given
 #: its real domain, the synthetic field moved above zero, rather than a signed field outside it
-#: (issues/101). The synthetic field stays within about +-2, so the offset leaves it at least 1.
+#: (issues/101). Pressure is not listed: a dataset may store a gauge pressure, which takes both
+#: signs (issues/101). The synthetic field stays within about +-2 in two dimensions and +-2.3 in
+#: three, so the offset leaves it at least about 0.7.
 POSITIVE_FIELDS: frozenset[str] = frozenset({"density"})
 POSITIVE_OFFSET: float = 3.0
 

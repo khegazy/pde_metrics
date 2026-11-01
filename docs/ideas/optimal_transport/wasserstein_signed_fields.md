@@ -48,8 +48,9 @@ one to use is open (issue 066, waiting on issue 047).
   than it is in one dimension.
 - The $s^2$ growth with a shift holds for a signal on an empty background. Adding a constant
   to make a signed field positive puts it on a background, and the misfit is then no longer
-  convex in shifts (Yang et al. 2018, Sect. 3.1). The density build shows the same thing,
-  because density is already a fluctuation on a large mean; its card has the measurements.
+  convex in shifts (Yang et al. 2018, section "Data normalization"). The density build shows
+  a related effect in size: density is already a fluctuation on a large mean, and moving it by
+  many cells costs a small fraction of a cell. Its card has the measurements.
 
 ## Rationale
 

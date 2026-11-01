@@ -16,7 +16,7 @@ Velocity and vorticity take both signs, so they are not measures, and every way 
 
 ## What would unblock it
 
-The signed-field decision (issue 047). Its options interact with what the density build found. Density is a small fluctuation on a large positive mean. That is the same situation as the "add a constant, then normalise" option, under which the distance stops growing as the square of a shift (Yang et al. 2018, *Geophysics* 83(1), R43–R62, Sect. 3.1; Engquist & Yang 2022, *CPAM* 75(10), 2201–2244, Theorem 4.6). It also stays close to the H^-1 seminorm of `h_minus_one` (Peyre 2018, *ESAIM: COCV* 24(4), 1489–1501, Corollary 3 and Theorem 5). The Monge–Ampère solver in `metrics/wasserstein` applies unchanged to whatever positive densities the chosen formulation produces.
+The signed-field decision (issue 047). Its options interact with what the density build found. Density is a small fluctuation on a large positive mean. That is the same situation as the "add a constant, then normalise" option, under which the misfit is no longer convex in shifts (Yang et al. 2018, *Geophysics* 83(1), R43–R62, section "Data normalization"; for a compactly supported 1-D signal, Engquist & Yang 2022, *CPAM* 75(10), 2201–2244, Theorem 4.6). To first order it is also the H^-1 norm weighted by the reference density, close to the H^-1 seminorm of `h_minus_one` (Peyre 2018, *ESAIM: COCV* 24(4), 1489–1501, Eq. (5) and Lemma 2). The Monge–Ampère solver in `metrics/wasserstein` applies unchanged to whatever positive densities the chosen formulation produces, within the contrast range its card states.
 
 ## Related
 

@@ -5,7 +5,7 @@ monotonicity under blur, the map reducing to the metric, the spacing scaling -- 
 ``tests/test_metric_contract.py``. What is tested here is the worked example printed in the
 card, agreement with the exact one-dimensional solution on a target that is not uniform, the
 bound against ``h_minus_one`` that the card quotes, and what the metric does outside its
-domain and under a change of total mass.
+domain, when its solve does not converge, and under a change of total mass.
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ from scipy import ndimage, optimize
 from metrics.h_minus_one.metric import h_minus_one
 from tests.conftest import cosine_mode, make_ctx
 
+from . import metric as metric_module
 from .metric import wasserstein
 
 
@@ -35,7 +36,9 @@ def test_worked_example_from_the_card():
     W_2 = a L / (2 pi sqrt 2). With a = 0.5 and L = 4 cells: W_2 = 1 / (pi sqrt 2) = 0.225079
     cells. The grid sees this exactly: sin^2 at the four columns is 0, 1, 0, 1, so its
     f-weighted mean is (1.5 * 0 + 1 * 1 + 0.5 * 0 + 1 * 1) / 4 = 1/2, and the displacement is a
-    single Fourier mode, which the spectral derivatives represent without error.
+    single Fourier mode, which the spectral derivatives represent without error. Because the
+    candidate is uniform, one Laplacian step solves the equation exactly here, so this example
+    does not exercise the interpolation or the nonlinear iteration; the circle tests do.
     """
     reference = 1.0 + 0.5 * cosine_mode((4, 4), mode=1)   # columns 1.5, 1, 0.5, 1
     uniform = np.ones((1, 4, 4))
@@ -44,7 +47,19 @@ def test_worked_example_from_the_card():
         0.225079, abs=1e-6)
 
 
-def test_agrees_with_the_exact_solution_on_the_circle_for_a_shifted_density():
+def _two_modes(x: np.ndarray, n: int) -> np.ndarray:
+    """Between 0.63 and 1.37 times its mean."""
+    return 1.0 + 0.3 * np.cos(2 * np.pi * x / n) + 0.1 * np.sin(6 * np.pi * x / n)
+
+
+def _peaked(x: np.ndarray, n: int) -> np.ndarray:
+    """exp(a cos) with a maximum ten times its minimum and 2.33 times its mean: a compression
+    the plain Laplacian step (no division by g, no damping) diverged on."""
+    return np.exp(0.5 * np.log(10.0) * np.cos(2 * np.pi * x / n))
+
+
+@pytest.mark.parametrize("profile", [_two_modes, _peaked])
+def test_agrees_with_the_exact_solution_on_the_circle_for_a_shifted_density(profile):
     """A density varying along x only, against itself moved by an eighth of the domain.
 
     The optimal map then acts along x only, so the two-dimensional solve must equal the
@@ -56,10 +71,13 @@ def test_agrees_with_the_exact_solution_on_the_circle_for_a_shifted_density():
     grid, with each density read as constant on its cell. That is an independent algorithm,
     with neither a Monge-Ampere solve nor a spline, and on this smooth profile the two
     readings of the cells differ by less than the tolerance.
+
+    The peaked profile is the regression test for a step that overshoots where the candidate
+    density is several times its mean; it must converge and agree, not return NaN.
     """
     n = 256
     x = np.arange(n)
-    f = 1.0 + 0.3 * np.cos(2 * np.pi * x / n) + 0.1 * np.sin(6 * np.pi * x / n)
+    f = profile(x, n)
     g = np.roll(f, n // 8)
     field = lambda profile: np.broadcast_to(profile[:, None], (n, 4))[None].copy()  # noqa: E731
     got = wasserstein(field(f), field(g), ctx=make_ctx((n, 4)))
@@ -91,7 +109,9 @@ def test_lies_within_the_h_minus_one_bounds():
     ``h_minus_one`` returns the seminorm as a root mean square over the grid, the
     normalisation in which a probability density on the torus has mean 1, so the bounds
     apply to it directly. The pair is a smooth density and its blurred copy, both between
-    0.5 and 1.5 times their mean.
+    0.5 and 1.5 times their mean. This is a consistency check and not a tight one: the bounds
+    are a factor of about three apart here, so a value nearly twice too large would pass. The
+    worked example and the circle tests pin the magnitude.
     """
     rng = np.random.default_rng(0)
     noise = ndimage.gaussian_filter(rng.standard_normal((32, 32)), 3, mode="wrap")
@@ -114,6 +134,21 @@ def test_total_mass_is_normalised_away():
     reference = 1.0 + 0.5 * cosine_mode((8, 8), mode=1)
     ctx = make_ctx((8, 8))
     assert wasserstein(reference, 3.0 * reference, ctx=ctx) == pytest.approx(0.0, abs=1e-12)
+
+
+def test_a_solve_that_does_not_converge_scores_nan_with_a_warning(monkeypatch):
+    """The cap on iterations is reached: the value is NaN and a RuntimeWarning says so.
+
+    One iteration is not enough for a non-uniform target, so capping at one forces the path
+    a real non-convergence takes, without depending on which inputs make it diverge. The
+    warning must say that the cap was reached and what residual was left, so that a reader can
+    tell it from a step that no damping could make lower the residual.
+    """
+    monkeypatch.setattr(metric_module, "MAX_ITERATIONS", 1)
+    reference = 1.0 + 0.5 * cosine_mode((8, 8), mode=1)
+    candidate = np.roll(reference, 1, axis=1)
+    with pytest.warns(RuntimeWarning, match="residual was still .* after 1 iterations"):
+        assert np.isnan(wasserstein(reference, candidate, ctx=make_ctx((8, 8))))
 
 
 @pytest.mark.parametrize("bad", [0.0, -1.0, np.nan])

@@ -11,12 +11,13 @@ would measure the grid rather than the field.
 
 Two facts about density set what this number can and cannot do, and the card measures both.
 The density's mean is two to three orders of magnitude larger than its fluctuation, and a
-uniform background added to a signal is known to destroy the property that made the
-Wasserstein distance attractive for displaced features, its growth as the square of a shift
-(Yang et al. 2018, Geophysics 83(1), Sect. 3.1; Engquist & Yang 2022, CPAM 75(10),
-Theorem 4.6). And for densities this close to uniform the distance is pinned between two
-multiples of the H^-1 seminorm that ``h_minus_one`` computes (Peyre 2018, ESAIM:COCV 24(4),
-Corollary 3 and Theorem 5).
+uniform background added to a signal makes the misfit non-convex in shifts (Yang et al. 2018,
+Geophysics 83(1), section "Data normalization"; in one dimension, Engquist & Yang 2022,
+CPAM 75(10), Theorem 4.6), losing the property that made the Wasserstein distance attractive
+for displaced features, its growth as the square of a shift. And for densities this close
+to uniform the distance is, to first order, the H^-1 norm weighted by the reference density
+(Peyre 2018, ESAIM:COCV 24(4), Eq. 5), within a factor close to 1 of the seminorm that
+``h_minus_one`` computes (his Lemma 2).
 
 Velocity and vorticity take both signs and are not densities, so they wait on the choice of
 a signed-field formulation (issues/047).
@@ -41,9 +42,14 @@ from metrics.registry import REDUCTIONS, companion, metric
 RESIDUAL_TOLERANCE: float = 1e-12
 
 #: Iterations allowed before the solve is declared failed and the value is NaN. Mine: measured
-#: convergence takes 4 to 7 iterations on kinet density and 30 on the contract tests' field,
-#: whose density varies by a factor of four.
-MAX_ITERATIONS: int = 100
+#: convergence takes 4 to 7 iterations on kinet density, and 239 between two unrelated smooth
+#: 64^2 densities whose maximum is four times their minimum, the slowest pair that converged.
+MAX_ITERATIONS: int = 500
+
+#: Times a step may be halved to make the residual fall while keeping I + D^2 u positive
+#: definite, before the solve is declared failed. Mine: 2^-30 of a step is below the precision
+#: of the potential it is added to.
+MAX_HALVINGS: int = 30
 
 #: Order of the periodic B-spline that evaluates the candidate density at the displaced points
 #: x + grad u. Mine: Saumier et al. (2015), Sect. 4, use nearest neighbour and name linear
@@ -57,8 +63,10 @@ SPLINE_ORDER: int = 3
     arity="pairwise",
     fields=("density",),     # a density is a measure; signed fields wait on issues/047
     differentiable=True,     # W_2^2 has a Frechet derivative in the densities, the adjoint
-                             # source of Yang et al. (2018), Geophysics 83(1), Sect. 3.3
-    cost="moderate",         # about 0.08 s per 256^2 frame: 4 to 7 Newton steps of FFTs
+                             # source of Yang et al. (2018), Geophysics 83(1), section
+                             # "Compare globally", "Computation of adjoint source"
+    cost="moderate",         # 0.19 to 0.23 s per 256^2 evaluation in the evidence run, a
+                             # hundred times h_minus_one: 4 to 7 Newton steps of FFTs
     higher_is_better=False,
     symmetric=False,         # W_2 is symmetric (Peyre & Cuturi 2019, Prop. 2.3), but solving
                              # from the other side differs at the discretisation's error,
@@ -105,27 +113,34 @@ def wasserstein_map(
 
     With ``f`` and ``g`` the reference and candidate divided by their means, so each is a
     probability density on the torus times its area, the optimal map is ``T(x) = x + grad u``
-    with ``u`` periodic (Saumier et al. 2015, IMA J. Appl. Math. 80(1), Theorem 2.1, after
-    Cordero-Erausquin), and ``u`` solves the Monge-Ampere equation
+    with ``u`` periodic (Saumier et al. 2015, IMA J. Appl. Math. 80(1): Theorem 2.1, after
+    Cordero-Erausquin, states that the map is additive, and the remark after it that this makes
+    it x plus the gradient of a periodic function), and ``u`` solves the Monge-Ampere equation
     ``g(x + grad u) det(I + D^2 u) = f`` (their Eq. 4). Its mean over the grid is
     ``W_2^2 = integral of |x - T(x)|^2 f dx / |Omega|`` (their Eq. 3), so the map reduces to
     the metric by ``sqrt_mean``.
 
-    The solve is their damped Newton iteration (Eq. 6) with step ``1/tau``, ``tau = 1`` (the
-    value that converged in their Sect. 5.1), starting from ``u = 0``:
+    The solve is their damped Newton iteration (Eq. 6), starting from ``u = 0``:
 
     1. ``f_n = g(x + grad u_n) det(I + D^2 u_n)``, then ``f_n - mean(f_n) + 1`` so that the
        residual has zero mean (their Eq. 14).
-    2. Solve ``Laplacian theta = f - f_n`` by FFT and set ``u_{n+1} = u_n + theta``.
+    2. Solve ``Laplacian theta = (f - f_n) / g(x + grad u_n)``, re-centred to zero mean, by
+       FFT.
+    3. Set ``u_{n+1} = u_n + theta / tau`` with ``tau = 1, 2, 4, ...``, the first that lowers
+       the root mean square residual and keeps ``I + D^2 u`` positive definite.
 
-    Step 2 replaces their linearised operator (Eq. 5) by the Laplacian, its value at ``u = 0``
-    and ``g = 1``, which their Sect. 3.3 says works in practice ("an even simpler equation");
-    the converged ``u`` is fixed by the residual of step 1, not by the operator used to reduce
-    it, so the choice changes the number of iterations and not the answer. Derivatives of ``u``
-    are spectral, with wavevectors from ``physical_wavenumber_grid``, the convention the
-    repository's spectral derivatives and ``h_minus_one`` use; their Sect. 4.2 solves the
-    linear step by FFT as well. The candidate is evaluated off the grid by a periodic cubic
-    B-spline, a choice of mine (see ``SPLINE_ORDER``).
+    Step 2 replaces their linearised operator (Eq. 5) by its leading term ``g Laplacian``
+    with ``g`` divided out cell by cell, which is mine; their Sect. 3.3 says the full operator
+    can sometimes be replaced by a simpler equation. The converged ``u`` is fixed by the
+    residual of step 1, not by the operator that reduces it, so the choice changes the number
+    of iterations and not the answer. Dividing by ``g`` is what keeps the step from
+    overshooting where the candidate density is several times its mean. Step 3 chooses their
+    damping ``tau`` adaptively, which is mine: their proof needs ``tau`` large enough and
+    ``I + D^2 u_n`` positive definite at every step (Sect. 3.3), and gives no value for it.
+    Derivatives of ``u`` are spectral, with wavevectors from ``physical_wavenumber_grid``,
+    the convention the repository's spectral derivatives and ``h_minus_one`` use; their
+    Sect. 4.2 solves the linear step by FFT as well. The candidate is evaluated off the grid
+    by a periodic cubic B-spline, a choice of mine (see ``SPLINE_ORDER``).
 
     Args:
         reference: The trusted density, shape ``(1, *spatial)``.
@@ -161,22 +176,48 @@ def wasserstein_map(
     cells = np.meshgrid(*(np.arange(n, dtype=np.float64) for n in spatial), indexing="ij")
     axes = tuple(range(len(spatial)))
 
-    u_hat = np.zeros(spatial, dtype=np.complex128)
-    for _ in range(MAX_ITERATIONS):
+    g_floor = g.min()  # the spline can undershoot between cells; never divide by less
+
+    def evaluate(u_hat: NDArray[np.complexfloating]) -> tuple:
+        """Residual of Eqs. 4 and 14 at ``u``, with grad u, g(x + grad u) and the least
+        eigenvalue of I + D^2 u (positive iff ``x + grad u`` is a convex map's gradient)."""
         grad = [np.fft.ifftn(1j * kj * u_hat, axes=axes).real for kj in k]
         hessian = np.stack([np.stack([np.fft.ifftn(-ki * kj * u_hat, axes=axes).real
                                       for kj in k], axis=-1) for ki in k], axis=-2)
-        jacobian = np.linalg.det(np.eye(len(spatial)) + hessian)  # det(I + D^2 u), Eq. 4
+        eigenvalues = np.linalg.eigvalsh(np.eye(len(spatial)) + hessian)
         displaced = [c + d / h for c, d, h in zip(cells, grad, spacing)]  # in cells
-        f_n = ndimage.map_coordinates(g_spline, displaced, order=SPLINE_ORDER,
-                                      mode="grid-wrap", prefilter=False) * jacobian  # Eq. 4
+        g_at = ndimage.map_coordinates(g_spline, displaced, order=SPLINE_ORDER,
+                                       mode="grid-wrap", prefilter=False)
+        f_n = g_at * eigenvalues.prod(axis=-1)  # g(x + grad u) det(I + D^2 u), Eq. 4
         residual = f - (f_n - f_n.mean() + 1.0)  # Eq. 14
-        if not np.isfinite(residual).all():
-            break
-        if np.sqrt(np.mean(residual**2)) <= RESIDUAL_TOLERANCE:
+        return residual, grad, g_at, eigenvalues.min()
+
+    u_hat = np.zeros(spatial, dtype=np.complex128)
+    residual, grad, g_at, _ = evaluate(u_hat)
+    rms = np.sqrt(np.mean(residual**2))
+    for iteration in range(MAX_ITERATIONS):
+        if rms <= RESIDUAL_TOLERANCE:
             return f * sum(d**2 for d in grad)  # f |x - T(x)|^2, the integrand of Eq. 3
-        u_hat = u_hat + np.fft.fftn(residual, axes=axes) * inverse_laplacian  # Eq. 6, tau = 1
+        step = residual / np.maximum(g_at, g_floor)  # leading term of Eq. 5, g divided out
+        theta_hat = np.fft.fftn(step - step.mean(), axes=axes) * inverse_laplacian
+        for _ in range(MAX_HALVINGS):  # the damping tau of Eq. 6, doubled until accepted
+            trial = evaluate(u_hat + theta_hat)
+            trial_rms = np.sqrt(np.mean(trial[0] ** 2))
+            if trial_rms < rms and trial[3] > 0:  # NaN compares False, so divergence halves
+                break
+            theta_hat = theta_hat / 2
+        else:
+            stopped = (f"no step of up to 2^-{MAX_HALVINGS} of the Newton step lowered the "
+                       f"residual of {rms:.1e} after {iteration} iterations")
+            break
+        u_hat = u_hat + theta_hat
+        residual, grad, g_at, _ = trial
+        rms = trial_rms
+    else:
+        if rms <= RESIDUAL_TOLERANCE:  # the last permitted step reached the tolerance
+            return f * sum(d**2 for d in grad)
+        stopped = f"the residual was still {rms:.1e} after {MAX_ITERATIONS} iterations"
     warnings.warn(
-        f"wasserstein: Monge-Ampere solve did not converge in {MAX_ITERATIONS} iterations "
-        f"on frame {ctx.frame_index}; returning NaN", RuntimeWarning, stacklevel=2)
+        f"wasserstein: Monge-Ampere solve did not converge on frame {ctx.frame_index}: "
+        f"{stopped}; returning NaN", RuntimeWarning, stacklevel=2)
     return np.full(spatial, np.nan)
