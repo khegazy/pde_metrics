@@ -21,6 +21,13 @@ python -c 'from scipy.stats import spearmanr; print(repr(spearmanr([0,1,2,3,4],[
 np.float64(0.9999999999999999)
 ```
 
+A metric that saturates passes through ties as well as through round-off (finding 028 of the
+agent that built `tail_exceedance`, 2026-10-31): `tail_exceedance` gives 1.0, 0.16, 0, 0, 0 on
+the contract ladder, never rising, and `|rho|` = 0.894, so a declaration of
+`monotone_under_smoothing=False` passes although the value never rises. The same test compares
+a pairwise metric's raw values with +1, so a target metric declaring `True` would need them
+ordered by `|log(value / target)|`, as `fmeval/analysis.py::_oriented` does (finding 020).
+
 ## What would settle it
 
 Compare with a tolerance (for example `abs(rho) < 1 - 1e-9`), or test the ranks directly: a ladder

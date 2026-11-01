@@ -7,7 +7,7 @@
 ## Context
 
 `FieldContext.cache` (`fmeval/context.py`) lives across the whole ladder of one frame and field,
-and its documented contract is one context per (frame, field, metric). Four bundles cache a
+and its documented contract is one context per (frame, field, metric). Four merged bundles cache a
 quantity of the reference in it under a fixed key, computed on first use:
 `persistence_distance`, `spectral_energy_flux` and `increment_w1_by_separation` (each one's
 reference curve or diagram) and `shock_set_distance` (the reference's shock mask). Those three
@@ -18,6 +18,9 @@ Nothing records which reference a cached entry was computed from.
 
 Found by the agent that built `persistence_distance` (finding 024, adversarial review
 2026-10-31). The orchestrator added `shock_set_distance`, which the finding did not list.
+`tail_exceedance` (pull request #31) caches its reference thresholds the same way; its
+adversarial review reproduced the failure there, 21.6 instead of 1 on a reused context, with
+no error even for a reference of a different shape (finding 027).
 
 ## Evidence
 

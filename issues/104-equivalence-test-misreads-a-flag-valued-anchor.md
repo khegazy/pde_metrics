@@ -38,6 +38,12 @@ reports it as blind to it. The same will happen to any metric whose value withou
 worst-case convention: shock-mask overlap, an eddy census, a pair-correlation function of
 features.
 
+Measured since, the prediction does not hold for every such metric. `shock_mask_overlap` (pull
+request #30) scores 0 with no feature and also 0 for a lost overlap, so `translate_x` reaches
+damage 1 from a two-cell shift and is not listed blind (`results/shock_mask_overlap_1793494245`,
+finding 007 of its agent). The problem is specific to a metric whose no-feature value lies far
+beyond its ordinary range, as a distance set to the domain's length does.
+
 ## Options
 
 1. A metric declares a natural scale for its damage (here one cell, or the shock's own width)
