@@ -23,16 +23,19 @@ $$
 \mathrm{DICE}(A, B) = \frac{2\,|A \cap B|}{|A| + |B|}, \tag{1}
 $$
 
-the number of cells flagged in both fields over the mean number flagged in each, introduced
-by [@dice1945] to measure how often two species occur together. It is the F1 score of the
+the number of cells flagged in both fields over the mean number flagged in each. It is named
+after [@dice1945], a paper on measures of ecologic association between species, which was not
+opened here; the formula is taken from [@taha2015]. It is the F1 score of the
 candidate's flags read as a prediction of the reference's ([@taha2015], Table 1). The
 Jaccard index, or intersection over union, $|A \cap B| / |A \cup B|$ ([@jaccard1912];
 [@taha2015], Eq. (7)), is not registered: it is the monotone function
 $\mathrm{DICE} / (2 - \mathrm{DICE})$ of Equation (1) ([@taha2015], Eq. (8)), so it ranks
 every set of candidates the same way, which Taha and Hanbury state in so many words.
-[@maierhein2024], Suppl. Note 2.3, recommends "the DSC or IoU" as the default overlap score
-and calls the choice between them a community preference; Dice is registered because it is
-also the boundary F-score of the idea this bundle comes from at zero matching tolerance (my
+[@maierhein2024] recommend "the DSC or IoU" as the default overlap score and call the choice
+between the two "a simple user or community preference" (main-text Results, the semantic
+segmentation recommendations and "Step 2 - Metric Selection"); their Suppl. Note 2.3 names the
+DSC as its default, "almost identical to the IoU". Dice is registered for that reason and
+because it is also the boundary F-score of the idea this bundle comes from at zero matching tolerance (my
 derivation: at zero tolerance a flagged cell is matched only by the same cell, so precision
 and recall are $|A \cap B|/|B|$ and $|A \cap B|/|A|$, whose harmonic mean is Equation (1)).
 
@@ -146,16 +149,20 @@ and every smooth part of the field.
   anywhere.
 - **Direction.** Higher is better; 1 means the two fields have their shocks in the same cells,
   or both have none.
-- **What a value means.** For one sharp shock in each field, which the detector marks as two
-  cells, 1 means the same cells, 0.5 a shift of one cell, and 0 a shift of two cells or more,
-  or a shock in one field only. Values between those come from shocks the detector marks with
-  a different number of cells, or from cells marked away from any shock, as noise can mark
-  them. A value of 0 does not say whether the shock was a few cells off, far off, or missing.
+- **What a value means.** A jump that falls between two cell centres, as in point samples of
+  an exact solution, is marked as the two cells beside it; then 1 means the same cells, 0.5 a
+  shift of one cell, and 0 a shift of two cells or more, or a shock in one field only. A shock
+  inside a cell, as in cell averages or after a sub-cell shift, gives that cell an intermediate
+  value and is marked as one, two or three cells, depending on where it sits and how strong it
+  is (this bundle's tests: a cell-averaged step of ratio 10 whose jump lies 40% of the way
+  into a cell marks three cells, and a step of Sod's ratio whose middle cell holds 0.175
+  between 0.303 and 0.1 marks one). Values between those come from such shocks, or from cells marked away
+  from any shock, as noise can mark them. A value of 0 does not say whether the shock was a
+  few cells off, far off, or missing.
 - **Valid comparisons.** Values on one grid compare directly. Across grids they do not: a
-  sharp shock is marked as two cells whatever the cell size, so the same displacement in length is
-  more cells, and a lower score, on a finer grid. That holds for a sharp shock, which the
-  detector marks as two cells on any grid; a shock a solver spreads over a few cells is marked
-  over a number of cells that also depends on the grid.
+  shock is marked as one to three cells whatever the cell size, so the same displacement in
+  length is more cells, and a lower score, on a finer grid; and a shock a solver spreads over
+  several cells is marked over a number of cells that also depends on the grid.
 - **The damage scale.** The repository's damage 1 is the score of the field's spatial mean,
   which has no shock and so scores 0 against a reference that has one; damage is then one
   minus the value.
@@ -170,9 +177,18 @@ and every smooth part of the field.
   needs to rank. [shock_set_distance](../../metrics/shock_set_distance/card.md) measures how
   far.
 - **A smeared shock disappears.** The detector compares only the two neighbours of a cell, so
-  a shock spread over more than about four cells is not marked at all and the value drops to
-  0 as for a missing shock (the estimate is on the detector's card). A prediction that
-  captures the shock a little diffusely therefore scores the same as one with no shock.
+  a shock whose log pressure rises over more than $2 \ln R / \ln 1.805$ cells, for a pressure
+  ratio $R$ across it, is not marked at all and the value drops to 0 as for a missing shock:
+  3.8 cells for Sod's ratio of 3.03, more for a stronger shock (the estimate is on the
+  detector's card). A prediction that captures the shock a little diffusely therefore scores
+  the same as one with no shock.
+- **An offset in the pressure erases a shock in the right place.** The detector reads ratios,
+  so a uniform pressure added to the candidate lowers the ratio across an otherwise exact
+  shock. On the exact Sod pressure at t = 0.1, an offset of 0.15 leaves the score at 1 and an
+  offset of 0.2 brings the ratio from 3.03 to 1.68, below the threshold, and the score to 0
+  (this bundle's tests). A surrogate with a pressure bias can thus
+  score as if it had no shock. The high-pass filters on Sod do the same thing (Results,
+  Spectral filtering).
 - **Two empty sets score 1.** A prediction that smooths away every shock of a reference that
   has none scores perfectly, which is right; but on a frame with a shock the same prediction
   scores 0, so the value can jump from 1 to 0 between frames of one trajectory according to
@@ -181,8 +197,14 @@ and every smooth part of the field.
 - **False detections and missed shocks count alike.** A marked cell away from any shock in the
   candidate costs the same as a true shocked cell the candidate missed, and many false marks
   can push a value with the right shock in the right cells well below 1.
-- **The detector's limits carry over.** No compression gate, a fixed ratio of specific heats,
-  and nothing defined for a gauge pressure; each is stated on the detector's card.
+- **The detector's limits carry over.** No compression gate and a fixed ratio of specific
+  heats; each is stated on the detector's card.
+- **A gauge pressure gets a number, not a refusal.** The metric accepts any field called
+  pressure, including the zero-mean pressure of an incompressible flow, where a ratio means
+  nothing. On the Taylor-Green vortex fixture the detector marks cells along the zero
+  contours of a smooth field with no shock, and the metric returns finite values that mean
+  nothing
+  ([issue 101](https://github.com/khegazy/pde_metrics/blob/main/issues/101-a-metric-cannot-declare-it-needs-an-absolute-positive-field.md)).
 - **Only one dimension is evidenced.** The only dataset with a shock is the one-dimensional
   Sod tube, with one shock per field. Many shocklets in two or three dimensions are untested
   ([issue 002](https://github.com/khegazy/pde_metrics/blob/main/issues/002-shocklet-dataset.md)).
@@ -211,10 +233,13 @@ Every number in this section comes from that one run. Regenerate with `python -m
 
 <!-- END GENERATED results_smoothing -->
 
-Every calibrated blur smears Sod's shock beyond the detector's reach, so the candidate has no
-shock and every strength of both blurs scores 0, the formula's value for one empty set. The
-values are equal across strengths, so no rank correlation is defined. This axis tests only
-whether the metric notices that the shock is gone, which it does at the mildest strength.
+Both linear blurs smear Sod's shock beyond the detector's reach at every calibrated strength,
+so the candidate has no shock and scores 0, the formula's value for one empty set. The values
+are equal across strengths, so no rank correlation is defined. This axis tests only whether
+the metric notices that the shock is gone, which it does at the mildest strength. The median
+blur, also in this family, is absent from the table because it left Sod's pressure unchanged
+at every strength (a median filter keeps a step), and the run excluded it as doing nothing; it
+scored 1 there.
 
 ### Spectral filtering
 
@@ -233,11 +258,16 @@ whether the metric notices that the shock is gone, which it does at the mildest 
 <!-- END GENERATED results_spectral -->
 
 The low-pass filters smear the shock away at every distinct strength and score 0 throughout,
-so they carry no ranking. The rank correlation of 1 under `highpass_butterworth` comes from a
-single frame, the only one in which the milder distinct strength leaves the shocked cells in
-place (fraction of frames in order 0.1); in every other frame both strengths remove the shock
-and tie at 0. The metric therefore reads these filters as "shock kept" or "shock lost" and
-nothing in between.
+so they carry no ranking. The high-pass filters score 0 for a different reason: they keep the
+jump across the shock nearly intact but raise the pressure on both sides of it, so the ratio
+the detector reads falls below its threshold while the shock is still there (checked off the
+run in this bundle's review, by applying the operators as the pipeline does). The rank
+correlation of 1 under `highpass_butterworth` comes from a single frame (fraction of frames in
+order 0.1), in which the milder distinct strength leaves the ratio just above the threshold;
+in the next frame the same strength leaves it just below, and every other frame ties at 0. The
+single usable strength of `highpass_ideal` scores 0 the same way. Under these filters the
+metric therefore measures a change in the pressure level near the shock, not the loss of the
+shock: the limitation "An offset in the pressure erases a shock in the right place".
 
 ### Displacement
 
@@ -261,7 +291,13 @@ strengths tie, which is why its rank correlation is 0.707 in every frame, below 
 advisory threshold. That tie is the near-miss limitation measured: a shift of two cells and a shift of
 sixteen are scored alike. The sub-pixel translation ranks at 0.971 in every frame: its two
 smallest shifts leave the shocked cells where they were and tie at 1, and from two cells on it
-ties at 0. The damage scale is not the problem it is for
+ties at 0. Between them it grades the shift. At one cell it scores 0.5, as the whole-cell
+translation does. At half a cell it scores between 1 and 0.5, because the Fourier shift rings
+beside the jump, over- and undershooting the two plateaus, and the detector then marks only
+one cell, which the reference's pair shares (Equation (1) with one shared cell out of two plus
+one; checked off the run in this bundle's review, through the pipeline's wall extension). The
+value at half a cell therefore reflects the operator's ringing as well as the shift. The
+damage scale is not the problem it is for
 [shock_set_distance](../../metrics/shock_set_distance/card.md): the anchor scores 0 and a lost
 overlap scores the same 0, so a misplaced shock reads as full damage, and the profile lists no
 axis as provably small.
@@ -281,12 +317,15 @@ axis as provably small.
 
 Block averaging moves the shock to a block edge, by an amount set by where the block
 boundaries fall rather than by the factor alone: at the mildest factor the staircase
-reconstruction scores 1 in some frames and 0.5 in others, and in most frames every harsher factor ties at 0, so the rank correlation is 0.775 on
-both reconstructions. The
-band-limited reconstruction keeps the shocked cells only at the mildest factor, where it
-scores at most 0.8 (`value_max`); from the next factor on it smears the shock away and scores
-0, which is why the profile names `coarsen_bandlimited` as the degradation the metric charges
-most for.
+reconstruction scores 1 in some frames and 0.5 in others, and in most frames every harsher
+factor ties at 0, so the rank correlation is 0.775 on both reconstructions. The band-limited
+reconstruction keeps shocked cells only at the mildest factor, where it scores at most 0.8
+(`value_max`, three marked cells sharing two with the reference); from the next factor on it
+smears the shock away and scores 0. Both reconstructions reach full damage, so neither is
+charged more in damage; the profile names `coarsen_bandlimited` as the degradation the metric
+charges most for because it does so with a smaller change to the field (`damage_per_change`
+in `_generated/fingerprint.json`), its smooth reconstruction departing less from the
+reference than the staircase does.
 
 ### Noise
 

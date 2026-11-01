@@ -27,8 +27,10 @@ math:
   # C = {2} give 1 - DICE(A, C) = 1 but (1 - DICE(A, B)) + (1 - DICE(B, C)) = 1/3 + 1/3.
   # And two distinct fields with the same shock set score 1.
   triangle_inequality: false
-  # The detector reads pressure ratios, so scaling both fields by a positive constant flags
-  # the same cells and leaves the value unchanged.
+  # The detector reads pressure ratios, so scaling both fields by a positive constant (a change
+  # of pressure units) flags the same cells and leaves the value unchanged. A zero or negative
+  # constant is not a rescaled pressure: it leaves no positive pressure, so both masks are
+  # empty and the value is 1 by the convention of issues/120.
   scale_dependent: false
   # Which cells are flagged, and how many a shock occupies, depend on the grid.
   resolution_dependent: true

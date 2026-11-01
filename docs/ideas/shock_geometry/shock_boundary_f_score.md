@@ -16,7 +16,7 @@ drawn by people (Martin et al. 2004).
 
 The plain overlap scores, intersection over union and the Dice coefficient, are built:
 [shock_mask_overlap](../../metrics/shock_mask_overlap.md) registers the Dice coefficient, which
-is the boundary F-score at zero tolerance, and names intersection over union as its monotone
+is the boundary F-score at zero tolerance (a derivation on its card, not a source's), and names intersection over union as its monotone
 equivalent. What remains is the tolerance. Overlap at zero tolerance drops to zero once a thin
 shock has moved by its own detected width, two cells, and stays there however far it moved; a
 tolerance of a few cells would keep a near miss distinguishable from a far one. The nearest-cell
@@ -25,18 +25,21 @@ distances the score thresholds are already computed by `surface_distances` in th
 
 ## Pitfalls
 
-- **The tolerance is a threshold and must be fixed once, with a source.** The benchmark
-  convention for natural images, as implemented in MATLAB's `bfscore` (secondary; not checked
-  against Martin et al. 2004 itself), is 0.75% of the image diagonal. On the 2048-cell Sod tube
-  that is 15.4 cells, which would leave the score blind to every `translate_x` shift below 16
-  cells; on a 256-cell square grid it is 2.7 cells. A fraction of the domain diagonal has no
-  physical meaning for a shock, so a builder must find the tolerance in a primary source and
-  decide whether to take it in cells instead.
+- **The tolerance is a threshold and must be fixed once, with a source.** Two defaults exist,
+  neither checked against Martin et al. 2004 itself. MATLAB's `bfscore` documentation gives
+  0.75% of the image diagonal; the Berkeley benchmark's own matching routine,
+  `correspondPixels.m`, defaults its `maxDist` to 0.01 of the image diagonal (its header
+  comment). On the 2048-cell Sod tube these are 15.4 and 20.5 cells, which would leave the score
+  blind to every `translate_x` shift below 16 cells; on a 256-cell square grid they are 2.7
+  and 3.6 cells. A fraction of the domain diagonal has no physical meaning for a shock, so a
+  builder must find the tolerance in a primary source and decide whether to take it in cells
+  instead.
 - **One-to-one or nearest-cell matching.** Matching each cell to its nearest cell, as a distance
   transform does, can match many cells to one, and gives a different number from a one-to-one
-  correspondence when the two sets differ in size. Which of the two Martin et al. use has not
-  been checked against the paper (its PDF could not be read by the agent that narrowed this
-  page); a builder must read it before choosing.
+  correspondence when the two sets differ in size. The header of `correspondPixels.m` says it
+  computes a "minimum-cost correspondance between two boundary maps", which points to one-to-one
+  matching in the benchmark code; what Martin et al. write has not been checked against the
+  paper, and a builder must read it before choosing.
 
 ## Rationale
 
