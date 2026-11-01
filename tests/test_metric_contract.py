@@ -133,12 +133,13 @@ def test_declared_fields_are_canonical(spec):
     assert not unknown, f"{spec.name} declares unknown fields {sorted(unknown)}"
 
 
-def test_pairwise_identity_is_zero(spec):
-    """d(x, x) == 0 for a pairwise error metric. Catches normalisation slips."""
+def test_pairwise_identity_is_zero_or_the_target(spec):
+    """d(x, x) == 0 for a pairwise error metric, or its declared target for a target-valued one
+    (``tail_exceedance``'s frequency bias is 1 on identical fields). Catches normalisation slips."""
     if spec.arity != "pairwise" or spec.higher_is_better:
         pytest.skip("not a pairwise error metric")
     x = synthetic_field(GRID, _channels_for(spec))
-    assert _call(spec, x, x) == pytest.approx(0.0, abs=1e-12)
+    assert _call(spec, x, x) == pytest.approx(spec.target or 0.0, abs=1e-12)
 
 
 def test_symmetry(spec):
@@ -356,15 +357,16 @@ def test_a_curve_has_one_value_per_fixed_coordinate(spec):
         "coordinate is the same at every row or the rows cannot be compared")
 
 
-def test_a_comparison_curve_is_zero_on_identical_fields(spec):
-    """A comparison curve of an error metric takes the metric's identity value, zero, at every
-    coordinate when the two fields are the same."""
+def test_a_comparison_curve_is_zero_or_the_target_on_identical_fields(spec):
+    """A comparison curve of an error metric takes the metric's identity value, zero or its
+    declared target, at every coordinate when the two fields are the same."""
     _curve(spec)
     if spec.companion.one_field or spec.arity != "pairwise" or spec.higher_is_better:
         pytest.skip("not a comparison curve of a pairwise error metric")
     x = synthetic_field(GRID, _channels_for(spec))
     _, values = _call_companion(spec, x, x)
-    assert np.allclose(values, 0.0, atol=1e-12), f"{spec.name}: curve on (x, x) is {values}"
+    assert np.allclose(values, spec.target or 0.0, atol=1e-12), (
+        f"{spec.name}: curve on (x, x) is {values}")
 
 
 def test_a_point_set_has_one_column_per_declared_coordinate(spec):

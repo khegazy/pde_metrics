@@ -16,14 +16,14 @@ Built already, and so not listed here: the continuous ranked probability score
 ([energy_score](../../metrics/energy_score.md)), the variogram score
 ([variogram_score](../../metrics/variogram_score.md)), the flatness of increments
 ([increment_flatness](../../metrics/increment_flatness.md)), the Hill estimate of their tail
-index ([tail_index](../../metrics/tail_index.md)), and the energy distance between increment
+index ([tail_index](../../metrics/tail_index.md)), the frequency bias of their extremes
+([tail_exceedance](../../metrics/tail_exceedance.md)), and the energy distance between increment
 distributions ([energy_distance](../../metrics/energy_distance.md)).
 
 ## Ideas in this theme
 
-- [Tail exceedance and peaks-over-threshold](tail_index_estimators.md): direct comparison of
-  how often large values occur, and a generalised Pareto fit to the values above a high
-  threshold.
+- [Peaks-over-threshold fits](tail_index_estimators.md): a generalised Pareto fit to the values
+  above a high threshold.
 - [Pair-correlation function of features](pair_correlation.md): the distribution of
   distances between extracted features such as eddy centres, compared between two fields.
 - [Reliability, interval coverage and the distribution of spectra](ensemble_calibration.md):

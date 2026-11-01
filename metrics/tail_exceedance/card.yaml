@@ -1,0 +1,39 @@
+schema_version: 1
+
+name: tail_exceedance
+kind: metric
+
+# "Compares distributions or moments of the field": it compares how often two fields' one-cell
+# increments reach an extreme level, regardless of where.
+category: statistical
+
+summary: >-
+  Frequency bias of extreme one-cell increments: how many of the prediction's increments reach
+  the size of the reference's square-root-of-n largest, over how many of the reference's do, so
+  1 is right, below 1 too few extremes and above 1 too many.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    The frequency bias, the prediction's count of absolute one-cell increments at least as large
+    as the reference's k-th largest over the reference's own count, pooled over channels and
+    spatial axes, at k = ceil(sqrt(n)). Dimensionless, 1 for a prediction with as many extremes
+    as the reference. NaN when the reference is constant. The same ratio at nine orders
+    k = ceil(n^theta) is stored beside it.
+  bounds:
+    # A ratio of counts: 0 when the prediction has no increment as large as the threshold, and at
+    # most n / k when every one of its n increments is.
+    lower: 0.0
+    upper: null
+
+math:
+  triangle_inequality: false   # not a distance: a ratio, 1 at identity
+  # Scaling both fields by c scales every increment and every threshold by c alike.
+  scale_dependent: false
+  # One-cell increments and k set by the number of cells: it depends on the grid twice over.
+  resolution_dependent: true
+  complexity: "O(N log N)"     # one sort of the reference's increments per channel and axis
+references: [clauset2009, etccdi, granero2024, jwgfvr, zhang2005]
+review: null
