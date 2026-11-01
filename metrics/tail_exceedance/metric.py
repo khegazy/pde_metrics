@@ -41,8 +41,8 @@ REFERENCE_EVENTS = "tail_exceedance/reference_events"
     target=1.0,               # JWGFVR, "Frequency bias": perfect score 1
     # A fixed threshold's exceedance count can rise under blur before it falls: one tall jump
     # spread over several cells puts each of them above a low threshold. A 16-cell spike of
-    # height 8 on noise of rms 0.01 scores 1, 1.25, 2, 3, 3.5, 0 at sigma = 0, 0.5, 1, 2, 4, 8
-    # (test_metric.py pins the rise and the fall).
+    # height 8 on noise of rms 0.01 (seed 0) scores 1, 1, 2, 3, 3.5, 0 at sigma = 0, 0.5, 1, 2,
+    # 4, 8 (test_metric.py pins the sequence).
     monotone_under_smoothing=False,
     requires_periodic=True,   # increment_flatness's wrap-around increments
 )
@@ -54,8 +54,10 @@ def tail_exceedance(reference: NDArray[np.floating], candidate: NDArray[np.float
     methods, issues and FAQ", Sect. "Frequency bias (bias score)",
     https://jwgfvr.github.io/forecastverification), with the reference in the place of the
     observation. The registered point theta = 1/2 of :func:`tail_exceedance_curve` is the order of
-    ``tail_index``, the largest sqrt(n) of Clauset, Shalizi & Newman (2009, SIAM Rev. 51(4),
-    661-703, Sect. 3.5); that this point stands for the curve is a convention (``issues/118``).
+    ``tail_index``, the largest sqrt(n), which Clauset, Shalizi & Newman (2009, SIAM Rev. 51(4),
+    661-703, Sect. 3.5) mention as an alternative way of choosing a tail sample, common in the
+    finance literature, not as their recommended method; that this point stands for the curve is
+    a convention (``issues/118``).
 
     Args:
         reference: The trusted field, shape ``(C, *spatial)`` on the analysis grid.
@@ -70,8 +72,8 @@ def tail_exceedance(reference: NDArray[np.floating], candidate: NDArray[np.float
     """
     thetas, values = (ctx.cache[COMPANION_KEY] if ctx is not None and COMPANION_KEY in ctx.cache
                       else tail_exceedance_curve(reference, candidate, ctx=ctx))
-    # theta = 1/2, k = ceil(sqrt(n)): the largest-sqrt(n) rule of Clauset, Shalizi & Newman
-    # (2009), SIAM Rev. 51(4), Sect. 3.5; registering this point is a convention, issues/118.
+    # theta = 1/2, k = ceil(sqrt(n)): the largest-sqrt(n) rule Clauset, Shalizi & Newman (2009),
+    # SIAM Rev. 51(4), Sect. 3.5, mention; registering this point is a convention, issues/118.
     return float(np.asarray(values)[np.flatnonzero(np.asarray(thetas) == REGISTERED_THETA)[0]])
 
 
@@ -83,8 +85,10 @@ def tail_exceedance_curve(reference: NDArray[np.floating], candidate: NDArray[np
     For each channel and spatial axis, the reference's absolute one-cell increments ``|delta|``
     (``n`` of them) are sorted into ``X_(1) >= ... >= X_(n)`` and the threshold at each theta is
     ``a = X_(k)``, ``k`` from ``tail_index``'s :func:`~metrics.tail_index.metric.orders`. The
-    event is ``|delta| >= a`` (the percentile-threshold event of the ETCCDI indices, e.g. TX90p,
-    https://etccdi.pacificclimate.org/list_27_indices.shtml, with the reference as base period).
+    event is ``|delta| >= a``: an exceedance of a percentile of the reference, as the ETCCDI
+    indices count exceedances of a base period's percentile (TX90p, item 13 of
+    https://etccdi.pacificclimate.org/list_27_indices.shtml, which uses a strict ``>``; the
+    non-strict inequality here is this bundle's choice, below).
     The frequency bias (JWGFVR, Sect. "Frequency bias (bias score)") pools the counts over pairs:
 
         B(theta) = sum_pairs #{|delta_cand| >= a} / sum_pairs #{|delta_ref| >= a}
@@ -93,10 +97,12 @@ def tail_exceedance_curve(reference: NDArray[np.floating], candidate: NDArray[np
     reference count is then ``k``. A pair whose ``a`` is zero, an axis along which the reference
     is constant, has no event and is left out, as ``tail_index`` leaves it out (``issues/103``).
     ``X_(k)`` with ``>=`` rather than ``X_(k+1)`` with ``>`` is this bundle's choice: for a
-    candidate drawn independently from the reference's distribution the expected bias is then
-    n / (n + 1), where the other gives (k + 1) / k, 1.25 at the curve's first point on 256 x 256
-    (the derivation is on the card; Zhang et al. 2005, J. Climate 18(11), 1641-1651, abstract,
-    describe the same in-sample/out-of-sample effect of a percentile threshold).
+    reference of n independent values and a candidate drawn independently from the same
+    distribution, the expected bias is then n / (n + 1), where the other gives
+    n (k + 1) / ((n + 1) k), about 1.25 at the curve's first point on 256 x 256 (the derivation
+    is the card's, this bundle's own; Zhang et al. 2005, J. Climate 18(11), 1641-1651, abstract,
+    describe how a percentile threshold's exceedance rate differs inside and outside the sample
+    it was estimated from, which they correct with a bootstrap).
 
     Args:
         reference: The trusted field, shape ``(C, *spatial)`` on the analysis grid.
@@ -130,7 +136,7 @@ def tail_exceedance_curve(reference: NDArray[np.floating], candidate: NDArray[np
         # X_(k), the k-th largest |increment| of each (channel, axis) pair at each theta: a
         # threshold set by a percentile of the reference sample, as the ETCCDI percentile indices
         # set theirs from a base period (TX90p, list of the 27 core indices, item 13). The k-th
-        # rather than the (k+1)-th is this bundle's choice (docstring; Zhang et al. 2005).
+        # rather than the (k+1)-th is this bundle's choice (docstring).
         thresholds = np.array([np.sort(size)[::-1][ks - 1] for size in _sizes(reference)])
         cache[REFERENCE_EVENTS] = (thresholds, _exceedances(reference, thresholds))
     thresholds, reference_counts = cache[REFERENCE_EVENTS]
@@ -154,7 +160,8 @@ def _sizes(x: NDArray[np.floating]) -> list[NDArray[np.floating]]:
 def _exceedances(x: NDArray[np.floating], thresholds: NDArray[np.floating]) -> NDArray[np.int64]:
     """``#{|delta| >= a}`` for each pair of ``x`` (rows) and each of its thresholds (columns): the
     event count of the frequency bias (JWGFVR, "Frequency bias (bias score)"), the event being an
-    exceedance of a reference percentile as in the ETCCDI indices (TX90p)."""
+    exceedance of a reference percentile, as the ETCCDI indices (TX90p) count exceedances of a
+    base-period percentile (they with a strict inequality)."""
     # The non-strict inequality is this bundle's choice; with X_(k) it gives an independent
     # candidate an expected bias of n / (n + 1) (card, Equation (5)).
     return np.array([np.count_nonzero(size[:, None] >= row[None, :], axis=0)

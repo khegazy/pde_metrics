@@ -133,7 +133,7 @@ def test_declared_fields_are_canonical(spec):
     assert not unknown, f"{spec.name} declares unknown fields {sorted(unknown)}"
 
 
-def test_pairwise_identity_is_zero(spec):
+def test_pairwise_identity_is_zero_or_the_target(spec):
     """d(x, x) == 0 for a pairwise error metric, or its declared target for a target-valued one
     (``tail_exceedance``'s frequency bias is 1 on identical fields). Catches normalisation slips."""
     if spec.arity != "pairwise" or spec.higher_is_better:
@@ -357,7 +357,7 @@ def test_a_curve_has_one_value_per_fixed_coordinate(spec):
         "coordinate is the same at every row or the rows cannot be compared")
 
 
-def test_a_comparison_curve_is_zero_on_identical_fields(spec):
+def test_a_comparison_curve_is_zero_or_the_target_on_identical_fields(spec):
     """A comparison curve of an error metric takes the metric's identity value, zero or its
     declared target, at every coordinate when the two fields are the same."""
     _curve(spec)

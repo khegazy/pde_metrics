@@ -80,12 +80,15 @@ def test_a_non_finite_field_is_refused():
 def test_an_independent_twin_scores_one_at_the_smallest_order():
     """At theta = 0.1 on 1024 cells (k = 2) an independent draw scores 1 on average, not 1.5.
 
-    A periodic random walk with centred independent steps has exactly those steps as its one-cell
-    increments, so reference and candidate are independent samples of one distribution. For the
+    A periodic random walk with centred steps has exactly those steps (rolled by one) as its
+    one-cell increments; centred steps sum to zero, so they are exchangeable rather than strictly
+    independent, a dependence of order 1/n. Reference and candidate are drawn independently. For the
     k-th largest of n, F(X_(k)) is Beta(n - k + 1, k), so a new value reaches it with probability
     k / (n + 1) and the expected frequency bias is n / (n + 1) = 0.999. Had the threshold been
-    the (k + 1)-th largest with a strict inequality, it would be (k + 1) / k = 1.5. Mean over 400
-    seeds: 1.015 with a standard error of 0.052 (measured); the bound 0.2 separates the two.
+    the (k + 1)-th largest with a strict inequality, it would be n (k + 1) / ((n + 1) k) = 1.499.
+    Mean over 400 seeds: 1.015 with a standard error of 0.052 (measured); the alternative convention
+    measures 1.5625 on the same seeds (adversarial review, .agent/adversary/checks.out), so the
+    bound 0.2 separates the two.
     """
     def walk(rng: np.random.Generator) -> np.ndarray:
         steps = rng.standard_normal(1024)
@@ -104,14 +107,16 @@ def test_blur_can_raise_the_value_before_it_lowers_it():
 
     A 16-cell spike of height 8 on noise of rms 0.01 (seed 0): the reference's fourth-largest step
     is a noise step, so a blurred spike's several moderate steps all exceed it until the blur is
-    wide enough to flatten the spike. Measured: 1, 1.25, 2, 3, 3.5, 0 at sigma 0, 0.5, 1, 2, 4, 8.
-    This is why the decorator declares ``monotone_under_smoothing=False``.
+    wide enough to flatten the spike. Measured: 1, 1, 2, 3, 3.5, 0 at sigma 0, 0.5, 1, 2, 4, 8;
+    with n = 16 and k = 4 these are candidate counts of 4, 4, 8, 12, 14 and 0 over the reference's
+    4. This is why the decorator declares ``monotone_under_smoothing=False``; the sequence is
+    pinned so the documented numbers cannot drift from the field the test builds.
     """
     x = 0.01 * np.random.default_rng(0).standard_normal((1, 16))
     x[0, 0] += 8.0
     values = [tail_exceedance(x, x if s == 0 else gaussian_filter(x, (0, s), mode="wrap"))
               for s in (0, 0.5, 1, 2, 4, 8)]
-    assert max(values) > 1.0 and values[-1] < 1.0, values
+    assert values == [1.0, 1.0, 2.0, 3.0, 3.5, 0.0], values
 
 
 def test_scaling_both_fields_and_moving_the_candidate_change_nothing():

@@ -47,9 +47,13 @@ page numbers no equations. Here the reference stands in for the observation and 
 the forecast. A threshold set by a percentile of a reference sample, against which another sample's
 exceedances are counted, is the construction of the percentile-based climate-extremes indices,
 such as TX90p, "the percentage of days when TX > 90th percentile" of a base period [@etccdi],
-item 13. The reported value is $B(\tfrac{1}{2})$, at $k = \lceil \sqrt{n} \rceil$, the largest
-$\sqrt{n}$ that Clauset, Shalizi and Newman [@clauset2009], Section 3.5, name as a fixed rule for
-the tail and `tail_index` reads; on the 256 by 256 analysis grid that is $k = 256$ of $n = 65536$
+item 13; those indices use a strict inequality, and the non-strict one of Equation (3) is this
+bundle's choice, explained below. The reported value is $B(\tfrac{1}{2})$, at
+$k = \lceil \sqrt{n} \rceil$, the largest $\sqrt{n}$ that `tail_index` reads. Clauset, Shalizi
+and Newman [@clauset2009], Section 3.5, mention keeping the largest $\sqrt{n}$ observations as an
+alternative way of choosing a tail sample, "quite common in the quantitative finance literature",
+and say that their own Kolmogorov-Smirnov method of Section 3.3 gives estimates at least as good;
+the rule is used here as a fixed level, not as their recommendation; on the 256 by 256 analysis grid that is $k = 256$ of $n = 65536$
 increments per axis. It is NaN when $A$ is empty, as on a constant reference.
 
 **Choices made here, not by a source.** That the quantity counted is the one-cell increment follows
@@ -65,8 +69,11 @@ cases, which, with no ties at the threshold, equals the mean over pairs of each 
 since every pair's reference count is then $k$.
 
 **Why the $k$-th largest and $\ge$.** A threshold estimated from the reference sample is exceeded
-at a different rate inside that sample than outside it, the effect Zhang, Hegerl, Zwiers and
-Kenyon [@zhang2005] describe for percentile indices. The derivation that follows is this bundle's.
+at a different rate inside that sample than outside it: Zhang, Hegerl, Zwiers and Kenyon
+[@zhang2005] describe this for percentile indices, where sampling error in the threshold inflates
+the rate outside the base period, and correct it with a bootstrap. This bundle does not bootstrap;
+it chooses the order statistic so that the expected rate outside the sample is nearly the rate
+inside it. The derivation that follows is this bundle's, not theirs.
 For a continuous distribution $F$ and $n$ independent reference values, $F(X_{(k)})$ follows a
 $\mathrm{Beta}(n-k+1, k)$ distribution, so a new value reaches $X_{(k)}$ with probability
 $\mathbb{E}[1 - F(X_{(k)})] = k/(n+1)$, and an independent prediction with the reference's
@@ -77,8 +84,11 @@ $$
 $$
 
 within $1/(n+1)$ of the target. With the $(k+1)$-th largest and a strict inequality the same
-calculation gives $(k+1)/k$, which is 1.25 at the curve's first point on the 256 by 256 grid, where
-$k = 4$. A test in `test_metric.py` checks Equation (5) on independent samples at $k = 2$.
+calculation gives $n(k+1)/\bigl((n+1)k\bigr)$, about $(k+1)/k$, which is 1.25 at the curve's first
+point on the 256 by 256 grid, where $k = 4$. Equation (5) assumes the reference's $n$ values are
+independent; the one-cell increments of a real field are correlated, and for them the expectation
+is not established. A test in `test_metric.py` checks Equation (5) at $k = 2$ on samples whose
+increments are independent up to their zero sum.
 
 **The curve behind the number** is Equation (4) at every $\theta$ of Equation (2). Small $\theta$
 reads the few largest increments; large $\theta$ lowers the threshold into the body of the
@@ -226,8 +236,10 @@ Dimensionless, zero or positive, and unbounded above; at most $n/k$, 256 on the 
 The target is 1: the analysis orders the value by its distance from 1 on a logarithmic scale, so
 0.5 and 2 are equally far from right. Below 1 the prediction has fewer increments as large as the
 reference's extreme ones, above 1 more. The prediction that is the reference itself scores exactly
-1, and an independent draw from the reference's distribution scores $n/(n+1)$ on average
-(Equation (5)), with a spread across draws that grows as $k$ shrinks.
+1. When the reference's increments are independent values, an independent draw from their
+distribution scores $n/(n+1)$ on average (Equation (5)), with a spread across draws that grows as
+$k$ shrinks; for a real field, whose increments are correlated, that expectation is not
+established.
 
 Because the threshold and the counts scale together, multiplying both fields by one constant
 changes nothing, and a prediction can be compared with a reference of any magnitude. Values are
@@ -244,10 +256,12 @@ one, and on 256 by 256 $\theta = 0.9$ counts about a third of all increments.
 The value saturates. Once a prediction has no increment as large as the reference's $\sqrt{n}$-th
 largest, it scores 0 however much further it is smoothed, and on the distance-from-1 scale that is
 infinitely far: two predictions both at 0 cannot be ranked against each other, and a mild blur and
-a total one are scored alike. On the evidence run every blur and low-pass filter takes the value to
-0 at its harshest strength on every field, and on density and velocity the analysis then withholds
-the rank correlation altogether (Results, "Smoothing"). The stored curve at larger $\theta$ is
-where such predictions are still told apart.
+a total one are scored alike. On the evidence run, on density and velocity, the Gaussian and box
+blurs leave the value at 0 from their second strength in every frame and both low-pass filters
+at every strength, so the registered number cannot tell any blur strength beyond the first, nor
+any low-pass strength, from another, and the analysis withholds those axes' rank correlation
+(Results, "Smoothing" and "Spectral filtering"). The stored curve at larger $\theta$ is where such
+predictions are still told apart.
 
 A value above 1 does not mean the prediction is more intermittent or more turbulent. Anything that
 puts more one-cell jumps above the reference's extreme level raises it: noise, and also a
@@ -257,7 +271,7 @@ jumps. Below 1 does not mean smoother everywhere either, only fewer extreme jump
 It is not monotone under smoothing in general, which the decorator declares and the contract test
 checks. Spreading one tall, isolated jump over several cells can put each of them above a low
 threshold, so blur can raise the count before it lowers it: a 16-cell spike of height 8 on faint
-noise scores 1, 1.25, 2, 3, 3.5 and then 0 as the blur widens (`test_metric.py`).
+noise scores 1, 1, 2, 3, 3.5 and then 0 as the blur widens (`test_metric.py`).
 
 The counts are piecewise constant in the prediction, so the metric has no useful gradient and is
 not a training loss. A pair along which the reference is exactly constant is left out, but the same
@@ -299,14 +313,17 @@ Every number in this section comes from that one run. Regenerate with `python -m
 <!-- END GENERATED results_smoothing -->
 
 All three smoothing axes were declared before the run, with the value falling. It falls on every
-field: the harshest strength of each takes it to 0, a change from clean of -1 in the Performance
-tables. The median blur is followed in every frame on every field (rank correlation 1, every
-frame in order). The Gaussian and box blurs are not graded at the registered point: on density and
+field. The harshest strength of each takes the median to 0, a change from clean of -1 in the
+Performance tables, except the median blur on vorticity, which leaves a change of -0.818. The
+median blur is followed in every frame on every field (rank correlation 1, every frame in
+order). The Gaussian and box blurs are not graded at the registered point: on density and
 velocity the value is already 0 from the second strength in every frame, and the analysis, which
 places a value of 0 infinitely far from the target, then treats each frame's single finite point as
 no ordering at all and withholds the rank correlation (the dashes). On vorticity the second
-strength still leaves a few events in some frames, so two finite points remain and the rank
-correlation is 0.949, with no frame strictly in order because the harsher strengths tie at 0. The
+strength still leaves a few events in a minority of frames. Only in those frames is a rank
+correlation defined, and there the pattern is always two finite points and two ties at 0, whose
+rank correlation is 0.949 whatever the finite values are; so 0.949 records the tie pattern of the
+frames that have one, not a grading of the axis, and no frame is strictly in order. The
 analysis reports a direction of +1 on every axis of a metric with a target, because it orders by
 distance from the target; the fall declared as -1 is the raw value's.
 
@@ -386,8 +403,9 @@ remainder is the Fourier shift's treatment of the grid's highest mode, `issues/0
 
 <!-- END GENERATED results_resolution -->
 
-`coarsen` raises the value far above 1 on density and velocity, to 5.44 and 9.3 times the clean
-value at the harshest strength (the 0.5 column of the curve tables below): a block reconstruction
+`coarsen` raises the value far above 1 on density and velocity: at the harshest strength it
+exceeds its clean value of 1 by 5.44 and 9.3 times that value (the 0.5 column of the curve tables
+below, a change from clean): a block reconstruction
 concentrates the change between blocks into one-cell jumps at block edges, and many of those reach
 the reference's extreme level. A value above 1 therefore does not mean a more intermittent field.
 On vorticity it first rises above 1 and then falls below, to a change of -0.406, so its distance

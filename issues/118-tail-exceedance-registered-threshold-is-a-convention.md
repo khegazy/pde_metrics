@@ -30,9 +30,10 @@ the median value is 0.02 to 0.27 at the first strength of `gaussian_blur` and `b
 exactly 0 from the second strength on every field, and 0 at every strength of `lowpass_ideal` and
 `lowpass_butterworth` on density and velocity. A value of 0 is infinitely far from the target on
 the scale the analysis orders by, so the harsher strengths of those axes tie. The evidence run
-`tail_exceedance_1793494833` (161 frames) bears this out: the Gaussian and box blurs and both
-low-pass filters have their rank correlation withheld on density and velocity at $\theta = 1/2$,
-and are graded again only from $\theta = 0.6$ or 0.7 upward; the dominance of the weakest pair of
+`tail_exceedance_1793494833` (161 frames) bears this out: on density and velocity the Gaussian
+and box blurs are at 0 from their second strength in every frame and both low-pass filters at every
+strength, so their rank correlation is withheld at $\theta = 1/2$. The blurs are graded again from
+$\theta = 0.6$ or 0.7 upward; the low-pass filters only at 0.8 and 0.9, and not consistently there; the dominance of the weakest pair of
 Gaussian-blur strengths is 0.429, 0.764 and 0.59 on the three fields, so there the registered
 point does not stand for the curve (the card's "The curve behind the number").
 

@@ -10,7 +10,8 @@
   title        = {Forecast verification: methods, issues and {FAQ}},
   howpublished = {Web page of the JWGFVR, formerly hosted at cawcr.gov.au/projects/verification},
   url          = {https://jwgfvr.github.io/forecastverification},
-  note         = {Read in full on 2026-10-31. Section "Frequency bias (bias score)", under methods
+  note         = {Read on 2026-10-31 in a fetch of the first 100,000 of the page's 141,777
+                  characters, which hold the cited section. Section "Frequency bias (bias score)", under methods
                   for dichotomous forecasts: (hits + false alarms) / (hits + misses), the
                   frequency of forecast events over the frequency of observed events, range 0 to
                   infinity, perfect score 1, below 1 under-forecasting and above 1
@@ -27,7 +28,9 @@
   note         = {Read in full on 2026-10-31. Items 10 (TN10p) and 13 (TX90p): the percentage of
                   days whose value exceeds a percentile computed from a base period. The precedent
                   for this bundle's event, an exceedance of a threshold set by the reference
-                  sample's own percentile, with the reference in the place of the base period}
+                  sample's own percentile, with the reference in the place of the base period.
+                  The indices use a strict inequality (TXij > TXin90); this bundle's non-strict
+                  one is its own choice}
 }
 
 @article{zhang2005,
@@ -56,8 +59,11 @@
   pages   = {661--703},
   year    = {2009},
   doi     = {10.1137/070710111},
-  note    = {Read in the ar5iv HTML of arXiv:0706.1062, numbered as the journal. Section 3.5
-             names the fixed rule of keeping the largest sqrt(n) observations; this bundle sets
+  note    = {Read in the HTML of arXiv:0706.1062 (the first 100,000 characters, which hold
+             Sections 3.3 to 4); the section numbers cited are that version's. Section 3.5
+             mentions keeping the largest sqrt(n) observations as an alternative approach
+             "quite common in the quantitative finance literature" and says the authors' KS
+             method of Section 3.3 gives estimates at least as good; this bundle sets
              its registered threshold at the k = ceil(sqrt(n))-th largest reference increment,
              the order tail_index reads, and its curve at k = ceil(n^theta)}
 }

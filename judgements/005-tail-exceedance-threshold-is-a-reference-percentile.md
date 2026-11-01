@@ -45,11 +45,14 @@ by distance from 1, as it does `spread_skill`.
   probabilities of order $1/\sqrt{n}$ is itself of that order and depends on the grid; the ratio is
   dimensionless and has a fixed perfect value, and it is the score the verification literature
   defines for this question.
-- **Why the $k$-th largest with $\ge$.** Derived on the card (Equation (5)): an independent
-  prediction from the reference's distribution then has an expected frequency bias of $n/(n+1)$,
-  while the $(k+1)$-th largest with $>$ gives $(k+1)/k$, 1.25 at the curve's first point. The
-  in-sample/out-of-sample difference of a percentile threshold is the effect Zhang, Hegerl, Zwiers
-  and Kenyon (2005, *J. Climate* 18(11), 1641–1651, doi:10.1175/JCLI3366.1, abstract) describe.
+- **Why the $k$-th largest with $\ge$.** Derived on the card (Equation (5), this bundle's own,
+  for a reference of independent values): an independent prediction from the reference's
+  distribution then has an expected frequency bias of $n/(n+1)$, while the $(k+1)$-th largest with
+  $>$ gives $n(k+1)/((n+1)k)$, about 1.25 at the curve's first point. Zhang, Hegerl, Zwiers and
+  Kenyon (2005, *J. Climate* 18(11), 1641–1651, doi:10.1175/JCLI3366.1, abstract) describe how a
+  percentile threshold's exceedance rate differs inside and outside the sample it was estimated
+  from, and correct it with a bootstrap; the choice of order statistic here is a different remedy.
+  The ETCCDI indices themselves use a strict inequality.
 
 ## What it changes
 
