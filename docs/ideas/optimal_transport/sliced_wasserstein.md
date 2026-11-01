@@ -7,7 +7,7 @@
 ## What it is
 
 Project the field onto many random one-dimensional directions, compute the
-[Wasserstein distance](wasserstein.md) along each direction, and average the results. In one
+[Wasserstein distance](../../metrics/wasserstein.md) along each direction, and average the results. In one
 dimension the Wasserstein distance is cheap, because it reduces to sorting the two samples and
 comparing them in order. The total cost of the sliced distance is therefore close to linear in
 the size of the field.
@@ -38,7 +38,7 @@ distance compares distributions whose discrepancies can be traced to a physical 
 ## Rationale
 
 *The team's judgement.* High priority: it brings the displacement-aware behaviour of the
-[Wasserstein distance](wasserstein.md) at close to linear cost, using only the cheap
+[Wasserstein distance](../../metrics/wasserstein.md) at close to linear cost, using only the cheap
 sort-based one-dimensional distance.
 
 ## Keywords

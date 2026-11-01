@@ -1,0 +1,109 @@
+@article{saumier2015,
+  author  = {Saumier, Louis-Philippe and Agueh, Martial and Khouider, Boualem},
+  title   = {An efficient numerical algorithm for the {L}2 optimal transport problem with
+             periodic densities},
+  journal = {IMA Journal of Applied Mathematics},
+  volume  = {80},
+  number  = {1},
+  pages   = {135--157},
+  year    = {2015},
+  doi     = {10.1093/imamat/hxt032},
+  note    = {The solver. Theorem 2.1 (after Cordero-Erausquin): on the torus the optimal map
+             is x + grad u with u periodic. Eq. (3) the L2 transport problem, Eq. (4) the
+             Monge-Ampere equation in u, Eq. (5) its linearisation, Eq. (6) the damped Newton
+             iteration, Eq. (14) the mass re-normalisation of each iterate, Sect. 3.3 the
+             simpler linear operator, Sect. 4.2 the FFT solver, Sect. 5.1 tau = 1. Numbers
+             from the arXiv:1009.6039v2 source, compiled; the journal numbering was not seen}
+}
+
+@article{peyrecuturi2019,
+  author  = {Peyr{\'e}, Gabriel and Cuturi, Marco},
+  title   = {Computational Optimal Transport},
+  journal = {Foundations and Trends in Machine Learning},
+  volume  = {11},
+  number  = {5-6},
+  pages   = {355--607},
+  year    = {2019},
+  doi     = {10.1561/2200000073},
+  note    = {Eq. (2.18) and Prop. 2.3: W_p is the transport cost with ground cost d^p raised
+             to 1/p, a distance between probability measures. Eq. (2.36), Remark 2.30: the
+             one-dimensional distance between quantile functions, used for the worked
+             example. Numbers from the arXiv:1803.00567 source, compiled}
+}
+
+@article{peyre2018,
+  author  = {Peyre, R{\'e}mi},
+  title   = {Comparison between {$W_2$} distance and {$\dot{H}^{-1}$} norm, and
+             localization of {W}asserstein distance},
+  journal = {ESAIM: Control, Optimisation and Calculus of Variations},
+  volume  = {24},
+  number  = {4},
+  pages   = {1489--1501},
+  year    = {2018},
+  doi     = {10.1051/cocv/2017050},
+  note    = {The bounds relating W_2 to the H^-1 seminorm of h_minus_one: Eq. (5) the
+             linearisation, Corollary 3 the upper bound 2 rho^(-1/2) ||mu - nu||_{H^-1}, Theorem
+             5 with Eq. (17) the lower bound on a flat manifold. Numbers from the
+             arXiv:1104.4631v2 source, compiled}
+}
+
+@article{delon2010,
+  author  = {Delon, Julie and Salomon, Julien and Sobolevski, Andrei},
+  title   = {Fast transport optimization for {M}onge costs on the circle},
+  journal = {SIAM Journal on Applied Mathematics},
+  volume  = {70},
+  number  = {7},
+  pages   = {2239--2258},
+  year    = {2010},
+  doi     = {10.1137/090772708},
+  note    = {Sect. 2: the exact transport cost on the circle as the minimum over a rotation
+             of mass levels of the quantile cost; the independent check in test_metric.py.
+             Read from arXiv:0902.3527; cited by section, the source did not compile}
+}
+
+@article{engquist2014,
+  author  = {Engquist, Bj{\"o}rn and Froese, Brittany D.},
+  title   = {Application of the {W}asserstein metric to seismic signals},
+  journal = {Communications in Mathematical Sciences},
+  volume  = {12},
+  number  = {5},
+  pages   = {979--988},
+  year    = {2014},
+  doi     = {10.4310/CMS.2014.v12.n5.a7},
+  note    = {Sect. 1: W_2 as a misfit, s^2 for a shifted hat function, computed from a
+             Monge-Ampere solution. Sect. 2.1: adding a constant for positivity distorts the
+             map; Sect. 2.2: equal mass by a constant scaling, the normalisation used here.
+             Read from arXiv:1311.4581; cited by section, the source did not compile}
+}
+
+@article{yang2018,
+  author  = {Yang, Yunan and Engquist, Bj{\"o}rn and Sun, Junzhe and Hamfeldt, Brittany F.},
+  title   = {Application of optimal transport and the quadratic {W}asserstein metric to
+             full-waveform inversion},
+  journal = {Geophysics},
+  volume  = {83},
+  number  = {1},
+  pages   = {R43--R62},
+  year    = {2018},
+  doi     = {10.1190/geo2016-0663.1},
+  note    = {Sect. 3.1, Eq. (27): the linear normalisation (f + c) / <f + c>, which makes the
+             misfit non-convex in shifts; Eqs. (34)-(35): W_2 from a Monge-Ampere solve in two
+             dimensions. Numbers from the arXiv:1612.05075 source, compiled; the journal
+             numbering was not seen. Listed on the idea page under its 2016 preprint, with
+             the fourth author as Froese}
+}
+
+@article{engquistyang2022,
+  author  = {Engquist, Bj{\"o}rn and Yang, Yunan},
+  title   = {Optimal transport based seismic inversion: beyond cycle skipping},
+  journal = {Communications on Pure and Applied Mathematics},
+  volume  = {75},
+  number  = {10},
+  pages   = {2201--2244},
+  year    = {2022},
+  doi     = {10.1002/cpa.21990},
+  note    = {Sect. 1: W_2^2 of a shifted signal is s^2 whatever its profile. Theorem 4.6:
+             after adding a constant c the misfit is O(s^2) only for shifts up to about
+             1/c + |supp f| and O(s) beyond. Numbers from the arXiv:2002.00031 source,
+             compiled}
+}

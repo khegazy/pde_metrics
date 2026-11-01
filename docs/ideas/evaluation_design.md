@@ -64,7 +64,8 @@ prediction and in the reference.
   distance (indicators of half-lines) (Müller 1997). The energy distance
   belongs to the same family. These stay well behaved when the distributions do not overlap:
   for the two point masses above, the Wasserstein-1 distance is $h$. See the
-  [Wasserstein distance](optimal_transport/wasserstein.md), the
+  built [wasserstein](../metrics/wasserstein.md) on density, its
+  [extension to velocity and vorticity](optimal_transport/wasserstein_signed_fields.md), the
   [sliced Wasserstein distance](optimal_transport/sliced_wasserstein.md), the
   built [energy_distance](../metrics/energy_distance.md) and
   [increment_w1](../metrics/increment_w1.md).

@@ -12,7 +12,7 @@ The page: "this becomes relevant only after the Wasserstein distance has shown t
 
 ## Why it is not built
 
-The rule this follows: an idea that builds on a metric not yet on `main` is not implemented; it waits until that metric is merged. The [Wasserstein distance](../docs/ideas/optimal_transport/wasserstein.md) is not built. A Sinkhorn implementation would also normally use a transport library, which cannot be added now. No dependency can be added at present: `uv` is not installed on the login node, and CI installs with `uv sync --locked`, so editing `pyproject.toml` without regenerating `uv.lock` fails every later pull request. Adding the library is a separate change to `pyproject.toml` and `uv.lock`, made once `uv` is available.
+The rule this follows: an idea that builds on a metric not yet on `main` is not implemented; it waits until that metric is merged. The [Wasserstein distance](../metrics/wasserstein/card.md) is built for density only, and whether it is useful is not yet settled. A Sinkhorn implementation would also normally use a transport library, which cannot be added now. No dependency can be added at present: `uv` is not installed on the login node, and CI installs with `uv sync --locked`, so editing `pyproject.toml` without regenerating `uv.lock` fails every later pull request. Adding the library is a separate change to `pyproject.toml` and `uv.lock`, made once `uv` is available.
 
 ## What would unblock it
 

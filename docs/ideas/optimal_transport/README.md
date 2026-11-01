@@ -9,12 +9,14 @@ solutions. Its central obstacle is that transport is defined for nonnegative qua
 fixed total mass, which pressure and velocity are not.
 
 Built already, and so not listed here: the Wasserstein distance between one-cell increment
-distributions ([increment_w1](../../metrics/increment_w1.md)).
+distributions ([increment_w1](../../metrics/increment_w1.md)), and the quadratic Wasserstein
+distance between density fields ([wasserstein](../../metrics/wasserstein.md)).
 
 ## Ideas in this theme
 
-- [Wasserstein distance for horizontal displacement](wasserstein.md): the cost of moving one
-  field onto the other, which grows with the size of a displacement instead of saturating.
+- [Wasserstein distance for velocity and vorticity](wasserstein_signed_fields.md): the cost of
+  moving one field onto the other for the fields that take both signs, once a signed-field
+  formulation is chosen.
 - [Transport between signed fields](signed_field_transport.md): the four standard ways to
   apply transport to fields that take negative values or do not conserve their total.
 - [Sliced Wasserstein distance](sliced_wasserstein.md): the average of cheap one-dimensional

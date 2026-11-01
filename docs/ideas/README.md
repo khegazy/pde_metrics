@@ -53,7 +53,7 @@ regime, protected from data leakage and combined.
 
 | Idea | Theme | Gap | Cost | Priority | Owner |
 |---|---|---|---|---|---|
-| [Wasserstein distance for horizontal displacement](optimal_transport/wasserstein.md) | [Optimal transport](optimal_transport/README.md) | math, [issue 066](https://github.com/khegazy/pde_metrics/blob/main/issues/066-wasserstein-needs-a-transport-library.md) | medium | high | |
+| [Wasserstein distance for velocity and vorticity](optimal_transport/wasserstein_signed_fields.md) | [Optimal transport](optimal_transport/README.md) | math, [issue 066](https://github.com/khegazy/pde_metrics/blob/main/issues/066-wasserstein-for-signed-fields-waits-on-047.md) | medium | high | |
 | [Transport between signed fields](optimal_transport/signed_field_transport.md) | [Optimal transport](optimal_transport/README.md) | math, [issue 047](https://github.com/khegazy/pde_metrics/blob/main/issues/047-signed-field-transport-has-no-chosen-formulation.md) | medium | high | |
 | [Sliced Wasserstein distance](optimal_transport/sliced_wasserstein.md) | [Optimal transport](optimal_transport/README.md) | implementation, [issue 048](https://github.com/khegazy/pde_metrics/blob/main/issues/048-sliced-wasserstein-measure-is-undefined.md) | low | high | |
 | [Entropic relaxation and Sinkhorn divergences](optimal_transport/sinkhorn.md) | [Optimal transport](optimal_transport/README.md) | implementation, [issue 067](https://github.com/khegazy/pde_metrics/blob/main/issues/067-sinkhorn-waits-on-wasserstein.md) | low | medium | |
@@ -134,8 +134,8 @@ judgement.
 
 After these come [wavelet scattering](basis_decompositions/wavelet_scattering.md), the
 [Helmholtz split](physics_invariants/helmholtz_split.md), the
-[winding angle](pattern_detection/winding_angle.md) in two dimensions, and the full
-[Wasserstein distance](optimal_transport/wasserstein.md) together with
+[winding angle](pattern_detection/winding_angle.md) in two dimensions, and the
+[Wasserstein distance for velocity and vorticity](optimal_transport/wasserstein_signed_fields.md) together with
 [transport between signed fields](optimal_transport/signed_field_transport.md).
 
 ## What other fields have already solved

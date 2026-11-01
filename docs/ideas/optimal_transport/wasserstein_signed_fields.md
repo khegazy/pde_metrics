@@ -1,8 +1,12 @@
-# Wasserstein distance for horizontal displacement
+# Wasserstein distance for velocity and vorticity
 
 !!! note "Planned, not built"
     The idea on this page is not built yet. Its gap, cost, priority and owner are in the
     [table of all ideas](../README.md).
+
+The quadratic Wasserstein distance between density fields is built as
+[wasserstein](../../metrics/wasserstein.md); what remains is velocity and vorticity, which
+take both signs.
 
 ## What it is
 
@@ -22,8 +26,8 @@ properties from both of the traditional measures" (Engquist and Froese 2014).
 
 The convexity property is the one this project needs. In the review literature, the $W_2$
 misfit "precisely captures the data shift $s$ as the misfit is $s^2$ independent of the
-profile of the signal" (Engquist and Yang). That is a clean statement that $W_2$ measures
-*position* error while remaining blind to *profile shape*.
+profile of the signal" (Engquist and Yang 2022). That is a clean statement that $W_2$
+measures *position* error while remaining blind to *profile shape*.
 
 Converting a pressure or velocity field into a probability distribution requires the field to
 be nonnegative with a fixed total mass. This is a known, named problem. Yang, Engquist, Sun
@@ -32,7 +36,8 @@ nonnegative density functions" (Yang et al. 2016). Métivier and colleagues stat
 obstruction plainly: "the main difficulty for the application of optimal transport to
 seismic data is related to their non positivity: the optimal transport theory is developed
 for the comparison of positive quantities" (Métivier et al. 2018, EAGE). The standard fixes
-are collected under [transport between signed fields](signed_field_transport.md).
+are collected under [transport between signed fields](signed_field_transport.md), and which
+one to use is open (issue 066, waiting on issue 047).
 
 ## Pitfalls
 
@@ -41,6 +46,10 @@ are collected under [transport between signed fields](signed_field_transport.md)
   is sensitive to amplitude.
 - In two and three dimensions, reading the distance as a "horizontal shift" is less clean
   than it is in one dimension.
+- The $s^2$ growth with a shift holds for a signal on an empty background. Adding a constant
+  to make a signed field positive puts it on a background, and the misfit is then no longer
+  convex in shifts (Yang et al. 2018, Sect. 3.1). The density build shows the same thing,
+  because density is already a fluctuation on a large mean; its card has the measurements.
 
 ## Rationale
 
@@ -58,12 +67,13 @@ Monge–Ampère, displacement convexity, $W_2$ convexity with respect to transla
 - Engquist, B. & Froese, B. D. (2014). Application of the Wasserstein metric to seismic
   signals. *Communications in Mathematical Sciences* 12(5), 979–988.
   <https://doi.org/10.4310/CMS.2014.v12.n5.a7>
-- Engquist, B. & Yang, Y. Optimal transport based seismic inversion: Beyond cycle skipping.
-  *Communications on Pure and Applied Mathematics*.
-  <https://yunany.github.io/Publications/11_OT_CPAM.pdf>
+- Engquist, B. & Yang, Y. (2022). Optimal transport based seismic inversion: Beyond cycle
+  skipping. *Communications on Pure and Applied Mathematics* 75(10), 2201–2244.
+  <https://doi.org/10.1002/cpa.21990>
 - Métivier, L., Allain, A., Brossier, R., Mérigot, Q., Oudet, E. & Virieux, J. (2018). A
   graph-space optimal transport approach for full waveform inversion. *80th EAGE Conference
   and Exhibition*, 1–5. <https://doi.org/10.3997/2214-4609.201801031>
-- Yang, Y., Engquist, B., Sun, J. & Froese, B. D. (2016). Application of optimal transport and
-  the quadratic Wasserstein metric to full-waveform inversion.
-  <https://arxiv.org/abs/1612.05075>
+- Yang, Y., Engquist, B., Sun, J. & Hamfeldt, B. F. (2018). Application of optimal transport
+  and the quadratic Wasserstein metric to full-waveform inversion. *Geophysics* 83(1),
+  R43–R62. <https://doi.org/10.1190/geo2016-0663.1> (preprint
+  <https://arxiv.org/abs/1612.05075>, 2016, listing the fourth author as Froese)

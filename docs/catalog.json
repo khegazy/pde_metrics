@@ -1,7 +1,7 @@
 {
   "counts": {
     "degradations": 25,
-    "metrics": 25,
+    "metrics": 26,
     "reviewed": 0,
     "with_measurements": 25
   },
@@ -17937,6 +17937,61 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Variogram score of order one half with inverse-distance weights in its fair form, the proper score that compares an ensemble's differences between every pair of cells with the reference's."
+    },
+    {
+      "card": "metrics/wasserstein/card.md",
+      "category": "transport",
+      "declared": {
+        "arity": "pairwise",
+        "companion": {
+          "coordinate": null,
+          "kind": "field",
+          "one_field": false
+        },
+        "cost": "moderate",
+        "differentiable": true,
+        "fields": [
+          "density"
+        ],
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "sqrt_mean",
+        "requires_periodic": true,
+        "symmetric": false,
+        "target": null,
+        "units": "length"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N log N)",
+        "resolution_dependent": true,
+        "scale_dependent": false,
+        "triangle_inequality": true
+      },
+      "name": "wasserstein",
+      "output": {
+        "description": "The quadratic Wasserstein distance between the reference and candidate densities, each divided by its mean, on the periodic analysis grid, in the grid's units of length. Zero when the two normalised densities coincide.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/wasserstein",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Quadratic Wasserstein distance between two density fields on a periodic domain: the root mean square distance the reference's mass must move to become the candidate's, each density divided by its own mean."
     }
   ],
   "schema_version": 4

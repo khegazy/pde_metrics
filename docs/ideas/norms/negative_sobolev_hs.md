@@ -28,7 +28,7 @@ sequences of fields with bounded $L^2$ norm on a bounded domain, they metrize we
 convergence, meaning that such a sequence converges in a negative-order norm exactly when its
 averages against every smooth test function converge, even if the fields themselves keep
 oscillating. They remain finite for rough and discontinuous fields. Most importantly, they
-are quantitatively close to the [Wasserstein distance](../optimal_transport/wasserstein.md),
+are quantitatively close to the [Wasserstein distance](../../metrics/wasserstein.md),
 the cost of moving one field's mass onto the other's. On a periodic domain the $\dot H^{-1}$
 norm is computed by dividing the Fourier coefficients by $|\mathbf{k}|$, so its cost is one
 fast Fourier transform.
