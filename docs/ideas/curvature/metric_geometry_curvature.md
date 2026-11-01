@@ -14,7 +14,7 @@ meshes and graphs as readily as to smooth surfaces. Two families are relevant:
   whose triangles are no fatter than the model's has curvature at most $k$.
 - **Ollivier–Ricci curvature** is defined through optimal transport between the measures
   that describe the neighbourhoods of two nearby points. Because it is built on the
-  [Wasserstein distance](../optimal_transport/wasserstein.md), it connects this theme back
+  [Wasserstein distance](../../metrics/wasserstein.md), it connects this theme back
   to transport.
 
 ## Precedent

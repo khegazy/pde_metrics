@@ -16,13 +16,13 @@ The rule this follows: an open question with no obvious answer and no clear publ
 
 1. If the field itself is treated as a mass distribution, it must be nonnegative with a fixed total, so velocity and vorticity need the signed-field formulation, which is itself open (issue on transport between signed fields).
 2. On the doubly periodic `kinet_re5e4` domain, a projection onto a line at a non-axis angle does not close on the torus, and the transport cost along a projection must use a periodic distance; the page does not say how either is handled.
-3. The page's pitfall says to "validate it against the exact Wasserstein distance on small cases", and the exact distance is not built.
+3. The page's pitfall says to "validate it against the exact Wasserstein distance on small cases", and the exact distance is built only for positive fields ([wasserstein](../metrics/wasserstein/card.md), on density).
 
 If instead the sliced distance is applied to samples of a feature (increments, gradients), the choice of feature is the open question, and for one-dimensional features slicing is unnecessary.
 
 ## What would unblock it
 
-A decision on which measure is sliced and how periodicity is treated, and the full [Wasserstein distance](../docs/ideas/optimal_transport/wasserstein.md) built first if validation against it is required.
+A decision on which measure is sliced and how periodicity is treated, and, if validation against the full distance is required on a signed field, the [Wasserstein distance for velocity and vorticity](../docs/ideas/optimal_transport/wasserstein_signed_fields.md) built first; on density it can be validated against [wasserstein](../metrics/wasserstein/card.md).
 
 ## Related
 

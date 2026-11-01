@@ -50,6 +50,22 @@ def _channels_for(spec: registry.MetricSpec) -> int:
     return 1
 
 
+#: Fields positive by definition: a mass density. A metric that declares only these is given
+#: its real domain, the synthetic field moved above zero, rather than a signed field outside it
+#: (issues/101). Pressure is not listed: a dataset may store a gauge pressure, which takes both
+#: signs (issues/101). The synthetic field stays within about +-2 in two dimensions and +-2.3 in
+#: three, so the offset leaves it at least about 0.7.
+POSITIVE_FIELDS: frozenset[str] = frozenset({"density"})
+POSITIVE_OFFSET: float = 3.0
+
+
+def _field_for(spec: registry.MetricSpec, shape: tuple[int, ...] = GRID, n_channels: int = 1,
+               **kwargs) -> np.ndarray:
+    """``synthetic_field`` in this metric's domain: moved above zero for a positive field."""
+    x = synthetic_field(shape, n_channels, **kwargs)
+    return x + POSITIVE_OFFSET if set(spec.fields) <= POSITIVE_FIELDS else x
+
+
 def _members(shape: tuple[int, ...], n_channels: int, *, seed: int = 1) -> np.ndarray:
     """An ``(N, C, *spatial)`` ensemble scattered about a common base field."""
     return members(synthetic_field(shape, n_channels, seed=seed, noise=0.0), seed=seed, scale=0.3)
@@ -71,12 +87,12 @@ def _args_for(
     :func:`_channels_for` picks.
     """
     c = _channels_for(spec) if n_channels is None else n_channels
-    a = synthetic_field(shape, c, seed=seed_a)
+    a = _field_for(spec, shape, c, seed=seed_a)
     if spec.arity == "single":
         return (a,)
     if spec.arity == "ensemble":
         return (a, _members(shape, c, seed=seed_b))
-    return (a, synthetic_field(shape, c, seed=seed_b))
+    return (a, _field_for(spec, shape, c, seed=seed_b))
 
 
 def _kwargs_for(spec: registry.MetricSpec, first: np.ndarray) -> dict[str, object]:
@@ -137,7 +153,7 @@ def test_pairwise_identity_is_zero(spec):
     """d(x, x) == 0 for a pairwise error metric. Catches normalisation slips."""
     if spec.arity != "pairwise" or spec.higher_is_better:
         pytest.skip("not a pairwise error metric")
-    x = synthetic_field(GRID, _channels_for(spec))
+    x = _field_for(spec, GRID, _channels_for(spec))
     assert _call(spec, x, x) == pytest.approx(0.0, abs=1e-12)
 
 
@@ -182,13 +198,13 @@ def test_monotone_on_synthetic_blur_ladder(spec):
     ladder, and this finds out in milliseconds instead of after a full run.
     """
     c = _channels_for(spec)
-    ref = synthetic_field(GRID, c, seed=0, noise=0.0)
+    ref = _field_for(spec, GRID, c, seed=0, noise=0.0)
     # A pairwise metric that is undefined (NaN) on the noise-free field, because the quantity it
     # normalises by is zero there, is scored from the default, mildly noisy field instead. The
     # noise-free field is a few Fourier modes, and a statistic that needs more structure than
     # that, such as energy transfer between wavenumber shells, can be exactly zero on it.
     if spec.arity == "pairwise" and np.isnan(_call(spec, ref, ref)):
-        ref = synthetic_field(GRID, c, seed=0)
+        ref = _field_for(spec, GRID, c, seed=0)
     sigmas = [0.0, 0.5, 1.0, 2.0, 4.0]
 
     if spec.arity == "ensemble":
@@ -362,7 +378,7 @@ def test_a_comparison_curve_is_zero_on_identical_fields(spec):
     _curve(spec)
     if spec.companion.one_field or spec.arity != "pairwise" or spec.higher_is_better:
         pytest.skip("not a comparison curve of a pairwise error metric")
-    x = synthetic_field(GRID, _channels_for(spec))
+    x = _field_for(spec, GRID, _channels_for(spec))
     _, values = _call_companion(spec, x, x)
     assert np.allclose(values, 0.0, atol=1e-12), f"{spec.name}: curve on (x, x) is {values}"
 
@@ -538,6 +554,9 @@ def test_response_to_a_small_displacement_has_the_declared_power(name: str, rati
     # The distance between shock sets is a length: the detector reads only pressure ratios,
     # so the same cells are flagged at any spacing and every distance between them doubles.
     pytest.param("shock_set_distance", 2.0, id="shock_set_distance-length"),
+    # The Wasserstein distance is a length of transport: the same mode on a grid twice as
+    # coarse moves the same fraction of the mass twice as far. Given on its positive domain.
+    pytest.param("wasserstein", 2.0, id="wasserstein-length"),
 ])
 def test_doubling_the_spacing_scales_the_value_by_its_power_of_length(name: str, factor: float):
     """A metric carrying a length to some power scales by ``2^power`` when the spacing doubles.
@@ -554,6 +573,8 @@ def test_doubling_the_spacing_scales_the_value_by_its_power_of_length(name: str,
         fields = (np.zeros((1, *shape)), *fields)
     elif spec.arity == "ensemble":
         fields = (np.zeros((1, *shape)), fields[0][None])
+    if set(spec.fields) <= POSITIVE_FIELDS:
+        fields = tuple(x + POSITIVE_OFFSET for x in fields)
     unit = spec.fn(*fields, ctx=make_ctx(shape, spacing=1.0))
     doubled = spec.fn(*fields, ctx=make_ctx(shape, spacing=2.0))
     assert doubled == pytest.approx(factor * unit)

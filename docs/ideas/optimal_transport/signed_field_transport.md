@@ -8,7 +8,7 @@
 
 Optimal transport compares two nonnegative distributions of equal total mass, so it cannot be
 applied directly to a pressure or velocity field, which can be negative and need not conserve
-its total. The [Wasserstein distance](wasserstein.md) therefore needs one of four standard
+its total. The [Wasserstein distance](wasserstein_signed_fields.md) therefore needs one of four standard
 ways around these two constraints.
 
 1. **Split into positive and negative parts.** Write the field as the difference of two
@@ -37,7 +37,7 @@ generalised into a family of distances that contains the $L^p$ distances as spec
 ## Rationale
 
 *The team's judgement.* High priority: this is the single idea that makes the
-[Wasserstein distance](wasserstein.md) usable on real pressure and velocity fields. It is a
+[Wasserstein distance](wasserstein_signed_fields.md) usable on real pressure and velocity fields. It is a
 mathematical gap, but one the seismic community has already filled, so the work is importing
 a known solution rather than inventing one.
 

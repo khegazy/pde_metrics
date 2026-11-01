@@ -12,7 +12,7 @@ The page itself says the gap is mathematical and lists three open choices: how t
 
 ## Why it is not built
 
-The rule this follows: an open question with no obvious answer and no clear published standard is decided by a person, not settled by whoever implements the metric. Each choice changes the number reported, and the page records no standard for any of them. Comparing $|\Delta|$ with a Wasserstein distance also depends on the unbuilt [Wasserstein distance](../docs/ideas/optimal_transport/wasserstein.md).
+The rule this follows: an open question with no obvious answer and no clear published standard is decided by a person, not settled by whoever implements the metric. Each choice changes the number reported, and the page records no standard for any of them. Comparing $|\Delta|$ with a Wasserstein distance would use [wasserstein](../metrics/wasserstein/card.md), which is built for positive fields but declares only density.
 
 ## What would unblock it
 
