@@ -14,6 +14,7 @@ import numpy as np
 import pytest
 
 from fmeval.data.analytic import SodShockTube
+from metrics.shock_set_distance.metric import shock_mask
 from tests.conftest import make_ctx
 
 from .metric import REFERENCE_MASKS, shock_mask_overlap
@@ -68,6 +69,30 @@ def test_channels_are_averaged():
     assert _score(reference, candidate) == pytest.approx(0.75)
 
 
+def test_a_shock_inside_a_cell_is_marked_as_one_to_three_cells():
+    """A jump inside a cell gives that cell an intermediate value, so the detector's ratio of
+    1.805 between a cell's two neighbours can mark one, two or three cells, not always two.
+
+    Ratio-10 step, cell 4 averaged with the jump 40% into it: 0.4 * 1 + 0.6 * 0.1 = 0.46.
+    Cell 3 sees 1 / 0.46 = 2.17, cell 4 sees 1 / 0.1 = 10, cell 5 sees 0.46 / 0.1 = 4.6: three
+    cells. Sod's ratio, 0.303 over 0.1, with the middle cell at 0.175: cell 2 sees
+    0.303 / 0.175 = 1.73, cell 3 sees 3.03, cell 4 sees 0.175 / 0.1 = 1.75: one cell. Against
+    the reference's sharp pair {3, 4} that single cell scores 2 * 1 / (2 + 1) = 2/3."""
+    averaged = np.array([1.0, 1.0, 1.0, 1.0, 0.46, 0.1, 0.1, 0.1])
+    assert np.flatnonzero(shock_mask(averaged)).tolist() == [3, 4, 5]
+    sharp = np.array([[0.303, 0.303, 0.303, 0.303, 0.1, 0.1, 0.1, 0.1]])
+    mixed = np.array([[0.303, 0.303, 0.303, 0.175, 0.1, 0.1, 0.1, 0.1]])
+    assert np.flatnonzero(shock_mask(mixed[0])).tolist() == [3]
+    assert _score(sharp, mixed) == pytest.approx(2.0 / 3.0)
+
+
+def test_a_field_without_its_channel_axis_is_rejected():
+    """``(8,)`` instead of ``(1, 8)``: read as eight channels of one cell each, no cell could be
+    flagged and the step against its one-cell shift would score a perfect 1, not 0.5."""
+    with pytest.raises(ValueError, match="grid"):
+        shock_mask_overlap(STEP[0], _shifted(1)[0], ctx=make_ctx(STEP.shape[1:]))
+
+
 def test_a_non_finite_field_scores_nan():
     """A pressure that is NaN or infinite anywhere is not a state the detector can read. Without
     this rule a NaN candidate against a smooth reference would flag nothing and score a
@@ -92,11 +117,24 @@ def test_the_reference_masks_are_cached_for_the_frame():
 
 def test_on_the_exact_sod_solution_it_scores_the_moving_shock():
     """The exact Sod solution at t = 0.1 against itself and against t = 0.1 + 2e-5 on 2048
-    cells. The shock speed is 1.75216 (the reader's ``speeds``), so 2e-5 moves the shock
-    3.5e-5, 0.07 of a cell of width 1/2048: the flagged pair stays or moves one cell, giving
-    1 or 2 * 1 / 4 = 0.5. Over 0.01 it moves 35.9 cells, and no flagged cell is shared: 0."""
+    cells. The shock speed is 1.75216 (the reader's ``speeds``), so at t = 0.1 the shock sits
+    at x = 0.5 + 0.175216, 2048 x - 0.5 = 1382.34 cells: between the centres of cells 1382 and
+    1383, which are flagged. 2e-5 moves it 3.5e-5, 0.07 of a cell of width 1/2048, to 1382.41,
+    still between the same two centres, so the flagged pair is unchanged: 1. Over 0.01 it
+    moves 35.9 cells, and no flagged cell is shared: 0."""
     tube = SodShockTube(n_frames=2, t_start=0.1, t_end=0.11)
     early = tube.solution(0.1)["pressure"]
     assert _score(early, early) == 1.0
-    assert _score(early, tube.solution(0.1 + 2e-5)["pressure"]) in (1.0, 0.5)
+    assert _score(early, tube.solution(0.1 + 2e-5)["pressure"]) == 1.0
     assert _score(early, tube.solution(0.11)["pressure"]) == 0.0
+
+
+def test_a_pressure_offset_erases_a_shock_in_the_right_place():
+    """The detector reads ratios, so a uniform offset lowers the ratio across an exact shock.
+    Sod's post- and pre-shock pressures are 0.30313 and 0.1. With 0.15 added the ratio is
+    0.45313 / 0.25 = 1.81, still above 1.805: the same cells, 1. With 0.2 added it is
+    0.50313 / 0.3 = 1.68: no shock in the candidate, 0, with the shock exactly in place."""
+    tube = SodShockTube(n_frames=2, t_start=0.1, t_end=0.11)
+    pressure = tube.solution(0.1)["pressure"]
+    assert _score(pressure, pressure + 0.15) == 1.0
+    assert _score(pressure, pressure + 0.2) == 0.0

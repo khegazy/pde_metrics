@@ -61,11 +61,13 @@ def shock_mask_overlap(reference: NDArray[np.floating], candidate: NDArray[np.fl
         The Dice coefficient, dimensionless, in [0, 1]; NaN on a non-finite field.
 
     Raises:
-        ValueError: If the shapes differ.
+        ValueError: If the shapes differ, or do not match the grid in ``ctx``: a field
+            without its channel axis would otherwise be read as channels of single cells,
+            none flagged, and score a perfect 1.
     """
-    if reference.shape != candidate.shape:
-        raise ValueError(f"shock_mask_overlap needs matching shapes, got {reference.shape} "
-                         f"and {candidate.shape}")
+    if reference.shape != candidate.shape or reference.shape[1:] != ctx.grid.shape:
+        raise ValueError(f"shock_mask_overlap needs matching shapes on the grid "
+                         f"{ctx.grid.shape}, got {reference.shape} and {candidate.shape}")
     if not (np.isfinite(reference).all() and np.isfinite(candidate).all()):
         return float("nan")
     if REFERENCE_MASKS not in ctx.cache:
