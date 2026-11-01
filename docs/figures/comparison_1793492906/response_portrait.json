@@ -17,6 +17,7 @@
     "mse",
     "nrmse",
     "palinstrophy",
+    "persistence_distance",
     "rmse",
     "spectral_energy_flux",
     "spectrum_l2",
@@ -2857,6 +2858,224 @@
         "metric": "palinstrophy"
       }
     ],
+    "persistence_distance": [
+      {
+        "cliffs_delta_min": 1.0,
+        "degradation": "additive_noise",
+        "field": "density",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "additive_noise",
+        "field": "velocity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 1.0,
+        "degradation": "additive_noise",
+        "field": "vorticity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.9057135141,
+        "degradation": "box_blur",
+        "field": "density",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "box_blur",
+        "field": "velocity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.0851818988,
+        "degradation": "box_blur",
+        "field": "vorticity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.9697542533,
+        "degradation": "coarsen",
+        "field": "density",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "coarsen",
+        "field": "velocity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.1135758651,
+        "degradation": "coarsen",
+        "field": "vorticity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.3332047375,
+        "degradation": "coarsen_bandlimited",
+        "field": "density",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "coarsen_bandlimited",
+        "field": "velocity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.0783148798,
+        "degradation": "coarsen_bandlimited",
+        "field": "vorticity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.9044789939,
+        "degradation": "gaussian_blur",
+        "field": "density",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "gaussian_blur",
+        "field": "velocity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.2301994522,
+        "degradation": "gaussian_blur",
+        "field": "vorticity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.8331082906,
+        "degradation": "highpass_butterworth",
+        "field": "density",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "highpass_butterworth",
+        "field": "velocity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.6487789823,
+        "degradation": "highpass_butterworth",
+        "field": "vorticity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.8490798966,
+        "degradation": "highpass_ideal",
+        "field": "density",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "highpass_ideal",
+        "field": "velocity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.6031017322,
+        "degradation": "highpass_ideal",
+        "field": "vorticity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.7028664018,
+        "degradation": "lowpass_butterworth",
+        "field": "density",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "lowpass_butterworth",
+        "field": "velocity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.1565911809,
+        "degradation": "lowpass_butterworth",
+        "field": "vorticity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.9022414259,
+        "degradation": "lowpass_ideal",
+        "field": "density",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "lowpass_ideal",
+        "field": "velocity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.1863739825,
+        "degradation": "lowpass_ideal",
+        "field": "vorticity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.9520851819,
+        "degradation": "median_blur",
+        "field": "density",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "median_blur",
+        "field": "velocity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": 0.3320473747,
+        "degradation": "median_blur",
+        "field": "vorticity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": -1.0,
+        "degradation": "translate_subpixel",
+        "field": "density",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "translate_subpixel",
+        "field": "velocity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": -1.0,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "translate_x",
+        "field": "density",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "translate_x",
+        "field": "velocity",
+        "metric": "persistence_distance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "metric": "persistence_distance"
+      }
+    ],
     "rmse": [
       {
         "cliffs_delta_min": 1.0,
@@ -3730,5 +3949,5 @@
       }
     ]
   },
-  "run": "comparison_1793434653"
+  "run": "comparison_1793492906"
 }

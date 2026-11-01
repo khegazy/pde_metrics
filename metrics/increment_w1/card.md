@@ -61,7 +61,7 @@ non-periodic axis, such as the Sod shock tube; it reports why in the run log.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793434653`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793492906`, do not edit -->
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -142,9 +142,9 @@ These tables report what was measured and grade none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift, against severity (distance) | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| density | 0.816 | `additive_noise` | `translate_x` | `translate_subpixel` `translate_x` | 0.327 | 36.9 |
-| velocity | 0.72 | `additive_noise` | `translate_x` | `translate_subpixel` `translate_x` | 0.3 | 73.4 |
-| vorticity | 0.616 | `additive_noise` | `translate_x` | `translate_subpixel` `translate_x` | 0.253 | 36 |
+| density | 0.816 | `additive_noise` | `translate_x` | `translate_subpixel` `translate_x` | 0.327 | 37.2 |
+| velocity | 0.72 | `additive_noise` | `translate_x` | `translate_subpixel` `translate_x` | 0.3 | 73.9 |
+| vorticity | 0.616 | `additive_noise` | `translate_x` | `translate_subpixel` `translate_x` | 0.253 | 36.3 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
@@ -231,11 +231,11 @@ damage columns in the evaluation are comparable between fields.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793434653`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793492906`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `a9a8b7f86aca`. Run `comparison_1793434653`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `2037a69c0492`. Run `comparison_1793492906`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793434653`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793492906`.
 
 <!-- END GENERATED run -->
 
@@ -244,7 +244,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 [gaussian_blur](../../degradations/gaussian_blur/card.md) ·
 [box_blur](../../degradations/box_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793434653`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793492906`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -269,7 +269,7 @@ than of position, so it is the kind of damage this metric is built to see.
 [lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
 [highpass_ideal](../../degradations/highpass_ideal/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793434653`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793492906`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -298,7 +298,7 @@ low modes changes the increment distribution as readily as removing high ones do
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793434653`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793492906`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -330,7 +330,7 @@ that detects none is `coarsen_bandlimited` on density, which reaches a damage of
 [coarsen](../../degradations/coarsen/card.md) ·
 [coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793434653`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793492906`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -355,7 +355,7 @@ genuinely cannot hold vorticity's structure at that size.
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793434653`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793492906`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -375,7 +375,7 @@ metric measures.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793434653`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793492906`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
 |---|---|---|---|---|
@@ -396,13 +396,14 @@ Displacement.
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793434653`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793492906`, do not edit -->
 
 | compared with | rank correlation over every degradation |
 |---|---|
 | `energy_distance` | 0.984 |
 | `increment_w1_by_separation` | 0.918 |
 | `spectral_energy_flux` | 0.868 |
+| `persistence_distance` | 0.809 |
 | `spectrum_l2` | 0.749 |
 | `h1_seminorm` | 0.225 |
 | `max_error` | 0.177 |
@@ -435,7 +436,7 @@ moment, so the two are related but far from redundant.
 
 ### Damage beside the other metrics
 
-<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793434653`, do not edit -->
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793492906`, do not edit -->
 
 ![damage against applied strength for this metric beside the pointwise controls, log-log, one panel per displacement degradation and field](_generated/damage_beside_controls.svg)
 
