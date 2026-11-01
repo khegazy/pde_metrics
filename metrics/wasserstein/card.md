@@ -65,9 +65,10 @@ simpler equation can *sometimes* replace the full one, and their $\tau = 1$ in S
 obtained with the full operator. Step 4 chooses their damping $\tau$ adaptively, also mine:
 their proof needs $\tau$ large enough and $I + D^2 u_n$ positive definite at every step
 (Sect. 3.3) and gives no value. The answer is fixed by the residual of step 1, so these
-choices change the number of iterations and not the value: on kinet density, the plain
-Laplacian step and this one agree to a relative $4 \times 10^{-9}$, the size the tolerance
-allows. Without step 3's division and step 4's damping the iteration overshoots, and
+choices change the number of iterations and not the value: over the 9499 values of the
+kinet evidence run, the plain Laplacian step and this one differ by a relative
+$5 \times 10^{-11}$ in the median and $1.4 \times 10^{-6}$ at worst, both far below the three
+figures the tables report. Without step 3's division and step 4's damping the iteration overshoots, and
 diverges, once the candidate density exceeds about twice its mean. Derivatives of $u$ are spectral, with the wavevectors
 $k_j = 2\pi\,\mathrm{fftfreq}(N_j, h_j)$ that [h_minus_one](../../metrics/h_minus_one/card.md)
 uses; [@saumier2015] also solve the linear step by FFT (Sect. 4.2). The candidate is
