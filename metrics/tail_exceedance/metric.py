@@ -70,6 +70,8 @@ def tail_exceedance(reference: NDArray[np.floating], candidate: NDArray[np.float
     """
     thetas, values = (ctx.cache[COMPANION_KEY] if ctx is not None and COMPANION_KEY in ctx.cache
                       else tail_exceedance_curve(reference, candidate, ctx=ctx))
+    # theta = 1/2, k = ceil(sqrt(n)): the largest-sqrt(n) rule of Clauset, Shalizi & Newman
+    # (2009), SIAM Rev. 51(4), Sect. 3.5; registering this point is a convention, issues/118.
     return float(np.asarray(values)[np.flatnonzero(np.asarray(thetas) == REGISTERED_THETA)[0]])
 
 
@@ -125,8 +127,10 @@ def tail_exceedance_curve(reference: NDArray[np.floating], candidate: NDArray[np
     cache = ctx.cache if ctx is not None else {}
     if REFERENCE_EVENTS not in cache:
         ks = orders(n)
-        # X_(k), the k-th largest |increment| of each (channel, axis) pair at each theta; the
-        # k-th rather than the (k+1)-th is this bundle's choice (docstring).
+        # X_(k), the k-th largest |increment| of each (channel, axis) pair at each theta: a
+        # threshold set by a percentile of the reference sample, as the ETCCDI percentile indices
+        # set theirs from a base period (TX90p, list of the 27 core indices, item 13). The k-th
+        # rather than the (k+1)-th is this bundle's choice (docstring; Zhang et al. 2005).
         thresholds = np.array([np.sort(size)[::-1][ks - 1] for size in _sizes(reference)])
         cache[REFERENCE_EVENTS] = (thresholds, _exceedances(reference, thresholds))
     thresholds, reference_counts = cache[REFERENCE_EVENTS]
@@ -148,6 +152,10 @@ def _sizes(x: NDArray[np.floating]) -> list[NDArray[np.floating]]:
 
 
 def _exceedances(x: NDArray[np.floating], thresholds: NDArray[np.floating]) -> NDArray[np.int64]:
-    """``#{|delta| >= a}`` for each pair of ``x`` (rows) and each of its thresholds (columns)."""
+    """``#{|delta| >= a}`` for each pair of ``x`` (rows) and each of its thresholds (columns): the
+    event count of the frequency bias (JWGFVR, "Frequency bias (bias score)"), the event being an
+    exceedance of a reference percentile as in the ETCCDI indices (TX90p)."""
+    # The non-strict inequality is this bundle's choice; with X_(k) it gives an independent
+    # candidate an expected bias of n / (n + 1) (card, Equation (5)).
     return np.array([np.count_nonzero(size[:, None] >= row[None, :], axis=0)
                      for size, row in zip(_sizes(x), thresholds, strict=True)])

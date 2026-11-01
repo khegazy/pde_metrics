@@ -29,9 +29,12 @@ calibration measured on those frames), the point $\theta = 1/2$ saturates on the
 the median value is 0.02 to 0.27 at the first strength of `gaussian_blur` and `box_blur` and
 exactly 0 from the second strength on every field, and 0 at every strength of `lowpass_ideal` and
 `lowpass_butterworth` on density and velocity. A value of 0 is infinitely far from the target on
-the scale the analysis orders by, so the harsher strengths of those axes tie. The evidence run's
-per-coordinate tables (the card's "The curve behind the number") show where on the curve each axis
-is graded instead.
+the scale the analysis orders by, so the harsher strengths of those axes tie. The evidence run
+`tail_exceedance_1793494833` (161 frames) bears this out: the Gaussian and box blurs and both
+low-pass filters have their rank correlation withheld on density and velocity at $\theta = 1/2$,
+and are graded again only from $\theta = 0.6$ or 0.7 upward; the dominance of the weakest pair of
+Gaussian-blur strengths is 0.429, 0.764 and 0.59 on the three fields, so there the registered
+point does not stand for the curve (the card's "The curve behind the number").
 
 ## What would settle it
 
