@@ -1,0 +1,78 @@
+% References cited by this bundle's card.md, and nothing else. One file per bundle, so a
+% bundle can be added or removed without touching anyone else's citations.
+%
+% Cite from the card as [@key]. If you cannot verify that a reference exists, leave
+% TODO(cite) in the card and say so when you report -- a guessed DOI, year or equation
+% number is worse than an admitted gap, and the checker rejects TODO(cite) on purpose.
+
+@misc{jwgfvr,
+  author       = {{WWRP/WCRP Joint Working Group on Forecast Verification Research}},
+  title        = {Forecast verification: methods, issues and {FAQ}},
+  howpublished = {Web page of the JWGFVR, formerly hosted at cawcr.gov.au/projects/verification},
+  url          = {https://jwgfvr.github.io/forecastverification},
+  note         = {Read in full on 2026-10-31. Section "Frequency bias (bias score)", under methods
+                  for dichotomous forecasts: (hits + false alarms) / (hits + misses), the
+                  frequency of forecast events over the frequency of observed events, range 0 to
+                  infinity, perfect score 1, below 1 under-forecasting and above 1
+                  over-forecasting, and no measure of correspondence. The page numbers no
+                  equations, so the section is cited. This bundle's number is that score, with
+                  the reference as the observation; its target of 1 is the perfect score}
+}
+
+@misc{etccdi,
+  author       = {{CCl/CLIVAR Expert Team on Climate Change Detection and Indices}},
+  title        = {Climate Change Indices: Definitions of the 27 core indices},
+  howpublished = {ETCCDI web page, last updated 2009-09-15},
+  url          = {https://etccdi.pacificclimate.org/list_27_indices.shtml},
+  note         = {Read in full on 2026-10-31. Items 10 (TN10p) and 13 (TX90p): the percentage of
+                  days whose value exceeds a percentile computed from a base period. The precedent
+                  for this bundle's event, an exceedance of a threshold set by the reference
+                  sample's own percentile, with the reference in the place of the base period}
+}
+
+@article{zhang2005,
+  author  = {Zhang, Xuebin and Hegerl, Gabriele and Zwiers, Francis W. and Kenyon, Jesse},
+  title   = {Avoiding Inhomogeneity in Percentile-Based Indices of Temperature Extremes},
+  journal = {Journal of Climate},
+  volume  = {18},
+  number  = {11},
+  pages   = {1641--1651},
+  year    = {2005},
+  doi     = {10.1175/JCLI3366.1},
+  note    = {Read through its abstract only (Crossref record). Exceedance rates of a percentile
+             threshold differ inside and outside the sample the threshold was estimated from,
+             because of sampling error in the threshold. The same effect is why this bundle
+             takes the k-th largest reference increment with a non-strict inequality; the
+             expected value for an independent candidate is derived on the card, not taken
+             from this paper}
+}
+
+@article{clauset2009,
+  author  = {Clauset, Aaron and Shalizi, Cosma Rohilla and Newman, M. E. J.},
+  title   = {Power-Law Distributions in Empirical Data},
+  journal = {SIAM Review},
+  volume  = {51},
+  number  = {4},
+  pages   = {661--703},
+  year    = {2009},
+  doi     = {10.1137/070710111},
+  note    = {Read in the ar5iv HTML of arXiv:0706.1062, numbered as the journal. Section 3.5
+             names the fixed rule of keeping the largest sqrt(n) observations; this bundle sets
+             its registered threshold at the k = ceil(sqrt(n))-th largest reference increment,
+             the order tail_index reads, and its curve at k = ceil(n^theta)}
+}
+
+@article{granero2024,
+  author  = {Granero-Belinch{\'o}n, Carlos and Cabeza Gallucci, Manuel},
+  title   = {A multiscale and multicriteria {G}enerative {A}dversarial {N}etwork to
+             synthesize 1-dimensional turbulent fields},
+  journal = {Machine Learning: Science and Technology},
+  volume  = {5},
+  number  = {2},
+  pages   = {025032},
+  year    = {2024},
+  doi     = {10.1088/2632-2153/ad43b3},
+  note    = {Read through its abstract. Increment statistics as physics-based criteria for a
+             generative turbulence model, flatness standing for intermittency: the reason the
+             quantity whose extremes this bundle counts is the one-cell increment}
+}

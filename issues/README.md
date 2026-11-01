@@ -105,6 +105,7 @@ Designed, hooks in place, not built.
 | [097](097-stochastic-ladder-for-comparable-magnitudes.md) | A stochastic ladder (several draws per severity) would make response magnitudes comparable across a metric's functional forms | none set |
 | [098](098-increment-w1-registered-number-is-a-convention.md) | The number `increment_w1_by_separation` registers, a normalised mean over separations, is a convention with no source | unset |
 | [105](105-spectral-energy-flux-summary-is-a-convention.md) | The number `spectral_energy_flux` registers, a relative L2 distance between flux curves sampled at octaves, is a convention with no source | unset |
+| [118](118-tail-exceedance-registered-threshold-is-a-convention.md) | The threshold at which `tail_exceedance` registers its frequency bias, the reference's sqrt(n)-th largest increment, is a convention with no source, and it saturates at 0 under smoothing | unset |
 | [102](102-shock-set-distance-empty-and-non-positive-conventions.md) | The scores `shock_set_distance` gives an empty shock set and a non-positive pressure are conventions | unset |
 
 ## Technical debt

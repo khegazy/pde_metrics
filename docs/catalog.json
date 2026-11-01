@@ -1,7 +1,7 @@
 {
   "counts": {
     "degradations": 25,
-    "metrics": 25,
+    "metrics": 26,
     "reviewed": 0,
     "with_measurements": 25
   },
@@ -16770,6 +16770,64 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Ratio of the ensemble's own spread to the error of its mean, the standard check for whether a prediction's stated uncertainty is honest. Calibrated at one."
+    },
+    {
+      "card": "metrics/tail_exceedance/card.md",
+      "category": "statistical",
+      "declared": {
+        "arity": "pairwise",
+        "companion": {
+          "coordinate": [
+            "theta",
+            "log k / log n"
+          ],
+          "kind": "curve",
+          "one_field": false
+        },
+        "cost": "cheap",
+        "differentiable": false,
+        "fields": [
+          "*"
+        ],
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "mean",
+        "requires_periodic": true,
+        "symmetric": false,
+        "target": 1.0,
+        "units": "dimensionless"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N log N)",
+        "resolution_dependent": true,
+        "scale_dependent": false,
+        "triangle_inequality": false
+      },
+      "name": "tail_exceedance",
+      "output": {
+        "description": "The frequency bias, the prediction's count of absolute one-cell increments at least as large as the reference's k-th largest over the reference's own count, pooled over channels and spatial axes, at k = ceil(sqrt(n)). Dimensionless, 1 for a prediction with as many extremes as the reference. NaN when the reference is constant. The same ratio at nine orders k = ceil(n^theta) is stored beside it.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/tail_exceedance",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Frequency bias of extreme one-cell increments: how many of the prediction's increments reach the size of the reference's square-root-of-n largest, over how many of the reference's do, so 1 is right, below 1 too few extremes and above 1 too many."
     },
     {
       "card": "metrics/tail_index/card.md",
