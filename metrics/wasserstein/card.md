@@ -117,9 +117,58 @@ run it on a dataset with a non-periodic axis, such as the Sod shock tube.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence <name>`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793495645`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence <name>`.
+![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
+
+Four measured statistics for wasserstein, one row per degradation grouped by family and one marker per field. From left: the rank correlation between the metric and the applied strength within a frame, with the line showing the resampling interval; the separation of neighbouring strengths as Cliff's delta, where 0 means the metric cannot tell one strength from the next and the faint ticks at 0.12, 0.28 and 0.42 are Vargha and Delaney's small, medium and large anchors, for scale and not as grades; the damage charged per unit of field change at the harshest strength; and the upper confidence bound on the largest damage, beside the fixed margin of 0.05. A hollow marker is a field and degradation on which that bound lies below the margin, so the response is provably small. A missing marker is a statistic the analysis withheld, as the rank correlation is on an axis the metric is invariant to.
+
+![median damage against severity level, one panel per degradation family and field, on one shared scale](_generated/response_curves.svg)
+
+Median damage over frames against severity level for wasserstein, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, the anchor (by default the field's own mean); the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to the anchor. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points beyond 2 either side are drawn as triangles at the edge. Damage is negative where a degradation moves the metric away from the anchor, as noise raises a single-field quantity the field's mean sets to zero.
+
+**Trend: does the response follow the degradation?**
+
+| test family | field | degradations | rank correlation | fraction of frames in order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| Displacement | density | 2 | 1 | 1 | 0.959 to 0.96 |
+| Resolution loss | density | 2 | 1 | 1 | 0.865 to 1 |
+| Smoothing | density | 3 | 1 | 1 | 0.963 to 0.974 |
+| Spectral filtering | density | 4 | 1 | 1 | 0.548 to 0.968 |
+| Noise | density | 1 | 1 | 1 | 1 |
+
+**Reactivity: how far does it move?**
+
+| test family | field | change from clean at the harshest strength | elasticity | first strength detected |
+|---|---|---|---|---|
+| Displacement | density | — | 0.999 to 1 | level 3 |
+| Resolution loss | density | — | 2.03 to 2.14 | level — |
+| Smoothing | density | — | 1.81 to 1.92 | level 3 |
+| Spectral filtering | density | — | 1.12 to 6.71 | level 1 |
+| Noise | density | — | 0.997 | level — |
+| trap test: fake prediction, right spectrum | density | — | — | damage 1.33 |
+
+**Consistency: how much does it vary from snapshot to snapshot?**
+
+| test family | field | consistency, in the strength's units | snapshots per independent block |
+|---|---|---|---|
+| Displacement | density | 0.053 to 0.315 | 18 |
+| Resolution loss | density | 0.582 to 1.72 | 19 to 21 |
+| Smoothing | density | 0.00546 to 0.0138 | 19 to 20 |
+| Spectral filtering | density | 0.0137 to 0.0325 | 1 to 20 |
+| Noise | density | 0.00991 | 1 |
+
+One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. It does not exist for this metric, whose undegraded value is exactly zero; the damage below is its relative reading. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
+
+These tables report what was measured and grade none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
+
+**Profile.**
+
+| field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift, against severity (distance) | compute cost (x cheapest in this run) |
+|---|---|---|---|---|---|---|
+| density | 0.38 | `translate_subpixel` | `additive_noise` | `additive_noise` `coarsen` `coarsen_bandlimited` | 1 | 1 |
+
+One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
 <!-- END GENERATED performance -->
 
@@ -201,9 +250,11 @@ negative, because neither is then a pile of mass.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence <name>`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793495645`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence <name>`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `ed1970a573e0`. Run `wasserstein_1793495645`.
+
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/wasserstein_1793495645`.
 
 <!-- END GENERATED run -->
 
@@ -213,13 +264,17 @@ Not generated yet. Run `python -m fmeval.cards evidence <name>`.
 [box_blur](../../degradations/box_blur/card.md) ·
 [median_blur](../../degradations/median_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence <name>`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793495645`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence <name>`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `box_blur` | density | 4 | 1 | 1 | 0.963 |
+| `gaussian_blur` | density | 4 | 1 | 1 | 0.974 |
+| `median_blur` | density | 3 | 1 | 1 | 0.971 |
 
 <!-- END GENERATED results_smoothing -->
 
-Read once the evidence run exists.
+Every blur moves mass from the density's peaks into its troughs, and the distance follows the width on every frame, as pre-registered, with neighbouring widths almost never overlapping (weakest gap 0.963). The largest damage, 0.455 under `gaussian_blur`, is under half of what the spatial mean scores. The elasticity of 1.81 to 1.92 says the distance grows nearly as the square of the kernel width at the mildest widths. That is what a narrow blur does to a field carried by a few large-scale modes, each of which it damps by an amount proportional to the square of the width (my reading, not a source's).
 
 ### Spectral filtering
 
@@ -228,84 +283,100 @@ Read once the evidence run exists.
 [highpass_ideal](../../degradations/highpass_ideal/card.md) ·
 [highpass_butterworth](../../degradations/highpass_butterworth/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence <name>`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793495645`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence <name>`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `highpass_butterworth` | density | 4 | 1 | 1 | 0.576 |
+| `highpass_ideal` | density | 3 | 1 | 1 | 0.548 |
+| `lowpass_butterworth` | density | 4 | 1 | 1 | 0.848 |
+| `lowpass_ideal` | density | 3 | 1 | 1 | 0.968 |
 
 <!-- END GENERATED results_spectral -->
 
-Read once the evidence run exists.
-
+All four filters follow the fraction of energy removed on every frame. The high-pass pair separates neighbouring strengths least well (weakest gap 0.548 for `highpass_ideal`), because removing density's large-scale modes takes most of its fluctuation at once, and the harshest high-pass and low-pass strengths go slightly past the anchor (largest damage 1.08 for `lowpass_ideal`, `highpass_ideal` and `highpass_butterworth`).
 ### Displacement
 
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence <name>`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793495645`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence <name>`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `translate_subpixel` | density | 6 | 1 | 1 | 0.96 |
+| `translate_x` | density | 5 | 1 | 1 | 0.959 |
 
 <!-- END GENERATED results_geometric -->
 
-Read once the evidence run exists.
+Both axes follow the shift on every frame, as pre-registered, and the elasticity of 0.999 to 1 says the distance is proportional to the shift over these ranges. That is not the property the idea was built for. The largest whole-domain shift on the ladder scores a damage of 0.468, and the anchor it is measured against is itself only 0.172 cells: moving the whole density by many cells costs a transport of a small fraction of a cell, because only its fluctuation of a few percent has to be rearranged, not the whole mass. This is the background effect described in the Definition, measured.
 
 ### Resolution loss
 
 [coarsen](../../degradations/coarsen/card.md) ·
 [coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence <name>`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793495645`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence <name>`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `coarsen` | density | 4 | 1 | 1 | 1 |
+| `coarsen_bandlimited` | density | 4 | 1 | 1 | 0.865 |
 
 <!-- END GENERATED results_resolution -->
 
-Read once the evidence run exists.
+Both coarsenings follow the factor on every frame, but their response is small: the profile table lists both, and noise, among the degradations whose damage is provably below 0.05. Block averaging redistributes mass only within a block, and density's fluctuation sits in the largest scales, so little mass moves far.
 
 ### Noise
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence <name>`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793495645`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence <name>`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `additive_noise` | density | 4 | 1 | 1 | 1 |
 
 <!-- END GENERATED results_stochastic -->
 
-Read once the evidence run exists.
+Ordered perfectly, with no overlap between neighbouring amplitudes, and with an elasticity of 0.997, so the distance is proportional to the noise amplitude. The damage stays tiny (largest 0.0204): independent noise in each cell is evened out by moving mass over about a cell, which costs little next to the anchor. Noise is what this metric charges least for.
 
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence <name>`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793495645`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence <name>`.
+| field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
+|---|---|---|---|---|
+| density | 1.33 | `lowpass_ideal=1.4029` | 1.11 | 0.172 |
+
+The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_canaries -->
 
-Read once the evidence run exists.
+The fake prediction with the right spectrum scores a damage of 1.33, more than the spatial mean: the metric is not fooled by it, because the phases decide where the mass sits. The reference moved far away scores 1.11, close to the anchor.
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence <name>`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793495645`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence <name>`.
+No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_summary -->
 
-Read once the evidence run exists.
+This run held only this metric, so the generated cross-metric table is empty. Placed beside the committed fingerprint of [h_minus_one](../../metrics/h_minus_one/card.md) on the same frames, every axis's largest damage and elasticity, and both probes, agree to two significant figures, as Equation (5) requires for a density this close to uniform. On kinet density the two metrics carry the same information, and this one costs 0.214 s per evaluation (the fingerprint) where `h_minus_one` takes one FFT. A run of both together would put the correlation in this table.
 
 ### Damage beside the other metrics
 
-<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence <name>`, do not edit -->
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793495645`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence <name>`.
+Only one metric in the recorded run; there is nothing to place this one beside.
 
 <!-- END GENERATED results_damage_by_level -->
 
-Read once the evidence run exists.
+Only one metric was in the run, so there is nothing to place beside it here; see the comparison with `h_minus_one` above.
 
 ## References
 
