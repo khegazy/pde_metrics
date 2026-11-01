@@ -1,7 +1,7 @@
 {
   "counts": {
     "degradations": 25,
-    "metrics": 25,
+    "metrics": 26,
     "reviewed": 0,
     "with_measurements": 25
   },
@@ -14852,6 +14852,57 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Square root of the mean squared difference between the candidate and reference fields, carrying the error back into the field's own units."
+    },
+    {
+      "card": "metrics/shock_mask_overlap/card.md",
+      "category": "geometric",
+      "declared": {
+        "arity": "pairwise",
+        "companion": null,
+        "cost": "cheap",
+        "differentiable": false,
+        "fields": [
+          "pressure"
+        ],
+        "higher_is_better": true,
+        "measures": "error",
+        "reduction": "mean",
+        "requires_periodic": false,
+        "symmetric": true,
+        "target": null,
+        "units": "dimensionless"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N)",
+        "resolution_dependent": true,
+        "scale_dependent": false,
+        "triangle_inequality": false
+      },
+      "name": "shock_mask_overlap",
+      "output": {
+        "description": "The Dice coefficient of the two sets of shocked cells, dimensionless: 1 when the sets coincide or both are empty, 0 when they share no cell or only one field has a shock.",
+        "lower_bound": 0.0,
+        "upper_bound": 1.0
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/shock_mask_overlap",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Dice coefficient of the shocks detected in the reference and in the candidate pressure: the number of shocked cells the two fields share, over the mean number each has."
     },
     {
       "card": "metrics/shock_set_distance/card.md",
