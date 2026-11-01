@@ -106,6 +106,7 @@ Designed, hooks in place, not built.
 | [098](098-increment-w1-registered-number-is-a-convention.md) | The number `increment_w1_by_separation` registers, a normalised mean over separations, is a convention with no source | unset |
 | [105](105-spectral-energy-flux-summary-is-a-convention.md) | The number `spectral_energy_flux` registers, a relative L2 distance between flux curves sampled at octaves, is a convention with no source | unset |
 | [102](102-shock-set-distance-empty-and-non-positive-conventions.md) | The scores `shock_set_distance` gives an empty shock set and a non-positive pressure are conventions | unset |
+| [120](120-shock-mask-overlap-both-empty-convention.md) | The score `shock_mask_overlap` gives two empty shock sets, 1, is a convention | unset |
 
 ## Technical debt
 
