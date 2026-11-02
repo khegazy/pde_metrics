@@ -12,7 +12,7 @@ The page names Alexandrov (CAT(k)) and Ollivier–Ricci curvature and says "the 
 
 ## Why it is not built
 
-The rule this follows: an open question with no obvious answer and no clear published standard is decided by a person, not settled by whoever implements the metric. Neither which space the curvature is computed on (a point cloud, a graph built from the field, ...) nor how two fields are compared is defined. Ollivier–Ricci curvature is also built on the unbuilt [Wasserstein distance](../docs/ideas/optimal_transport/wasserstein.md).
+The rule this follows: an open question with no obvious answer and no clear published standard is decided by a person, not settled by whoever implements the metric. Neither which space the curvature is computed on (a point cloud, a graph built from the field, ...) nor how two fields are compared is defined. Ollivier–Ricci curvature is also built on a Wasserstein distance between neighbourhood measures, which [wasserstein](../metrics/wasserstein/card.md), a distance between two density fields, does not provide.
 
 ## What would unblock it
 

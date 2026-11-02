@@ -50,7 +50,7 @@ Designed, hooks in place, not built.
 | [015](015-rotation-degradation.md) | Rotation, which must rotate vector components | low |
 | [016](016-mass-weighted-remap.md) | Momentum-conserving remap option | low |
 | [024](024-leray-projection.md) | Solenoidal projection for the spectral operators | low |
-| [066](066-wasserstein-needs-a-transport-library.md) | Wasserstein distance for horizontal displacement needs a transport library | high |
+| [066](066-wasserstein-for-signed-fields-waits-on-047.md) | The Wasserstein distance for velocity and vorticity waits on the signed-field formulation | high |
 | [067](067-sinkhorn-waits-on-wasserstein.md) | Sinkhorn divergences wait on the Wasserstein distance | medium |
 | [069](069-solver-consistency-needs-a-trusted-solver.md) | Consistency with one step of a trusted solver needs the solver | high |
 | [070](070-admissibility-checks-are-untestable.md) | Admissibility checks: no existing experiment violates an admissibility condition | unset |
@@ -105,7 +105,9 @@ Designed, hooks in place, not built.
 | [097](097-stochastic-ladder-for-comparable-magnitudes.md) | A stochastic ladder (several draws per severity) would make response magnitudes comparable across a metric's functional forms | none set |
 | [098](098-increment-w1-registered-number-is-a-convention.md) | The number `increment_w1_by_separation` registers, a normalised mean over separations, is a convention with no source | unset |
 | [105](105-spectral-energy-flux-summary-is-a-convention.md) | The number `spectral_energy_flux` registers, a relative L2 distance between flux curves sampled at octaves, is a convention with no source | unset |
+| [118](118-tail-exceedance-registered-threshold-is-a-convention.md) | The threshold at which `tail_exceedance` registers its frequency bias, the reference's sqrt(n)-th largest increment, is a convention with no source, and it saturates at 0 under smoothing | unset |
 | [102](102-shock-set-distance-empty-and-non-positive-conventions.md) | The scores `shock_set_distance` gives an empty shock set and a non-positive pressure are conventions | unset |
+| [120](120-shock-mask-overlap-both-empty-convention.md) | The score `shock_mask_overlap` gives two empty shock sets, 1, is a convention | unset |
 
 ## Technical debt
 

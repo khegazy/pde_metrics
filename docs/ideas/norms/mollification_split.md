@@ -18,7 +18,7 @@ $$
 The smooth parts of two fields are compared with ordinary metrics such as $L^2$ or the
 [$H^1$ seminorm](../../metrics/h1_seminorm.md). The remainders are compared with
 position-tolerant metrics, such as the
-[Wasserstein distance](../optimal_transport/wasserstein.md) applied to $|\Delta|$, or the
+[Wasserstein distance](../../metrics/wasserstein.md) applied to $|\Delta|$, or the
 [distance between extracted shock sets](../../metrics/shock_set_distance.md) applied to
 the support of $\Delta$, the set of points where it is nonzero.
 

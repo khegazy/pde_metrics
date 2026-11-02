@@ -64,7 +64,8 @@ prediction and in the reference.
   distance (indicators of half-lines) (Müller 1997). The energy distance
   belongs to the same family. These stay well behaved when the distributions do not overlap:
   for the two point masses above, the Wasserstein-1 distance is $h$. See the
-  [Wasserstein distance](optimal_transport/wasserstein.md), the
+  built [wasserstein](../metrics/wasserstein.md) on density, its
+  [extension to velocity and vorticity](optimal_transport/wasserstein_signed_fields.md), the
   [sliced Wasserstein distance](optimal_transport/sliced_wasserstein.md), the
   built [energy_distance](../metrics/energy_distance.md) and
   [increment_w1](../metrics/increment_w1.md).
@@ -76,7 +77,8 @@ prediction and in the reference.
   extend it to many variables at once.
 - **Set overlap and geometric distances** compare extracted objects rather than fields:
   overlap ratios such as intersection over union, and distances between surfaces. See
-  [overlap of shock masks](shock_geometry/shock_mask_overlap.md) and
+  the built [overlap of shock masks](../metrics/shock_mask_overlap.md), the planned
+  [boundary F-score of shock masks](shock_geometry/shock_boundary_f_score.md) and the built
   [distance between extracted shock sets](../metrics/shock_set_distance.md).
 
 ## What a metric's description should declare

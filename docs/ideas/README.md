@@ -53,12 +53,12 @@ regime, protected from data leakage and combined.
 
 | Idea | Theme | Gap | Cost | Priority | Owner |
 |---|---|---|---|---|---|
-| [Wasserstein distance for horizontal displacement](optimal_transport/wasserstein.md) | [Optimal transport](optimal_transport/README.md) | math, [issue 066](https://github.com/khegazy/pde_metrics/blob/main/issues/066-wasserstein-needs-a-transport-library.md) | medium | high | |
+| [Wasserstein distance for velocity and vorticity](optimal_transport/wasserstein_signed_fields.md) | [Optimal transport](optimal_transport/README.md) | math, [issue 066](https://github.com/khegazy/pde_metrics/blob/main/issues/066-wasserstein-for-signed-fields-waits-on-047.md) | medium | high | |
 | [Transport between signed fields](optimal_transport/signed_field_transport.md) | [Optimal transport](optimal_transport/README.md) | math, [issue 047](https://github.com/khegazy/pde_metrics/blob/main/issues/047-signed-field-transport-has-no-chosen-formulation.md) | medium | high | |
 | [Sliced Wasserstein distance](optimal_transport/sliced_wasserstein.md) | [Optimal transport](optimal_transport/README.md) | implementation, [issue 048](https://github.com/khegazy/pde_metrics/blob/main/issues/048-sliced-wasserstein-measure-is-undefined.md) | low | high | |
 | [Entropic relaxation and Sinkhorn divergences](optimal_transport/sinkhorn.md) | [Optimal transport](optimal_transport/README.md) | implementation, [issue 067](https://github.com/khegazy/pde_metrics/blob/main/issues/067-sinkhorn-waits-on-wasserstein.md) | low | medium | |
 | [Increment distances with other stencils, longitudinal and transverse](optimal_transport/gradient_pdf_w1.md) | [Optimal transport](optimal_transport/README.md) | implementation | low | high | |
-| [Overlap of shock masks](shock_geometry/shock_mask_overlap.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | medium | |
+| [Boundary F-score of shock masks](shock_geometry/shock_boundary_f_score.md) | [Shock geometry](shock_geometry/README.md) | implementation | low | medium | |
 | [Shock front position, speed and jump conditions](shock_geometry/shock_front_error.md) | [Shock geometry](shock_geometry/README.md) | both, [issue 051](https://github.com/khegazy/pde_metrics/blob/main/issues/051-shock-front-reference-surface-score.md) | medium | medium | |
 | [Shock–turbulence interaction statistics](shock_geometry/shock_turbulence_interaction.md) | [Shock geometry](shock_geometry/README.md) | implementation, [issue 002](https://github.com/khegazy/pde_metrics/blob/main/issues/002-shocklet-dataset.md) | medium | unset | |
 | [Negative Sobolev norms of general order](norms/negative_sobolev_hs.md) | [Norms](norms/README.md) | math, [issue 049](https://github.com/khegazy/pde_metrics/blob/main/issues/049-negative-sobolev-order-and-length-scale.md) | low | high | |
@@ -103,7 +103,7 @@ regime, protected from data leakage and combined.
 | [Temporal autocorrelation](dynamics/temporal_autocorrelation.md) | [Dynamics](dynamics/README.md) | implementation, [issue 079](https://github.com/khegazy/pde_metrics/blob/main/issues/079-temporal-autocorrelation-needs-rollouts.md) | low | unset | |
 | [Invariant measure and attractor comparison](dynamics/invariant_measure.md) | [Dynamics](dynamics/README.md) | both, [issue 080](https://github.com/khegazy/pde_metrics/blob/main/issues/080-invariant-measure-needs-long-rollouts.md) | high | unset | |
 | [Modal decompositions and radiated sound](dynamics/modal_decompositions.md) | [Dynamics](dynamics/README.md) | implementation, [issue 081](https://github.com/khegazy/pde_metrics/blob/main/issues/081-modal-decompositions-need-trajectories.md) | medium | unset | |
-| [Tail exceedance and peaks-over-threshold](distributional/tail_index_estimators.md) | [Distributional](distributional/README.md) | implementation | low | high | |
+| [Peaks-over-threshold fits](distributional/tail_index_estimators.md) | [Distributional](distributional/README.md) | implementation | low | high | |
 | [Pair-correlation function of features](distributional/pair_correlation.md) | [Distributional](distributional/README.md) | implementation, [issue 082](https://github.com/khegazy/pde_metrics/blob/main/issues/082-pair-correlation-waits-on-features.md) | medium | medium | |
 | [Reliability, interval coverage and the distribution of spectra](distributional/ensemble_calibration.md) | [Distributional](distributional/README.md) | implementation | low | unset | |
 | [Width of the log-density distribution](distributional/density_log_pdf.md) | [Distributional](distributional/README.md) | implementation, [issue 088](https://github.com/khegazy/pde_metrics/blob/main/issues/088-log-density-width-needs-supersonic-data.md) | low | unset | |
@@ -124,18 +124,19 @@ regime, protected from data leakage and combined.
 These are the high-priority ideas ordered by value per unit of effort. The order is the team's
 judgement.
 
-1. **[Tail exceedance and peaks-over-threshold](distributional/tail_index_estimators.md),**
+1. **[Peaks-over-threshold fits](distributional/tail_index_estimators.md),**
    what remains of the tail-index idea once its Hill-estimator tier was built as
-   [tail_index](../metrics/tail_index.md). It has no positivity problem to solve, and it
-   measures intermittency directly.
+   [tail_index](../metrics/tail_index.md) and its exceedance tier as
+   [tail_exceedance](../metrics/tail_exceedance.md). It has no positivity problem to solve, and
+   it measures intermittency directly.
 2. **The [weak-form residual](physics_invariants/weak_residual.md) with
    [solver consistency](physics_invariants/solver_consistency.md).** Both need no reference
    field, and solver consistency is nearly free once a trusted solver is in the repository.
 
 After these come [wavelet scattering](basis_decompositions/wavelet_scattering.md), the
 [Helmholtz split](physics_invariants/helmholtz_split.md), the
-[winding angle](pattern_detection/winding_angle.md) in two dimensions, and the full
-[Wasserstein distance](optimal_transport/wasserstein.md) together with
+[winding angle](pattern_detection/winding_angle.md) in two dimensions, and the
+[Wasserstein distance for velocity and vorticity](optimal_transport/wasserstein_signed_fields.md) together with
 [transport between signed fields](optimal_transport/signed_field_transport.md).
 
 ## What other fields have already solved

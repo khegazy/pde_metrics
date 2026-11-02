@@ -7,7 +7,7 @@
 ## What it is
 
 Entropic relaxation adds an entropy penalty to the optimal-transport problem behind the
-[Wasserstein distance](wasserstein.md). The penalty smooths the problem, so it can be solved by
+[Wasserstein distance](../../metrics/wasserstein.md). The penalty smooths the problem, so it can be solved by
 the Sinkhorn algorithm, which alternately rescales the rows and columns of the transport plan
 until its row and column sums match the two distributions. A Sinkhorn divergence is the
 transport cost computed this way; the debiased version corrects it so that a field is at zero
@@ -26,7 +26,7 @@ evaluation metrics are collected in [designing an evaluation](../evaluation_desi
 ## Rationale
 
 *The team's judgement.* Medium priority: this becomes relevant only after the
-[Wasserstein distance](wasserstein.md) has shown that it is useful. The open question is
+[Wasserstein distance](../../metrics/wasserstein.md) has shown that it is useful. The open question is
 whether Wasserstein helps at all, and that should be answered before its cost is optimised.
 
 ## Keywords

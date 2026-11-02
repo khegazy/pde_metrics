@@ -8,7 +8,7 @@
 
 Idea: [Transport between signed fields](../docs/ideas/optimal_transport/signed_field_transport.md). Its row in `docs/ideas/README.md` links here, so the idea is not picked up for building until this issue is resolved; the change that then builds it deletes this file.
 
-The idea page lists four standard ways to apply optimal transport to a field that takes negative values or does not conserve its total: split into positive and negative parts; add a constant and renormalise; unbalanced (Hellinger–Kantorovich) transport; and graph-space transport (Métivier et al. 2018, *Geophysics* 83(5), R515–R540). It chooses none. Every transport metric applied to velocity or vorticity depends on the choice, including the [Wasserstein distance](../docs/ideas/optimal_transport/wasserstein.md) and the [sliced Wasserstein distance](../docs/ideas/optimal_transport/sliced_wasserstein.md).
+The idea page lists four standard ways to apply optimal transport to a field that takes negative values or does not conserve its total: split into positive and negative parts; add a constant and renormalise; unbalanced (Hellinger–Kantorovich) transport; and graph-space transport (Métivier et al. 2018, *Geophysics* 83(5), R515–R540). It chooses none. Every transport metric applied to velocity or vorticity depends on the choice, including the [Wasserstein distance for velocity and vorticity](../docs/ideas/optimal_transport/wasserstein_signed_fields.md) and the [sliced Wasserstein distance](../docs/ideas/optimal_transport/sliced_wasserstein.md).
 
 ## Why it is not built
 
