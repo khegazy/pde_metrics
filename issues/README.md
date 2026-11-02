@@ -50,7 +50,7 @@ Designed, hooks in place, not built.
 | [015](015-rotation-degradation.md) | Rotation, which must rotate vector components | low |
 | [016](016-mass-weighted-remap.md) | Momentum-conserving remap option | low |
 | [024](024-leray-projection.md) | Solenoidal projection for the spectral operators | low |
-| [066](066-wasserstein-needs-a-transport-library.md) | Wasserstein distance for horizontal displacement needs a transport library | high |
+| [066](066-wasserstein-for-signed-fields-waits-on-047.md) | The Wasserstein distance for velocity and vorticity waits on the signed-field formulation | high |
 | [067](067-sinkhorn-waits-on-wasserstein.md) | Sinkhorn divergences wait on the Wasserstein distance | medium |
 | [069](069-solver-consistency-needs-a-trusted-solver.md) | Consistency with one step of a trusted solver needs the solver | high |
 | [070](070-admissibility-checks-are-untestable.md) | Admissibility checks: no existing experiment violates an admissibility condition | unset |

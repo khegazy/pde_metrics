@@ -2,7 +2,7 @@
 
 **Category:** technical debt
 **Priority:** low
-**Status:** open. No harness change made; `shock_set_distance` documents the limit on its card.
+**Status:** open. No declaration on the decorator yet; `shock_set_distance` documents the limit on its card. The contract tests now hand a metric that declares only density a positive input (judgements/006), which covers `wasserstein`, a transport distance with no value on a signed field.
 
 ## Context
 
