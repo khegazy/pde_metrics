@@ -1,7 +1,7 @@
 ---
 type: EXP
 kind: benchmark problem
-related: ["metrics/shock_set_distance", "docs/ideas/shock_geometry/shock_mask_overlap.md", "docs/ideas/shock_geometry/shock_front_error.md"]
+related: ["metrics/shock_set_distance", "metrics/shock_mask_overlap", "docs/ideas/shock_geometry/shock_front_error.md"]
 seen_in: "agent's own idea, built on the closed form in fmeval/data/analytic.py (Toro 2009, Sect. 4.5, eqs. 4.55-4.59)"
 doi: "none"
 found_by: "sod_evidence, 2026-10-23"
@@ -34,7 +34,7 @@ contact or the shock separately can be checked wave by wave against the closed-f
 ## Metrics it would test
 
 The shock-geometry chain (`docs/ideas/shock_geometry/`): the distance between extracted
-shock sets, the shock-mask overlap (`docs/ideas/shock_geometry/shock_mask_overlap.md`), and the Rankine-Hugoniot residual on a
+shock sets, the shock-mask overlap (`metrics/shock_mask_overlap`), and the Rankine-Hugoniot residual on a
 detected surface (issue 051), whose residual should stay at its reference value because the
 jumps are exact while the position error grows.
 

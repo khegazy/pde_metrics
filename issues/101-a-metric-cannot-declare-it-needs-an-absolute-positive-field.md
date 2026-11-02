@@ -65,3 +65,7 @@ metric would).
 Found by the adversarial review of `shock_set_distance` (pull request #22), 2026-10-31. Issue
 102 records the non-positive convention; issue 096 the related question of handing a metric
 several fields.
+
+More evidence (adversarial review of `shock_mask_overlap`, finding 019, 2026-10-31): on
+`taylor_green_2d`'s gauge pressure at frame 0 the shared detector flags 2860 of 65536 cells in a
+field with no shock, and `shock_mask_overlap` scores 0.113 against the field rolled by 3 cells.

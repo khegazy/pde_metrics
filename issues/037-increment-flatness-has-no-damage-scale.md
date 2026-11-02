@@ -15,7 +15,7 @@ moment over a squared second moment, is zero over zero.
 
 ## Evidence
 
-On the pinned run `comparison_1793434653` (`kinet_re5e4`, start 2000, reduction 50, 161 frames),
+On the pinned run `comparison_1793492906` (`kinet_re5e4`, start 2000, reduction 50, 161 frames),
 `increment_flatness` has `value_anchor` NaN and `degenerate` true on density, velocity and
 vorticity. Under the earlier translation anchor it was degenerate too, for a different reason: it
 is a single-field statistic that a translation leaves unchanged.

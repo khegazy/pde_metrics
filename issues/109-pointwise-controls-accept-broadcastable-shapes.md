@@ -20,6 +20,13 @@ Fields of ones `(1, 8, 8)` against zeros `(2, 8, 8)`:
 mae 1.0    mse 1.0    rmse 1.0    nrmse nan
 ```
 
+A field missing its channel axis is a second shape the contract does not test. Called with a
+32-cell field without its channel axis (finding 020 of the agent that built `shock_mask_overlap`,
+2026-10-31): `increment_w1` and `energy_distance` return NaN with a NumPy warning instead of
+raising, `max_error` returns the right value, and `spectrum_l2`, `spectral_energy_flux` and
+`persistence_distance` raise. `shock_mask_overlap` returned a confident 1.0 until its review
+fixed it. A contract test that a field without its channel axis raises would cover all of them.
+
 ## Options
 
 1. Add a broadcastable mismatch to the contract test and a shape check to each control.
