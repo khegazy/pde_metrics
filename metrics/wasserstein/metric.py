@@ -175,22 +175,40 @@ def wasserstein_map(
     g_spline = ndimage.spline_filter(g, order=SPLINE_ORDER, mode="grid-wrap")
     cells = np.meshgrid(*(np.arange(n, dtype=np.float64) for n in spatial), indexing="ij")
     axes = tuple(range(len(spatial)))
+    n_dim = len(spatial)
+    upper = [(i, j) for i in range(n_dim) for j in range(i, n_dim)]  # distinct Hessian entries
 
     g_floor = g.min()  # the spline can undershoot between cells; never divide by less
 
     def evaluate(u_hat: NDArray[np.complexfloating]) -> tuple:
-        """Residual of Eqs. 4 and 14 at ``u``, with grad u, g(x + grad u) and the least
-        eigenvalue of I + D^2 u (positive iff ``x + grad u`` is a convex map's gradient)."""
+        """Residual of Eqs. 4 and 14 at ``u``, with grad u, g(x + grad u) and whether
+        I + D^2 u is positive definite everywhere (iff ``x + grad u`` is a convex map's
+        gradient).
+
+        In two dimensions, with ``xx, xy, yy`` the entries of I + D^2 u, the determinant is
+        ``xx yy - xy^2`` and positive definiteness is ``xx > 0`` with a positive determinant
+        (Sylvester's criterion), both in closed form from the three distinct second
+        derivatives. Any other dimension takes the eigenvalues of the symmetric matrix.
+        """
         grad = [np.fft.ifftn(1j * kj * u_hat, axes=axes).real for kj in k]
-        hessian = np.stack([np.stack([np.fft.ifftn(-ki * kj * u_hat, axes=axes).real
-                                      for kj in k], axis=-1) for ki in k], axis=-2)
-        eigenvalues = np.linalg.eigvalsh(np.eye(len(spatial)) + hessian)
+        second = {(i, j): np.fft.ifftn(-k[i] * k[j] * u_hat, axes=axes).real for i, j in upper}
+        if n_dim == 2:
+            xx, xy, yy = 1.0 + second[0, 0], second[0, 1], 1.0 + second[1, 1]
+            jacobian = xx * yy - xy * xy  # det(I + D^2 u), Eq. 4
+            convex = bool((xx > 0).all() and (jacobian > 0).all())
+        else:
+            matrix = np.empty((*spatial, n_dim, n_dim))
+            for (i, j), entry in second.items():
+                matrix[..., i, j] = matrix[..., j, i] = entry + (i == j)
+            eigenvalues = np.linalg.eigvalsh(matrix)
+            jacobian = eigenvalues.prod(axis=-1)  # det(I + D^2 u), Eq. 4
+            convex = bool(eigenvalues.min() > 0)
         displaced = [c + d / h for c, d, h in zip(cells, grad, spacing)]  # in cells
         g_at = ndimage.map_coordinates(g_spline, displaced, order=SPLINE_ORDER,
                                        mode="grid-wrap", prefilter=False)
-        f_n = g_at * eigenvalues.prod(axis=-1)  # g(x + grad u) det(I + D^2 u), Eq. 4
+        f_n = g_at * jacobian  # g(x + grad u) det(I + D^2 u), Eq. 4
         residual = f - (f_n - f_n.mean() + 1.0)  # Eq. 14
-        return residual, grad, g_at, eigenvalues.min()
+        return residual, grad, g_at, convex
 
     u_hat = np.zeros(spatial, dtype=np.complex128)
     residual, grad, g_at, _ = evaluate(u_hat)
@@ -203,7 +221,7 @@ def wasserstein_map(
         for _ in range(MAX_HALVINGS):  # the damping tau of Eq. 6, doubled until accepted
             trial = evaluate(u_hat + theta_hat)
             trial_rms = np.sqrt(np.mean(trial[0] ** 2))
-            if trial_rms < rms and trial[3] > 0:  # NaN compares False, so divergence halves
+            if trial_rms < rms and trial[3]:  # NaN compares False, so divergence halves
                 break
             theta_hat = theta_hat / 2
         else:

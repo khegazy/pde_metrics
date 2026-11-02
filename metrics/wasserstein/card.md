@@ -64,7 +64,11 @@ $g\,\Delta$, with $g$ divided out cell by cell. That is mine: their Sect. 3.3 sa
 simpler equation can *sometimes* replace the full one, and their $\tau = 1$ in Sect. 5.1 was
 obtained with the full operator. Step 4 chooses their damping $\tau$ adaptively, also mine:
 their proof needs $\tau$ large enough and $I + D^2 u_n$ positive definite at every step
-(Sect. 3.3) and gives no value. The answer is fixed by the residual of step 1, so these
+(Sect. 3.3) and gives no value. In two dimensions the determinant of steps 1 and 4 is
+$(1 + u_{xx})(1 + u_{yy}) - u_{xy}^2$, and positive definiteness is $1 + u_{xx} > 0$ with a
+positive determinant (Sylvester's criterion), both from the three distinct second
+derivatives; in any other dimension both come from the eigenvalues of $I + D^2 u$. The
+answer is fixed by the residual of step 1, so these
 choices change the number of iterations and not the value: over the 9499 values of the
 kinet evidence run, the plain Laplacian step and this one differ by a relative
 $5 \times 10^{-11}$ in the median and $1.4 \times 10^{-6}$ at worst, both far below the three
