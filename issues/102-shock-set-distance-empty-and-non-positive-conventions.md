@@ -52,5 +52,5 @@ number of every row where a set is empty, so it is a decision for a person.
 ## Related
 
 Written with the first shock metric, `shock_set_distance`, 2026-10-30. The detector it
-contains is the input the shock-mask overlap idea (`docs/ideas/shock_geometry/shock_mask_overlap.md`)
-waits on.
+contains is shared with `shock_mask_overlap`, whose score for two empty sets is the
+convention of issue 120; the two should be settled together.

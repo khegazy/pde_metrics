@@ -1,7 +1,7 @@
 ---
 type: EXP
 kind: benchmark problem
-related: ["metrics/shock_set_distance", "docs/ideas/shock_geometry/shock_mask_overlap.md", "docs/ideas/shock_geometry/shock_turbulence_interaction.md", "issues/002"]
+related: ["metrics/shock_set_distance", "metrics/shock_mask_overlap", "docs/ideas/shock_geometry/shock_turbulence_interaction.md", "issues/002"]
 seen_in: "Lax & Liu 1998, SIAM J. Sci. Comput. 19(2), 319-340"
 doi: "10.1137/S1064827595291819"
 found_by: "shock_set_distance, 2026-10-30"
@@ -35,7 +35,7 @@ and the pooled average's weighting toward the larger set (the card's Limitations
 
 ## Metrics it would test
 
-`shock_set_distance`, and the shock-mask overlap that waits on the same detector; on shocklets,
+`shock_set_distance`, and `shock_mask_overlap`, which imports the same detector; on shocklets,
 the shock-turbulence interaction statistics as well.
 
 ## Why it is helpful
