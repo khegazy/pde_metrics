@@ -324,7 +324,7 @@
       },
       {
         "blind": false,
-        "blindness_q": 0.2173663094,
+        "blindness_q": 0.2182143318,
         "cliffs_delta_min": 0.984028394,
         "damage_max_ucb": 0.0479514474,
         "damage_per_change": 3.5116483901,
@@ -551,5 +551,5 @@
       }
     ]
   },
-  "run": "comparison_1793434653"
+  "run": "comparison_1793492906"
 }

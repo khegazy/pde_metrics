@@ -21,3 +21,9 @@ A decision, with its reason, on which formulation (and which free parameters) th
 ## Related
 
 Found by the screening of `docs/ideas/` for agent-built metrics (2026-10-23).
+
+A lead, read to its introduction only (finding 020 of the agent that built `wasserstein`,
+2026-10-31): Engquist & Yang (2019, Methods Appl. Anal. 26(2), 133-148, arXiv:1810.08686) say the
+linear normalisation (add a constant, rescale) worked well in realistic large-scale inversions
+though it is not convex in shifts, while the convex alternatives (positive part, squaring,
+envelope, absolute value) performed poorly, and set out to explain why.

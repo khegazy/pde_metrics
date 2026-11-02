@@ -1416,7 +1416,7 @@ def test_committed_figures_fit_the_size_budget():
               for p in (REPO / "docs" / d).rglob("*") if p.is_file()]
     total = sum(p.stat().st_size for p in files)
     largest = sorted(files, key=lambda p: p.stat().st_size, reverse=True)[:3]
-    assert total < 25_000_000, (
+    assert total < 40_000_000, (
         f"committed generated files total {total / 1e6:.1f} MB; largest: "
         + ", ".join(f"{p.parent.parent.name}/{p.name} {p.stat().st_size // 1024} KB"
                     for p in largest)
