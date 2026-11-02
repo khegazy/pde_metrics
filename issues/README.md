@@ -125,7 +125,14 @@ Designed, hooks in place, not built.
 | [099](099-derived-field-read-without-its-inputs.md) | A run that reads vorticity without velocity scores the solver's stored vorticity, not the recomputed one, without warning | medium |
 | [103](103-exact-zero-axis-rule-is-discontinuous.md) | `tail_index` and `increment_flatness` leave out an axis only when it is exactly constant, so round-off on that axis changes the value by a third | unset |
 | [111](111-damage-per-change-divides-by-round-off-on-ensemble-axes.md) | Damage per unit field change divides by round-off on the ensemble-dispersion axes, so the ensemble cards' profile ranking is meaningless | medium |
+| [123](123-analysis-cannot-read-a-target-valued-metric.md) | The analysis cannot read a metric with a target: direction fixed at +1, no blindness bound, damage on the raw ratio, and a zero withholds the rank correlation | medium |
 | [036](036-increment-flatness-is-not-monotone-under-smoothing.md) | Increment flatness is not monotone under smoothing on any field, so it fails the stated acceptance rule; needs a decision, not a fix | medium |
+| [115](115-run-meta-records-the-git-state-at-the-end.md) | A run's `run_meta.json` records the git commit at its end, so a commit made during the run is recorded as the code that ran | medium |
+| [116](116-context-cache-trusts-one-context-per-frame.md) | Four bundles cache the reference in `ctx.cache` under a fixed key, so a reused context silently returns the first reference's answer | low |
+| [117](117-one-metric-error-stops-the-run.md) | One metric's error stops the whole run, a metric cannot declare the grids it accepts, and `field_gallery` orders frames as strings | low |
+| [121](121-shock-set-distance-card-half-cell-and-high-pass-readings.md) | `shock_set_distance`'s card says a half-cell shift flags three cells (it flags one) and reads the high-pass filters as removing the shock (they raise the pressure level) | low |
+| [122](122-scale-dependent-does-not-say-which-constants.md) | The schema's `scale_dependent` does not say whether the constant may be negative | low |
+| [124](124-tail-index-card-overstates-clauset-on-sqrt-n.md) | `tail_index`'s card says Clauset et al. name the square-root rule, which they do not recommend | low |
 | [022](022-sim-config-parsing.md) | Solver configs carry executable YAML tags | low |
 | [023](023-vendored-kinet-drift.md) | Vendored kinet code is pinned and may drift | low |
 | [045](045-retired-tracker-ids-in-code.md) | Retired tracker IDs remain in code comments, tests and six issues | low |
