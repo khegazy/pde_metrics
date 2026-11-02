@@ -65,8 +65,8 @@ SPLINE_ORDER: int = 3
     differentiable=True,     # W_2^2 has a Frechet derivative in the densities, the adjoint
                              # source of Yang et al. (2018), Geophysics 83(1), section
                              # "Compare globally", "Computation of adjoint source"
-    cost="moderate",         # 0.16 to 0.25 s per 256^2 evaluation in the evidence run, a
-                             # hundred times h_minus_one: 4 to 7 Newton steps of FFTs
+    cost="moderate",         # 0.058 to 0.091 s per 256^2 evaluation in the evidence run,
+                             # 28 times h_minus_one in one process: 4 to 7 Newton steps
     higher_is_better=False,
     symmetric=False,         # W_2 is symmetric (Peyre & Cuturi 2019, Prop. 2.3), but solving
                              # from the other side differs at the discretisation's error,

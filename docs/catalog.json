@@ -18301,7 +18301,7 @@
             "selectivity": 0.3802822348
           }
         ],
-        "run": "wasserstein_1793501169"
+        "run": "wasserstein_1793647243"
       },
       "kind": "metric",
       "math": {

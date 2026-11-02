@@ -148,7 +148,7 @@ run it on a dataset with a non-periodic axis, such as the Sod shock tube.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793501169`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_gate_closed_form/wasserstein_1793647243`, do not edit -->
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -282,16 +282,27 @@ negative, because neither is then a pile of mass.
   its step then lowers the residual. A strong shock compresses density by more than that, so
   a shock-dominated field can score NaN with a warning. A full Newton step, solving their
   linearised operator (Eq. (5)) iteratively as their Sect. 4.2 does, would be the remedy.
+- **It costs about thirty times `h_minus_one`.** Timed in one process on kinet density at step
+  6000 against five candidates (mean field, a 16-cell shift, an eighth-cell shift, a blur and
+  noise), interleaved over nine rounds with medians (my measurement,
+  `.agent/scratch/interleaved_timing.py` in the build records): 74.7 ms per call against 2.71 ms
+  for `h_minus_one`, a ratio of 28. Before the closed-form determinant the same measurement
+  gave 196.0 ms, a ratio of 72. The recorded fingerprints give a larger ratio than one
+  process does, because they come from different runs on different login nodes under
+  different loads: `h_minus_one`'s cost was recorded on login05, this metric's on login10,
+  and one call of `h_minus_one` took between 2.7 and 5.0 ms on login10 within minutes, at a
+  load average above the node's core count. That last point is my explanation of the gap,
+  supported by those timings but not isolated by a controlled test.
 - **Not exactly symmetric.** $W_2$ is symmetric, but solving from the other side gives a value
   that differs by the discretisation error, so the metric declares `symmetric=False`.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793501169`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_gate_closed_form/wasserstein_1793647243`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `ecf826cf0428`. Run `wasserstein_1793501169`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `589ff0d32d32`. Run `wasserstein_1793647243`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/wasserstein_1793501169`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/wasserstein_gate_closed_form/wasserstein_1793647243`.
 
 <!-- END GENERATED run -->
 
@@ -301,7 +312,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 [box_blur](../../degradations/box_blur/card.md) ·
 [median_blur](../../degradations/median_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793501169`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_gate_closed_form/wasserstein_1793647243`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -320,7 +331,7 @@ Every blur moves mass from the density's peaks into its troughs, and the distanc
 [highpass_ideal](../../degradations/highpass_ideal/card.md) ·
 [highpass_butterworth](../../degradations/highpass_butterworth/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793501169`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_gate_closed_form/wasserstein_1793647243`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -337,7 +348,7 @@ All four filters follow the fraction of energy removed on every frame. The high-
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793501169`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_gate_closed_form/wasserstein_1793647243`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -353,7 +364,7 @@ Both axes follow the shift on every frame, as pre-registered, and the elasticity
 [coarsen](../../degradations/coarsen/card.md) ·
 [coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793501169`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_gate_closed_form/wasserstein_1793647243`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -368,7 +379,7 @@ Both coarsenings follow the factor on every frame, but their response is small: 
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793501169`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_gate_closed_form/wasserstein_1793647243`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -383,7 +394,7 @@ Ordered perfectly, with no overlap between neighbouring amplitudes, and with an 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793501169`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_gate_closed_form/wasserstein_1793647243`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
 |---|---|---|---|---|
@@ -397,17 +408,17 @@ The fake prediction with the right spectrum scores a damage of 1.33, more than t
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793501169`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_gate_closed_form/wasserstein_1793647243`, do not edit -->
 
 No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_summary -->
 
-This run held only this metric, so the generated cross-metric table is empty. Placed beside the committed fingerprint of [h_minus_one](../../metrics/h_minus_one/card.md) on the same frames, every axis's largest damage and elasticity, and both probes, agree to within about one percent, as the first-order relation in the Definition predicts for a density this close to uniform; Equation (5) alone would allow a factor of two. On kinet density the two metrics carry the same information, and this one costs 0.193 s per evaluation (the fingerprint) where `h_minus_one` takes one FFT. A run of both together would put the correlation in this table.
+This run held only this metric, so the generated cross-metric table is empty. Placed beside the committed fingerprint of [h_minus_one](../../metrics/h_minus_one/card.md) on the same frames, every axis's largest damage and elasticity, and both probes, agree to within about one percent, as the first-order relation in the Definition predicts for a density this close to uniform; Equation (5) alone would allow a factor of two. On kinet density the two metrics carry the same information, and this one costs 0.0721 s per evaluation (the fingerprint) where `h_minus_one` takes one FFT; Limitations compares the two costs measured in one process. A run of both together would put the correlation in this table.
 
 ### Damage beside the other metrics
 
-<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_1793501169`, do not edit -->
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence wasserstein --results results/wasserstein_gate_closed_form/wasserstein_1793647243`, do not edit -->
 
 Only one metric in the recorded run; there is nothing to place this one beside.
 
