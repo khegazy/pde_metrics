@@ -349,7 +349,7 @@
         "metric": "tail_exceedance",
         "n_levels": 6.0,
         "rho": -0.6377481392,
-        "rho_ci_hi": -0.5797710357,
+        "rho_ci_hi": -0.5898855178,
         "rho_ci_lo": -0.6982532518
       },
       {
@@ -531,7 +531,7 @@
         "metric": "tail_exceedance",
         "n_levels": 6.0,
         "rho": -0.7247137946,
-        "rho_ci_hi": -0.7102367889,
+        "rho_ci_hi": -0.7194997544,
         "rho_ci_lo": -0.7537023463
       },
       {
@@ -551,5 +551,5 @@
       }
     ]
   },
-  "run": "tail_exceedance_1793494833"
+  "run": "comparison_1793657627"
 }
