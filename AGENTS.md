@@ -232,6 +232,9 @@ order — the first two are yours, the rest an agent can complete from the contr
 4. **`card.md`** — the prose, six sections in a fixed order. See §3.1.
 5. **`python -m fmeval.cards evidence <name> --results results/<run>`** — writes the
    measured half from a recorded run. Never write those numbers yourself.
+6. **`research_notes.md` and `code_notes.md`** — what you read, tried, measured and left
+   open, under the fixed headings in `docs/working-with-the-repo.md`. Before you start,
+   read these two files in every bundle related to yours.
 
 Reusing another bundle's function is expected rather than discouraged: `rmse` imports
 `mse`, `nrmse` imports `rmse`. The decorator returns the function unwrapped and the import

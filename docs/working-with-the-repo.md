@@ -24,6 +24,7 @@ elsewhere needs editing.
 | `card.yaml` | The machine-readable record: category, status, bounds, references | You | Always |
 | `card.md` | The written description: what the metric detects, how to read its output, where it misleads | You | Always |
 | `refs.bib` | BibTeX entries for the sources this description cites | You | When you cite something |
+| `research_notes.md`, `code_notes.md` | What the builder learned that the card does not carry, split into the research record and the coding record | Whoever builds or changes the metric | When you build it; read them before changing it or building a related one |
 | `_generated/` | Measured results and figures | **A command. Never by hand** | Run the command |
 
 ### Around the repository
@@ -271,6 +272,30 @@ else's references. Cite from the description as `[@key]`.
 If you cannot verify that a reference exists, write `TODO(cite)` and say so when you
 report. The checker rejects `TODO(cite)` deliberately: a guessed DOI, year or equation
 number is worse than an admitted gap, because a guess looks exactly like a real citation.
+
+### `research_notes.md` and `code_notes.md` — what the builder learned
+
+The card says what the metric is; these two files say how it got that way, so the next
+person does not repeat the work. `research_notes.md` holds the sources read and how, the
+method choices and the options weighed, the formulations rejected and why, the evidence runs
+and what each showed, corrections found in other parts of the repository, the review's
+critiques, and the open questions with where each now lives. `code_notes.md` holds how the
+implementation works and why, what each test pins, the bugs found and their fixes, cost
+measurements, and tooling problems.
+
+Both files use the same headings in every bundle, in this order, so that one section can be
+read across all metrics. An empty section says "Nothing recorded."
+
+- `research_notes.md`: `## Summary`, `## Sources`, `## Method choices`,
+  `## Rejected formulations and negative results`, `## Evidence runs`,
+  `## Corrections to the rest of the repository`, `## Review round`,
+  `## Open questions and follow-ups`, `## For the next agent`.
+- `code_notes.md`: `## Summary`, `## Implementation`, `## Tests`, `## Bugs and fixes`,
+  `## Performance`, `## Tooling and environment problems`, `## For the next agent`.
+
+They are a record, not a second description. Where a note and the card disagree, the card
+wins, and a measured fact belongs on the card; the notes keep the reasoning and the history
+behind it.
 
 ### `_generated/` — never edit this
 
