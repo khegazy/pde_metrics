@@ -98,7 +98,7 @@ L 243.184523 128.249946
    </g>
    <g id="LineCollection_14">
     <path d="M 110.425327 265.011055 
-L 119.687552 265.011055 
+L 118.896863 265.011055 
 " clip-path="url(#p0ebad29db4)" style="fill: none; stroke: #d55e00; stroke-opacity: 0.6; stroke-width: 0.9"/>
    </g>
    <g id="LineCollection_15">
@@ -153,7 +153,7 @@ L 243.184523 128.249946
    </g>
    <g id="LineCollection_25">
     <path d="M 106.090651 265.011055 
-L 109.488526 265.011055 
+L 108.764403 265.011055 
 " clip-path="url(#p0ebad29db4)" style="fill: none; stroke: #d55e00; stroke-opacity: 0.6; stroke-width: 0.9"/>
    </g>
    <g id="matplotlib.axis_1">

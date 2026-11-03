@@ -128,6 +128,8 @@ Designed, hooks in place, not built.
 | [103](103-exact-zero-axis-rule-is-discontinuous.md) | `tail_index` and `increment_flatness` leave out an axis only when it is exactly constant, so round-off on that axis changes the value by a third | unset |
 | [111](111-damage-per-change-divides-by-round-off-on-ensemble-axes.md) | Damage per unit field change divides by round-off on the ensemble-dispersion axes, so the ensemble cards' profile ranking is meaningless | medium |
 | [123](123-analysis-cannot-read-a-target-valued-metric.md) | The analysis cannot read a metric with a target: direction fixed at +1, no blindness bound, damage on the raw ratio, and a zero withholds the rank correlation | medium |
+| [119](119-refactor-gate-fails-on-ill-conditioned-small-values.md) | A refactor gate at rtol 1e-12 cannot pass where a metric's value is ill-conditioned (`wasserstein` on near-identical pairs) | low |
+| [125](125-costs-from-different-runs-are-not-comparable.md) | Costs recorded in different runs are not comparable on shared login nodes, and the catalog lists them side by side | low |
 | [036](036-increment-flatness-is-not-monotone-under-smoothing.md) | Increment flatness is not monotone under smoothing on any field, so it fails the stated acceptance rule; needs a decision, not a fix | medium |
 | [115](115-run-meta-records-the-git-state-at-the-end.md) | A run's `run_meta.json` records the git commit at its end, so a commit made during the run is recorded as the code that ran | medium |
 | [116](116-context-cache-trusts-one-context-per-frame.md) | Four bundles cache the reference in `ctx.cache` under a fixed key, so a reused context silently returns the first reference's answer | low |

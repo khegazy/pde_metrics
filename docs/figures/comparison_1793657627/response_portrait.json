@@ -21,7 +21,9 @@
     "rmse",
     "spectral_energy_flux",
     "spectrum_l2",
-    "tail_index"
+    "tail_exceedance",
+    "tail_index",
+    "wasserstein"
   ],
   "panels": {
     "energy_distance": [
@@ -3730,6 +3732,224 @@
         "metric": "spectrum_l2"
       }
     ],
+    "tail_exceedance": [
+      {
+        "cliffs_delta_min": 0.6504378689,
+        "degradation": "additive_noise",
+        "field": "density",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.9901238378,
+        "degradation": "additive_noise",
+        "field": "velocity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.5073106747,
+        "degradation": "additive_noise",
+        "field": "vorticity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "box_blur",
+        "field": "density",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "box_blur",
+        "field": "velocity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.0,
+        "degradation": "box_blur",
+        "field": "vorticity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.0123837815,
+        "degradation": "coarsen",
+        "field": "density",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": -0.151614521,
+        "degradation": "coarsen",
+        "field": "velocity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": -0.9792832067,
+        "degradation": "coarsen",
+        "field": "vorticity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.2939315613,
+        "degradation": "coarsen_bandlimited",
+        "field": "density",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.263300027,
+        "degradation": "coarsen_bandlimited",
+        "field": "velocity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.0745341615,
+        "degradation": "coarsen_bandlimited",
+        "field": "vorticity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "gaussian_blur",
+        "field": "density",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "gaussian_blur",
+        "field": "velocity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.0,
+        "degradation": "gaussian_blur",
+        "field": "vorticity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.5450792793,
+        "degradation": "highpass_butterworth",
+        "field": "density",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.9042475213,
+        "degradation": "highpass_butterworth",
+        "field": "velocity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.4259866517,
+        "degradation": "highpass_butterworth",
+        "field": "vorticity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.9369237298,
+        "degradation": "highpass_ideal",
+        "field": "density",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.9304424984,
+        "degradation": "highpass_ideal",
+        "field": "velocity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.3165772925,
+        "degradation": "highpass_ideal",
+        "field": "vorticity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "lowpass_butterworth",
+        "field": "density",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "lowpass_butterworth",
+        "field": "velocity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.0,
+        "degradation": "lowpass_butterworth",
+        "field": "vorticity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "lowpass_ideal",
+        "field": "density",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "lowpass_ideal",
+        "field": "velocity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.0,
+        "degradation": "lowpass_ideal",
+        "field": "vorticity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 1.0,
+        "degradation": "median_blur",
+        "field": "density",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.7820300143,
+        "degradation": "median_blur",
+        "field": "velocity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": 0.3442768412,
+        "degradation": "median_blur",
+        "field": "vorticity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": -0.8083793064,
+        "degradation": "translate_subpixel",
+        "field": "density",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": -0.7155202346,
+        "degradation": "translate_subpixel",
+        "field": "velocity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": -0.8886617029,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "translate_x",
+        "field": "density",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "translate_x",
+        "field": "velocity",
+        "metric": "tail_exceedance"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "metric": "tail_exceedance"
+      }
+    ],
     "tail_index": [
       {
         "cliffs_delta_min": -0.3966282165,
@@ -3947,7 +4167,225 @@
         "field": "vorticity",
         "metric": "tail_index"
       }
+    ],
+    "wasserstein": [
+      {
+        "cliffs_delta_min": 1.0,
+        "degradation": "additive_noise",
+        "field": "density",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "additive_noise",
+        "field": "velocity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "additive_noise",
+        "field": "vorticity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": 0.9253115235,
+        "degradation": "box_blur",
+        "field": "density",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "box_blur",
+        "field": "velocity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "box_blur",
+        "field": "vorticity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": 0.999845685,
+        "degradation": "coarsen",
+        "field": "density",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "coarsen",
+        "field": "velocity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "coarsen",
+        "field": "vorticity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": 0.7295629027,
+        "degradation": "coarsen_bandlimited",
+        "field": "density",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "coarsen_bandlimited",
+        "field": "velocity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "coarsen_bandlimited",
+        "field": "vorticity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": 0.9483044636,
+        "degradation": "gaussian_blur",
+        "field": "density",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "gaussian_blur",
+        "field": "velocity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "gaussian_blur",
+        "field": "vorticity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": 0.1521932024,
+        "degradation": "highpass_butterworth",
+        "field": "density",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "highpass_butterworth",
+        "field": "velocity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "highpass_butterworth",
+        "field": "vorticity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": 0.0957138999,
+        "degradation": "highpass_ideal",
+        "field": "density",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "highpass_ideal",
+        "field": "velocity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "highpass_ideal",
+        "field": "vorticity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": 0.6956135952,
+        "degradation": "lowpass_butterworth",
+        "field": "density",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "lowpass_butterworth",
+        "field": "velocity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "lowpass_butterworth",
+        "field": "vorticity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": 0.9359592608,
+        "degradation": "lowpass_ideal",
+        "field": "density",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "lowpass_ideal",
+        "field": "velocity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "lowpass_ideal",
+        "field": "vorticity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": 0.9420547047,
+        "degradation": "median_blur",
+        "field": "density",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "median_blur",
+        "field": "velocity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "median_blur",
+        "field": "vorticity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": 0.920913545,
+        "degradation": "translate_subpixel",
+        "field": "density",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "translate_subpixel",
+        "field": "velocity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "translate_subpixel",
+        "field": "vorticity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": 0.9184445045,
+        "degradation": "translate_x",
+        "field": "density",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "translate_x",
+        "field": "velocity",
+        "metric": "wasserstein"
+      },
+      {
+        "cliffs_delta_min": null,
+        "degradation": "translate_x",
+        "field": "vorticity",
+        "metric": "wasserstein"
+      }
     ]
   },
-  "run": "comparison_1793492906"
+  "run": "comparison_1793657627"
 }

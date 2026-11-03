@@ -8,8 +8,8 @@
 
 `saturation_level` is the first severity level at which a metric has moved 90% of the way from
 clean to the anchor, the field's spatial mean (`judgements/001`). On the pinned run
-`comparison_1793492906` (`kinet_re5e4`, 18 metrics, 161 frames) it is defined on 109 of the 540
-ordinary rows, `severity_50` on 229 and `severity_10` on 383. Against the earlier translation
+`comparison_1793657627` (`kinet_re5e4`, 20 metrics, 161 frames) it is defined on 129 of the 588
+ordinary rows, `severity_50` on 233 and `severity_10` on 392. Against the earlier translation
 anchor it was defined on 12 of 360, so the change of anchor populated it partly but not for most
 rows.
 
