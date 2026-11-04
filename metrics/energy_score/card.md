@@ -59,6 +59,51 @@ None. Equation (2) uses only norms of whole-field differences; no stencil, trans
 neighbourhood is involved, so the domain edge is never consulted and periodicity is
 irrelevant.
 
+### How its field reports it
+
+The field is the verification of multivariate probabilistic forecasts, in meteorology and
+energy forecasting.
+
+- **The object and its normalisation.** The mean energy score over many cases, each a small
+  vector: Gneiting and colleagues introduce the ensemble form for surface wind vectors, so
+  $d = 2$ at each of 565 stations, scored per station and averaged (their Section 4.2,
+  Equations (6) and (7), and Section 5, in the technical-report version read)
+  [@gneitingstanberry2008]. They write that "when the dimension of the forecast vector is large,
+  attention typically focuses on low-dimensional functionals" (Section 1), and that if the
+  components "are incommensurable, or incomparable in magnitude, a standardization may be
+  advisable or necessary" (Section 4.2) [@gneitingstanberry2008]. Scheuerer and Hamill score
+  vectors of $d = 5$ and 15 in simulation and $d = 5$ wind-farm sites in their application,
+  each lead time separately (Sections 3 and 4) [@scheuererhamill2015]; Pinson and Tastu study
+  $d = 2$ and bound the score's sensitivity up to $d = 300$ (Sections 2.4 and 3)
+  [@pinsontastu2013]. **This bundle departs from that practice in dimension:** it scores the
+  raw field flattened into one vector of every channel of every cell, $d = 4096$ values on the
+  64 by 64 synthetic ensemble, with no standardisation. Standardisation is not needed for one
+  variable in one unit (this card's reasoning: the components are commensurable), but no source
+  read evaluates the energy score on a field of thousands of components; Pacchiardi and
+  colleagues train with it on a 32 by 64 grid, summed over patches (their Section 3.2.2)
+  [@pacchiardi2024], which is the variant written up in
+  [MTR-energy_score-patched-energy-score](https://github.com/khegazy/pde_metrics/blob/main/proposals/MTR-energy_score-patched-energy-score.md).
+- **The statistics reported beside it.** Mean scores, or skill relative to a reference
+  forecast, in tables per lead time (Scheuerer and Hamill, Table 1) [@scheuererhamill2015]; and
+  the multivariate calibration checks, the multivariate and minimum-spanning-tree rank
+  histograms (Gneiting and colleagues, Sections 2.1 and 2.2) [@gneitingstanberry2008], which are
+  not built here. Scheuerer and Hamill "strongly recommend that several different scores be
+  always considered" (Section 5) [@scheuererhamill2015], here the [variogram_score](../../metrics/variogram_score/card.md)
+  and the per-cell [crps](../../metrics/crps/card.md).
+- **The experiment, and what this repository cannot show.** The field tests the score on
+  simulated Gaussian vectors whose mean, variance and correlation are mis-specified one at a
+  time (Pinson and Tastu, Section 2.4, Figures 2 and 3; Scheuerer and Hamill, Sections 3a to
+  3c, Figures 1 to 3) [@pinsontastu2013; @scheuererhamill2015]. The correlation case is the one
+  that matters for a whole-field score, and its finding is that the energy score "can hardly
+  discriminate multivariate forecasts that differ only with respect to their correlations"
+  (Scheuerer and Hamill, Section 3b, Figure 2) [@scheuererhamill2015]. The synthetic ensemble
+  here draws independent noise at every cell for the reference and every member, so its
+  ensembles never differ in correlation: on it this score moves with the spread factor as the
+  mean CRPS does, and nothing in its evidence can show what the energy score adds over `crps`.
+  That experiment is
+  [EXP-energy_score-correlated-synthetic-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-energy_score-correlated-synthetic-ensemble.md);
+  real ensembles wait on [issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md).
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence energy_score --results results/energy_score_1793780354`, do not edit -->

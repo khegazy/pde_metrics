@@ -101,13 +101,13 @@ Designed, hooks in place, not built.
 | [095](095-pooling-across-frames-for-distributional-estimates.md) | Pooling across frames for a distributional estimate; the contract of a series-level procedure, should a metric need one | unset |
 | [104](104-equivalence-test-misreads-a-flag-valued-anchor.md) | The blindness test lists an axis as blind for a metric whose anchor is a worst-case flag value (`shock_set_distance` follows `translate_x` with rho 1 yet is listed blind to it); needs a decision | unset |
 | [106](106-max-error-scores-the-density-impostor-under-the-anchor.md) | `max_error` scores the Gaussian impostor on density near the anchor because density's extreme is one deep minimum on a vortex core; why the harness's 0.955 sits below the per-frame medians near 1.02 is unexplained | unset |
-| [112](112-crps-card-overclaims-comparison-at-one-member.md) | The `crps` card says ensemble sizes compare fairly; at one member the score doubles (1.14 against 0.57) | low |
 | [097](097-stochastic-ladder-for-comparable-magnitudes.md) | A stochastic ladder (several draws per severity) would make response magnitudes comparable across a metric's functional forms | none set |
 | [098](098-increment-w1-registered-number-is-a-convention.md) | The number `increment_w1_by_separation` registers, a normalised mean over separations, is a convention with no source | unset |
 | [105](105-spectral-energy-flux-summary-is-a-convention.md) | The number `spectral_energy_flux` registers, a relative L2 distance between flux curves sampled at octaves, is a convention with no source | unset |
 | [118](118-tail-exceedance-registered-threshold-is-a-convention.md) | The threshold at which `tail_exceedance` registers its frequency bias, the reference's sqrt(n)-th largest increment, is a convention with no source, and it saturates at 0 under smoothing | unset |
 | [102](102-shock-set-distance-empty-and-non-positive-conventions.md) | The scores `shock_set_distance` gives an empty shock set and a non-positive pressure are conventions | unset |
 | [120](120-shock-mask-overlap-both-empty-convention.md) | The score `shock_mask_overlap` gives two empty shock sets, 1, is a convention | unset |
+| [127](127-crps-decomposition-has-no-settled-form-for-a-fair-ensemble-score.md) | The CRPS decomposition the field reports is not built: the recommended isotonic form needs isotonic distributional regression, and Hersbach's sums to the plug-in score, not the fair one `crps` registers | low |
 
 ## Technical debt
 

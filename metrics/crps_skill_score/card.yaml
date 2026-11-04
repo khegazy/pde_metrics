@@ -1,0 +1,32 @@
+# The typed half of this bundle's card. Every field is documented, with the reasoning
+# behind it, in fmeval/cards/schema.py.
+schema_version: 1
+
+name: crps_skill_score
+kind: metric
+
+category: probabilistic
+
+summary: Skill score of the fair ensemble CRPS against climatology, the empirical
+  distribution of the reference's values over the frame; one is perfect, zero is climatology.
+
+status: candidate
+
+owners: [khegazy]
+
+output:
+  description: One minus the ratio of the ensemble's mean CRPS to the climatological mean
+    CRPS, dimensionless. One for a perfect ensemble, zero at climatology, negative below it.
+  bounds:
+    lower: null
+    upper: 1.0
+
+math:
+  triangle_inequality: false
+  scale_dependent: false      # numerator and denominator scale together with the field
+  resolution_dependent: true  # both the CRPS and the frame's climatology change with the grid
+  complexity: "O(N M log M + N log N)"   # N cells, M members: the per-cell member sort and
+                                         # the per-channel sort of the climatology
+references: []
+
+review: null
