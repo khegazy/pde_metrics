@@ -48,6 +48,17 @@ rank (1 to 4) and parameters; its name in the family's sweep; and its severity c
 checked at the 128^2 grid (`AGENTS.md` §5). The files use the old dataset names (`rho`, `u`,
 `t`), which `kinet_raw` does not read, so the reader needs those names too.
 
+## Also open: the 128^2 grid is coarse for vorticity at Re = 1e6
+
+On the family's 128^2 grid, vorticity's characteristic scale is 18 cells at Re = 5e4 and 11 at
+Re = 1e6 (run `reynolds_ladder_2d_1793783563`, frames 2000 to 10000 every 50th). The windowed
+kernels' strengths round to whole cells, so at Re = 1e6 the median blur keeps one usable level
+of its three on vorticity and has no rank correlation there; the box, disk and Epanechnikov
+kernels keep two. The fix `AGENTS.md` §5 prescribes is a wider list of fractions, which would
+move every number of the pinned `kinet_re5e4` evidence. The alternative is a 256^2 family grid,
+which divides both current members' grids and the planned 512^2 ones; it would make the family
+cost more per frame, and it was not measured. Neither is decided here.
+
 ## Related
 
 `configs/dataset_family/reynolds_ladder_2d.yaml`; `judgements/007`;

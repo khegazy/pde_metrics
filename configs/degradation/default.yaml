@@ -59,6 +59,10 @@ ladder:
   lowpass_butterworth: {enabled: true,  severities: [0.05, 0.15, 0.30, 0.45]}
   highpass_ideal:      {enabled: true,  severities: [0.45, 0.70, 0.90, 0.97]}
   highpass_butterworth: {enabled: true, severities: [0.45, 0.70, 0.90, 0.97]}
+  # The one uncalibrated spectral axis: the band is |k| = 16 to 64 on every field, so its damage is
+  # read one field at a time. Removing the band entirely changes kinet_re5e4 (frames 2000 to
+  # 10000, every 50th) by 3.8e-5 of density's fluctuation energy, 1.0e-3 of velocity's and 0.19
+  # of vorticity's: a measurement of where each field keeps its energy, not a defect.
   band_attenuate:      {enabled: true,  severities: [0.8, 0.5, 0.2, 0.0]}
 
   # --- geometric: the double-penalty probe ----------------------------------------
@@ -76,7 +80,16 @@ ladder:
   coarsen_bandlimited: {enabled: true, severities: [2, 4, 8, 16]}
   subsample:           {enabled: true, severities: [2, 4, 8, 16]}
   additive_noise:      {enabled: true, severities: [0.001, 0.01, 0.1, 0.5]}
+  # Relative to the local value, not the fluctuation, so on density (mean ~1, fluctuation a few
+  # thousandths) the noise is set by the mean. On kinet_re5e4 (frames 2000 to 10000, every 50th)
+  # the five strengths change density by 2.2e-4, 2.2e-2, 2.2, 2.2e2 and 5.6e3 of its fluctuation
+  # energy, and velocity and vorticity by the square of the strength, 1e-8 to 0.25. The two
+  # smallest strengths are what give density an onset below the anchor.
   multiplicative_noise: {enabled: true, severities: [0.0001, 0.001, 0.01, 0.1, 0.5]}
+  # gain scales the fluctuation and bias offsets the level, each by the strength times the
+  # fluctuation rms, so mean squared error charges both the square of the strength on every
+  # field (1e-4 to 0.25 of the fluctuation energy, measured): the same strengths make them a
+  # pair, and a metric that charges them differently tells an amplitude error from a level one.
   gain:                {enabled: true, severities: [0.01, 0.05, 0.2, 0.5]}
   bias:                {enabled: true, severities: [0.01, 0.05, 0.2, 0.5]}
 

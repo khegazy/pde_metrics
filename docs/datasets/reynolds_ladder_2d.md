@@ -49,6 +49,34 @@ of `kinet_re1e6` are drawn beside these figures under `docs/datasets/_generated/
 straight.* The other fields of `kinet_re5e4_dev` are drawn beside these figures under
 `docs/datasets/_generated/`.
 
+## The Reynolds ladder
+
+`kinet_re5e4` and `kinet_re1e6` differ only in Reynolds number and grid: the same two shear
+layers ($\lambda = 80$, $\epsilon = 0.05$, density 1), the same Mach number and the same
+dimensionless end time, 2.2553. They are run together, as one sweep, with
+
+```bash
+python evaluate.py -m dataset_family=reynolds_ladder_2d 'metrics=[mse]' dataset.time.start=2000
+```
+
+which remaps both onto one $128^2$ analysis grid, evaluates the same 161 physical times on each
+(frames 2000 to 10000, every 50th, on `kinet_re5e4`'s clock), and gathers them into one
+`reynolds_ladder_2d_<time>` folder. Its report draws section 12, which sets each member's rank
+correlation, Gaussian-impostor damage and sensitivity level against its rank; raw values are not
+compared across members. Four more members planned at $\mathrm{Re} = 6.25 \times 10^4$ to
+$10^5$ exist on disk but cannot be read ([issue 011](https://github.com/khegazy/pde_metrics/blob/main/issues/011-cross-dataset-comparison.md));
+`judgements/007` records why the ladder runs on these two meanwhile.
+
+At the $128^2$ grid (run `reynolds_ladder_2d_1793783563`) the characteristic scale is 69 and 68
+cells for density, 95 and 92 for velocity, and 18 and 11 for vorticity, at
+$\mathrm{Re} = 5 \times 10^4$ and $10^6$. On vorticity the mildest strength of the box and median
+kernels therefore rounds to no smoothing and is excluded on both members, as are those of the
+disk and Epanechnikov kernels at $\mathrm{Re} = 10^6$, where the box and median kernels' third
+strength also repeats their second. That is a property of a field with an 11-to-18-cell scale on
+a 128-cell grid. It leaves the median blur on vorticity at $\mathrm{Re} = 10^6$ with one usable
+level of three, so no rank correlation there; every other axis keeps at least two on every field
+of both members (issue 011 says what would change it).
+
 ## What the evaluation sees
 
 These limits come from the data itself, recorded in `CLAUDE.md` from earlier runs.
