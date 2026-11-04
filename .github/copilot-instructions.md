@@ -8,7 +8,7 @@ It covers how to add a metric, a degradation, a data source, and a figure or tab
 write tests here; how to treat the generated LaTeX; and a table of traps that have already
 caught someone, each of which would quietly corrupt results.
 
-Four rules worth repeating because they are easy to violate by accident:
+Five rules worth repeating because they are easy to violate by accident:
 
 - **Verify before claiming.** `pytest | tail` masks the exit code, so a `&&` chain passes with
   failing tests. Use
@@ -19,3 +19,7 @@ Four rules worth repeating because they are easy to violate by accident:
   already exists and extend it (`AGENTS.md` §1).
 - **Delete an issue once it is fully resolved.** `issues/` holds only open items: remove the
   file and its row in `issues/README.md`, and rewrite every reference to it (`AGENTS.md` §1).
+- **Evaluate a metric the way its own field does, on every experiment where it makes sense.**
+  Build every standard where fields disagree, say on the card why any experiment was skipped,
+  and write up the field's missing experiments as proposals (`AGENTS.md` §1, "How every metric
+  is evaluated").

@@ -53,9 +53,10 @@ T = \frac{1}{|A|} \sum_{(c, j) \in A} H_j^{(c)}\bigl(k(\tfrac{1}{2})\bigr) \tag{
 $$
 
 and is NaN when $A$ is empty, as on a constant field. $\theta = 1/2$ keeps the largest
-$\sqrt{n}$ values, one of the two fixed rules Clauset, Shalizi and Newman [@clauset2009] name in
-Section 3.5 as an alternative to choosing $k$ from the data. On the 256 by 256 analysis grid that
-is $k = 256$ of $n = 65536$ increments per axis.
+$\sqrt{n}$ values. Clauset, Shalizi and Newman [@clauset2009], Section 3.5, describe this fixed
+rule as an alternative approach common in quantitative finance, and recommend instead their
+Kolmogorov-Smirnov method of Section 3.3, which they say gives estimates at least as good.
+On the 256 by 256 analysis grid that is $k = 256$ of $n = 65536$ increments per axis.
 
 **Choices made here, not by a source.** Which of the fixed rules to register is this bundle's
 choice: the largest $\sqrt{n}$ satisfies the condition under which Equation (2) is consistent,

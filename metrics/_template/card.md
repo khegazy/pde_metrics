@@ -47,6 +47,19 @@ Fourier transform, a spectral derivative, `np.roll` — set `requires_periodic=T
 `metric.py` and say here that the metric is therefore not run on a dataset with a
 non-periodic axis.
 
+### How its field reports it
+
+TODO(fill) Required. How the metric's own field computes and reports it, so that a reader
+from that field finds the metric evaluated the way they would evaluate it. Name the field,
+or every field if they differ, and for each, with a citation and an equation, section or
+figure number: the object computed (a scalar, a curve, a histogram, a diagram, a time
+series) and its normalisation; the figure the field draws and its axes; the statistics it
+reports beside the number (an interval, a decomposition, a goodness of fit); and the
+experiment it evaluates the metric on. Say which of those experiments this repository has,
+and link the proposal under `proposals/` for each one it lacks. Where a field's form differs
+from this bundle's, name the sibling bundle that implements it. Nothing here depends on a
+run; the field's standard figure from the recorded run is generated into Performance.
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence <name>`, do not edit -->

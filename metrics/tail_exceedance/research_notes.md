@@ -131,8 +131,8 @@ The card's Results now come from `results/comparison_1793657627`, the shared run
 - **`tail_index`'s card overstates Clauset et al. on the $\sqrt{n}$ rule.** It says they "name" it
   as one of two fixed rules, which omits that they call it a common alternative and prefer their
   Kolmogorov-Smirnov method. This bundle's card was corrected; `tail_index`'s wording was left for
-  its owner and routed as
-  [issues/124](../../issues/124-tail-index-card-overstates-clauset-on-sqrt-n.md).
+  its owner and routed to an issue; the `tail_index` card has since been reworded and the
+  issue deleted.
 - **The idea page** was narrowed to the peaks-over-threshold tier, with its row in
   `docs/ideas/README.md`, its build-next entry and its bullet and built list in
   `docs/ideas/distributional/README.md`. Granero-Belinchón & Cabeza Gallucci (2024) left the page

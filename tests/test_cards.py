@@ -329,6 +329,7 @@ def build_prose(name="example", **bodies):
     defaults["Definition"] = (
         "Body for Definition. " * 20
         + "\n\n### Boundary handling\n\nNone. The operation is local to each cell."
+        + "\n\n### How its field reports it\n\nThe field reports one number per snapshot."
     )
     defaults["Performance"] = "<!-- GENERATED performance: written by `python -m fmeval.cards evidence example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED performance -->"
     defaults["Results"] = (
@@ -355,6 +356,16 @@ def test_a_complete_card_has_no_prose_problems():
     """The defaults include the accepted forms most often doubted: a Performance section that
     is nothing but its generated include, and "None." as the boundary-handling answer."""
     assert problems_for(build_prose()) == []
+
+
+def test_a_metric_card_without_its_field_standard_is_warned():
+    """Every metric card says how the metric's own field computes and reports it. Missing, it is
+    a warning while the cards are given the subsection, not yet an error."""
+    text = build_prose(Definition="An equation. " * 10
+                       + "\n\n### Boundary handling\n\nNone. Local to each cell.")
+    found = [p for p in problems_for(text) if prose.FIELD_STANDARD in p.message]
+    assert len(found) == 1, f"expected one problem naming {prose.FIELD_STANDARD!r}, got {found}"
+    assert found[0].severity == "warning", found[0]
 
 
 def test_sections_must_be_in_the_fixed_order():

@@ -166,15 +166,13 @@ The card currently cites `results/shock_mask_overlap_1793494245`.
   of {1382, 1383} against {1383} is $(1 + 0 + 0)/3 = 1/3$; three flagged cells would give $1/5$.
   The cause is the Fourier ringing described under Evidence runs. Found by the builder, reproduced
   independently by the reviewer through the pipeline's path. Routed to
-  [issue 121](../../issues/121-shock-set-distance-card-half-cell-and-high-pass-readings.md); the
-  card still carries the old sentence.
+  an issue; the `shock_set_distance` card has since been corrected and the issue deleted.
 - **`shock_set_distance`'s card, the high-pass reading.** It reads its spectral-filter results
   as "shock kept" or "shock lost". The high-pass filters keep the jump (0.20 of 0.203) but raise
   the pre-shock plateau to 0.24-0.51, so the ratio across the intact shock falls to 1.84, 1.80 or
   1.40 against the threshold 1.805; a uniform offset of 0.2 does the same (ratio 1.68, Dice 0).
   Any future bias degradation on Sod should be checked against this mechanism. Routed to
-  [issue 121](../../issues/121-shock-set-distance-card-half-cell-and-high-pass-readings.md), still
-  open.
+  an issue; the `shock_set_distance` card has since been corrected and the issue deleted.
 - **Issue 104's prediction.** [Issue 104](../../issues/104-equivalence-test-misreads-a-flag-valued-anchor.md)
   predicted that a shock-mask overlap would, like `shock_set_distance`, be listed blind to
   `translate_x` because its no-feature value is a worst-case flag. Measured on the evidence run,
@@ -278,7 +276,7 @@ quotation; and the fractions-skill-score algebra.
 - **The both-empty convention**, 1 against Metrics Reloaded's 0, has no evidence row on Sod:
   [issue 120](../../issues/120-shock-mask-overlap-both-empty-convention.md), open.
 - **The two readings on `shock_set_distance`'s card** (half-cell count, high-pass mechanism):
-  [issue 121](../../issues/121-shock-set-distance-card-half-cell-and-high-pass-readings.md), open.
+  routed to an issue; the card has since been corrected and the issue deleted.
 - **Whether `scale_dependent` means a positive constant or any constant**:
   [issue 122](../../issues/122-scale-dependent-does-not-say-which-constants.md), open.
 - **A metric cannot declare that it needs an absolute, positive field** (the Taylor-Green gauge

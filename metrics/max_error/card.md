@@ -533,8 +533,6 @@ Median damage over frames at every strength, this metric in the first row and th
 
 <!-- END GENERATED results_damage_by_level -->
 
-For the same reason this run has no damage beside the pointwise controls; a run beside `mae`,
-`mse`, `rmse` and `nrmse` would fill this table.
 
 ## References
 

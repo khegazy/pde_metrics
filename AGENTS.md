@@ -78,6 +78,41 @@ in `judgements/`: the question, the choice, the evidence and sources, what it ch
 to reverse it. Routine choices are never recorded there; a log of every choice would not be
 read. `judgements/README.md` is the index.
 
+### How every metric is evaluated
+
+These are Kareem's decisions (2026-11-03) and the most important rules in this file. A user
+from a metric's own field must never open its page and find it useless because the repository
+did not evaluate it the way that field does.
+
+- **The field's standard comes first.** Evaluate each metric the way its own community
+  evaluates it: the same object, normalisation, summary, figure and experiment, each cited to
+  a primary source. Only after that, ask how its output compares with other metrics. The
+  harness adapts to the metric, never the metric to the harness: never move a threshold, a
+  summary or a normalisation so that the harness stops misbehaving; fix the harness.
+- **Several standards: build them all.** When fields compute or report a metric differently
+  (RMSE reduced per channel in machine-learning benchmarks and pooled as a vector norm in
+  numerical analysis; nRMSE in PDEBench and VRMSE in The Well), each standard is its own
+  bundle importing the shared function, so no existing number moves.
+- **Run every metric on every experiment where it makes sense.** A metric is run on every
+  experiment, degradation and benchmark the repository has, to show how it behaves across the
+  board, unless that experiment does not make sense for it. Whether it makes sense is the
+  building agent's call. A metric is skipped where it cannot be defined (a periodic-only metric
+  on Sod's walls, an ensemble metric on single-realisation data, a shock metric on a dataset
+  without pressure) or where the result would carry no information. Every skip is stated on
+  the card in one line with its reason. The experiments that exist today are the degradation
+  ladder on `kinet_re5e4` (`configs/degradation/default.yaml`), the miscalibration ladder on
+  `synthetic_ensemble`, and `sod_shock_tube` as an analytic check; the forecast pairs in
+  `datasets/results/entropic_D2Q9/` (issue 010) and the Reynolds ladder (issue 011) join the
+  list when their readers exist. Fixtures (`advecting_blobs`, `taylor_green_2d`) are not
+  evidence (`docs/decisions.md`). Until `python -m fmeval.cards evidence` can cite more than one
+  run, the card's generated blocks cite one run and the Results prose names the other runs'
+  folders and what each found, with no number that the card's fingerprint does not hold.
+- **Write down the experiments that are missing.** When the experiment a metric's field relies
+  on, its primary problem set, does not exist here, write one `proposals/EXP-<metric>-<slug>.md`
+  per experiment in the format of the existing proposals, add its row to
+  `proposals/README.md`, and name it on the card. Reuse an existing proposal with "see also"
+  rather than writing a second one. Kareem reads these to decide which experiments to add.
+
 ### One source of truth, least new code
 
 Every rule below exists because a second copy of something drifted from the first while every
@@ -229,7 +264,7 @@ order — the first two are yours, the rest an agent can complete from the contr
    a small field. It is also the source of the worked example in the card, so the prose
    cannot drift from the code.
 3. **`card.yaml`** — the typed record. Every field is documented in `fmeval/cards/schema.py`.
-4. **`card.md`** — the prose, six sections in a fixed order. See §3.1.
+4. **`card.md`** — the prose, seven sections in a fixed order. See §3.1.
 5. **`python -m fmeval.cards evidence <name> --results results/<run>`** — writes the
    measured half from a recorded run. Never write those numbers yourself.
 6. **`research_notes.md` and `code_notes.md`** — what you read, tried, measured and left
@@ -242,11 +277,12 @@ system registers each bundle once, so the shared maths cannot drift apart.
 
 ### 3.1 What goes in `card.md`
 
-Six sections, fixed order, all required: `## Definition`, `## Performance`, `## Intuition`,
+Seven sections, fixed order, all required: `## Definition`, `## Performance`, `## Intuition`,
 `## Reading the output`, `## Limitations`, `## Results`, `## References`.
 
-- **`## Definition`** — numbered equations, the discretisation, and a required
-  `### Boundary handling` subsection. `None.` plus a clause is a fine answer for a
+- **`## Definition`** — numbered equations, the discretisation, a required
+  `### Boundary handling` subsection, and a required `### How its field reports it`
+  subsection (§1, "How every metric is evaluated"; the template says what goes in it). `None.` plus a clause is a fine answer for a
   pointwise metric. Write maths as `$ ... $` inline and `$$ ... $$` with `\tag{1}` for
   display, and nothing else: `\begin{equation}`, `\label` and `\eqref` typeset on the
   site and show as raw source on GitHub, so the checker refuses them.
@@ -349,11 +385,13 @@ judges is the honesty of an ensemble's dispersion rather than its distance from 
 an ensemble collapsed onto the exact reference is *maximally* overconfident, so the generic
 contract test that expects a perfect prediction to score zero does not apply to it.
 
-A single-field metric will be reported as `no dynamic range`, and **that is correct, not a bug you
-should try to fix**. The normalised damage scale is anchored between the reference and a
-*translated* copy of it, which has identical statistics — so a single-field quantity takes the same
-value at both anchors and the span is zero. If you find yourself "fixing" that, stop: you would
-be removing a true statement. On a smoothing axis such a quantity falls rather than rises, and it
+A single-field metric has a damage scale: the anchor is the field's own spatial mean
+(`judgements/001`), which removes every fluctuation, so a quantity such as enstrophy falls to zero
+there and its damage reads the fraction of its clean value it has lost. A metric undefined on a
+constant field, such as the increment flatness (zero over zero), is reported as `no dynamic
+range`, and **that is correct, not a bug you should try to fix** (`issues/037`). If you find
+yourself "fixing" it, stop: you would be removing a true statement. On a smoothing axis a
+single-field quantity falls rather than rises, and it
 reads `rho = 1` with `direction = -1`: the trend is measured on the departure from clean in one
 direction measured per degradation, so falling steadily and rising steadily both follow the
 degradation, and which way the value went is a separate column.

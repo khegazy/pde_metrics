@@ -93,11 +93,18 @@ its `## Definition` section and in `refs.bib`.
 
 ## Evaluation protocol (how a metric earns its place)
 
-Every candidate metric is validated on the degradation-ladder protocol:
+**First, each metric is evaluated the way its own field evaluates it**, with every standard
+built where fields disagree, and **it is run on every experiment, degradation and benchmark the
+repository has, wherever that makes sense**; a skipped experiment is explained on the card, and
+an experiment the metric's field relies on but the repository lacks is written up under
+`proposals/`. Only then is its output compared with other metrics. These are Kareem's decisions
+of 2026-11-03, stated in full in `AGENTS.md` §1, "How every metric is evaluated".
 
-1. **Reference**: DNS at Re ≈ 500, isotropic and doubly periodic shear. A Boltzmann solver is planned as the baseline predictor.
+The repository's own experiment for comparing metrics is the degradation ladder:
+
+1. **Reference**: the protocol calls for DNS at Re ≈ 500, isotropic and doubly periodic; no such dataset exists (`issues/001`). The evidence today is `kinet_re5e4`: a two-dimensional, weakly compressible (Ma 0.1) lattice-Boltzmann simulation at Re 5e4, two shear layers rolling up into a vortex pair, doubly periodic and not isotropic (`docs/datasets/reynolds_ladder_2d.md`). A Boltzmann solver is planned as the baseline predictor.
 2. **Ladder**: the solver degraded in controlled steps (grid coarsening, plus an orthogonal axis such as noise or artificial viscosity).
-3. **Acceptance**: a metric joins the panel only if it is monotone in degradation with high Spearman rank correlation. Non-monotone metrics are dangerous for model selection.
+3. **Trend**: whether the metric is monotone in degradation, measured by the per-frame Spearman rank correlation, is recorded for every metric and never turned into a verdict (`docs/decisions.md`, "There is no pass or fail"). Non-monotone metrics are dangerous for model selection, and whether a metric joins a panel is the team's call.
 4. **Canary (the `gaussian_impostor` degradation)**: a Gaussian random field matched to the reference energy spectrum is included as an impostor predictor. Any metric that scores it well is phase-blind and must not be used alone.
 5. Also record: sensitivity (where the metric first departs from clean vs. where a human sees degradation), wall-clock cost per evaluation, and cross-metric correlation to prune redundant panel members.
 

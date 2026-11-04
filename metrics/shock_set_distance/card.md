@@ -301,8 +301,11 @@ says nothing about distance.
 
 <!-- END GENERATED results_spectral -->
 
-The spectral filters mostly decide between "shock kept" and "shock lost", the two plateaus of
-the empty-set convention, and few of their strengths are distinct experiments on Sod's
+The spectral filters mostly decide between "shock flagged" and "no shock flagged", the two
+plateaus of the empty-set convention. A high-pass filter keeps the pressure jump but raises
+the pre-shock pressure level, so the ratio across the intact shock falls below the detector's
+threshold and the shock goes unflagged; any operator that raises the pressure level without
+removing the jump does the same. Few of these strengths are distinct experiments on Sod's
 pressure (the run excludes the repeats). The rank correlation of −1 under `lowpass_ideal` is
 that switch running backwards in a single frame: only in the first frame does the harsher
 distinct strength leave a flagged cell, far from the true shock, and score an ordinary distance,
@@ -329,8 +332,8 @@ whole-cell translation is ranked perfectly, and its values are Equation (3) exac
 strength: the largest, 0.00757 in `_generated/fingerprint.json`, is the largest shift less half
 a cell in units of the tube's length. The sub-pixel shift is ranked at 0.986 in every frame:
 its two smallest shifts leave the flagged cells where they were and score 0, a tie; a shift of
-half a cell places the step on a cell centre, which flags three cells instead of two and scores
-a third of a cell; from one cell on the flagged pair moves in whole-cell steps, up to 0.00171
+half a cell places the step on a cell centre, which flags one cell where the reference flags two,
+and scores a third of a cell; from one cell on the flagged pair moves in whole-cell steps, up to 0.00171
 at the largest. The
 damage column of the profile reads both axes as provably small, because damage here is a
 fraction of the domain's diagonal (Reading the output); that is a statement about the scale,

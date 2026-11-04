@@ -11,7 +11,7 @@ It covers adding metrics, degradations, data sources and report renderers; the t
 conventions; how to treat generated LaTeX; and a table of traps that have already caught
 someone.
 
-Four rules that are easy to violate by accident:
+Five rules that are easy to violate by accident:
 
 - Verify before claiming. `pytest | tail` masks the exit code, so a `&&` chain passes with
   failing tests. Use
@@ -22,3 +22,7 @@ Four rules that are easy to violate by accident:
   already exists and extend it (`AGENTS.md` §1).
 - Delete an issue once it is fully resolved. `issues/` holds only open items: remove the file
   and its row in `issues/README.md`, and rewrite every reference to it (`AGENTS.md` §1).
+- Evaluate a metric the way its own field does, on every experiment where it makes sense.
+  Build every standard where fields disagree, say on the card why any experiment was skipped,
+  and write up the field's missing experiments as proposals (`AGENTS.md` §1, "How every metric
+  is evaluated").

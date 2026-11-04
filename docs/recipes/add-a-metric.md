@@ -6,6 +6,16 @@ example, a machine-readable record, a written description aimed at three differe
 of reader, and — once an evaluation run exists — the metric's measured behaviour. Follow
 the steps in order; several of the later ones consume the output of earlier ones.
 
+## 0. Find the standard
+
+Before writing any code, find how the metric's own field computes and reports it, from the
+primary sources: the object, the normalisation, the summary number if the field has one, the
+figure and its axes, the statistics reported beside it, and the experiment the field evaluates
+it on. Where fields disagree, build every standard, each as its own bundle importing the shared
+function. Record what you found in the card's `### How its field reports it` (step 5), and
+write up as a proposal under `proposals/` any experiment the field relies on that this
+repository lacks (`AGENTS.md` §1, "How every metric is evaluated").
+
 ## 1. Scaffold
 
 ```bash
@@ -89,8 +99,9 @@ References.
 
 - **`## Definition`** — numbered display equations, the discretisation, and a required
   `### Boundary handling` subsection; `None.` plus one clause is the right answer for a
-  metric that works one cell at a time. Say what the equation does not already say, and
-  nothing that it does. Write
+  metric that works one cell at a time. Then a required `### How its field reports it`
+  subsection holding what step 0 found, cited; the template says what goes in it. Say what
+  the equation does not already say, and nothing that it does. Write
   maths as `$...$` inline and `$$...$$` with `\tag{1}` for display, and nothing else —
   `\begin{equation}`, `\label` and `\eqref` render on the site but show as raw source on
   GitHub, and the checker refuses them.
@@ -118,12 +129,18 @@ References.
 python -m fmeval.cards evidence <name> --results results/<run>
 ```
 
+Run the metric on every experiment where it makes sense, not only one: the degradation
+ladder on `kinet_re5e4`, the miscalibration ladder on `synthetic_ensemble`, and
+`sod_shock_tube` with the reader's own frames
+(`python evaluate.py metrics=[<name>] dataset=sod_shock_tube`), whose run summary calls the
+numbers an analytic check. A metric declaring `requires_periodic` is never run on Sod. Skip an
+experiment only where the metric cannot be defined on it or the result would carry no
+information, and say on the card in one line why it was skipped (`AGENTS.md` §1, "How every
+metric is evaluated"). Where the experiment the metric's own field relies on does not exist
+here, write it up as a proposal under `proposals/` and name it on the card.
+
 Point that command at the reference evaluation run; `configs/cards/default.yaml` lists
-which datasets qualify, and the command refuses smoke-test data. A metric that needs a shock
-or pressure, which `kinet_re5e4` lacks, takes its run on `sod_shock_tube` with the reader's
-own frames (`python evaluate.py metrics=[<name>] dataset=sod_shock_tube`), and its run
-summary then calls the numbers an analytic check; a metric declaring `requires_periodic` is
-never run there. The command fills in
+which datasets qualify, and the command refuses smoke-test data. The command fills in
 `## Performance`, the run summary, the per-test tables and `_generated/fingerprint.json`.
 Only after that should you write the Results readings. Any number you type into a sentence
 must be one the fingerprint file supports, and pointing at the generated table beats

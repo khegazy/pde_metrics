@@ -55,7 +55,8 @@ These limits come from the data itself, recorded in `CLAUDE.md` from earlier run
 - **The high-pass axis is squeezed** between doing nothing below those diagonal modes and
   near-total damage above them.
 - **The flow decays.** The variance falls over the trajectory, which is why the damage scale
-  is anchored on a translated copy of the same frame and never on a distant frame.
+  is anchored on the same frame's own spatial mean (`judgements/001`) and never on a distant
+  frame.
 
 Every axis is periodic, so every metric and degradation runs on this dataset without boundary
 handling.

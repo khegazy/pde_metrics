@@ -39,8 +39,9 @@ The histogram is formed **per frame**, not pooled across frames. Pooling would a
 a calibration failure that changes sign along the trajectory, and it is the same rule the
 rank correlations in this suite follow for the same reason.
 
-A chi-square goodness-of-fit statistic would be the other natural summary, and is used in
-this bundle's tests where the draws really are independent. It is not what is reported: its
+A chi-square goodness-of-fit statistic would be the other natural summary, and the
+repository's synthetic-ensemble tests (`tests/test_synthetic_ensemble.py`) use it where the
+draws really are independent. It is not what is reported: its
 scale depends on the bin count and the sample size, so it cannot be compared across ensemble
 sizes or grids, and interpreting it as a test would need an independence assumption these
 spatially correlated fields do not satisfy. Equation (2) is descriptive, bounded, and reads
@@ -144,8 +145,8 @@ error metric: lower is better and the ordering statistics apply directly.
 What counts as small depends on the sample, and this is the number people get wrong. Even a
 perfectly calibrated ensemble produces a non-zero index, because a finite histogram is never
 exactly flat; the floor scales roughly as the square root of the bin count over the number
-of draws. On the synthetic ensemble here, with a few thousand cells and eight members, that
-floor is around 0.1. Compare a measured value against that floor rather than against zero,
+of draws. On the synthetic ensemble here, with 4096 cells and sixteen members, that floor
+is the clean value in Results. Compare a measured value against that floor rather than against zero,
 and the cheapest way to establish the floor is to read this metric at the clean severity
 level of the same run.
 
@@ -213,9 +214,9 @@ regenerated against it and this section will say something different.
 
 <!-- END GENERATED results_ensemble -->
 
-The clean ensemble reads 0.049, which is the sampling floor rather than zero: 16 members
+The clean ensemble reads 0.0451, which is the sampling floor rather than zero: 16 members
 over a 64x64 grid give 17 bins and a finite histogram is never exactly flat. Every measured
-departure below should be read against 0.049, not against zero.
+departure below should be read against 0.0451, not against zero.
 
 Both directions rise well clear of it — to 1.239 at the harshest deflation and 1.009 at the
 harshest inflation, a factor of 20 or more — with a rank correlation of 1 on each. The

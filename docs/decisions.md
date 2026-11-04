@@ -143,15 +143,16 @@ The fields in `tests/analytic_fields.py` — a Gaussian bump, a stripe, a single
 responses known in closed form and exist to test the statistics. Nothing measured on them may
 appear on a metric's page. Of the datasets computed from exact solutions, `taylor_green_2d` is
 the same kind of fixture and is not in `evidence_datasets`. `sod_shock_tube` is, as an
-**analytic check**, for the metrics that need a shock or pressure: its evidence says that a
-metric locates and scores a known shock correctly, and nothing about turbulence. A metric that
-needs a periodic domain is never run on it.
+**analytic check**, for every metric that can run on it: its evidence says how a metric scores
+a known shock, contact and rarefaction, and nothing about turbulence. A metric that needs a
+periodic domain is never run on it.
 
 Why: a closed form says what a metric does to an idealised feature, not to turbulence. Numbers
 from a fixture, once written into a page, would read exactly like numbers from a flow. Sod is
-admitted anyway because `kinet_re5e4` has neither shocks nor pressure, so without it a shock or
-pressure metric would have no evidence at all; that is safe only because the label travels with
-the numbers. `evidence_datasets` maps each dataset to the kind of claim it supports, and every
+admitted anyway: `kinet_re5e4` has neither shocks nor pressure, so without it a shock or
+pressure metric would have no evidence at all, and every metric is run on every experiment where
+that makes sense (`AGENTS.md` §1, "How every metric is evaluated"). That is safe only because
+the label travels with the numbers. `evidence_datasets` maps each dataset to the kind of claim it supports, and every
 card's generated run summary quotes it, as it does for the calibrated null `synthetic_ensemble`.
 Taylor–Green stays refused: every frame is a scalar multiple of the first.
 

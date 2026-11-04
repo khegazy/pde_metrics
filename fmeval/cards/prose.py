@@ -102,6 +102,21 @@ to be said, with the reason, rather than left to be inferred from silence. An em
 statement and an absent one look identical to a reader; only one of them is a claim.
 """
 
+FIELD_STANDARD = "How its field reports it"
+"""H3 subsection a metric card's ``## Definition`` must contain: how the metric's own field
+computes and reports it.
+
+It names the field or fields the metric comes from and, for each, with citations: the object
+computed and its normalisation, the figure drawn and its axes, the statistics reported beside
+it, and the experiment the field evaluates it on, with a link to the proposal when this
+repository does not have that experiment (``AGENTS.md`` §1, "How every metric is evaluated").
+It sits in ``## Definition`` because it holds for any dataset; the field's standard figure from
+the recorded run is generated into ``## Performance``.
+
+It is reported as a warning, not an error, while metric cards are being given it, so the
+checks stay usable during that work; it becomes an error once every metric card has it.
+"""
+
 GENERATED_ONLY_SECTIONS = frozenset({"Performance"})
 """Sections that are nothing but a generated include.
 
@@ -557,6 +572,19 @@ def check_prose(text: str, *, kind: str, name: str) -> list[Problem]:
                     "no neighbourhood is ever consulted",
                 )
             )
+
+    if kind == "metric" and f"### {FIELD_STANDARD}" not in sections.get("Definition", ""):
+        problems.append(
+            Problem(
+                "Definition",
+                f"no '### {FIELD_STANDARD}' subsection. A reader from the metric's own field "
+                "must find the metric evaluated the way that field evaluates it.",
+                f"add '### {FIELD_STANDARD}' to ## Definition: the field(s), and for each the "
+                "object, normalisation, figure, reported statistics and experiment, cited "
+                "(AGENTS.md section 1, 'How every metric is evaluated')",
+                severity="warning",
+            )
+        )
 
     present = [s for s in sections if s in required]
     missing = [s for s in required if s not in sections]

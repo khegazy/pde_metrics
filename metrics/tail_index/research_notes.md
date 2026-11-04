@@ -148,9 +148,8 @@ The card's Results now come from `results/comparison_1793657627`, the shared run
   `docs/ideas/distributional/README.md` were narrowed to match.
 - **Later, from another bundle's review.** The adversarial review of `tail_exceedance` found that
   this card says Clauset et al. "name" the $\sqrt{n}$ rule without saying that they call it an
-  alternative common in quantitative finance and prefer their Kolmogorov-Smirnov method. It is
-  open as [issues/124](../../issues/124-tail-index-card-overstates-clauset-on-sqrt-n.md), to be
-  reworded by this bundle's owner.
+  alternative common in quantitative finance and prefer their Kolmogorov-Smirnov method. It was
+  routed to an issue; the card has since been reworded and the issue deleted.
 
 ## Review round
 
@@ -239,8 +238,7 @@ and README edits.
 - **The exact-zero axis rule**:
   [issues/103](../../issues/103-exact-zero-axis-rule-is-discontinuous.md) (details in
   [code_notes.md](code_notes.md)).
-- **The card's wording on Clauset et al. and $\sqrt{n}$**:
-  [issues/124](../../issues/124-tail-index-card-overstates-clauset-on-sqrt-n.md).
+- **The card's wording on Clauset et al. and $\sqrt{n}$**: since reworded on the card.
 
 ## For the next agent
 

@@ -32,8 +32,8 @@
 # `sod_shock_tube` is admitted on the same footing: an analytic check. It is the exact
 # solution of Sod's shock tube, with a shock, a contact and a rarefaction at known places,
 # and pressure. Evidence from it says the metric locates and scores a known shock correctly,
-# and nothing about turbulence. It is cited only by metrics that need a shock or pressure,
-# because kinet_re5e4 has neither; a metric declaring `requires_periodic` is never run on it,
+# and nothing about turbulence. Every metric that can run on it does (AGENTS.md §1, "How
+# every metric is evaluated"); a metric declaring `requires_periodic` is never run on it,
 # since its ends are walls. Runs on it use the reader's own frames, not `evidence_window`.
 evidence_datasets:
   kinet_re5e4: developed flow

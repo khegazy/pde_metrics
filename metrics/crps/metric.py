@@ -12,7 +12,7 @@ merely qualitative. And it rewards sharpness subject to calibration in a single 
 where the spread-to-skill ratio and the rank histogram each see only one half of that.
 
 The estimator is the *fair* one (Ferro 2014). The obvious plug-in form -- replace both
-expectations with sample means over the ensemble -- is biased low for finite N, and its
+expectations with sample means over the ensemble -- is biased high for finite N, and its
 bias depends on the ensemble size, so a model run with more members would appear better
 than the same model run with fewer. The fair form removes that by excluding self-pairs
 from the second term. On the worked example in the card the two differ by a factor of

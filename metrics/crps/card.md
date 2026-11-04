@@ -27,9 +27,10 @@ observation and the second rewards spread, which is what makes the score *proper
 minimised in expectation only by reporting the distribution one actually believes.
 
 Estimating both expectations from a finite ensemble $x_1 \dots x_M$ requires care. Replacing
-them with plain sample means gives an estimator biased low by an amount that depends on $M$,
-so the same model evaluated with more members would look worse. Excluding self-pairs from the
-second sum removes that bias, giving the **fair** estimator [@ferro2014]:
+them with plain sample means gives an estimator biased high by an amount that depends on $M$:
+the second sum then includes the zero self-pairs, so it credits only $(M-1)/M$ of the ensemble's
+spread, and the same model evaluated with more members would look better. Excluding self-pairs
+from the second sum removes that bias, giving the **fair** estimator [@ferro2014]:
 
 $$
 \widehat{\mathrm{CRPS}} = \frac{1}{M}\sum_{i=1}^{M} |x_i - y|
@@ -218,10 +219,13 @@ regenerated against it and this section will say something different.
 
 <!-- END GENERATED results_ensemble -->
 
-Both directions raise the score, which is propriety visible in a measurement rather than
-asserted from the definition: the calibrated ensemble at 0.085 is the minimum, and widening
-it (to 0.141 at the harshest inflation) or narrowing it (to 0.109 at the harshest deflation)
-both cost. The two sides are not symmetric. Inflation is the steeper of the two here,
+Both directions raise the score at their harsher strengths: widening the ensemble (to 0.141
+at the harshest inflation) or narrowing it (to 0.109 at the harshest deflation) both cost
+against the calibrated 0.085. The calibrated ensemble is not exactly the minimum on this
+ladder: the mildest inflation scores marginally below it. The ladder scales the members about
+their own sample mean, which is not the distribution the reference was drawn from, so the
+fair score's optimum sits at a slightly inflated spread; the `energy_score` card derives the
+same effect. The two sides are not symmetric. Inflation is the steeper of the two here,
 costing 0.056 against deflation's 0.024 at comparable severity, because an ensemble stretched
 to four times its honest width puts most of its members far from the truth while one
 collapsed toward its mean keeps them all near a centre that is itself close to correct.
