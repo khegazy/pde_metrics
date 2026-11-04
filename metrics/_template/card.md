@@ -111,8 +111,9 @@ TODO(fill) Answer four questions, in order. What is the range, and
 what are the units? Is lower better, higher better, or is there a target value? What
 counts as a good value, and what does that depend on? And which comparisons are
 meaningful — across models, across resolutions, across datasets — and which of those are
-invalid for this metric in particular? If the metric has a companion, name it and its columns:
-the per-cell map, or the curve, its coordinate and what one value of it means.
+invalid for this metric in particular? If the metric has companions, name each and its columns:
+the per-cell map, or the curve, its coordinate and what one value of it means; for a curve
+with `analysed` coordinates, which ones the tables read and why those.
 
 ## Limitations
 
@@ -256,9 +257,9 @@ Not generated yet. Run `python -m fmeval.cards evidence <name>`.
 
 <!-- END GENERATED results_companion -->
 
-TODO(fill) Only for a metric with a curve companion; delete this subsection otherwise. Which
-coordinates each degradation moves, whether the trend holds coordinate by coordinate, and what
-the dominance says about the registered number standing for the curve.
+TODO(fill) Only for a metric with a curve companion; delete this subsection otherwise. For each
+curve, which coordinates each degradation moves, whether the trend holds coordinate by
+coordinate, and what the dominance says about the registered number standing for the curve.
 
 ## References
 

@@ -739,16 +739,29 @@ directions.
 
 Some metrics report one number that stands for a curve: a distance at every separation, an
 energy at every wavenumber. Such a metric declares the curve as its **companion**, and the run
-stores it beside the result rows.
+stores it beside the result rows. A metric may declare several companions, when its field
+computes or draws several objects behind the number; each has a name, and is written as the
+metric's name for the companion the number is computed from and as `metric.name` for any other.
 
 ### `companions.csv` and `coordinate` — the curve, one row per coordinate
 
-**What it is.** One row per coordinate of the curve for every result row of that metric. It has
-the same columns as `results.csv`, `value` holding the curve's value there, plus `coordinate`,
-the separation, wavenumber or threshold. The values are the literature's own, untransformed.
-The coordinate's name and units are in `run_meta.json`, under the metric's registry entry. A curve
-that is a property of one field, such as a structure function, is stored for the damaged field
-at every strength, and on the clean level it is the reference's own curve.
+**What it is.** One row per analysed coordinate of the curve for every result row of that
+metric. It has the same columns as `results.csv`, `value` holding the curve's value there and
+`metric` the companion's name as written above, plus `coordinate`, the separation, wavenumber or
+threshold. The values are the literature's own, untransformed. The coordinate's name and units,
+and the analysed coordinates if the curve names them, are in `run_meta.json`, under the
+metric's registry entry (`companions`). A curve that is a property of one field, such as a
+structure function, is stored for the damaged field at every strength, and on the clean level
+it is the reference's own curve.
+
+A curve with many coordinates, such as one value per wavenumber shell, may name a few
+coordinates for the analysis. Only those are written here; the whole curve is a **dense curve**,
+stored in `data/error_maps.npz` as an array of two columns, coordinate and value, on the frames,
+ladder entries and fields that `report.error_map` names and on the clean level of those frames,
+under the key `metric:field__variant__tframe` of the per-cell maps. The `companion_curves` figure
+draws the dense curve where one is stored. Analysing every coordinate costs 2.3 to 3.0 s per
+coordinate and field, and the dominance fraction below can only fall as coordinates are added,
+which is why only a few are analysed.
 
 **How it is evaluated.** Each coordinate is read as a metric of its own, named
 `metric[coordinate]`, and receives every per-degradation statistic above (trend, change from
@@ -764,8 +777,9 @@ correlations therefore localises the evidence and does not multiply it. Where th
 crosses zero along its coordinate, the change from clean is large by construction near the
 crossing, and the raw curve is the reading there.
 
-**Where it appears.** `data/companions.csv`; the `companion_curves` figure; the companion table
-of a metric's page.
+**Where it appears.** `data/companions.csv`, and dense curves in `data/error_maps.npz`; the
+`companion_curves` figure, one per curve; the companion table of a metric's page, headed by
+each curve's name when the metric has several.
 
 ### Point sets in `error_maps.npz` — the points behind the number
 
@@ -780,7 +794,8 @@ ladder entries and fields that `report.error_map` names, and on the clean level 
 For a companion of one field, the clean level's set is that of the undamaged prediction: the
 reference's own on a deterministic dataset, the member mean's on an ensemble one. It shares
 `data/error_maps.npz` and its key,
-`metric:field__variant__tframe`, with the per-cell maps.
+`metric:field__variant__tframe`, with the per-cell maps, `metric` being the companion's name as
+written above.
 
 **Where it appears.** `data/error_maps.npz`; the `companion_points` figure.
 
@@ -1345,8 +1360,8 @@ translates the ensemble rather than perturbing it, and would leave the spread un
 | `response_curves` | 3 | Median damage over frames against severity level for one metric, one panel per family of degradation (rows) and field (columns), every panel on one shared 0-to-1 scale so onset, slope and saturation are read by position. The solid grey line is damage 1, the field's own mean; the dotted black line is the damage assigned to the fake prediction with the right spectrum; the hollow black ring is `sensitivity_level`, the first level at which the metric has moved a tenth of the way to the anchor; hollow grey markers are strengths flagged `severity_degenerate`; three or fewer usable levels are drawn as markers only; points above the clip are triangles. A field with no damage scale shows the raw value on a grey panel. The numbers behind it are `per_level_response`: per level, the median and quartiles of damage and of the raw value (`damage_median`, `damage_q25`, `damage_q75`, `value_median`, `value_q25`, `value_q75`), the applied and nominal strength, `n_frames` and the median `energy_changed` |
 | `energy_spectrum` | 3 | Cumulative fluctuation energy against wavenumber, per field, with the applied spectral cutoffs drawn on. This sets the resolution of every filter's sequence of strengths: a spectral severity is a fraction of energy to remove and is converted to a cutoff using exactly this curve, so where the curve rises sharply neighbouring severity levels land on the same set of modes and become the same experiment. The density curve is almost a step — 3×10⁻⁵ of its fluctuation energy at or below |k| = 1 and 69% at |k| = √2 — which is why a sharp filter has only a couple of usable severity levels there; vorticity rises gradually, 50% by |k| = 3.2 and 99% by 51, and its cutoffs spread over more than a factor of ten. Dashed lines are cutoffs in use, dotted lines severity levels excluded for repeating a milder severity level or for doing nothing. It says nothing about phase — two fields with identical curves can look entirely different, which is the premise of the trap test above |
 | `ladder_curves` | 3 | Value against severity level for every degradation, with an interquartile band over frames. The curve the correlation summarises. Flat means blind to that failure mode |
-| `companion_curves` | 3 | For a metric with a curve companion: the curve against its coordinate, one panel per degradation, the median over frames at every strength (darker for harsher), the clean curve in black, the anchor dashed and the impostor dotted. The values are the literature's own. A second figure reads each coordinate as a metric of its own: its rank correlation with strength and its change from clean at the harshest strength, one line per degradation |
-| `companion_points` | 3 | For a metric with a point-set companion: the stored sets, one panel per stored variant, frames in time order with each frame's clean level first and at most twelve panels (the caption says when more were stored), on axes shared by every panel so a collapsed set cannot look like the clean one. The first two named coordinates are the axes and a third, if any, the colour. A triangle on a panel's edge is a point with an infinite coordinate, such as a persistence class that never dies |
+| `companion_curves` | 3 | For each curve companion of a metric: the curve against its coordinate, one panel per degradation, the median over frames at every strength (darker for harsher), the clean curve in black, the anchor dashed and the impostor dotted. A dense curve is drawn at every coordinate on the frames and ladder entries `report.error_map` stored. The values are the literature's own. A second figure reads each analysed coordinate as a metric of its own: its rank correlation with strength and its change from clean at the harshest strength, one line per degradation |
+| `companion_points` | 3 | For each point-set companion of a metric: the stored sets, one panel per stored variant, frames in time order with each frame's clean level first and at most twelve panels (the caption says when more were stored), on axes shared by every panel so a collapsed set cannot look like the clean one. The first two named coordinates are the axes and a third, if any, the colour. A triangle on a panel's edge is a point with an infinite coordinate, such as a persistence class that never dies |
 | `response_along_time` | 3 | The metric against the frame's physical time, one line per strength, for each degradation whose applied strength changes along the trajectory (`per_unit_time`); the clean field in black. Shows an error growing in time. On a dataset of real forecasts, a second figure (`along-lead` in its name): the metric against `lead_time`, one panel per starting time, one line per run, darker the finer the run's grid, with a single-field quantity's value on the target dashed. Machine-learning benchmarks score a rollout step by step: PDEBench computes its errors at every time step (Takamoto et al. 2022, Sect. 3.3, and its code, as read in `metrics/max_error/research_notes.md`). Not drawn for a run with neither |
 | `monotonicity_heatmap` | 4 | `rho` for every metric against every degradation. Down a column: is this metric monotone? Across a row: what does it detect? Hatched cells fall below the reference value |
 | `severity_level_separation` | 5 | The spread of each severity level across frames, as violins. Where neighbouring violins overlap, the metric cannot rank models one severity level apart |

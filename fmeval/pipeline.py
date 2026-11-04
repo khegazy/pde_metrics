@@ -34,7 +34,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from metrics.registry import MetricSpec
+from metrics.registry import MetricSpec, companion_label
 
 from .calibration import Calibration, calibrate
 from .context import COMPANION_KEY, FieldContext, derive_rng, fluctuation_rms
@@ -135,7 +135,8 @@ class MapRequest:
 
     Storing a map for every frame and variant would be gigabytes, so only the named
     combinations are retained -- enough for the figure, not for the whole run. A point-set
-    companion is kept on the same combinations and on the clean level of the named frames, the
+    companion, and a curve companion's dense curve when it declares ``analysed``, is kept on the
+    same combinations and on the clean level of the named frames, the
     set of the undamaged prediction: the reference on a deterministic dataset, the member mean on
     an ensemble one. The defaults here keep nothing, for callers that do not ask.
     """
@@ -155,13 +156,15 @@ class PipelineResult:
 
     rows: pd.DataFrame
     maps: dict[str, np.ndarray] = dc_field(default_factory=dict)
-    """``"<metric>:<field>__<variant>__t<frame>"`` -> a per-cell map ``(*spatial)`` or a point set
-    ``(N, D)``, for ``error_maps.npz``. The run's registry snapshot says which, by the metric's
-    companion kind."""
+    """``"<companion>:<field>__<variant>__t<frame>"`` -> a per-cell map ``(*spatial)``, a point set
+    ``(N, D)`` or a dense curve ``(n, 2)`` of (coordinate, value), for ``error_maps.npz``;
+    ``<companion>`` is :func:`metrics.registry.companion_label`. The run's registry snapshot says
+    which, by the companion's kind and ``analysed``."""
     companions: pd.DataFrame = dc_field(default_factory=pd.DataFrame)
-    """One row per curve coordinate of every result row whose metric has a curve companion: the
-    result row's columns, its ``value`` replaced by the curve's, plus ``coordinate``. Empty when no
-    metric has one. Written to ``companions.csv``."""
+    """One row per analysed curve coordinate of every result row whose metric has a curve
+    companion: the result row's columns, its ``metric`` replaced by the companion's label and its
+    ``value`` by the curve's, plus ``coordinate``. Empty when no metric has one. Written to
+    ``companions.csv``."""
     n_frames: int = 0
     analysis_grid: int = 0
     """Extent of the analysis grid along its first axis, as written to every row."""
@@ -389,13 +392,15 @@ def run(
                     rng=derive_rng(seed, "metric", frame.index, field),
                 )
                 kwargs = {"ctx": ctx} if spec.takes_ctx else {}
-                companion = spec.companion
-                # The companion draws from its own generator, so adding one to a metric that
+                handed = spec.cached_companion
+                labels = {c.name: companion_label(spec.name, c.name) for c in spec.companions}
+                # Each companion draws from its own generator, so adding one to a metric that
                 # draws random numbers cannot move the metric's number. The cache is shared.
-                companion_kwargs = ({"ctx": replace(ctx, rng=derive_rng(
-                    seed, f"companion/{spec.name}", frame.index, field))}
-                    if companion is not None and companion.takes_ctx else {})
-                kind = None if companion is None else companion.kind
+                companion_kwargs = {c.name: {"ctx": replace(ctx, rng=derive_rng(
+                    seed, f"companion/{labels[c.name]}", frame.index, field))}
+                    if c.takes_ctx else {} for c in spec.companions}
+                stored_here = (frame.index in keep_frames
+                               and (not maps.fields or field in maps.fields))
 
                 for label, (severity_level, applied) in variants.items():
                     candidate = applied.fields[field]
@@ -409,37 +414,50 @@ def run(
                     else:
                         args = (candidate,)
                     t1 = time.perf_counter()
-                    if kind in ("curve", "points"):
+                    if handed is not None:
                         # First, so the metric reads the companion rather than computing it
                         # again; both calls are timed, so the row's cost is the whole evaluation.
-                        ctx.cache[COMPANION_KEY] = companion.fn(
-                            *((candidate,) if companion.one_field else args), **companion_kwargs)
+                        # Any other companion is not part of the number and is not timed.
+                        ctx.cache[COMPANION_KEY] = handed.fn(
+                            *((candidate,) if handed.one_field else args),
+                            **companion_kwargs[handed.name])
                     value = spec.fn(*args, **kwargs)
                     wall = time.perf_counter() - t1
                     t_metric += wall
                     row = _emit(spec, field, frame, severity_level, applied, frame_columns,
                                 value, wall, n_members=n_members)
                     rows.append(row)
-                    if kind == "curve":
-                        curve_rows += [{**row, "coordinate": c, "value": float(v),
-                                        "_row": len(rows) - 1}
-                                       for c, v in zip(*ctx.cache[COMPANION_KEY], strict=True)]
 
-                    # A point set is kept on the clean level too, the undamaged prediction's
-                    # (the reference's on a deterministic dataset, the member mean's on an
-                    # ensemble one), the set the degraded ones are drawn beside.
-                    if (
-                        kind in ("field", "points")
-                        and frame.index in keep_frames
-                        and (not maps.axes or severity_level.label in maps.axes
-                             or (kind == "points" and severity_level.is_reference))
-                        and (not maps.fields or field in maps.fields)
-                    ):
-                        m = (ctx.cache[COMPANION_KEY] if kind == "points"
-                             else companion.fn(*args, **companion_kwargs))
-                        stored_maps[map_key(spec.name, field, label, frame.index)] = (
-                            np.asarray(m, dtype=np.float64)
-                        )
+                    for c in spec.companions:
+                        # A point set or a dense curve is kept on the clean level too, the
+                        # undamaged prediction's (the reference's on a deterministic dataset,
+                        # the member mean's on an ensemble one), the one the degraded ones are
+                        # drawn beside. A curve goes to companions.csv on every row.
+                        dense = c.kind == "curve" and c.analysed is not None
+                        keep = (stored_here and (c.kind != "curve" or dense)
+                                and (not maps.axes or severity_level.label in maps.axes
+                                     or (c.kind != "field" and severity_level.is_reference)))
+                        if c.kind != "curve" and not keep:
+                            continue
+                        result = (ctx.cache[COMPANION_KEY] if c is handed
+                                  else c.fn(*((candidate,) if c.one_field else args),
+                                            **companion_kwargs[c.name]))
+                        if c.kind == "curve":
+                            coordinates, values = result
+                            if dense and not set(c.analysed) <= set(np.asarray(coordinates)
+                                                                    .tolist()):
+                                raise ValueError(
+                                    f"{labels[c.name]}: the curve's coordinates do not include "
+                                    f"every analysed one; analysed {list(c.analysed)}, curve "
+                                    f"{np.asarray(coordinates).tolist()}")
+                            curve_rows += [{**row, "metric": labels[c.name], "coordinate": x,
+                                            "value": float(v), "_row": len(rows) - 1}
+                                           for x, v in zip(coordinates, values, strict=True)
+                                           if not dense or x in c.analysed]
+                        if keep:
+                            stored_maps[map_key(labels[c.name], field, label, frame.index)] = (
+                                np.column_stack(result) if dense else np.asarray(result)
+                            ).astype(np.float64)
 
     if skipped_ensemble:
         log.info(

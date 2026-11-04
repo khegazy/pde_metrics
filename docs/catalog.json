@@ -1203,7 +1203,7 @@
       "category": "probabilistic",
       "declared": {
         "arity": "ensemble",
-        "companion": null,
+        "companions": [],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -1363,7 +1363,7 @@
       "category": "statistical",
       "declared": {
         "arity": "pairwise",
-        "companion": null,
+        "companions": [],
         "cost": "moderate",
         "differentiable": true,
         "fields": [
@@ -2386,7 +2386,7 @@
       "category": "probabilistic",
       "declared": {
         "arity": "ensemble",
-        "companion": null,
+        "companions": [],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -2546,7 +2546,7 @@
       "category": "probabilistic",
       "declared": {
         "arity": "ensemble",
-        "companion": null,
+        "companions": [],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -2709,7 +2709,7 @@
       "category": "physical",
       "declared": {
         "arity": "single",
-        "companion": null,
+        "companions": [],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -3097,11 +3097,15 @@
       "category": "functional",
       "declared": {
         "arity": "pairwise",
-        "companion": {
-          "coordinate": null,
-          "kind": "field",
-          "one_field": false
-        },
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": null,
+            "kind": "field",
+            "name": "h1_seminorm",
+            "one_field": false
+          }
+        ],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -4114,11 +4118,15 @@
       "category": "functional",
       "declared": {
         "arity": "pairwise",
-        "companion": {
-          "coordinate": null,
-          "kind": "field",
-          "one_field": false
-        },
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": null,
+            "kind": "field",
+            "name": "h_minus_one",
+            "one_field": false
+          }
+        ],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -5141,7 +5149,7 @@
       "category": "statistical",
       "declared": {
         "arity": "single",
-        "companion": null,
+        "companions": [],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -6166,7 +6174,7 @@
       "category": "statistical",
       "declared": {
         "arity": "pairwise",
-        "companion": null,
+        "companions": [],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -7188,14 +7196,18 @@
       "category": "statistical",
       "declared": {
         "arity": "pairwise",
-        "companion": {
-          "coordinate": [
-            "separation",
-            "cells"
-          ],
-          "kind": "curve",
-          "one_field": false
-        },
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              "separation",
+              "cells"
+            ],
+            "kind": "curve",
+            "name": "increment_w1_by_separation",
+            "one_field": false
+          }
+        ],
         "cost": "moderate",
         "differentiable": true,
         "fields": [
@@ -8218,7 +8230,7 @@
       "category": "physical",
       "declared": {
         "arity": "single",
-        "companion": null,
+        "companions": [],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -8608,11 +8620,15 @@
       "category": "pointwise",
       "declared": {
         "arity": "pairwise",
-        "companion": {
-          "coordinate": null,
-          "kind": "field",
-          "one_field": false
-        },
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": null,
+            "kind": "field",
+            "name": "mae",
+            "one_field": false
+          }
+        ],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -9627,11 +9643,15 @@
       "category": "pointwise",
       "declared": {
         "arity": "pairwise",
-        "companion": {
-          "coordinate": null,
-          "kind": "field",
-          "one_field": false
-        },
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": null,
+            "kind": "field",
+            "name": "max_error",
+            "one_field": false
+          }
+        ],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -10644,11 +10664,15 @@
       "category": "pointwise",
       "declared": {
         "arity": "pairwise",
-        "companion": {
-          "coordinate": null,
-          "kind": "field",
-          "one_field": false
-        },
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": null,
+            "kind": "field",
+            "name": "mse",
+            "one_field": false
+          }
+        ],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -11670,7 +11694,7 @@
       "category": "pointwise",
       "declared": {
         "arity": "pairwise",
-        "companion": null,
+        "companions": [],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -12683,7 +12707,7 @@
       "category": "physical",
       "declared": {
         "arity": "single",
-        "companion": null,
+        "companions": [],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -13071,24 +13095,28 @@
       "category": "topological",
       "declared": {
         "arity": "pairwise",
-        "companion": {
-          "coordinate": [
-            [
-              "birth",
-              "field"
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              [
+                "birth",
+                "field"
+              ],
+              [
+                "death",
+                "field"
+              ],
+              [
+                "dimension",
+                ""
+              ]
             ],
-            [
-              "death",
-              "field"
-            ],
-            [
-              "dimension",
-              ""
-            ]
-          ],
-          "kind": "points",
-          "one_field": true
-        },
+            "kind": "points",
+            "name": "persistence_distance",
+            "one_field": true
+          }
+        ],
         "cost": "expensive",
         "differentiable": false,
         "fields": [
@@ -13794,7 +13822,7 @@
       "category": "probabilistic",
       "declared": {
         "arity": "ensemble",
-        "companion": null,
+        "companions": [],
         "cost": "cheap",
         "differentiable": false,
         "fields": [
@@ -13954,11 +13982,15 @@
       "category": "pointwise",
       "declared": {
         "arity": "pairwise",
-        "companion": {
-          "coordinate": null,
-          "kind": "field",
-          "one_field": false
-        },
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": null,
+            "kind": "field",
+            "name": "rmse",
+            "one_field": false
+          }
+        ],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -14971,7 +15003,7 @@
       "category": "geometric",
       "declared": {
         "arity": "pairwise",
-        "companion": null,
+        "companions": [],
         "cost": "cheap",
         "differentiable": false,
         "fields": [
@@ -15331,7 +15363,7 @@
       "category": "geometric",
       "declared": {
         "arity": "pairwise",
-        "companion": null,
+        "companions": [],
         "cost": "cheap",
         "differentiable": false,
         "fields": [
@@ -15694,14 +15726,18 @@
       "category": "spectral",
       "declared": {
         "arity": "pairwise",
-        "companion": {
-          "coordinate": [
-            "wavenumber",
-            "cycles per domain"
-          ],
-          "kind": "curve",
-          "one_field": true
-        },
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              "wavenumber",
+              "cycles per domain"
+            ],
+            "kind": "curve",
+            "name": "spectral_energy_flux",
+            "one_field": true
+          }
+        ],
         "cost": "moderate",
         "differentiable": true,
         "fields": [
@@ -16089,7 +16125,7 @@
       "category": "spectral",
       "declared": {
         "arity": "pairwise",
-        "companion": null,
+        "companions": [],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -17116,7 +17152,7 @@
       "category": "probabilistic",
       "declared": {
         "arity": "ensemble",
-        "companion": null,
+        "companions": [],
         "cost": "cheap",
         "differentiable": false,
         "fields": [
@@ -17276,14 +17312,18 @@
       "category": "statistical",
       "declared": {
         "arity": "pairwise",
-        "companion": {
-          "coordinate": [
-            "theta",
-            "log k / log n"
-          ],
-          "kind": "curve",
-          "one_field": false
-        },
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              "theta",
+              "log k / log n"
+            ],
+            "kind": "curve",
+            "name": "tail_exceedance",
+            "one_field": false
+          }
+        ],
         "cost": "cheap",
         "differentiable": false,
         "fields": [
@@ -18305,14 +18345,18 @@
       "category": "statistical",
       "declared": {
         "arity": "single",
-        "companion": {
-          "coordinate": [
-            "theta",
-            "log k / log n"
-          ],
-          "kind": "curve",
-          "one_field": false
-        },
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              "theta",
+              "log k / log n"
+            ],
+            "kind": "curve",
+            "name": "tail_index",
+            "one_field": false
+          }
+        ],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -19333,11 +19377,15 @@
       "category": "probabilistic",
       "declared": {
         "arity": "ensemble",
-        "companion": {
-          "coordinate": null,
-          "kind": "field",
-          "one_field": false
-        },
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": null,
+            "kind": "field",
+            "name": "variogram_score",
+            "one_field": false
+          }
+        ],
         "cost": "expensive",
         "differentiable": false,
         "fields": [
@@ -19500,11 +19548,15 @@
       "category": "transport",
       "declared": {
         "arity": "pairwise",
-        "companion": {
-          "coordinate": null,
-          "kind": "field",
-          "one_field": false
-        },
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": null,
+            "kind": "field",
+            "name": "wasserstein",
+            "one_field": false
+          }
+        ],
         "cost": "moderate",
         "differentiable": true,
         "fields": [
@@ -19889,5 +19941,5 @@
       "summary": "Quadratic Wasserstein distance between two density fields on a periodic domain: the root mean square distance the reference's mass must move to become the candidate's, each density divided by its own mean."
     }
   ],
-  "schema_version": 4
+  "schema_version": 5
 }

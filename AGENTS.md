@@ -260,7 +260,7 @@ order — the first two are yours, the rest an agent can complete from the contr
 
 1. **`metric.py`** — one `@metric`-decorated function returning one float per (field,
    frame, severity level): the number the literature reports. Anything with more structure
-   behind that number, a per-cell map or a curve, is its companion (§3.3). The decorator's
+   behind that number, a per-cell map or a curve, is a companion (§3.3). The decorator's
    fields are read by the harness and appear in the catalog; nothing in `card.yaml` repeats
    them.
 2. **`test_metric.py`** — at least one test whose expected value you worked out by hand, on
@@ -425,9 +425,18 @@ physical time, the reference fluctuation RMS, and a seeded generator. Omit it an
 nothing extra — which is why `mae(reference, candidate)` needs no boilerplate. Never hardcode
 an axis index: use `ctx.axis("x")`, because which axis is x depends on the dimension count.
 
-**Companions: the object behind the number.** One per metric, declared after the metric with
-`@companion(of=...)`. A second number from the literature is a sibling bundle that imports the
-function, the `rmse` pattern.
+**Companions: the objects behind the number.** Declared after the metric with
+`@companion(of=...)`. A metric may carry several when that is how its field computes or draws
+it (Kareem's decision, 2026-11-03): a longitudinal and a transverse curve, a cost density and a
+set of points. Each has a `name=`, a short identifier unique within the metric. The default
+name is the metric's own, and marks the companion the number is computed from: that one, if it
+is a curve or a point set, is the one handed to the metric (below). Every other companion is
+computed for storage and figures only, outside the row's timing. A companion is spelled
+`metric` when it carries the metric's name and `metric.name` otherwise
+(`metrics.registry.companion_label`), in `companions.csv`, in `error_maps.npz` keys, in figure
+titles and in the card's headings, so a bundle with one companion reads exactly as it did. A
+second *number* from the literature is still a sibling bundle that imports the function, the
+`rmse` pattern.
 
 - **`kind="field"`**, a per-cell map, if the metric is a reduction of a per-cell quantity (a
   density for a mean or a sum, the error itself for a maximum). It is what makes the
@@ -454,20 +463,42 @@ function, the `rmse` pattern.
   a curve stored there by the metric is read back for the next variant. The analysis reads each
   coordinate as a metric of its own (`metric[coordinate]`) in tables beside the panel.
 
+  A curve with many coordinates (every wavenumber shell, every separation) names the few the
+  analysis reads with `analysed=(...)`, each exactly as the curve returns it. Only those go to
+  `companions.csv`, the per-coordinate tables and the dominance fraction; the whole curve is
+  handed to the metric as before, and stored as an `(n, 2)` array of (coordinate, value) in
+  `error_maps.npz` on the frames `report.error_map` names, plus their clean level, where the
+  `companion_curves` figure draws it. The analysis costs 2.3 to 3.0 s per (coordinate, field),
+  measured on the four curve bundles of the pinned run (2026-11-03), and dominance asks every
+  coordinate to have moved, so over more coordinates it can only fall; the analysed
+  coordinates are the handful the field tabulates. Without `analysed` every coordinate
+  is analysed and nothing is stored densely.
+
   ```python
   @companion(of="structure_function_2", kind="curve", coordinate=("separation", "cells"))
   def structure_function_2_curve(x, *, ctx):
       """(separations, S_2(l)) of one field: the curve the literature plots."""
+      ...
+
+  # A second curve of the same metric, and a dense one analysed at named coordinates.
+  @companion(of="structure_function_2", name="transverse", kind="curve",
+             coordinate=("separation", "cells"), analysed=(1, 2, 4, 8, 16, 32))
+  def structure_function_2_transverse(x, *, ctx):
+      """(every separation, S_2^T(l)): stored as structure_function_2.transverse."""
       ...
   ```
 
 - **`kind="points"`**, if the number compares two sets of points: a persistence diagram, the
   positions of detected shocks. It returns an `(N, D)` array, one row per point and one column
   per coordinate named in `coordinate=(("birth", "field"), ("death", "field"), ...)`, at least
-  two. Like a curve it is called before the metric on every row and handed over under
-  `COMPANION_KEY`; like a field map it is stored in `error_maps.npz` only on the frames
-  `report.error_map` names, plus their clean level, and drawn by the `companion_points` figure.
-  `metrics/persistence_distance` is the worked example.
+  two. Like a curve, the metric's own point set is called before the metric on every row and
+  handed over under `COMPANION_KEY`; like a field map every point set is stored in
+  `error_maps.npz` only on the frames `report.error_map` names, plus their clean level, and
+  drawn by the `companion_points` figure. `metrics/persistence_distance` is the worked example.
+
+The contract tests run on every companion of every metric; the map-reduces-to-metric identity
+and the same-number-from-the-cache check apply to the metric's own companion, the one its
+number is computed from.
 
 **Work shared across the ladder** goes in `ctx.cache`, which lives for one (frame, field,
 metric): compute a quantity of the reference once per frame with a membership test,

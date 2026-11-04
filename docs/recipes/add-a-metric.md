@@ -63,6 +63,16 @@ looping over all three; your metric sees two arrays and returns a number.
     `@companion(of="<name>", kind="points", coordinate=(("<name>", "<units>"), ...))` returning an
     `(N, D)` array, one column per named coordinate. It is handed to the metric like a curve and
     stored, like a map, only on the frames `report.error_map` names.
+  - If the curve has many coordinates (every wavenumber shell, every separation), add
+    `analysed=(...)` naming the few the analysis reads, each exactly as the curve returns it.
+    The metric still receives the whole curve; only those coordinates go to `companions.csv`
+    and the per-coordinate tables, and the whole curve is stored for the figure on the frames
+    `report.error_map` names.
+  - If the field computes or draws more than one object behind the number (a longitudinal and a
+    transverse curve, a cost density and its points), declare each with its own `name="<id>"`.
+    The companion without a name, which carries the metric's own, is the one the number is
+    computed from and the only one handed to the metric; the others are stored and drawn as
+    `<metric>.<id>`. `AGENTS.md` §3.3 has the example.
   - If the number is a summary of the curve that no source fixes, it is a convention: say so in
     the docstring and on the card, and write an issue.
 

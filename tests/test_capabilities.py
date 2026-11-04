@@ -116,7 +116,7 @@ def test_a_curve_companion_runs_end_to_end_through_a_run_folder(temporary_metric
     """
     _register_two_way(temporary_metric, "_two_way")
     spec = metric_registry.get("_two_way")
-    assert spec.companion.one_field and spec.companion.kind == "curve"
+    assert spec.cached_companion.one_field and spec.cached_companion.kind == "curve"
 
     ladder = build_ladder({"gaussian_blur": {"severities": [1.0, 2.0, 3.0]}})
     result = run(SyntheticTrajectory(), [spec], ladder, fields=["density"],
@@ -177,6 +177,18 @@ def test_a_companion_cannot_move_its_metric_s_number(temporary_metric):
     values = result.rows.pivot_table(index="variant_label", columns="metric", values="value",
                                      observed=True)
     assert np.array_equal(values["_with_curve"], values["_without_curve"])
+
+
+def test_an_analysed_coordinate_the_curve_lacks_stops_the_run(temporary_metric):
+    """A curve's coordinates must include every coordinate it is analysed at; one it lacks would
+    silently leave a hole in every table, so the run stops and names both lists."""
+    _register_two_way(temporary_metric, "_lacks", with_curve=False)
+    metric_registry.companion(of="_lacks", kind="curve", coordinate=("moment", "index"),
+                              analysed=(2, 3))(lambda x: (np.array([1, 2]), np.array([0.0, 1.0])))
+    with pytest.raises(ValueError, match=r"do not include every analysed one.*\[2, 3\]"):
+        run(SyntheticTrajectory(), [metric_registry.get("_lacks")],
+            build_ladder({"gaussian_blur": {"severities": [1.0]}}), fields=["density"],
+            dataset=DatasetInfo(name="synthetic"), seed=0)
 
 
 def test_a_new_degradation_inherits_the_whole_contract(temporary_degradation):

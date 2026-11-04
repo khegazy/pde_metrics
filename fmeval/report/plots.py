@@ -28,6 +28,7 @@ from scipy.spatial.distance import squareform
 from fmeval import analysis as an
 from fmeval.ladder import FORECAST_LEVEL
 from fmeval.pipeline import parse_map_key
+from metrics import registry as metric_registry
 
 from . import vocabulary
 from .context import FigureItem, PlotResult
@@ -129,20 +130,26 @@ def ladder_curves(ctx, df, opts) -> PlotResult:
 _MAX_PANELS = 12
 
 
-def _companion(ctx, metric: str) -> dict:
-    """A metric's companion (kind, coordinate) as the run's own registry snapshot recorded it;
-    empty for a metric without one or a run that predates the record."""
-    return ctx.meta.get("registries", {}).get("metrics", {}).get(metric, {}).get("companion") or {}
+def _companions(ctx, metric: str) -> list[dict]:
+    """A metric's companions (name, kind, coordinate, analysed) as the run's own registry
+    snapshot recorded them, in declaration order; empty for a metric without one or a run that
+    predates the record. A run recorded when a metric had at most one names it ``companion``."""
+    entry = ctx.meta.get("registries", {}).get("metrics", {}).get(metric, {})
+    if "companions" in entry:
+        return entry["companions"]
+    return [{"name": metric, **entry["companion"]}] if entry.get("companion") else []
+
+
+def _companion(ctx, label: str) -> dict:
+    """One companion's record by its label (:func:`metrics.registry.companion_label`), as
+    :func:`_companions` reads it; empty if the snapshot has none."""
+    metric, _, name = label.partition(".")
+    return next((c for c in _companions(ctx, metric) if c["name"] == (name or metric)), {})
 
 
 def _axis_label(name: str, units: str) -> str:
     """``name [units]``, or the name alone for a dimensionless coordinate."""
     return f"{name} [{units}]" if units else str(name)
-
-
-def _coordinate_label(ctx, metric: str) -> str:
-    """``name [units]`` of a metric's curve coordinate, from the run's own registry snapshot."""
-    return _axis_label(*(_companion(ctx, metric).get("coordinate") or ["coordinate", ""]))
 
 
 @plot(
@@ -151,20 +158,50 @@ def _coordinate_label(ctx, metric: str) -> str:
     requires_columns=("degradation", "level", "value"),
 )
 def companion_curves(ctx, df, opts) -> PlotResult:
-    """The metric's curve companion against its coordinate, one panel per degradation.
+    """Each of the metric's curve companions against its coordinate, one panel per degradation.
 
     The literature's own values, untransformed: in each panel the clean curve in black, one line
     per strength in the degradation's colour, darker with strength, and in every panel the
     anchor dashed and the impostor dotted, so a reader sees which coordinates a degradation moves
-    and how far toward the anchor. A second figure gives the
-    per-coordinate trend and change from clean that :func:`fmeval.analysis.analyse` computes.
+    and how far toward the anchor. A curve that declares ``analysed`` is drawn at every coordinate
+    from the dense curves stored on the frames and ladder entries ``report.error_map`` names, and
+    from its analysed coordinates when none were stored. A second figure gives the
+    per-coordinate trend and change from clean that :func:`fmeval.analysis.analyse` computes, at
+    the analysed coordinates.
     """
     metric, field = str(df["metric"].iloc[0]), str(df["field"].iloc[0])
     scored = ctx.companion_scored
+    # Every curve writes its analysed coordinates to companions.csv, a dense one included.
     ctx.require(not scored.empty, "this run stored no curve companion")
-    rows = scored[scored["metric"].astype(str).str.startswith(f"{metric}[")
-                  & (scored["field"].astype(str) == field)]
-    ctx.require(not rows.empty, f"{metric} has no curve companion")
+    items = []
+    for entry in (c for c in _companions(ctx, metric) if c["kind"] == "curve"):
+        label = metric_registry.companion_label(metric, entry["name"])
+        meta = {"metric": metric, "field": field,
+                **({"companion": entry["name"]} if label != metric else {})}
+        stored = {k: v for k, v in ctx.maps.items() if parse_map_key(k)[:2] == (label, field)}
+        dense = entry.get("analysed") is not None and bool(stored)
+        if dense:
+            levels = df.drop_duplicates("variant_label").set_index("variant_label")
+            rows = pd.concat([
+                pd.DataFrame({"degradation": levels.at[variant, "degradation"],
+                              "level": levels.at[variant, "level"], "frame_index": frame,
+                              "coordinate": curve[:, 0], "value": curve[:, 1]})
+                for key, curve in stored.items()
+                for _, _, variant, frame in [parse_map_key(key)]], ignore_index=True)
+        else:
+            rows = scored[scored["metric"].astype(str).str.startswith(f"{label}[")
+                          & (scored["field"].astype(str) == field)]
+        if rows.empty:
+            continue
+        items += _companion_curve_items(ctx, label, field, meta, rows, entry, dense)
+    ctx.require(bool(items), f"{metric} has no curve companion")
+    return PlotResult(items)
+
+
+def _companion_curve_items(ctx, label: str, field: str, meta: dict, rows: pd.DataFrame,
+                           entry: dict, dense: bool) -> list[FigureItem]:
+    """The two figures :func:`companion_curves` draws for one curve companion, ``label``."""
+    coordinate_label = _axis_label(*(entry.get("coordinate") or ["coordinate", ""]))
     medians = (rows.groupby(["degradation", "level", "coordinate"], observed=True)["value"]
                .median().rename("value_median").reset_index())
     numeric = pd.api.types.is_numeric_dtype(medians["coordinate"])
@@ -185,32 +222,38 @@ def companion_curves(ctx, df, opts) -> PlotResult:
             ax.plot(line["coordinate"], line["value_median"], color=colour, lw=1.2,
                     marker="o", ms=2.5, label=f"level {level}")
         ax.plot(clean["coordinate"], clean["value_median"], color="k", lw=1.6, label="clean")
-        for label, ls in ((ctx.anchor_label, "--"), ("gaussian_impostor", ":")):
+        for probe_label, ls in ((ctx.anchor_label, "--"), ("gaussian_impostor", ":")):
             # One line per draw: the anchor's draws are levels of one label, and a single line
             # through all of them would zigzag between draws at every coordinate.
-            probe = medians[medians["degradation"] == label]
+            probe = medians[medians["degradation"] == probe_label]
             for n, (_, draw) in enumerate(probe.groupby("level", observed=True)):
                 draw = draw.sort_values("coordinate")
                 ax.plot(draw["coordinate"], draw["value_median"], color="0.45", ls=ls, lw=1,
-                        label=ctx.label(label) if n == 0 else None)
+                        label=ctx.label(probe_label) if n == 0 else None)
         if positive and medians["coordinate"].max() / medians["coordinate"].min() > 10:
             ax.set_xscale("log", base=2)
         ax.set_title(ctx.label(name), fontsize="small")
     for k in range(len(names), nrows * ncols):
         grid[k // ncols, k % ncols].set_visible(False)
     for ax in grid[-1, :]:
-        ax.set_xlabel(_coordinate_label(ctx, metric))
-    grid[0, 0].set_ylabel(metric)
+        ax.set_xlabel(coordinate_label)
+    grid[0, 0].set_ylabel(label)
     grid[0, 0].legend(fontsize="xx-small")
-    items = [FigureItem(fig, {"metric": metric, "field": field},
-                        caption=f"The curve behind {metric} on {field}: the median over frames "
-                                "at every strength of every degradation, the clean curve in "
-                                "black, the anchor dashed and the impostor dotted. "
-                                "Values are the literature's own, untransformed.",
+    items = [FigureItem(fig, meta,
+                        caption=(f"The dense curve behind {label} on {field}, at every coordinate "
+                                 "the curve returns, on the frames and ladder entries "
+                                 "report.error_map stored: the median over those frames at every "
+                                 "stored strength, the clean curve in black, the anchor dashed "
+                                 "and the impostor dotted where stored. "
+                                 if dense else
+                                 f"The curve behind {label} on {field}: the median over frames "
+                                 "at every strength of every degradation, the clean curve in "
+                                 "black, the anchor dashed and the impostor dotted. ")
+                                + "Values are the literature's own, untransformed.",
                         data=medians)]
 
     stats = ctx.companion_axes
-    stats = stats[(stats["metric"].astype(str) == metric) & (stats["field"].astype(str) == field)
+    stats = stats[(stats["metric"].astype(str) == label) & (stats["field"].astype(str) == field)
                   & ~stats["is_probe"]] if not stats.empty else stats
     if not stats.empty:
         fig2, grid2 = ctx.style.figure(1, 2, sharex=True)
@@ -222,19 +265,19 @@ def companion_curves(ctx, df, opts) -> PlotResult:
                         label=ctx.label(name))
         for ax, column in zip(grid2[0], ("rho", "relative_change_max"), strict=True):
             ax.set_ylabel(vocabulary.label(column), fontsize="small")
-            ax.set_xlabel(_coordinate_label(ctx, metric))
+            ax.set_xlabel(coordinate_label)
             if positive and medians["coordinate"].max() / medians["coordinate"].min() > 10:
                 ax.set_xscale("log", base=2)
         grid2[0, 1].legend(fontsize="xx-small", ncol=2)
         items.append(FigureItem(
-            fig2, {"metric": metric, "field": field, "view": "per-coordinate"},
-            caption=f"Each coordinate of {metric}'s curve on {field} read as a metric of its own: "
+            fig2, {**meta, "view": "per-coordinate"},
+            caption=f"Each coordinate of {label}'s curve on {field} read as a metric of its own: "
                     "its rank correlation with strength and its change from clean at the "
                     "harshest strength. Neighbouring coordinates of one curve are strongly "
                     "correlated, so this localises the evidence and does not multiply it.",
             data=stats[["degradation", "coordinate", "rho", "monotone_fraction",
                         "relative_change_max", "elasticity", "severity_resolution"]]))
-    return PlotResult(items)
+    return items
 
 
 @plot(
@@ -254,10 +297,23 @@ def companion_points(ctx, df, opts) -> PlotResult:
     on the edge of the panel rather than dropped.
     """
     metric, field = str(df["metric"].iloc[0]), str(df["field"].iloc[0])
-    entry = _companion(ctx, metric)
-    ctx.require(entry.get("kind") == "points", f"{metric} has no point-set companion")
-    stored = {k: v for k, v in ctx.maps.items() if parse_map_key(k)[:2] == (metric, field)}
-    ctx.require(bool(stored), f"no point sets of {metric} on {field} were stored")
+    entries = [c for c in _companions(ctx, metric) if c["kind"] == "points"]
+    ctx.require(bool(entries), f"{metric} has no point-set companion")
+    items = []
+    for entry in entries:
+        label = metric_registry.companion_label(metric, entry["name"])
+        stored = {k: v for k, v in ctx.maps.items() if parse_map_key(k)[:2] == (label, field)}
+        if stored:
+            items.append(_point_set_item(ctx, label, field, entry, stored, {
+                "metric": metric, "field": field,
+                **({"companion": entry["name"]} if label != metric else {})}))
+    ctx.require(bool(items), f"no point sets of {metric} on {field} were stored")
+    return PlotResult(items)
+
+
+def _point_set_item(ctx, label: str, field: str, entry: dict, stored: dict[str, np.ndarray],
+                    meta: dict) -> FigureItem:
+    """The figure :func:`companion_points` draws for one point-set companion, ``label``."""
     names = [name for name, _ in entry["coordinate"]]
     # Frames in time order, the clean level first within each frame.
     order = sorted(stored, key=lambda k: (parse_map_key(k)[3], parse_map_key(k)[2] != "reference",
@@ -300,15 +356,15 @@ def companion_points(ctx, df, opts) -> PlotResult:
     if colour:
         fig.colorbar(ScalarMappable(**colour), ax=list(grid.ravel()), shrink=0.7,
                      label=_axis_label(*entry["coordinate"][2]))
-    return PlotResult([FigureItem(
-        fig, {"metric": metric, "field": field},
-        caption=f"The point set behind {metric} on {field}, one panel per stored variant, the "
+    return FigureItem(
+        fig, meta,
+        caption=f"The point set behind {label} on {field}, one panel per stored variant, the "
                 "clean level first in each frame, on shared axes. Triangles on a panel's edge are "
                 "points with an infinite coordinate."
                 + (f" Only the first {len(panels)} of the {len(order)} stored sets are drawn, in "
                    "time order; every set is in data/error_maps.npz."
                    if len(order) > len(panels) else ""),
-        data=pd.concat(tidy, ignore_index=True))])
+        data=pd.concat(tidy, ignore_index=True))
 
 
 @plot(
@@ -873,9 +929,10 @@ def field_gallery(ctx, df, opts) -> PlotResult:
     figure is for.
     """
     field = str(df["field"].iloc[0])
-    # Point sets share the store and are drawn by companion_points.
+    # Point sets and dense curves share the store and are drawn by companion_points and
+    # companion_curves.
     stored = {k: v for k, v in ctx.maps.items() if parse_map_key(k)[1] == field
-              and _companion(ctx, parse_map_key(k)[0]).get("kind") != "points"}
+              and _companion(ctx, parse_map_key(k)[0]).get("kind") not in ("points", "curve")}
     ctx.require(bool(stored), f"no stored maps for {field}")
     ctx.require(all(m.ndim == 2 for m in stored.values()),
                 f"the gallery draws two-dimensional maps and the maps of {field} are not")
