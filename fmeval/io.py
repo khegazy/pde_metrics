@@ -1,7 +1,8 @@
 """Run folders: creation, provenance, and reloading.
 
-One folder per metric under test, named ``<metric>_<time>`` where ``<time>`` is
-``int(time.time())``. The **same** timestamp is used for every metric in one invocation,
+One folder per metric under test, named ``<metric>_<time>`` where ``<time>`` is the stamp
+the invocation claimed with :func:`claim_stamp`, ``int(time.time())`` unless another invocation
+already holds that second. The **same** stamp is used for every metric in one invocation,
 so a multi-metric run produces sibling folders that sort together and are obviously one
 experiment.
 
@@ -91,6 +92,27 @@ class RunFolder:
         for path in (self.data, self.plots, self.tables, self.sections, self.figure_data):
             path.mkdir(parents=True, exist_ok=True)
         return self
+
+
+def claim_stamp(results_root: Path | str) -> int:
+    """A run stamp no other invocation holds: ``int(time.time())``, or the next free second.
+
+    Folders are written when a run ends, under the stamp taken when it started, so two
+    invocations started in the same second would write the same ``<name>_<stamp>`` folder and
+    the later would silently overwrite the earlier. A stamp is claimed by creating the
+    directory ``<results_root>/.stamps/<stamp>``, which ``mkdir`` does atomically, so the claim
+    holds across processes; a taken stamp moves on to the next second.
+    """
+    claims = Path(results_root) / ".stamps"
+    claims.mkdir(parents=True, exist_ok=True)
+    stamp = int(time.time())
+    while True:
+        try:
+            (claims / str(stamp)).mkdir()
+        except FileExistsError:
+            stamp += 1
+        else:
+            return stamp
 
 
 def make_run_folder(results_root: Path | str, name: str, stamp: int) -> RunFolder:
@@ -367,7 +389,7 @@ class FamilyComparison(Callback):
         if self.failed:
             log.error("%d member job(s) failed; no comparison folder written", self.failed)
             return
-        folder = combine_runs(self.folders, int(time.time()))
+        folder = combine_runs(self.folders, claim_stamp(self.folders[0].parent))
         log.info("wrote %s", folder.root)
 
 

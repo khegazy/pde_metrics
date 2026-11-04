@@ -84,11 +84,11 @@ def main(cfg: DictConfig) -> Path:
         stream=sys.stdout, force=True,
     )
     started = time.perf_counter()
-    stamp = int(time.time())     # stamps every folder this invocation writes
     # Every value is read from `job`, the config built into its schema (fmeval/config.py), so a
     # missing, misspelt or refused key stops the run here, before any data is read. `cfg` is
     # kept only to record the composed config.
     job = build_job(cfg)
+    stamp = fio.claim_stamp(job.paths.results)  # stamps every folder this invocation writes
 
     specs = [metric_registry.get(name) for name in job.metrics]
     severity_levels = build_ladder(job.degradation)

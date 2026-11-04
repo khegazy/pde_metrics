@@ -222,6 +222,14 @@ def test_maps_are_disabled_by_default(traj):
 # --- run folders ------------------------------------------------------------------------
 
 
+def test_two_invocations_in_one_second_claim_different_stamps(tmp_path, monkeypatch):
+    """Folders are written under the stamp claimed at the start; two runs started in the same
+    second must not share it, or the later run's folders overwrite the earlier run's."""
+    monkeypatch.setattr(fio.time, "time", lambda: 1234567890.5)
+    first, second = fio.claim_stamp(tmp_path), fio.claim_stamp(tmp_path)
+    assert (first, second) == (1234567890, 1234567891), (first, second)
+
+
 def test_run_folder_round_trip(tmp_path, traj):
     result = evaluate(traj, maps=MapRequest(enabled=True, frames=[-1]))
     folder = fio.make_run_folder(tmp_path, "mse", 1234567890)
