@@ -487,7 +487,9 @@ second *number* from the literature is still a sibling bundle that imports the f
   measured on the four curve bundles of the pinned run (2026-11-03), and dominance asks every
   coordinate to have moved, so over more coordinates it can only fall; the analysed
   coordinates are the handful the field tabulates. Without `analysed` every coordinate
-  is analysed and nothing is stored densely.
+  is analysed and nothing is stored densely. A curve whose coordinates the grid sets, such as
+  wavenumber shells, may lack the larger analysed ones on a coarse grid, and is analysed at
+  those it has; one missing inside its range stops the run (`Companion.unmatched_analysed`).
 
   ```python
   @companion(of="structure_function_2", kind="curve", coordinate=("separation", "cells"))

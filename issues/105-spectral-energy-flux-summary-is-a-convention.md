@@ -3,7 +3,8 @@
 **Category:** method
 **Priority:** unset
 **Status:** open. The metric is built with both conventions labelled; what would replace them is
-open.
+open. The curve itself is now stored at every shell for its figure, so only the number's
+sampling and summary remain conventions.
 
 ## Context
 
@@ -13,21 +14,16 @@ with the reference's, $\Pi(K) = \langle \mathbf{u}^{<K} \cdot (\mathbf{u}\cdot\n
 arXiv:1808.06186). The idea page asked for "the error of the curve $\Pi(k)$ across the inertial
 range". Two things in the built metric come from no source:
 
-1. **The coordinates.** The curve is stored at the octave wavenumbers $K = 1, 2, 4, \dots$ up to
-   half the smallest side of the grid (eight on $256^2$), not at every unit shell (182 on
-   $256^2$). Because $\Pi$ is cumulative, each sampled value still counts every mode inside it;
-   the sampling decides how often each range of scales is counted. The shells beyond $N/2$
-   exist only in the corners of a square grid, and they enter only through the flux out of the
-   last octave.
-   One column per shell would also make the card's per-coordinate table 182 columns wide.
-
-   That table is the reason for sampling at all. A curve companion is stored at every
-   coordinate it returns. `fmeval/cards/evidence.py::companion_block` renders one table column
-   per coordinate, and `fmeval/analysis.py` analyses each coordinate as a metric of its own
-   (`metric[coordinate]`). On unit shells `rint(|k|)` a $256^2$ grid has 182 coordinates, so a
-   spectral curve companion needs a sampled coordinate set to stay readable and to keep the
-   analysis cost bounded. Any later spectral curve, such as a coherence spectrum or
-   `spectrum_l2`'s own curve, meets the same limit.
+1. **The sampling.** The curve is stored at every unit shell up to half the smallest side of
+   the grid (128 on $256^2$), on the frames `report.error_map` names, and drawn whole; the
+   analysis reads it at the octaves (the companion's `analysed`), as it reads every curve at a
+   handful of named coordinates because each one costs seconds per field. The number samples
+   the same octaves, $K = 1, 2, 4, \dots$ (eight on $256^2$). Because $\Pi$ is cumulative,
+   each sampled value still counts every mode inside it; the sampling decides how often each
+   range of scales is counted, and that choice has no source. A sum over every shell would
+   count the small scales far more often than the large ones. The shells beyond $N/2$ exist
+   only in the corners of a square grid, and they enter only through the flux out of the last
+   shell.
 2. **The summary.** The number is $\lVert \Pi_{\text{cand}} - \Pi_{\text{ref}} \rVert_2 /
    \lVert \Pi_{\text{ref}} \rVert_2$ over those octaves, the form `spectrum_l2` uses for the
    energy spectrum. The idea page's "inertial range" does not exist on `kinet_re5e4`, which is
@@ -62,4 +58,5 @@ shells. Each is a sibling bundle importing the same curve, not a change to this 
 ## Related
 
 Written with `spectral_energy_flux` (branch `metric/spectral_energy_flux`), 2026-10-30. Modelled on
-`issues/098`, the same question for `increment_w1_by_separation`.
+`issues/098`, the same question for `increment_w1_by_separation`. `issues/136` asks the same
+question of `spectrum_l2`, whose summary this one copies.

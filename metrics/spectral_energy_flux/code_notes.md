@@ -25,12 +25,18 @@ bound. The bundle was merged with every CI check passing.
   2. The first term is Parseval's co-spectrum $\mathrm{Re}[\hat u^*\cdot\hat D]/M^2$, binned into
      unit shells by `radial_energy_spectrum(velocity, ctx, other=nonlinear)` and summed
      cumulatively.
-  3. The second term is formed per octave. The velocity is filtered with
-     `degradations/_shared/filters.py::_apply_filter` and the mask `radial_shells(shape) <= K`
-     (Aluie's sharp filter, his Eq. 21). The code then takes the mean of $\lvert u^{<K}\rvert^2$
-     times the divergence of the filtered field.
-  4. The octaves are $2^n$ up to half the smallest grid side. The filter keeps the shells up to
-     and including $K$, so $\Pi(K)$ is the flux through $\lvert k\rvert = K + \tfrac12$.
+  3. The second term is formed per shell, from one real forward transform of the velocity: for
+     each $K$ the half-spectrum is masked to `radial_shells(shape) <= K` (Aluie's sharp filter,
+     his Eq. 21) and inverted for $u^{<K}$, and the masked $i\mathbf{k}\cdot\hat u$ is inverted
+     for its divergence, with the Nyquist wavenumber zeroed on each even axis, as the real part
+     of `spectral_derivative`'s inverse transform zeroes it. The code then takes the mean of
+     $\lvert u^{<K}\rvert^2$ times that divergence. Until 2026-11-04 this was done per octave
+     with `degradations/_shared/filters.py::_apply_filter` and `spectral_derivative`; the two
+     agree to $2.4\times10^{-13}$ in the registered number on the evidence trajectory (below).
+  4. The curve runs over every shell $K = 1 \dots N/2$, half the smallest grid side. The filter
+     keeps the shells up to and including $K$, so $\Pi(K)$ is the flux through
+     $\lvert k\rvert = K + \tfrac12$. The companion declares `analysed` at the octaves
+     (`spectrum_l2.metric.OCTAVES`), and the metric reads the octaves out of the dense curve.
 - **The number.** `spectral_energy_flux` refuses differing shapes. It takes the candidate's curve
   from `ctx.cache[COMPANION_KEY]` when the pipeline has already computed it. It caches the
   reference's curve under `REFERENCE_FLUX` once per frame. It returns
@@ -56,12 +62,12 @@ bound. The bundle was merged with every CI check passing.
 
   The companion is `kind="curve"` with coordinate `("wavenumber", "cycles per domain")`. The
   decorator's default `mean` reduction is unused.
-- **Why octaves, from the harness's side.** A curve companion on unit shells would have 182
-  coordinates on a 256 by 256 grid. `fmeval/cards/evidence.py::companion_block` renders one table
-  column per coordinate, and the analysis runs every coordinate as a metric of its own. A spectral
-  curve companion therefore needs a sampled coordinate set to stay readable. Any future spectral
-  curve metric (`spectrum_l2`'s own curve, a coherence spectrum) meets the same limit. This was
-  routed into [issues/105](../../issues/105-spectral-energy-flux-summary-is-a-convention.md).
+- **Why octaves for the number and the tables.** The harness analyses each coordinate it is given
+  as a metric of its own, at 2.3 to 3.0 s per coordinate and field (CRITIQUE finding 12 of the
+  2026-11-03 plan), and renders one table column per coordinate. Since 2026-11-04 a curve can
+  store every coordinate for its figure and name the few the analysis reads (`analysed`), so
+  the curve is dense and the tables keep the octaves. The number's octave sampling remains a
+  convention ([issues/105](../../issues/105-spectral-energy-flux-summary-is-a-convention.md)).
 - **Changes outside the bundle.**
   - `metrics/spectrum_l2/metric.py`, under the exception in AGENTS.md §3.2.
     `radial_energy_spectrum` gained an optional `other` argument that bins the co-spectrum
@@ -187,6 +193,13 @@ reviewer ran the bundle's tests, `spectrum_l2`'s, the contract tests, `test_card
     1312 s, of which 640 s was the metric and 662 s the degradations.
 - **Smoke run** `results/spectral_energy_flux_1793354039`: 1000 rows in 36 s.
 
+- **Dense curve (2026-11-04).** One curve on a 256 by 256 kinet frame (frames 2000, 6000 and
+  10000 of `kinet_re5e4`, a shared login node): 0.161 s for the octave version, 0.341 s for the
+  dense one. Median per row in the refactor-gate runs on `kinet_re5e4_dev` at 256 by 256: 0.065 s
+  before, 0.153 s after. A dense curve with the octave code's filter (`_apply_filter` and
+  `spectral_derivative` per shell) took 0.91 s on a random 256 by 256 field, against 0.15 s for
+  the real-transform form kept.
+
 ## Tooling and environment problems
 
 - **No PDF reader.** There was no pdftotext, pypdf or poppler. Every source was first read as HTML
@@ -222,7 +235,7 @@ reviewer ran the bundle's tests, `spectrum_l2`'s, the contract tests, `test_card
   (research_notes.md, Method choices).
 - The Nyquist mode's derivative is zero through the vendored spectral derivative. Its effect was
   not measured in isolation.
-- The corner shells beyond $N/2$ enter only through the flux out of the last octave. Their weight
+- The corner shells beyond $N/2$ enter only through the flux out of the last shell, $N/2$. Their weight
   on noisy fields was not measured.
 - The round-off bound is the agent's own. A reference whose genuine flux lies below it is treated
   as carrying none (card, Limitations).

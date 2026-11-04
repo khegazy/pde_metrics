@@ -358,7 +358,8 @@ def test_pointwise_map_is_multichannel_aware():
 
 def test_a_curve_has_one_value_per_fixed_coordinate(spec):
     """Equal lengths, unique coordinates that do not depend on the fields, finite values; and a
-    curve that names the coordinates it is analysed at returns every one of them."""
+    curve that names the coordinates it is analysed at returns every one of them inside its
+    range."""
     for companion in _companions(spec, "curve"):
         name = f"{spec.name}.{companion.name}"
         first = _call_companion(companion, *_companion_args(companion, _args_for(spec)))
@@ -374,10 +375,9 @@ def test_a_curve_has_one_value_per_fixed_coordinate(spec):
         assert np.array_equal(np.asarray(first[0]), np.asarray(second[0])), (
             f"{name}: the coordinates moved with the fields, {first[0]} vs {second[0]}; a "
             "coordinate is the same at every row or the rows cannot be compared")
-        if companion.analysed is not None:
-            assert set(companion.analysed) <= set(np.asarray(first[0]).tolist()), (
-                f"{name}: analysed coordinates {list(companion.analysed)} are not all among the "
-                f"curve's {np.asarray(first[0]).tolist()}")
+        assert not companion.unmatched_analysed(first[0]), (
+            f"{name}: analysed coordinates {companion.unmatched_analysed(first[0])} lie inside "
+            f"the curve's range and are not among its {np.asarray(first[0]).tolist()}")
 
 
 def test_a_comparison_curve_is_zero_or_the_target_on_identical_fields(spec):

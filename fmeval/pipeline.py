@@ -449,12 +449,11 @@ def run(
                                             **companion_kwargs[c.name]))
                         if c.kind == "curve":
                             coordinates, values = result
-                            if dense and not set(c.analysed) <= set(np.asarray(coordinates)
-                                                                    .tolist()):
+                            if dense and c.unmatched_analysed(coordinates):
                                 raise ValueError(
                                     f"{labels[c.name]}: the curve's coordinates do not include "
-                                    f"every analysed one; analysed {list(c.analysed)}, curve "
-                                    f"{np.asarray(coordinates).tolist()}")
+                                    f"the analysed {c.unmatched_analysed(coordinates)} inside "
+                                    f"its range; curve {np.asarray(coordinates).tolist()}")
                             curve_rows += [{**row, "metric": labels[c.name], "coordinate": x,
                                             "value": float(v), "_row": len(rows) - 1}
                                            for x, v in zip(coordinates, values, strict=True)

@@ -35,9 +35,9 @@ Positive $\Pi$ is energy leaving the modes inside $K$ for smaller scales and neg
 energy arriving from them; in two dimensions energy moves toward large scales, so $\Pi < 0$ is
 the expected sign over the inverse-cascade range ([@alexakis2018], Equations (21)–(22) and
 Section 3.2.1, after [@kraichnan1967]). Nothing in this metric depends on that sign. Equation
-(1) is the curve, the metric's companion, sampled at the octaves $K = 1, 2, 4, \dots$ up to
-half the smallest side of the grid: eight coordinates, 1 to 128, on a $256^2$ grid. The number
-registered is
+(1) at every shell $K = 1, 2, \dots$ up to half the smallest side of the grid, 128 on a $256^2$
+grid, is the metric's curve companion. The number registered samples it at the octaves
+$K = 1, 2, 4, \dots$, eight of them on a $256^2$ grid:
 
 $$
 F(\mathbf{u}_{\text{ref}}, \mathbf{u}_{\text{cand}}) =
@@ -50,7 +50,7 @@ the L2 distance between the two curves over the octaves, divided by the referenc
 the octave sampling and Equation (2) are this repository's conventions, recorded in
 `issues/105`. Because $\Pi$ is cumulative, the value at each octave counts every mode inside it;
 the sampling weighs each octave of scale once. The shells beyond $N/2$, which exist only in the
-corners of a square grid, enter only through the flux out of the last octave.
+corners of a square grid, enter only through the flux out of the last shell.
 
 The number is NaN when the reference's curve is no larger than floating-point round-off, which
 this metric bounds by machine epsilon times the largest speed of the reference cubed times
@@ -64,7 +64,9 @@ mode a zero derivative. The products are formed in physical space without dealia
 term of Equation (1) is Parseval's co-spectrum
 $\mathrm{Re}[\hat{\mathbf{u}}^{*} \cdot \widehat{\nabla \cdot (\mathbf{u}\mathbf{u})}] / M^2$,
 binned into `spectrum_l2`'s unit shells and summed up to $K$; the second is formed from the
-filtered velocity at each $K$. $\Pi(K)$ is the flux through $|\mathbf{k}| = K + \tfrac12$.
+filtered velocity and its divergence at each $K$, each the inverse of the velocity's real
+half-spectrum masked to the shells up to $K$. $\Pi(K)$ is the flux through
+$|\mathbf{k}| = K + \tfrac12$.
 
 **Compressibility.** In compressible flow the coarse-grained budget of the large-scale kinetic
 energy moves energy across scales through deformation work and baropycnal work, the latter
@@ -83,6 +85,55 @@ range [@aluieli2012], Figures 2–3; that evidence is three-dimensional.
 Periodic wrap on every axis: Equation (1) takes Fourier transforms and spectral derivatives. The
 metric therefore declares `requires_periodic`, and the harness does not run it on a dataset with
 a non-periodic axis.
+
+### How its field reports it
+
+The flux is a turbulence quantity, and turbulence reports it as a curve, never as a distance
+between two curves.
+
+- **The object.** $\Pi(k)$, the sum of the shell-to-shell transfer $T(k')$ over $k' < k$
+  ([@alexakis2018], Equation (13) for $T$, Equation (16) for the low-pass velocity
+  $\mathbf{u}^{<k}$, Equation (18) for $\Pi$), positive for a direct cascade and negative for an
+  inverse one (Equations (21)–(22)). For compressible flow the cross-scale transfer is the
+  deformation work and the baropycnal work of a filtered budget ([@aluie2013], Equations (13)–(15)
+  and the sharp filter of Equation (21); [@aluie2011], Equations (3)–(5)).
+- **The figure.** $\Pi(k)$ against $k$ on a logarithmic wavenumber axis and a linear flux axis,
+  normalised by the energy injection rate $\epsilon_{in}$ of the forcing, with the zero line
+  drawn so a change of direction is visible: "lin-log plot of the fluxes" ([@alexakis2018],
+  Figs. 20 and 31, the latter with $\Pi$ changing sign at the forcing scale; [@boffetta2012],
+  Fig. 11b–c, $\Pi_E(k)/\epsilon_I$ and the enstrophy flux, and the inset of Fig. 5c). The
+  compressible kinetic-energy flux of a filtered budget is drawn the same way against the
+  inverse filter scale, unnormalised, with the conversion, inertial and dissipation ranges
+  marked ([@aluieli2012], Fig. 3). [@aluie2013] defines the flux and draws none.
+- **What is read off.** The plateau: a flux constant across an inertial range and equal to the
+  injection or dissipation rate, and its sign, the direction of the cascade ([@alexakis2018],
+  Equations (21)–(22); [@boffetta2012], Fig. 11b). No source read for this card reduces a
+  comparison of two flux curves to one number.
+- **The experiment.** Forced, statistically stationary turbulence, in which $\epsilon_{in}$ is
+  set by the forcing and an inertial range exists on either side of the forcing scale.
+
+**What this bundle reports, and how it differs.** The curve is the field's object at every
+shell up to $N/2$, drawn against a logarithmic wavenumber axis with the zero line. Two
+differences follow from the data. The flux is not divided by an injection rate, because
+`kinet_re5e4` is unforced and decaying and has none, so the curve keeps its units. And the flux
+axis is symmetric-logarithmic rather than linear: linear within six decades of the largest
+magnitude drawn and logarithmic beyond, because the curves of one figure span several decades
+from the smoothed candidates to the noisy ones (the per-octave table under "The curve behind
+the number" gives the change from clean at each octave). The velocity-only form at uniform density
+is `judgements/003`. The registered number, the relative L2 distance over the octaves, is the
+repository's convention (`issues/105`).
+
+**The experiments here.** Forced stationary turbulence does not exist here:
+[EXP-spectral_energy_flux-forced-2d-compressible-flux-loop](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spectral_energy_flux-forced-2d-compressible-flux-loop.md)
+writes up the two-dimensional compressible case, whose flux changes sign across the forcing
+scale, and
+[EXP-increment_flatness-isotropic-3d-turbulence-cutouts](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-increment_flatness-isotropic-3d-turbulence-cutouts.md)
+the three-dimensional one with a constant flux.
+[EXP-spectral_energy_flux-graded-phase-randomisation](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spectral_energy_flux-graded-phase-randomisation.md)
+is an ordinal axis with a predicted response for a triple correlation such as this one. The
+metric runs on the degradation ladder on `kinet_re5e4`, on the forecasts of `forecast_re5e4`
+against their targets and on the Reynolds ladder. It cannot run on `synthetic_ensemble`, which
+has no velocity, or on `sod_shock_tube`, whose walls rule out a periodic transform.
 
 ## Performance
 
@@ -194,11 +245,13 @@ predictions of the same reference on the same analysis grid. Values on different
 different octaves and are not comparable, and the number is undefined (NaN) for a reference
 whose flux is round-off, such as a uniform velocity or a steady Taylor–Green vortex.
 
-The companion is the curve of Equation (1): a `coordinate` column holding the octave wavenumber
-in cycles across the domain and a value column holding $\Pi$ there, in velocity cubed per unit
-length, stored for the candidate on every result row in `companions.csv`; on the clean level it
-is the reference's curve. Read a candidate's curve against the reference's to see at which
-octaves the transfer departs and in which direction.
+The companion is the curve of Equation (1): a `coordinate` column holding the wavenumber $K$
+in cycles across the domain and a value column holding $\Pi(K)$ there, in velocity cubed per
+unit length, for the candidate; on the clean level it is the reference's curve. The whole curve,
+every shell up to $N/2$, is stored on the frames and ladder entries `report.error_map` names and
+drawn in Performance; `companions.csv` and the per-coordinate tables hold its octaves, the
+coordinates the number is computed from. Read a candidate's curve against the reference's to
+see at which scales the transfer departs and in which direction.
 
 ## Limitations
 

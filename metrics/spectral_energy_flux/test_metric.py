@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 
 from fmeval.external.kinet_spectral import spectral_derivative
+from metrics.spectrum_l2.metric import radial_shells
 from tests.conftest import make_ctx, synthetic_field
 
 from .metric import energy_flux_curve, spectral_energy_flux
@@ -164,3 +165,43 @@ def test_a_reference_whose_flux_is_round_off_scores_nan():
 def test_a_velocity_without_one_component_per_axis_is_refused():
     with pytest.raises(ValueError, match="shape"):
         energy_flux_curve(np.zeros((1, *SHAPE)), ctx=make_ctx(SHAPE))
+
+
+@pytest.mark.parametrize("shape", [(12, 10), (9, 16)])
+def test_every_shell_matches_a_direct_sharp_filter_on_a_divergent_field(shape):
+    """The curve at every shell against Equation (1) rebuilt term by term in physical space,
+    with the full complex transform and the vendored spectral derivative, on a divergent
+    velocity and non-square grids (even and odd sides, so the Nyquist handling of the real
+    transform's half-spectrum is exercised along each axis)."""
+    rng = np.random.default_rng(4)
+    velocity = rng.standard_normal((2, *shape))
+    ctx = make_ctx(velocity)
+    wavenumbers, flux = energy_flux_curve(velocity, ctx=ctx)
+    assert wavenumbers.tolist() == list(range(1, min(shape) // 2 + 1))
+
+    def div(field):
+        return sum(spectral_derivative(field[j], j) for j in range(2))
+
+    nonlinear = np.stack([sum(spectral_derivative(velocity[i] * velocity[j], j) for j in range(2))
+                          for i in range(2)])
+    shells = radial_shells(shape)
+    expected = []
+    for k in wavenumbers:
+        low = np.fft.ifft2(np.fft.fft2(velocity) * (shells <= k)).real
+        expected.append(np.mean(np.sum(low * nonlinear, axis=0))
+                        - np.mean(np.sum(low ** 2, axis=0) * div(low)) / 2)
+    assert flux == pytest.approx(expected, abs=1e-13 * np.abs(expected).max())
+
+
+def test_the_number_reads_the_curve_at_the_octaves_only():
+    """The dense curve has every shell up to N/2; the registered number compares the octaves
+    1, 2, 4, ... alone (issues/105). On a 32 x 32 grid that is 1, 2, 4, 8 and 16 of the
+    sixteen shells."""
+    reference, candidate = band_limited(seed=0), band_limited(seed=1)
+    ctx = make_ctx((32, 32))
+    _, ref = energy_flux_curve(reference, ctx=ctx)
+    _, cand = energy_flux_curve(candidate, ctx=ctx)
+    octave = np.array([1, 2, 4, 8, 16]) - 1
+    assert len(ref) == 16
+    assert spectral_energy_flux(reference, candidate, ctx=make_ctx((32, 32))) == pytest.approx(
+        np.linalg.norm(cand[octave] - ref[octave]) / np.linalg.norm(ref[octave]), rel=1e-12)

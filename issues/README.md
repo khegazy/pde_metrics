@@ -110,6 +110,8 @@ Designed, hooks in place, not built.
 | [127](127-crps-decomposition-has-no-settled-form-for-a-fair-ensemble-score.md) | The CRPS decomposition the field reports is not built: the recommended isotonic form needs isotonic distributional regression, and Hersbach's sums to the plug-in score, not the fair one `crps` registers | low |
 | [128](128-increment-metrics-one-cell-separation-is-a-convention.md) | The one-cell separation at which `increment_w1` and `energy_distance` register their number is a convention with no source; their field reads many separations | unset |
 | [132](132-hill-estimator-interval-on-spatially-correlated-increments.md) | The Hill estimator's interval, gamma / sqrt(k), assumes independent samples; its variance on spatially correlated increments is unknown, so `tail_index` reports no interval | low |
+| [136](136-spectrum-l2-linear-summary-is-a-convention.md) | The number `spectrum_l2` registers, a linear relative L2 over shells, is a convention with no source, and the few lowest shells decide it | unset |
+| [137](137-log-spectral-distance-is-undefined-on-empty-shells.md) | A log-spectral distance has sources but is undefined on the shells a prediction or the anchor empties; not built | unset |
 
 ## Technical debt
 

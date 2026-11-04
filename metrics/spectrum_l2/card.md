@@ -7,47 +7,57 @@ kind: metric
 
 Remove the spatial mean of each channel, transform, and sum the squared moduli into
 unit-width shells of wavevector magnitude. Writing $\hat{f}^{(c)}_{\mathbf{m}}$ for the
-transform of the mean-removed channel $c$ and $|\mathbf{m}|$ for the magnitude of mode
-$\mathbf{m}$ in integer wavenumber units (cycles across the domain), the shell energies are
+transform of the mean-removed channel $c$ divided by the number of cells $M$, and
+$|\mathbf{m}|$ for the magnitude of mode $\mathbf{m}$ in integer wavenumber units (cycles
+across the domain), the energy spectrum is
 
 $$
-E_f(\kappa) = \sum_{c=1}^{C} \; \sum_{\mathrm{rint}(|\mathbf{m}|) = \kappa}
+E_f(k) = \frac12 \sum_{c=1}^{C} \; \sum_{\mathrm{rint}(|\mathbf{m}|) = k}
 \bigl| \hat{f}^{(c)}_{\mathbf{m}} \bigr|^2 \tag{1}
 $$
 
-where $\kappa = 0, 1, 2, \ldots$ and shell $\kappa$ collects every mode with
-$\kappa - \tfrac12 \le |\mathbf{m}| < \kappa + \tfrac12$. Equation (1) is the discrete
-counterpart of the shell-averaged energy spectrum of turbulence (Equation 3 of
-[@boffetta2012]; see also [@pope2000]). On the 256 by 256 analysis grid there are 182 shells,
-running to the corner mode at $|\mathbf{m}| = 181.02$. The metric is the L2
-distance between the reference's and the candidate's shell energies, normalised by the
-reference's:
+where $k = 1, 2, \ldots$ and shell $k$ collects every mode with
+$k - \tfrac12 \le |\mathbf{m}| < k + \tfrac12$. By Parseval's theorem the shells sum to half the
+mean square of the fluctuation, $\sum_k E_f(k) = \tfrac12 \langle |f'|^2 \rangle$: for velocity
+the kinetic energy per unit mass, $E = \tfrac12 \langle u^2 \rangle = \int E(k)\,dk$, of
+[@boffetta2012], Equation (3), p. 430, whose isotropic spectrum is the shell average Equation
+(1) discretises (see also [@alexakis2018], Equation (11), and [@pope2000], Chapter 6). For
+vorticity the same sum is the enstrophy. On the 256 by 256 analysis grid there are 181 shells,
+running to the corner mode at $|\mathbf{m}| = 181.02$. The metric is the L2 distance between
+the reference's and the candidate's spectra, normalised by the reference's:
 
 $$
-S(f, g) = \frac{\bigl( \sum_{\kappa} [ E_f(\kappa) - E_g(\kappa) ]^2 \bigr)^{1/2}}
-{\bigl( \sum_{\kappa} E_f(\kappa)^2 \bigr)^{1/2}} \tag{2}
+S(f, g) = \frac{\bigl( \sum_{k} [ E_f(k) - E_g(k) ]^2 \bigr)^{1/2}}
+{\bigl( \sum_{k} E_f(k)^2 \bigr)^{1/2}} \tag{2}
 $$
 
 and is NaN when the reference has no fluctuation energy, since Equation (2) then divides by
-zero and there is no scale against which a difference could be relative.
+zero and there is no scale against which a difference could be relative. The constant
+$\tfrac12$ and the division by $M$ cancel in Equation (2); they make Equation (1) the field's own
+quantity. No source reduces two spectra to Equation (2): it is this repository's summary, and
+on linear values it is decided by the few most energetic shells (`issues/136`).
+
+The spectrum $E(k)$ at every shell is the metric's curve companion, the object its field draws.
+It is stored for the candidate on the frames `report.error_map` names, and the analysis reads
+it at the octave shells $k = 1, 2, 4, \ldots, 128$, each as a metric of its own.
 
 Three points about Equation (1) are choices, not consequences.
 
-The spatial mean is removed, so the $\kappa = 0$ shell carries no energy. On this data that
-is load-bearing rather than cosmetic: density's fluctuation is a few thousandths of its mean of $1$, so its mean is
-two to three orders of magnitude larger than any fluctuation, and a spectrum retaining it would
-compare two means and ignore the flow entirely.
+The spatial mean is removed, so the $k = 0$ shell carries no energy and is left out. On this
+data that is load-bearing rather than cosmetic: density's fluctuation is a few thousandths of
+its mean of $1$, so its mean is two to three orders of magnitude larger than any fluctuation,
+and a spectrum retaining it would compare two means and ignore the flow entirely.
 
 The shells are unit-width bands. The magnitude $|\mathbf{m}|$ is the repository's one
-definition, from `fmeval/wavenumbers.py`, and only the grouping is chosen here. That module
-exists because the filters and the calibration once disagreed about which side of a cutoff the
-diagonal modes fell on, and on density a low-pass asked to remove 30% of the energy removed
-99.997%; grouping a shared magnitude into shells cannot recreate that disagreement. The first
-version of this metric grouped modes by their exact magnitude instead, which gives 5924 shells
-of a median 8 modes on this grid and made Equation (2) nearly a mode-by-mode comparison.
-Every mode is kept, including the corners beyond
-$|\mathbf{m}| = 128$, whose shells the square grid only partly fills, so the shell energies sum
-to the field's fluctuation energy exactly.
+definition, from `fmeval/wavenumbers.py`, and only the grouping is chosen here; grouping a
+shared magnitude into shells cannot put a mode on two sides of one cutoff. Grouping modes by
+their exact magnitude instead would give 5924 shells of a median 8 modes on this grid and make
+Equation (2) nearly a mode-by-mode comparison. Every mode is kept, including the corners beyond
+$|\mathbf{m}| = 128$, whose shells the square grid only partly fills, so the spectrum sums to
+the field's fluctuation energy exactly. The spectrum falls across those corner shells because
+they are incomplete, not because the field holds less energy there, and the figure draws them
+as they are. [@alexakis2018], Equation (11), bins $k \le |\mathbf{m}| < k + 1$ instead of
+rounding; on unit shells the two differ by half a shell in where each mode is counted.
 
 The normalisation in Equation (2) is taken from the reference, which makes the metric
 dimensionless and scale-free — multiplying both fields by a constant scales both spectra by
@@ -69,6 +79,63 @@ its value is unchanged by a rescaling of the cell size.
 
 It therefore declares `requires_periodic`, and the harness does not run it on a dataset with a
 non-periodic axis, such as the Sod shock tube; it reports why in the run log.
+
+### How its field reports it
+
+Two fields compare energy spectra: turbulence, where the spectrum is a central object, and
+machine-learned surrogates of fluid and weather models, which compare a prediction's spectrum
+with the reference's.
+
+- **Turbulence** computes the shell-summed spectrum $E(k)$ normalised so that it integrates to
+  the kinetic energy ([@boffetta2012], Equation (3), p. 430; [@alexakis2018], Equation (11)).
+  It draws $E(k)$ on log-log axes with the theoretical power laws overlaid: $k^{-5/3}$ and
+  $k^{-3}$ for forced two-dimensional turbulence ([@boffetta2012], Equations (12)–(13),
+  p. 431, and Fig. 11a), and $\kappa^{-5/3}$ for three-dimensional turbulence ([@pope2000],
+  Figs. 6.13–6.14). It often also draws the spectrum compensated by the expected power law,
+  $\epsilon^{-2/3} k^{5/3} E(k)$ or $k^3 E(k)$, on a linear axis, where an inertial range shows
+  as a plateau ([@pope2000], Figs. 6.15 and 6.17; [@boffetta2012], Fig. 5a inset and Fig. 8).
+  The numbers it reports beside the figure are the slope and the constant read off that plateau
+  (the Kolmogorov constant $C = 6.0 \pm 0.4$ in [@boffetta2012], Fig. 5a), not a distance
+  between two spectra. Its experiment is forced, statistically stationary turbulence with an
+  inertial range.
+- **Machine-learned surrogates** draw the prediction's spectrum over the reference's on log-log
+  axes: [@kochkov2021], Fig. 2c, scaled by $k^5$, against a $2048^2$ reference simulation;
+  [@rasp2024], Section 5.3 and Fig. 10, at lead times from 12 hours to 10 days against the
+  ERA5 reanalysis, with no spectral score. Where a number is reported it is one of several
+  forms: the absolute error of the $k^5$-scaled spectrum, without a stated formula
+  ([@kochkov2021], Fig. 5); the root-mean-square error of the logarithm of the spectrum
+  ([@stachenfeld2022], Section 5 and Fig. 2c–d); or the L2 distance between log spectra, used as
+  the ground distance of a Wasserstein distance between samples ([@lienen2024], Section 6.3,
+  Equation (7)). The binned spectral error of [@ohana2024], Appendix E.3, is not a comparison
+  of spectra: it filters the difference of the two fields into three bands, so it sees phase,
+  and is a band-limited pointwise error.
+
+**What this bundle reports, and how it differs.** The curve companion is the field's object,
+Equation (1), with the field's normalisation, at every shell. The figure draws it on log-log
+axes, the reference's (the clean level) in black under each degraded curve, as both fields draw
+it. It is not compensated: compensating presumes an inertial range and its exponent, which
+`kinet_re5e4`, two-dimensional, unforced and decaying, has not established. The corner shells
+beyond $k = 128$ are drawn as they are and fall off because they are incomplete (Definition).
+The registered number, a linear relative L2 over shells, comes from no source (`issues/136`).
+No source found reports a linear one; the logarithmic form of [@stachenfeld2022] and
+[@lienen2024] is not built as a sibling, because a logarithm is undefined on the shells that
+the anchor and the sharp low-pass filters empty, and no source says what to do there
+(`issues/137`, `judgements/016`).
+
+**The experiments here.** The field's experiment, forced stationary turbulence with an inertial
+range, does not exist here:
+[EXP-spectral_energy_flux-forced-2d-compressible-flux-loop](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spectral_energy_flux-forced-2d-compressible-flux-loop.md)
+writes up the nearest one, forced two-dimensional compressible turbulence, and
+[EXP-increment_flatness-isotropic-3d-turbulence-cutouts](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-increment_flatness-isotropic-3d-turbulence-cutouts.md)
+the three-dimensional one. The surrogates' test bed, rollouts of a model from many initial conditions,
+is
+[EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md).
+[EXP-spectral_energy_flux-graded-phase-randomisation](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spectral_energy_flux-graded-phase-randomisation.md)
+is an axis this metric is blind to by construction, a null for it. The metric runs on the
+degradation ladder on `kinet_re5e4`, on the forecasts of `forecast_re5e4` against their targets
+and on the Reynolds ladder. It is not run on `synthetic_ensemble`, whose every axis leaves the
+member mean's spectrum unchanged (reason under Results), or on `sod_shock_tube`, whose walls
+rule out a periodic spectrum.
 
 ## Performance
 
@@ -235,6 +302,21 @@ fields. A large value here means the balance of scales is wrong. A small value h
 almost nothing on its own, and should be read only as "the balance of scales is not the
 problem".
 
+The companion `spectrum_l2` is the curve behind the number: a `coordinate` column holding the
+shell $k$ in cycles across the domain and a value holding $E(k)$ of Equation (1) there, in the
+field's units squared, for the candidate (on the clean level, the reference). One value of it
+is the energy per unit mass in that shell for velocity, the enstrophy in it for vorticity, and
+half the variance in it for density; summed over shells it is half the fluctuation's mean
+square. The whole curve is stored on the frames and ladder entries `report.error_map` names and
+drawn in Performance. The tables read it at the octave shells 1, 2, 4, ..., 128 only, because
+each coordinate the analysis reads costs seconds per field and a column on the card; the
+octaves span the grid's scales evenly in the logarithm, as the figure's axis does. A worked
+example by hand, from `test_metric.py`: on a 4 by 4 grid, one wave across the domain of
+amplitude 1 plus the grid-scale alternation of amplitude 0.5 along the other axis has
+$E = 0.25$ in shell 1, $0.125$ in shell 2 and nothing in shell 3, summing to 0.375, half its
+mean square of 0.75; the wave alone scores $1/\sqrt 5 = 0.447$ against it, because it lacks
+shell 2.
+
 ## Limitations
 
 The metric assigns zero to fields that are not remotely alike, and this is not an edge case
@@ -250,13 +332,14 @@ not two independent checks.
 
 A second, quieter failure comes from the linear normalisation in Equation (2). The sum is
 dominated by whichever shells hold the most energy, and on this data that is a handful of very
-low wavenumbers: the calibration recorded with `comparison_1790633480` puts half of density's
-fluctuation energy below $|\mathbf{m}| = 1.29$ and 90% below 3.03, and for velocity half at
-$|\mathbf{m}| = 1$. It follows from Equation (2) that a prediction that destroys the entire
-inertial range while preserving the largest scales scores close to zero, because the shells
-it ruined contributed little to the norm in the first place. A logarithmic or
-per-shell-relative comparison would weight the scales more evenly and is not what this
-computes.
+low wavenumbers: on frames 2000, 6000 and 10000 of `kinet_re5e4`, shells 1 to 3 hold more than
+99.7% of the denominator of Equation (2) for density and velocity, and every shell from 16 up
+less than 5e-7 of it (`issues/136`, which shows the computation). It follows from Equation (2)
+that a prediction that loses everything above shell 16 on those fields while keeping the
+largest scales scores below about 7e-4, because the shells it ruined contributed little to the
+norm in the first place. Vorticity, whose spectrum weighs the small scales more, is less
+affected. The per-shell tables under "The curve behind the number" show what the number does
+not; a logarithmic comparison would weigh the scales evenly and is not what this computes.
 
 Third, a shell is blind to where inside it the energy sits. That is the purpose of shell
 averaging, and it matters most at the lowest shells, which are the widest relative to their
@@ -284,7 +367,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 |---|---|---|
 | `kinet_re5e4` | developed flow | measured, run `comparison_1793657627`: the main results |
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
-| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not yet run; on this dataset the metric scores the member mean of the ensemble |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: every axis there leaves the member mean's spectrum unchanged (dispersion scales members about their mean; a uniform bias leaves every fluctuation unchanged) |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
 
@@ -568,6 +651,17 @@ Median damage over frames against the applied strength, log-log, for spectrum_l2
 Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 the anchor (by default the field's own mean); a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
 
 <!-- END GENERATED results_damage_by_level -->
+
+### The curve behind the number
+
+<!-- GENERATED results_companion: written by `python -m fmeval.cards evidence spectrum_l2`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence spectrum_l2`.
+
+<!-- END GENERATED results_companion -->
+
+The spectrum read shell by shell at the octaves, written when the evidence is regenerated from
+a run that stores the curve.
 
 ## References
 

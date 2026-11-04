@@ -114,9 +114,11 @@ class Companion:
     the signature."""
     takes_ctx: bool
     analysed: tuple[Any, ...] | None = None
-    """For a curve, the coordinates the analysis reads, a subset of those the curve returns. None
-    reads every coordinate. When set, ``companions.csv`` holds only these, and the whole dense
-    curve is stored on the frames ``report.error_map`` names for the figures."""
+    """For a curve, the coordinates the analysis reads. None reads every coordinate. When set,
+    ``companions.csv`` holds those the curve returns, and the whole dense curve is stored on the
+    frames ``report.error_map`` names for the figures. A curve whose coordinates the grid sets,
+    such as wavenumber shells, may stop short of the larger ones on a coarse grid
+    (:meth:`unmatched_analysed`)."""
     scales: tuple[Scale, Scale] | None = None
     """For a curve or a point set, the ``(x, y)`` axis scales its field draws it on, each one of
     :data:`SCALES`. None keeps the renderers' default: a curve's coordinate on a base-2 log axis
@@ -124,6 +126,19 @@ class Companion:
     style: CurveStyle = "line"
     """For a curve, ``"bars"`` when its field draws it as a histogram over fixed bins (a rank
     histogram's counts): a renderer style, not a storage kind."""
+
+    def unmatched_analysed(self, coordinates: Sequence[Any]) -> list[Any]:
+        """The analysed coordinates a curve of ``coordinates`` should hold and does not.
+
+        Each analysed coordinate must be among the curve's, or lie beyond its largest: a
+        coarser grid has fewer shells, so the octave 128 is absent from a 64-cell grid's curve
+        and is not an error there. One missing inside the curve's range is a coordinate spelled
+        differently from the curve's, which would silently drop it from the analysis.
+        """
+        present = np.asarray(coordinates).tolist()
+        last = max(present) if present else None
+        return [x for x in self.analysed or () if x not in present
+                and not (isinstance(x, (int, float)) and last is not None and x > last)]
 
     def describe(self) -> dict[str, Any]:
         # Plain lists, as JSON reads them back: a point set's coordinates are (name, units) pairs.
@@ -383,8 +398,9 @@ def companion(*, of: str, name: str | None = None, kind: CompanionKind = "field"
             ``(("birth", "field"), ("death", "field"))``. Required for a curve and a point set,
             refused for a field map.
         analysed: For a curve only, the coordinates the analysis reads, each exactly as the
-            curve returns it; the curve's numeric coordinates must include every one, which the
-            pipeline checks on every row. None, the default, reads every coordinate.
+            curve returns it; the curve's coordinates must include every one that is not beyond
+            its largest (:meth:`Companion.unmatched_analysed`), which the pipeline checks on
+            every row. None, the default, reads every coordinate.
         scales: For a curve or a point set, the ``(x, y)`` axis scales of its figure as its
             field draws it, each ``"linear"``, ``"log"`` or ``"symlog"`` (for a quantity that
             changes sign, such as an energy flux). None, the default, keeps the renderers'
