@@ -72,6 +72,12 @@ FIGURE_BLOCKS: dict[str, str] = {
 #: The words a card uses for the field's figure where it names the slot rather than a renderer.
 STANDARD_TITLE = "field-standard"
 
+#: Renderer options a card overrides. A card shows at most four point-set panels: twelve
+#: persistence diagrams of vorticity, about 7000 points each on the pinned kinet run, wrote
+#: 10.6 MB of numbers beside one figure, against the 40 MB budget for every committed
+#: generated file (``tests/test_cards.py``). The report keeps every panel.
+CARD_OPTIONS: dict[str, dict] = {"companion_points": {"max_panels": 4}}
+
 #: Fixed salt for SVG element ids. Any string works; what matters is that it never changes,
 #: because a changed salt rewrites every committed SVG at once.
 SVG_HASHSALT = "pde_metrics"
@@ -128,7 +134,7 @@ def _panels(data: pd.DataFrame | None, key: str) -> dict[str, list[dict]]:
 def render_figure(spec: RendererSpec, ctx: ReportContext, subset: pd.DataFrame, out_dir: Path,
                   stem: str, *, alt: str, record: dict, panel_key: str,
                   keep: Callable[[FigureItem], bool] | None = None,
-                  ) -> tuple[list[CardFigure], str]:
+                  options: dict | None = None) -> tuple[list[CardFigure], str]:
     """Draw one renderer, save its figures as byte-stable SVGs and their numbers as strict JSON.
 
     Drawing and saving share one ``rc_context`` holding the theme and the fixed
@@ -147,13 +153,14 @@ def render_figure(spec: RendererSpec, ctx: ReportContext, subset: pd.DataFrame, 
         keep: Which of the renderer's figures to write, each under ``stem`` extended by the
             keys that tell it apart (:func:`fmeval.report.latex.slug`, the metric left out).
             None writes the first figure alone, under ``stem``.
+        options: Renderer options overriding its defaults (:func:`draw`).
 
     Returns:
         The figures written, empty with the renderer's reason when it declined.
     """
     written = []
     with rc_context({**ctx.style.rc, "svg.hashsalt": SVG_HASHSALT}):
-        result, why = draw(spec, ctx, subset)
+        result, why = draw(spec, ctx, subset, options)
         items = ([] if result is None else result.figures[:1] if keep is None
                  else [item for item in result.figures if keep(item)])
         for item in items:
@@ -284,7 +291,8 @@ def metric_figures(
                 spec, ctx, subset, out_dir, name, alt=ALT_TEXT[name], panel_key="field",
                 record={"metric": metric, "run": run.folder.name,
                         "dataset": str(run.rows["dataset"].iloc[0]), "figure": name},
-                keep=None if spec.scope == "per_metric" else (lambda i: "view" not in i.keys))
+                keep=None if spec.scope == "per_metric" else (lambda i: "view" not in i.keys),
+                options=CARD_OPTIONS.get(name))
             figures += [replace(f, slot=slot) for f in out]
             why += [declined] if declined else []
         if figures:

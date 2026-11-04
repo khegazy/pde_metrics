@@ -129,6 +129,9 @@ def ladder_curves(ctx, df, opts) -> PlotResult:
 #: Most panels one stored-map or point-set figure draws, so a figure stays legible on a page.
 _MAX_PANELS = 12
 
+#: Largest point set drawn as vector markers; a larger one is rasterised inside the figure.
+_VECTOR_POINTS = 1000
+
 
 def companion_records(ctx, metric: str) -> list[dict]:
     """A metric's companions (name, kind, coordinate, analysed, scales, style) as the run's own
@@ -350,11 +353,12 @@ def _companion_curve_items(ctx, label: str, field: str, meta: dict, rows: pd.Dat
     section=3, order=13, scope="per_metric_field",
     title="The point set behind the number",
     requires_maps=True,
+    defaults={"max_panels": _MAX_PANELS},
 )
 def companion_points(ctx, df, opts) -> PlotResult:
     """The metric's point-set companion on every stored variant, on shared axes.
 
-    One panel per stored variant and frame, frames in time order, at most :data:`_MAX_PANELS`;
+    One panel per stored variant and frame, frames in time order, at most ``max_panels``;
     the caption says when more were stored. The first two declared coordinates are the axes, on
     the scales the companion declares (linear by default), and a third, if declared, colours the
     points on one scale for the whole figure. The axes are shared for the reason the gallery
@@ -384,7 +388,8 @@ def companion_points(ctx, df, opts) -> PlotResult:
         label = metric_registry.companion_label(metric, entry["name"])
         stored = {k: v for k, v in ctx.maps.items() if parse_map_key(k)[:2] == (label, field)}
         if stored:
-            items.append(_point_set_item(ctx, label, field, entry, stored, lineout, {
+            items.append(_point_set_item(ctx, label, field, entry, stored, lineout,
+                                         opts["max_panels"], {
                 "metric": metric, "field": field,
                 **({"companion": entry["name"]} if label != metric else {})}))
     ctx.require(bool(items), f"no point sets of {metric} on {field} were stored")
@@ -392,7 +397,8 @@ def companion_points(ctx, df, opts) -> PlotResult:
 
 
 def _point_set_item(ctx, label: str, field: str, entry: dict, stored: dict[str, np.ndarray],
-                    lineout: dict[tuple[str, int], np.ndarray], meta: dict) -> FigureItem:
+                    lineout: dict[tuple[str, int], np.ndarray], max_panels: int,
+                    meta: dict) -> FigureItem:
     """The figure :func:`companion_points` draws for one point-set companion, ``label``, over
     the line-outs ``lineout`` holds by ``(variant, frame)``."""
     names = [name for name, _ in entry["coordinate"]]
@@ -406,7 +412,7 @@ def _point_set_item(ctx, label: str, field: str, entry: dict, stored: dict[str, 
     # A clean set drawn under every panel needs no panel of its own, unless it is all there is.
     panels = ([k for k in order if parse_map_key(k)[2] != REFERENCE_VARIANT] if overlay
               else order) or order
-    shown, panels = len(panels), panels[:_MAX_PANELS]
+    shown, panels = len(panels), panels[:max_panels]
     frames = sorted({parse_map_key(k)[3] for k in panels})
     under = {f: clean[f] for f in frames if f in clean}
     lines = {w: lineout[w] for w in {*(parse_map_key(k)[2:] for k in panels),
@@ -439,7 +445,10 @@ def _point_set_item(ctx, label: str, field: str, entry: dict, stored: dict[str, 
             look = ({"facecolors": "none", "edgecolors": "0.55", "linewidths": 0.6, "s": 12}
                     if ring else {"linewidths": 0, "s": 6,
                                   **({"c": p[mask, 2], **colour} if colour else {"color": "k"})})
-            ax.scatter(xy[mask, 0], xy[mask, 1], marker=marker, **look)
+            # A set of thousands of points is drawn as an image inside the vector figure: as
+            # markers, persistence_distance's vorticity diagrams made one card SVG 18.8 MB.
+            ax.scatter(xy[mask, 0], xy[mask, 1], marker=marker,
+                       rasterized=len(p) > _VECTOR_POINTS, **look)
 
     ncols = min(4, len(panels))
     nrows = -(-len(panels) // ncols)

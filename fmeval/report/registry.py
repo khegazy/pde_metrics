@@ -203,16 +203,25 @@ def check_preconditions(spec: RendererSpec, ctx) -> tuple[bool, str]:
     return True, ""
 
 
-def draw(spec: RendererSpec, ctx, subset: pd.DataFrame) -> tuple[Any, str]:
+def draw(spec: RendererSpec, ctx, subset: pd.DataFrame,
+         options: dict[str, Any] | None = None) -> tuple[Any, str]:
     """Run one renderer on one scope subset: ``(result, "")``, or ``(None, reason)``.
 
     The reason is the renderer's own :class:`RendererUnavailable` message. Anything else it
     raises propagates, and each caller decides what that means: the report records it and
     carries on, card generation stops. Call inside the caller's ``rc_context``. The renderer
-    gets a fresh copy of its defaults, so one call cannot change the next.
+    gets a fresh copy of its defaults, updated by ``options`` (each a key of its defaults), so
+    one call cannot change the next.
+
+    Raises:
+        TypeError: If ``options`` names a key the renderer's defaults do not have.
     """
+    unknown = set(options or {}) - set(spec.defaults)
+    if unknown:
+        raise TypeError(f"{spec.name} has no option {sorted(unknown)}; it has "
+                        f"{sorted(spec.defaults)}")
     try:
-        return spec.fn(ctx, subset, dict(spec.defaults)), ""
+        return spec.fn(ctx, subset, {**spec.defaults, **(options or {})}), ""
     except RendererUnavailable as exc:
         return None, str(exc)
 
