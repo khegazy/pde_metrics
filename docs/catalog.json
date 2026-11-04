@@ -36,6 +36,7 @@
       "kind": "degradation",
       "math": null,
       "name": "additive_noise",
+      "other_evidence": [],
       "output": {
         "description": "Noise standard deviation as a fraction of the reference field's fluctuation RMS, so 0.1 means noise a tenth the size of the field's own variation.",
         "lower_bound": 0.0,
@@ -86,6 +87,7 @@
       "kind": "degradation",
       "math": null,
       "name": "band_attenuate",
+      "other_evidence": [],
       "output": {
         "description": "Fraction of the field's spectral energy above the cutoff that the filter removes, resolved per field to a cutoff wavenumber against a measured spectrum.",
         "lower_bound": 0.0,
@@ -134,6 +136,7 @@
       "kind": "degradation",
       "math": null,
       "name": "bias",
+      "other_evidence": [],
       "output": {
         "description": "Offset as a fraction of the reference field's fluctuation RMS, so 0.5 shifts the field by half its own variation.",
         "lower_bound": 0.0,
@@ -181,6 +184,7 @@
       "kind": "degradation",
       "math": null,
       "name": "box_blur",
+      "other_evidence": [],
       "output": {
         "description": "Kernel width in analysis-grid cells, rounded to an odd number, resolved per field from a severity given as a fraction of that field's characteristic scale.",
         "lower_bound": 0.0,
@@ -228,6 +232,7 @@
       "kind": "degradation",
       "math": null,
       "name": "coarsen",
+      "other_evidence": [],
       "output": {
         "description": "Coarsening factor, a whole number of cells per block. Absolute rather than calibrated: a factor of four means four on every field.",
         "lower_bound": 0.0,
@@ -275,6 +280,7 @@
       "kind": "degradation",
       "math": null,
       "name": "coarsen_bandlimited",
+      "other_evidence": [],
       "output": {
         "description": "Coarsening factor, a whole number of cells per block, on the same absolute scale as coarsen: a factor of four means four on every field.",
         "lower_bound": 0.0,
@@ -322,6 +328,7 @@
       "kind": "degradation",
       "math": null,
       "name": "disk_blur",
+      "other_evidence": [],
       "output": {
         "description": "Kernel radius in analysis-grid cells, resolved per field from a severity given as a fraction of that field's characteristic scale.",
         "lower_bound": 0.0,
@@ -369,6 +376,7 @@
       "kind": "degradation",
       "math": null,
       "name": "epanechnikov_blur",
+      "other_evidence": [],
       "output": {
         "description": "Kernel radius in analysis-grid cells, resolved per field from a severity given as a fraction of that field's characteristic scale.",
         "lower_bound": 0.0,
@@ -417,6 +425,7 @@
       "kind": "degradation",
       "math": null,
       "name": "gain",
+      "other_evidence": [],
       "output": {
         "description": "Relative gain error: 0.1 means the fluctuation is scaled by 1.1, so every departure from the mean is a tenth too large.",
         "lower_bound": 0.0,
@@ -464,6 +473,7 @@
       "kind": "degradation",
       "math": null,
       "name": "gaussian_blur",
+      "other_evidence": [],
       "output": {
         "description": "Kernel standard deviation in analysis-grid cells, resolved per field from a severity given as a fraction of that field's characteristic scale.",
         "lower_bound": 0.0,
@@ -514,6 +524,7 @@
       "kind": "degradation",
       "math": null,
       "name": "gaussian_impostor",
+      "other_evidence": [],
       "output": {
         "description": "None. The severity is ignored entirely; there is one experiment, not a ladder.",
         "lower_bound": 0.0,
@@ -563,6 +574,7 @@
       "kind": "degradation",
       "math": null,
       "name": "highpass_butterworth",
+      "other_evidence": [],
       "output": {
         "description": "Fraction of the field's spectral energy below the cutoff that the filter removes, resolved per field to a cutoff wavenumber against a measured spectrum.",
         "lower_bound": 0.0,
@@ -610,6 +622,7 @@
       "kind": "degradation",
       "math": null,
       "name": "highpass_ideal",
+      "other_evidence": [],
       "output": {
         "description": "Fraction of the field's spectral energy below the cutoff that the filter removes, resolved per field to a cutoff wavenumber against a measured spectrum.",
         "lower_bound": 0.0,
@@ -660,6 +673,7 @@
       "kind": "degradation",
       "math": null,
       "name": "identity",
+      "other_evidence": [],
       "output": {
         "description": "None. There is one level and it applies no change.",
         "lower_bound": 0.0,
@@ -709,6 +723,7 @@
       "kind": "degradation",
       "math": null,
       "name": "lowpass_butterworth",
+      "other_evidence": [],
       "output": {
         "description": "Fraction of the field's spectral energy above the cutoff that the filter removes, resolved per field to a cutoff wavenumber against a measured spectrum.",
         "lower_bound": 0.0,
@@ -756,6 +771,7 @@
       "kind": "degradation",
       "math": null,
       "name": "lowpass_ideal",
+      "other_evidence": [],
       "output": {
         "description": "Fraction of the field's spectral energy above the cutoff that the filter removes, resolved per field to a cutoff wavenumber against a measured spectrum.",
         "lower_bound": 0.0,
@@ -803,6 +819,7 @@
       "kind": "degradation",
       "math": null,
       "name": "mean_field",
+      "other_evidence": [],
       "output": {
         "description": "No severity. There is one level, and it removes every fluctuation.",
         "lower_bound": 0.0,
@@ -848,6 +865,7 @@
       "kind": "degradation",
       "math": null,
       "name": "median_blur",
+      "other_evidence": [],
       "output": {
         "description": "Window width in analysis-grid cells, rounded to an odd number, resolved per field from a severity given as a fraction of that field's characteristic scale.",
         "lower_bound": 0.0,
@@ -893,6 +911,7 @@
       "kind": "degradation",
       "math": null,
       "name": "multiplicative_noise",
+      "other_evidence": [],
       "output": {
         "description": "Standard deviation of the multiplicative factor, relative: 0.1 means each cell is scaled by roughly one plus or minus a tenth.",
         "lower_bound": 0.0,
@@ -943,6 +962,7 @@
       "kind": "degradation",
       "math": null,
       "name": "random_large_translation",
+      "other_evidence": [],
       "output": {
         "description": "A draw index, not a severity. Each level is an independent random offset drawn from the same distribution; the levels are not ordered and carry no increasing damage.",
         "lower_bound": 0.0,
@@ -990,6 +1010,7 @@
       "kind": "degradation",
       "math": null,
       "name": "spread_deflate",
+      "other_evidence": [],
       "output": {
         "description": "The fraction of the calibrated spread removed. Severity 1 collapses every member onto the ensemble mean, a forecast claiming certainty.",
         "lower_bound": 0.0,
@@ -1037,6 +1058,7 @@
       "kind": "degradation",
       "math": null,
       "name": "spread_inflate",
+      "other_evidence": [],
       "output": {
         "description": "The excess dispersion, as a fraction of the calibrated spread. Severity 1 doubles the distance of every member from the ensemble mean.",
         "lower_bound": 0.0,
@@ -1082,6 +1104,7 @@
       "kind": "degradation",
       "math": null,
       "name": "subsample",
+      "other_evidence": [],
       "output": {
         "description": "Subsampling factor, a whole number of cells between retained samples. Absolute rather than calibrated.",
         "lower_bound": 0.0,
@@ -1134,6 +1157,7 @@
       "kind": "degradation",
       "math": null,
       "name": "translate",
+      "other_evidence": [],
       "output": {
         "description": "Displacement in whole analysis-grid cells, absolute rather than calibrated: one cell means one cell on every field.",
         "lower_bound": 0.0,
@@ -1183,6 +1207,7 @@
       "kind": "degradation",
       "math": null,
       "name": "translate_subpixel",
+      "other_evidence": [],
       "output": {
         "description": "Displacement in analysis-grid cells, continuous rather than rounded, absolute rather than calibrated.",
         "lower_bound": 0.0,
@@ -1335,6 +1360,53 @@
         ],
         "run": "crps_1793780354"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "crps_1793780354",
+          "state": "measured"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N M log M)",
@@ -1343,6 +1415,7 @@
         "triangle_inequality": false
       },
       "name": "crps",
+      "other_evidence": [],
       "output": {
         "description": "The score in the field's own units, averaged over channels and cells. Zero when every member equals the reference; larger is worse.",
         "lower_bound": 0.0,
@@ -2358,6 +2431,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N log N)",
@@ -2366,6 +2486,7 @@
         "triangle_inequality": true
       },
       "name": "energy_distance",
+      "other_evidence": [],
       "output": {
         "description": "Mean over channels and spatial axes of the energy distance between the reference's and the candidate's one-cell increment distributions along that axis, in the square root of the field's units. Zero when every increment distribution matches.",
         "lower_bound": 0.0,
@@ -2518,6 +2639,53 @@
         ],
         "run": "energy_score_1793780354"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "energy_score_1793780354",
+          "state": "measured"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N M^2)",
@@ -2526,6 +2694,7 @@
         "triangle_inequality": false
       },
       "name": "energy_score",
+      "other_evidence": [],
       "output": {
         "description": "The score in the field's own units, from the Euclidean norm over every channel and cell. Zero when every member equals the reference; larger is worse.",
         "lower_bound": 0.0,
@@ -2681,6 +2850,53 @@
         ],
         "run": "ensemble_mean_rmse_1793780354"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "ensemble_mean_rmse_1793780354",
+          "state": "measured"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N M)",
@@ -2689,6 +2905,7 @@
         "triangle_inequality": true
       },
       "name": "ensemble_mean_rmse",
+      "other_evidence": [],
       "output": {
         "description": "Root mean squared error between the member-wise mean and the reference, in the field's own units. Zero when the ensemble mean is exact.",
         "lower_bound": 0.0,
@@ -3069,6 +3286,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs vorticity, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs vorticity, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N)",
@@ -3077,6 +3341,7 @@
         "triangle_inequality": false
       },
       "name": "enstrophy",
+      "other_evidence": [],
       "output": {
         "description": "Half the mean squared vorticity magnitude, summed over components, in the square of the vorticity units. Reported per variant; the drift from the reference is what is read.",
         "lower_bound": 0.0,
@@ -4092,6 +4357,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N log N)",
@@ -4100,6 +4412,7 @@
         "triangle_inequality": true
       },
       "name": "h1_seminorm",
+      "other_evidence": [],
       "output": {
         "description": "Root mean square of the spectral gradient of the error, summed over channels and gradient directions, in the field's units per length. Normalised to match h_minus_one, so for an error carried by one mode the two multiply to the mean squared error.",
         "lower_bound": 0.0,
@@ -5125,6 +5438,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N log N)",
@@ -5133,6 +5493,7 @@
         "triangle_inequality": true
       },
       "name": "h_minus_one",
+      "other_evidence": [],
       "output": {
         "description": "Root-mean-square of the error after applying the inverse half-Laplacian, in the field's units times a length. Normalised so that at Sobolev order zero it would return exactly rmse, which makes the two directly comparable.",
         "lower_bound": 0.0,
@@ -6150,6 +6511,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N)",
@@ -6158,6 +6566,7 @@
         "triangle_inequality": false
       },
       "name": "increment_flatness",
+      "other_evidence": [],
       "output": {
         "description": "Fourth moment of the one-cell increments divided by the square of their second moment, averaged over spatial axes and channels. Exactly 3 for a Gaussian field. Reported per variant; the drift from the reference's value is what is read.",
         "lower_bound": 1.0,
@@ -7172,6 +7581,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N log N)",
@@ -7180,6 +7636,7 @@
         "triangle_inequality": true
       },
       "name": "increment_w1",
+      "other_evidence": [],
       "output": {
         "description": "Mean over channels and spatial axes of the 1-Wasserstein distance between the reference's and the candidate's increment distributions along that axis, in the field's units. Zero when every increment distribution matches.",
         "lower_bound": 0.0,
@@ -8208,6 +8665,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N log^2 N)",
@@ -8216,6 +8720,7 @@
         "triangle_inequality": false
       },
       "name": "increment_w1_by_separation",
+      "other_evidence": [],
       "output": {
         "description": "Mean over separations 1, 2, 4, ... cells of the 1-Wasserstein distance between the reference's and the candidate's increment distributions at that separation, divided by the reference's mean absolute increment there; dimensionless. A repository convention with no source (issues/098). The curve of undivided distances is stored beside it.",
         "lower_bound": 0.0,
@@ -8598,6 +9103,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs velocity, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N)",
@@ -8606,6 +9158,7 @@
         "triangle_inequality": false
       },
       "name": "kinetic_energy",
+      "other_evidence": [],
       "output": {
         "description": "Half the mean squared velocity magnitude, summed over components, in the square of the velocity units. Reported per variant; the drift from the reference is what is read.",
         "lower_bound": 0.0,
@@ -9623,6 +10176,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N)",
@@ -9631,6 +10231,7 @@
         "triangle_inequality": true
       },
       "name": "mae",
+      "other_evidence": [],
       "output": {
         "description": "Mean over all channels and grid cells of the absolute field difference, in the field's own units.",
         "lower_bound": 0.0,
@@ -10646,6 +11247,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N)",
@@ -10654,6 +11302,7 @@
         "triangle_inequality": true
       },
       "name": "max_error",
+      "other_evidence": [],
       "output": {
         "description": "Maximum over all channels and grid cells of the absolute field difference, in the field's own units.",
         "lower_bound": 0.0,
@@ -11678,6 +12327,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": "mse_1793784126",
+          "state": "measured"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N)",
@@ -11686,6 +12382,917 @@
         "triangle_inequality": false
       },
       "name": "mse",
+      "other_evidence": [
+        {
+          "axes": [
+            {
+              "axis": "additive_noise",
+              "blindness_q": 1.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": 0.1783900254,
+              "elasticity": 1.998027378,
+              "elasticity_x": "severity (amplitude)",
+              "family": "stochastic",
+              "field": "density",
+              "first_detected_level": 4.0,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.2692876678,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "power",
+              "severity_resolution": 0.0024824165,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "box_blur",
+              "blindness_q": 1.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": null,
+              "elasticity": 1.55723623,
+              "elasticity_x": "severity_nominal (width)",
+              "family": "smoothing",
+              "field": "density",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0630211472,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "power",
+              "severity_resolution": 0.0067868573,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "coarsen",
+              "blindness_q": 0.0,
+              "cliffs_delta": 0.84,
+              "detection_onset_severity": null,
+              "elasticity": 1.3196755978,
+              "elasticity_x": "severity (factor)",
+              "family": "resolution",
+              "field": "density",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0005969322,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "linear",
+              "severity_resolution": 2.5692128201,
+              "weakest_separation": 0.92
+            },
+            {
+              "axis": "coarsen_bandlimited",
+              "blindness_q": 0.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": null,
+              "elasticity": 1.0560290078,
+              "elasticity_x": "severity (factor)",
+              "family": "resolution",
+              "field": "density",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0003298167,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "linear",
+              "severity_resolution": 0.3743138549,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "gaussian_blur",
+              "blindness_q": 1.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": 0.1445018521,
+              "elasticity": 1.5549921293,
+              "elasticity_x": "severity_nominal (sigma)",
+              "family": "smoothing",
+              "field": "density",
+              "first_detected_level": 4.0,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.1722558798,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "power",
+              "severity_resolution": 0.0035442692,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "gaussian_impostor",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "stochastic",
+              "field": "density",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": true,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "highpass_butterworth",
+              "blindness_q": 1.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": 0.45,
+              "elasticity": null,
+              "elasticity_x": "severity_nominal (energy removed)",
+              "family": "spectral",
+              "field": "density",
+              "first_detected_level": 1.0,
+              "half_damage_severity": 0.5928001989,
+              "is_probe": false,
+              "largest_response_upper_bound": 1.0135684424,
+              "levels": 2,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "undetermined",
+              "severity_resolution": 0.0090932728,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "highpass_ideal",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "spectral",
+              "field": "density",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "lowpass_butterworth",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "spectral",
+              "field": "density",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "lowpass_ideal",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "spectral",
+              "field": "density",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "mean_field",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "smoothing",
+              "field": "density",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": true,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "translate_subpixel",
+              "blindness_q": 0.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": null,
+              "elasticity": 1.9435552112,
+              "elasticity_x": "severity (distance)",
+              "family": "geometric",
+              "field": "density",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0007687015,
+              "levels": 6,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "linear",
+              "severity_resolution": 0.0523023003,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "translate_x",
+              "blindness_q": 0.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": null,
+              "elasticity": 1.044788167,
+              "elasticity_x": "severity (distance)",
+              "family": "geometric",
+              "field": "density",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0039149682,
+              "levels": 5,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "power",
+              "severity_resolution": 0.2169373464,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "uncorrelated",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "geometric",
+              "field": "density",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": true,
+              "largest_response_upper_bound": null,
+              "levels": 6,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "additive_noise",
+              "blindness_q": 1.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": 0.1847259723,
+              "elasticity": 2.0015876614,
+              "elasticity_x": "severity (amplitude)",
+              "family": "stochastic",
+              "field": "pressure",
+              "first_detected_level": 4.0,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.2679342566,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "power",
+              "severity_resolution": 0.0043927145,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "box_blur",
+              "blindness_q": 1.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": null,
+              "elasticity": 1.890147003,
+              "elasticity_x": "severity_nominal (width)",
+              "family": "smoothing",
+              "field": "pressure",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0920896045,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "power",
+              "severity_resolution": 0.0141543149,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "coarsen",
+              "blindness_q": 0.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": null,
+              "elasticity": 3.7377530932,
+              "elasticity_x": "severity (factor)",
+              "family": "resolution",
+              "field": "pressure",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0006659296,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "linear",
+              "severity_resolution": 1.4065971014,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "coarsen_bandlimited",
+              "blindness_q": 0.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": null,
+              "elasticity": 1.040127996,
+              "elasticity_x": "severity (factor)",
+              "family": "resolution",
+              "field": "pressure",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0002806873,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "linear",
+              "severity_resolution": 0.4036847723,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "gaussian_blur",
+              "blindness_q": 1.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": 0.1331303205,
+              "elasticity": 1.8463146672,
+              "elasticity_x": "severity_nominal (sigma)",
+              "family": "smoothing",
+              "field": "pressure",
+              "first_detected_level": 4.0,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.1737049451,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "power",
+              "severity_resolution": 0.0039827063,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "gaussian_impostor",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "stochastic",
+              "field": "pressure",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": true,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "highpass_butterworth",
+              "blindness_q": 1.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": 0.45,
+              "elasticity": null,
+              "elasticity_x": "severity_nominal (energy removed)",
+              "family": "spectral",
+              "field": "pressure",
+              "first_detected_level": 1.0,
+              "half_damage_severity": 0.6009475546,
+              "is_probe": false,
+              "largest_response_upper_bound": 1.0353108435,
+              "levels": 2,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "undetermined",
+              "severity_resolution": 0.0172934169,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "highpass_ideal",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "spectral",
+              "field": "pressure",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "lowpass_butterworth",
+              "blindness_q": 1.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": 0.0617569489,
+              "elasticity": null,
+              "elasticity_x": "severity_nominal (energy removed)",
+              "family": "spectral",
+              "field": "pressure",
+              "first_detected_level": 2.0,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.3233032641,
+              "levels": 2,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "undetermined",
+              "severity_resolution": 0.0062424876,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "lowpass_ideal",
+              "blindness_q": 1.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "severity_nominal (energy removed)",
+              "family": "spectral",
+              "field": "pressure",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0882899224,
+              "levels": 2,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "undetermined",
+              "severity_resolution": 0.0345254727,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "mean_field",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "smoothing",
+              "field": "pressure",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": true,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "translate_subpixel",
+              "blindness_q": 0.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": null,
+              "elasticity": 1.9442514608,
+              "elasticity_x": "severity (distance)",
+              "family": "geometric",
+              "field": "pressure",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0006932602,
+              "levels": 6,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "power",
+              "severity_resolution": 0.0641684955,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "translate_x",
+              "blindness_q": 0.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": null,
+              "elasticity": 1.073591622,
+              "elasticity_x": "severity (distance)",
+              "family": "geometric",
+              "field": "pressure",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0039801168,
+              "levels": 5,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "power",
+              "severity_resolution": 0.2384094529,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "uncorrelated",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "geometric",
+              "field": "pressure",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": true,
+              "largest_response_upper_bound": null,
+              "levels": 6,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "additive_noise",
+              "blindness_q": 1.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": 0.1854885917,
+              "elasticity": 1.9967771538,
+              "elasticity_x": "severity (amplitude)",
+              "family": "stochastic",
+              "field": "velocity",
+              "first_detected_level": 4.0,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.2538295501,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "power",
+              "severity_resolution": 0.0113343709,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "box_blur",
+              "blindness_q": 1.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": null,
+              "elasticity": 1.003748194,
+              "elasticity_x": "severity_nominal (width)",
+              "family": "smoothing",
+              "field": "velocity",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0644027441,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "linear",
+              "severity_resolution": 0.01699329,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "coarsen",
+              "blindness_q": 0.0,
+              "cliffs_delta": 0.58,
+              "detection_onset_severity": null,
+              "elasticity": 5.506615771,
+              "elasticity_x": "severity (factor)",
+              "family": "resolution",
+              "field": "velocity",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0092334645,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "linear",
+              "severity_resolution": 1.7092968884,
+              "weakest_separation": 0.79
+            },
+            {
+              "axis": "coarsen_bandlimited",
+              "blindness_q": 0.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": null,
+              "elasticity": 1.0397158035,
+              "elasticity_x": "severity (factor)",
+              "family": "resolution",
+              "field": "velocity",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0045886195,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "linear",
+              "severity_resolution": 0.7682354228,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "gaussian_blur",
+              "blindness_q": 1.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": null,
+              "elasticity": 1.0254703775,
+              "elasticity_x": "severity_nominal (sigma)",
+              "family": "smoothing",
+              "field": "velocity",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.1025100557,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "linear",
+              "severity_resolution": 0.0083578606,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "gaussian_impostor",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "stochastic",
+              "field": "velocity",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": true,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "highpass_butterworth",
+              "blindness_q": 1.0,
+              "cliffs_delta": 0.56,
+              "detection_onset_severity": 0.4544174029,
+              "elasticity": 3.3009714951,
+              "elasticity_x": "severity_nominal (energy removed)",
+              "family": "spectral",
+              "field": "velocity",
+              "first_detected_level": 2.0,
+              "half_damage_severity": 0.7142221226,
+              "is_probe": false,
+              "largest_response_upper_bound": 1.0067269269,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "linear",
+              "severity_resolution": 0.0279666648,
+              "weakest_separation": 0.78
+            },
+            {
+              "axis": "highpass_ideal",
+              "blindness_q": 1.0,
+              "cliffs_delta": 0.56,
+              "detection_onset_severity": 0.4594580989,
+              "elasticity": 3.7716076529,
+              "elasticity_x": "severity_nominal (energy removed)",
+              "family": "spectral",
+              "field": "velocity",
+              "first_detected_level": 2.0,
+              "half_damage_severity": 0.6212051736,
+              "is_probe": false,
+              "largest_response_upper_bound": 1.0068751061,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "linear",
+              "severity_resolution": 0.0318556944,
+              "weakest_separation": 0.78
+            },
+            {
+              "axis": "lowpass_butterworth",
+              "blindness_q": 1.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": 0.1106782642,
+              "elasticity": 1.0742337697,
+              "elasticity_x": "severity_nominal (energy removed)",
+              "family": "spectral",
+              "field": "velocity",
+              "first_detected_level": 2.0,
+              "half_damage_severity": 0.4048268704,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.5761840953,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "linear",
+              "severity_resolution": 0.0224730754,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "lowpass_ideal",
+              "blindness_q": 1.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": 0.0945094315,
+              "elasticity": 1.0736842811,
+              "elasticity_x": "severity_nominal (energy removed)",
+              "family": "spectral",
+              "field": "velocity",
+              "first_detected_level": 2.0,
+              "half_damage_severity": 0.3368377181,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.9183633321,
+              "levels": 4,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "linear",
+              "severity_resolution": 0.0375818612,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "mean_field",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "smoothing",
+              "field": "velocity",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": true,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "translate_subpixel",
+              "blindness_q": 0.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": null,
+              "elasticity": 1.9428099336,
+              "elasticity_x": "severity (distance)",
+              "family": "geometric",
+              "field": "velocity",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0098272476,
+              "levels": 6,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "linear",
+              "severity_resolution": 0.0702376069,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "translate_x",
+              "blindness_q": 0.0,
+              "cliffs_delta": 1.0,
+              "detection_onset_severity": null,
+              "elasticity": 1.0062615914,
+              "elasticity_x": "severity (distance)",
+              "family": "geometric",
+              "field": "velocity",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": false,
+              "largest_response_upper_bound": 0.0407971108,
+              "levels": 5,
+              "monotone_fraction": 1.0,
+              "rank_correlation": 1.0,
+              "response_shape": "power",
+              "severity_resolution": 0.4328714065,
+              "weakest_separation": 1.0
+            },
+            {
+              "axis": "uncorrelated",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "geometric",
+              "field": "velocity",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": true,
+              "largest_response_upper_bound": null,
+              "levels": 6,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            }
+          ],
+          "dataset": "sod_shock_tube",
+          "frames": 10,
+          "measured": true,
+          "probes": [
+            {
+              "field": "density",
+              "impostor_damage": 1.9831536987,
+              "impostor_nearest_level": "highpass_butterworth=2.77538",
+              "translation_probe_value": 0.4203383263
+            },
+            {
+              "field": "pressure",
+              "impostor_damage": 1.8578730745,
+              "impostor_nearest_level": "highpass_butterworth=3.73482",
+              "translation_probe_value": 0.4492675883
+            },
+            {
+              "field": "velocity",
+              "impostor_damage": 2.0980727765,
+              "impostor_nearest_level": "highpass_ideal=17.1163",
+              "translation_probe_value": 0.3761109938
+            }
+          ],
+          "profile": [
+            {
+              "blind_axes": [
+                "coarsen",
+                "coarsen_bandlimited",
+                "translate_subpixel",
+                "translate_x"
+              ],
+              "elasticity_displacement": 1.9435552112,
+              "field": "density",
+              "least_sensitive_axis": "box_blur",
+              "most_sensitive_axis": "additive_noise",
+              "selectivity": 0.0005016155
+            },
+            {
+              "blind_axes": [
+                "coarsen",
+                "coarsen_bandlimited",
+                "translate_subpixel",
+                "translate_x"
+              ],
+              "elasticity_displacement": 1.9442514608,
+              "field": "pressure",
+              "least_sensitive_axis": "coarsen",
+              "most_sensitive_axis": "lowpass_ideal",
+              "selectivity": 0.0003147613
+            },
+            {
+              "blind_axes": [
+                "coarsen",
+                "coarsen_bandlimited",
+                "translate_subpixel",
+                "translate_x"
+              ],
+              "elasticity_displacement": 1.9428099336,
+              "field": "velocity",
+              "least_sensitive_axis": "lowpass_ideal",
+              "most_sensitive_axis": "coarsen",
+              "selectivity": 0.0001841336
+            }
+          ],
+          "run": "mse_1793784126"
+        }
+      ],
       "output": {
         "description": "Mean over all channels and grid cells of the squared field difference, in the square of the field's units.",
         "lower_bound": 0.0,
@@ -12691,6 +14298,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N)",
@@ -12699,6 +14353,7 @@
         "triangle_inequality": true
       },
       "name": "nrmse",
+      "other_evidence": [],
       "output": {
         "description": "Dimensionless ratio of the root mean squared error to the reference field's fluctuation RMS. NaN where the reference is spatially uniform.",
         "lower_bound": 0.0,
@@ -13079,6 +14734,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs vorticity, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic; needs vorticity, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N log N)",
@@ -13087,6 +14789,7 @@
         "triangle_inequality": false
       },
       "name": "palinstrophy",
+      "other_evidence": [],
       "output": {
         "description": "Half the mean squared gradient of the vorticity, summed over components and gradient directions, in the square of the vorticity units per square length. Reported per variant; the drift from the reference is what is read.",
         "lower_bound": 0.0,
@@ -13808,6 +15511,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "measured, not derived: under 0.1 s per diagram and about 0.35 s per matching on a 256 x 256 field",
@@ -13816,6 +15566,7 @@
         "triangle_inequality": true
       },
       "name": "persistence_distance",
+      "other_evidence": [],
       "output": {
         "description": "The largest, over homology dimensions, of the bottleneck distance between the two fields' sublevel-set persistence diagrams, in the field's own units.",
         "lower_bound": 0.0,
@@ -13968,6 +15719,53 @@
         ],
         "run": "rank_histogram_1793780354"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "rank_histogram_1793780354",
+          "state": "measured"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N M)",
@@ -13976,6 +15774,7 @@
         "triangle_inequality": false
       },
       "name": "rank_histogram",
+      "other_evidence": [],
       "output": {
         "description": "Total absolute deviation of the rank histogram from uniform, dimensionless. Zero for a flat histogram; at most 2M/(M+1) when every draw lands in one bin.",
         "lower_bound": 0.0,
@@ -14991,6 +16790,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N)",
@@ -14999,6 +16845,7 @@
         "triangle_inequality": true
       },
       "name": "rmse",
+      "other_evidence": [],
       "output": {
         "description": "Square root of the mean over all channels and grid cells of the squared field difference, in the field's own units.",
         "lower_bound": 0.0,
@@ -15351,6 +17198,53 @@
         ],
         "run": "shock_mask_overlap_1793494245"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "shock_mask_overlap_1793494245",
+          "state": "measured"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N)",
@@ -15359,6 +17253,7 @@
         "triangle_inequality": false
       },
       "name": "shock_mask_overlap",
+      "other_evidence": [],
       "output": {
         "description": "The Dice coefficient of the two sets of shocked cells, dimensionless: 1 when the sets coincide or both are empty, 0 when they share no cell or only one field has a shock.",
         "lower_bound": 0.0,
@@ -15714,6 +17609,53 @@
         ],
         "run": "shock_set_distance_1793381550"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "shock_set_distance_1793381550",
+          "state": "measured"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N)",
@@ -15722,6 +17664,7 @@
         "triangle_inequality": false
       },
       "name": "shock_set_distance",
+      "other_evidence": [],
       "output": {
         "description": "The average symmetric surface distance between the two sets of shocked cells, in the units of the grid spacing; zero when the sets coincide or both are empty, and the length of the domain's diagonal when only one field has a shock.",
         "lower_bound": 0.0,
@@ -16118,6 +18061,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs velocity, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N log N)",
@@ -16126,6 +18116,7 @@
         "triangle_inequality": false
       },
       "name": "spectral_energy_flux",
+      "other_evidence": [],
       "output": {
         "description": "L2 distance between the candidate's and the reference's spectral energy flux, sampled at the octave wavenumbers 1, 2, 4, ... up to half the grid, divided by the L2 norm of the reference's; dimensionless. Zero when the curves coincide and 1 when the candidate carries no flux. The sampling and the summary are repository conventions (issues/105); the curve is stored beside the number.",
         "lower_bound": 0.0,
@@ -17145,6 +19136,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N log N)",
@@ -17153,6 +19191,7 @@
         "triangle_inequality": false
       },
       "name": "spectrum_l2",
+      "other_evidence": [],
       "output": {
         "description": "L2 distance between the two shell-summed fluctuation energy spectra, divided by the L2 norm of the reference's. Dimensionless; 0 when the spectra coincide and 1 when the candidate has no fluctuation energy at all.",
         "lower_bound": 0.0,
@@ -17305,6 +19344,53 @@
         ],
         "run": "spread_skill_1793780354"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "spread_skill_1793780354",
+          "state": "measured"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N M)",
@@ -17313,6 +19399,7 @@
         "triangle_inequality": false
       },
       "name": "spread_skill",
+      "other_evidence": [],
       "output": {
         "description": "Dimensionless ratio of RMS ensemble spread to ensemble-mean RMSE, with the finite-ensemble correction applied. One is calibrated; below one is overconfident and above one hedges, so distance from one is what counts rather than size.",
         "lower_bound": 0.0,
@@ -18340,6 +20427,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N log N)",
@@ -18348,6 +20482,7 @@
         "triangle_inequality": false
       },
       "name": "tail_exceedance",
+      "other_evidence": [],
       "output": {
         "description": "The frequency bias, the prediction's count of absolute one-cell increments at least as large as the reference's k-th largest over the reference's own count, pooled over channels and spatial axes, at k = ceil(sqrt(n)). Dimensionless, 1 for a prediction with as many extremes as the reference. NaN when the reference is constant. The same ratio at nine orders k = ceil(n^theta) is stored beside it.",
         "lower_bound": 0.0,
@@ -19374,6 +21509,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N log N)",
@@ -19382,6 +21564,7 @@
         "triangle_inequality": false
       },
       "name": "tail_index",
+      "other_evidence": [],
       "output": {
         "description": "Mean over channels and spatial axes of the Hill estimate of the absolute one-cell increments at k = ceil(sqrt(n)), the mean log-ratio of the k largest to the (k+1)-th largest. For a power-law tail with exponent alpha it estimates 1/alpha. Dimensionless. NaN on a constant field. The Hill estimate at nine orders k = ceil(n^theta) is stored beside it.",
         "lower_bound": 0.0,
@@ -19547,6 +21730,53 @@
         ],
         "run": "variogram_score_1793780354"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "variogram_score_1793780354",
+          "state": "measured"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(M N^2)",
@@ -19555,6 +21785,7 @@
         "triangle_inequality": false
       },
       "name": "variogram_score",
+      "other_evidence": [],
       "output": {
         "description": "The weighted sum over every ordered pair of cells of the squared mismatch between the reference's and the members' mean square-root differences, less the members' variance over M, summed over channels. Zero when every member equals the reference; larger is worse.",
         "lower_bound": null,
@@ -19946,6 +22177,53 @@
         ],
         "run": "comparison_1793657627"
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": true,
+          "reason": null,
+          "run": "comparison_1793657627",
+          "state": "measured"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N log N)",
@@ -19954,6 +22232,7 @@
         "triangle_inequality": true
       },
       "name": "wasserstein",
+      "other_evidence": [],
       "output": {
         "description": "The quadratic Wasserstein distance between the reference and candidate densities, each divided by its mean, on the periodic analysis grid, in the grid's units of length. Zero when the two normalised densities coincide.",
         "lower_bound": 0.0,

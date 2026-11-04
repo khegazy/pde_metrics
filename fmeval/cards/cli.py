@@ -100,6 +100,13 @@ def _report(bundle: Bundle, *, strict: bool) -> int:
         show(exc.where, exc.problem, exc.fix)
         return errors
 
+    if bundle.kind == "metric":
+        try:
+            catalog.experiments(bundle)
+        except ValueError as exc:
+            show("card.yaml  not_run", str(exc),
+                 "correct not_run in card.yaml, or the runs the card cites")
+
     if bundle.card_md.is_file():
         for problem in check_prose(
             bundle.card_md.read_text(), kind=bundle.kind, name=bundle.name
@@ -198,19 +205,58 @@ def cmd_sign(args: argparse.Namespace) -> int:
 
 
 def cmd_evidence(args: argparse.Namespace) -> int:
-    """Fill in the measured half of one metric card, or of every one."""
-    run = evidence.load_run(Path(args.results))
-    names = [b.name for b in iter_bundles("metric")] if args.all else [args.name]
-    present = set(run.rows["metric"].astype(str).unique())
-    for name in names:
-        if args.all and name not in present:
+    """Fill in the measured half of one metric card, or of every one.
+
+    A card cites one run per experiment, its primary run first. Named, the card is written from
+    the ``--results`` given, in that order, or, with none, from the runs its fingerprint
+    records (``catalog.recorded_runs``), found under ``results/``. With ``--all``, every card is
+    written from the runs it records, each replaced by a given run on the same dataset that
+    holds the metric, and joined by a given run on a dataset it does not cite yet that holds it;
+    a card that no given run holds is left alone.
+    """
+    loaded: dict[Path, evidence.Run] = {}
+
+    def run_at(folder: Path) -> evidence.Run:
+        # A comparison run is analysed once, however many cards cite it.
+        if folder not in loaded:
+            loaded[folder] = evidence.load_run(folder)
+        return loaded[folder]
+
+    given = [run_at(Path(p)) for p in args.results or []]
+    if not args.all:
+        bundle = find_bundle(args.name, "metric")
+        if bundle is None:
+            raise KeyError(f"no metric bundle named {args.name!r}")
+        runs = given or [run_at(evidence.RESULTS / r["run"])
+                         for r in catalog.recorded_runs(bundle)]
+        if not runs:
+            raise FileNotFoundError(f"{args.name} records no runs; give them with --results")
+        evidence.generate(args.name, *runs)
+        print(f"wrote evidence for {args.name} from {', '.join(r.folder.name for r in runs)}")
+        return 0
+
+    for bundle in iter_bundles("metric"):
+        holds = [r for r in given if bundle.name in set(r.rows["metric"].astype(str))]
+        if given and not holds:
             # A run that lacks a metric has nothing to say about it. Generating anyway
             # would overwrite the card's blocks with "no measurements" and its fingerprint
             # with empty axes -- erasing evidence from the run the card actually cites.
-            print(f"skipped {name}: not in {run.folder.name}; regenerate it from its own run")
+            print(f"skipped {bundle.name}: in none of the runs given; regenerate it from its "
+                  "own runs")
             continue
-        evidence.generate(name, run)
-        print(f"wrote evidence for {name} from {run.folder.name}")
+        replacing = {evidence.dataset_of(r): r for r in holds}
+        recorded = catalog.recorded_runs(bundle)
+        if not given and not recorded:
+            print(f"skipped {bundle.name}: it records no runs; give them with --results")
+            continue
+        # A recorded run keeps its place, so the primary run stays first; one a given run
+        # replaces is never read, since it may since have been archived.
+        runs = {r["dataset"]: replacing.get(r["dataset"])
+                or run_at(evidence.RESULTS / r["run"]) for r in recorded}
+        runs.update(replacing)
+        evidence.generate(bundle.name, *runs.values())
+        print(f"wrote evidence for {bundle.name} from "
+              f"{', '.join(r.folder.name for r in runs.values())}")
     return 0
 
 
@@ -243,7 +289,10 @@ def cmd_overview(args: argparse.Namespace) -> int:
 
 
 def cmd_catalog(args: argparse.Namespace) -> int:
-    """Write docs/catalog.json, the structured surface agents read instead of prose."""
+    """Write docs/catalog.json, the structured surface agents read instead of prose, and each
+    metric card's "Across the experiments" table, which reads the same records."""
+    for bundle in iter_bundles("metric"):
+        evidence.write_experiments(bundle)
     path = catalog.write(Path(args.out))
     counts = json.loads(path.read_text())["counts"]
     print(f"wrote {path}: {counts['metrics']} metrics, {counts['degradations']} "
@@ -284,9 +333,12 @@ def build_parser() -> argparse.ArgumentParser:
         "evidence", help="fill in a metric card's measurements from an evaluation run")
     evidence_cmd.add_argument("name", nargs="?", help="the metric bundle; omit with --all")
     evidence_cmd.add_argument("--all", action="store_true",
-                              help="every metric bundle the run contains")
-    evidence_cmd.add_argument("--results", required=True,
-                              help="a results/<name>_<stamp> folder on the canonical dataset")
+                              help="every metric card, from the runs it records and those given")
+    evidence_cmd.add_argument(
+        "--results", action="append",
+        help="a results/<name>_<stamp> folder on an evidence dataset; repeat it for one run per "
+             "experiment, the primary one first. Omitted, each card's recorded runs are read "
+             "from results/")
     evidence_cmd.set_defaults(func=cmd_evidence)
 
     exemplars_cmd = sub.add_parser(
@@ -309,7 +361,8 @@ def build_parser() -> argparse.ArgumentParser:
     overview.set_defaults(func=cmd_overview)
 
     catalog_cmd = sub.add_parser(
-        "catalog", help="write the machine-readable index of every bundle")
+        "catalog", help="write the machine-readable index of every bundle, and each metric "
+        "card's Across-the-experiments table")
     catalog_cmd.add_argument("--out", default="docs/catalog.json")
     catalog_cmd.set_defaults(func=cmd_catalog)
 

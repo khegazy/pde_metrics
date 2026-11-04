@@ -21,9 +21,11 @@ from __future__ import annotations
 import json
 import re
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 import mkdocs_gen_files
+import yaml
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
@@ -119,10 +121,9 @@ def _header(entry: dict) -> str:
             f"{'yes' if declared['ordinal'] else 'no: this is a trap test, not a ladder'} |",
             f"| **uses randomness** | {'yes' if declared['stochastic'] else 'no'} |",
         ]
-    evidence = entry["evidence"]
-    measured = (f"`{evidence['run']}` on `{evidence['dataset']}`, "
-                f"{evidence.get('frames', 0)} frames"
-                if evidence["measured"] else "not yet measured")
+    measured = "; ".join(f"`{e['run']}` on `{e['dataset']}`, {e.get('frames', 0)} frames"
+                         for e in (entry["evidence"], *entry["other_evidence"])
+                         if e["measured"]) or "not yet measured"
     rows.append(f"| **measured on** | {measured} |")
     rows.append(f"| **read and signed by a person** | "
                 f"{'yes, ' + str(entry['reviewed_at']) if entry['reviewed'] else 'not yet'} |")
@@ -210,6 +211,7 @@ def main() -> None:
     with mkdocs_gen_files.open("sensitivity.md", "w") as f:
         print(page_markdown(catalog=catalog), file=f)
     _write_gallery(catalog)
+    _write_coverage(catalog)
     _write_protocol()
     _write_nav(nav_metrics, nav_degradations)
     _write_machine_surfaces(catalog)
@@ -283,6 +285,53 @@ def _write_gallery(catalog: dict) -> None:
                       "it, so there would be nothing to show.*\n", file=f)
 
 
+def _proposals_naming() -> dict[str, list[str]]:
+    """Each proposal under ``proposals/``, by every name its front matter's ``related`` lists."""
+    named: dict[str, list[str]] = defaultdict(list)
+    for path in sorted((REPO / "proposals").glob("*.md")):
+        match = FRONTMATTER.match(path.read_text())
+        if match:          # the index, proposals/README.md, has no front matter
+            for name in yaml.safe_load(match.group(1)).get("related") or []:
+                named[str(name)].append(path.name)
+    return named
+
+
+def _write_coverage(catalog: dict) -> None:
+    """Every metric against every experiment: measured, not applicable and why, or not yet run.
+
+    Read from the catalog's ``experiments`` records (``fmeval.cards.catalog.experiments``), the
+    same records each card's "Across the experiments" table shows, so the page and the cards
+    cannot disagree. Proposals are not published on the site; they are linked on GitHub, as
+    ``docs/ideas/README.md`` links issues.
+    """
+    metrics = [e for e in catalog["entries"] if e["kind"] == "metric"]
+    experiments = metrics[0]["experiments"]
+    proposals = _proposals_naming()
+    blob = f"{mkdocs_gen_files.config['repo_url']}/blob/main/proposals"
+    with mkdocs_gen_files.open("coverage.md", "w") as f:
+        print("# Coverage: every metric on every experiment\n", file=f)
+        print("Every metric is run on every experiment where it makes sense. One row per "
+              "metric and one column per experiment its card may cite. A cell says "
+              "**measured** and names the run the card cites, **not applicable** and why, or "
+              "**not yet run** where the metric can run and no run is cited yet. The last "
+              "column lists the proposals for experiments and metrics that name the metric; "
+              "they are kept in the repository, not on this site.\n", file=f)
+        print("| metric | " + " | ".join(f"`{x['dataset']}`" for x in experiments)
+              + " | proposals naming it |", file=f)
+        print("|---|" + "---|" * (len(experiments) + 1), file=f)
+        for e in metrics:
+            cells = [f"measured (`{x['run']}`)" if x["state"] == "measured"
+                     else f"not applicable ({x['reason']})" if x["state"] == "not applicable"
+                     else "not yet run" for x in e["experiments"]]
+            linked = ", ".join(f"[{p.removesuffix('.md')}]({blob}/{p})"
+                               for p in proposals.get(e["name"], [])) or "—"
+            print(f"| [{e['name']}](metrics/{e['name']}.md) | " + " | ".join(cells)
+                  + f" | {linked} |", file=f)
+        print("\nWhat a run on each experiment is evidence of:\n", file=f)
+        for x in experiments:
+            print(f"- `{x['dataset']}`: {x['claim']}.", file=f)
+
+
 def _write_protocol() -> None:
     """TEST_DESCRIPTION.md, served as the protocol reference rather than duplicated.
 
@@ -322,6 +371,7 @@ def _write_nav(metrics: list, degradations: list) -> None:
         # the sub-tree from the directory, as for the ideas.
         print("- [Datasets](datasets/)", file=f)
         print("- [Sensitivity at a glance](sensitivity.md)", file=f)
+        print("- [Coverage: every metric on every experiment](coverage.md)", file=f)
         print("- Metrics", file=f)
         for category in CATEGORIES:
             named = [m for m in metrics if m[1] == category]

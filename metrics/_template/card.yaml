@@ -42,5 +42,13 @@ math:
   complexity: "O(N)"          # in the number of grid cells
 references: []
 
+# Evidence datasets this metric is deliberately not run on, each with a one-line reason, for
+# a reason only a person can give: a run there would carry no information. A reason the
+# decorator and the dataset already determine (requires_periodic on Sod, an ensemble metric
+# on one realisation per frame, a field the dataset lacks) is derived and must not be
+# repeated. Shown in the card's "Across the experiments" table and on the coverage page.
+# not_run:
+#   <dataset>: <one line saying why a run there would carry no information>
+
 # Written by `python -m fmeval.cards sign <name> --by <who>`. Never edit by hand.
 review: null

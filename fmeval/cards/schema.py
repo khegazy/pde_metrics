@@ -256,6 +256,12 @@ class Card:
     review: Review | None = None
     failure_mode: str = ""
     """Degradations only: in one sentence, what kind of model error this stands in for."""
+    not_run: dict[str, str] = dataclasses.field(default_factory=dict)
+    """Metrics only: evidence datasets the metric is deliberately not run on, each mapped to the
+    one-line reason, for a reason only a person can give (the result would carry no
+    information). A reason the code can derive from the decorator and the dataset is never
+    written here; ``fmeval.cards.catalog.experiments`` derives it and refuses a duplicate. Shown
+    in the card's "Across the experiments" table and on the site's coverage page."""
 
 
 # --------------------------------------------------------------------------------------
@@ -368,6 +374,7 @@ def parse_card(data: Any, *, where: str) -> Card:
         references=_str_tuple(data.get("references"), "references", where, fix),
         review=_parse_review(data.get("review"), where, fix),
         failure_mode=str(data.get("failure_mode") or "").strip(),
+        not_run=_parse_not_run(data.get("not_run"), where, fix),
     )
 
     if card.kind == "degradation" and card.exemplars is None:
@@ -379,6 +386,9 @@ def parse_card(data: Any, *, where: str) -> Card:
         )
     if card.kind == "metric" and card.math is None:
         raise CardError(where, "a metric card needs a `math` block.", fix)
+    if card.kind == "degradation" and card.not_run:
+        raise CardError(where, "not_run is for metric cards: a degradation is not run on its "
+                               "own.", fix)
 
     _check_keys(data, dataclasses.fields(Card), "", where)
     return card
@@ -479,6 +489,22 @@ def _parse_exemplars(data: Any, where: str, fix: str) -> Exemplars | None:
         field_name=str(data.get("field_name", default["field_name"])),
         rationale=rationale,
     )
+
+
+def _parse_not_run(data: Any, where: str, fix: str) -> dict[str, str]:
+    """``not_run``: dataset name to a reason of at least a few words. Which names are evidence
+    datasets is checked where the cards config is read (``fmeval.cards.catalog.experiments``)."""
+    if data is None:
+        return {}
+    if not isinstance(data, dict):
+        raise CardError(where, f"not_run must map a dataset to its reason, found "
+                               f"{type(data).__name__}.", fix)
+    reasons = {str(k): str(v or "").strip() for k, v in data.items()}
+    short = sorted(k for k, v in reasons.items() if len(v) < 20)
+    if short:
+        raise CardError(where, f"not_run gives no real reason for {short}: say in one line why "
+                               "the result would carry no information.", fix)
+    return reasons
 
 
 def _parse_review(data: Any, where: str, fix: str) -> Review | None:

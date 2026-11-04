@@ -130,6 +130,18 @@ Not generated yet. Run `python -m fmeval.cards evidence <name>`.
 
 <!-- END GENERATED run -->
 
+<!-- GENERATED experiments: written by `python -m fmeval.cards catalog`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence <name>`.
+
+<!-- END GENERATED experiments -->
+
+The table above has one row per experiment and states every one this card cites no run on,
+with the reason. Give one `--results` per experiment to `cards evidence`; each run after the
+first gets its own subsection at the end of this section, headed `### On <dataset>`, with
+your reading below its numbers. A reason only you can give for not running an experiment
+goes in `card.yaml` under `not_run`.
+
 One subsection per kind of test: the degradations it reports, then their generated
 numbers, then what those numbers show about this metric. Keep the evidence beside the
 claim it supports.
