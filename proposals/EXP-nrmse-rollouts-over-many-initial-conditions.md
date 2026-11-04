@@ -1,7 +1,7 @@
 ---
 type: "EXP"
 kind: "benchmark suite or dataset"
-related: ["mse", "mae", "rmse", "nrmse", "max_error", "h1_seminorm", "spectrum_l2", "kinetic_energy", "enstrophy", "palinstrophy", "issues/004", "docs/datasets/reynolds_ladder_2d.md", "issues/078"]
+related: ["mse", "mae", "rmse", "rmse_channel_mean", "nrmse", "vrmse", "max_error", "max_error_channel_mean", "h1_seminorm", "spectrum_l2", "kinetic_energy", "enstrophy", "palinstrophy", "issues/004", "docs/datasets/reynolds_ladder_2d.md", "issues/078"]
 seen_in: "Takamoto et al. 2022, NeurIPS 35 Datasets and Benchmarks, 1596-1611 (PDEBench), Sect. 3.3, 4.3, App. B; Ohana et al. 2024, NeurIPS 37 Datasets and Benchmarks, 44989-45037 (The Well), Sect. 4, App. E.3"
 doi: "10.52202/068431-0117"
 found_by: "update_metric_eval_principles, 2026-11-03"
@@ -48,8 +48,8 @@ state the decay rates such series follow).
 
 ## Metrics it would test
 
-`mse`, `mae`, `rmse`, `nrmse` (PDEBench's definition and the planned VRMSE sibling of The Well),
-`max_error`, `h1_seminorm` (the relative H1 error that neural-operator work reports: Li et al.
+`mse`, `mae`, `rmse` and `rmse_channel_mean`, `nrmse` (PDEBench's definition), `vrmse` (The
+Well's), `max_error` and `max_error_channel_mean`, `h1_seminorm` (the relative H1 error that neural-operator work reports: Li et al.
 2022 train with relative H1 and H2 losses and report L2, H1 and H2 test errors on Kolmogorov
 flow, Sect. 3 Eqs. 3-4, App. A.3 Table 3), `spectrum_l2` beside The Well's binned spectral
 error, and `kinetic_energy`, `enstrophy` and `palinstrophy` as time series. Every other

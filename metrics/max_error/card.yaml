@@ -26,5 +26,5 @@ math:
   scale_dependent: true        # scaling both fields by c scales the value by c
   resolution_dependent: true   # a maximum over cells, so a finer grid offers more cells to it
   complexity: "O(N)"
-references: [roy2005, takamoto2022]
+references: [roy2005, takamoto2022, ohana2024]
 review: null

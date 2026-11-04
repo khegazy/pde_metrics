@@ -5,21 +5,21 @@ reviewer's records. The research record is in [research_notes.md](research_notes
 
 ## Summary
 
-`metric.py` holds the metric `max_error`, its companion `max_error_map` and one private helper,
-`_absolute_error`, which both call. The build added a `max` entry to `REDUCTIONS` in
-`metrics/registry.py`. In the review round it made three further changes outside the bundle: it
+`metric.py` holds the metric `max_error`, its companion `max_error_map` and one helper,
+`absolute_error`, which both call and `max_error_channel_mean` imports. The build added a `max`
+entry to `REDUCTIONS` in `metrics/registry.py`. In the review round it made three further changes outside the bundle: it
 documented the reductions in AGENTS.md §3.3, made the map-reduction contract test run on two
 channels, and tightened a documentation test. No fix changed a number the metric produces. The
 bundle was merged with every verification step passing.
 
 ## Implementation
 
-- **The number.** `max_error` returns `float(_absolute_error(reference, candidate).max())`, the
+- **The number.** `max_error` returns `float(absolute_error(reference, candidate).max())`, the
   maximum over every (channel, cell) entry, which is Roy (2005) Eq. 7 with channels pooled.
-- **The map.** `max_error_map` returns `_absolute_error(...).max(axis=0)`: the absolute error at
+- **The map.** `max_error_map` returns `absolute_error(...).max(axis=0)`: the absolute error at
   each cell, the largest over channels. Its maximum is the metric.
-- **`_absolute_error`** (added in the review, with two callers) raises `ValueError` when the two
-  shapes differ, then returns `np.abs(reference - candidate)`. It follows the inline check that
+- **`absolute_error`** (added in the review; called by the metric, its map and
+  `max_error_channel_mean`) raises `ValueError` when the two shapes differ, then returns `np.abs(reference - candidate)`. It follows the inline check that
   `increment_w1` already makes.
 - **Constants.** There are no numeric literals at all.
 - **Decorator.** `arity="pairwise"`, `fields=("*",)`, `differentiable=True` (piecewise linear: a
@@ -113,15 +113,15 @@ fixed in commit 9a211e0 on #25 with a regression test shown to fail without its 
   returned 3.190. The contract's shape test uses $16\times8$ against $16\times10$, which cannot
   broadcast, so it could not catch this. `uint8` 0 against 1 gave 255. An empty array raised
   `ValueError`, where every control returns NaN with a warning. **Fixed for shape**: the
-  `_absolute_error` check and its regression test, which gave "2 failed, 4 passed" before the
+  `absolute_error` check and its regression test, which gave "2 failed, 4 passed" before the
   check and "6 passed" after. The agent's `response_edge.py` (not kept) then showed `ValueError`
   for both broadcastable cases. **Rejected with evidence for the rest**: every reader returns
   float64 (`fmeval/data/base.py`, `np.ascontiguousarray(..., dtype=np.float64)`; AGENTS.md §3.3,
   "Both receive `(C, *spatial)` float64 arrays"), so integer input is outside the contract; an
   empty field raising is louder than NaN; and NaN propagates as in the controls. All three are now
   stated in the docstring.
-- **The same broadcasting gap in the controls.** `mae`, `mse`, `rmse` and `nrmse` also return a
-  number for $(1,8,8)$ against $(2,8,8)$. The pipeline always feeds matching float64 arrays, so
+- **The same broadcasting gap in the controls.** `mae`, `mse`, `rmse` and `nrmse` (since renamed
+  `vrmse`, which now refuses) also return a number for $(1,8,8)$ against $(2,8,8)$. The pipeline always feeds matching float64 arrays, so
   only direct callers, such as a training loss, are exposed. Those bundles are outside this branch.
   The orchestrator reproduced the problem and wrote
   [issues/109](../../issues/109-pointwise-controls-accept-broadcastable-shapes.md), with the options

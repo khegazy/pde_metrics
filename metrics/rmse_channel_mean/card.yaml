@@ -1,0 +1,32 @@
+schema_version: 1
+
+name: rmse_channel_mean
+kind: metric
+category: pointwise
+
+summary: >-
+  Root mean squared error of each channel over the grid, averaged over channels: the RMSE that
+  PDEBench and The Well tabulate, equal to rmse on a one-channel field.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    Mean over channels of each channel's root mean squared field difference over the grid
+    cells, in the field's own units.
+  bounds:
+    lower: 0.0
+    upper: null
+
+math:
+  triangle_inequality: true    # a sum of per-channel L2 distances is a distance
+  scale_dependent: true        # scaling both fields by c scales the value by c
+  resolution_dependent: true   # a mean over cells, so refining the grid reweights the sum
+  complexity: "O(N)"
+references: [takamoto2022, ohana2024]
+
+not_run:
+  sod_shock_tube: every field of the one-dimensional tube has one channel, where this metric is rmse exactly
+  synthetic_ensemble: the dataset holds density alone, one channel, where this metric is rmse exactly
+review: null

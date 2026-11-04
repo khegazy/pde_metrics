@@ -84,16 +84,33 @@ def crps(reference: np.ndarray, members: np.ndarray) -> float:
         # score is |x - y| and the metric coincides with mean absolute error exactly.
         return float(skill.mean())
 
-    # E|X - X'|, over ordered pairs excluding the diagonal. Sorting turns the O(N^2)
-    # double sum into an O(N log N) weighted sum: for sorted members the total pairwise
-    # absolute difference is sum_i (2i - N + 1) * x_(i), which matters because this runs
-    # once per cell, per field, per severity level, per frame.
-    ordered = np.sort(members, axis=0)
-    weights = (2 * np.arange(n_members) - n_members + 1).astype(np.float64)
-    weights = weights.reshape((n_members,) + (1,) * (members.ndim - 1))
-    pair_sum = (weights * ordered).sum(axis=0)  # = 1/2 * sum_i sum_j |x_i - x_j|
-
-    # Fair correction: divide the *ordered-pair* sum by N(N-1). pair_sum already halves
+    # Fair correction: divide the *ordered-pair* sum by N(N-1). half_pair_sum already halves
     # the double sum, so the factor here is 1/(N(N-1)) rather than 1/(2N(N-1)).
-    spread = pair_sum / (n_members * (n_members - 1))
+    spread = half_pair_sum(members) / (n_members * (n_members - 1))
     return float((skill - spread).mean())
+
+
+def half_pair_sum(values: np.ndarray) -> np.ndarray:
+    """Half the sum of absolute differences over all ordered pairs along the leading axis.
+
+    For values sorted along that axis, :math:`x_{(0)} \\le \\dots \\le x_{(N-1)}`,
+
+    .. math::
+
+        \\tfrac{1}{2}\\sum_i\\sum_j |x_i - x_j| = \\sum_{i=0}^{N-1} (2i - N + 1)\\, x_{(i)},
+
+    which turns the O(N^2) double sum into an O(N log N) sort and weighted sum; it runs once per
+    cell, per field, per severity level, per frame for ``crps``, and once per channel over every
+    cell for ``crps_skill_score``'s climatology.
+
+    Args:
+        values: Array whose leading axis holds the values to pair; any trailing shape.
+
+    Returns:
+        The half pair sum at every trailing index, shape ``values.shape[1:]``.
+    """
+    n = values.shape[0]
+    ordered = np.sort(values, axis=0)
+    weights = (2 * np.arange(n) - n + 1).astype(np.float64)
+    weights = weights.reshape((n,) + (1,) * (values.ndim - 1))
+    return (weights * ordered).sum(axis=0)

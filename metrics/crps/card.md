@@ -60,6 +60,51 @@ None. The score at a cell uses only the values at that cell, across the ensemble
 stencil, transform or neighbourhood is involved, so the domain edge is never consulted and
 periodicity is irrelevant.
 
+### How its field reports it
+
+The field is probabilistic forecast verification, in meteorology, hydrology and now machine
+learning weather models.
+
+- **The object and its normalisation.** The score of one forecast against one observation,
+  averaged over many cases: $\bar S = \frac{1}{n}\sum_i S(F_i, y_i)$ (Gneiting and Raftery,
+  Section 2.3) [@gneitingraftery2007]. They write the CRPS positively oriented, Equation (20),
+  with the kernel form as Equation (21); this card uses the negative orientation, lower is
+  better, as verification practice does. For an ensemble the fair estimator is Ferro's (Section
+  2.1, Definition 1 of fairness) [@ferro2014]. Here the cases are the cells and channels of one
+  frame, so one row's value is a mean over cells, not over forecast dates.
+- **The statistics reported beside it.** A skill score against climatology,
+  $(\bar S^{\mathrm{fcst}} - \bar S^{\mathrm{ref}}) / (\bar S^{\mathrm{opt}} - \bar S^{\mathrm{ref}})$,
+  a ratio of mean scores with a reference that is "typically a climatological forecast, that
+  is, an estimate of the marginal distribution of the predictand" (Gneiting and Raftery, Section
+  2.3, Equation (8)) [@gneitingraftery2007]: it is the sibling bundle
+  [crps_skill_score](../../metrics/crps_skill_score/card.md). And a decomposition of the mean score into
+  miscalibration, discrimination and uncertainty, $\overline{\mathrm{CRPS}} = \mathrm{MCB} -
+  \mathrm{DSC} + \mathrm{UNC}$, either Hersbach's, which "has been popular in the specific
+  setting of ensemble forecasts" but can give a negative discrimination term (Arnold and
+  colleagues, Section 2.6 and Proposition 2.3), or their isotonicity-based one (Section 3.1),
+  which they recommend [@arnold2024]. Neither is built: the recommended one needs isotonic
+  distributional regression, and Hersbach's components add up to the plug-in score rather than
+  the fair one registered here
+  ([issue 127](https://github.com/khegazy/pde_metrics/blob/main/issues/127-crps-decomposition-has-no-settled-form-for-a-fair-ensemble-score.md)).
+- **The figure.** The mean CRPS read at each lead time, and the miscalibration–discrimination
+  plot, discrimination against miscalibration with isolines of equal mean score, one point per
+  forecast and lead time (Arnold and colleagues, Section 5, Figure 3, precipitation at four
+  stations over lead times of one to five days) [@arnold2024]. Neither can be drawn honestly
+  here: the synthetic ensemble has no lead time (its frames advance a phase, not a forecast),
+  and it has no decomposition.
+- **The experiment.** Many forecast cases scored against what happened, at each lead time; and,
+  to check that the score ranks forecasters correctly, forecasters of known calibration and
+  sharpness whose CRPS is published (Table 5) [@gneitingbalabdaoui2007]. Neither
+  exists here. The only ensemble experiment is the calibrated null of `synthetic_ensemble`,
+  which validates the estimator; real ensembles wait on
+  [issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md).
+  The missing experiments are written up as
+  [EXP-crps-gneiting-forecaster-suite](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-crps-gneiting-forecaster-suite.md),
+  [EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md)
+  (forecasts against lead time) and
+  [EXP-spread_skill-heteroscedastic-synthetic-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-heteroscedastic-synthetic-ensemble.md)
+  (dispersion that varies from case to case, which a decomposition needs).
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence crps --results results/crps_1793780354`, do not edit -->
@@ -158,9 +203,14 @@ rise is what says whether the metric is sensitive where it matters.
 
 Comparisons across models on one dataset are meaningful. Comparisons across resolutions are
 not, without care — the score is resolution dependent, since a finer grid resolves sharper
-gradients and larger pointwise differences. Comparisons across ensemble sizes are meaningful
-*because* the fair estimator is used; with the plug-in form they would not be, which is why
-`n_members` is recorded on every row.
+gradients and larger pointwise differences. Comparisons across ensemble sizes of two or more
+are meaningful *because* the fair estimator is used; with the plug-in form they would not be,
+which is why `n_members` is recorded on every row. A one-member "ensemble" is the exception:
+the spread term is empty, so the score is the mean absolute error, and for a calibrated
+forecast that is twice the score the same forecast earns with two or more members (for
+standard normal draws on 16 by 16 cells, 1.1376 at one member against 0.5722 at two and 0.5727
+at eight, means over 200 draws). Ferro shows that no non-trivial score is fair for one member
+[@ferro2014], so compare a deterministic prediction with `mae`, not with an ensemble's CRPS.
 
 ## Limitations
 

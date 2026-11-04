@@ -35,6 +35,36 @@ difference in exponent is what separates the two in practice.
 None. The operation is local to each cell, so no neighbourhood is ever consulted and no
 boundary condition can enter.
 
+### How its field reports it
+
+None of the primary sources read for the pointwise family makes the mean absolute error its
+reported number. Numerical analysis defines the $L^\infty$ and $L^2$ norms of the discretisation
+error and not the $L^1$ [@roy2005] (Sect. 2.5, Eq. 7); PDEBench reports RMSE, nRMSE and the
+maximum error [@takamoto2022] (Sect. 3.3); WeatherBench 2's deterministic scores are the RMSE, the
+anomaly correlation, the bias and SEEPS [@rasp2024] (Sect. 4.3); The Well's paper lists squared
+and maximum errors only [@ohana2024] (App. E.3).
+
+- **Machine-learning benchmarks for PDEs.** The Well's library defines the MAE, the spatial mean
+  of the absolute error, one value per field, and a normalised form divided by the mean absolute
+  value of the truth (`the_well/benchmark/metrics/spatial.py`, `MAE` and `NMAE`), but leaves both
+  out of the suite its trainer reports (`the_well/benchmark/metrics/__init__.py`,
+  `validation_metric_suite`: RMSE, NRMSE, $L^\infty$, VRMSE, a binned spectral error and the
+  Pearson correlation). Every channel has the same cells, so a mean of per-field MAEs over channels
+  is exactly Equation (1): pooling and averaging per channel agree for this metric, and no sibling
+  is needed.
+- **The figure and the experiment** are those of its squared counterpart, the error against
+  prediction step on a test set of rollouts, described on [rmse](../../metrics/rmse/card.md).
+
+**The experiments here.** `forecast_re5e4` gives one model's error against lead time from two
+starting times (`docs/datasets/reynolds_ladder_2d.md`, "Forecast pairs"); the missing
+experiments are
+[EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md)
+and
+[EXP-max_error-grid-convergence-with-a-known-solution](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-max_error-grid-convergence-with-a-known-solution.md).
+The metric also runs on the degradation ladder on `kinet_re5e4`, on `sod_shock_tube`, on the
+member mean of `synthetic_ensemble` and on the Reynolds ladder: it needs nothing but two fields
+on one grid.
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence mae --results results/comparison_1793657627`, do not edit -->
@@ -377,7 +407,7 @@ Rank correlation over every degradation, computed separately for each physical f
 <!-- END GENERATED results_summary -->
 
 MAE and MSE correlate at 0.98 to 0.997 across every degradation of each field, above the 0.95
-redundancy threshold, and MAE against NRMSE at 0.981 to 0.997 — they order the degradations almost identically
+redundancy threshold, and MAE against `vrmse` (`nrmse` in the run cited) at 0.981 to 0.997 — they order the degradations almost identically
 while differing by 38 times in sub-cell displacement damage. For ranking models the
 cell-by-cell baselines are duplicates of one another; as training losses they are not.
 

@@ -280,7 +280,8 @@ order — the first two are yours, the rest an agent can complete from the contr
    read these two files in every bundle related to yours.
 
 Reusing another bundle's function is expected rather than discouraged: `rmse` imports
-`mse`, `nrmse` imports `rmse`. The decorator returns the function unwrapped and the import
+`mse`, and `nrmse`, `vrmse` and `rmse_channel_mean` import `mse`'s per-channel
+`channel_mse`. The decorator returns the function unwrapped and the import
 system registers each bundle once, so the shared maths cannot drift apart.
 
 ### 3.1 What goes in `card.md`

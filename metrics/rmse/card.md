@@ -30,6 +30,54 @@ squared error, and the metric is the square root of that.
 None. The operation is local to each cell, so no neighbourhood is ever consulted and no
 boundary condition can enter.
 
+### How its field reports it
+
+Three fields report a root mean squared error. They agree on a one-channel field and reduce a
+vector field differently; this bundle is the pooled form, and the per-channel form of the
+machine-learning benchmarks is [rmse_channel_mean](../../metrics/rmse_channel_mean/card.md).
+
+- **Numerical analysis and code verification** [@roy2005]. The object is the discrete $L^2$ norm
+  of the discretisation error, $\bigl(\sum_n |f_{k,n} - f_{\mathrm{exact},n}|^2 / N\bigr)^{1/2}$
+  over the $N$ mesh nodes of grid $k$, defined beside the $L^\infty$ norm (Sect. 2.5, Eq. 7) and
+  applied to one variable at a time; it is Equation (1) on a one-channel field. The figure is the
+  norm against the grid spacing $h$ on logarithmic axes, with first- and second-order slopes
+  drawn for reference (Fig. 3, for mass density), and the statistic reported beside it is the
+  observed order of accuracy, $p = \ln(L_{k+1}/L_k) / \ln r$ from two grids refined by the ratio
+  $r$ against an exact solution (Eq. 8, plotted against $h$ in Fig. 4), or from three grids
+  without one (Sect. 3.3.3, Eq. 18). The experiment is a manufactured or exact solution on
+  systematically refined grids (Sect. 2.5; Table 1, five grids at $r = 2$). Roy gives no
+  reduction for a vector unknown.
+- **Weather verification** [@rasp2024]. The object is the RMSE of each variable and pressure
+  level, area-weighted by latitude, with the mean over forecast initialisations inside the square
+  root, which the paper notes agrees with the WMO and ECMWF definition (Sect. 4.3.1, Eq. 2). Wind
+  is pooled: the vector RMSE sums the squared errors of the two components without dividing by
+  two (Eq. 3), so it is the root mean square of the error vector's length. On velocity that is
+  $\sqrt{2}$ times this bundle's value, which divides by the channel count in Equation (1). The
+  figure is the RMSE against lead time, one panel per variable and one line per model (Fig. 4),
+  with headline scorecards beside it (Figs. 1-2). The experiment is forecasts from every 00 and
+  12 UTC initialisation of 2020 against ERA5, regridded conservatively to a common 1.5° grid
+  (Sects. 4.1-4.2).
+- **Machine-learning benchmarks for PDEs** [@takamoto2022; @ohana2024]. PDEBench tabulates the
+  per-channel mean (`metric_func`), which is [rmse_channel_mean](../../metrics/rmse_channel_mean/card.md),
+  but its curve of RMSE against the unrolled time step (Sect. 4.3, Fig. 5a and 5c) is computed in
+  its code over a batch, space and channels pooled (`metrics`, `val_l2_time`): this bundle's
+  object, one value per step. The Well keeps one RMSE per field (App. E.3) and averages over
+  fields.
+
+**The experiments here.** A refinement study against a known solution does not exist: the three
+runs of `forecast_re5e4` are not a refinement sequence as they stand
+(`docs/datasets/reynolds_ladder_2d.md`, "Can the three runs be read as a grid-refinement
+sequence?"), and the study is written up in
+[EXP-max_error-grid-convergence-with-a-known-solution](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-max_error-grid-convergence-with-a-known-solution.md).
+The error against lead time is drawn on `forecast_re5e4` (same page, "Forecast pairs"): one
+model's predictions at ten prediction steps from two starting times, not the many
+initialisations a verification year or a test set averages over, which
+[EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md)
+writes up. Neither benchmark's mean over cases is applied here: each row is one frame, and the
+harness summarises frames by medians. The metric also runs on the degradation ladder on
+`kinet_re5e4`, on `sod_shock_tube`, on the member mean of `synthetic_ensemble` and on the Reynolds
+ladder: it needs nothing but two fields on one grid.
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence rmse --results results/comparison_1793657627`, do not edit -->
@@ -160,7 +208,7 @@ There is no value that counts as good in the abstract; it depends on the varianc
 field being predicted, which is why the suite reports damage alongside it.
 
 Comparisons across models on the same field, dataset and analysis grid are the intended
-use. Comparisons across fields need normalising — that is what NRMSE is for. Comparisons
+use. Comparisons across fields need normalising — that is what `vrmse` and `nrmse` are for. Comparisons
 across resolutions are invalid as they stand, because the mean over cells reweights the
 small scales when the grid is refined; compare on a common analysis grid.
 

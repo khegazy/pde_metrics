@@ -1,5 +1,3 @@
-"""Normalised root mean squared error: RMSE divided by the reference fluctuation.
-
-Discovery registers the metric from ``metric.py``. See ``card.md`` for what it measures, how to
-read it, and where it misleads.
+"""The `nrmse` metric. Discovery registers it from ``metric.py``; see
+``card.md`` for what it is and where it misleads.
 """

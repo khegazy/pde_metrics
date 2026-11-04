@@ -31,6 +31,38 @@ the sum, so the two cannot drift apart; a test asserts the equality.
 None. Both the mean over members and the mean over cells are taken pointwise, so no cell
 consults its neighbours and the domain edge never enters.
 
+### How its field reports it
+
+The field is ensemble forecast verification, where this number is "the RMSE of the ensemble
+mean".
+
+- **The object and its normalisation.** The root mean squared error of the members' mean over
+  the cases, as Equation (2), unnormalised and in the field's units (Fortin and colleagues,
+  Equations (14) and (15); Leutbecher and Palmer, Equation (4) of the memorandum, squared per case)
+  [@fortin2014; @leutbecherpalmer2008].
+- **The figure and what is reported beside it.** It is drawn against lead time beside the RMS
+  spread of the ensemble, the two lines whose agreement is the calibration check (Fortin and
+  colleagues, Figure 1) [@fortin2014], and binned by predicted spread in the spread-error
+  diagram (Leutbecher and Palmer, Figure 4) [@leutbecherpalmer2008]. Their ratio is
+  [spread_skill](../../metrics/spread_skill/card.md), which imports this function. Neither figure can be
+  drawn honestly on `synthetic_ensemble`, whose dispersion is the same everywhere and whose
+  frames are not lead times (the `spread_skill` card gives the reasons).
+- **The experiment.** An ensemble verified over many cases at each lead time. Only the
+  calibrated null of `synthetic_ensemble` exists here; real ensembles wait on
+  [issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md). The missing experiments are
+  [EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md)
+  and [EXP-crps-gneiting-forecaster-suite](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-crps-gneiting-forecaster-suite.md).
+
+**On the data that exists this metric equals [rmse](../../metrics/rmse/card.md) exactly.** On an
+ensemble dataset the harness scores every pairwise metric on the member mean (the prediction
+the ladder degrades), so `rmse` on `synthetic_ensemble` computes the same
+`rmse(reference, members.mean(0))` on the same array; the two agreed to a largest absolute
+difference of 0.0 over 156 rows (critique finding 9 of the plan that added this subsection).
+The bundle is kept because ensemble verification reports this number by this name beside the
+spread, so a reader from that field looks for it among the ensemble metrics, and because a
+future ensemble dataset or harness change, such as one scoring a deterministic metric on a
+single member, could separate the two.
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence ensemble_mean_rmse --results results/ensemble_mean_rmse_1793780354`, do not edit -->
@@ -200,7 +232,7 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_ensemble -->
 
-The metric returns 0.1553 at every severity of both axes, to four decimals, against 0.1553
+The metric returns 0.1559 at every severity of both axes, to four decimals, against 0.1559
 at the clean severity level. That is the control working exactly as intended, and it is the
 sharpest statement in this bundle: an ensemble can go from honestly dispersed to four times
 too wide, or be collapsed to a fifth of its proper width, and this metric cannot tell.

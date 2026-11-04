@@ -1427,7 +1427,7 @@ DAMAGE_BLOCK_FAMILIES: tuple[str, ...] = ("geometric",)
 
 #: The metrics a card's damage table and figure place beside its own: the pointwise controls
 #: every candidate has to be read against.
-DAMAGE_BLOCK_CONTROLS: tuple[str, ...] = ("mae", "mse", "rmse", "nrmse")
+DAMAGE_BLOCK_CONTROLS: tuple[str, ...] = ("mae", "mse", "rmse", "vrmse")
 
 #: The grouping keys of :func:`per_level_response`, in the order its rows are sorted.
 RESPONSE_KEYS: tuple[str, ...] = ("field", "degradation_family", "degradation", "level")

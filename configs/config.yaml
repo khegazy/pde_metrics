@@ -34,7 +34,7 @@ paths:
   data_url: https://portal.nersc.gov/project/m4790/Data
 
 # Metric names resolved against the registry. `python -m metrics` lists them.
-metrics: [mae, mse, nrmse]
+metrics: [mae, mse, vrmse]
 
 # `fields` (default: every field the dataset lists that a selected metric accepts) and
 # `analysis_grid` (default: the native resolution, block_mean) are documented on their schema

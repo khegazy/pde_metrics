@@ -101,27 +101,27 @@ Designed, hooks in place, not built.
 | [095](095-pooling-across-frames-for-distributional-estimates.md) | Pooling across frames for a distributional estimate; the contract of a series-level procedure, should a metric need one | unset |
 | [104](104-equivalence-test-misreads-a-flag-valued-anchor.md) | The blindness test lists an axis as blind for a metric whose anchor is a worst-case flag value (`shock_set_distance` follows `translate_x` with rho 1 yet is listed blind to it); needs a decision | unset |
 | [106](106-max-error-scores-the-density-impostor-under-the-anchor.md) | `max_error` scores the Gaussian impostor on density near the anchor because density's extreme is one deep minimum on a vortex core; why the harness's 0.955 sits below the per-frame medians near 1.02 is unexplained | unset |
-| [112](112-crps-card-overclaims-comparison-at-one-member.md) | The `crps` card says ensemble sizes compare fairly; at one member the score doubles (1.14 against 0.57) | low |
 | [097](097-stochastic-ladder-for-comparable-magnitudes.md) | A stochastic ladder (several draws per severity) would make response magnitudes comparable across a metric's functional forms | none set |
 | [098](098-increment-w1-registered-number-is-a-convention.md) | The number `increment_w1_by_separation` registers, a normalised mean over separations, is a convention with no source | unset |
 | [105](105-spectral-energy-flux-summary-is-a-convention.md) | The number `spectral_energy_flux` registers, a relative L2 distance between flux curves sampled at octaves, is a convention with no source | unset |
 | [118](118-tail-exceedance-registered-threshold-is-a-convention.md) | The threshold at which `tail_exceedance` registers its frequency bias, the reference's sqrt(n)-th largest increment, is a convention with no source, and it saturates at 0 under smoothing | unset |
 | [102](102-shock-set-distance-empty-and-non-positive-conventions.md) | The scores `shock_set_distance` gives an empty shock set and a non-positive pressure are conventions | unset |
 | [120](120-shock-mask-overlap-both-empty-convention.md) | The score `shock_mask_overlap` gives two empty shock sets, 1, is a convention | unset |
+| [127](127-crps-decomposition-has-no-settled-form-for-a-fair-ensemble-score.md) | The CRPS decomposition the field reports is not built: the recommended isotonic form needs isotonic distributional regression, and Hersbach's sums to the plug-in score, not the fair one `crps` registers | low |
 
 ## Technical debt
 
 | ID | Title | Priority |
 |---|---|---|
 | [020](020-import-name-collision.md) | `metrics` is a very generic top-level import name | low |
-| [110](110-uniform-reference-nan-guard-needs-round-off-bound.md) | A uniform reference gives NaN only when its floating-point mean is exact (`spectrum_l2`, `nrmse`) | unset |
+| [110](110-uniform-reference-nan-guard-needs-round-off-bound.md) | A uniform reference gives NaN only when its floating-point mean is exact (`spectrum_l2`) | unset |
 | [032](032-prose-numbers-can-go-stale.md) | Numbers written into card prose can go stale unnoticed | medium |
 | [033](033-link-rewriting-is-only-checked-for-deadness.md) | Site link rewriting is checked for dead links, not correct destinations | medium |
 | [101](101-a-metric-cannot-declare-it-needs-an-absolute-positive-field.md) | A metric cannot declare that it needs an absolute, positive field; `shock_set_distance` runs on the gauge pressure of `taylor_green_2d` | low |
 | [100](100-site-shows-citations-as-raw-text.md) | The documentation site shows a card's citations as raw `[@key]` and `\bibliography`, and a bundle's three reference lists disagree | medium |
 | [107](107-increment-flatness-drops-a-non-finite-channel.md) | `increment_flatness` silently scores the other channels when one channel holds a NaN or an infinity | low |
 | [108](108-field-gallery-hides-the-cell-a-maximum-map-is-about.md) | The report's field gallery clips the colour scale at the 0.995 quantile, saturating the worst cell a `max` map is about, and captions every map as a per-cell share | low |
-| [109](109-pointwise-controls-accept-broadcastable-shapes.md) | `mae`, `mse`, `rmse` and `nrmse` return a number for shapes numpy can broadcast, and the contract test's mismatch cannot broadcast | low |
+| [109](109-pointwise-controls-accept-broadcastable-shapes.md) | `mae`, `mse` and `rmse` return a number for shapes numpy can broadcast, and the contract test's mismatch cannot broadcast | low |
 | [113](113-not-monotone-declaration-passes-on-round-off.md) | A metric falsely declaring `monotone_under_smoothing=False` passes the contract test when Spearman's rho is 0.9999999999999999 | low |
 | [114](114-cost-warning-ignores-grid-and-maps-are-computed-twice.md) | The cost warning counts frames, not grid cells, and a stored map is computed beside its metric | low |
 | [099](099-derived-field-read-without-its-inputs.md) | A run that reads vorticity without velocity scores the solver's stored vorticity, not the recomputed one, without warning | medium |

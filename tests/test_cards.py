@@ -886,7 +886,7 @@ def test_the_catalog_supports_the_query_it_exists_for():
     # calibration metrics are absent because they declare differentiable=False -- a rank
     # is integer-valued and a ratio of square roots is not a loss.
     assert set(answer) == {
-        "mae", "mse", "rmse", "nrmse", "enstrophy", "kinetic_energy",
+        "mae", "mse", "rmse", "enstrophy", "kinetic_energy",
         "crps", "ensemble_mean_rmse",
         # energy_score is a sum of Euclidean norms, one per member and per member pair.
         "energy_score",

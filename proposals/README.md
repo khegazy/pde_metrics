@@ -47,7 +47,6 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 | [MTR-energy_score-patched-energy-score.md](MTR-energy_score-patched-energy-score.md) | Patched energy score, local in space and cheap on large grids | proposed |
 | [MTR-energy_score-transformed-difference-scores.md](MTR-energy_score-transformed-difference-scores.md) | Proper scores of the vector of weighted pairwise differences | proposed |
 | [MTR-max_error-high-quantile-error.md](MTR-max_error-high-quantile-error.md) | A high quantile of the pointwise absolute error | proposed |
-| [MTR-max_error-mean-of-channel-maxima.md](MTR-max_error-mean-of-channel-maxima.md) | Maximum error averaged over channels (PDEBench's reduction) | proposed |
 | [MTR-max_error-vector-magnitude.md](MTR-max_error-vector-magnitude.md) | Maximum of the error vector's length | proposed |
 | [MTR-persistence_distance-betti-curve-distance.md](MTR-persistence_distance-betti-curve-distance.md) | Distance between Betti curves | proposed |
 | [MTR-persistence_distance-signed-vortex-census.md](MTR-persistence_distance-signed-vortex-census.md) | Signed vortex census from zero-dimensional persistence | proposed |

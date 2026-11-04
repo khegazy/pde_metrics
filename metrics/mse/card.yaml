@@ -18,5 +18,5 @@ math:
   scale_dependent: true
   resolution_dependent: true
   complexity: O(N)
-references: []
+references: [ohana2024, takamoto2022]
 review: null
