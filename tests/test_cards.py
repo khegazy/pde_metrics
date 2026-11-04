@@ -992,9 +992,11 @@ def test_the_run_summary_says_what_kind_of_claim_its_dataset_supports(dataset, t
     block = evidence.run_block(evidence.load_run(_synthetic_run(tmp_path, dataset=dataset)))
     claim = fmeval_config.load_cards_config().evidence_datasets[dataset]
     assert f"frames of {claim})" in block, block
-    simulated = READERS[fmeval_config.compose_config(f"dataset={dataset}").dataset.format] \
+    reads_from_disk = READERS[fmeval_config.compose_config(f"dataset={dataset}").dataset.format] \
         .reads_from_disk
-    assert ("developed flow" in block) == simulated, block
+    # Only data read from disk may be called developed flow; not everything read from disk is a
+    # simulated flow (forecast_re5e4 holds predictions and says so).
+    assert reads_from_disk or "developed flow" not in block, block
 
 
 def test_sod_evidence_runs_end_to_end_and_calls_itself_an_analytic_check(tmp_path, monkeypatch):
