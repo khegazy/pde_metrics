@@ -249,14 +249,43 @@ def performance_block(run: Run, metric: str, figures: Sequence[CardFigure] = (),
     return "\n".join(lines)
 
 
+def _companion_rows(frame: pd.DataFrame, metric: str) -> pd.DataFrame:
+    """The rows of ``frame`` that belong to ``metric``'s curve companions, whose ``metric`` column
+    holds each companion's label (:func:`metrics.registry.companion_label`)."""
+    if frame.empty:
+        return frame
+    return frame[frame["metric"].astype(str).str.split(".", n=1).str[0] == metric]
+
+
 def companion_block(run: Run, metric: str) -> str:
-    """The metric's curve read coordinate by coordinate, beside the panel, never inside it."""
-    stats = run.companion_axes
-    stats = stats[(stats["metric"].astype(str) == metric) & ~stats["is_probe"]] \
-        if not stats.empty else stats
+    """The metric's curves read coordinate by coordinate, beside the panel, never inside it: one
+    set of tables per curve companion, headed by its label when the metric has several."""
+    stats = _companion_rows(run.companion_axes, metric)
+    stats = stats[~stats["is_probe"]] if not stats.empty else stats
     if stats.empty:
         return NOT_MEASURED
-    dominance = run.dominance[run.dominance["metric"].astype(str) == metric]
+    curves = sorted(stats["metric"].astype(str).unique())
+    lines = []
+    for curve in curves:
+        if len(curves) > 1:
+            lines += [f"**Curve `{curve}`.**", ""]
+        lines += _companion_tables(stats[stats["metric"].astype(str) == curve],
+                                   run.dominance[run.dominance["metric"].astype(str) == curve])
+    lines.append(
+        "Each coordinate of the curve read as a metric of its own, with the same statistics as "
+        "the tables above and no resampling interval. Neighbouring coordinates are strongly "
+        "correlated, so a row localises the evidence and does not multiply it. **Dominance** "
+        "is the fraction of frames in which, for the weakest pair of neighbouring strengths, the "
+        "harsher strength's curve has moved at least as far as the milder one's at every "
+        "coordinate, each in its own direction: near 1, any summary that grows with every "
+        "coordinate's departure orders those strengths the same way, so the choice of summary "
+        "cannot change the trend. None of these numbers enters the tables above."
+    )
+    return "\n".join(lines)
+
+
+def _companion_tables(stats: pd.DataFrame, dominance: pd.DataFrame) -> list[str]:
+    """The per-field tables of one curve companion's per-coordinate statistics."""
     coordinates = sorted(stats["coordinate"].unique())
     heads = [an.coordinate_label(c) for c in coordinates]
     lines = []
@@ -284,17 +313,7 @@ def companion_block(run: Run, metric: str) -> str:
                     cells.append(_fmt(float(hit["dominance_min"].iloc[0])) if len(hit) else "—")
                 lines.append(f"| `{degradation}` | " + " | ".join(cells) + " |")
             lines.append("")
-    lines.append(
-        "Each coordinate of the curve read as a metric of its own, with the same statistics as "
-        "the tables above and no resampling interval. Neighbouring coordinates are strongly "
-        "correlated, so a row localises the evidence and does not multiply it. **Dominance** "
-        "is the fraction of frames in which, for the weakest pair of neighbouring strengths, the "
-        "harsher strength's curve has moved at least as far as the milder one's at every "
-        "coordinate, each in its own direction: near 1, any summary that grows with every "
-        "coordinate's departure orders those strengths the same way, so the choice of summary "
-        "cannot change the trend. None of these numbers enters the tables above."
-    )
-    return "\n".join(lines)
+    return lines
 
 
 def _profile_lines(run: Run, metric: str, axes: pd.DataFrame) -> list[str]:
@@ -501,10 +520,8 @@ def generate(metric: str, run: Run) -> Path:
 
     axes = run.axes[run.axes["metric"] == metric]
     probes = run.probes[run.probes["metric"] == metric]
-    curve = (run.companion_axes[run.companion_axes["metric"].astype(str) == metric]
-             if not run.companion_axes.empty else run.companion_axes)
-    dominance = (run.dominance[run.dominance["metric"].astype(str) == metric]
-                 if not run.dominance.empty else run.dominance)
+    curve = _companion_rows(run.companion_axes, metric)
+    dominance = _companion_rows(run.dominance, metric)
     fingerprint = {
         "metric": metric,
         "dataset": str(run.rows["dataset"].iloc[0]),

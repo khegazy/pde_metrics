@@ -19,6 +19,7 @@ import pandas as pd
 import pytest
 
 from fmeval import analysis
+from fmeval.cards import evidence
 from fmeval.context import COMPANION_KEY
 from fmeval.data.analytic import AdvectingBlobs
 from fmeval.io import (
@@ -867,6 +868,92 @@ def test_a_point_set_is_stored_on_the_chosen_frames_and_drawn(tmp_path, temporar
     assert np.isinf(data["y"]).sum() == 3, "the point at infinity is kept, once per panel"
     gallery = _rendered(folder, "field_gallery")
     assert gallery.status != "ok", "a point set is not a per-cell map"
+
+
+def test_several_companions_and_a_dense_curve_are_stored_analysed_and_drawn(tmp_path,
+                                                                           temporary_metric):
+    """A metric with three companions: its own curve, dense over eight separations and analysed
+    at two; a named curve analysed at every coordinate; and a named point set. Only the own curve
+    is handed to the metric, and whole. ``companions.csv`` holds the analysed coordinates of both
+    curves, each under its label; the dense curve and the point set are stored, under their
+    labels, only on the frames and ladder entries ``report.error_map`` names plus the clean
+    level. The analysis, the card's table and the per-coordinate figure read the analysed
+    coordinates; the curve figure draws every one."""
+    handed = []
+
+    def _auto(reference, candidate, *, ctx):
+        """Summed difference of the two autocorrelation curves, the candidate's from the cache."""
+        handed.append(len(ctx.cache[COMPANION_KEY][0]))
+        return float(np.abs(ctx.cache[COMPANION_KEY][1] - _auto_curve(reference)[1]).sum())
+
+    def _auto_curve(x):
+        """(separation, mean of the field times itself shifted by that many cells)."""
+        shifts = np.arange(8)
+        return shifts, np.array([np.mean(x * np.roll(x, s, axis=-2)) for s in shifts])
+
+    temporary_metric(name="_auto", arity="pairwise", symmetric=False)(_auto)
+    metric_registry.companion(of="_auto", kind="curve", coordinate=("separation", "cells"),
+                              analysed=(1, 4))(_auto_curve)
+    metric_registry.companion(of="_auto", name="moments", kind="curve",
+                              coordinate=("order", "index"))(
+        lambda x: (np.array([1, 2]), np.array([np.mean(x), np.mean(x ** 2)])))
+    metric_registry.companion(of="_auto", name="peaks", kind="points", coordinate=(
+        ("x", "cells"), ("y", "cells")))(lambda x: np.argwhere(x[0] > x[0].mean()).astype(float))
+    ladder = build_ladder({"gaussian_blur": {"severities": [0.1, 0.2]},
+                           "box_blur": {"severities": [0.1, 0.2]}})
+    result = run(AdvectingBlobs(grid=(16, 8), n_frames=4), [metric_registry.get("_auto")],
+                 ladder, fields=["density"], dataset=DatasetInfo(name="advecting_blobs"),
+                 maps=MapRequest(enabled=True, frames=[-1], axes=["gaussian_blur"]))
+
+    assert handed and set(handed) == {8}, "the metric receives its own curve, dense"
+    stored = {(m, f, v, t): a for (m, f, v, t), a in
+              ((parse_map_key(k), a) for k, a in result.maps.items())}
+    assert {(m, v) for m, _, v, _ in stored} == {
+        (label, variant) for label in ("_auto", "_auto.peaks")
+        for variant in ("reference", "gaussian_blur_l1", "gaussian_blur_l2")}
+    assert all(a.shape == (8, 2) for (m, *_), a in stored.items() if m == "_auto")
+    assert {(str(m), c) for m, c in zip(result.companions["metric"],
+                                        result.companions["coordinate"], strict=True)} == {
+        ("_auto", 1), ("_auto", 4), ("_auto.moments", 1), ("_auto.moments", 2)}
+
+    folder = RunFolder(tmp_path / "_auto_1").create()
+    write_results(folder, result.rows)
+    write_results(folder, result.companions, name=COMPANIONS)
+    write_maps(folder, result.maps)
+    write_config(folder, {"metrics": ["_auto"], "seed": 0}, [])
+    write_run_meta(folder, run_id=1, metric="_auto", dataset="advecting_blobs")
+
+    run_analysis = analysis.analyse(result.rows, companions=result.companions, n_bootstrap=0)
+    axes = run_analysis.companion_axes
+    assert set(axes.loc[axes["metric"] == "_auto", "coordinate"]) == {1, 4}
+    assert set(axes["metric"]) == {"_auto", "_auto.moments"}
+    assert (run_analysis.dominance.loc[run_analysis.dominance["metric"] == "_auto",
+                                       "n_coordinates"] <= 2).all()
+    block = evidence.companion_block(evidence.Run(
+        folder=folder.root, rows=result.rows, meta={},
+        **{f.name: getattr(run_analysis, f.name) for f in dataclasses.fields(run_analysis)}),
+        "_auto")
+    assert "**Curve `_auto`.**" in block and "**Curve `_auto.moments`.**" in block
+
+    curves = _rendered(folder, "companion_curves")
+    assert curves.status == "ok", curves.reason
+    dense = _figure_data(folder, "companion_curves__metric-_auto__field-density")
+    assert set(dense["coordinate"]) == set(range(8)), "the figure draws the dense curve"
+    assert set(dense["degradation"]) == {"identity", "gaussian_blur"}, (
+        "the clean level and the stored ladder entries only")
+    analysed = _figure_data(folder, "companion_curves__metric-_auto__field-density__view-"
+                                    "per-coordinate")
+    assert set(analysed["coordinate"]) == {1, 4}
+    moments = _figure_data(folder, "companion_curves__metric-_auto__field-density__companion-"
+                                   "moments")
+    assert set(moments["coordinate"]) == {1, 2}
+    assert {"gaussian_blur", "box_blur"} <= set(moments["degradation"])
+    points = _rendered(folder, "companion_points")
+    assert points.status == "ok", points.reason
+    assert not _figure_data(folder, "companion_points__metric-_auto__field-density__companion-"
+                                    "peaks").empty
+    gallery = _rendered(folder, "field_gallery")
+    assert gallery.status != "ok", "neither a dense curve nor a point set is a per-cell map"
 
 
 def test_point_set_panels_run_in_time_order_and_stop_at_twelve(tmp_path, temporary_metric):

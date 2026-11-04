@@ -168,7 +168,7 @@ class Output:
     A metric returns one float per (field, frame, severity level): the number the literature
     reports, which the harness treats as it treats every other metric's. The structure over
     fields and frames comes from the evaluation loop, not from the metric, so there is one output
-    per card, not a list. A curve or a per-cell map behind the number is the metric's companion
+    per card, not a list. A curve, a per-cell map or a point set behind the number is a companion
     (``metrics.registry.companion``); ``## Reading the output`` names it and its columns.
 
     Direction (whether higher or lower is better) is *not* here: the ``@metric``
