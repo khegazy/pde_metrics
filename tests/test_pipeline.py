@@ -7,11 +7,13 @@ groupby on that frame, so its columns and dtypes are frozen deliberately.
 from __future__ import annotations
 
 import json
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from evaluate import select_fields
 from fmeval import io as fio
 from fmeval.data.base import GridSpec, TimeSelection
 from fmeval.data.kinet_raw import KinetRawTrajectory
@@ -461,3 +463,15 @@ def test_a_derived_field_is_the_same_whether_or_not_its_inputs_are_requested(tmp
         np.testing.assert_array_equal(alone, with_inputs)
     finally:
         trajectory.close()
+
+
+def test_a_derived_field_is_read_with_its_inputs():
+    """A run whose metrics accept only vorticity still reads velocity when the dataset recomputes
+    derived fields, so vorticity is the spectral curl on the analysis grid, not the solver's
+    stored stencil (issues/099); without recomputation nothing is added."""
+    trajectory = SimpleNamespace(fields=("density", "velocity", "vorticity"))
+    specs = [metric_registry.get("enstrophy")]
+    for recompute, expected in ((True, ["vorticity", "velocity"]), (False, ["vorticity"])):
+        job = SimpleNamespace(fields=None, dataset=SimpleNamespace(
+            name="d", fields=["density", "velocity", "vorticity"], recompute_derived=recompute))
+        assert select_fields(job, trajectory, specs) == expected, recompute

@@ -2,7 +2,11 @@
 
 **Category:** pipeline / data
 **Priority:** medium
-**Status:** open. Reproduced and pinned by a strict xfail; not fixed.
+**Status:** open in part. `evaluate.py::select_fields` now reads a derived field's inputs
+whenever the dataset recomputes derived fields, so no run of `evaluate.py` scores the stored
+operator (`tests/test_pipeline.py::test_a_derived_field_is_read_with_its_inputs`). What remains is
+the direct path: `RecomputingTrajectory.frame(t, ["vorticity"])` called without velocity still
+keeps the stored field, pinned by the strict xfail below.
 
 ## Context
 

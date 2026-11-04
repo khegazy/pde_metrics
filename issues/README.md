@@ -131,7 +131,7 @@ Designed, hooks in place, not built.
 | [109](109-pointwise-controls-accept-broadcastable-shapes.md) | `mae`, `mse` and `rmse` return a number for shapes numpy can broadcast, and the contract test's mismatch cannot broadcast | low |
 | [113](113-not-monotone-declaration-passes-on-round-off.md) | A metric falsely declaring `monotone_under_smoothing=False` passes the contract test when Spearman's rho is 0.9999999999999999 | low |
 | [114](114-cost-warning-ignores-grid-and-maps-are-computed-twice.md) | The cost warning counts frames, not grid cells, and a stored map is computed beside its metric | low |
-| [099](099-derived-field-read-without-its-inputs.md) | A run that reads vorticity without velocity scores the solver's stored vorticity, not the recomputed one, without warning | medium |
+| [099](099-derived-field-read-without-its-inputs.md) | `RecomputingTrajectory.frame` asked for vorticity without velocity keeps the solver's stored vorticity; `evaluate.py` now always reads velocity beside it | low |
 | [103](103-exact-zero-axis-rule-is-discontinuous.md) | `tail_index` and `increment_flatness` leave out an axis only when it is exactly constant, so round-off on that axis changes the value by a third | unset |
 | [111](111-damage-per-change-divides-by-round-off-on-ensemble-axes.md) | Damage per unit field change divides by round-off on the ensemble-dispersion axes, so the ensemble cards' profile ranking is meaningless | medium |
 | [119](119-refactor-gate-fails-on-ill-conditioned-small-values.md) | A refactor gate at rtol 1e-12 cannot pass where a metric's value is ill-conditioned (`wasserstein` on near-identical pairs) | low |

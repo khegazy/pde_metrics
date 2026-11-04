@@ -32,7 +32,7 @@ from fmeval.data.base import READERS, Trajectory
 from fmeval.data.forecast import ForecastPairs
 from fmeval.data.locate import trajectory_provenance
 from fmeval.data.readers import open_trajectory
-from fmeval.derived import RecomputingTrajectory
+from fmeval.derived import RECIPES, RecomputingTrajectory
 from fmeval.ladder import FORECAST_LEVEL, build_ladder, ladder_axes
 from fmeval.pipeline import DatasetInfo, parse_map_key, run
 from metrics import registry as metric_registry
@@ -42,7 +42,13 @@ log = logging.getLogger(__name__)
 
 def select_fields(job: Config, trajectory: Trajectory,
                   specs: list[metric_registry.MetricSpec]) -> list[str]:
-    """Fields to read: the config list if given, else what the metrics actually accept."""
+    """Fields to read: the config list if given, else what the metrics actually accept.
+
+    When the dataset recomputes its derived fields, a derived field's inputs
+    (``fmeval.derived.RECIPES``) are read too, so the field is recomputed on the analysis grid
+    rather than the solver's stored operator being scored; a metric that does not accept an
+    input still produces no rows for it.
+    """
     requested = job.fields or job.dataset.fields
     available = list(trajectory.fields)
     missing = [f for f in requested or () if f not in available]
@@ -58,6 +64,9 @@ def select_fields(job: Config, trajectory: Trajectory,
             f"no field in {candidates} is accepted by any of "
             f"{[s.name for s in specs]}"
         )
+    if job.dataset.recompute_derived:
+        wanted += [i for i in dict.fromkeys(i for f in wanted for i in RECIPES.get(f, ()))
+                   if i in available and i not in wanted]
     return wanted
 
 
