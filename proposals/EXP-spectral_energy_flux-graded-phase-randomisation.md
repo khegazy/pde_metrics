@@ -1,7 +1,7 @@
 ---
 type: "EXP"
 kind: "degradation"
-related: ["spectral_energy_flux", "gaussian_impostor", "docs/ideas/basis_decompositions/bispectrum.md", "docs/ideas/basis_decompositions/spectral_coherence.md", "docs/ideas/turbulence_statistics/derivative_skewness.md"]
+related: ["spectral_energy_flux", "spectrum_l2", "gaussian_impostor", "docs/ideas/basis_decompositions/bispectrum.md", "docs/ideas/basis_decompositions/spectral_coherence.md", "docs/ideas/turbulence_statistics/derivative_skewness.md"]
 seen_in: "agent's own"
 doi: "none"
 found_by: "spectral_energy_flux, 2026-10-30"

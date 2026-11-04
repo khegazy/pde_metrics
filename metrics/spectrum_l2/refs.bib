@@ -4,8 +4,14 @@
   publisher = {Cambridge University Press},
   year      = {2000},
   doi       = {10.1017/CBO9780511840531},
-  note      = {Chapter 6 for the energy spectrum and for what it does and does not
-               determine about a field}
+  note      = {Chapter 6, the energy spectrum E(kappa). The book itself was not read for this
+               card; the figure numbers are from the author's Chapter 6 figure file
+               (pope.mae.cornell.edu/TurbulentFlows/popefigures/pdf/chapter6Figures.pdf): Fig.
+               6.13, the model spectrum of Eq. (6.246) at R_lambda = 500 on log-log axes with
+               slope 2 and slope -5/3 lines; Fig. 6.14, measured one-dimensional spectra over
+               the model spectrum, log-log; Figs. 6.15 and 6.17, compensated spectra
+               epsilon^{-2/3} kappa_1^{5/3} E_11 against kappa_1 eta, log x and linear y. The
+               equation numbers of the definition of E(kappa) were not verified}
 }
 
 @article{boffetta2012,
@@ -16,8 +22,108 @@
   pages   = {427--451},
   year    = {2012},
   doi     = {10.1146/annurev-fluid-120710-101240},
-  note    = {Equation (3), page 429: the isotropic energy spectrum E(k) = pi k <|u(k)|^2>,
-             the average taken over all |k| = k. That is the shell-averaged spectrum; this
-             bundle's unit-width shells rint(|k|) are its discrete form, and the card's
-             Limitations say what a unit-width shell cannot see. Read from the published PDF}
+  note    = {Equation (3), page 430: the isotropic energy spectrum E(k) = pi k <|u(k)|^2>, the
+             average over all |k| = k, with E = (1/2) <u^2> = int E(k) dk and enstrophy
+             int k^2 E(k) dk. Equations (12)-(13), p. 431: the k^{-5/3} and k^{-3} spectra of
+             forced two-dimensional turbulence. Fig. 11a (p. 446): E(k) on log-log axes with the
+             two predictions drawn dashed and dotted; Fig. 5a (p. 439): E(k) log-log with an
+             inset of the compensated spectrum epsilon^{-2/3} k^{5/3} E(k), from which the
+             Kolmogorov constant is read; Fig. 8 (p. 443): the compensated k^3 E(k). Read from
+             the published PDF; figure axes from its extracted label text}
+}
+
+@article{alexakis2018,
+  author  = {Alexakis, Alexandros and Biferale, Luca},
+  title   = {Cascades and transitions in turbulent flows},
+  journal = {Physics Reports},
+  volume  = {767--769},
+  pages   = {1--101},
+  year    = {2018},
+  doi     = {10.1016/j.physrep.2018.08.001},
+  note    = {Equation (11): the energy spectrum E(k) = (1/(2 Delta k)) sum over
+             k <= |k| < k + Delta k of |u(k)|^2, a shell sum of the kind this bundle computes.
+             Equation number of the arXiv copy, arXiv:1808.06186, read in its TeX source}
+}
+
+@article{kochkov2021,
+  author  = {Kochkov, Dmitrii and Smith, Jamie A. and Alieva, Ayya and Wang, Qing and
+             Brenner, Michael P. and Hoyer, Stephan},
+  title   = {Machine learning-accelerated computational fluid dynamics},
+  journal = {Proceedings of the National Academy of Sciences},
+  volume  = {118},
+  number  = {21},
+  pages   = {e2101784118},
+  year    = {2021},
+  doi     = {10.1073/pnas.2101784118},
+  note    = {Results, Accuracy: E(k) = (1/2) |u(k)|^2. Fig. 2c (and panel c of Figs. 3, 4 and
+             6): the energy spectrum scaled by k^5, log-log, the 2048^2 reference simulation
+             drawn with direct simulations at 64^2 to 1024^2 and the learned model. Results,
+             "Comparison to other ML models", and Fig. 5: "the absolute error of the energy
+             spectrum scaled by k^5", with no formula given. Read in the arXiv TeX source,
+             arXiv:2102.01010, figures viewed}
+}
+
+@inproceedings{stachenfeld2022,
+  author    = {Stachenfeld, Kimberly and Fielding, Drummond B. and Kochkov, Dmitrii and
+               Cranmer, Miles and Pfaff, Tobias and Godwin, Jonathan and Cui, Can and Ho,
+               Shirley and Battaglia, Peter and Sanchez-Gonzalez, Alvaro},
+  title     = {Learned Coarse Models for Efficient Turbulence Simulation},
+  booktitle = {International Conference on Learning Representations},
+  year      = {2022},
+  note      = {Sect. 5, "Spatial coarsening", and Fig. 2c-d: the RMSE of the logarithm of an
+             energy spectrum, the shell histogram of Fourier amplitudes of the scalar energy
+             field; the appendix paragraph "Other Statistical Metrics" gives the steps. No
+             numbered equation. Read in the arXiv TeX source, arXiv:2112.15275}
+}
+
+@inproceedings{lienen2024,
+  author    = {Lienen, Marten and L{\"u}dke, David and Hansen-Palmus, Jan and
+               G{\"u}nnemann, Stephan},
+  title     = {From Zero to Turbulence: Generative Modeling for 3D Flow Simulation},
+  booktitle = {International Conference on Learning Representations},
+  year      = {2024},
+  note      = {Sect. 6.3, Eq. (7): d = || log E_1 - log E_2 ||_2 between the turbulent kinetic
+             energy spectra of two samples (Eq. (6)), used as the ground distance of a
+             Wasserstein-2 distance between sample sets, reported in Table 1; App. E, Eq. (10),
+             the integral over k from 1 to 23. Read in the arXiv TeX source, arXiv:2306.01776}
+}
+
+@article{rasp2024,
+  author  = {Rasp, Stephan and Hoyer, Stephan and Merose, Alexander and Langmore, Ian and
+             Battaglia, Peter and Russell, Tyler and Sanchez-Gonzalez, Alvaro and Yang, Vivian
+             and Carver, Rob and Agrawal, Shreya and Chantry, Matthew and Ben Bouallegue,
+             Zied and others},
+  title   = {{WeatherBench} 2: A Benchmark for the Next Generation of Data-Driven Global
+             Weather Models},
+  journal = {Journal of Advances in Modeling Earth Systems},
+  volume  = {16},
+  number  = {6},
+  pages   = {e2023MS004019},
+  year    = {2024},
+  doi     = {10.1029/2023MS004019},
+  note    = {Sect. 4.5: zonal energy spectra; Sect. 5.3 and Fig. 10: power spectra of the
+             forecasts at lead times of 12 h to 10 days drawn on log-log axes over ERA5's, with
+             no spectral score, "a spectrum that matches observations well is a necessary but
+             not sufficient condition". Read in the arXiv TeX source, arXiv:2308.15560 (January
+             2024 version)}
+}
+
+@inproceedings{ohana2024,
+  author    = {Ohana, Ruben and McCabe, Michael and Meyer, Lucas and Morel, Rudy and Agocs,
+               Fruzsina and Beneitez, Miguel and Berger, Marsha and Burkhart, Blakesley and
+               Dalziel, Stuart and Fielding, Drummond and Fortunato, Daniel and
+               Goldberg, Jared and others},
+  title     = {The Well: a Large-Scale Collection of Diverse Physics Simulations for Machine
+               Learning},
+  booktitle = {Advances in Neural Information Processing Systems 37 (Datasets and Benchmarks
+               Track)},
+  pages     = {44989--45037},
+  year      = {2024},
+  doi       = {10.52202/079017-1430},
+  note      = {App. E.3: the binned spectral error BSMSE_B(u, v) = <|u_B - v_B|^2> with
+             u_B = F^{-1}[F[u] 1_B], three frequency bands split evenly on a logarithmic scale,
+             and its version normalised by the target's energy in the band; it filters the
+             difference of the two fields, so it sees phase. Fig. 6 reports it against the
+             prediction step. Read in the arXiv TeX source, arXiv:2412.00568, and the code
+             the_well/benchmark/metrics/spectral.py}
 }

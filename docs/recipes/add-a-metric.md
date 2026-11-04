@@ -67,7 +67,8 @@ looping over all three; your metric sees two arrays and returns a number.
     `analysed=(...)` naming the few the analysis reads, each exactly as the curve returns it.
     The metric still receives the whole curve; only those coordinates go to `companions.csv`
     and the per-coordinate tables, and the whole curve is stored for the figure on the frames
-    `report.error_map` names.
+    `report.error_map` names. On a grid too coarse to hold the larger ones, those beyond the
+    curve's last coordinate are simply absent (`metrics/spectrum_l2`'s octave shells).
   - If the field computes or draws more than one object behind the number (a longitudinal and a
     transverse curve, a cost density and its points), declare each with its own `name="<id>"`.
     The companion without a name, which carries the metric's own, is the one the number is

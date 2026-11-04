@@ -109,6 +109,8 @@ Designed, hooks in place, not built.
 | [120](120-shock-mask-overlap-both-empty-convention.md) | The score `shock_mask_overlap` gives two empty shock sets, 1, is a convention | unset |
 | [127](127-crps-decomposition-has-no-settled-form-for-a-fair-ensemble-score.md) | The CRPS decomposition the field reports is not built: the recommended isotonic form needs isotonic distributional regression, and Hersbach's sums to the plug-in score, not the fair one `crps` registers | low |
 | [128](128-increment-metrics-one-cell-separation-is-a-convention.md) | The one-cell separation at which `increment_w1` and `energy_distance` register their number is a convention with no source; their field reads many separations | unset |
+| [136](136-spectrum-l2-linear-summary-is-a-convention.md) | The number `spectrum_l2` registers, a linear relative L2 over shells, is a convention with no source, and the few lowest shells decide it | unset |
+| [137](137-log-spectral-distance-is-undefined-on-empty-shells.md) | A log-spectral distance has sources but is undefined on the shells a prediction or the anchor empties; not built | unset |
 
 ## Technical debt
 

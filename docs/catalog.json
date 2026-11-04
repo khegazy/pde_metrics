@@ -17207,7 +17207,16 @@
         "arity": "pairwise",
         "companions": [
           {
-            "analysed": null,
+            "analysed": [
+              1,
+              2,
+              4,
+              8,
+              16,
+              32,
+              64,
+              128
+            ],
             "coordinate": [
               "wavenumber",
               "cycles per domain"
@@ -17662,7 +17671,32 @@
       "category": "spectral",
       "declared": {
         "arity": "pairwise",
-        "companions": [],
+        "companions": [
+          {
+            "analysed": [
+              1,
+              2,
+              4,
+              8,
+              16,
+              32,
+              64,
+              128
+            ],
+            "coordinate": [
+              "wavenumber",
+              "cycles per domain"
+            ],
+            "kind": "curve",
+            "name": "spectrum_l2",
+            "one_field": true,
+            "scales": [
+              "log",
+              "log"
+            ],
+            "style": "line"
+          }
+        ],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -18683,11 +18717,11 @@
         {
           "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
           "dataset": "synthetic_ensemble",
-          "note": "scores the member mean",
+          "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "every axis there leaves the member mean's spectrum unchanged (dispersion scales members about their mean; a uniform bias leaves every fluctuation unchanged)",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
