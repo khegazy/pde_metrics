@@ -105,9 +105,13 @@ did not evaluate it the way that field does.
   `forecast_re5e4`, scored against their targets at each prediction step
   (`docs/datasets/reynolds_ladder_2d.md`, "Forecast pairs"); the Reynolds ladder (issue 011)
   joins the list when its configs exist. Fixtures (`advecting_blobs`, `taylor_green_2d`) are not
-  evidence (`docs/decisions.md`). Until `python -m fmeval.cards evidence` can cite more than one
-  run, the card's generated blocks cite one run and the Results prose names the other runs'
-  folders and what each found, with no number that the card's fingerprint does not hold.
+  evidence (`docs/decisions.md`). A card cites one run per experiment:
+  `python -m fmeval.cards evidence <name> --results <primary run> --results <run> ...` puts
+  the primary run, the field-standard experiment where it exists here, in `## Performance` and
+  the subsections per test, and each further run in a subsection headed with its dataset. The
+  generated *Across the experiments* table states every skip. Reasons that follow from the
+  decorator and the dataset are derived; a reason only a person can give goes in `card.yaml`
+  under `not_run` (`docs/recipes/add-a-metric.md`, step 6).
 - **Write down the experiments that are missing.** When the experiment a metric's field relies
   on, its primary problem set, does not exist here, write one `proposals/EXP-<metric>-<slug>.md`
   per experiment in the format of the existing proposals, add its row to
@@ -267,7 +271,8 @@ order — the first two are yours, the rest an agent can complete from the contr
 3. **`card.yaml`** — the typed record. Every field is documented in `fmeval/cards/schema.py`.
 4. **`card.md`** — the prose, seven sections in a fixed order. See §3.1.
 5. **`python -m fmeval.cards evidence <name> --results results/<run>`** — writes the
-   measured half from a recorded run. Never write those numbers yourself.
+   measured half from a recorded run, one `--results` per experiment, the primary run first.
+   Never write those numbers yourself.
 6. **`research_notes.md` and `code_notes.md`** — what you read, tried, measured and left
    open, under the fixed headings in `docs/working-with-the-repo.md`. Before you start,
    read these two files in every bundle related to yours.

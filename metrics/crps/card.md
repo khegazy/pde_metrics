@@ -205,6 +205,29 @@ tables for that reason, and so are the trap tests. When an ensemble of real runs
 ([issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md)), this card should be
 regenerated against it and this section will say something different.
 
+<!-- GENERATED experiments: written by `python -m fmeval.cards catalog`, do not edit -->
+
+**Across the experiments.**
+
+| experiment | what a run on it is evidence of | on this card |
+|---|---|---|
+| `kinet_re5e4` | developed flow | not applicable: needs an ensemble, and this dataset has one realisation per frame |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | measured, run `crps_1793780354`: the main results |
+| `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs an ensemble, and this dataset has one realisation per frame |
+| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not applicable: needs an ensemble, and this dataset has one realisation per frame |
+
+One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.
+
+<!-- END GENERATED experiments -->
+
+CRPS scores an ensemble, so the synthetic ensemble is the one experiment in this repository it
+can run on; the other three hold one realisation per frame. The experiments its field relies
+on, many forecast cases scored against what happened, and forecasters of known calibration and
+sharpness, do not exist here. The second is written up in
+[EXP-crps-gneiting-forecaster-suite](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-crps-gneiting-forecaster-suite.md),
+and the first waits on an ensemble of independent realisations
+([issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md)).
+
 ### Ensemble dispersion
 
 [spread_inflate](../../degradations/spread_inflate/card.md) ·

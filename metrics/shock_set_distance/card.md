@@ -265,6 +265,21 @@ Every number in this section comes from that one run. Regenerate with `python -m
 
 <!-- END GENERATED run -->
 
+<!-- GENERATED experiments: written by `python -m fmeval.cards catalog`, do not edit -->
+
+**Across the experiments.**
+
+| experiment | what a run on it is evidence of | on this card |
+|---|---|---|
+| `kinet_re5e4` | developed flow | not applicable: needs pressure, which this dataset does not provide |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: needs pressure, which this dataset does not provide |
+| `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | measured, run `shock_set_distance_1793381550`: the main results |
+| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not applicable: needs pressure, which this dataset does not provide |
+
+One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.
+
+<!-- END GENERATED experiments -->
+
 ### Smoothing
 
 [gaussian_blur](../../degradations/gaussian_blur/card.md) ·

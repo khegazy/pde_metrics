@@ -8,7 +8,7 @@ the same directory as the code it describes.
 The sections run in a fixed order, from what the metric *is* to what the metric *did on
 our data*. The break between those two halves matters: the first four sections hold for
 any dataset, so a reader adopting a metric for their own work can stop at Limitations.
-The last two report findings from one specific recorded run on our data.
+The last two report findings from recorded runs on our data.
 
 ## Definition
 
@@ -44,9 +44,9 @@ that you can recognise the situation in your own results.
 
 ## Performance and Results
 
-The measured half of the page. Every number in both sections comes from one recorded
-evaluation run, named at the top of Results along with the dataset, the grid and the
-number of snapshots it covered.
+The measured half of the page. Every number in Performance, and in Results outside the
+subsections headed with another experiment, comes from one recorded evaluation run, named at
+the top of Results along with the dataset, the grid and the number of snapshots it covered.
 
 **Performance** opens with two figures and then gives the table they summarise, so that
 the shape of the metric's behaviour is seen before any number is read.
@@ -77,7 +77,19 @@ Below the figures sits the table, one row per test family and physical field, so
 metrics can be compared at a glance. To compare every metric on the same figures, see
 [Sensitivity at a glance](sensitivity.md).
 
-**Results** breaks that summary down one test at a time. Each subsection links to the
+**Results** opens with a table headed *Across the experiments*. Every metric is run on every
+experiment where it makes sense, and the table has one row per experiment: the developed flow,
+the synthetic ensemble, the shock tube and the real forecasts. Each row says what a run on that
+experiment is evidence of, and whether the page reports one. Where it does not, the row says
+why. The metric cannot be computed there, because the experiment lacks a periodic domain, an
+ensemble or the field the metric needs. Or a person judged the result would carry no
+information. Or nobody has run it yet. The main results come from one run, named just above the
+table. A run on another experiment has its own subsection at the end of Results, headed with
+the experiment's name. Its first line says what kind of evidence it is: an analytic check, for
+instance, says nothing about turbulence. The [coverage page](coverage.md) puts these tables for
+every metric on one page.
+
+The rest of **Results** breaks the summary down one test at a time. Each subsection links to the
 way of damaging the field that it reports, shows the numbers for that damage, and then
 says in a few sentences what those numbers mean for this metric. The last subsection,
 *Damage beside the other metrics*, opens with a third figure: this metric's damage against

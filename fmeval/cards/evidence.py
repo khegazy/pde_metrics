@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -21,16 +22,17 @@ from typing import Any
 
 import pandas as pd
 
+from fmeval import REPO
 from fmeval import analysis as an
 from fmeval.config import load_cards_config
 from fmeval.io import COMPANIONS, read_config, read_results, read_run_meta
 from fmeval.report.registry import PLOTS
 from fmeval.report.vocabulary import FAMILY_INFO, family_label, label
 
-from . import loader
+from . import catalog, loader
 from .loader import write_strict_json
 from .metric_figures import FIGURE_BLOCKS, METRIC_FIGURES, CardFigure, metric_figures
-from .prose import has_block, write_block
+from .prose import EXPERIMENT_BLOCK, generated_blocks, has_block, insert_block, write_block
 
 #: Which generated block each degradation family's results go into. Derived from
 #: :data:`fmeval.report.vocabulary.FAMILY_INFO` rather than written out again, so a family
@@ -38,6 +40,17 @@ from .prose import has_block, write_block
 FAMILY_BLOCKS = {family: f"results_{family}" for family in FAMILY_INFO}
 
 NOT_MEASURED = "No measurements for this test in the recorded run."
+
+#: Where ``cards evidence`` finds the runs a card's fingerprint records when it is given none:
+#: ``evaluate.py``'s default ``paths.results`` (``configs/config.yaml``). A run kept elsewhere,
+#: on scratch, is linked in here, so every cited run is found under its own name.
+RESULTS = REPO / "results"
+
+#: The command that rewrites a card's "Across the experiments" table, as its marker names it.
+#: ``cards evidence`` writes the table too, with the same words, so neither rewrites the other.
+EXPERIMENTS_COMMAND = "python -m fmeval.cards catalog"
+
+_SUBSECTION = re.compile(r"^### ", re.MULTILINE)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -108,14 +121,29 @@ def _fmt(value: Any, digits: int = 3) -> str:
     return str(value)
 
 
-def run_block(run: Run) -> str:
-    """The provenance every number below it inherits, and the kind of claim it supports.
+def dataset_of(run: Run) -> str:
+    """The one dataset a run is on."""
+    return str(run.rows["dataset"].iloc[0])
+
+
+def _command(metric: str, runs: Sequence[Run]) -> str:
+    """The command that regenerates a card from ``runs``, its primary run first.
+
+    A run folder inside the repository is named relative to it, as the recipes type it, so the
+    command written into the card is the same on every checkout.
+    """
+    shown = [r.folder.relative_to(REPO) if r.folder.is_absolute() and r.folder.is_relative_to(REPO)
+             else r.folder for r in runs]
+    return f"python -m fmeval.cards evidence {metric} " + " ".join(f"--results {p}" for p in shown)
+
+
+def _provenance(run: Run) -> str:
+    """Which dataset, frames, grid, seed and commit a run used, and the kind of claim it supports.
 
     What the frames are is read from ``evidence_datasets``, so a card on a calibrated null or
     an analytic check says so in the same sentence that names the dataset.
     """
-    meta, rows = run.meta, run.rows
-    dataset = str(rows["dataset"].iloc[0])
+    meta, rows, dataset = run.meta, run.rows, dataset_of(run)
     frames = sorted(rows["frame_index"].unique())
     git = meta.get("git", {})
     sha = str(git.get("sha") or "not recorded")[:12]
@@ -124,10 +152,78 @@ def run_block(run: Run) -> str:
         f"Measured on `{dataset}`, frames {frames[0]} to {frames[-1]} "
         f"({len(frames)} frames of {load_cards_config().evidence_datasets[dataset]}), on the "
         f"{meta.get('analysis_grid') or 'native'} analysis grid, seed "
-        f"{meta.get('seed', '—')}, at commit `{sha}`{dirty}. Run `{run.folder.name}`.\n\n"
-        f"Every number in this section comes from that one run. Regenerate with "
-        f"`python -m fmeval.cards evidence <name> --results {run.folder}`."
+        f"{meta.get('seed', '—')}, at commit `{sha}`{dirty}. Run `{run.folder.name}`."
     )
+
+
+def run_block(run: Run, *others: Run) -> str:
+    """The provenance every number below it inherits, and the kind of claim it supports.
+
+    ``others`` are the card's further runs, each reported in its own subsection that names it.
+    """
+    scope = ("that one run" if not others else "that run, except in the subsections headed "
+             "with another experiment, each of which names its own run")
+    return (f"{_provenance(run)}\n\nEvery number in this section comes from {scope}. Regenerate "
+            f"with `{_command('<name>', (run, *others))}`.")
+
+
+def experiment_block(run: Run, metric: str) -> str:
+    """A further run's numbers, in the subsection headed with its dataset.
+
+    It opens with the dataset's ``evidence_datasets`` label, so a reader knows what kind of
+    claim the numbers support before reading them, then the run's provenance, a link to each
+    degradation the run applied, and the per-family and trap-test tables of ``## Results``.
+    The figures and the cross-metric tables come from the primary run only.
+    """
+    label = load_cards_config().evidence_datasets[dataset_of(run)]
+    applied = (run.rows.loc[run.rows["metric"].astype(str) == metric,
+                            ["degradation", "degradation_op"]]
+               .drop_duplicates().sort_values("degradation").itertuples(index=False))
+    # The undegraded reference is not a degradation a reader needs sending to.
+    links = [f"[{name}](../../degradations/{op}/card.md)" for name, op in applied
+             if name != "identity"
+             and (loader.bundle_root("degradation") / str(op) / "card.yaml").is_file()]
+    lines = [f"**{label[0].upper()}{label[1:]}.**", "", _provenance(run), ""]
+    if links:
+        lines += [" ·\n".join(links), ""]
+    for family in FAMILY_BLOCKS:
+        table = family_block(run, metric, family)
+        if table != NOT_MEASURED:
+            lines += [f"**{family_label(family)}.**", "", table, ""]
+    canaries = canaries_block(run, metric)
+    if canaries != NOT_MEASURED:
+        lines += ["**Trap tests.**", "", canaries]
+    return "\n".join(lines)
+
+
+def experiments_block(bundle: loader.Bundle) -> str:
+    """The "Across the experiments" table: whether the card cites a run on each evidence
+    dataset, and if not, why (:func:`fmeval.cards.catalog.experiments`)."""
+    lines = ["**Across the experiments.**", "",
+             *_header("experiment", "what a run on it is evidence of", "on this card")]
+    for row in catalog.experiments(bundle):
+        if row["state"] == "measured":
+            cell = (f"measured, run `{row['run']}`: "
+                    + ("the main results" if row["primary"]
+                       else f"under *On `{row['dataset']}`*"))
+        elif row["state"] == "not applicable":
+            cell = f"not applicable: {row['reason']}"
+        else:
+            cell = "not yet run"
+        if row["note"]:
+            cell += f"; on this dataset the metric {row['note']} of the ensemble"
+        lines.append(f"| `{row['dataset']}` | {row['claim']} | {cell} |")
+    lines += [
+        "",
+        "One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names "
+        "the run the card cites: the main results are `## Performance` and the subsections "
+        "below, and every other run has its own subsection headed with its dataset. *Not "
+        "applicable* gives the reason: one that follows from what the metric declares and what "
+        "the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) "
+        "because the result would carry no information. *Not yet run* means the metric can run "
+        "there and the card cites no run on it yet.",
+    ]
+    return "\n".join(lines)
 
 
 def figure_lines(figures: Sequence[CardFigure] | None, reasons: Mapping[str, str] | None,
@@ -477,12 +573,39 @@ def summary_block(run: Run, metric: str) -> str:
     return "\n".join(lines)
 
 
-def generate(metric: str, run: Run) -> Path:
+def _results_span(text: str) -> tuple[int, int]:
+    """Where ``## Results`` starts and ends in a card, as character offsets of line starts."""
+    start = text.index("\n## Results\n") + 1
+    end = text.find("\n## ", start)
+    return start, (len(text) if end < 0 else end + 1)
+
+
+def write_experiments(bundle: loader.Bundle) -> None:
+    """Write a metric card's "Across the experiments" table, inserting its block above the first
+    subsection of ``## Results`` if the card has none yet.
+
+    Needs no run: it reads the fingerprint, the card and the cards config, so
+    ``cards catalog`` rewrites it on every card whenever any of those changes.
+    """
+    text = bundle.card_md.read_text()
+    if not has_block(text, "experiments"):
+        start, end = _results_span(text)
+        first = _SUBSECTION.search(text, start, end)
+        text = insert_block(text, "experiments", first.start() if first else end)
+        bundle.card_md.write_text(text)
+    write_block(bundle.card_md, "experiments", experiments_block(bundle),
+                command=EXPERIMENTS_COMMAND)
+
+
+def generate(metric: str, run: Run, *others: Run) -> Path:
     """Write every generated block of one metric's card, and its fingerprint.
 
     Args:
         metric: The metric bundle to fill in.
-        run: The run to take every number from.
+        run: The primary run, whose numbers fill ``## Performance`` and the subsections per
+            test: the metric's field-standard experiment where the repository has it.
+        others: One further run per other evidence dataset, each written into a subsection
+            headed with its dataset, inserted before ``## References`` if the card lacks it.
 
     Returns:
         The path to the written fingerprint.
@@ -491,19 +614,50 @@ def generate(metric: str, run: Run) -> Path:
         KeyError: If the bundle does not exist, or its card lacks a block the generator
             writes -- which means the card and the generator disagree about what is
             generated.
+        ValueError: If two runs are on one dataset, a further run lacks the metric or applies
+            no degradation ladder to it (a forecast run), or the
+            card has a subsection for a run on a dataset not among ``others``, whose numbers
+            would otherwise stay on the card from a run no longer cited.
     """
     # Looked up through the module, so a test that substitutes `loader.find_bundle` with a
     # throwaway copy keeps the generator away from the tracked bundle.
     bundle = loader.find_bundle(metric)
     if bundle is None:
         raise KeyError(f"no metric bundle named {metric!r}")
+    datasets = [dataset_of(r) for r in (run, *others)]
+    if len(set(datasets)) < len(datasets):
+        raise ValueError(f"a card cites one run per experiment; these runs are on {datasets}")
+    lacking = [r.folder.name for r in others if metric not in set(r.rows["metric"].astype(str))]
+    if lacking:
+        raise ValueError(f"{lacking} hold no rows of {metric}")
+    # A further run is reported by its ladder tables. A forecast run has none: what it measures
+    # is read along the prediction step, which no card block shows yet.
+    ladderless = [r.folder.name for r in others
+                  if r.axes[(r.axes["metric"] == metric) & ~r.axes["is_probe"]].empty]
+    if ladderless:
+        raise ValueError(f"{ladderless} apply no degradation ladder to {metric}, and a card "
+                         "reports a further run by its ladder tables; a forecast run cannot be "
+                         "cited on a card yet")
+    text = bundle.card_md.read_text()
+    stale = sorted({name.removeprefix(EXPERIMENT_BLOCK) for name in generated_blocks(text)
+                    if name.startswith(EXPERIMENT_BLOCK)} - set(datasets[1:]))
+    if stale:
+        raise ValueError(
+            f"{bundle.card_md} reports runs on {stale} that this command does not cite. Give "
+            "their runs with --results as well, or delete those subsections and their readings.")
+    for dataset in datasets[1:]:
+        if not has_block(text, EXPERIMENT_BLOCK + dataset):
+            text = insert_block(text, EXPERIMENT_BLOCK + dataset, _results_span(text)[1],
+                                heading=f"### On `{dataset}`")
+    bundle.card_md.write_text(text)
 
-    command = f"python -m fmeval.cards evidence {metric} --results {run.folder}"
+    command = _command(metric, (run, *others))
     # Figures first, so a figure that cannot be drawn is reported inside the block that
     # would have shown it rather than discovered as a missing file.
     figures, reasons = metric_figures(run, metric, bundle.generated)
     blocks = {
-        "run": run_block(run),
+        **{EXPERIMENT_BLOCK + dataset_of(r): experiment_block(r, metric) for r in others},
+        "run": run_block(run, *others),
         "performance": performance_block(run, metric, figures, reasons),
         "results_canaries": canaries_block(run, metric),
         "results_summary": summary_block(run, metric),
@@ -518,26 +672,34 @@ def generate(metric: str, run: Run) -> Path:
         if has_block(text, name):
             write_block(bundle.card_md, name, body, command=command)
 
-    axes = run.axes[run.axes["metric"] == metric]
-    probes = run.probes[run.probes["metric"] == metric]
     curve = (run.companion_axes[run.companion_axes["metric"].astype(str) == metric]
              if not run.companion_axes.empty else run.companion_axes)
     dominance = (run.dominance[run.dominance["metric"].astype(str) == metric]
                  if not run.dominance.empty else run.dominance)
     fingerprint = {
         "metric": metric,
-        "dataset": str(run.rows["dataset"].iloc[0]),
+        **_record(run, metric),
+        **({"companion": json.loads(curve.to_json(orient="records")),
+            "dominance": json.loads(dominance.to_json(orient="records"))}
+           if not curve.empty else {}),
+        # Further runs, in the order given; `catalog.recorded_runs` reads them back.
+        **({"other_runs": [_record(r, metric) for r in others]} if others else {}),
+    }
+    write_strict_json(bundle.fingerprint, fingerprint)
+    write_experiments(bundle)
+    return bundle.fingerprint
+
+
+def _record(run: Run, metric: str) -> dict[str, Any]:
+    """One run's entry in a fingerprint: its provenance and this metric's statistics."""
+    return {
+        "dataset": dataset_of(run),
         "run": run.folder.name,
         "frames": sorted(int(f) for f in run.rows["frame_index"].unique()),
         "seed": run.meta.get("seed"),
         "analysis_grid": run.meta.get("analysis_grid"),
         "git": run.meta.get("git", {}),
-        "axes": json.loads(axes.to_json(orient="records")),
-        "probes": json.loads(probes.to_json(orient="records")),
+        "axes": json.loads(run.axes[run.axes["metric"] == metric].to_json(orient="records")),
+        "probes": json.loads(run.probes[run.probes["metric"] == metric].to_json(orient="records")),
         "profile": json.loads(run.card[run.card["metric"] == metric].to_json(orient="records")),
-        **({"companion": json.loads(curve.to_json(orient="records")),
-            "dominance": json.loads(dominance.to_json(orient="records"))}
-           if not curve.empty else {}),
     }
-    write_strict_json(bundle.fingerprint, fingerprint)
-    return bundle.fingerprint

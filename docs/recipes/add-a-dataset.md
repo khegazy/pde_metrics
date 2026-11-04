@@ -99,6 +99,11 @@ Edit `configs/cards/default.yaml`:
   runs on it by name — with the phrase naming the kind of claim a run on it supports
   ("developed flow", "an analytic check: ..."), which every card citing it quotes in its
   run summary;
+- add it to `evidence_dataset_properties`: whether every axis is periodic and whether every
+  frame carries ensemble members, which every metric card's *Across the experiments* table and
+  the site's coverage page read to say why a metric is not run on it; a test opens the dataset
+  and checks both. Then run `python -m fmeval.cards catalog`, which adds the dataset's row to
+  every metric card;
 - record its window under `evidence_window`;
 - decide whether the **one fixed snapshot every example panel is drawn from** stays where
   it is. All the panels share a single snapshot so that the gallery can be compared
