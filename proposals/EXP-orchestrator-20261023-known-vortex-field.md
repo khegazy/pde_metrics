@@ -1,7 +1,7 @@
 ---
 type: EXP
 kind: benchmark suite or dataset
-related: ["issues/060", "issues/073", "issues/082", "issues/086"]
+related: ["persistence_distance", "issues/060", "issues/073", "issues/082", "issues/086"]
 seen_in: "orchestrator's own"
 doi: "none"
 found_by: "orchestrator, 2026-10-23"
@@ -30,7 +30,11 @@ every vortex together, and noise creates spurious structure only incidentally.
 ## Metrics it would test
 
 The winding angle (issue 086), any comparison built on the vortex criteria (060), the eddy census
-(073) and the pair-correlation function of features (082).
+(073) and the pair-correlation function of features (082). Also `persistence_distance` on
+vorticity, whose diagram records the cores of one sign as minima and those of the other as
+the levels at which the loops around them fill in (its card, Definition), so a known
+population should give a known number of persistent points (added by
+update_metric_eval_principles, 2026-11-03; the count is that agent's reasoning).
 
 ## Why it is helpful
 

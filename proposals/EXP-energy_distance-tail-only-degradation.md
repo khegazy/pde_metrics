@@ -1,7 +1,7 @@
 ---
 type: EXP
 kind: degradation
-related: ["energy_distance", "increment_w1", "increment_flatness", "docs/ideas/distributional/tail_index_estimators.md"]
+related: ["energy_distance", "increment_w1", "increment_flatness", "tail_index", "tail_exceedance", "docs/ideas/distributional/tail_index_estimators.md"]
 seen_in: "agent's own"
 doi: "none"
 found_by: "energy_distance, 2026-10-30"
@@ -33,9 +33,10 @@ bulk), and this experiment is the test that would show it on real data.
 
 ## Metrics it would test
 
-energy_distance, increment_w1, increment_w1_by_separation, increment_flatness, and the planned
-tail-index estimators (docs/ideas/distributional/tail_index_estimators.md), for which no
-existing axis is a controlled test of what they measure.
+energy_distance, increment_w1, increment_w1_by_separation, increment_flatness, tail_index, tail_exceedance
+(its research notes name this proposal as a direct test), and the planned tail-index
+estimators (docs/ideas/distributional/tail_index_estimators.md), for which no existing axis is
+a controlled test of what they measure.
 
 ## Why it is helpful
 

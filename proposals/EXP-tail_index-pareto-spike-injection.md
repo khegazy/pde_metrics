@@ -1,7 +1,7 @@
 ---
 type: "EXP"
 kind: "degradation"
-related: ["metrics/tail_index", "metrics/increment_flatness", "docs/ideas/distributional/tail_index_estimators.md"]
+related: ["metrics/tail_index", "metrics/increment_flatness", "metrics/tail_exceedance", "docs/ideas/distributional/tail_index_estimators.md"]
 seen_in: "agent's own"
 doi: "none"
 found_by: "tail_index, 2026-10-30"
@@ -30,8 +30,9 @@ depends on the field.
 ## Metrics it would test
 
 `tail_index` (a known target), `increment_flatness` (flatness grows without bound as alpha falls
-toward 4, where the fourth moment stops existing), `increment_w1` and the planned tail-exceedance
-and peaks-over-threshold tier of the idea page.
+toward 4, where the fourth moment stops existing), `increment_w1`, `tail_exceedance`
+(its research notes name this proposal as a direct test) and the planned peaks-over-threshold
+tier of the idea page.
 
 ## Why it is helpful
 
