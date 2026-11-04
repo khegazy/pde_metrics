@@ -1,0 +1,30 @@
+schema_version: 1
+
+name: vrmse
+kind: metric
+category: pointwise
+
+summary: >-
+  Root mean squared error of each channel divided by the standard deviation of the reference
+  channel about its mean, averaged over channels: The Well's VRMSE, read against one for the
+  reference's own mean.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    Dimensionless mean over channels of each channel's RMSE over the square root of the
+    reference channel's variance plus 1e-7. Predicting the reference's spatial mean scores just
+    under one.
+  bounds:
+    lower: 0.0
+    upper: null
+
+math:
+  triangle_inequality: false   # each term is scaled by its own first argument's variance
+  scale_dependent: true        # only through the constant 1e-7, which is in the field's units
+  resolution_dependent: true   # both numerator and denominator are means over cells
+  complexity: "O(N)"
+references: [ohana2024, takamoto2022]
+review: null

@@ -10,7 +10,7 @@ easy to miss.
 On a machine with the data:
 
 ```bash
-python evaluate.py 'metrics=[mae,mse,rmse,nrmse,enstrophy,kinetic_energy]' \
+python evaluate.py 'metrics=[mae,mse,rmse,vrmse,enstrophy,kinetic_energy]' \
     dataset=kinet_re5e4 dataset.time.start=2000 dataset.time.reduction=50
 ```
 

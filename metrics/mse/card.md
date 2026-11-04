@@ -43,6 +43,34 @@ $$
 None. The operation is local to each cell, so no neighbourhood is ever consulted and no
 boundary condition can enter.
 
+### How its field reports it
+
+The fields that report a squared error mostly report its square root; the mean squared error
+itself is a per-field number of The Well's library and the loss its baselines were trained on.
+
+- **Machine-learning benchmarks for PDEs** [@ohana2024]. The Well's MSE is the spatial mean of the
+  squared error, one value per field (App. E.3; `the_well/benchmark/metrics/spatial.py`, `MSE`).
+  Its baselines were trained on the MSE "averaged over fields and space" (App. E.1), and its
+  trainer reports the training loss per field and as the mean over fields beside its validation
+  metrics (`the_well/benchmark/trainer/training.py`, `validation_suite`, `split_up_losses`).
+  Every channel has the same cells, so that mean over channels is exactly Equation (1): pooling
+  and averaging per channel agree for this metric, and no sibling is needed. The Well's
+  tables and figures report the normalised form, [vrmse](../../metrics/vrmse/card.md), and PDEBench reports
+  RMSE, not MSE [@takamoto2022] (Sect. 3.3).
+- **Numerical analysis and weather verification** report the square root, the discrete $L^2$
+  norm and the RMSE; the figures, statistics and experiments of both are on the card of
+  [rmse](../../metrics/rmse/card.md), whose ordering this metric shares exactly.
+
+**The experiments here.** The rollouts and refinement studies these fields evaluate on are as
+described on `rmse`'s card: `forecast_re5e4` gives one model's error against lead time from two
+starting times, and the missing experiments are
+[EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md)
+and
+[EXP-max_error-grid-convergence-with-a-known-solution](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-max_error-grid-convergence-with-a-known-solution.md).
+The metric also runs on the degradation ladder on `kinet_re5e4`, on `sod_shock_tube`, on the
+member mean of `synthetic_ensemble` and on the Reynolds ladder: it needs nothing but two fields
+on one grid.
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627`, do not edit -->
@@ -177,8 +205,8 @@ entirely on the variance of the field being predicted: an error of 0.01 is excel
 field whose fluctuations are of order one and catastrophic for one whose fluctuations are
 of order 0.001. That is why the suite reports damage, which rescales the value so that
 zero is the reference and one is what the reference's own spatial mean
-scores, which for this metric is exactly the variance of the reference, and why NRMSE exists
-as a normalised sibling.
+scores, which for this metric is exactly the variance of the reference, and why `vrmse` and
+`nrmse` exist as normalised siblings.
 
 Comparisons across models on the same field, the same dataset and the same analysis grid
 are meaningful and are the intended use. Comparisons across fields are meaningless without
@@ -383,7 +411,7 @@ Rank correlation over every degradation, computed separately for each physical f
 
 MSE and RMSE correlate at exactly 1: the square root is monotone, so no ranking can ever
 separate them. Against the other baselines MSE sits at 0.98 to 0.997 with MAE and 0.999 to 1
-with NRMSE across the fields, above the 0.95 redundancy threshold, yet MAE assigns 38 times the damage at an
+with `vrmse` (`nrmse` in the run cited) across the fields, above the 0.95 redundancy threshold, yet MAE assigns 38 times the damage at an
 eighth of a cell. They order damage alike without weighting it alike, so for ranking
 models they are duplicates and as training losses they are not. Reach for MSE when the
 errors that matter are errors of amplitude, not of position.

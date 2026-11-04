@@ -5,24 +5,24 @@ kind: metric
 category: pointwise
 
 summary: >-
-  Root mean squared error divided by the root-mean-square fluctuation of the reference,
-  giving a dimensionless error that can be read across fields.
+  Root mean squared error of each channel divided by the root mean square of the reference
+  channel, with no mean removed, averaged over channels: PDEBench's nRMSE.
 
 status: candidate
 owners: [khegazy]
 
 output:
   description: >-
-    Dimensionless ratio of the root mean squared error to the reference field's
-    fluctuation RMS. NaN where the reference is spatially uniform.
+    Dimensionless mean over channels of each channel's RMSE over the reference channel's root
+    mean square. NaN where a reference channel is zero in every cell.
   bounds:
     lower: 0.0
     upper: null
 
 math:
-  triangle_inequality: true    # a positive rescaling of the L2 distance preserves it
-  scale_dependent: false       # scaling both fields by c leaves the ratio unchanged
+  triangle_inequality: false   # each term is scaled by its own first argument's root mean square
+  scale_dependent: false       # scaling both fields by c leaves every ratio unchanged
   resolution_dependent: true   # both numerator and denominator are means over cells
   complexity: "O(N)"
-references: []
+references: [takamoto2022, ohana2024]
 review: null

@@ -114,14 +114,14 @@ Designed, hooks in place, not built.
 | ID | Title | Priority |
 |---|---|---|
 | [020](020-import-name-collision.md) | `metrics` is a very generic top-level import name | low |
-| [110](110-uniform-reference-nan-guard-needs-round-off-bound.md) | A uniform reference gives NaN only when its floating-point mean is exact (`spectrum_l2`, `nrmse`) | unset |
+| [110](110-uniform-reference-nan-guard-needs-round-off-bound.md) | A uniform reference gives NaN only when its floating-point mean is exact (`spectrum_l2`) | unset |
 | [032](032-prose-numbers-can-go-stale.md) | Numbers written into card prose can go stale unnoticed | medium |
 | [033](033-link-rewriting-is-only-checked-for-deadness.md) | Site link rewriting is checked for dead links, not correct destinations | medium |
 | [101](101-a-metric-cannot-declare-it-needs-an-absolute-positive-field.md) | A metric cannot declare that it needs an absolute, positive field; `shock_set_distance` runs on the gauge pressure of `taylor_green_2d` | low |
 | [100](100-site-shows-citations-as-raw-text.md) | The documentation site shows a card's citations as raw `[@key]` and `\bibliography`, and a bundle's three reference lists disagree | medium |
 | [107](107-increment-flatness-drops-a-non-finite-channel.md) | `increment_flatness` silently scores the other channels when one channel holds a NaN or an infinity | low |
 | [108](108-field-gallery-hides-the-cell-a-maximum-map-is-about.md) | The report's field gallery clips the colour scale at the 0.995 quantile, saturating the worst cell a `max` map is about, and captions every map as a per-cell share | low |
-| [109](109-pointwise-controls-accept-broadcastable-shapes.md) | `mae`, `mse`, `rmse` and `nrmse` return a number for shapes numpy can broadcast, and the contract test's mismatch cannot broadcast | low |
+| [109](109-pointwise-controls-accept-broadcastable-shapes.md) | `mae`, `mse` and `rmse` return a number for shapes numpy can broadcast, and the contract test's mismatch cannot broadcast | low |
 | [113](113-not-monotone-declaration-passes-on-round-off.md) | A metric falsely declaring `monotone_under_smoothing=False` passes the contract test when Spearman's rho is 0.9999999999999999 | low |
 | [114](114-cost-warning-ignores-grid-and-maps-are-computed-twice.md) | The cost warning counts frames, not grid cells, and a stored map is computed beside its metric | low |
 | [099](099-derived-field-read-without-its-inputs.md) | A run that reads vorticity without velocity scores the solver's stored vorticity, not the recomputed one, without warning | medium |

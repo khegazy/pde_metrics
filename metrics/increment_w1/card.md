@@ -428,7 +428,7 @@ Every axis except displacement is ranked perfectly on every field. Displacement 
 not at all, by construction.
 
 The number worth the most here is the cross-metric correlation: 0.188 to 0.189 on density,
-0.123 to 0.13 on velocity and -0.159 to -0.094 on vorticity against `nrmse`, `rmse`, `mse` and
+0.123 to 0.13 on velocity and -0.159 to -0.094 on vorticity against `vrmse` (`nrmse` in the run cited), `rmse`, `mse` and
 `mae`. This metric is close to uncorrelated with the
 entire pointwise family across the whole ladder, which is the strongest such result in the
 repository — `h_minus_one`, by contrast, correlates with them above 0.91 on every field. That is the

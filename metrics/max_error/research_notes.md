@@ -42,7 +42,8 @@ pages and year.
      controls pool channels the same way into their means, so `mae`, `rmse` and `max_error` read
      one consistent norm of the flattened vector (L1, L2, $L^\infty$). This is the agent's own
      choice, recorded on the card and in the docstring.
-  2. PDEBench's mean of per-channel maxima, written up as a variant (Open questions).
+  2. PDEBench's mean of per-channel maxima, written up as a variant (Open questions) and later
+     built as `max_error_channel_mean`.
   3. The maximum over cells of the Euclidean length of the error vector, which is rotation
      invariant, also written up as a variant.
   4. The maximum of the channel-summed absolute error, which would have reused `mae_map`
@@ -228,8 +229,9 @@ generated tables.
   [issues/106](../../issues/106-max-error-scores-the-density-impostor-under-the-anchor.md).
 - **The gallery clipping**:
   [issues/108](../../issues/108-field-gallery-hides-the-cell-a-maximum-map-is-about.md).
-- **PDEBench's channel reduction**, the mean of per-channel maxima:
-  [MTR-max_error-mean-of-channel-maxima](../../proposals/MTR-max_error-mean-of-channel-maxima.md).
+- **PDEBench's channel reduction**, the mean of per-channel maxima: built as the sibling
+  [max_error_channel_mean](../max_error_channel_mean/card.md) (2026-11-04), which replaced the
+  proposal that recorded it.
 - **The maximum of the error vector's length**:
   [MTR-max_error-vector-magnitude](../../proposals/MTR-max_error-vector-magnitude.md) (the agent's
   own).

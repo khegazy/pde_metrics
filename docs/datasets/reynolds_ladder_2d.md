@@ -155,7 +155,7 @@ PDEBench computes its errors at every time step (Takamoto et al. 2022, *NeurIPS 
 Benchmarks*, Sect. 3.3, and its code, as read in `metrics/max_error/research_notes.md`).
 
 ```bash
-python evaluate.py metrics=[mse,nrmse,enstrophy] dataset=forecast_re5e4 analysis_grid.resolution=64
+python evaluate.py metrics=[mse,vrmse,enstrophy] dataset=forecast_re5e4 analysis_grid.resolution=64
 python evaluate.py metrics=[mse] dataset=forecast_re5e4 \
     'dataset.reader.files=[F-906861_64/forecast_t0-0,F-906861_64/forecast_t0-5000]'
 ```

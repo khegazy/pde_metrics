@@ -2,12 +2,17 @@
 
 **Category:** technical debt
 **Priority:** unset
-**Status:** open. `spectral_energy_flux` is fixed on its own branch; `spectrum_l2` and `nrmse` are not.
+**Status:** open for `spectrum_l2`. `spectral_energy_flux` is fixed on its own branch. The
+bundle measured below as `nrmse` was renamed `vrmse` (2026-11-04) and now divides by the variance
+plus The Well's constant $10^{-7}$, so it promises no NaN and returns a finite value on a uniform
+reference; the new `nrmse` divides by the raw root mean square, which is zero only for a reference
+of exact zeros.
 
 ## Context
 
 Several metrics promise NaN for a spatially uniform reference, which has no scale to divide by,
-and guard with an exact comparison: `nrmse` tests `fluctuation_rms(reference) == 0.0`, and
+and guard with an exact comparison: `nrmse` (now `vrmse`) tested
+`fluctuation_rms(reference) == 0.0`, and
 `spectrum_l2` tests that the norm of the reference's spectrum is `0.0`. Both quantities are taken
 about the spatial mean (`fmeval/context.py::fluctuation`). The floating-point mean of a constant
 equals the constant only for some values and grid sizes, so a uniform reference usually leaves a
@@ -40,8 +45,8 @@ degeneracy handling (issues/037) never sees it.
 
 A shared round-off guard used by every metric that divides by a reference scale: compare the
 scale with machine epsilon times the reference's own magnitude (its largest absolute value,
-raised to the power the scale carries), and return NaN below it. Changing `spectrum_l2` and
-`nrmse` changes no number on real data, so the refactor gate (`docs/recipes/verify-a-refactor.md`)
+raised to the power the scale carries), and return NaN below it. Changing `spectrum_l2`
+changes no number on real data, so the refactor gate (`docs/recipes/verify-a-refactor.md`)
 would confirm it.
 
 ## Related

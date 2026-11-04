@@ -1,7 +1,7 @@
 """Evaluate metrics against a degradation ladder and write a run folder per metric.
 
     python evaluate.py metrics=[mse] dataset=kinet_re5e4_dev
-    python evaluate.py 'metrics=[mae,mse,nrmse]' dataset=kinet_re5e4 \\
+    python evaluate.py 'metrics=[mae,mse,vrmse]' dataset=kinet_re5e4 \\
         dataset.time.reduction=100
     python evaluate.py metrics=[mse] degradation=quick
     python evaluate.py metrics=[mse] analysis_grid.resolution=128

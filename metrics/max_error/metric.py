@@ -1,6 +1,6 @@
 """Maximum absolute error: the pointwise L-infinity control, the worst single cell.
 
-The pointwise controls ``mae``, ``mse``, ``rmse`` and ``nrmse`` average the error over the
+The pointwise controls ``mae``, ``mse``, ``rmse`` and ``vrmse`` average the error over the
 domain, so one badly wrong cell counts only in proportion to its share of the cells. The
 maximum error reports that cell alone: a spurious spike, an overshoot beside a front, or the
 first cell of a growing instability cannot be diluted out of it.
@@ -14,14 +14,15 @@ from numpy.typing import NDArray
 from metrics.registry import companion, metric
 
 
-def _absolute_error(
+def absolute_error(
     reference: NDArray[np.floating], candidate: NDArray[np.floating]
 ) -> NDArray[np.floating]:
     """``|reference - candidate|`` cell by cell, refusing shapes that differ.
 
-    Both the metric and its map take their maximum from this array. Numpy would broadcast a
-    one-channel field against a two-channel one, or a ``(X, 1)`` field against ``(X, Y)``, and
-    return a plausible number; a maximum over such an array is meaningless, so it raises.
+    The metric, its map and ``max_error_channel_mean`` take their maxima from this array.
+    Numpy would broadcast a one-channel field against a two-channel one, or a ``(X, 1)`` field
+    against ``(X, Y)``, and return a plausible number; a maximum over such an array is
+    meaningless, so it raises.
 
     Raises:
         ValueError: If the two shapes differ.
@@ -57,7 +58,7 @@ def max_error(reference: NDArray[np.floating], candidate: NDArray[np.floating]) 
     Channels are pooled: the maximum runs over every (channel, cell) entry, as ``mae`` and
     ``mse`` pool channels into their means. This choice is the bundle's, not a source's;
     PDEBench's code instead averages the per-channel maxima, which differs only on a
-    multi-channel field such as velocity.
+    multi-channel field such as velocity; that form is ``max_error_channel_mean``.
 
     Args:
         reference: The trusted field, shape ``(C, *spatial)`` on the analysis grid.
@@ -71,7 +72,7 @@ def max_error(reference: NDArray[np.floating], candidate: NDArray[np.floating]) 
         ValueError: If the shapes differ, or if the fields have no cells.
     """
     # Roy (2005) Eq. 7: L_inf = max_n |f_n - f_exact,n|, here over channels and cells pooled.
-    return float(_absolute_error(reference, candidate).max())
+    return float(absolute_error(reference, candidate).max())
 
 
 @companion(of="max_error")
@@ -91,4 +92,4 @@ def max_error_map(
         An array of shape ``(*spatial)``: the channel axis is reduced by its maximum, so that
         the maximum of the map is the metric (Roy 2005, Eq. 7, as in :func:`max_error`).
     """
-    return _absolute_error(reference, candidate).max(axis=0)
+    return absolute_error(reference, candidate).max(axis=0)

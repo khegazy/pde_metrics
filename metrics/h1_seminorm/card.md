@@ -454,7 +454,8 @@ Rank correlation over every degradation, computed separately for each physical f
 
 <!-- END GENERATED results_summary -->
 
-This metric ranks the ladder most like the pointwise family: with `nrmse`, `mae`, `mse` and
+This metric ranks the ladder most like the pointwise family: with `vrmse` (`nrmse` in the
+run cited), `mae`, `mse` and
 `rmse` it correlates at 0.758 to 0.763 on density, 0.657 to 0.663 on velocity and 0.592 to 0.605
 on vorticity, and less like `h_minus_one`, at 0.484 to 0.55. The two Sobolev orders agree on
 direction for most degradations and disagree on which ones are severe, which is the whole

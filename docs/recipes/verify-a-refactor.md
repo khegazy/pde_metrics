@@ -31,7 +31,7 @@ can replace that directory with one placeholder.
 
 ```bash
 D=/tmp/refactor/before      # use /tmp/refactor/after for step 3
-python evaluate.py 'metrics=[mae,mse,rmse,nrmse,enstrophy,kinetic_energy]' \
+python evaluate.py 'metrics=[mae,mse,rmse,vrmse,enstrophy,kinetic_energy]' \
     dataset=kinet_re5e4_dev degradation=default dataset.time.max_frames=3 \
     paths.results=$D/run1 hydra.run.dir=$D/run1/hydra
 python evaluate.py "metrics=[$(python -c 'from metrics import registry; print(",".join(registry.available()))')]" \

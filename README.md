@@ -78,7 +78,7 @@ to test is the one thing you will override most often**, so start here:
 python evaluate.py metrics=[mse] dataset=kinet_re5e4_dev
 
 # Several metrics in one run: each gets its own folder, plus a comparison folder
-python evaluate.py 'metrics=[mae,mse,nrmse]' dataset=kinet_re5e4_dev
+python evaluate.py 'metrics=[mae,mse,vrmse]' dataset=kinet_re5e4_dev
 ```
 
 Quote the argument (`'metrics=[mae,mse]'`) whenever the list has commas, or the shell will
@@ -171,7 +171,7 @@ python evaluate.py metrics=[mse] dataset=kinet_re5e4_dev \
 
 # A real run: three metrics on the developed flow, every 400th frame,
 # vorticity only, on a 128^2 analysis grid.
-python evaluate.py 'metrics=[mae,mse,nrmse]' dataset=kinet_re5e4 \
+python evaluate.py 'metrics=[mae,mse,vrmse]' dataset=kinet_re5e4 \
     dataset.time.start=2000 dataset.time.reduction=400 \
     'fields=[vorticity]' analysis_grid.resolution=128
 

@@ -278,7 +278,7 @@ at all.
 
 | Family | Reference needed | What to keep in mind |
 |---|---|---|
-| Pointwise errors: built [rmse](../metrics/rmse.md), [nrmse](../metrics/nrmse.md) and [max_error](../metrics/max_error.md); [valid prediction time](dynamics/valid_prediction_time.md) | Yes, and phase-aligned with the prediction | Carries no information about model quality once the prediction has decorrelated, Equation (4) |
+| Pointwise errors: built [rmse](../metrics/rmse.md), [vrmse](../metrics/vrmse.md), [nrmse](../metrics/nrmse.md) and [max_error](../metrics/max_error.md); [valid prediction time](dynamics/valid_prediction_time.md) | Yes, and phase-aligned with the prediction | Carries no information about model quality once the prediction has decorrelated, Equation (4) |
 | Spectra and band errors: built [spectrum_l2](../metrics/spectrum_l2.md); [error by wavenumber band](basis_decompositions/spectral_band_error.md) | A reference that declares which scales it resolves | The bands worth comparing are a property of the reference's resolution |
 | Admissibility: [admissibility checks](physics_invariants/admissibility_checks.md); [weak residual](physics_invariants/weak_residual.md); [signed entropy production](physics_invariants/entropy_production.md) | No | Computed from the prediction alone; a constant, laminar or over-smoothed field satisfies them |
 | Exact laws: [four-fifths law](turbulence_statistics/four_fifths_law.md); reference-free [energy-transfer checks](turbulence_statistics/energy_transfer_checks.md); log law in [wall-bounded flows](regime_specific/wall_bounded_flows.md) | No | Remain meaningful after decorrelation; they fix an amplitude and a slope that a degenerate field cannot reproduce |

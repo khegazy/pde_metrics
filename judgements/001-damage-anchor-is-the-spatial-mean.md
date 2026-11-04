@@ -93,7 +93,7 @@ by which each metric's damage numbers grow; "none" means the metric had no damag
 | `mse` | 1.45 | 3.05 | 2.36 |
 | `rmse` | 1.21 | 1.75 | 1.54 |
 | `mae` | 1.17 | 1.72 | 1.90 |
-| `nrmse` | 1.28 | 1.75 | 1.50 |
+| `nrmse` (since renamed `vrmse`) | 1.28 | 1.75 | 1.50 |
 | `h1_seminorm` | 1.38 | 1.54 | 1.41 |
 | `h_minus_one` | 1.11 | 1.79 | 1.75 |
 | `increment_w1`, `increment_w1_by_separation`, `spectrum_l2` | none | none | none |

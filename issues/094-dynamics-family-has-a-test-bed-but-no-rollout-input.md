@@ -38,7 +38,7 @@ built. This one records what now exists to test them and what the harness still 
 ## What is not settled
 
 1. **The valid prediction time is a reduction along time of rows the harness already writes.**
-   With `per_unit_time`, each frame's `nrmse` row is the error of a prediction that has drifted
+   With `per_unit_time`, each frame's `vrmse` row is the error of a prediction that has drifted
    for that long. The first time at which that error exceeds a threshold is the valid prediction
    time, so no new pipeline path is needed: it is a reduction over `frame_index` of existing
    rows. What is missing is the threshold. The idea page does not fix one, and a value chosen

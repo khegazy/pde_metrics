@@ -474,7 +474,7 @@ Rank correlation over every degradation, computed separately for each physical f
 
 The ranking this metric produces is close to independent of the pointwise family, correlating
 0.159 to 0.187 on density, 0.345 to 0.346 on velocity and 0.099 to 0.105 on vorticity with `mae`,
-`mse`, `rmse` and `nrmse`, and closest to `persistence_distance` at 0.929 and 0.931 on density and
+`mse`, `rmse` and `vrmse` (`nrmse` in the run cited), and closest to `persistence_distance` at 0.929 and 0.931 on density and
 vorticity, `increment_w1_by_separation` at 0.813 to 0.879 and `spectral_energy_flux` at 0.877 on
 velocity. `increment_w1`, the other metric here that reads only a distribution rather than an
 arrangement, is at 0.662 to 0.81. The strong

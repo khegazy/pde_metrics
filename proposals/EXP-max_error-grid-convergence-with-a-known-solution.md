@@ -1,7 +1,7 @@
 ---
 type: "EXP"
 kind: "protocol"
-related: ["max_error", "rmse", "mse", "mae", "nrmse", "h1_seminorm", "docs/ideas/infrastructure/grid_convergence.md", "docs/datasets/reynolds_ladder_2d.md"]
+related: ["max_error", "rmse", "mse", "mae", "nrmse", "vrmse", "h1_seminorm", "docs/ideas/infrastructure/grid_convergence.md", "docs/datasets/reynolds_ladder_2d.md"]
 seen_in: "Roy 2005, J. Comput. Phys. 205(1), 131-156, Sect. 2.5, Eqs. 5-8, Figs. 3-4"
 doi: "10.1016/j.jcp.2004.10.036"
 found_by: "update_metric_eval_principles, 2026-11-03"
@@ -45,8 +45,8 @@ settle, or settles at the wrong value, is measuring something other than discret
 
 ## Metrics it would test
 
-`max_error` and `rmse` (the two norms of Roy's Eq. 7), `mse`, `mae`, `nrmse` (its normalisation
-does not change the observed order), `h1_seminorm`. On the Sod form, the shock metrics as well:
+`max_error` and `rmse` (the two norms of Roy's Eq. 7), `mse`, `mae`, `nrmse` and `vrmse` (a
+normalisation does not change the observed order), `h1_seminorm`. On the Sod form, the shock metrics as well:
 `shock_set_distance` should fall with the shock's smeared width.
 
 ## Why it is helpful

@@ -19,8 +19,9 @@ Section 3.3 of [@takamoto2022].
 
 For a vector field the channels are pooled, so the maximum runs over every component of every
 cell, as `mae` and `mse` pool channels into their means. That choice is this bundle's, not a
-source's. PDEBench's code takes the maximum per channel and then averages over channels; the
-two agree on every one-channel field and differ only on velocity. A maximum carries no cell
+source's. PDEBench's code takes the maximum per channel and then averages over channels, which
+is the sibling bundle [max_error_channel_mean](../../metrics/max_error_channel_mean/card.md); the two agree
+on every one-channel field and differ only on velocity. A maximum carries no cell
 weights, so the formula of Equation (1) is unchanged on a non-uniform grid, but its value is
 not grid-neutral there: a peak inside a coarse cell is averaged down more than one inside a
 fine cell, so the number depends on where the grid is refined.
@@ -70,6 +71,42 @@ $\max_{c,i} |f_{c,i} - \bar f_c|$.
 
 None. The operation is local to each cell, so no neighbourhood is ever consulted and no
 boundary condition can enter.
+
+### How its field reports it
+
+Two fields report a maximum error. They agree on a one-channel field and reduce a vector field
+differently; this bundle is the pooled form, and the per-channel form of the machine-learning
+benchmarks is [max_error_channel_mean](../../metrics/max_error_channel_mean/card.md).
+
+- **Numerical analysis and code verification** [@roy2005]. The object is the discrete
+  $L^\infty$ norm of the discretisation error, $\max_n |f_{k,n} - f_{\mathrm{exact},n}|$ over the
+  mesh nodes of grid $k$, defined beside the $L^2$ norm (Sect. 2.5, Eq. 7) and applied to one
+  variable at a time. The figure is the norm against the grid spacing $h$ on logarithmic axes,
+  with first- and second-order slopes drawn for reference (Fig. 3, for mass density), and the
+  statistic reported beside it is the observed order of accuracy, $p = \ln(L_{k+1}/L_k) / \ln r$
+  from two grids refined by the ratio $r$ against an exact solution (Eq. 8, plotted against $h$ in
+  Fig. 4), or from three grids without one (Sect. 3.3.3, Eq. 18). For a flow with shocks Roy notes
+  that shock-capturing schemes fall to first order whatever their formal order (Sect. 3.5.6). The
+  experiment is a manufactured or exact solution on systematically refined grids (Sect. 2.5;
+  Table 1, five grids at $r = 2$).
+- **Machine-learning benchmarks for PDEs** [@takamoto2022; @ohana2024]. PDEBench's maximum error
+  is the per-channel maximum averaged over channels, reported in its tables per PDE and model
+  (App. E) and drawn against a PDE parameter beside the RMSE (Sect. 4.2, Fig. 3a): that is
+  [max_error_channel_mean](../../metrics/max_error_channel_mean/card.md). The Well's $L^\infty$ error is
+  one value per field (App. E.3).
+
+**The experiments here.** A refinement study against a known solution does not exist: the three
+runs of `forecast_re5e4` are not a refinement sequence as they stand
+(`docs/datasets/reynolds_ladder_2d.md`, "Can the three runs be read as a grid-refinement
+sequence?"), and `sod_shock_tube` has the exact solution but no solver run at several
+resolutions to set against it. The study is written up in
+[EXP-max_error-grid-convergence-with-a-known-solution](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-max_error-grid-convergence-with-a-known-solution.md).
+`forecast_re5e4` gives one model's error against lead time from two starting times; a test set of
+many initial conditions is
+[EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md).
+The metric also runs on the degradation ladder on `kinet_re5e4`, on `sod_shock_tube`, on the
+member mean of `synthetic_ensemble` and on the Reynolds ladder: it needs nothing but two fields
+on one grid.
 
 ## Performance
 
