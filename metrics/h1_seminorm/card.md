@@ -19,10 +19,23 @@ the average over cells. Derivatives are spectral, $\partial_j \to i k_j$ with
 $k_j = 2\pi \, \mathrm{fftfreq}(N_j, h_j)$ [@pope2000], the convention used throughout this
 repository.
 
-Equation (1) is normalised as a root *mean* square, deliberately matching
-[h_minus_one](../../metrics/h_minus_one/card.md) rather than following an integral convention, and the
-payoff is an exact identity. For an error carried by a single Fourier mode of wavenumber
-magnitude $|\mathbf{k}|$,
+Equation (1) is the finite-element seminorm in what it measures and differs from it in three
+places, each this repository's choice rather than that field's:
+
+- **A mean, not an integral.** Finite-element analysis integrates, $|v|_1 = (\int_\Omega
+  |\nabla v|^2 \, dx)^{1/2}$ with no division by the domain's size ([@arnold2015], Ch. 4, the
+  seminorm defined before Theorem 4.6; [@langtangen2016], Sect. 5.5.4, `errornorm` with
+  `norm_type='H10'`). Equation (1) averages over cells, so it is that integral divided by the
+  square root of the domain's area $|\Omega|$.
+- **The channels are pooled with $1/C$.** A vector field's seminorm sums over components; the
+  $1/C$ is this repository's, so that one channel and several sit on one scale.
+- **The derivative is spectral.** Finite elements differentiate the piecewise polynomial of each
+  element; here the gradient is taken in Fourier space.
+
+What it shares with that field: it is homogeneous, with no zeroth-order term, and absolute, not
+divided by the reference's own seminorm. The mean and the $1/C$ were chosen to match
+[h_minus_one](../../metrics/h_minus_one/card.md), and the payoff is an exact identity. For an
+error carried by a single Fourier mode of wavenumber magnitude $|\mathbf{k}|$,
 
 $$
 \mathrm{H}^1 = |\mathbf{k}| \cdot \mathrm{rms}(d),
@@ -50,6 +63,35 @@ factor.
 
 It therefore declares `requires_periodic`, and the harness does not run it on a dataset with a
 non-periodic axis, such as the Sod shock tube; it reports why in the run log.
+
+### How its field reports it
+
+Two fields report an H^1 error, differently, and each is its own bundle.
+
+- **Finite-element analysis**, this bundle's field. The object is the absolute seminorm of the
+  error between the exact solution and the discrete one. Its theory bounds it by a power of the
+  mesh size: for Lagrange elements of degree $r$ the interpolation error is
+  $|u - I_h u|_1 \le c\, h^{r} |u|_{r+1}$ ([@arnold2015], Ch. 4, Theorem 4.6). For Poisson's
+  problem, Galerkin orthogonality ([@arnold2015], Ch. 4, Eq. (4.3)) makes the discrete solution
+  the best approximation in that seminorm, so the same bound holds for $|u - u_h|_1$; that step
+  is our derivation from the two, not a statement read in the source, which states the bound in
+  the full norm (Eq. (4.10)). It is reported as the
+  observed convergence rate between successive meshes,
+  $r = \ln(E_i/E_{i-1}) / \ln(h_i/h_{i-1})$, in a table against the mesh size
+  ([@langtangen2016], Sect. 5.5.4). The experiment is a sequence of refined meshes on a problem
+  with a known exact or manufactured solution. The repository does not have it:
+  [EXP-max_error-grid-convergence-with-a-known-solution](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-max_error-grid-convergence-with-a-known-solution.md)
+  writes it up. `forecast_re5e4` has three resolutions, but no exact solution and no record of
+  how the predictions were produced, so it is not a convergence study (`issues/126`).
+- **Neural-operator learning** reports a *relative, inhomogeneous* H^1 error, with the
+  zeroth-order term included and the reference's norm as the denominator:
+  [h1_relative](../../metrics/h1_relative/card.md).
+
+The figure the field draws, error against mesh size, needs that experiment. The card's first
+figure is instead the damage against an applied shift beside the pointwise errors, the
+comparison by which a Sobolev norm's weighting of displaced error is read, and on a forecast run
+the error against lead time. The metric runs on the degradation ladder on `kinet_re5e4`, on the
+Reynolds ladder and on `forecast_re5e4`.
 
 ## Performance
 
@@ -270,7 +312,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 |---|---|---|
 | `kinet_re5e4` | developed flow | measured, run `comparison_1793657627`: the main results |
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
-| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not yet run; on this dataset the metric scores the member mean of the ensemble |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: every axis there leaves the value at its clean value (measured, 2.9e-16 relative at most): the dispersion axes do not move the member mean, and a uniform bias has no gradient |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
 

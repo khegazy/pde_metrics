@@ -110,6 +110,8 @@ Designed, hooks in place, not built.
 | [127](127-crps-decomposition-has-no-settled-form-for-a-fair-ensemble-score.md) | The CRPS decomposition the field reports is not built: the recommended isotonic form needs isotonic distributional regression, and Hersbach's sums to the plug-in score, not the fair one `crps` registers | low |
 | [128](128-increment-metrics-one-cell-separation-is-a-convention.md) | The one-cell separation at which `increment_w1` and `energy_distance` register their number is a convention with no source; their field reads many separations | unset |
 | [132](132-hill-estimator-interval-on-spatially-correlated-increments.md) | The Hill estimator's interval, gamma / sqrt(k), assumes independent samples; its variance on spatially correlated increments is unknown, so `tail_index` reports no interval | low |
+| [138](138-relative-h1-has-two-implementations-in-its-field.md) | The neural-operator relative H1 error has two implementations in its field (the library's centred differences, the MNO authors' spectral weights), and the papers do not say which produced their tables | unset |
+| [139](139-multiplicative-noise-makes-density-negative.md) | `multiplicative_noise` at its harshest severity makes density negative in some cells, where `wasserstein` is undefined, so that level scores NaN | unset |
 
 ## Technical debt
 

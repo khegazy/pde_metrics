@@ -26,5 +26,5 @@ math:
   scale_dependent: true        # scaling the field by c scales the value by c squared
   resolution_dependent: true   # a coarser grid resolves less of the small-scale vorticity
   complexity: "O(N)"
-references: []
+references: [boffetta2012, frezat2022]
 review: null

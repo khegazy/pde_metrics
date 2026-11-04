@@ -13,9 +13,11 @@ $$
 $$
 
 Components are summed before the average over cells, so in 2D the single component is
-used and in 3D all three contribute. Equation (1) takes one field and returns one number:
-it is a diagnostic, not a comparison, and the pipeline evaluates it on the reference and
-on every degraded variant so that the drift between them can be read downstream.
+used and in 3D all three contribute. Equation (1) is the enstrophy of two-dimensional
+turbulence theory, $\Omega = \tfrac12 \langle \omega^2 \rangle$ with the average over the
+domain, including its factor of one half ([@boffetta2012], p. 430). It takes one field and
+returns one number: it is a diagnostic, not a comparison, and the pipeline evaluates it on the
+reference and on every degraded variant so that the drift between them can be read downstream.
 
 The vorticity itself is recomputed on the analysis grid from the velocity rather than
 block-averaged from a finer one, because the average of a curl is not the curl of the
@@ -24,8 +26,43 @@ average. Mixing the two produces a field that is not the curl of the velocity be
 ### Boundary handling
 
 None in this metric: it reads cell values and never a neighbourhood. The vorticity it
-consumes does involve a stencil, and the boundary treatment there belongs to the field's
-construction — the domain is doubly periodic and the derivative wraps accordingly.
+consumes is the spectral curl of the velocity on the analysis grid
+(`fmeval/derived.py::vorticity_from_velocity`), not the solver's stored stencil vorticity. A
+Fourier transform wraps around every axis, so that recomputation refuses a grid that is not
+periodic on every axis; on such a dataset there is no vorticity for this metric to read.
+
+### How its field reports it
+
+**Turbulence theory** defines the enstrophy as the second quadratic invariant of the inviscid,
+unforced two-dimensional equations, $\Omega = \tfrac12 \langle \omega^2 \rangle = \int k^2
+E(k)\,dk$ with the isotropic spectrum $E(k)$ of their Eq. (3), and its decay without forcing or
+friction by their Eq. (6), $d\Omega/dt = -2\nu P$, with $P$ the
+[palinstrophy](../../metrics/palinstrophy/card.md) ([@boffetta2012], p. 430). Equation (5)
+there makes it also the rate at which viscosity removes [kinetic energy](../../metrics/kinetic_energy/card.md).
+The quantity is read as a time series and as the balance of that budget.
+
+**Learned turbulence models** report it as a time series: the enstrophy of each model's
+rollout against time, with the direct numerical simulation's curve overlaid
+([@frezat2022], Fig. 4 for decaying and Fig. 6 for forced turbulence, beside the energy). The
+paper does not reduce the two curves to a number; the relative error of the integral,
+$(\Omega_{\mathrm{prediction}} - \Omega_{\mathrm{reference}}) / \Omega_{\mathrm{reference}}$ at
+each time, is this repository's reading of them (Reading the output).
+
+**The figure** is the enstrophy against time with the reference's curve overlaid, the card's
+first figure. On a run of real forecasts it is the field's figure exactly, the prediction's
+enstrophy beside its target's at each prediction step. On the degradation ladder it is the
+reference's decay beside each degradation applied at each time, which is not a rollout.
+
+**The experiments.** Rollouts of a model scored against the truth: `forecast_re5e4` holds one
+model's rollouts from two starting times, ten prediction steps each; many initial conditions are
+written up in
+[EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md).
+The budget closure $d\Omega/dt = -2\nu P$ needs consecutive states of the same trajectory to
+difference in time: `kinet_re5e4` read at reduction 1 holds consecutive solver steps of the
+reference, but no candidate trajectory has them, so the experiment is written up in
+[EXP-enstrophy-budget-closure-from-consecutive-states](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-enstrophy-budget-closure-from-consecutive-states.md)
+and not built. The metric also runs on the degradation ladder on `kinet_re5e4` and on the
+Reynolds ladder. `sod_shock_tube` and `synthetic_ensemble` hold no vorticity.
 
 ## Performance
 
@@ -120,6 +157,13 @@ units. There is no direction in which it is better: it is a property of a flow, 
 error, and it is read by comparing the prediction's value against the reference's on the
 same frame. Equal is good; the sign of a departure tells you which way the prediction
 went wrong.
+
+**The reading is the relative error of the integral**,
+$(\Omega_{\mathrm{prediction}} - \Omega_{\mathrm{reference}}) / \Omega_{\mathrm{reference}}$ on
+the same frame, which the tables give as the *change from clean*: 0 is a prediction with the
+reference's enstrophy, $-0.3$ one that has lost three tenths of it. On a run of real forecasts
+it is the relative error at each prediction step, and the figure shows the two enstrophies
+against time. Unlike the raw value, its size is comparable across frames of a decaying flow.
 
 A prediction reporting less enstrophy than the reference has lost small-scale rotation,
 which is what excessive numerical dissipation or an over-smooth surrogate looks like. More

@@ -11,8 +11,10 @@ $$
 E(u) = \frac{1}{2N} \sum_{i=1}^{N} \sum_{c=1}^{C} u_{c,i}^{2} \tag{1}
 $$
 
-Components are summed before the average over cells. This is the *specific* kinetic
-energy, per unit mass: the density-weighted form is the conserved quantity, but at Mach
+Components are summed before the average over cells. Equation (1) is the energy of
+two-dimensional turbulence theory, $E = \tfrac12 \langle u^2 \rangle$ with the average over the
+domain ([@boffetta2012], p. 430), including its factor of one half. It is the *specific*
+kinetic energy, per unit mass: the density-weighted form is the conserved quantity, but at Mach
 0.1 with density varying under 4% the two differ negligibly, and Equation (1) needs only
 one field.
 
@@ -23,6 +25,41 @@ reference and on every degraded variant so the drift can be read downstream.
 
 None. The operation is local to each cell, so no neighbourhood is ever consulted and no
 boundary condition can enter.
+
+### How its field reports it
+
+**Turbulence theory** defines the energy as a quadratic invariant of the inviscid, unforced
+two-dimensional equations, $E = \tfrac12 \langle u^2 \rangle = \int E(k)\,dk$ with the isotropic
+spectrum $E(k)$ of their Eq. (3), and its decay without forcing or friction by their Eq. (5),
+$dE/dt = -2\nu\Omega$, with $\Omega$ the [enstrophy](../../metrics/enstrophy/card.md)
+([@boffetta2012], p. 430). The quantity is read as a time series and as the balance of that
+budget.
+
+**Learned turbulence models** report it as a time series: the energy of each model's rollout
+against time, with the direct numerical simulation's curve overlaid, in decaying
+two-dimensional turbulence ([@list2022], Fig. 4(a); [@frezat2022], Fig. 4, and Fig. 6 for the
+forced case). Neither paper reduces the two curves to a number; the relative error of the
+integral, $(E_{\mathrm{prediction}} - E_{\mathrm{reference}}) / E_{\mathrm{reference}}$ at each
+time, is this repository's reading of them (Reading the output). The two papers also normalise
+differently: [@frezat2022] average $\tfrac12 u^2$ over the domain, as Equation (1) does, and
+[@list2022] integrate $u'_i u'_i$ of the turbulent fluctuation without the one half.
+
+**The figure** is the energy against time with the reference's curve overlaid, the card's first
+figure. On a run of real forecasts it is the field's figure exactly, the prediction's energy
+beside its target's at each prediction step. On the degradation ladder it is the reference's
+decay beside each degradation applied at each time, which is not a rollout.
+
+**The experiments.** Rollouts of a model scored against the truth: `forecast_re5e4` holds one
+model's rollouts from two starting times, ten prediction steps each; many initial conditions are
+written up in
+[EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md).
+The budget, Eq. (5), needs consecutive states of the same trajectory to difference in time;
+`kinet_re5e4` read at reduction 1 holds consecutive solver steps of the reference, but no
+candidate trajectory has them, so the experiment is written up in
+[EXP-enstrophy-budget-closure-from-consecutive-states](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-enstrophy-budget-closure-from-consecutive-states.md)
+and not built. The metric also runs on the degradation ladder on `kinet_re5e4`, on the Reynolds
+ladder and on `sod_shock_tube`, whose one-dimensional velocity it reads as an analytic check.
+`synthetic_ensemble` holds no velocity.
 
 ## Performance
 
@@ -117,6 +154,14 @@ There is no direction in which it is better: like enstrophy, it is a property of
 rather than an error, read by comparing the prediction against the reference on the same
 frame.
 
+**The reading is the relative error of the integral**,
+$(E_{\mathrm{prediction}} - E_{\mathrm{reference}}) / E_{\mathrm{reference}}$ on the same
+frame, which the tables give as the *change from clean*: 0 is a prediction with the
+reference's energy, $-0.1$ one that has lost a tenth of it, $+0.1$ one with a tenth too much.
+On a run of real forecasts it is the relative error at each prediction step, and the figure
+shows the two energies against time. The sign says which way the prediction went wrong, and
+the size, unlike the raw value, is comparable across frames of a decaying flow.
+
 Because energy sits at the large scales, this quantity is far more robust to grid
 coarsening than enstrophy is, and a departure from the reference is more likely to mean a
 genuine amplitude error than a resolution artefact. In freely decaying turbulence the
@@ -133,10 +178,9 @@ takes, so a prediction can match it exactly while getting the flow entirely wron
 here is not evidence of a good prediction, only the absence of one particular kind of bad
 one.
 
-It sees the loss of small scales only through the energy that goes with them. At the
-strongest smoothing levels the median loss is 11% (median blur) to 64% (Gaussian blur), but
-coarsening by a factor of 16, which destroys the same small scales, removes 3%. A kinetic
-energy that matches should therefore be read as the absence of one kind of failure, not as
+It sees the loss of small scales only through the energy that goes with them, so two
+degradations that destroy the same small scales can remove very different shares of it, as
+the smoothing and resolution-loss tables under Results show. A kinetic energy that matches should therefore be read as the absence of one kind of failure, not as
 the prediction being sound.
 
 Finally, this is specific energy, not the conserved density-weighted quantity. At higher

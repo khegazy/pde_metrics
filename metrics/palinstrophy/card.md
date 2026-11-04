@@ -16,7 +16,7 @@ $$
 
 where $j$ runs over the spatial directions, $c$ over the components — one in 2D, three in
 3D — and $\langle \cdot \rangle$ averages over cells. The factor of one half is the one
-Boffetta and Ecke fix on p. 429 of their review [@boffetta2012]: they define enstrophy as
+Boffetta and Ecke fix on p. 430 of their review [@boffetta2012]: they define enstrophy as
 $\Omega = \tfrac12 \langle \omega^2 \rangle = \int k^2 E(k)\,dk$ and palinstrophy, with their
 Equation (6) $d\Omega/dt = -2\nu P$, as $P = \int k^4 E(k)\,dk$, which together give
 Equation (1). It is also the convention [enstrophy](../../metrics/enstrophy/card.md) uses, so the two
@@ -65,6 +65,32 @@ using the native spacing would inflate the result by the square of that factor.
 
 It therefore declares `requires_periodic`, and the harness does not run it on a dataset with a
 non-periodic axis, such as the Sod shock tube; it reports why in the run log.
+
+### How its field reports it
+
+**Turbulence theory** uses palinstrophy as the rate at which viscosity removes enstrophy: in
+decaying two-dimensional turbulence without forcing or friction,
+$d\Omega/dt = -2\nu P \equiv -\eta_\nu(t)$ ([@boffetta2012], p. 430, Eq. (6)), where $\Omega$
+is the [enstrophy](../../metrics/enstrophy/card.md) and $\eta_\nu$ the enstrophy dissipation
+rate. The object is therefore read beside the enstrophy, as the term that closes its budget,
+and the review uses Eq. (6) to bound the energy dissipation as the viscosity vanishes. No
+source read for this card draws palinstrophy alone against time; the learned-model papers that
+draw energy and enstrophy against time with the reference overlaid (see
+[enstrophy](../../metrics/enstrophy/card.md)) do not draw it. The card's first figure is that
+same form, the value against time with the reference's history overlaid, and the reading is
+the relative error of the integral (Reading the output).
+
+**The experiments.** The budget closure, Eq. (6) evaluated on consecutive states of a
+trajectory, is the experiment in which palinstrophy is the field's quantity; `kinet_re5e4` read at
+reduction 1 holds consecutive solver steps of the reference, but no candidate trajectory has
+them, so it is written up in
+[EXP-enstrophy-budget-closure-from-consecutive-states](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-enstrophy-budget-closure-from-consecutive-states.md)
+and not built. Rollouts over many initial conditions are written up in
+[EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md).
+The metric runs on the degradation ladder on `kinet_re5e4`, on the Reynolds ladder and on
+`forecast_re5e4`, where the figure is the prediction's palinstrophy beside its target's at each
+prediction step. `sod_shock_tube` has walls and no vorticity, and `synthetic_ensemble` no
+vorticity.
 
 ## Performance
 
@@ -162,6 +188,12 @@ Zero and unbounded above, in the square of the vorticity units per square length
 direction in which the value is better on its own: what is read is the drift away from the
 reference field's value, in either direction. A prediction scoring below the reference has
 smoothed the vorticity; one scoring above has sharpened or roughened it.
+
+**The reading is the relative error of the integral**, $(P_{\mathrm{prediction}} -
+P_{\mathrm{reference}}) / P_{\mathrm{reference}}$ on the same frame, which the tables give as
+the *change from clean*: $-0.5$ is a prediction that has lost half the reference's
+palinstrophy. On a run of real forecasts it is the relative error at each prediction step,
+beside the two values against time in the figure.
 
 Only comparisons at a fixed analysis-grid resolution are meaningful, and this metric is
 stricter about that than most. Equation (2) shows the value is dominated by the highest

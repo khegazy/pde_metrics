@@ -93,6 +93,42 @@ merely approximate.
 It therefore declares `requires_periodic`, and the harness does not run it on a dataset with a
 non-periodic axis, such as the Sod shock tube; it reports why in the run log.
 
+### How its field reports it
+
+**Optimal transport**, the field this bundle's source belongs to, uses the $\dot{H}^{-1}$
+distance between two densities as the linearisation of the quadratic Wasserstein distance:
+Equation (5) above ([@peyre2018], Theorem 1), the infinitesimal equality ([@peyre2018],
+Eq. (5)), and the lower bound by $W_2$ for bounded densities on a manifold of nonnegative
+curvature such as the flat torus ([@peyre2018], Theorem 5, Eq. (17)). Its check of this number
+is therefore the comparison with $W_2$ on the same pair of positive densities. The paper is
+purely theoretical: it draws no figure and runs no experiment, so the comparison is the
+standard and no figure is. This repository makes it: [wasserstein](../../metrics/wasserstein/card.md)
+computes $W_2$ between the mass-normalised densities, and both metrics run on density in the
+same runs, so the two cards' tables and the cross-metric correlation of the comparison run are
+the check. Two differences must be held in mind when reading them: Equation (3) is unweighted
+where the theorems weight by the reference density (Definition), and it is not mass-normalised,
+so on density the two differ also by the factor of the mean density.
+
+**The shift test** of the seismic-inversion literature, a misfit drawn against the shift of a
+signal ([@engquist2014], Fig. 1), is the comparison by which a transport-like distance is told
+apart from a pointwise one, and is the card's first figure: the damage against the applied
+translation beside the pointwise errors.
+
+**The mixing literature** also uses negative Sobolev norms, but of *one* scalar field tracked
+in time, rescaled by its initial value, as a measure of how mixed it is ([@thiffeault2011],
+Sect. 3.1, Eq. (3.3), and Fig. 4). That is a single-field norm, not this two-field distance,
+and is not built here.
+
+**The experiments.** Misfit against shift: the translation axes of the degradation ladder on
+`kinet_re5e4` (`translate_x`, `translate_subpixel`). Known-answer transport, where the distance
+between two densities is known in closed form:
+[EXP-wasserstein-known-answer-transport](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-wasserstein-known-answer-transport.md).
+A density whose fluctuation is not small against its mean, where the linearisation and the
+bounds separate:
+[EXP-wasserstein-background-ratio-sweep](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-wasserstein-background-ratio-sweep.md).
+The metric also runs on every field of the degradation ladder, on the Reynolds ladder and on
+`forecast_re5e4`, where its first figure is the error against lead time.
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence h_minus_one --results results/comparison_1793657627`, do not edit -->
@@ -299,7 +335,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 |---|---|---|
 | `kinet_re5e4` | developed flow | measured, run `comparison_1793657627`: the main results |
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
-| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not yet run; on this dataset the metric scores the member mean of the ensemble |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: every axis there leaves the value at its clean value (measured, 8.5e-16 relative at most): the dispersion axes do not move the member mean, and a uniform bias lies in the zero mode the seminorm omits |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
 
