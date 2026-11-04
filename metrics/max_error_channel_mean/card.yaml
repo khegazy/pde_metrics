@@ -25,4 +25,8 @@ math:
   resolution_dependent: true   # a maximum over cells, so a finer grid offers more cells to it
   complexity: "O(N)"
 references: [takamoto2022, ohana2024, roy2005]
+
+not_run:
+  sod_shock_tube: every field of the one-dimensional tube has one channel, where this metric is max_error exactly
+  synthetic_ensemble: the dataset holds density alone, one channel, where this metric is max_error exactly
 review: null

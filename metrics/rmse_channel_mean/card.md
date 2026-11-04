@@ -72,9 +72,9 @@ pairs"): one model's predictions at ten prediction steps from two starting times
 runs, on which the error is drawn against lead time. A test set of many initial conditions is
 written up in
 [EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md).
-The degradation ladder on `kinet_re5e4`, `sod_shock_tube`, the member mean of
-`synthetic_ensemble` and the Reynolds ladder are this repository's own experiments; the metric
-runs on all of them, since it needs nothing but two fields on one grid.
+The metric runs on the degradation ladder on `kinet_re5e4` and on the Reynolds ladder, where
+velocity has two components. It is not run on `sod_shock_tube` or `synthetic_ensemble`: every
+field there has one channel, where Equation (2) is `rmse` exactly (`card.yaml`, `not_run`).
 
 ## Performance
 
@@ -162,8 +162,8 @@ do, and what their strength numbers mean, is documented on their own pages.
 |---|---|---|
 | `kinet_re5e4` | developed flow | not yet run |
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
-| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not yet run; on this dataset the metric scores the member mean of the ensemble |
-| `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not yet run |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: the dataset holds density alone, one channel, where this metric is rmse exactly |
+| `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: every field of the one-dimensional tube has one channel, where this metric is rmse exactly |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
 
 One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.

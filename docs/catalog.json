@@ -11358,20 +11358,20 @@
         {
           "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
           "dataset": "synthetic_ensemble",
-          "note": "scores the member mean",
+          "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "the dataset holds density alone, one channel, where this metric is max_error exactly",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
           "dataset": "sod_shock_tube",
           "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "every field of the one-dimensional tube has one channel, where this metric is max_error exactly",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
@@ -16032,20 +16032,20 @@
         {
           "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
           "dataset": "synthetic_ensemble",
-          "note": "scores the member mean",
+          "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "the dataset holds density alone, one channel, where this metric is rmse exactly",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
           "dataset": "sod_shock_tube",
           "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "every field of the one-dimensional tube has one channel, where this metric is rmse exactly",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",

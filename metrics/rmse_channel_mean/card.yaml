@@ -25,4 +25,8 @@ math:
   resolution_dependent: true   # a mean over cells, so refining the grid reweights the sum
   complexity: "O(N)"
 references: [takamoto2022, ohana2024]
+
+not_run:
+  sod_shock_tube: every field of the one-dimensional tube has one channel, where this metric is rmse exactly
+  synthetic_ensemble: the dataset holds density alone, one channel, where this metric is rmse exactly
 review: null
