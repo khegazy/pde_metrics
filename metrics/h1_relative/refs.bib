@@ -1,0 +1,79 @@
+% References cited by this bundle's card.md, and nothing else.
+@misc{neuraloperator2026,
+  author       = {{The neuraloperator developers}},
+  title        = {neuraloperator: {Learning} in Infinite Dimensions with Neural Operators},
+  howpublished = {\url{https://github.com/neuraloperator/neuraloperator}},
+  year         = {2026},
+  note         = {Read 2026-11-04 at commit 0c10234 (2026-02-24). neuralop/losses/data_losses.py,
+                  H1Loss: compute_terms (the field and its first derivatives, flattened over
+                  space), uniform_quadrature (h_j = measure / N_j, measure = 1.0 by default),
+                  rel (sqrt of the summed squared differences over sqrt of the target's sums plus
+                  eps = 1e-8), reduce_all (sum over batch and channels by default) and __call__
+                  (returns rel). neuralop/losses/differentiation.py, FiniteDiff: periodic centred
+                  differences (f[i+1] - f[i-1]) / (2h) by torch.roll; third-order one-sided
+                  differences at non-periodic boundaries. neuralop/training/trainer.py, evaluate:
+                  each loss summed over batches and divided by the number of samples.
+                  scripts/train_navier_stokes.py line 157 and scripts/train_darcy.py line 148:
+                  h1loss = H1Loss(d=2)}
+}
+
+@inproceedings{li2022mno,
+  author    = {Li, Zongyi and Liu-Schiaffini, Miguel and Kovachki, Nikola and
+               Azizzadenesheli, Kamyar and Liu, Burigede and Bhattacharya, Kaushik and
+               Stuart, Andrew and Anandkumar, Anima},
+  title     = {Learning Chaotic Dynamics in Dissipative Systems},
+  booktitle = {Advances in Neural Information Processing Systems 35},
+  pages     = {16768--16781},
+  year      = {2022},
+  eprint    = {2106.06898},
+  archivePrefix = {arXiv},
+  note      = {Sect. 3, "Sobolev norm as loss", Eq. (3): the Sobolev norm of the one-step error
+               with the sum over derivative orders starting at 0 (inhomogeneous); Eq. (4): its
+               Fourier form. Sect. 4, "Accuracy with respect to various norms": models trained
+               with relative H^0, H^1 and H^2 losses and measured in the standard norms. App.
+               A.3, Table 3 (Kolmogorov flow, Re = 40): an "H^1 error" column; Table 5
+               (Re = 5000): a "Testing H^1" column. Numbering read from the arXiv source and
+               checked against the proceedings PDF. The paper does not state that the reported
+               H^1 error is relative; the authors' code (HsLoss, markov_neural_operator
+               utilities.py) computes it relative, with spectral weights}
+}
+
+@misc{kossaifi2023,
+  author    = {Kossaifi, Jean and Kovachki, Nikola and Azizzadenesheli, Kamyar and
+               Anandkumar, Anima},
+  title     = {Multi-Grid Tensorized {Fourier} Neural Operator for High-Resolution {PDEs}},
+  year      = {2023},
+  eprint    = {2310.00120},
+  archivePrefix = {arXiv},
+  note      = {Fig. 1: "the relative L^2 and H^1 test errors" on Navier-Stokes; Tables 3 and 4:
+               H^1 error columns beside L^2; Sect. 4, "Training the operator": trained with the
+               H^1 Sobolev norm. The H^1 error is not defined in the paper. Read from the arXiv
+               source, v1}
+}
+
+@inproceedings{li2021fno,
+  author    = {Li, Zongyi and Kovachki, Nikola and Azizzadenesheli, Kamyar and Liu, Burigede
+               and Bhattacharya, Kaushik and Stuart, Andrew and Anandkumar, Anima},
+  title     = {Fourier Neural Operator for Parametric Partial Differential Equations},
+  booktitle = {International Conference on Learning Representations},
+  year      = {2021},
+  eprint    = {2010.08895},
+  archivePrefix = {arXiv},
+  note      = {Relative error on Burgers (Sect. 5.1, Table 3), Darcy (Sect. 5.2, Table 4; the
+               solution operator maps into H^1_0((0,1)^2)) and Navier-Stokes (Sect. 5.3, Table 1).
+               No H^1 loss or error. Read from the arXiv source}
+}
+
+@article{kovachki2023,
+  author  = {Kovachki, Nikola and Li, Zongyi and Liu, Burigede and Azizzadenesheli, Kamyar and
+             Bhattacharya, Kaushik and Stuart, Andrew and Anandkumar, Anima},
+  title   = {Neural Operator: Learning Maps Between Function Spaces With Applications to {PDEs}},
+  journal = {Journal of Machine Learning Research},
+  volume  = {24},
+  number  = {89},
+  pages   = {1--97},
+  year    = {2023},
+  note    = {Sect. 6, "Test Problems": every reported error is a Monte-Carlo estimate of the
+             relative L^2 error over the input distribution; Sect. 6.5, "Choice of Loss
+             Criteria". Section numbers from the arXiv source, arXiv:2108.08481}
+}
