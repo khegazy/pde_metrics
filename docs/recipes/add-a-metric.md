@@ -136,25 +136,43 @@ References.
 ## 6. Measurements
 
 ```bash
-python -m fmeval.cards evidence <name> --results results/<run>
+python -m fmeval.cards evidence <name> --results results/<primary run> \
+    --results results/<run on another experiment> ...
 ```
 
 Run the metric on every experiment where it makes sense, not only one: the degradation
 ladder on `kinet_re5e4`, the miscalibration ladder on `synthetic_ensemble`, and
 `sod_shock_tube` with the reader's own frames
 (`python evaluate.py metrics=[<name>] dataset=sod_shock_tube`), whose run summary calls the
-numbers an analytic check. A metric declaring `requires_periodic` is never run on Sod. Skip an
-experiment only where the metric cannot be defined on it or the result would carry no
-information, and say on the card in one line why it was skipped (`AGENTS.md` §1, "How every
-metric is evaluated"). Where the experiment the metric's own field relies on does not exist
-here, write it up as a proposal under `proposals/` and name it on the card.
+numbers an analytic check. Then give the card one `--results` per experiment, the metric's
+field-standard experiment first where the repository has it: that run fills `## Performance`
+and the subsections per test, and each further run gets a subsection of `## Results` headed
+*On `<dataset>`*, inserted for you, whose generated block opens with the dataset's label.
+Write the reading below that block as for any other subsection. A card cites one run per
+dataset, and the fingerprint records them in order, so a later
+`python -m fmeval.cards evidence <name>` with no `--results` regenerates from the same runs.
 
-Point that command at the reference evaluation run; `configs/cards/default.yaml` lists
-which datasets qualify, and the command refuses smoke-test data. The command fills in
-`## Performance`, the run summary, the per-test tables and `_generated/fingerprint.json`.
-Only after that should you write the Results readings. Any number you type into a sentence
-must be one the fingerprint file supports, and pointing at the generated table beats
-restating its values.
+Skip an experiment only where the metric cannot be defined on it or the result would carry no
+information (`AGENTS.md` §1, "How every metric is evaluated"). The generated *Across the
+experiments* table at the top of `## Results` states every skip. The reasons that follow from
+the decorator and the dataset (a metric declaring `requires_periodic` on Sod's walls, an
+ensemble metric on one realisation per frame, a field the dataset lacks) are written for you;
+never restate them. A reason only you can give goes in `card.yaml`, one line per dataset:
+
+```yaml
+not_run:
+  <dataset>: <one line saying why a run there would carry no information>  # e.g. forecast_re5e4
+```
+
+Where the experiment the metric's own field relies on does not exist here, write it up as a
+proposal under `proposals/`, name the metric in its `related:` front matter so the site's
+coverage page lists it, and name it on the card.
+
+`configs/cards/default.yaml` lists which datasets qualify, and the command refuses
+smoke-test data. The command fills in `## Performance`, the run summary, the table of
+experiments, the per-test tables and `_generated/fingerprint.json`. Only after that should you
+write the Results readings. Any number you type into a sentence must be one the fingerprint
+file supports, and pointing at the generated table beats restating its values.
 
 ## 7. Finish
 

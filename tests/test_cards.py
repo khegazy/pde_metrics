@@ -33,8 +33,8 @@ from fmeval.cards.figures import Column, _row_limits, exemplar_panel
 from fmeval.cards.metric_figures import ALT_TEXT, METRIC_FIGURES, metric_figures
 from fmeval.cards.overview import overview_figures, page_markdown
 from fmeval.cards.schema import CATEGORIES, SCHEMA_VERSION, STATUSES, CardError, parse_card
-from fmeval.data import readers  # noqa: F401  (registers every format)
 from fmeval.data.base import READERS
+from fmeval.data.readers import open_trajectory
 from fmeval.report import vocabulary
 from fmeval.report.style import OKABE_ITO
 from metrics import registry as metric_registry
@@ -348,6 +348,14 @@ def build_prose(name="example", **bodies):
     return text
 
 
+#: A further run's subsection, as ``cards evidence`` inserts it, under a given heading.
+_EXPERIMENT_SUBSECTION = (
+    "### {heading}\n\n<!-- GENERATED results_on_sod_shock_tube: written by `python -m "
+    "fmeval.cards evidence example`, do not edit -->\n\n"
+    "[gaussian_blur](../../degradations/gaussian_blur/card.md)\n\n<!-- END GENERATED "
+    "results_on_sod_shock_tube -->\n\n" + "What the run on the shock tube found. " * 4)
+
+
 def problems_for(text, **kwargs):
     kwargs.setdefault("kind", "metric")
     kwargs.setdefault("name", "example")
@@ -464,6 +472,10 @@ def test_the_declared_order_is_the_one_the_cards_use():
         "does not link to the degradations", id="no-degradation-link"),
     # The front matter must agree with the bundle name.
     pytest.param(build_prose(name="other"), "front matter", id="front-matter-name"),
+    # A further run's numbers under a heading that does not say which experiment they are
+    # from could be read as numbers about the developed flow.
+    pytest.param(build_prose(Results=_EXPERIMENT_SUBSECTION.format(heading="Another run")),
+                 "does not name it", id="experiment-heading-without-its-dataset"),
 ])
 def test_a_prose_fault_is_named(text, fragment):
     """Each prose rule, broken on an otherwise complete card, produces a problem naming it."""
@@ -513,6 +525,21 @@ def test_the_contract_sets_no_word_counts():
         "example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED results_smoothing "
         "-->\n\n" + "What the smoothing axes found, at length. " * 5)),
         "before its first subsection", id="run-summary-first"),
+    # The table of experiments sits beside the run summary: it describes every run below it,
+    # not one test, so it is the one other block allowed before the first subsection.
+    pytest.param(build_prose(Results=(
+        "<!-- GENERATED run: written by `python -m fmeval.cards evidence example`, do not "
+        "edit -->\n\nplaceholder\n\n<!-- END GENERATED run -->\n\n"
+        "<!-- GENERATED experiments: written by `python -m fmeval.cards catalog`, do not "
+        "edit -->\n\nplaceholder\n\n<!-- END GENERATED experiments -->\n\n### Smoothing\n\n"
+        "[gaussian_blur](../../degradations/gaussian_blur/card.md)\n\n"
+        "<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence "
+        "example`, do not edit -->\n\nplaceholder\n\n<!-- END GENERATED results_smoothing "
+        "-->\n\n" + "What the smoothing axes found, at length. " * 5)),
+        "before its first subsection", id="experiments-beside-the-run-summary"),
+    # A further run's subsection is headed with its dataset.
+    pytest.param(build_prose(Results=_EXPERIMENT_SUBSECTION.format(heading="On `sod_shock_tube`")),
+                 "does not name it", id="experiment-heading-names-its-dataset"),
     # A cross-cutting subsection, such as damage beside the other metrics, is about every
     # degradation at once and so has no single degradation to link to.
     pytest.param(build_prose(Results=(
@@ -908,6 +935,18 @@ def test_the_site_builds_without_the_dataset(tmp_path):
     assert (tmp_path / "metrics" / "mse" / "index.html").is_file()
     assert (tmp_path / "degradations" / "gallery" / "index.html").is_file()
     assert (tmp_path / "ideas" / "index.html").is_file(), "the ideas overview is missing"
+    # The coverage page: a row per metric, a column per evidence dataset, the skip reasons
+    # the catalog derives, and the proposals naming each metric, linked on GitHub.
+    coverage = (tmp_path / "coverage" / "index.html").read_text()
+    for bundle in loader.iter_bundles("metric"):
+        assert f"metrics/{bundle.name}/" in coverage, f"{bundle.name} has no coverage row"
+    for dataset in fmeval_config.load_cards_config().evidence_datasets:
+        assert f"<code>{dataset}</code>" in coverage, f"no column for {dataset}"
+    assert "not applicable (needs an ensemble, and this dataset has one realisation" in coverage
+    assert "measured (<code>crps_" in coverage and "not yet run" in coverage
+    assert ("https://github.com/khegazy/pde_metrics/blob/main/proposals/"
+            "EXP-crps-gneiting-forecaster-suite.md") in coverage
+    assert 'href="coverage/"' in (tmp_path / "index.html").read_text(), "not in the navigation"
 
 
 # --------------------------------------------------------------------------------------
@@ -975,10 +1014,19 @@ def test_a_ladder_with_the_anchor_and_no_impostor_writes_no_trap_test_line(tmp_p
 
 
 def _bundle_copy(tmp_path, monkeypatch):
-    """A throwaway copy of the mse bundle, so generators never touch tracked files."""
+    """A throwaway copy of the mse bundle, so generators never touch tracked files.
+
+    The copy cites one run: the subsections of mse's further runs, which ``cards evidence``
+    appends at the end of ``## Results``, are cut, so a test generating from one run is not
+    refused for leaving them behind.
+    """
     dst = tmp_path / "mse"
     shutil.copytree(REPO / "metrics" / "mse", dst,
                     ignore=shutil.ignore_patterns("__pycache__"))
+    text = (dst / "card.md").read_text()
+    if "\n### On `" in text:
+        head, tail = text.split("\n### On `", 1)
+        (dst / "card.md").write_text(head + "\n" + tail[tail.index("## References"):])
     bundle = loader.Bundle(name="mse", kind="metric", path=dst)
     monkeypatch.setattr(loader, "find_bundle", lambda *a, **k: bundle)
     return bundle
@@ -1265,12 +1313,212 @@ def test_evidence_all_skips_a_metric_the_run_does_not_contain(tmp_path, monkeypa
                for n in ("enstrophy", "mse")]
     monkeypatch.setattr(cli, "iter_bundles", lambda kind=None: bundles)
     generated: list[str] = []
-    monkeypatch.setattr(evidence, "generate", lambda name, run: generated.append(name))
+    monkeypatch.setattr(evidence, "generate", lambda name, *runs: generated.append(name))
 
-    assert cli.cmd_evidence(Namespace(name=None, all=True, results=str(folder))) == 0
+    assert cli.cmd_evidence(Namespace(name=None, all=True, results=[str(folder)])) == 0
     assert generated == ["mse"]
     out = capsys.readouterr().out
     assert "skipped enstrophy" in out and "its own run" in out
+
+
+# --- one card, several experiments ----------------------------------------------------------
+
+
+def _rows(tmp_path):
+    """The rows of the synthetic run, to stamp with other datasets and run names."""
+    return pd.read_csv(_synthetic_run(tmp_path) / "data" / "results.csv")
+
+
+def test_a_card_cites_one_run_per_experiment(tmp_path, monkeypatch):
+    """The first run fills Performance and the subsections per test; each further run gets a
+    subsection headed with its dataset that opens with the dataset's evidence label, so an
+    analytic check is never read as turbulence. The fingerprint, the catalog and the table of
+    experiments record every run, the card passes the contract, and regenerating changes
+    nothing. A subsection left from a run no longer given, and two runs on one experiment, are
+    refused."""
+    bundle = _bundle_copy(tmp_path, monkeypatch)
+    rows = _rows(tmp_path)
+    kinet = evidence.load_run(_run_folder(tmp_path / "comparison_kinet", rows))
+    sod = evidence.load_run(_run_folder(tmp_path / "mse_sod", rows, dataset="sod_shock_tube"))
+    evidence.generate("mse", kinet, sod)
+
+    text = bundle.card_md.read_text()
+    blocks = prose.generated_blocks(text)
+    claim = fmeval_config.load_cards_config().evidence_datasets["sod_shock_tube"]
+    further = text.split("### On `sod_shock_tube`", 1)[1]
+    assert prose.generated_blocks(further)["results_on_sod_shock_tube"].split("\n\n")[1] == \
+        f"**{claim[0].upper()}{claim[1:]}.**"
+    assert "Run `mse_sod`" in blocks["results_on_sod_shock_tube"]
+    assert "](../../degradations/gaussian_blur/card.md)" in blocks["results_on_sod_shock_tube"]
+    assert "Run `comparison_kinet`" in blocks["run"] and "--results" in blocks["run"]
+    assert f"--results {sod.folder}" in blocks["performance"].splitlines()[0]
+    assert "measured, run `mse_sod`: under *On `sod_shock_tube`*" in blocks["experiments"]
+    assert "measured, run `comparison_kinet`: the main results" in blocks["experiments"]
+
+    assert [(r["dataset"], r["run"]) for r in catalog.recorded_runs(bundle)] == [
+        ("kinet_re5e4", "comparison_kinet"), ("sod_shock_tube", "mse_sod")]
+    entry = catalog.entry(bundle)
+    assert entry["evidence"]["run"] == "comparison_kinet"
+    assert [e["run"] for e in entry["other_evidence"]] == ["mse_sod"]
+    assert entry["other_evidence"][0]["axes"], "the further run's statistics are missing"
+    problems = prose.check_prose(text, kind="metric", name="mse")
+    assert not [p for p in problems if p.severity == "error"], problems
+    assert any("On `sod_shock_tube`" in p.message and "nothing said" in p.message
+               for p in problems), "the further run's subsection must ask for its reading"
+
+    before = (bundle.card_md.read_bytes(), bundle.fingerprint.read_bytes())
+    evidence.generate("mse", kinet, sod)
+    assert (bundle.card_md.read_bytes(), bundle.fingerprint.read_bytes()) == before
+    with pytest.raises(ValueError, match="does not cite"):
+        evidence.generate("mse", kinet)
+    with pytest.raises(ValueError, match="one run per experiment"):
+        evidence.generate("mse", kinet, kinet)
+    # A run with no ladder, as a forecast run has, has no tables to report it by.
+    probes_only = rows[rows["degradation"].isin(["identity", "gaussian_impostor"])]
+    forecast = evidence.load_run(_run_folder(tmp_path / "mse_forecast", probes_only,
+                                             dataset="forecast_re5e4"))
+    with pytest.raises(ValueError, match="no degradation ladder"):
+        evidence.generate("mse", kinet, sod, forecast)
+    assert (bundle.card_md.read_bytes(), bundle.fingerprint.read_bytes()) == before
+
+
+def test_evidence_all_regenerates_each_card_from_the_runs_it_records(tmp_path, monkeypatch,
+                                                                     capsys):
+    """Without ``--results``, ``--all`` reads every card's runs from its fingerprint, primary
+    first, under ``results/``. A given run replaces the recorded run on its dataset in the same
+    place, without reading it; a given run on a dataset the card does not cite yet joins at the
+    end; a card no given run holds, or one that records no run, is left alone and named."""
+    rows = _rows(tmp_path)
+    results = tmp_path / "results"
+    for name, dataset in (("kinet_old", "kinet_re5e4"), ("sod_old", "sod_shock_tube"),
+                          ("kinet_new", "kinet_re5e4"), ("ens_new", "synthetic_ensemble")):
+        _run_folder(results / name, rows, dataset=dataset)
+    recorded = {"mse": {"dataset": "kinet_re5e4", "run": "kinet_old",
+                        "other_runs": [{"dataset": "sod_shock_tube", "run": "sod_old"}]},
+                "mae": {"dataset": "kinet_re5e4", "run": "kinet_old"}}
+    bundles = [loader.Bundle(name=n, kind="metric", path=tmp_path / n)
+               for n in ("enstrophy", "mae", "mse")]
+    for bundle in bundles:
+        if bundle.name in recorded:
+            bundle.generated.mkdir(parents=True)
+            bundle.fingerprint.write_text(json.dumps(recorded[bundle.name]))
+    monkeypatch.setattr(cli, "iter_bundles", lambda kind=None: bundles)
+    monkeypatch.setattr(cli, "find_bundle", lambda name, kind=None: bundles[2])
+    monkeypatch.setattr(evidence, "RESULTS", results)
+    generated: dict[str, list[str]] = {}
+    monkeypatch.setattr(evidence, "generate", lambda name, *runs: generated.update(
+        {name: [r.folder.name for r in runs]}))
+
+    def regenerate(*given: str) -> dict[str, list[str]]:
+        generated.clear()
+        assert cli.cmd_evidence(Namespace(name=None, all=True, results=[
+            str(results / g) for g in given] or None)) == 0
+        return dict(generated)
+
+    assert regenerate() == {"mse": ["kinet_old", "sod_old"], "mae": ["kinet_old"]}
+    assert "skipped enstrophy: it records no runs" in capsys.readouterr().out
+    assert regenerate("ens_new") == {"mse": ["kinet_old", "sod_old", "ens_new"],
+                                     "mae": ["kinet_old", "ens_new"]}
+    shutil.rmtree(results / "kinet_old")         # archived: a replaced run is never read
+    assert regenerate("kinet_new") == {"mse": ["kinet_new", "sod_old"], "mae": ["kinet_new"]}
+    assert "skipped enstrophy: in none of the runs given" in capsys.readouterr().out
+    # Named with no --results: the card's own recorded runs.
+    shutil.copytree(results / "kinet_new", results / "kinet_old")
+    generated.clear()
+    assert cli.cmd_evidence(Namespace(name="mse", all=False, results=None)) == 0
+    assert generated == {"mse": ["kinet_old", "sod_old"]}
+
+
+@pytest.mark.parametrize("metric, dataset, reason", [
+    # An ensemble metric on one realisation per frame.
+    pytest.param("crps", "kinet_re5e4", "needs an ensemble", id="ensemble-arity"),
+    # A periodic-only metric on Sod's walls.
+    pytest.param("wasserstein", "sod_shock_tube", "needs a periodic domain", id="periodic"),
+    # A metric of a field the dataset does not provide: pressure on kinet, vorticity on the
+    # synthetic ensemble.
+    pytest.param("shock_set_distance", "kinet_re5e4", "needs pressure", id="pressure"),
+    pytest.param("enstrophy", "synthetic_ensemble", "needs vorticity", id="vorticity"),
+])
+def test_a_reason_the_code_can_know_is_derived(metric, dataset, reason):
+    """Each skip reason the declarations and the dataset determine is stated, not left blank."""
+    row = {r["dataset"]: r for r in catalog.experiments(loader.find_bundle(metric))}[dataset]
+    assert row["state"] == "not applicable" and reason in row["reason"], row
+    assert row["run"] is None and row["note"] is None
+
+
+def test_a_pairwise_metric_on_an_ensemble_scores_the_member_mean():
+    """Not a skip: the metric can run there, on the mean of the members."""
+    row = {r["dataset"]: r for r in catalog.experiments(loader.find_bundle("mse"))}[
+        "synthetic_ensemble"]
+    assert row["state"] != "not applicable" and row["note"] == "scores the member mean", row
+
+
+def test_a_reason_only_a_person_can_give_is_the_cards_not_run(monkeypatch):
+    """``not_run`` in card.yaml marks an experiment not applicable with the person's reason. It
+    may not name a dataset that is not evidence, one the card cites a run on, or one whose
+    reason the code already knows; and every evidence dataset needs its properties."""
+    real = catalog.load_card
+
+    def with_not_run(**not_run):
+        monkeypatch.setattr(catalog, "load_card",
+                            lambda bundle: dataclasses.replace(real(bundle), not_run=not_run))
+
+    reason = "the forecasts are of density alone, which says nothing new here"
+    with_not_run(forecast_re5e4=reason)
+    row = {r["dataset"]: r for r in catalog.experiments(loader.find_bundle("mse"))}[
+        "forecast_re5e4"]
+    assert (row["state"], row["reason"]) == ("not applicable", reason)
+    with_not_run(kinet_re5e4=reason)            # mse cites a run there
+    with pytest.raises(ValueError, match="cites run"):
+        catalog.experiments(loader.find_bundle("mse"))
+    with_not_run(kinet_re5e4=reason)            # crps cannot run there in any case
+    with pytest.raises(ValueError, match="already known"):
+        catalog.experiments(loader.find_bundle("crps"))
+    with_not_run(kinet_re5e4_dev=reason)
+    with pytest.raises(ValueError, match="not evidence datasets"):
+        catalog.experiments(loader.find_bundle("mse"))
+    with pytest.raises(CardError, match="no real reason"):
+        parse(card(not_run={"forecast_re5e4": "pointless"}))
+
+    monkeypatch.setattr(catalog, "load_card", real)
+    config = fmeval_config.load_cards_config()
+    del config.evidence_dataset_properties["forecast_re5e4"]
+    monkeypatch.setattr(catalog, "load_cards_config", lambda: config)
+    with pytest.raises(ValueError, match="forecast_re5e4 has no entry"):
+        catalog.experiments(loader.find_bundle("mse"))
+
+
+def _evidence_datasets() -> list:
+    """Every evidence dataset, marked ``data`` when its reader needs the files on CFS."""
+    return [pytest.param(name, marks=[pytest.mark.data] if READERS[
+                fmeval_config.compose_config(f"dataset={name}").dataset.format].reads_from_disk
+            else []) for name in fmeval_config.load_cards_config().evidence_datasets]
+
+
+@pytest.mark.parametrize("dataset", _evidence_datasets())
+def test_what_each_evidence_dataset_offers_is_what_its_reader_gives(dataset):
+    """``evidence_dataset_properties`` states two properties of each reader so the cards can
+    give skip reasons without the data; opening the dataset must agree with both."""
+    job = fmeval_config.build_job(fmeval_config.compose_config(f"dataset={dataset}",
+                                                               "paths.data_url=null"))
+    trajectory = open_trajectory(job.dataset, job.paths)
+    offers = fmeval_config.load_cards_config().evidence_dataset_properties[dataset]
+    frame = trajectory.frame(int(job.dataset.time.resolve(len(trajectory))[0]),
+                             job.dataset.fields[:1])
+    assert (trajectory.grid.is_periodic, frame.has_members) == (offers.periodic, offers.ensemble)
+
+
+@pytest.mark.parametrize("bundle", [b for b in loader.iter_bundles("metric")],
+                         ids=lambda b: b.name)
+def test_every_card_shows_its_current_table_of_experiments(bundle):
+    """The committed "Across the experiments" table is what the records say now. A changed
+    `not_run`, a run cited or an evidence dataset added is shown on every card by running
+    `python -m fmeval.cards catalog`, which rewrites the table, or `cards evidence`."""
+    block = prose.generated_blocks(bundle.card_md.read_text()).get("experiments")
+    assert block is not None, f"{bundle.name}: no table of experiments; run  " \
+                              f"{evidence.EXPERIMENTS_COMMAND}"
+    assert evidence.experiments_block(bundle) in block, \
+        f"{bundle.name}: the table of experiments is stale; run  {evidence.EXPERIMENTS_COMMAND}"
 
 
 @pytest.mark.parametrize("argv, message", [
