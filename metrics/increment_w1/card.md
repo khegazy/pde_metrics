@@ -16,26 +16,36 @@ the same definition ``increment_flatness`` uses, imported rather than restated s
 cannot drift apart. Collecting Equation (1) over all $N$ cells gives an empirical
 distribution with $N$ equally weighted atoms. Writing $a_{(1)} \le \dots \le a_{(N)}$ for
 the sorted increments of the reference and $b_{(1)} \le \dots \le b_{(N)}$ for those of the
-candidate, the 1-Wasserstein distance between the two along axis $j$ is
+candidate, the 1-Wasserstein distance between the two along axis $j$ of channel $c$ is
 
 $$
 W_1^{(c, j)} = \frac{1}{N} \sum_{i=1}^{N} \bigl| a_{(i)} - b_{(i)} \bigr| \tag{2}
 $$
 
-and the reported value averages Equation (2) over every channel and spatial axis:
+which is [@peyrecuturi2019], Remark 2.28, Eq. (2.33) with $p = 1$, numbered as in
+arXiv:1803.00567. The reported value averages Equation (2) over the set $P$ of
+channel-and-axis pairs read:
 
 $$
-W_1 = \frac{1}{C \, D} \sum_{c=1}^{C} \sum_{j=1}^{D} W_1^{(c, j)} \tag{3}
+W_1 = \frac{1}{|P|} \sum_{(c, j) \in P} W_1^{(c, j)} \tag{3}
 $$
+
+For velocity, a vector whose channel $c$ is its component along axis $c$, $P$ holds the
+**longitudinal** pairs $j = c$ only, the component parallel to the separation, as
+structure-function theory reads velocity increments ([@boffetta2012], Eq. (4);
+[@granero2024], Eq. (1)). For a scalar field such as density or two-dimensional vorticity,
+which has no orientation, $P$ is every channel along every axis. For velocity the same
+average over the **transverse** pairs $j \ne c$ is the companion `increment_w1.transverse`,
+a curve with the one point $\ell = 1$; it is empty for a scalar field.
 
 Equation (2) is exact rather than an approximation, and the reason is worth stating because
-it is what makes the metric cost a sort instead of a linear program. The transport cost
-$|x - y|$ is convex, so by the rearrangement inequality the cheapest way to match two equally
-weighted point sets on the line is the monotone one: pair the smallest with the smallest and
-so on upward. For equal weights that pairing is exactly "sort both and subtract". The general
-treatment is [@peyrecuturi2019], Chapter 2; no equation number is cited from it because the
-copy that could be read did not show the numbering, and a plausible-looking one would be
-worse than none.
+it is what makes the metric cost a sort instead of a linear program. On the line the
+1-Wasserstein distance is the $L^1$ distance between the two quantile functions
+([@peyrecuturi2019], Remark 2.30, Eq. (2.36)), or equally between the two cumulative
+distribution functions (Eq. (2.37)), and for two empirical measures with the same number of
+equally weighted atoms the quantile functions are the sorted samples. Equivalently: the cost
+$|x - y|$ is convex, so the cheapest matching of two equally weighted point sets on the line
+is the monotone one, smallest with smallest and so on upward.
 
 Averaging in Equation (3) runs over per-axis distances rather than over one pooled sample of
 increments. Pooling would compare a mixture against a mixture, where an error along one axis
@@ -58,6 +68,49 @@ Equation (2) are guaranteed the same size, which is what the closed form require
 
 It therefore declares `requires_periodic`, and the harness does not run it on a dataset with a
 non-periodic axis, such as the Sod shock tube; it reports why in the run log.
+
+### How its field reports it
+
+Two fields meet in this metric: the distance comes from optimal transport, and the samples
+it compares come from the statistical theory of turbulence.
+
+- **Optimal transport** ([@peyrecuturi2019], Chapter 2) gives the distance and its exact
+  one-dimensional form (Remarks 2.28 and 2.30, Eqs. (2.33), (2.36), (2.37)) and nothing more:
+  it reports a distance between two measures, with no normalisation, figure or companion
+  statistic of its own.
+- **Turbulence** reads the increments of the longitudinal velocity at many separations
+  ([@granero2024], Sect. 2.1, Eq. (1); [@boffetta2012], Eq. (4), p. 430, which splits the
+  structure function into longitudinal and transverse parts). The one source here that
+  scores a model on its increment distributions, [@granero2024], draws the probability
+  densities of the centred, standardised increments at separations from the dissipative to
+  the integral scale on a logarithmic density axis (Fig. 8), and quantifies the difference
+  between a model's and the reference's by the Jeffreys distance between those densities at
+  each of the octave separations $\ell = 2, 4, \dots, 4096$ sampling lengths, drawn against
+  $\log \ell$ (Sect. 4 and App. A, Fig. A4), with error bars from 256 realisations elsewhere
+  in the paper (Fig. 6). Their experiment is a long record of the longitudinal velocity of
+  grid turbulence in the ONERA Modane wind tunnel at a Taylor-scale Reynolds number of 2500
+  (Sect. 2.2).
+
+**What this bundle reports, and how it differs.** The distance here is the 1-Wasserstein
+distance, not the Jeffreys distance, and the increments are not standardised, so a
+prediction with the right shape of increment distribution at the wrong amplitude is charged
+here and would not be there. A Jeffreys distance between standardised increment densities
+needs a choice of bins that the source does not state, and is not built. The number is read
+at one separation; the curve over octave separations, the analogue of their Fig. A4, is
+[increment_w1_by_separation](../../metrics/increment_w1_by_separation/card.md), whose
+transverse companion also holds the transverse distance at every separation. No source fixes
+one separation for a single number, and the one cell used here is the repository's
+convention, `issues/128`.
+
+**The experiments here.** The field's experiment, stationary turbulence with an inertial
+range, does not exist here:
+[EXP-increment_flatness-isotropic-3d-turbulence-cutouts](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-increment_flatness-isotropic-3d-turbulence-cutouts.md)
+writes it up, and
+[EXP-energy_distance-tail-only-degradation](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-energy_distance-tail-only-degradation.md)
+a degradation that changes only the tails of the increment distribution. The metric runs on
+the degradation ladder on `kinet_re5e4`, on the forecasts of `forecast_re5e4` against their
+targets and on the Reynolds ladder. It is not run on the member mean of `synthetic_ensemble`
+(reason under Results) or on `sod_shock_tube`, whose walls rule out a periodic increment.
 
 ## Performance
 
@@ -212,6 +265,13 @@ Comparison across analysis-grid resolutions is invalid for the same reason it is
 the separation in Equation (1) is one cell, so a finer grid measures increments at a physically
 smaller separation, and in turbulence the increment distribution depends on that separation.
 
+For velocity the number compares the longitudinal increments only. A velocity value from a run
+recorded before the bundle read the orientation averaged the longitudinal and transverse pairs
+together and is a different quantity; density and vorticity read every axis, and their values
+did not change. The transverse distance is in the run's `companions.csv`, in rows labelled
+`increment_w1.transverse` with `coordinate` 1, in the field's units like the number; read it
+beside the number, against the same comparison on the reference.
+
 ## Limitations
 
 The blind spot is total and is the point of the metric, which means it must never be read
@@ -247,7 +307,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 |---|---|---|
 | `kinet_re5e4` | developed flow | measured, run `comparison_1793657627`: the main results |
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
-| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not yet run; on this dataset the metric scores the member mean of the ensemble |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: every axis there leaves the member mean's increments unchanged (dispersion scales members about their mean; a bias cancels in an increment) |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
 

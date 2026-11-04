@@ -20,7 +20,8 @@ output:
   description: >-
     Mean over channels and spatial axes of the 1-Wasserstein distance between the
     reference's and the candidate's increment distributions along that axis, in the
-    field's units. Zero when every increment distribution matches.
+    field's units, the longitudinal pairs only for velocity. Zero when every increment
+    distribution matches. For velocity the transverse distance is a companion.
   bounds:
     lower: 0.0
     upper: null
@@ -33,5 +34,8 @@ math:
   scale_dependent: true        # scaling both fields by c scales the distance by c
   resolution_dependent: true   # the separation is one cell, so it is set by the grid
   complexity: "O(N log N)"     # dominated by the sort
-references: [peyrecuturi2019, granero2024]
+references: [peyrecuturi2019, granero2024, boffetta2012]
+not_run:
+  synthetic_ensemble: every axis there leaves the member mean's increments unchanged (dispersion scales members about their mean; a bias cancels in an increment)
+
 review: null

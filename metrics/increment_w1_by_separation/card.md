@@ -12,22 +12,27 @@ $$
 (\delta_{\ell, j} f)_{\mathbf{n}} = f_{\mathbf{n} + \ell \mathbf{e}_j} - f_{\mathbf{n}} \tag{1}
 $$
 
-the definition `increment_flatness` uses at one cell, with the separation as an argument. With
-$a_{(1)} \le \dots \le a_{(N)}$ the sorted increments of the reference over all $N$ cells and
-$b_{(i)}$ those of the candidate, the 1-Wasserstein distance between the two increment
-distributions along axis $j$, averaged over channels $c$ and axes, is
+the definition `increment_flatness` uses. With $a_{(1)} \le \dots \le a_{(N)}$ the sorted
+increments of the reference over all $N$ cells and $b_{(i)}$ those of the candidate, the
+1-Wasserstein distance between the two increment distributions along axis $j$ of channel
+$c$, averaged over the set $P$ of channel-and-axis pairs read, is
 
 $$
-W_1(\ell) = \frac{1}{C D} \sum_{c=1}^{C} \sum_{j=1}^{D}
+W_1(\ell) = \frac{1}{|P|} \sum_{(c, j) \in P}
 \frac{1}{N} \sum_{i=1}^{N} \bigl| a^{(c,j)}_{(i)} - b^{(c,j)}_{(i)} \bigr| \tag{2}
 $$
 
-which is the sorting form of the one-dimensional distance [@peyrecuturi2019], Chapter 2; the
-card of `increment_w1` derives it. Equation (2) is computed by `increment_w1` itself, so at
-$\ell = 1$ it is that metric's value exactly. The separations are the octaves
-$\ell = 1, 2, 4, \dots$ up to half the smallest side of the grid: 1 to 128 on a $256^2$ grid,
-eight of them. The curve $W_1(\ell)$ is the metric's companion, stored on every row in the
-field's units.
+which is the sorting form of the one-dimensional distance ([@peyrecuturi2019], Remark 2.28,
+Eq. (2.33), numbered as in arXiv:1803.00567); the card of `increment_w1` derives it. For
+velocity, whose channel $c$ is its component along axis $c$, $P$ holds the **longitudinal**
+pairs $j = c$ only, as structure-function theory reads velocity ([@boffetta2012], Eq. (4)); for
+a scalar field, which has no orientation, $P$ is every channel along every axis. Equation (2)
+is computed by `increment_w1` itself, so at $\ell = 1$ it is that metric's value exactly. The
+separations are the octaves $\ell = 1, 2, 4, \dots$ up to half the smallest side of the grid: 1
+to 128 on a $256^2$ grid, eight of them. The curve $W_1(\ell)$ is the metric's companion,
+stored on every row in the field's units; for velocity the same curve over the
+**transverse** pairs $j \ne c$ is the companion `increment_w1_by_separation.transverse`, empty
+for a scalar field.
 
 Comparing increment statistics scale by scale is the practice of [@granero2024]. No source
 reduces the comparison to one number, so the number registered here is a repository
@@ -35,15 +40,16 @@ convention, recorded in `issues/098`:
 
 $$
 M = \frac{1}{L} \sum_{\ell} \frac{W_1(\ell)}{s(\ell)}, \qquad
-s(\ell) = \frac{1}{C D} \sum_{c, j} \frac{1}{N} \sum_{\mathbf{n}}
+s(\ell) = \frac{1}{|P|} \sum_{(c, j) \in P} \frac{1}{N} \sum_{\mathbf{n}}
 \bigl| (\delta_{\ell, j} f^{(c)}_{\text{ref}})_{\mathbf{n}} \bigr| \tag{3}
 $$
 
-with $L$ the number of separations and $s(\ell)$ the reference's mean absolute increment.
-Increments grow with separation, so $W_1(\ell)$ does too; dividing each by the reference's size
-at that separation weighs every separation alike, where a plain mean of Equation (2) would be
-carried by the largest. A separation at which the reference has no increments at all
-contributes 0 when the candidate has none either, and an infinite term otherwise.
+with $L$ the number of separations and $s(\ell)$ the reference's mean absolute increment over
+the same pairs. Increments grow with separation, so $W_1(\ell)$ does too; dividing each by the
+reference's size at that separation weighs every separation alike, where a plain mean of
+Equation (2) would be carried by the largest. A separation at which the reference has no
+increments at all contributes 0 when the candidate has none either, and an infinite term
+otherwise.
 
 ### Boundary handling
 
@@ -52,6 +58,44 @@ the cells at the start, so every cell contributes one increment per axis and sep
 the two samples in Equation (2) have the same size, which the sorting form requires. The metric
 therefore declares `requires_periodic`, and the harness does not run it on a dataset with a
 non-periodic axis.
+
+### How its field reports it
+
+The curve is the object here, and its field is the statistical theory of turbulence; the
+distance is optimal transport's (see [increment_w1](../../metrics/increment_w1/card.md), whose
+card sets out both fields).
+
+- **Turbulence** reads increments of the longitudinal velocity at separations spanning the
+  dissipative, inertial and integral ranges ([@granero2024], Sect. 2.1, Eq. (1);
+  [@boffetta2012], Eq. (4), p. 430, which splits the structure function into longitudinal and
+  transverse parts). The nearest published form of this curve is [@granero2024], App. A,
+  Fig. A4: the Jeffreys distance between a model's and the reference's probability densities
+  of the *centred and standardised* increments, at the octave separations
+  $\ell = 2, 4, \dots, 4096$ sampling lengths, drawn against $\log \ell$ with a line at zero,
+  for three models, with the integral scale stated; the same densities are drawn on a
+  logarithmic density axis in Fig. 8 (Sect. 4). Their data are a long record of the
+  longitudinal velocity of grid turbulence in the ONERA Modane wind tunnel, at a Taylor-scale
+  Reynolds number of 2500 (Sect. 2.2).
+
+**What this bundle reports, and how it differs.** The curve is drawn the same way, against the
+separation on a logarithmic axis, at octave separations. Its distance is the 1-Wasserstein
+distance in the field's units rather than the Jeffreys distance between standardised
+densities, which would need a choice of bins the source does not state and is not built.
+Standardising removes the amplitude of the increments and compares only the shape of their
+distribution; the curve here keeps both, and the registered number divides each separation's
+distance by the reference's increment size, a different normalisation that likewise makes the
+separations comparable (`issues/098`). The separations are in cells, not in units of the
+Kolmogorov or the integral scale, which `kinet_re5e4` has not established.
+
+**The experiments here.** The field's experiment, stationary turbulence with an inertial
+range, does not exist here:
+[EXP-increment_flatness-isotropic-3d-turbulence-cutouts](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-increment_flatness-isotropic-3d-turbulence-cutouts.md)
+writes it up, and
+[EXP-energy_distance-tail-only-degradation](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-energy_distance-tail-only-degradation.md)
+a degradation that changes only the tails of the increment distribution. The metric runs on
+the degradation ladder on `kinet_re5e4`, on the forecasts of `forecast_re5e4` against their
+targets and on the Reynolds ladder. It is not run on the member mean of `synthetic_ensemble`
+(reason under Results) or on `sod_shock_tube`, whose walls rule out a periodic increment.
 
 ## Performance
 
@@ -193,9 +237,16 @@ and `increment_w1` keeps its one-cell distance in the field's units.
 
 The companion is the curve of Equation (2): a `coordinate` column holding the separation in
 cells and a `value` column holding $W_1(\ell)$ in the field's units, one row per separation for
-every result row, in the run's `companions.csv`. Read it against the reference's curve on the
-same field. A curve that departs at small separations and agrees at large ones describes a
-prediction that is wrong at small scales only.
+every result row, in the run's `companions.csv`. It is zero at every separation for a
+prediction whose increment statistics match, so its shape is the reading: a curve that departs
+at small separations and stays near zero at large ones describes a prediction that is wrong at
+small scales only.
+
+For velocity the number and the curve compare the longitudinal increments only. A velocity
+value from a run recorded before the bundle read the orientation averaged the longitudinal and
+transverse pairs together and is a different quantity; density and vorticity read every axis,
+and their values did not change. The transverse curve is in the same file, in rows labelled
+`increment_w1_by_separation.transverse`, in the field's units and undivided.
 
 Comparison across analysis-grid resolutions is invalid: the separations are in cells, so a
 finer grid measures each at a physically smaller distance.
@@ -203,8 +254,9 @@ finer grid measures each at a physically smaller distance.
 ## Limitations
 
 It is blind to position, like `increment_w1`. A translated prediction scores exactly zero, and
-the fake prediction with the right spectrum but scrambled phases scores a damage of only 0.28
-to 0.77, so it must not be read without a pointwise control.
+the fake prediction with the right spectrum but scrambled phases is charged only part of the
+anchor's damage (the trap tests under Results give the values), so it must not be read without
+a pointwise control.
 
 The number is a convention. Dividing by the reference's scale weighs a small departure at a
 separation where the reference barely changes as heavily as a large one where it changes a lot,
@@ -233,7 +285,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 |---|---|---|
 | `kinet_re5e4` | developed flow | measured, run `comparison_1793657627`: the main results |
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
-| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not yet run; on this dataset the metric scores the member mean of the ensemble |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: every axis there leaves the member mean's increments unchanged (dispersion scales members about their mean; a bias cancels in an increment) |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
 

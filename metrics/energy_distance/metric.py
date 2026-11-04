@@ -21,8 +21,9 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy import stats
 
-from metrics.increment_flatness.metric import increments
-from metrics.registry import metric
+from fmeval.context import FieldContext
+from metrics.increment_flatness.metric import SEPARATION_CELLS, increment_samples, vector_field
+from metrics.registry import companion, metric
 
 
 @metric(
@@ -40,9 +41,10 @@ from metrics.registry import metric
     units="field^(1/2)",     # the square root of a mean of |x - y|
     requires_periodic=True,  # increment_flatness's wrap-around increments
 )
-def energy_distance(reference: NDArray[np.floating],
-                    candidate: NDArray[np.floating]) -> float:
-    """Energy distance between one-cell increment distributions, averaged over axes and channels.
+def energy_distance(reference: NDArray[np.floating], candidate: NDArray[np.floating], *,
+                    ctx: FieldContext, transverse: bool = False) -> float:
+    """Energy distance between one-cell increment distributions, longitudinal for velocity,
+    averaged over the (channel, axis) pairs read.
 
     For real-valued random variables X ~ F and Y ~ G with independent copies X', Y', the
     squared energy distance is
@@ -73,14 +75,19 @@ def energy_distance(reference: NDArray[np.floating],
     2263-2291, Eq. (4.2) and Theorem 22). That kernel has no bandwidth: the exponent 1 on
     |x - y| in the definition is the only parameter, and it is fixed.
 
-    The average runs over (channel, axis) pairs, one distance each, as ``increment_w1``
-    averages its transport distances, so the two metrics read the same samples in the same
-    way. Every pair is included, also one whose increments vanish in both fields, where the
-    distance is a well-defined zero.
+    The average runs over the (channel, axis) pairs of
+    :func:`metrics.increment_flatness.metric.increment_samples`, longitudinal for velocity, one
+    distance each, as ``increment_w1`` averages its transport distances, so the two metrics read
+    the same samples in the same way. Every pair is included, also one whose increments vanish
+    in both fields, where the distance is a well-defined zero.
 
     Args:
         reference: The trusted field, shape ``(C, *spatial)`` on the analysis grid.
         candidate: The field being scored, same shape and grid.
+        ctx: The pipeline's context; its field name says whether the increments are
+            longitudinal.
+        transverse: Compare the transverse increments of a vector field instead; the
+            ``transverse`` companion reads them.
 
     Returns:
         The mean energy distance, in the square root of the field's units. Zero when every
@@ -92,12 +99,24 @@ def energy_distance(reference: NDArray[np.floating],
     if reference.shape != candidate.shape:
         raise ValueError(f"energy_distance needs matching shapes, got {reference.shape} and "
                          f"{candidate.shape}")
-    n_spatial = reference.ndim - 1
     return float(np.mean([
         # D = sqrt(2 * integral (F_n - G_n)^2): Rizzo & Székely (2016), p. 27, with the
         # one-dimensional identity of Székely & Rizzo (2013) before Eq. (2.3), applied to the
         # two empirical distributions as their Eq. (6.1) does.
-        stats.energy_distance(increments(ref_c, axis).ravel(), increments(cand_c, axis).ravel())
-        for ref_c, cand_c in zip(reference, candidate)
-        for axis in range(-n_spatial, 0)
+        stats.energy_distance(a.ravel(), b.ravel()) for a, b in zip(
+            increment_samples(reference, ctx.field, transverse=transverse),
+            increment_samples(candidate, ctx.field, transverse=transverse), strict=True)
     ]))
+
+
+@companion(of="energy_distance", name="transverse", kind="curve",
+           coordinate=("separation", "cells"))
+def energy_distance_transverse(reference: NDArray[np.floating], candidate: NDArray[np.floating],
+                               *, ctx: FieldContext) -> tuple[NDArray, NDArray]:
+    """(separation, D_T): the same distance between the transverse increments of a vector field,
+    at the registered separation. Empty for a field with no transverse increments (a scalar, or a
+    one-dimensional vector)."""
+    if not vector_field(ctx.field) or reference.ndim < 3:
+        return np.array([], dtype=np.int64), np.array([])
+    return np.array([SEPARATION_CELLS]), np.array([
+        energy_distance(reference, candidate, ctx=ctx, transverse=True)])

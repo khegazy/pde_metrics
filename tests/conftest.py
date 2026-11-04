@@ -362,6 +362,21 @@ def alternating_field(shape: tuple[int, int] = (4, 4)) -> np.ndarray:
     return out
 
 
+def oriented_velocity_field() -> np.ndarray:
+    """A 16x8 velocity field ``(2, 16, 8)`` whose longitudinal and transverse increments differ.
+
+    ``u_x`` is a lone step along x (zero on the first row, one on the rest) and ``u_y`` a square
+    wave of period 8 along x (four rows of zero, four of one, twice); neither varies along y. So
+    the longitudinal increments (``u_x`` along x, ``u_y`` along y) are the lone step and nothing,
+    and the transverse ones (``u_x`` along y, ``u_y`` along x) are nothing and the square wave.
+    The increment metrics derive their longitudinal and transverse values on it by hand.
+    """
+    out = np.zeros((2, 16, 8))
+    out[0, 1:, :] = 1.0
+    out[1, 4:8, :] = out[1, 12:16, :] = 1.0
+    return out
+
+
 def exchangeable_ensemble(
     seed: int | np.random.Generator, shape: tuple[int, ...], n_members: int
 ) -> tuple[np.ndarray, np.ndarray]:

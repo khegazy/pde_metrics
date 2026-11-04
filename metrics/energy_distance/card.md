@@ -48,12 +48,21 @@ random sample of it. Both empirical cumulative functions are step functions, so 
 is exact. `scipy.stats.energy_distance` [@scipyenergy] evaluates it: its documentation gives
 the identity, and its source (`scipy.stats._stats_py._cdf_distance`) sorts the pooled
 samples and evaluates both empirical cumulative functions between consecutive values by
-binary search, so the cost is a few sorts of $2N$ values. The reported value averages Equation (4) over
-every channel and spatial axis, as `increment_w1` averages its transport distances:
+binary search, so the cost is a few sorts of $2N$ values. The reported value averages
+Equation (4) over the set $P$ of channel-and-axis pairs that `increment_w1` reads, as it
+averages its transport distances:
 
 $$
-D = \frac{1}{C \, d} \sum_{c=1}^{C} \sum_{j=1}^{d} D^{(c, j)} \tag{5}
+D = \frac{1}{|P|} \sum_{(c, j) \in P} D^{(c, j)} \tag{5}
 $$
+
+For velocity, whose channel $c$ is its component along axis $c$, $P$ holds the
+**longitudinal** pairs $j = c$ only, the component parallel to the separation, as
+structure-function theory reads velocity increments ([@boffetta2012], Eq. (4);
+[@granero2024], Eq. (1)); for a scalar field such as density or two-dimensional vorticity,
+which has no orientation, $P$ is every channel along every axis. For velocity the same average
+over the **transverse** pairs $j \ne c$ is the companion `energy_distance.transverse`, a curve
+with the one point $\ell = 1$; it is empty for a scalar field.
 
 **Where it sits among distances between distributions.** Both the energy distance and the
 1-Wasserstein distance of `increment_w1` belong to the *integral probability metrics*, the
@@ -98,6 +107,58 @@ Periodic wrap on every axis: the increment of the last cell along an axis is tak
 the first, so every cell contributes exactly one increment per axis and both samples in
 Equation (4) have $N$ atoms. It therefore declares `requires_periodic`, and the harness does
 not run it on a dataset with a non-periodic axis, such as the Sod shock tube.
+
+### How its field reports it
+
+The distance comes from statistics, and the samples it compares from the statistical theory
+of turbulence.
+
+- **Statistics.** The energy distance is reported as the statistic of a two-sample test of
+  equal distributions: for independent random samples of sizes $n_1$ and $n_2$, the
+  V-statistic of Equation (4) squared, $\mathcal{E}_{n_1, n_2}$ ([@szekely2013], Eq. (6.1)),
+  scaled to $T = \frac{n_1 n_2}{n_1 + n_2} \mathcal{E}_{n_1, n_2}$, whose null distribution
+  depends on the two distributions, so the test is run as a permutation test and equality is
+  rejected for large $T$ ([@szekely2013], Sect. 6.1; [@rizzo2016], p. 28, "Testing for equal
+  distributions"). The report is the statistic and its permutation p-value; there is no
+  standard figure. The same distance is the maximum mean discrepancy of [@gretton2012] for
+  the kernel of [@sejdinovic2013], Eq. (4.2) (Definition, above).
+- **Turbulence** reads increments of the longitudinal velocity at many separations
+  ([@granero2024], Sect. 2.1, Eq. (1); [@boffetta2012], Eq. (4), p. 430, which splits the
+  structure function into longitudinal and transverse parts), and the one source here that
+  compares a model's increment distributions with a reference's does so by the Jeffreys
+  distance between the densities of the standardised increments at octave separations,
+  against $\log \ell$ ([@granero2024], App. A, Fig. A4), on records of wind-tunnel turbulence
+  (Sect. 2.2). [increment_w1](../../metrics/increment_w1/card.md) sets out that practice and
+  how this family differs from it.
+
+**What this bundle reports, and why no p-value.** The registered number is the distance $D$,
+not $T$ and not a p-value. A permutation test needs samples that are exchangeable under the
+null hypothesis, and the increments of one field are neither independent nor a random sample:
+they are every increment of one spatially correlated field, the whole population compared.
+With 65536 correlated increments per axis on a $256^2$ grid, a permutation p-value would treat
+neighbouring cells as independent evidence, and its size would not be the stated one (the
+agent's reasoning; no source examined here tests it). The suite also reports measurements, not
+accept-or-reject decisions (`AGENTS.md`, §1). The number is read at one separation; no source
+fixes one, and the one cell used here is the repository's convention, `issues/128`.
+
+**No companion for the cumulative functions.** The object behind the number is the gap
+between the two empirical cumulative distribution functions, against the increment value,
+Equation (4). It is not stored as a curve: a curve companion needs coordinates fixed across
+rows, and the increment value is in the field's units and moves with every frame, field and
+strength. Fixing the coordinates would mean evaluating the gap at standardised increment
+values, a transformation neither source uses for this distance, and the statistics field
+reports the statistic without a figure. The transverse distance is the only companion.
+
+**The experiments here.** The field's experiment, independent samples, has no counterpart in
+one flow; the turbulence experiment, stationary turbulence with an inertial range, does not
+exist here:
+[EXP-increment_flatness-isotropic-3d-turbulence-cutouts](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-increment_flatness-isotropic-3d-turbulence-cutouts.md)
+writes it up, and
+[EXP-energy_distance-tail-only-degradation](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-energy_distance-tail-only-degradation.md)
+the degradation this metric's weakness on tails calls for. The metric runs on the degradation
+ladder on `kinet_re5e4`, on the forecasts of `forecast_re5e4` against their targets and on the
+Reynolds ladder. It is not run on the member mean of `synthetic_ensemble` (reason under
+Results) or on `sod_shock_tube`, whose walls rule out a periodic increment.
 
 ## Performance
 
@@ -254,14 +315,14 @@ Comparison across analysis-grid resolutions is invalid for the same reason as fo
 `increment_w1`: the separation in Equation (1) is one cell, so a finer grid compares
 increments at a physically smaller separation.
 
-The value is a distance between two fixed sets of increments, not a test statistic. The
-increments of one field are neither independent nor a random sample, so the null
-distributions and permutation tests built on Equation (4) in [@szekely2013] do not apply.
+The value is a distance between two fixed sets of increments, not a test statistic and not a
+p-value (Definition, "How its field reports it").
 
-The metric has no companion. The object behind the number is the gap between the two
-cumulative distribution functions, plotted against the increment value; its coordinate is in
-the field's units and moves from frame to frame, so it is not a curve at fixed coordinates
-and needs a companion kind the harness does not have.
+For velocity the number compares the longitudinal increments only. A velocity value from a run
+recorded before the bundle read the orientation averaged the longitudinal and transverse pairs
+together and is a different quantity; density and vorticity read every axis, and their values
+did not change. The transverse distance is in the run's `companions.csv`, in rows labelled
+`energy_distance.transverse` with `coordinate` 1, in the same units as the number.
 
 ## Limitations
 
@@ -300,7 +361,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 |---|---|---|
 | `kinet_re5e4` | developed flow | measured, run `comparison_1793657627`: the main results |
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
-| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not yet run; on this dataset the metric scores the member mean of the ensemble |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: every axis there leaves the member mean's increments unchanged (dispersion scales members about their mean; a bias cancels in an increment) |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
 

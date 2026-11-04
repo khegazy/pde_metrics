@@ -1436,7 +1436,18 @@
       "category": "statistical",
       "declared": {
         "arity": "pairwise",
-        "companions": [],
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              "separation",
+              "cells"
+            ],
+            "kind": "curve",
+            "name": "transverse",
+            "one_field": false
+          }
+        ],
         "cost": "moderate",
         "differentiable": true,
         "fields": [
@@ -2453,11 +2464,11 @@
         {
           "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
           "dataset": "synthetic_ensemble",
-          "note": "scores the member mean",
+          "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "every axis there leaves the member mean's increments unchanged (dispersion scales members about their mean; a bias cancels in an increment)",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
@@ -2488,7 +2499,7 @@
       "name": "energy_distance",
       "other_evidence": [],
       "output": {
-        "description": "Mean over channels and spatial axes of the energy distance between the reference's and the candidate's one-cell increment distributions along that axis, in the square root of the field's units. Zero when every increment distribution matches.",
+        "description": "Mean over channels and spatial axes of the energy distance between the reference's and the candidate's one-cell increment distributions along that axis, in the square root of the field's units, the longitudinal pairs only for velocity. Zero when every increment distribution matches. For velocity the transverse distance is a companion.",
         "lower_bound": 0.0,
         "upper_bound": null
       },
@@ -5510,7 +5521,28 @@
       "category": "statistical",
       "declared": {
         "arity": "single",
-        "companions": [],
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              "separation",
+              "cells"
+            ],
+            "kind": "curve",
+            "name": "by_separation",
+            "one_field": false
+          },
+          {
+            "analysed": null,
+            "coordinate": [
+              "separation",
+              "cells"
+            ],
+            "kind": "curve",
+            "name": "transverse",
+            "one_field": false
+          }
+        ],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -6529,11 +6561,11 @@
         {
           "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
           "dataset": "synthetic_ensemble",
-          "note": "scores the member mean",
+          "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "every axis there leaves the member mean's increments unchanged (dispersion scales members about their mean; a bias cancels in an increment)",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
@@ -6564,7 +6596,7 @@
       "name": "increment_flatness",
       "other_evidence": [],
       "output": {
-        "description": "Fourth moment of the one-cell increments divided by the square of their second moment, averaged over spatial axes and channels. Exactly 3 for a Gaussian field. Reported per variant; the drift from the reference's value is what is read.",
+        "description": "Fourth moment of the one-cell increments divided by the square of their second moment, averaged over spatial axes and channels, the longitudinal pairs only for velocity. Exactly 3 for a Gaussian field. Reported per variant; the drift from the reference's value is what is read. The flatness at every octave separation, and for velocity the transverse one, are companion curves.",
         "lower_bound": 1.0,
         "upper_bound": null
       },
@@ -6583,7 +6615,18 @@
       "category": "statistical",
       "declared": {
         "arity": "pairwise",
-        "companions": [],
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              "separation",
+              "cells"
+            ],
+            "kind": "curve",
+            "name": "transverse",
+            "one_field": false
+          }
+        ],
         "cost": "cheap",
         "differentiable": true,
         "fields": [
@@ -7599,11 +7642,11 @@
         {
           "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
           "dataset": "synthetic_ensemble",
-          "note": "scores the member mean",
+          "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "every axis there leaves the member mean's increments unchanged (dispersion scales members about their mean; a bias cancels in an increment)",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
@@ -7634,7 +7677,7 @@
       "name": "increment_w1",
       "other_evidence": [],
       "output": {
-        "description": "Mean over channels and spatial axes of the 1-Wasserstein distance between the reference's and the candidate's increment distributions along that axis, in the field's units. Zero when every increment distribution matches.",
+        "description": "Mean over channels and spatial axes of the 1-Wasserstein distance between the reference's and the candidate's increment distributions along that axis, in the field's units, the longitudinal pairs only for velocity. Zero when every increment distribution matches. For velocity the transverse distance is a companion.",
         "lower_bound": 0.0,
         "upper_bound": null
       },
@@ -7662,6 +7705,16 @@
             ],
             "kind": "curve",
             "name": "increment_w1_by_separation",
+            "one_field": false
+          },
+          {
+            "analysed": null,
+            "coordinate": [
+              "separation",
+              "cells"
+            ],
+            "kind": "curve",
+            "name": "transverse",
             "one_field": false
           }
         ],
@@ -8681,11 +8734,11 @@
         {
           "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
           "dataset": "synthetic_ensemble",
-          "note": "scores the member mean",
+          "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "every axis there leaves the member mean's increments unchanged (dispersion scales members about their mean; a bias cancels in an increment)",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
@@ -8716,7 +8769,7 @@
       "name": "increment_w1_by_separation",
       "other_evidence": [],
       "output": {
-        "description": "Mean over separations 1, 2, 4, ... cells of the 1-Wasserstein distance between the reference's and the candidate's increment distributions at that separation, divided by the reference's mean absolute increment there; dimensionless. A repository convention with no source (issues/098). The curve of undivided distances is stored beside it.",
+        "description": "Mean over separations 1, 2, 4, ... cells of the 1-Wasserstein distance between the reference's and the candidate's increment distributions at that separation, divided by the reference's mean absolute increment there; dimensionless. A repository convention with no source (issues/098). Longitudinal increments only for velocity. The curve of undivided distances is stored beside it, and for velocity the transverse curve too.",
         "lower_bound": 0.0,
         "upper_bound": null
       },

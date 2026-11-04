@@ -20,6 +20,10 @@ On the pinned run `comparison_1793657627` (`kinet_re5e4`, start 2000, reduction 
 vorticity. Under the earlier translation anchor it was degenerate too, for a different reason: it
 is a single-field statistic that a translation leaves unchanged.
 
+The two curve companions, `increment_flatness.by_separation` and `increment_flatness.transverse`,
+are the flatness at other separations and inherit the same zero over zero: on the anchor every
+point of both is NaN, so their per-separation tables have no damage scale either.
+
 The harness already handles this as designed: the impostor is reported as
 `gaussian_impostor_relative`, a fraction of the metric's largest ladder response, and the
 blindness bound is read on the same relative scale.

@@ -9,27 +9,33 @@ Let $f$ be one channel of a field on a periodic grid and let $\mathbf{e}_j$ be t
 step along spatial axis $j$. The increment at separation $\ell$ is
 
 $$
-(\delta_j f)_{\mathbf{n}} = f_{\mathbf{n} + \ell \mathbf{e}_j} - f_{\mathbf{n}} \tag{1}
+(\delta_{\ell, j} f)_{\mathbf{n}} = f_{\mathbf{n} + \ell \mathbf{e}_j} - f_{\mathbf{n}} \tag{1}
 $$
 
-and this metric fixes $\ell = 1$ cell, the smallest separation the analysis grid resolves.
-The flatness of that increment field is its fourth moment normalised by the square of its
-second,
+and the registered number fixes $\ell = 1$ cell, the smallest separation the analysis grid
+resolves. The flatness of that increment field is its fourth moment normalised by the square
+of its second [@granero2024] (Eq. (5)),
 
 $$
-F_j^{(c)} = \frac{\bigl\langle (\delta_j f^{(c)})^4 \bigr\rangle}
-{\bigl\langle (\delta_j f^{(c)})^2 \bigr\rangle^2} \tag{2}
+F_j^{(c)}(\ell) = \frac{\bigl\langle (\delta_{\ell, j} f^{(c)})^4 \bigr\rangle}
+{\bigl\langle (\delta_{\ell, j} f^{(c)})^2 \bigr\rangle^2} \tag{2}
 $$
 
-with $\langle \cdot \rangle$ the average over all cells. The reported value averages
-Equation (2) over the set $A$ of channel-and-axis pairs whose increments do not vanish
-identically:
+with $\langle \cdot \rangle$ the average over all cells. Which channel-and-axis pairs
+$(c, j)$ are read depends on the field. Velocity is a vector whose channel $c$ is its
+component along axis $c$, and for it only the **longitudinal** pairs $j = c$ are read: the
+component parallel to the separation, the standard object of structure-function theory
+([@boffetta2012], Eq. (4); [@granero2024], Eq. (1)). The **transverse** pairs $j \ne c$, the
+component perpendicular to it, are a companion of their own (below). A scalar field such as
+density or vorticity in two dimensions has no orientation, and every channel is read along
+every axis. With $A$ the set of pairs read whose increments do not vanish identically, the
+reported value is
 
 $$
-F = \frac{1}{|A|} \sum_{(c, j) \in A} F_j^{(c)} \tag{3}
+F = \frac{1}{|A|} \sum_{(c, j) \in A} F_j^{(c)}(1) \tag{3}
 $$
 
-and is NaN when $A$ is empty, that is when the field is constant.
+and is NaN when $A$ is empty, that is when the field is constant along every axis read.
 
 Equation (3) averages *flatnesses*, and that is a choice with consequences rather than a
 detail. The alternative — pooling every increment from every axis and channel into one
@@ -59,19 +65,89 @@ rarer and scores higher without limit. At the other extreme $F = 1$, the floor i
 $\langle d^4 \rangle \ge \langle d^2 \rangle^2$, is attained when every increment has the
 same magnitude.
 
-The separation in Equation (1) is a constant of the evaluator, not an option. A separation
-chosen per model would let a model be scored at whichever scale flattered it, which is the
-same failure that fixing detector thresholds once is meant to prevent.
+The separation of the registered number is a constant of the evaluator, not an option. A
+separation chosen per model would let a model be scored at whichever scale flattered it,
+which is the same failure that fixing detector thresholds once is meant to prevent.
+
+**The curves behind the number.** The flatness at every octave separation,
+$\ell = 1, 2, 4, \dots$ cells up to half the shortest side of the grid (1 to 128 on a
+$256^2$ grid), averaged over the same pairs as Equation (3),
+$F(\ell) = |A_\ell|^{-1} \sum_{(c, j) \in A_\ell} F_j^{(c)}(\ell)$, is the companion
+`increment_flatness.by_separation`; its first point is the registered number. For velocity
+the same curve over the transverse pairs is the companion `increment_flatness.transverse`;
+for a scalar field it is empty. Both are stored for every result row, untransformed, and
+are drawn the way the field draws them, on logarithmic axes in both the separation and the
+flatness. The registered number is computed on its own, so its cost is that of one
+separation.
 
 ### Boundary handling
 
-Periodic wrap on every axis: the increment of the last cell along an axis is taken against
-the first. An axis that is constant contributes no increments and is dropped from the
-average in Equation (3) rather than contributing a zero or a three, both of which would be
-claims the data does not support.
+Periodic wrap on every axis: the increment of a cell within $\ell$ of the end of an axis is
+taken against the cells at its start. An axis that is constant contributes no increments and
+is dropped from the average in Equation (3) rather than contributing a zero or a three, both
+of which would be claims the data does not support.
 
 It therefore declares `requires_periodic`, and the harness does not run it on a dataset with a
 non-periodic axis, such as the Sod shock tube; it reports why in the run log.
+
+### How its field reports it
+
+The metric comes from the statistical theory of turbulence, where the flatness of velocity
+increments is the standard measure of intermittency.
+
+- **Fully developed three-dimensional turbulence.** The object is the increment of the
+  longitudinal velocity, $\delta_\ell v(x) = v(x + \ell) - v(x)$ ([@granero2024], Sect. 2.1,
+  Eq. (1), "following Kolmogorov 1941"), its structure functions
+  $S_p(\ell) = \langle (\delta_\ell v)^p \rangle$ (Eqs. (2)-(3)) and its flatness
+  $F(\ell) = S_4 / S_2^2$ (Eq. (5)). The flatness is 3 at the integral scale, where the
+  increments are close to Gaussian, and rises as $\ell$ decreases, which is intermittency
+  (Sect. 2.1). The figure is $\log(F(\ell)/3)$ against $\log(\ell / L)$, with the
+  Kolmogorov scale $\eta$ and the integral scale $L$ marked and error bars from the spread
+  over realisations (Fig. 6c), beside the structure functions of orders 2 to 4 on log-log
+  axes (Fig. 7), the probability densities of the standardised increments at several
+  separations on a logarithmic density axis (Fig. 8), and the scaling exponents $\zeta_p$
+  fitted to the structure functions over an inertial range (Fig. 9, fitted over
+  $17 \le \ell / l_s \le 274$ sampling lengths). The experiment is a long velocity record of
+  fully developed, homogeneous, isotropic turbulence: their data are single-point
+  measurements of the longitudinal velocity in grid turbulence in the ONERA Modane wind
+  tunnel, at a Taylor-scale Reynolds number of 2500,
+  read as a spatial signal through Taylor's frozen-turbulence hypothesis (Sect. 2.2). The
+  textbook treatment of structure functions and of intermittency is [@frisch1995],
+  chapters 6 and 8; that book was not read for this card, so nothing here rests on it beyond
+  the chapter titles.
+- **Two-dimensional turbulence** ([@boffetta2012]). The structure function is split into
+  longitudinal and transverse parts, from the velocity component parallel and perpendicular
+  to the separation (Eq. (4), p. 430), and the exact third-order laws are stated for the
+  longitudinal part (Eqs. (15)-(16), p. 432). In the inverse energy cascade the probability
+  densities of the longitudinal increments are close to Gaussian, with no intermittency
+  (p. 438, Fig. 6). In the direct enstrophy cascade the velocity structure functions are
+  dominated by the largest scales and say little about small ones, so the vorticity
+  structure functions are read instead (p. 432), and they become intermittent when the flow
+  has friction (p. 444). A strong departure from Gaussianity of the longitudinal increments
+  has been attributed to large coherent vortices (p. 442), which is the situation of the
+  data here.
+
+**What this bundle reports, and what it does not.** The number is the flatness at one cell,
+longitudinal for velocity; the curve $F(\ell)$ and, for velocity, the transverse curve are
+the field's figure. Scaling exponents are not computed and no scaling range is claimed:
+`kinet_re5e4` is two opposite shear layers rolling up into a vortex pair, decaying and
+anisotropic (`docs/datasets/reynolds_ladder_2d.md`), and no inertial range has been
+established on it. Extended self-similarity, a way of reading scaling exponents that is
+reported to hold at low Reynolds numbers too ([@benzi1993], abstract), is not used for the
+same reason. The separations are in cells, not in units of $\eta$ or $L$, so the curve
+cannot be laid over the field's published curves. Vorticity, which the two-dimensional field
+reads in the direct cascade, is evaluated as a scalar, every axis.
+
+**The experiments here.** The field's experiment, stationary isotropic turbulence with an
+inertial range, does not exist here:
+[EXP-increment_flatness-isotropic-3d-turbulence-cutouts](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-increment_flatness-isotropic-3d-turbulence-cutouts.md)
+writes it up, and
+[EXP-energy_distance-tail-only-degradation](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-energy_distance-tail-only-degradation.md)
+a degradation that changes the tails of the increment distribution and nothing else, which is
+what flatness measures. The metric runs on the degradation ladder on `kinet_re5e4`, on the
+forecasts of `forecast_re5e4` (the flatness of each prediction beside its target's) and on
+the Reynolds ladder. It is not run on the member mean of `synthetic_ensemble` (reason under
+Results) or on `sod_shock_tube`, whose walls rule out a periodic increment.
 
 ## Performance
 
@@ -206,6 +282,12 @@ the same single step across sixteen cells and it scores eight; across a hundred,
 rows running across in these examples are constant, so they contribute nothing and the
 value comes from reading down the columns alone.
 
+For a velocity field the differences are taken the way turbulence takes them: along each
+direction, only the part of the velocity pointing in that direction. The sideways part, the
+velocity across the direction of travel, is kept as a second curve beside the number. The
+same question asked at two, four, eight cells apart and further gives the curve that the
+field actually draws, and the number is its first point.
+
 What it ignores: where the sharp events are, and whether there is one of them or many
 arranged differently. It counts how rare and how large they are, and nothing about their
 positions, so two fields with identical increment distributions arranged into completely
@@ -229,14 +311,30 @@ flatness at a physically smaller separation, and intermittency means precisely t
 answer depends on that separation. Two runs at different `analysis_grid.resolution` are
 measuring different quantities that happen to share a name.
 
+For velocity the number is the flatness of the longitudinal increments only. A velocity value
+from a run recorded before the bundle read the orientation averaged the longitudinal and
+transverse pairs together, and is a different quantity; density and vorticity read every
+axis, and their values did not change.
+
+The companions are the curves in the run's `companions.csv`: rows labelled
+`increment_flatness.by_separation` hold $F(\ell)$, rows labelled
+`increment_flatness.transverse` the transverse curve of velocity, each with the separation in
+cells as `coordinate`. Read a curve against the reference's curve on the same field, on
+logarithmic axes. A curve that rises toward the small separations is the intermittency
+signature; a prediction whose curve drops toward 3 at the small separations while agreeing
+at the large ones has lost the small-scale extremes and kept the large-scale structure. A
+longitudinal and a transverse curve that differ say the flow is not isotropic at those
+separations, or that the two components are intermittent differently; neither is a defect of
+a prediction unless the reference's curves differ in another way.
+
 ## Limitations
 
 The most misleading case is a prediction whose flatness matches the reference for the wrong
 reason. This is one number summarising an entire distribution, and a field that has lost
 its genuine sharp structures while acquiring spurious small-scale noise can land back on
 the reference value with both errors present. Nothing in the output distinguishes that from
-a faithful prediction, which is why this belongs beside a metric that resolves scales
-rather than in place of one.
+a faithful prediction at one separation; the curve over separations, which the two errors
+move at different scales, is where they separate.
 
 A second case is quieter. The value is a fourth moment, so it is dominated by the largest
 few increments in the field and is correspondingly noisy from frame to frame. A drift that
@@ -246,11 +344,14 @@ frames has to be read alongside the drift, not separately from it.
 Finally, the fixed one-cell separation ties the number to the grid. On a coarse analysis
 grid the separation may sit outside the range of scales where intermittency is developed,
 and the metric then reports something real but not the quantity the literature discusses.
+At the other end of the curve, the largest separations have few independent samples on one
+frame: at half the domain every increment pairs a cell with the one opposite it, and the two
+halves of the domain repeat each other's pairs with the sign reversed.
 
 The limitation that matters most for how this metric may be used is that its response to
 smoothing is **not monotone**, and this has been measured rather than feared. On the real
 trajectory, increasing blur moves the value up before it moves down on density, wanders on
-velocity, and on vorticity falls by roughly 40 per cent and then more than doubles at the
+velocity (measured on the earlier value that pooled both orientations), and on vorticity falls by roughly 40 per cent and then more than doubles at the
 heaviest blur tested. So ranking two predictions by how close their flatness is to the
 reference's can put a more heavily smoothed field ahead of a less smoothed one. The numbers
 behind this, and what should be done about it, are in
@@ -275,7 +376,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 |---|---|---|
 | `kinet_re5e4` | developed flow | measured, run `comparison_1793657627`: the main results |
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
-| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not yet run; on this dataset the metric scores the member mean of the ensemble |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: every axis there leaves the member mean's increments unchanged (dispersion scales members about their mean; a bias cancels in an increment) |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
 

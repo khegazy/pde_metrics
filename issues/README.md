@@ -108,6 +108,7 @@ Designed, hooks in place, not built.
 | [118](118-tail-exceedance-registered-threshold-is-a-convention.md) | The threshold at which `tail_exceedance` registers its frequency bias, the reference's sqrt(n)-th largest increment, is a convention with no source, and it saturates at 0 under smoothing | unset |
 | [102](102-shock-set-distance-empty-and-non-positive-conventions.md) | The scores `shock_set_distance` gives an empty shock set and a non-positive pressure are conventions | unset |
 | [120](120-shock-mask-overlap-both-empty-convention.md) | The score `shock_mask_overlap` gives two empty shock sets, 1, is a convention | unset |
+| [128](128-increment-metrics-one-cell-separation-is-a-convention.md) | The one-cell separation at which `increment_w1` and `energy_distance` register their number is a convention with no source; their field reads many separations | unset |
 
 ## Technical debt
 

@@ -19,7 +19,8 @@ output:
   description: >-
     Mean over channels and spatial axes of the energy distance between the reference's and
     the candidate's one-cell increment distributions along that axis, in the square root of
-    the field's units. Zero when every increment distribution matches.
+    the field's units, the longitudinal pairs only for velocity. Zero when every increment
+    distribution matches. For velocity the transverse distance is a companion.
   bounds:
     lower: 0.0
     upper: null
@@ -33,5 +34,8 @@ math:
   scale_dependent: true        # scaling both fields by c scales the distance by sqrt(|c|)
   resolution_dependent: true   # the separation is one cell, so it is set by the grid
   complexity: "O(N log N)"     # dominated by the sort inside scipy.stats.energy_distance
-references: [szekely2013, rizzo2016, sejdinovic2013, gretton2012, muller1997, scipyenergy]
+references: [szekely2013, rizzo2016, sejdinovic2013, gretton2012, muller1997, scipyenergy, boffetta2012, granero2024]
+not_run:
+  synthetic_ensemble: every axis there leaves the member mean's increments unchanged (dispersion scales members about their mean; a bias cancels in an increment)
+
 review: null
