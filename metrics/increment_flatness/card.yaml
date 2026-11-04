@@ -20,8 +20,10 @@ owners: [khegazy]
 output:
   description: >-
     Fourth moment of the one-cell increments divided by the square of their second moment,
-    averaged over spatial axes and channels. Exactly 3 for a Gaussian field. Reported per
-    variant; the drift from the reference's value is what is read.
+    averaged over spatial axes and channels, the longitudinal pairs only for velocity. Exactly 3
+    for a Gaussian field. Reported per variant; the drift from the reference's value is what is
+    read. The flatness at every octave separation, and for velocity the transverse one, are
+    companion curves.
   bounds:
     # Jensen's inequality on the squared increment gives <d^4> >= <d^2>^2, with equality
     # only when |d| is constant, so 1 is attained and is a genuine floor rather than a
@@ -37,5 +39,11 @@ math:
   scale_dependent: false
   resolution_dependent: true   # the separation is one cell, so it is set by the grid
   complexity: "O(N)"
-references: [granero2024]
+references: [granero2024, boffetta2012, frisch1995, benzi1993]
+# The member mean of the synthetic ensemble is left unchanged by the two dispersion axes, which
+# scale the members about their mean, and the bias axis adds a constant, which cancels in every
+# increment: every severity would score the clean value (configs/degradation/ensemble_miscalibration.yaml).
+not_run:
+  synthetic_ensemble: every axis there leaves the member mean's increments unchanged (dispersion scales members about their mean; a bias cancels in an increment)
+
 review: null

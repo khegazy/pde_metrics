@@ -19,9 +19,9 @@ import pytest
 from scipy import stats
 
 from metrics.increment_w1.metric import increment_w1
-from tests.conftest import alternating_field, step_field
+from tests.conftest import alternating_field, make_ctx, oriented_velocity_field, step_field
 
-from .metric import energy_distance
+from .metric import energy_distance, energy_distance_transverse
 
 
 def test_worked_example_from_the_card():
@@ -41,7 +41,8 @@ def test_worked_example_from_the_card():
     Across each row both fields are constant, both samples are all zeros and that axis
     contributes 0. The reported value averages the two axes: (0.5 + 0) / 2 = 0.25.
     """
-    assert energy_distance(step_field(), alternating_field()) == pytest.approx(0.25)
+    ctx = make_ctx(step_field())
+    assert energy_distance(step_field(), alternating_field(), ctx=ctx) == pytest.approx(0.25)
 
 
 def test_a_rare_extreme_increment_costs_less_than_a_broad_change_of_equal_transport_cost():
@@ -69,10 +70,11 @@ def test_a_rare_extreme_increment_costs_less_than_a_broad_change_of_equal_transp
     broad = 2.0 * reference
     rare = reference.copy()
     rare[0, 1, :] = 9.0
-    assert increment_w1(reference, broad) == pytest.approx(0.5)
-    assert increment_w1(reference, rare) == pytest.approx(0.5)
-    assert energy_distance(reference, broad) == pytest.approx(0.5)
-    assert energy_distance(reference, rare) == pytest.approx(np.sqrt(1 / 8) / 2)
+    ctx = make_ctx(reference)
+    assert increment_w1(reference, broad, ctx=ctx) == pytest.approx(0.5)
+    assert increment_w1(reference, rare, ctx=ctx) == pytest.approx(0.5)
+    assert energy_distance(reference, broad, ctx=ctx) == pytest.approx(0.5)
+    assert energy_distance(reference, rare, ctx=ctx) == pytest.approx(np.sqrt(1 / 8) / 2)
 
 
 def test_on_a_gaussian_bulk_a_tail_change_costs_4_sqrt2_over_n_eps_of_an_equal_cost_stretch():
@@ -106,14 +108,14 @@ def test_on_a_gaussian_bulk_a_tail_change_costs_4_sqrt2_over_n_eps_of_an_equal_c
         return np.tile(column[None, :, None], (1, 1, 2))
 
     reference, broad = field(order), field((1 + eps) * order)
-    w1_broad = 2 * increment_w1(reference, broad)
+    w1_broad = 2 * increment_w1(reference, broad, ctx=make_ctx(reference))
     tail = order.copy()
     tail[np.argmax(order)] += n * w1_broad / 2
     tail[np.argmin(order)] -= n * w1_broad / 2
     rare = field(tail)
-    d2_broad = (2 * energy_distance(reference, broad)) ** 2
-    d2_rare = (2 * energy_distance(reference, rare)) ** 2
-    assert 2 * increment_w1(reference, rare) == pytest.approx(w1_broad)
+    d2_broad = (2 * energy_distance(reference, broad, ctx=make_ctx(reference))) ** 2
+    d2_rare = (2 * energy_distance(reference, rare, ctx=make_ctx(reference))) ** 2
+    assert 2 * increment_w1(reference, rare, ctx=make_ctx(reference)) == pytest.approx(w1_broad)
     assert d2_broad / w1_broad == pytest.approx(0.017678, rel=0.05)
     assert d2_rare / d2_broad == pytest.approx(0.11049, rel=0.05)
 
@@ -127,8 +129,8 @@ def test_translation_and_a_constant_offset_are_invisible():
     rng = np.random.default_rng(0)
     field = rng.standard_normal((1, 16, 8))
     for axis in (-2, -1):
-        assert energy_distance(field, np.roll(field, 3, axis=axis)) == 0.0
-    assert energy_distance(field, field + 12.5) == pytest.approx(0.0, abs=1e-6)
+        assert energy_distance(field, np.roll(field, 3, axis=axis), ctx=make_ctx(field)) == 0.0
+    assert energy_distance(field, field + 12.5, ctx=make_ctx(field)) == pytest.approx(0.0, abs=1e-6)
 
 
 def test_scaling_both_fields_scales_the_distance_by_the_root_of_the_factor():
@@ -140,4 +142,23 @@ def test_scaling_both_fields_scales_the_distance_by_the_root_of_the_factor():
     """
     rng = np.random.default_rng(1)
     a, b = rng.standard_normal((2, 2, 16, 8))
-    assert energy_distance(-4.0 * a, -4.0 * b) == pytest.approx(2.0 * energy_distance(a, b))
+    ctx = make_ctx(a)
+    assert energy_distance(-4.0 * a, -4.0 * b, ctx=ctx) == pytest.approx(
+        2.0 * energy_distance(a, b, ctx=ctx))
+
+
+def test_velocity_is_scored_on_its_longitudinal_increments_with_the_transverse_beside():
+    """``oriented_velocity_field`` against a zero field: 0.0625 longitudinal, 0.125 transverse.
+
+    A reference whose increments are +1 and -1 at a fraction p of the cells, equally, and 0
+    elsewhere, against a candidate whose increments are all 0: the two cumulative functions
+    differ by p/2 on [-1, 0) and on [0, 1), so D^2 = 2 * 2 * (p/2)^2 = p^2 and D = p.
+    Longitudinally, u_x along x is a lone step, p = 2/16, and u_y along y is constant, D = 0:
+    the number is 0.0625. Transversely, u_x along y gives 0 and u_y along x, a square wave of
+    period 8, p = 4/16: the companion holds 0.125 at the one-cell separation.
+    """
+    field, zero = oriented_velocity_field(), np.zeros((2, 16, 8))
+    ctx = make_ctx(field, field="velocity")
+    assert energy_distance(field, zero, ctx=ctx) == pytest.approx(0.0625)
+    separations, transverse = energy_distance_transverse(field, zero, ctx=ctx)
+    assert separations.tolist() == [1] and transverse == pytest.approx([0.125])

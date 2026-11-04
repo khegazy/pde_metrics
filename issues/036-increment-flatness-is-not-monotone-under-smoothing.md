@@ -2,7 +2,10 @@
 
 **Category:** acceptance criteria
 **Priority:** medium — needs a decision, not a fix
-**Status:** open
+**Status:** open for density and vorticity. For velocity the registered number is now the
+longitudinal flatness, which falls steadily under blur on the frame measured below; option 3
+below is in part done (the curve over separations is stored beside the number). Whether to
+accept a non-monotone metric is still a person's call.
 
 ## Context
 
@@ -25,6 +28,27 @@ at sigma = 0, 0.5, 1, 2, 4:
 | density | 16.4684 | 16.5496 | 16.3802 | 15.5289 | 12.9909 | no — rises first |
 | velocity | 8.3400 | 8.2108 | 8.1013 | 8.4812 | 8.3551 | no — wanders |
 | vorticity | 12.7123 | 12.3369 | 10.1410 | 7.5878 | 16.1508 | no — falls, then doubles |
+| velocity, longitudinal | 7.7183 | 7.3988 | 6.8270 | 6.4111 | 5.5126 | yes — falls |
+| velocity, transverse | 8.9616 | 9.0228 | 9.3756 | 10.5513 | 11.1977 | yes — rises |
+
+The velocity row is the four channel-axis pairs pooled, the value the metric registered when this
+issue was written. Measured again on 2026-11-04 with the same method (the first three rows
+reproduce to every digit shown), the two orientations respond in opposite directions: the
+longitudinal flatness, the field's standard object and now the registered number, falls steadily,
+while the transverse flatness, now a companion, rises. Pooling them is what made velocity wander.
+
+The same measurement at every octave separation (the companion `increment_flatness.by_separation`):
+
+| field | separations at which the flatness is monotone in sigma | where it is not |
+|---|---|---|
+| density | 2 to 128 cells | 1 cell (16.47, 16.55, 16.38, ...) |
+| velocity, longitudinal | 1 to 128 cells | none |
+| velocity, transverse | every separation but 8 cells | 8 cells (10.73, 10.79, 10.97, 11.32, 10.96) |
+| vorticity | 16 to 128 cells | 1 to 8 cells |
+
+So on this frame density's non-monotonicity is confined to the one-cell separation and is small
+(a rise of 0.5%), while vorticity's spans every separation up to 8 cells. One frame and one blur
+operator; the evidence run's per-separation trend tables are the fuller test.
 
 The vorticity row is the sharpest case: flatness falls by 40% out to sigma = 2, then more
 than doubles at sigma = 4. A model-selection procedure ranking candidates by closeness to
@@ -71,10 +95,10 @@ A decision on one of these, which only a person should make:
    and say so in the protocol. Flatness returning to the reference value under heavy blur is
    not noise; it is a real and nameable failure mode of the statistic, and a panel that
    reports it alongside a monotone metric loses nothing.
-3. **Replace the single-cell separation with a curve over separations** (`increment_w1`'s
-   increment-PDF comparison is the neighbouring item) and judge the curve rather than one
-   point. This is more work and changes what the metric returns from a scalar to a vector,
-   which the registry already supports via `returns="vector"`.
+3. **Judge the curve over separations rather than one point.** The curve is now stored as the
+   companion `increment_flatness.by_separation`, and the analysis reads each separation's trend
+   as a metric of its own; what remains is deciding whether a panel reads the curve instead of
+   the one-cell number.
 
 Option 3 is the one that most directly addresses the underlying problem, since
 intermittency is a statement about how flatness varies *across* scales and a single

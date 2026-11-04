@@ -25,37 +25,33 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from metrics.increment_flatness.metric import SEPARATION_CELLS, increments
-from metrics.registry import metric
+from fmeval.context import FieldContext
+from metrics.increment_flatness.metric import (
+    SEPARATION_CELLS,
+    increment_samples,
+    vector_field,
+)
+from metrics.registry import companion, metric
 
 
-def axis_w1(a: NDArray[np.floating], b: NDArray[np.floating], axis: int,
-            separation: int = SEPARATION_CELLS) -> float:
-    """1-Wasserstein distance between the increment distributions of ``a`` and ``b``.
+def sample_w1(a: NDArray[np.floating], b: NDArray[np.floating]) -> float:
+    """1-Wasserstein distance between two equally sized samples of increments.
 
     Both samples have the same number of points, so the quantile form of the 1-Wasserstein
-    distance reduces to sorting each and averaging the absolute difference elementwise.
-    That is exact, not an approximation: for two empirical measures on the line with equal
-    weights the optimal coupling is the monotone one.
+    distance reduces to sorting each and averaging the absolute difference elementwise
+    (Peyre & Cuturi 2019, Remark 2.28, Eq. (2.33) with p = 1). That is exact, not an
+    approximation: for two empirical measures on the line with equal weights the optimal
+    coupling is the monotone one.
 
     Args:
-        a: One channel of the reference field, shape ``(*spatial)``.
-        b: The matching channel of the candidate, same shape.
-        axis: Which spatial axis to take increments along, as a negative index.
-        separation: The increments' separation in cells; one by default.
+        a: The reference's increments along one axis of one channel, any shape.
+        b: The candidate's matching increments, same size.
 
     Returns:
         The transport distance, in the field's units. Zero when the two increment
         distributions coincide, which does not require the two fields to coincide.
     """
-    return float(
-        np.mean(
-            np.abs(
-                np.sort(increments(a, axis, separation), axis=None)
-                - np.sort(increments(b, axis, separation), axis=None)
-            )
-        )
-    )
+    return float(np.mean(np.abs(np.sort(a, axis=None) - np.sort(b, axis=None))))
 
 
 @metric(
@@ -71,26 +67,24 @@ def axis_w1(a: NDArray[np.floating], b: NDArray[np.floating], axis: int,
 )
 def increment_w1(
     reference: NDArray[np.floating], candidate: NDArray[np.floating], *,
-    separation: int = SEPARATION_CELLS,
+    ctx: FieldContext, separation: int = SEPARATION_CELLS, transverse: bool = False,
 ) -> float:
-    """Increment-PDF 1-Wasserstein distance, averaged over spatial axes and channels.
+    """Increment-PDF 1-Wasserstein distance, longitudinal for velocity, averaged over the
+    (channel, axis) pairs read.
 
-    The quantile form of the one-dimensional 1-Wasserstein distance between two empirical
-    measures with equal weights is the mean absolute difference of their order statistics.
-    The general treatment is Peyre and Cuturi (2019), "Computational Optimal Transport",
-    Foundations and Trends in Machine Learning 11(5-6), 355-607, DOI 10.1561/2200000073,
-    Chapter 2. No equation number is given here on purpose: the copy that could be read
-    did not show the numbering, and a plausible-looking one would be worse than none. The
-    result is short enough to derive instead, and the card's Definition does so -- the
-    cost |x - y| is convex, so by the rearrangement inequality the monotone coupling is
-    optimal, and for equal weights the monotone coupling is exactly "sort both".
+    The quantile form of the one-dimensional 1-Wasserstein distance (Peyre and Cuturi (2019),
+    "Computational Optimal Transport", Foundations and Trends in Machine Learning 11(5-6),
+    355-607, DOI 10.1561/2200000073, Remark 2.30, Eq. (2.36), numbered as in arXiv:1803.00567)
+    between two empirical measures with equal weights is the mean absolute difference of their
+    order statistics (Remark 2.28, Eq. (2.33)).
 
     Increment statistics are used as physics-based criteria for generative turbulence
     models by Granero-Belinchon and Cabeza Gallucci (2024), Mach. Learn.: Sci. Technol.
-    5(2), 025032, DOI 10.1088/2632-2153/ad43b3.
+    5(2), 025032, DOI 10.1088/2632-2153/ad43b3, on the longitudinal velocity (Sect. 2.1).
 
-    The average runs over ``(channel, axis)`` pairs, one transport distance each, rather
-    than over one pooled sample. Pooling would compare a mixture against a mixture and
+    The average runs over the ``(channel, axis)`` pairs of
+    :func:`metrics.increment_flatness.metric.increment_samples`, one transport distance each,
+    rather than over one pooled sample. Pooling would compare a mixture against a mixture and
     could cancel an error along one axis against an opposite error along another; keeping
     the axes separate cannot. Every pair is included, including one whose increments vanish
     in both fields -- unlike a flatness, a transport distance between two identical
@@ -99,8 +93,12 @@ def increment_w1(
     Args:
         reference: The trusted field, shape ``(C, *spatial)`` on the analysis grid.
         candidate: The field being scored, same shape and grid.
+        ctx: The pipeline's context; its field name says whether the increments are
+            longitudinal.
         separation: The increments' separation in cells. The registered metric is at one cell;
             ``increment_w1_by_separation`` reads the others, so both share this computation.
+        transverse: Compare the transverse increments of a vector field instead; the
+            ``transverse`` companion reads them.
 
     Returns:
         Mean transport distance, in the field's units. Zero when every increment
@@ -111,11 +109,23 @@ def increment_w1(
             f"increment_w1 needs matching shapes, got {reference.shape} and "
             f"{candidate.shape}"
         )
-    n_spatial = reference.ndim - 1
-    return float(
-        np.mean([
-            axis_w1(ref_c, cand_c, axis=axis, separation=separation)
-            for ref_c, cand_c in zip(reference, candidate)
-            for axis in range(-n_spatial, 0)
-        ])
-    )
+    return float(np.mean([
+        sample_w1(a, b) for a, b in zip(
+            increment_samples(reference, ctx.field, separation, transverse=transverse),
+            increment_samples(candidate, ctx.field, separation, transverse=transverse),
+            strict=True)
+    ]))
+
+
+@companion(of="increment_w1", name="transverse", kind="curve",
+           coordinate=("separation", "cells"))
+def increment_w1_transverse(reference: NDArray[np.floating], candidate: NDArray[np.floating],
+                            *, ctx: FieldContext) -> tuple[NDArray, NDArray]:
+    """(separation, W1_T): the same distance between the transverse increments of a vector
+    field, at the registered separation only; its other separations are
+    ``increment_w1_by_separation.transverse``. Empty for a field with no transverse
+    increments (a scalar, or a one-dimensional vector)."""
+    if not vector_field(ctx.field) or reference.ndim < 3:
+        return np.array([], dtype=np.int64), np.array([])
+    return np.array([SEPARATION_CELLS]), np.array([
+        increment_w1(reference, candidate, ctx=ctx, transverse=True)])

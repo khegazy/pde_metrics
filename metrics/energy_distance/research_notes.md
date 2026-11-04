@@ -253,3 +253,15 @@ to the deleted page left.
   agree with SciPy; the worked example's 0.25 and the tail derivations in `test_metric.py`; and
   that the pre-registration in commit 4dbecc3 matches the declared file and that the evidence run
   postdates it (the reviewer confirmed all three).
+
+## Evaluation by the field's standard (2026-11-04)
+
+Recorded in the effort log `task-metrics-increments.md` (update_metric_eval_principles). The card
+gained `### How its field reports it`: the statistics field reports the two-sample energy
+statistic $T$ with a permutation p-value (Székely & Rizzo 2013, Sect. 6.1; Rizzo & Székely 2016,
+p. 28), which is not reported here because the increments of one field are not exchangeable
+samples. The "No companion" choice above stands with a different reason: curve companions now
+exist, but the cumulative-function gap has no coordinates fixed across rows. For velocity the
+number now reads the longitudinal increments only, with the transverse distance as the companion
+`energy_distance.transverse`; density and vorticity are bitwise unchanged. The one-cell
+separation is recorded as a convention in `issues/128`.
