@@ -135,8 +135,8 @@ class MapRequest:
 
     Storing a map for every frame and variant would be gigabytes, so only the named
     combinations are retained -- enough for the figure, not for the whole run. A point-set
-    companion, and a curve companion's dense curve when it declares ``analysed``, is kept on the
-    same combinations and on the clean level of the named frames, the
+    companion, a curve companion's dense curve when it declares ``analysed``, and a field map of
+    one field, is kept on the same combinations and on the clean level of the named frames, the
     set of the undamaged prediction: the reference on a deterministic dataset, the member mean on
     an ensemble one. The defaults here keep nothing, for callers that do not ask.
     """
@@ -429,14 +429,16 @@ def run(
                     rows.append(row)
 
                     for c in spec.companions:
-                        # A point set or a dense curve is kept on the clean level too, the
-                        # undamaged prediction's (the reference's on a deterministic dataset,
-                        # the member mean's on an ensemble one), the one the degraded ones are
-                        # drawn beside. A curve goes to companions.csv on every row.
+                        # A point set, a dense curve or a one-field map is kept on the clean
+                        # level too, the undamaged prediction's (the reference's on a
+                        # deterministic dataset, the member mean's on an ensemble one), the one
+                        # the degraded ones are drawn beside; a two-field map is zero there. A
+                        # curve goes to companions.csv on every row.
                         dense = c.kind == "curve" and c.analysed is not None
                         keep = (stored_here and (c.kind != "curve" or dense)
                                 and (not maps.axes or severity_level.label in maps.axes
-                                     or (c.kind != "field" and severity_level.is_reference)))
+                                     or ((c.kind != "field" or c.one_field)
+                                         and severity_level.is_reference)))
                         if c.kind != "curve" and not keep:
                             continue
                         result = (ctx.cache[COMPANION_KEY] if c is handed

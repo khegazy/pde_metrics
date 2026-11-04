@@ -29,7 +29,14 @@ from fmeval.report.vocabulary import FAMILY_INFO, family_label, label
 
 from . import loader
 from .loader import write_strict_json
-from .metric_figures import FIGURE_BLOCKS, METRIC_FIGURES, CardFigure, metric_figures
+from .metric_figures import (
+    FIGURE_BLOCKS,
+    METRIC_FIGURES,
+    STANDARD,
+    STANDARD_TITLE,
+    CardFigure,
+    metric_figures,
+)
 from .prose import has_block, write_block
 
 #: Which generated block each degradation family's results go into. Derived from
@@ -144,16 +151,18 @@ def figure_lines(figures: Sequence[CardFigure] | None, reasons: Mapping[str, str
         return []      # drawn without figures, e.g. from a test: no figure lines at all
     reasons = reasons or {}
     lines: list[str] = []
-    by_name = {f.name: f for f in figures or ()}
-    for name in METRIC_FIGURES:
-        if FIGURE_BLOCKS[name] != block:
+    for slot in METRIC_FIGURES:
+        if FIGURE_BLOCKS[slot] != block:
             continue
-        figure = by_name.get(name)
-        if figure is None:
-            title = PLOTS[name].title.lower()
-            lines += [f"No {title} figure: {reasons.get(name, 'not drawn')}.", ""]
+        drawn = [f for f in figures or () if f.slot == slot]
+        if not drawn:
+            title = STANDARD_TITLE if slot == STANDARD else PLOTS[slot].title.lower()
+            lines += [f"No {title} figure: {reasons.get(slot, 'not drawn')}.", ""]
             continue
-        lines += [f"![{figure.alt}](_generated/{figure.path.name})", "", figure.caption, ""]
+        lead = "*As this metric's own field draws it.* " if slot == STANDARD else ""
+        for figure in drawn:
+            lines += [f"![{figure.alt}](_generated/{figure.path.name})", "",
+                      lead + figure.caption, ""]
     return lines
 
 

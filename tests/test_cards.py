@@ -30,11 +30,21 @@ from fmeval import CONFIGS, REPO, analysis
 from fmeval import config as fmeval_config
 from fmeval.cards import catalog, cli, evidence, exemplars, loader, prose, review
 from fmeval.cards.figures import Column, _row_limits, exemplar_panel
-from fmeval.cards.metric_figures import ALT_TEXT, METRIC_FIGURES, metric_figures
+from fmeval.cards.metric_figures import (
+    ALT_TEXT,
+    METRIC_FIGURES,
+    STANDARD,
+    metric_figures,
+    standard_figure,
+)
 from fmeval.cards.overview import overview_figures, page_markdown
 from fmeval.cards.schema import CATEGORIES, SCHEMA_VERSION, STATUSES, CardError, parse_card
 from fmeval.data import readers  # noqa: F401  (registers every format)
+from fmeval.data.analytic import TaylorGreen2D
 from fmeval.data.base import READERS
+from fmeval.io import RunFolder, write_results, write_run_meta
+from fmeval.ladder import build_ladder
+from fmeval.pipeline import DatasetInfo, run
 from fmeval.report import vocabulary
 from fmeval.report.style import OKABE_ITO
 from metrics import registry as metric_registry
@@ -937,6 +947,7 @@ def _synthetic_run(tmp_path, with_mae: bool = True, dataset: str = "kinet_re5e4"
                                                      for k, vals in ladder.items()}))
     df = pd.concat(frames, ignore_index=True)
     df["energy_changed"] = np.where(df["level"] > 0, 0.01 * df["severity"] ** 2, 0.0)
+    df["arity"] = "pairwise"
     return _run_folder(tmp_path / "comparison_synthetic", df, dataset=dataset)
 
 
@@ -1332,7 +1343,7 @@ def _figure_run(tmp_path, metrics=("mse", "mae", "flat"), *, impostor: bool = Tr
     df = synthetic_rows(metrics=metrics)
     if not impostor:
         df = df[df["degradation"] != "gaussian_impostor"]
-    return _run_folder(tmp_path / "comparison_figures", df)
+    return _run_folder(tmp_path / "comparison_figures", df.assign(arity="pairwise"))
 
 
 def test_metric_figures_are_byte_identical_within_one_environment(tmp_path):
@@ -1345,7 +1356,11 @@ def test_metric_figures_are_byte_identical_within_one_environment(tmp_path):
     run = evidence.load_run(_figure_run(tmp_path))
     first, _ = metric_figures(run, "mse", tmp_path / "a")
     second, _ = metric_figures(run, "mse", tmp_path / "b")
-    assert [f.name for f in first] == list(METRIC_FIGURES)
+    assert [f.slot for f in first] == list(METRIC_FIGURES)
+    assert [f.name for f in first] == ["damage_beside_controls", "sensitivity_profile",
+                                       "response_curves", "damage_beside_controls"], (
+        "a pairwise metric with nothing behind its number opens with misfit against shift, "
+        "drawn once and shown in both of its slots")
     for one, two in zip(first, second, strict=True):
         assert one.path.read_bytes() == two.path.read_bytes(), f"{one.name} is not stable"
         assert one.numbers.read_bytes() == two.numbers.read_bytes()
@@ -1354,15 +1369,19 @@ def test_metric_figures_are_byte_identical_within_one_environment(tmp_path):
 
 
 def test_the_performance_block_opens_with_the_figures(tmp_path, monkeypatch):
-    """Picture first, table second; and every figure beside the card is one the card shows."""
+    """Picture first, table second, the field's figure before the harness's; and every figure
+    beside the card is one the card shows."""
     bundle = _bundle_copy(tmp_path, monkeypatch)
     evidence.generate("mse", evidence.load_run(_synthetic_run(tmp_path)))
 
     block = prose.generated_blocks(bundle.card_md.read_text())["performance"]
     body = [line for line in block.splitlines()[1:] if line.strip()]
-    assert body[0] == f"![{ALT_TEXT['sensitivity_profile']}](_generated/sensitivity_profile.svg)"
-    assert body[2] == f"![{ALT_TEXT['response_curves']}](_generated/response_curves.svg)"
-    assert body[4].startswith("**Trend") and body[5].startswith("| test family |"), (
+    assert body[0] == (f"![{ALT_TEXT['damage_beside_controls']}]"
+                       "(_generated/damage_beside_controls.svg)"), "the field's figure first"
+    assert body[1].startswith("*As this metric's own field draws it.* ")
+    assert body[2] == f"![{ALT_TEXT['sensitivity_profile']}](_generated/sensitivity_profile.svg)"
+    assert body[4] == f"![{ALT_TEXT['response_curves']}](_generated/response_curves.svg)"
+    assert body[6].startswith("**Trend") and body[7].startswith("| test family |"), (
         "the tables follow the figures")
     headings = [line for line in body if line.startswith("**") and line.endswith("?**")]
     assert [h.split(":")[0] for h in headings] == ["**Trend", "**Reactivity", "**Consistency"], (
@@ -1370,7 +1389,8 @@ def test_the_performance_block_opens_with_the_figures(tmp_path, monkeypatch):
     for alt in ALT_TEXT.values():
         assert "]" not in alt and ")" not in alt, "alt text would truncate the link pattern"
     referenced = set(re.findall(r"\]\(_generated/([^)]+\.svg)\)", block))
-    assert referenced == {"response_curves.svg", "sensitivity_profile.svg"}
+    assert referenced == {"damage_beside_controls.svg", "response_curves.svg",
+                          "sensitivity_profile.svg"}
     damage = prose.generated_blocks(bundle.card_md.read_text())["results_damage_by_level"]
     first = next(line for line in damage.splitlines()[1:] if line.strip())
     assert first == (f"![{ALT_TEXT['damage_beside_controls']}]"
@@ -1396,8 +1416,9 @@ def test_a_single_metric_run_gets_no_damage_figure_and_the_block_says_only_that(
 def test_a_metric_without_a_damage_scale_still_gets_its_figures(tmp_path):
     run = evidence.load_run(_figure_run(tmp_path))
     _figures, reasons = metric_figures(run, "flat", tmp_path / "flat")
-    assert set(reasons) == {"damage_beside_controls"}, reasons
+    assert set(reasons) == {STANDARD, "damage_beside_controls"}, reasons
     assert "no damage scale" in reasons["damage_beside_controls"]
+    assert reasons[STANDARD] == reasons["damage_beside_controls"], "one renderer, one reason"
     curves = json.loads((tmp_path / "flat" / "response_curves.json").read_text())
     assert set(curves["panels"]) == {"density", "velocity", "vorticity"}
     rows = [r for rows in curves["panels"].values() for r in rows]
@@ -1681,3 +1702,68 @@ def test_the_curve_table_gives_each_coordinate_its_own_column_and_the_right_reas
     assert "| 1234567 | 1234568 |" in block, block
     rho_line = next(line for line in block.splitlines() if "rank correlation" in line)
     assert "zero" not in rho_line, rho_line
+
+
+# --- the field's own figure on a metric card --------------------------------------------------
+
+
+def _declared(rows: pd.DataFrame, companions: list[dict] | None = None):
+    """The two things :func:`standard_figure` reads: the rows, and a registry snapshot."""
+    meta = {"registries": {"metrics": {"m": {"companions": companions or []}}}}
+    return Namespace(df=rows, meta=meta)
+
+
+@pytest.mark.parametrize("arity,lead,companions,expected", [
+    ("pairwise", None, [{"name": "m", "kind": "curve"}], "companion_curves"),
+    ("pairwise", None, [{"name": "m", "kind": "field"}, {"name": "x", "kind": "points"}],
+     "companion_points"),
+    ("single", None, [{"name": "x", "kind": "curve"}, {"name": "m", "kind": "points"}],
+     "companion_points"),
+    ("single", None, [], "response_along_time"),
+    ("pairwise", 1.0, [{"name": "m", "kind": "field"}], "response_along_time"),
+    ("pairwise", None, [{"name": "m", "kind": "field"}], "damage_beside_controls"),
+    ("ensemble", None, [], None),
+], ids=["own-curve", "named-points", "own-kind-wins", "single", "forecast", "pairwise",
+        "ensemble"])
+def test_the_field_s_figure_follows_from_what_the_metric_declares(arity, lead, companions,
+                                                                   expected):
+    """One rule names a metric's field figure: its curve or point set (its own companion's kind
+    first), else its value against time for a single-field quantity or a forecast, else misfit
+    against shift; an ensemble score with none of these has none, and says why."""
+    rows = pd.DataFrame({"metric": ["m"], "arity": [arity], "lead_step": [lead]})
+    name, why = standard_figure(_declared(rows, companions), "m")
+    assert name == expected
+    assert bool(why) == (expected is None)
+
+
+def test_a_curve_metric_s_card_opens_with_its_curve_on_each_field(tmp_path, temporary_metric):
+    """The field's figure of a curve metric is drawn once per field it was measured on, from
+    the stored run, ahead of the harness's figures; its per-coordinate view is left to the
+    companion tables; and the files are byte-stable like the others."""
+    temporary_metric(name="_spectrum", arity="single", symmetric=False)(lambda x: 0.0)
+    metric_registry.companion(of="_spectrum", kind="curve", coordinate=("k", "cycles"),
+                              scales=("log", "log"))(
+        lambda x: (np.array([1.0, 2.0, 4.0]), np.array([1.0, 0.5, 0.25]) * float(np.var(x))))
+    ladder = build_ladder({"gaussian_blur": {"severities": [0.1, 0.2]}})
+    result = run(TaylorGreen2D(grid=(16, 8), n_frames=3), [metric_registry.get("_spectrum")],
+                 ladder, fields=["pressure", "vorticity"],
+                 dataset=DatasetInfo(name="taylor_green_2d"))
+    folder = RunFolder(tmp_path / "comparison_curve").create()
+    write_results(folder, result.rows.assign(dataset="kinet_re5e4"))
+    write_results(folder, result.companions.assign(dataset="kinet_re5e4"), name="companions")
+    write_run_meta(folder, run_id=1, metric="_spectrum", dataset="kinet_re5e4")
+    measured = evidence.load_run(folder.root)
+
+    figures, reasons = metric_figures(measured, "_spectrum", tmp_path / "a")
+    standard = [f for f in figures if f.slot == STANDARD]
+    assert [f.name for f in standard] == ["companion_curves__field-pressure",
+                                          "companion_curves__field-vorticity"]
+    assert figures[:2] == standard, "the field's figures come first"
+    assert not any("per-coordinate" in f.name for f in figures)
+    again, _ = metric_figures(measured, "_spectrum", tmp_path / "b")
+    for one, two in zip(figures, again, strict=True):
+        assert one.path.read_bytes() == two.path.read_bytes(), f"{one.name} is not stable"
+    numbers = json.loads(standard[0].numbers.read_text())
+    assert numbers["figure"] == "companion_curves" and numbers["panels"]
+    lines = evidence.figure_lines(figures, reasons, "performance")
+    assert lines[0] == f"![{ALT_TEXT['companion_curves']}](_generated/{standard[0].path.name})"

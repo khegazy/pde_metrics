@@ -95,8 +95,10 @@ def spectral_energy_flux(
     return float(np.linalg.norm(np.asarray(flux) - reference_flux) / scale)
 
 
+# Pi(K) changes sign along K (the cited run's clean medians are negative up to K = 8 and
+# positive above), so its values are drawn on a symlog axis, its octave wavenumbers on a log one.
 @companion(of="spectral_energy_flux", kind="curve",
-           coordinate=("wavenumber", "cycles per domain"))
+           coordinate=("wavenumber", "cycles per domain"), scales=("log", "symlog"))
 def energy_flux_curve(velocity: NDArray[np.floating], *,
                       ctx: FieldContext) -> tuple[NDArray, NDArray]:
     """(K, Pi(K)): the spectral energy flux of one velocity field at octave wavenumbers K.

@@ -21,10 +21,11 @@ import pytest
 from fmeval import analysis
 from fmeval.cards import evidence
 from fmeval.context import COMPANION_KEY
-from fmeval.data.analytic import AdvectingBlobs
+from fmeval.data.analytic import AdvectingBlobs, SodShockTube
 from fmeval.io import (
     COMPANIONS,
     RunFolder,
+    read_maps,
     write_config,
     write_maps,
     write_results,
@@ -975,19 +976,21 @@ def test_several_companions_and_a_dense_curve_are_stored_analysed_and_drawn(tmp_
 
 
 def test_point_set_panels_run_in_time_order_and_stop_at_twelve(tmp_path, temporary_metric):
-    """Frames 2 and 10 each store the clean level and six blur levels, 14 sets. The panels run
-    frame by frame in time order, so frame 2 before frame 10 although the key ``t10`` sorts
-    before ``t2`` as a string, with the clean level first in each frame, and stop at twelve:
-    all seven sets of frame 2, then the first five of frame 10."""
+    """Frames 2 and 10 each store the clean level and seven blur levels, 16 sets. The set is of
+    one field, so each frame's clean set is drawn under that frame's panels rather than in a
+    panel of its own. The panels run frame by frame in time order, so frame 2 before frame 10
+    although the key ``t10`` sorts before ``t2`` as a string, and stop at twelve: all seven
+    blurred sets of frame 2, then the first five of frame 10."""
     temporary_metric(name="_count", arity="pairwise", symmetric=False)(
         lambda reference, candidate, *, ctx: float(len(ctx.cache[COMPANION_KEY])))
     metric_registry.companion(of="_count", kind="points", coordinate=(
         ("x", "cells"), ("y", "cells")))(lambda x: np.argwhere(x[0] > x[0].mean()).astype(float))
-    ladder = build_ladder({"gaussian_blur": {"severities": [0.05, 0.1, 0.15, 0.2, 0.25, 0.3]}})
+    ladder = build_ladder({"gaussian_blur": {
+        "severities": [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35]}})
     result = run(AdvectingBlobs(grid=(16, 8), n_frames=11), [metric_registry.get("_count")],
                  ladder, fields=["density"], dataset=DatasetInfo(name="advecting_blobs"),
                  maps=MapRequest(enabled=True, frames=[2, 10]))
-    assert len(result.maps) == 14
+    assert len(result.maps) == 16
     folder = RunFolder(tmp_path / "_count_1").create()
     write_results(folder, result.rows)
     write_maps(folder, result.maps)
@@ -997,7 +1000,174 @@ def test_point_set_panels_run_in_time_order_and_stop_at_twelve(tmp_path, tempora
     outcome = _rendered(folder, "companion_points")
     assert outcome.status == "ok", outcome.reason
     data = _figure_data(folder, "companion_points__metric-_count__field-density")
-    panels = data[["frame_index", "variant"]].drop_duplicates()
+    sets = data[["frame_index", "variant"]].drop_duplicates()
+    panels = sets[sets["variant"] != "reference"]
     assert list(panels["frame_index"]) == [2] * 7 + [10] * 5
-    assert list(panels.groupby("frame_index", sort=False)["variant"].first()) == [
-        "reference", "reference"]
+    assert sorted(sets.loc[sets["variant"] == "reference", "frame_index"]) == [2, 10], (
+        "each drawn frame's clean set is in the numbers, once")
+
+
+# --- the field's own figure: declared axes, bars, diagrams over the reference, line-outs ------
+
+
+def _run_to_folder(path, result, metric: str, config: dict | None = None) -> RunFolder:
+    """A run folder holding one pipeline result, its registry snapshot and ``config``."""
+    folder = RunFolder(path).create()
+    write_results(folder, result.rows)
+    if not result.companions.empty:
+        write_results(folder, result.companions, name=COMPANIONS)
+    write_maps(folder, result.maps)
+    write_config(folder, {"metrics": [metric], "seed": 0, **(config or {})}, [])
+    write_run_meta(folder, run_id=1, metric=metric, dataset="advecting_blobs")
+    return folder
+
+
+def _figures(folder, name: str, metric: str, field: str):
+    """The figures one renderer returns for one metric and field, drawn in memory."""
+    ctx = build_context(folder, bootstrap=0)
+    spec = PLOTS[name]
+    subset = ctx.df[(ctx.df["metric"] == metric) & (ctx.df["field"] == field)]
+    return spec.fn(ctx, subset, dict(spec.defaults)).figures
+
+
+def test_a_curve_is_drawn_on_the_axes_and_in_the_style_its_field_declares(tmp_path,
+                                                                         temporary_metric):
+    """A curve that changes sign declares a log coordinate and a symlog value: both axes are
+    set, the symlog one with its zero line, and the caption names them. A fixed-bin curve
+    declaring bars is drawn as one bar per series in every bin. An undeclared curve keeps the
+    default, a base-2 log coordinate when it spans more than a factor of ten."""
+    def _flux_curve(x):
+        """(k, a value that changes sign at k = 4 and spans decades)."""
+        k = np.array([1.0, 2.0, 4.0, 8.0, 16.0, 32.0])
+        return k, float(np.mean(x ** 2)) * (4.0 - k) * 10.0 ** -k
+
+    temporary_metric(name="_flux", arity="single", symmetric=False)(
+        lambda x: float(np.sum(_flux_curve(x)[1])))
+    metric_registry.companion(of="_flux", kind="curve", coordinate=("k", "cycles"),
+                              scales=("log", "symlog"))(_flux_curve)
+    temporary_metric(name="_ranks", arity="single", symmetric=False)(lambda x: 0.0)
+    metric_registry.companion(of="_ranks", kind="curve", coordinate=("rank", ""),
+                              style="bars")(
+        lambda x: (np.arange(4.0), np.histogram(x, bins=4)[0].astype(float)))
+    temporary_metric(name="_plain", arity="single", symmetric=False)(lambda x: 0.0)
+    metric_registry.companion(of="_plain", kind="curve", coordinate=("k", "cycles"))(
+        lambda x: (np.array([1.0, 4.0, 32.0]), np.full(3, float(np.mean(x)))))
+    ladder = build_ladder({"gaussian_blur": {"severities": [0.1, 0.2]}})
+    result = run(AdvectingBlobs(grid=(16, 8), n_frames=3),
+                 [metric_registry.get(m) for m in ("_flux", "_ranks", "_plain")], ladder,
+                 fields=["density"], dataset=DatasetInfo(name="advecting_blobs"))
+    folder = _run_to_folder(tmp_path / "comparison_1", result, "_flux")
+
+    flux = _figures(folder, "companion_curves", "_flux", "density")[0]
+    ax = flux.fig.axes[0]
+    assert (ax.get_xscale(), ax.get_yscale()) == ("log", "symlog")
+    assert any(np.allclose(line.get_ydata(), 0.0) for line in ax.get_lines()), "the zero line"
+    assert "symlog" in flux.caption
+    ranks = _figures(folder, "companion_curves", "_ranks", "density")[0]
+    assert len(ranks.fig.axes[0].patches) == 4 * 3, (
+        "four bins, each with two strengths and the clean level")
+    plain = _figures(folder, "companion_curves", "_plain", "density")[0]
+    assert (plain.fig.axes[0].get_xscale(), plain.fig.axes[0].get_yscale()) == ("log", "linear")
+    assert "Axes as the field draws them" not in plain.caption
+
+
+def test_a_diagram_of_one_field_is_drawn_over_the_reference_s_with_its_diagonal(
+        tmp_path, temporary_metric):
+    """A one-field point set named birth and death is a persistence diagram: each degraded
+    variant gets one panel with the clean level's set drawn under it as rings, and the
+    diagonal; the clean level has no panel of its own but its numbers are written once."""
+    temporary_metric(name="_diagram", arity="pairwise", symmetric=False)(
+        lambda reference, candidate: 0.0)
+    metric_registry.companion(of="_diagram", kind="points", coordinate=(
+        ("birth", "field"), ("death", "field")))(
+        lambda x: np.column_stack([np.sort(x[0].ravel())[:5], np.sort(x[0].ravel())[-5:]]))
+    ladder = build_ladder({"gaussian_blur": {"severities": [0.1, 0.2]}})
+    result = run(AdvectingBlobs(grid=(16, 8), n_frames=3), [metric_registry.get("_diagram")],
+                 ladder, fields=["density"], dataset=DatasetInfo(name="advecting_blobs"),
+                 maps=MapRequest(enabled=True, frames=[-1]))
+    folder = _run_to_folder(tmp_path / "comparison_1", result, "_diagram")
+
+    (item,) = _figures(folder, "companion_points", "_diagram", "density")
+    panels = [ax for ax in item.fig.axes if ax.get_visible()]
+    assert len(panels) == 2, "one panel per degraded variant, none for the clean level"
+    for ax in panels:
+        assert len(ax.collections) == 2, "the reference's rings and the variant's points"
+        (diagonal,) = ax.get_lines()
+        assert np.allclose(diagonal.get_xdata(), diagonal.get_ydata())
+    assert set(item.data["variant"]) == {"reference", "gaussian_blur_l1", "gaussian_blur_l2"}
+    assert "diagonal" in item.caption and "rings" in item.caption
+
+
+def test_a_one_dimensional_shock_set_is_marked_on_the_line_out_of_both_fields(
+        tmp_path, temporary_metric):
+    """On Sod's one-dimensional grid a metric's shock positions, a one-field point set of
+    ``(x, cells)`` and the pressure there, are drawn on the pressure line-out a named one-field
+    field companion stores, the reference's in grey under each variant's. That map is stored on
+    the clean level as well, which a two-field map never is, and the gallery of
+    two-dimensional maps declines a line-out."""
+    def _jumps(x):
+        """(cell, pressure) of the cells where the pressure jumps by a tenth of its range."""
+        cells = np.flatnonzero(np.abs(np.diff(x[0])) >= 0.1 * np.ptp(x[0])).astype(float)
+        return np.column_stack([cells, x[0][cells.astype(int)]])
+
+    temporary_metric(name="_shocks", arity="pairwise", fields=("pressure",), symmetric=False)(
+        lambda reference, candidate: 0.0)
+    metric_registry.companion(of="_shocks", kind="points", coordinate=(
+        ("x", "cells"), ("pressure", "field")))(_jumps)
+    metric_registry.companion(of="_shocks", name="profile")(lambda x: x[0])
+    ladder = build_ladder({"gaussian_blur": {"severities": [0.02, 0.05]}})
+    result = run(SodShockTube(grid=(64,), n_frames=2), [metric_registry.get("_shocks")],
+                 ladder, fields=["pressure"], dataset=DatasetInfo(name="sod_shock_tube"),
+                 maps=MapRequest(enabled=True, frames=[-1]))
+    stored = {(parse_map_key(k)[0], parse_map_key(k)[2]) for k in result.maps}
+    assert ("_shocks.profile", "reference") in stored, "a one-field map is kept when clean"
+    folder = _run_to_folder(tmp_path / "comparison_1", result, "_shocks")
+
+    (item,) = _figures(folder, "companion_points", "_shocks", "pressure")
+    panels = [ax for ax in item.fig.axes if ax.get_visible()]
+    assert len(panels) == 2
+    for ax in panels:
+        grey, own = ax.get_lines()
+        assert len(grey.get_xdata()) == len(own.get_xdata()) == 64
+        assert grey.get_color() == "0.6"
+    lines = item.data[item.data["drawn"] == "line-out"]
+    assert set(lines["variant"]) == {"reference", "gaussian_blur_l1", "gaussian_blur_l2"}
+    assert "line-out" in item.caption
+    assert _rendered(folder, "field_gallery").status != "ok"
+
+
+def test_a_single_field_quantity_is_drawn_against_time_on_the_chosen_entries_only(
+        tmp_path, temporary_metric):
+    """A single-field quantity is drawn against time for the ladder entries the run chose for
+    its detailed views, every strength and the clean field, captioned as the operator applied
+    at each time; a two-field error under the same fixed strengths is not drawn along time."""
+    temporary_metric(name="_energy", arity="single", symmetric=False)(
+        lambda x: float(np.mean(x ** 2)))
+    temporary_metric(name="_gap", arity="pairwise", symmetric=False)(
+        lambda reference, candidate: float(np.mean((reference - candidate) ** 2)))
+    ladder = build_ladder({"gaussian_blur": {"severities": [0.1, 0.2]},
+                           "box_blur": {"severities": [0.1, 0.2]}})
+    result = run(AdvectingBlobs(grid=(16, 8), n_frames=4),
+                 [metric_registry.get("_energy"), metric_registry.get("_gap")], ladder,
+                 fields=["density"], dataset=DatasetInfo(name="advecting_blobs"))
+    folder = _run_to_folder(tmp_path / "comparison_1", result, "_energy",
+                            {"report": {"error_map": {"axes": ["gaussian_blur"]}}})
+
+    (item,) = _figures(folder, "response_along_time", "_energy", "density")
+    assert set(item.data["degradation"]) == {"gaussian_blur"}
+    assert set(item.data["level"]) == {0, 1, 2}
+    assert "not a rollout" in item.caption
+    outcome = _rendered(folder, "response_along_time", metric="_gap")
+    assert outcome.status != "ok" and "fixed strength" in outcome.reason
+
+
+def test_read_maps_reads_only_the_keys_asked_for(tmp_path):
+    """A card reads one metric's maps out of the run's archive, not every metric's."""
+    folder = RunFolder(tmp_path / "comparison_1").create()
+    write_maps(folder, {"a:density__reference__t0": np.zeros(3),
+                        "a.extra:density__reference__t0": np.ones(2),
+                        "b:density__reference__t0": np.ones(4)})
+    kept = read_maps(folder, keep=lambda k: parse_map_key(k)[0].partition(".")[0] == "a")
+    assert sorted(kept) == ["a.extra:density__reference__t0", "a:density__reference__t0"]
+    assert len(read_maps(folder)) == 3
+    assert read_maps(RunFolder(tmp_path / "empty")) == {}

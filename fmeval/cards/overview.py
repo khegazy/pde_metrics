@@ -79,13 +79,13 @@ def overview_figures(run: Run, out_dir: Path) -> tuple[list[CardFigure], dict[st
             continue
         for keys, subset in iter_scope(spec.scope, ctx.df):
             stem = slug(name, **keys)
-            figure, why = render_figure(spec, ctx, subset, out_dir, stem, alt=ALT_TEXT[name],
-                                        panel_key="metric",
-                                        record={**provenance, "figure": name, "keys": keys})
-            if figure is None:
-                reasons[stem] = why
+            figures, why = render_figure(spec, ctx, subset, out_dir, stem, alt=ALT_TEXT[name],
+                                         panel_key="metric",
+                                         record={**provenance, "figure": name, "keys": keys})
+            if figures:
+                written += figures
             else:
-                written.append(figure)
+                reasons[stem] = why
     remove_stale(out_dir, {f.path.name for f in written})
     return written, reasons
 

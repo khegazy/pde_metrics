@@ -27,7 +27,8 @@ Three rules, each enforced by a test in ``tests/test_cards.py``:
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -35,9 +36,12 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib import rc_context
 
-from fmeval.report import plots as _plots  # noqa: F401  (importing registers the renderers)
+from fmeval.io import read_config, read_maps
+from fmeval.pipeline import parse_map_key
 from fmeval.report import style as report_style
-from fmeval.report.context import ReportContext
+from fmeval.report.context import FigureItem, ReportContext
+from fmeval.report.latex import slug
+from fmeval.report.plots import companion_records  # importing registers the renderers
 from fmeval.report.registry import PLOTS, RendererSpec, check_preconditions, draw, iter_scope
 
 from .loader import write_strict_json
@@ -45,18 +49,28 @@ from .loader import write_strict_json
 if TYPE_CHECKING:
     from .evidence import Run
 
-#: The renderers a metric card draws, in the order the card shows them. Each must be a
-#: ``scope="per_metric"`` plot in :data:`fmeval.report.registry.PLOTS`.
-METRIC_FIGURES: tuple[str, ...] = ("sensitivity_profile", "response_curves",
+#: The slot of the figure the metric's own field draws, the renderer :func:`standard_figure`
+#: names. It is the first figure on the card, ahead of the harness's own.
+STANDARD = "standard"
+
+#: The figures a metric card draws, in the order the card shows them: the field's figure, then
+#: the harness's. Every renderer drawn must be a ``per_metric`` or ``per_metric_field`` plot in
+#: :data:`fmeval.report.registry.PLOTS`; a ``per_metric_field`` one is drawn once per field.
+METRIC_FIGURES: tuple[str, ...] = (STANDARD, "sensitivity_profile", "response_curves",
                                    "damage_beside_controls")
 
-#: Which generated block of the card each figure opens. The two response figures head the
-#: Performance summary; the magnitude comparison sits above the table of the same numbers.
+#: Which generated block of the card each figure opens. The field's figure and the two response
+#: figures head the Performance summary; the magnitude comparison sits above the table of the
+#: same numbers.
 FIGURE_BLOCKS: dict[str, str] = {
+    STANDARD: "performance",
     "sensitivity_profile": "performance",
     "response_curves": "performance",
     "damage_beside_controls": "results_damage_by_level",
 }
+
+#: The words a card uses for the field's figure where it names the slot rather than a renderer.
+STANDARD_TITLE = "field-standard"
 
 #: Fixed salt for SVG element ids. Any string works; what matters is that it never changes,
 #: because a changed salt rewrites every committed SVG at once.
@@ -74,6 +88,13 @@ ALT_TEXT: dict[str, str] = {
     "damage_beside_controls": "damage against applied strength for this metric beside the "
                               "pointwise controls, log-log, one panel per displacement "
                               "degradation and field",
+    "companion_curves": "the curve behind the number against its coordinate, as its field "
+                        "draws it, at every strength of each degradation, the clean curve in "
+                        "black",
+    "companion_points": "the point sets behind the number, each degraded set over the "
+                        "reference's, as its field draws them",
+    "response_along_time": "the metric against time, the clean field's own history in black "
+                           "and each strength of the operator applied at each time",
 }
 
 
@@ -86,6 +107,9 @@ class CardFigure:
     numbers: Path
     caption: str
     alt: str
+    slot: str = ""
+    """The entry of :data:`METRIC_FIGURES` it fills; one file may fill two, and the field's
+    figure of a per-field renderer fills one slot with a file per field."""
 
 
 def _panels(data: pd.DataFrame | None, key: str) -> dict[str, list[dict]]:
@@ -102,9 +126,10 @@ def _panels(data: pd.DataFrame | None, key: str) -> dict[str, list[dict]]:
 
 
 def render_figure(spec: RendererSpec, ctx: ReportContext, subset: pd.DataFrame, out_dir: Path,
-                  stem: str, *, alt: str, record: dict,
-                  panel_key: str) -> tuple[CardFigure | None, str]:
-    """Draw one renderer, save it as a byte-stable SVG and its numbers as strict JSON.
+                  stem: str, *, alt: str, record: dict, panel_key: str,
+                  keep: Callable[[FigureItem], bool] | None = None,
+                  ) -> tuple[list[CardFigure], str]:
+    """Draw one renderer, save its figures as byte-stable SVGs and their numbers as strict JSON.
 
     Drawing and saving share one ``rc_context`` holding the theme and the fixed
     :data:`SVG_HASHSALT`: the salt is read when the SVG is written, so a save outside the
@@ -119,23 +144,30 @@ def render_figure(spec: RendererSpec, ctx: ReportContext, subset: pd.DataFrame, 
         alt: The image's alt text.
         record: The provenance the JSON carries beside ``caption`` and ``panels``.
         panel_key: The column of the renderer's data the JSON's panels are split by.
+        keep: Which of the renderer's figures to write, each under ``stem`` extended by the
+            keys that tell it apart (:func:`fmeval.report.latex.slug`, the metric left out).
+            None writes the first figure alone, under ``stem``.
 
     Returns:
-        The figure written, or ``None`` and the renderer's reason for declining.
+        The figures written, empty with the renderer's reason when it declined.
     """
+    written = []
     with rc_context({**ctx.style.rc, "svg.hashsalt": SVG_HASHSALT}):
         result, why = draw(spec, ctx, subset)
-        if result is None:
-            plt.close("all")
-            return None, why
-        item = result.figures[0]
-        caption = item.caption or spec.title
-        path, numbers = out_dir / f"{stem}.svg", out_dir / f"{stem}.json"
-        item.fig.savefig(path, format="svg", metadata={"Date": None, "Creator": None})
+        items = ([] if result is None else result.figures[:1] if keep is None
+                 else [item for item in result.figures if keep(item)])
+        for item in items:
+            name = stem if keep is None else slug(
+                stem, **{k: v for k, v in item.keys.items() if k != "metric"})
+            caption = item.caption or spec.title
+            path, numbers = out_dir / f"{name}.svg", out_dir / f"{name}.json"
+            item.fig.savefig(path, format="svg", metadata={"Date": None, "Creator": None})
+            write_strict_json(numbers, {**record, "caption": caption,
+                                        "panels": _panels(item.data, panel_key)})
+            written.append(CardFigure(name=name, path=path, numbers=numbers, caption=caption,
+                                      alt=alt))
         plt.close("all")
-    write_strict_json(numbers, {**record, "caption": caption,
-                                "panels": _panels(item.data, panel_key)})
-    return CardFigure(name=stem, path=path, numbers=numbers, caption=caption, alt=alt), why
+    return written, why
 
 
 def remove_stale(out_dir: Path, keep: set[str]) -> None:
@@ -146,10 +178,54 @@ def remove_stale(out_dir: Path, keep: set[str]) -> None:
             stale.with_suffix(".json").unlink(missing_ok=True)
 
 
+def standard_figure(ctx: ReportContext, metric: str) -> tuple[str | None, str]:
+    """The renderer that draws the figure this metric's own field draws, or None and why.
+
+    One rule, read from what the metric declares and what the run holds, so a metric names its
+    figure by declaring its companions and nothing else:
+
+    1. **A curve or a point set behind the number**: ``companion_curves`` or
+       ``companion_points``, the object the field plots (a spectrum, a structure function, a
+       Hill plot, a rank histogram; persistence diagrams, shock positions). The metric's own
+       companion decides when it is one of these, else the first declared that is.
+    2. **A single-field quantity**: ``response_along_time``, its value against time with the
+       clean field's history in black, as an energy or enstrophy decay curve is drawn.
+    3. **A two-field metric on a run of real forecasts**: ``response_along_time``, its error
+       against lead time, as the forecasting benchmarks score a rollout step by step.
+    4. **Any other two-field metric**: ``damage_beside_controls``, its misfit against an
+       applied shift beside the pointwise errors, the comparison by which an error that
+       tolerates displacement is told apart from the pointwise ones.
+    5. **An ensemble score with none of the above**: no figure here. Its field draws scores
+       against lead time, and the synthetic ensemble's time is a phase advance with one spread
+       at every frame, on which such a figure is flat by construction.
+    """
+    companions = [c for c in companion_records(ctx, metric) if c["kind"] in ("curve", "points")]
+    if companions:
+        own = next((c for c in companions if c["name"] == metric), companions[0])
+        return f"companion_{'curves' if own['kind'] == 'curve' else 'points'}", ""
+    rows = ctx.df[ctx.df["metric"].astype(str) == metric]
+    if "arity" not in rows.columns or rows.empty:
+        return None, "the run records no arity for this metric"
+    arity = str(rows["arity"].iloc[0])
+    forecast = "lead_step" in rows.columns and rows["lead_step"].notna().any()
+    if arity == "single" or (arity == "pairwise" and forecast):
+        return "response_along_time", ""
+    if arity == "pairwise":
+        return "damage_beside_controls", ""
+    return None, ("an ensemble score with no curve or point set behind it; its field draws it "
+                  "against lead time, which the synthetic ensemble, one spread at every frame, "
+                  "cannot show")
+
+
 def metric_figures(
     run: Run, metric: str, out_dir: Path,
 ) -> tuple[list[CardFigure], dict[str, str]]:
     """Draw every card figure for one metric and write each with its numbers.
+
+    The field's figure (:data:`STANDARD`) comes first. A renderer that fills two slots, as
+    ``damage_beside_controls`` does for a pairwise metric with nothing else to draw, is drawn
+    once and its file shown in both. The stored maps the field's figures read are those of
+    this metric alone, read lazily from the run's ``error_maps.npz``.
 
     Args:
         run: The evidence run, already analysed.
@@ -157,7 +233,7 @@ def metric_figures(
         out_dir: The bundle's ``_generated/`` directory.
 
     Returns:
-        The figures written, in card order, and the reason for each figure in
+        The figures written, in card order, and the reason for each slot of
         :data:`METRIC_FIGURES` that could not be drawn -- a renderer declaring itself
         unavailable is a statement about the run, not an error, and the card prints it.
 
@@ -169,32 +245,53 @@ def metric_figures(
     """
     # The same frames the report builds from the folder, taken from the run the card
     # generator already analysed, so a figure draws the numbers the tables beside it print.
-    ctx = ReportContext.from_analysis(run, meta=run.meta, theme=report_style.DEFAULT_THEME)
+    maps = read_maps(run.folder, keep=lambda key: parse_map_key(key)[0].partition(".")[0]
+                     == metric)
+    ctx = ReportContext.from_analysis(run, meta=run.meta, theme=report_style.DEFAULT_THEME,
+                                      maps=maps, config=read_config(run.folder))
     out_dir.mkdir(parents=True, exist_ok=True)
     written: list[CardFigure] = []
     reasons: dict[str, str] = {}
+    drawn: dict[str, list[CardFigure]] = {}
+    standard, why_none = standard_figure(ctx, metric)
 
-    for name in METRIC_FIGURES:
+    for slot in METRIC_FIGURES:
+        name = standard if slot == STANDARD else slot
+        if name is None:
+            reasons[slot] = why_none
+            continue
+        if name in drawn:
+            written += [replace(f, slot=slot) for f in drawn[name]]
+            continue
         spec = PLOTS[name]
-        if spec.scope != "per_metric":
-            raise ValueError(f"{name} is {spec.scope!r}; a card figure must be per_metric")
+        if spec.scope not in ("per_metric", "per_metric_field"):
+            raise ValueError(f"{name} is {spec.scope!r}; a card figure must be per_metric "
+                             "or per_metric_field")
         ok, why = check_preconditions(spec, ctx)
         if not ok:
-            reasons[name] = why
+            reasons[slot] = why
             continue
-        subset = next((sub for keys, sub in iter_scope(spec.scope, ctx.df)
-                       if keys.get("metric") == metric), None)
-        if subset is None:
-            reasons[name] = f"{metric} is not in the run"
+        subsets = [sub for keys, sub in iter_scope(spec.scope, ctx.df)
+                   if keys.get("metric") == metric]
+        if not subsets:
+            reasons[slot] = f"{metric} is not in the run"
             continue
-        figure, why = render_figure(
-            spec, ctx, subset, out_dir, name, alt=ALT_TEXT[name], panel_key="field",
-            record={"metric": metric, "run": run.folder.name,
-                    "dataset": str(run.rows["dataset"].iloc[0]), "figure": name})
-        if figure is None:
-            reasons[name] = why
+        figures, why = [], []
+        for subset in subsets:
+            # The field's figure keeps every figure the renderer draws but a per-coordinate
+            # view, whose numbers the card prints as tables in its companion block.
+            out, declined = render_figure(
+                spec, ctx, subset, out_dir, name, alt=ALT_TEXT[name], panel_key="field",
+                record={"metric": metric, "run": run.folder.name,
+                        "dataset": str(run.rows["dataset"].iloc[0]), "figure": name},
+                keep=None if spec.scope == "per_metric" else (lambda i: "view" not in i.keys))
+            figures += [replace(f, slot=slot) for f in out]
+            why += [declined] if declined else []
+        if figures:
+            drawn[name] = figures
+            written += figures
         else:
-            written.append(figure)
+            reasons[slot] = "; ".join(dict.fromkeys(why)) or "the renderer drew nothing"
 
     # Rule 3: nothing this generation did not write survives beside the card.
     remove_stale(out_dir, {f.path.name for f in written})

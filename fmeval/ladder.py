@@ -37,6 +37,9 @@ from .calibration import Calibration
 from .context import FieldContext, derive_rng, fluctuation_energy, fluctuation_rms
 from .data.base import Frame
 
+#: The ``variant_label`` of the clean level, in result rows and ``error_maps.npz`` keys.
+REFERENCE_VARIANT = "reference"
+
 
 @dataclass(frozen=True)
 class SeverityLevel:
@@ -72,7 +75,7 @@ class SeverityLevel:
     @property
     def variant_label(self) -> str:
         """Stable identifier for this severity level, used in filenames and result rows."""
-        return "reference" if self.is_reference else f"{self.label}_l{self.level}"
+        return REFERENCE_VARIANT if self.is_reference else f"{self.label}_l{self.level}"
 
     @property
     def is_reference(self) -> bool:

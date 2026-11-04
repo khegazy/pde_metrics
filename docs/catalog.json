@@ -3103,7 +3103,9 @@
             "coordinate": null,
             "kind": "field",
             "name": "h1_seminorm",
-            "one_field": false
+            "one_field": false,
+            "scales": null,
+            "style": "line"
           }
         ],
         "cost": "cheap",
@@ -4124,7 +4126,9 @@
             "coordinate": null,
             "kind": "field",
             "name": "h_minus_one",
-            "one_field": false
+            "one_field": false,
+            "scales": null,
+            "style": "line"
           }
         ],
         "cost": "cheap",
@@ -7205,7 +7209,9 @@
             ],
             "kind": "curve",
             "name": "increment_w1_by_separation",
-            "one_field": false
+            "one_field": false,
+            "scales": null,
+            "style": "line"
           }
         ],
         "cost": "moderate",
@@ -8626,7 +8632,9 @@
             "coordinate": null,
             "kind": "field",
             "name": "mae",
-            "one_field": false
+            "one_field": false,
+            "scales": null,
+            "style": "line"
           }
         ],
         "cost": "cheap",
@@ -9649,7 +9657,9 @@
             "coordinate": null,
             "kind": "field",
             "name": "max_error",
-            "one_field": false
+            "one_field": false,
+            "scales": null,
+            "style": "line"
           }
         ],
         "cost": "cheap",
@@ -10670,7 +10680,9 @@
             "coordinate": null,
             "kind": "field",
             "name": "mse",
-            "one_field": false
+            "one_field": false,
+            "scales": null,
+            "style": "line"
           }
         ],
         "cost": "cheap",
@@ -13114,7 +13126,9 @@
             ],
             "kind": "points",
             "name": "persistence_distance",
-            "one_field": true
+            "one_field": true,
+            "scales": null,
+            "style": "line"
           }
         ],
         "cost": "expensive",
@@ -13988,7 +14002,9 @@
             "coordinate": null,
             "kind": "field",
             "name": "rmse",
-            "one_field": false
+            "one_field": false,
+            "scales": null,
+            "style": "line"
           }
         ],
         "cost": "cheap",
@@ -15735,7 +15751,12 @@
             ],
             "kind": "curve",
             "name": "spectral_energy_flux",
-            "one_field": true
+            "one_field": true,
+            "scales": [
+              "log",
+              "symlog"
+            ],
+            "style": "line"
           }
         ],
         "cost": "moderate",
@@ -17321,7 +17342,9 @@
             ],
             "kind": "curve",
             "name": "tail_exceedance",
-            "one_field": false
+            "one_field": false,
+            "scales": null,
+            "style": "line"
           }
         ],
         "cost": "cheap",
@@ -18354,7 +18377,9 @@
             ],
             "kind": "curve",
             "name": "tail_index",
-            "one_field": false
+            "one_field": false,
+            "scales": null,
+            "style": "line"
           }
         ],
         "cost": "cheap",
@@ -19383,7 +19408,9 @@
             "coordinate": null,
             "kind": "field",
             "name": "variogram_score",
-            "one_field": false
+            "one_field": false,
+            "scales": null,
+            "style": "line"
           }
         ],
         "cost": "expensive",
@@ -19554,7 +19581,9 @@
             "coordinate": null,
             "kind": "field",
             "name": "wasserstein",
-            "one_field": false
+            "one_field": false,
+            "scales": null,
+            "style": "line"
           }
         ],
         "cost": "moderate",
@@ -19941,5 +19970,5 @@
       "summary": "Quadratic Wasserstein distance between two density fields on a periodic domain: the root mean square distance the reference's mass must move to become the candidate's, each density divided by its own mean."
     }
   ],
-  "schema_version": 5
+  "schema_version": 6
 }

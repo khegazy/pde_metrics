@@ -62,6 +62,11 @@ ARITY_POSITIONAL: dict[str, int] = {"pairwise": 2, "single": 1, "ensemble": 2}
 Cost = Literal["cheap", "moderate", "expensive"]
 Measures = Literal["error", "calibration"]
 CompanionKind = Literal["field", "curve", "points"]
+#: The axis scales a companion's figure may declare (:func:`companion`, ``scales``).
+Scale = Literal["linear", "log", "symlog"]
+SCALES: tuple[str, ...] = ("linear", "log", "symlog")
+#: How a curve companion is drawn: ``"line"``, or ``"bars"`` for counts over fixed bins.
+CurveStyle = Literal["line", "bars"]
 
 #: How a pointwise map reduces to the metric's scalar value. ``C`` is the channel count of
 #: the *input* field. A map reduced by ``mean``, ``sum`` or ``sqrt_mean`` is summed over
@@ -112,13 +117,22 @@ class Companion:
     """For a curve, the coordinates the analysis reads, a subset of those the curve returns. None
     reads every coordinate. When set, ``companions.csv`` holds only these, and the whole dense
     curve is stored on the frames ``report.error_map`` names for the figures."""
+    scales: tuple[Scale, Scale] | None = None
+    """For a curve or a point set, the ``(x, y)`` axis scales its field draws it on, each one of
+    :data:`SCALES`. None keeps the renderers' default: a curve's coordinate on a base-2 log axis
+    when every coordinate is positive and they span more than a factor of ten, all else linear."""
+    style: CurveStyle = "line"
+    """For a curve, ``"bars"`` when its field draws it as a histogram over fixed bins (a rank
+    histogram's counts): a renderer style, not a storage kind."""
 
     def describe(self) -> dict[str, Any]:
         # Plain lists, as JSON reads them back: a point set's coordinates are (name, units) pairs.
         coordinate = [list(c) if isinstance(c, tuple) else c for c in self.coordinate or []]
         return {"name": self.name, "kind": self.kind, "coordinate": coordinate or None,
                 "one_field": self.one_field,
-                "analysed": None if self.analysed is None else list(self.analysed)}
+                "analysed": None if self.analysed is None else list(self.analysed),
+                "scales": None if self.scales is None else list(self.scales),
+                "style": self.style}
 
 
 @dataclass(frozen=True)
@@ -318,6 +332,7 @@ def metric(
 def companion(*, of: str, name: str | None = None, kind: CompanionKind = "field",
               coordinate: tuple[str, str] | tuple[tuple[str, str], ...] | None = None,
               analysed: Sequence[Any] | None = None,
+              scales: Sequence[Scale] | None = None, style: CurveStyle = "line",
               ) -> Callable[[Callable], Callable]:
     """Attach an object behind a metric's number to an already-registered metric.
 
@@ -331,7 +346,11 @@ def companion(*, of: str, name: str | None = None, kind: CompanionKind = "field"
     * ``kind="field"``: a per-cell density taking the metric's arguments and returning
       ``(*spatial)``, the channel axis summed away. Reducing the metric's own map with the
       metric's declared ``reduction`` must reproduce the metric's number; the contract test
-      enforces that. Stored on the frames ``report.error_map`` names.
+      enforces that. Stored on the frames ``report.error_map`` names. A further, named field
+      companion of a pairwise metric may instead take one field, a property of that field such
+      as the pressure itself; it is then stored on the clean level too, where it is the
+      reference's, and on a one-dimensional grid ``companion_points`` draws it as the line-out
+      under the metric's point sets.
     * ``kind="curve"``: returns ``(coordinates, values)``, two 1-D arrays of one length with fixed
       coordinates and the literature's own values, untransformed. It takes either the metric's
       arguments, and is then itself a comparison, or one field where the metric takes two, and is
@@ -366,11 +385,19 @@ def companion(*, of: str, name: str | None = None, kind: CompanionKind = "field"
         analysed: For a curve only, the coordinates the analysis reads, each exactly as the
             curve returns it; the curve's numeric coordinates must include every one, which the
             pipeline checks on every row. None, the default, reads every coordinate.
+        scales: For a curve or a point set, the ``(x, y)`` axis scales of its figure as its
+            field draws it, each ``"linear"``, ``"log"`` or ``"symlog"`` (for a quantity that
+            changes sign, such as an energy flux). None, the default, keeps the renderers'
+            default.
+        style: For a curve, ``"bars"`` to draw it as a histogram over fixed bins; ``"line"``,
+            the default, otherwise.
 
     Raises:
         ValueError: If the metric is unknown or already has a companion of that name, the name
-            is not an identifier, the kind and the coordinate disagree, or ``analysed`` is given
-            for something other than a curve, is empty or repeats a coordinate.
+            is not an identifier, the kind and the coordinate disagree, ``analysed`` is given
+            for something other than a curve, is empty or repeats a coordinate, ``scales`` is
+            given for a field map or is not two of :data:`SCALES`, or ``style`` is neither
+            ``"line"`` nor, for a curve, ``"bars"``.
         TypeError: If the positional-argument count fits neither form.
     """
 
@@ -405,8 +432,20 @@ def companion(*, of: str, name: str | None = None, kind: CompanionKind = "field"
                 f"companion(of={of!r}): analysed names the distinct coordinates of a curve the "
                 f"analysis reads, at least one; got kind={kind!r}, analysed={analysed!r}"
             )
+        if scales is not None and (kind == "field" or len(scales) != 2
+                                   or not set(scales) <= set(SCALES)):
+            raise ValueError(
+                f"companion(of={of!r}): scales names the (x, y) axes of a curve or a point set, "
+                f"each one of {SCALES}; got kind={kind!r}, scales={scales!r}"
+            )
+        if style not in ("line", "bars") or (style == "bars" and kind != "curve"):
+            raise ValueError(
+                f"companion(of={of!r}): style is 'line', or 'bars' for a curve; got "
+                f"kind={kind!r}, style={style!r}"
+            )
         n_pos, expected = positional_count(fn), ARITY_POSITIONAL[spec.arity]
-        allowed = ({expected, 1} if kind != "field" and spec.arity == "pairwise"
+        # The metric's own field map takes the metric's arguments: it reduces to the number.
+        allowed = ({expected, 1} if spec.arity == "pairwise" and (kind != "field" or key != of)
                    else {expected})
         if n_pos not in allowed:
             raise TypeError(
@@ -417,7 +456,8 @@ def companion(*, of: str, name: str | None = None, kind: CompanionKind = "field"
             fn=fn, name=key, kind=kind,
             coordinate=None if coordinate is None else tuple(coordinate),
             one_field=n_pos < expected, takes_ctx="ctx" in inspect.signature(fn).parameters,
-            analysed=None if analysed is None else tuple(analysed))))
+            analysed=None if analysed is None else tuple(analysed),
+            scales=None if scales is None else tuple(scales), style=style)))
         return fn
 
     return _decorate

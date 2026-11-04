@@ -24,7 +24,7 @@ import shutil
 import subprocess
 import sys
 import time
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -226,6 +226,22 @@ def read_run_meta(folder: RunFolder | Path) -> dict[str, Any]:
     """A run's provenance, or an empty mapping for a folder written before it was recorded."""
     path = _folder(folder).meta_path
     return json.loads(path.read_text()) if path.exists() else {}
+
+
+def read_maps(folder: RunFolder | Path,
+              keep: Callable[[str], bool] | None = None) -> dict[str, np.ndarray]:
+    """A run's stored maps, point sets and dense curves, by ``error_maps.npz`` key; empty if
+    none were stored.
+
+    ``keep`` selects keys before any array is read: the archive decompresses a member only
+    when it is accessed, so a card that needs one metric's maps does not read every metric's
+    (94 MB on the pinned kinet run).
+    """
+    path = _folder(folder).maps_path
+    if not path.exists():
+        return {}
+    with np.load(path) as archive:
+        return {k: archive[k] for k in archive.files if keep is None or keep(k)}
 
 
 def read_config(folder: RunFolder | Path) -> dict[str, Any]:

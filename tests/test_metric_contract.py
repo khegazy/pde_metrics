@@ -317,7 +317,7 @@ def test_declared_target_is_consistent_with_direction(spec):
 
 def test_pointwise_map_shape(spec):
     for companion in _companions(spec, "field"):
-        m = _call_companion(companion, *_args_for(spec))
+        m = _call_companion(companion, *_companion_args(companion, _args_for(spec)))
         assert m.shape == GRID, f"{spec.name}.{companion.name}: map is {m.shape}, expected {GRID}"
         assert np.isfinite(m).all()
 
@@ -507,6 +507,44 @@ def test_a_metric_may_carry_several_named_companions(temporary_metric):
     assert [(c["name"], c["kind"], c["analysed"]) for c in described] == [
         ("transverse", "curve", None), ("_several", "curve", [2]),
         ("density_map", "field", None)]
+
+def test_a_companion_declares_the_axes_and_style_its_field_draws_it_with(temporary_metric):
+    """``scales`` names a curve's or a point set's (x, y) axes, each linear, log or symlog;
+    ``style="bars"`` is for a curve over fixed bins. Both are in the catalog entry, None and
+    "line" when undeclared, and are refused where they cannot apply."""
+    temporary_metric(name="_drawn", arity="pairwise")(lambda a, b: 0.0)
+    for bad in (("log",), ("log", "sqrt"), ("log", "log", "log")):
+        with pytest.raises(ValueError, match="scales"):
+            registry.companion(of="_drawn", kind="curve", coordinate=("k", ""),
+                               scales=bad)(lambda x: ([1], [0.0]))
+    with pytest.raises(ValueError, match="scales"):
+        registry.companion(of="_drawn", scales=("log", "log"))(lambda a, b: a[0])
+    with pytest.raises(ValueError, match="style"):
+        registry.companion(of="_drawn", kind="points", coordinate=(("x", ""), ("y", "")),
+                           style="bars")(lambda x: np.zeros((0, 2)))
+    with pytest.raises(ValueError, match="style"):
+        registry.companion(of="_drawn", kind="curve", coordinate=("k", ""),
+                           style="dots")(lambda x: ([1], [0.0]))
+    registry.companion(of="_drawn", kind="curve", coordinate=("k", ""),
+                       scales=("log", "symlog"))(lambda x: ([1], [0.0]))
+    registry.companion(of="_drawn", name="counts", kind="curve", coordinate=("rank", ""),
+                       style="bars")(lambda x: ([0, 1], [1.0, 1.0]))
+    described = registry.REGISTRY["_drawn"].describe()["companions"]
+    assert [(c["scales"], c["style"]) for c in described] == [
+        (["log", "symlog"], "line"), (None, "bars")]
+
+
+def test_only_a_named_field_map_may_take_one_field(temporary_metric):
+    """A pairwise metric's own field map reduces to its number, so it takes both fields; a
+    named one may take one, a property of that field stored for every variant and the clean
+    level, such as the pressure a shock metric's positions are drawn on."""
+    temporary_metric(name="_lineout", arity="pairwise")(lambda a, b: 0.0)
+    with pytest.raises(TypeError, match="positional"):
+        registry.companion(of="_lineout")(lambda x: x[0])
+    registry.companion(of="_lineout", name="profile")(lambda x: x[0])
+    (profile,) = registry.REGISTRY["_lineout"].companions
+    assert profile.kind == "field" and profile.one_field
+
 
 
 def test_unknown_reduction_raises():
