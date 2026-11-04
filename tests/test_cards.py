@@ -379,14 +379,13 @@ def test_a_complete_card_has_no_prose_problems():
     assert problems_for(build_prose()) == []
 
 
-def test_a_metric_card_without_its_field_standard_is_warned():
-    """Every metric card says how the metric's own field computes and reports it. Missing, it is
-    a warning while the cards are given the subsection, not yet an error."""
+def test_a_metric_card_without_its_field_standard_is_refused():
+    """Every metric card says how the metric's own field computes and reports it."""
     text = build_prose(Definition="An equation. " * 10
                        + "\n\n### Boundary handling\n\nNone. Local to each cell.")
     found = [p for p in problems_for(text) if prose.FIELD_STANDARD in p.message]
     assert len(found) == 1, f"expected one problem naming {prose.FIELD_STANDARD!r}, got {found}"
-    assert found[0].severity == "warning", found[0]
+    assert found[0].severity == "error", found[0]
 
 
 def test_sections_must_be_in_the_fixed_order():

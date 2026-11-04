@@ -112,9 +112,6 @@ it, and the experiment the field evaluates it on, with a link to the proposal wh
 repository does not have that experiment (``AGENTS.md`` §1, "How every metric is evaluated").
 It sits in ``## Definition`` because it holds for any dataset; the field's standard figure from
 the recorded run is generated into ``## Performance``.
-
-It is reported as a warning, not an error, while metric cards are being given it, so the
-checks stay usable during that work; it becomes an error once every metric card has it.
 """
 
 GENERATED_ONLY_SECTIONS = frozenset({"Performance"})
@@ -627,7 +624,6 @@ def check_prose(text: str, *, kind: str, name: str) -> list[Problem]:
                 f"add '### {FIELD_STANDARD}' to ## Definition: the field(s), and for each the "
                 "object, normalisation, figure, reported statistics and experiment, cited "
                 "(AGENTS.md section 1, 'How every metric is evaluated')",
-                severity="warning",
             )
         )
 
