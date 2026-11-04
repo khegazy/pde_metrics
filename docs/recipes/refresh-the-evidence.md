@@ -18,6 +18,22 @@ Use the time window recorded in `configs/cards/default.yaml`, adding any newly i
 metrics to the list. Note the name of the `results/comparison_<stamp>` folder the run
 writes.
 
+Every metric is run on every evidence dataset where it makes sense (`AGENTS.md` §1, "How every
+metric is evaluated"), so repeat the run for each dataset in `evidence_datasets`, with that
+dataset's own window. A run over every metric on the full ladder takes hours in one process.
+To spread it, run the same command several times at one clean commit, each with a different
+part of the metric list, then merge the parts into the one comparison folder a single process
+would have written:
+
+```python
+from fmeval import io as fio
+folder = fio.combine_runs(["results/comparison_<a>", "results/comparison_<b>"],
+                          fio.claim_stamp("results"), across="metrics")
+```
+
+`combine_runs` refuses parts that ran at different commits or on different ladders, or that
+share a metric.
+
 ## 2. Regenerate in dependency order
 
 ```bash

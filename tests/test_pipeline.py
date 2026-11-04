@@ -329,6 +329,49 @@ def test_combine_runs_refuses_members_on_different_scales(tmp_path, traj):
         fio.combine_runs([a], 9)
 
 
+def _shard(tmp_path, rows, metrics: list[str], stamp: int, calibration: int = 0):
+    """A run folder as evaluate.py writes it for some of the metrics of one evaluation."""
+    folder = fio.make_run_folder(tmp_path, "comparison", stamp)
+    fio.write_results(folder, rows[rows["metric"].isin(metrics)])
+    fio.write_maps(folder, {f"{m}__map": np.full(2, stamp, dtype=float) for m in metrics})
+    for table in ("calibration", "calibration_spectrum"):
+        fio.write_table(folder, pd.DataFrame({"field": ["density"], "x": [calibration]}), table)
+    fio.write_config(folder, {"seed": 1, "dataset": {"name": "a"}, "metrics": metrics})
+    fio.write_run_meta(folder, dataset="a", analysis_grid=8, anchor_label="mean_field",
+                       metric=", ".join(metrics))
+    return folder.root
+
+
+def test_combine_runs_merges_the_shards_of_one_evaluation(tmp_path, traj):
+    """An evaluation split by metrics over several processes merges into the comparison folder
+    one process would have written: every row and map, the calibration once."""
+    rows = evaluate(traj).rows
+    names = sorted(rows["metric"].unique())
+    assert len(names) >= 2, names
+    shards = [_shard(tmp_path, rows, names[:1], 1), _shard(tmp_path, rows, names[1:], 2)]
+    folder = fio.combine_runs(shards, 3, across="metrics")
+    assert folder.root.name == "comparison_3"
+    assert len(fio.read_results(folder)) == len(rows)
+    assert sorted(fio.read_maps(folder)) == sorted(f"{m}__map" for m in names)
+    assert fio.read_config(folder)["metrics"] == names
+    meta = fio.read_run_meta(folder)
+    assert meta["metric"] == ", ".join(names) and meta["comparison"] is True
+    assert meta["git"] == fio.read_run_meta(shards[0])["git"]
+    assert len(pd.read_csv(folder.data / "calibration.csv")) == 1
+
+
+def test_combine_runs_refuses_shards_that_overlap_or_ran_different_ladders(tmp_path, traj):
+    rows = evaluate(traj).rows
+    names = sorted(rows["metric"].unique())
+    a = _shard(tmp_path, rows, names, 1)
+    with pytest.raises(ValueError, match="metrics of its own"):
+        fio.combine_runs([a, _shard(tmp_path, rows, names[:1], 2)], 9, across="metrics")
+    with pytest.raises(ValueError, match="calibration tables differ"):
+        fio.combine_runs([_shard(tmp_path, rows, names[:1], 3),
+                          _shard(tmp_path, rows, names[1:], 4, calibration=1)], 9,
+                         across="metrics")
+
+
 def test_a_map_key_round_trips_even_when_the_label_contains_a_double_underscore():
     for variant in ("gaussian_blur_l2", "blur__fine_l1", "reference"):
         assert parse_map_key(map_key("mse", "density", variant, 3)) == (

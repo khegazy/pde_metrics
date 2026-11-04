@@ -317,68 +317,112 @@ SHARED_META: tuple[str, ...] = ("metric", "fields", "analysis_grid", "ladder_axe
                                 "boundary")
 
 
-def combine_runs(folders: Sequence[Path | str], stamp: int) -> RunFolder:
-    """Write one folder holding the rows of one run per dataset of a family, for section 12.
+#: Provenance a run records for itself alone; a combined folder does not copy it from a member.
+_OWN_META: tuple[str, ...] = ("git", "host", "python", "platform", "packages", "registries",
+                              "run_id", "config_hash", "metric", "n_rows", "command", "timings",
+                              "comparison", "members")
 
-    Each member is a folder ``evaluate.py`` wrote for one dataset; the combined folder is
-    ``<family>_<stamp>`` beside the first. It holds every member's rows and companion rows,
+
+def combine_runs(folders: Sequence[Path | str], stamp: int, *,
+                 across: str = "dataset") -> RunFolder:
+    """Write one folder holding the rows of several runs that differ only in ``across``.
+
+    ``across="dataset"``: one run per dataset of a family, for section 12. The combined folder
+    is ``<family>_<stamp>`` beside the first; it holds every member's rows and companion rows,
     their calibration tables with a ``dataset`` column, and a ``run_meta.json`` whose
     ``members`` maps each dataset to its own folder's provenance. Error maps are not carried:
     their keys do not name the dataset. A member's own folder remains its full report.
 
+    ``across="metrics"``: the shards of one evaluation, each run with a different set of metrics
+    on the same dataset, ladder, grid and commit, so it can be spread over several processes.
+    The combined folder is ``comparison_<stamp>`` beside the first and is the folder one process
+    running every metric would have written: every row, companion row and stored map, the
+    calibration once (it depends on the dataset and ladder only, and is checked equal), and the
+    first member's provenance, including its git state, with ``metric`` naming every metric.
+
     Raises:
-        ValueError: On fewer than two members, a member holding several datasets or one the
-            others hold too, members of different families, or members whose configurations
-            differ in anything but the dataset, or whose provenance differs in a
-            :data:`SHARED_META` key: their damages would not be on one scale.
+        ValueError: On fewer than two members; members whose configurations differ in anything
+            but ``across``, or whose provenance differs in a :data:`SHARED_META` key (for
+            shards, also in git state or calibration): their damages would not be on one
+            scale. For datasets, a member holding several datasets or one the others hold too,
+            or members of different families; for metrics, two members sharing a metric.
     """
+    if across not in ("dataset", "metrics"):
+        raise ValueError(f"across must be 'dataset' or 'metrics', got {across!r}")
     members = [_folder(f) for f in folders]
     if len(members) < 2:
         raise ValueError(f"a comparison needs at least two runs, got {len(members)}")
     configs = [read_config(m) for m in members]
     metas = [read_run_meta(m) for m in members]
+    shared = [k for k in SHARED_META if not (across == "metrics" and k == "metric")]
+    if across == "metrics":
+        shared.append("git")
     for member, config, meta in zip(members[1:], configs[1:], metas[1:], strict=True):
-        differ = sorted(k for k in {*configs[0], *config} - {"dataset"}
+        differ = sorted(k for k in {*configs[0], *config} - {across}
                         if config.get(k) != configs[0].get(k))
-        differ += [f"run_meta.{k}" for k in SHARED_META if meta.get(k) != metas[0].get(k)]
+        differ += [f"run_meta.{k}" for k in shared if meta.get(k) != metas[0].get(k)]
         if differ:
             raise ValueError(
                 f"{member.root.name} differs from {members[0].root.name} in {differ}; the "
-                "members of one comparison must share ladder, metrics, grid and anchor"
+                f"members of one comparison may differ only in {across}"
             )
     rows = load_runs(m.root for m in members)
-    datasets = rows.groupby("run_dir", observed=True)["dataset"].unique()
-    if any(len(d) != 1 for d in datasets) or len({d[0] for d in datasets}) != len(members):
-        raise ValueError(f"each member must hold one dataset of its own: {datasets.to_dict()}")
-    families = rows["dataset_family"].dropna().unique()
-    if len(families) != 1 or not families[0]:
-        raise ValueError(f"the members must belong to one dataset family, got {list(families)}")
+    if across == "dataset":
+        datasets = rows.groupby("run_dir", observed=True)["dataset"].unique()
+        if any(len(d) != 1 for d in datasets) or len({d[0] for d in datasets}) != len(members):
+            raise ValueError(f"each member must hold one dataset of its own: {datasets.to_dict()}")
+        families = rows["dataset_family"].dropna().unique()
+        if len(families) != 1 or not families[0]:
+            raise ValueError(f"the members must belong to one dataset family, got {list(families)}")
+        name = str(families[0])
+    else:
+        metrics = rows.groupby("run_dir", observed=True)["metric"].unique()
+        if sum(len(m) for m in metrics) != len({x for m in metrics for x in m}):
+            raise ValueError(f"each member must hold metrics of its own: {metrics.to_dict()}")
+        name = "comparison"
 
-    folder = make_run_folder(members[0].root.parent, str(families[0]), stamp)
+    folder = make_run_folder(members[0].root.parent, name, stamp)
     write_results(folder, rows.drop(columns="run_dir"))
     if any((m.data / f"{COMPANIONS}.csv").exists() or (m.data / f"{COMPANIONS}.csv.gz").exists()
            for m in members):
         write_results(folder, load_runs((m.root for m in members), COMPANIONS)
                       .drop(columns="run_dir"), name=COMPANIONS)
     for table in ("calibration", "calibration_spectrum"):
-        write_table(folder, pd.concat(
-            [pd.read_csv(m.data / f"{table}.csv").assign(dataset=meta["dataset"])
-             for m, meta in zip(members, metas, strict=True)], ignore_index=True), table)
-    digest = write_config(folder, {**configs[0], "dataset": {
-        meta["dataset"]: config["dataset"] for config, meta in zip(configs, metas, strict=True)}})
+        frames = [pd.read_csv(m.data / f"{table}.csv") for m in members
+                  if (m.data / f"{table}.csv").exists()]
+        if not frames:
+            continue
+        if across == "dataset":
+            write_table(folder, pd.concat(
+                [f.assign(dataset=meta["dataset"]) for f, meta in zip(frames, metas, strict=True)],
+                ignore_index=True), table)
+        else:
+            if any(not f.equals(frames[0]) for f in frames[1:]):
+                raise ValueError(f"the shards' {table} tables differ; they did not run one ladder")
+            write_table(folder, frames[0], table)
+    if across == "dataset":
+        digest = write_config(folder, {**configs[0], "dataset": {
+            meta["dataset"]: config["dataset"]
+            for config, meta in zip(configs, metas, strict=True)}})
+        meta_extra = {**{k: metas[0][k] for k in SHARED_META if k in metas[0]},
+                      "n_frames": sum(int(meta.get("n_frames", 0)) for meta in metas),
+                      "dataset": ", ".join(meta["dataset"] for meta in metas),
+                      "dataset_family": name,
+                      "members": {meta["dataset"]: {"run": m.root.name, **meta}
+                                  for m, meta in zip(members, metas, strict=True)}}
+    else:
+        ran = [x for config in configs for x in config["metrics"]]
+        digest = write_config(folder, {**configs[0], "metrics": ran})
+        maps = {k: v for m in members for k, v in read_maps(m).items()}
+        write_maps(folder, maps)
+        meta_extra = {**{k: v for k, v in metas[0].items() if k not in _OWN_META},
+                      "git": metas[0].get("git"), "registries": metas[0].get("registries"),
+                      "metric": ", ".join(ran),
+                      "n_rows": len(rows),
+                      "members": {m.root.name: meta.get("metric")
+                                  for m, meta in zip(members, metas, strict=True)}}
     copy_documentation(folder)
-    write_run_meta(
-        folder,
-        run_id=stamp,
-        config_hash=digest,
-        **{k: metas[0][k] for k in SHARED_META if k in metas[0]},
-        n_frames=sum(int(meta.get("n_frames", 0)) for meta in metas),
-        dataset=", ".join(meta["dataset"] for meta in metas),
-        dataset_family=str(families[0]),
-        comparison=True,
-        members={meta["dataset"]: {"run": m.root.name, **meta}
-                 for m, meta in zip(members, metas, strict=True)},
-    )
+    write_run_meta(folder, run_id=stamp, config_hash=digest, comparison=True, **meta_extra)
     return folder
 
 
