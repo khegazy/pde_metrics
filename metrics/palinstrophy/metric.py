@@ -42,7 +42,7 @@ def palinstrophy(x: NDArray[np.floating], *, ctx: FieldContext) -> float:
     """Mean palinstrophy, one half the mean squared vorticity gradient.
 
     Boffetta & Ecke (2012), Annu. Rev. Fluid Mech. 44, 427, DOI
-    10.1146/annurev-fluid-120710-101240, p. 429: enstrophy Omega = (1/2) <omega^2> =
+    10.1146/annurev-fluid-120710-101240, p. 430: enstrophy Omega = (1/2) <omega^2> =
     int k^2 E(k) dk, and palinstrophy P = int k^4 E(k) dk, introduced with their Eq. (6),
     dOmega/dt = -2 nu P. The two definitions together fix P = (1/2) <|grad omega|^2>, the
     factor of one half computed here and the one ``enstrophy`` uses. Their setting is

@@ -31,5 +31,12 @@ math:
   scale_dependent: true        # scaling both fields by c scales the value by c
   resolution_dependent: true   # the mode sum runs to the grid Nyquist
   complexity: "O(N log N)"     # one FFT and one inverse FFT per channel
-references: [peyre2018, pope2000]
+references: [peyre2018, pope2000, engquist2014, thiffeault2011]
+
+not_run:
+  synthetic_ensemble: >-
+    every axis there leaves the value at its clean value (measured, 8.5e-16 relative at most):
+    the dispersion axes do not move the member mean, and a uniform bias lies in the zero mode
+    the seminorm omits
+
 review: null

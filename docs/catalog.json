@@ -1,7 +1,7 @@
 {
   "counts": {
     "degradations": 25,
-    "metrics": 33,
+    "metrics": 34,
     "reviewed": 0,
     "with_measurements": 27
   },
@@ -3470,6 +3470,105 @@
       "summary": "Mean squared vorticity of a single field, a reference-free diagnostic of how much small-scale rotational activity a flow carries."
     },
     {
+      "card": "metrics/h1_relative/card.md",
+      "category": "functional",
+      "declared": {
+        "arity": "pairwise",
+        "companions": [],
+        "cost": "cheap",
+        "differentiable": true,
+        "fields": [
+          "*"
+        ],
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "mean",
+        "requires_periodic": true,
+        "symmetric": false,
+        "target": null,
+        "units": "dimensionless"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N)",
+        "resolution_dependent": true,
+        "scale_dependent": true,
+        "triangle_inequality": false
+      },
+      "name": "h1_relative",
+      "other_evidence": [],
+      "output": {
+        "description": "Dimensionless sum over channels of the square root of the error's summed squares and squared centred differences, on a domain one unit long per axis, over the same for the reference plus 1e-8. A prediction of zero scores one per channel.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/h1_relative",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Relative H1 error as the neural-operator library computes it: the error's value and centred first differences over the reference's, per channel, summed over channels."
+    },
+    {
       "card": "metrics/h1_seminorm/card.md",
       "category": "functional",
       "declared": {
@@ -4491,11 +4590,11 @@
         {
           "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
           "dataset": "synthetic_ensemble",
-          "note": "scores the member mean",
+          "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "every axis there leaves the value at its clean value (measured, 2.9e-16 relative at most): the dispersion axes do not move the member mean, and a uniform bias has no gradient",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
@@ -5572,11 +5671,11 @@
         {
           "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
           "dataset": "synthetic_ensemble",
-          "note": "scores the member mean",
+          "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "every axis there leaves the value at its clean value (measured, 8.5e-16 relative at most): the dispersion axes do not move the member mean, and a uniform bias lies in the zero mode the seminorm omits",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
@@ -22098,11 +22197,11 @@
         {
           "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
           "dataset": "synthetic_ensemble",
-          "note": "scores the member mean",
+          "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "its density is a signed two-scale pattern plus noise, with cells below zero, where the distance is undefined: every value there is NaN (measured on all 168 rows)",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",

@@ -7,3 +7,32 @@
   note      = {The spectral differentiation convention k_j = 2 pi fftfreq(N_j, dx_j) this
                bundle inherits from the repository's existing derivative code}
 }
+
+@misc{arnold2015,
+  author       = {Arnold, Douglas N.},
+  title        = {Lecture Notes on Numerical Analysis of Partial Differential Equations},
+  howpublished = {University of Minnesota, MATH 8445-8446,
+                  \url{https://www-users.cse.umn.edu/~arnold/8445-8446.14-15/notes.pdf}},
+  year         = {2015},
+  note         = {Chapter 4 read in full text on 2026-11-04. The H^r seminorm on an element is
+                  the integral of the squared derivatives of order r, with no division by the
+                  element's size (the display before Theorem 4.6); Eq. (4.3) is Galerkin
+                  orthogonality; Theorem 4.6 bounds the interpolation error |u - I_h u|_1 by
+                  c h^(s-1) |u|_s; Eq. (4.10) is the a priori estimate ||u - u_h||_1 <= c h^r
+                  ||u||_(r+1) in the full norm}
+}
+
+@book{langtangen2016,
+  author    = {Langtangen, Hans Petter and Logg, Anders},
+  title     = {Solving {PDEs} in {Python}: The {FEniCS} Tutorial {I}},
+  series    = {Simula SpringerBriefs on Computing},
+  volume    = {3},
+  publisher = {Springer},
+  year      = {2016},
+  doi       = {10.1007/978-3-319-52462-7},
+  note      = {Open access. Sect. 5.5.4, pp. 132-136, read in full: the convergence rate r of
+               ||e|| <= C h^r, computed between successive meshes as
+               r = ln(E_i/E_(i-1)) / ln(h_i/h_(i-1)) and tabulated; the gradient error
+               ||grad(u_e - u)||, "often referred to as the H^1 or H^1_0 seminorm of the error",
+               computed by errornorm(u_e, u, norm_type='H10') as an absolute integral}
+}

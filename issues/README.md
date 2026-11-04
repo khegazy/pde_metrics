@@ -112,6 +112,8 @@ Designed, hooks in place, not built.
 | [132](132-hill-estimator-interval-on-spatially-correlated-increments.md) | The Hill estimator's interval, gamma / sqrt(k), assumes independent samples; its variance on spatially correlated increments is unknown, so `tail_index` reports no interval | low |
 | [136](136-spectrum-l2-linear-summary-is-a-convention.md) | The number `spectrum_l2` registers, a linear relative L2 over shells, is a convention with no source, and the few lowest shells decide it | unset |
 | [137](137-log-spectral-distance-is-undefined-on-empty-shells.md) | A log-spectral distance has sources but is undefined on the shells a prediction or the anchor empties; not built | unset |
+| [138](138-relative-h1-has-two-implementations-in-its-field.md) | The neural-operator relative H1 error has two implementations in its field (the library's centred differences, the MNO authors' spectral weights), and the papers do not say which produced their tables | unset |
+| [139](139-multiplicative-noise-makes-density-negative.md) | `multiplicative_noise` at its harshest severity makes density negative in some cells, where `wasserstein` is undefined, so that level scores NaN | unset |
 
 ## Technical debt
 

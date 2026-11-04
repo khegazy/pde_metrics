@@ -146,6 +146,46 @@ wrap-around (`scipy.ndimage.map_coordinates`, `mode="grid-wrap"`), so mass leavi
 enters the other. The metric therefore declares `requires_periodic`, and the harness does not
 run it on a dataset with a non-periodic axis, such as the Sod shock tube.
 
+### How its field reports it
+
+Three communities use this distance, and each evaluates it differently.
+
+- **Seismic inversion**, where $W_2^2$ is a misfit to be minimised. Its standard figure is the
+  misfit against the shift of a signal, $L_2^2$ and $W_2^2$ between a wavelet and its shifted
+  copy drawn against the shift $s$ ([@engquist2014], Fig. 1; reprinted as [@engquist2016],
+  Fig. 1, with the convexity in $s$ stated as their Theorem 1); the same paper draws the misfit
+  over the parameters of a layered model (Fig. 3) and repeats the shift test with noise
+  (Fig. 4). The card's first figure is this comparison: the damage against the applied
+  translation beside the pointwise errors, on log-log axes. It draws $W_2$, the registered
+  number, where they draw its square; on log-log axes a square doubles the slope and changes no
+  ordering. On density here the background makes the growth with the shift far weaker than
+  theirs (Definition, "Shift and background").
+- **Numerical optimal transport**, where a solver is validated against a known answer.
+  [@saumier2015] (Sect. 5.1, Fig. 1) choose the potential and one density, compute the other
+  from Equation (3), and report the error of the computed potential against Newton iterations
+  on grids of $16^2$ to $256^2$, with the observed order of accuracy in the text.
+  `test_metric.py` checks the solve against the exact transport on the circle (Definition); the
+  manufactured two-dimensional problem is written up in
+  [EXP-wasserstein-known-answer-transport](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-wasserstein-known-answer-transport.md).
+- **Optimal-transport analysis** relates $W_2$ to the $\dot H^{-1}$ norm (Equation (5),
+  [@peyre2018]); the check is the comparison with [h_minus_one](../../metrics/h_minus_one/card.md),
+  computed on density in the same runs. A density whose fluctuation is not small against its
+  mean, where the two separate, is written up in
+  [EXP-wasserstein-background-ratio-sweep](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-wasserstein-background-ratio-sweep.md).
+
+**The transport map is not stored.** The displacement $\nabla u$ is drawn as arrows in a
+seismic registration example ([@engquist2014], Fig. 2(d)) and for closed-form maps in a
+textbook ([@peyrecuturi2019], Fig. 2.12), both as illustrations; [@saumier2015] draw none, and
+no source read evaluates a distance by its map. On kinet density the displacements are far below
+a cell, so an arrow plot would show little. The map would be a second, named field companion of
+this metric; the cost density $f |\nabla u|^2$, the companion that is stored, already shows where
+mass moves and how far.
+
+**The experiments.** Misfit against shift: the translation axes of the degradation ladder on
+`kinet_re5e4` (`translate_x`, `translate_subpixel`). The metric also runs on density on the
+Reynolds ladder and on `forecast_re5e4`. It is not run on `synthetic_ensemble`, whose density is
+a signed pattern (`card.yaml`).
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793657627`, do not edit -->
@@ -271,7 +311,9 @@ negative, because neither is then a pile of mass.
   clean in two dimensions than in one, because the optimal map can move different parts of
   the field in different directions.
 - **A non-positive cell gives NaN, not a large value.** A surrogate that predicts a negative
-  density anywhere is scored NaN, which an average over frames can hide.
+  density anywhere is scored NaN, which an average over frames can hide. The harshest level of
+  [multiplicative_noise](../../degradations/multiplicative_noise/card.md) makes density negative
+  in some cells of every frame, so that level scores NaN here (`issues/139`).
 - **At high contrast the solve can fail, and the value is then NaN.** [@saumier2015]
   (Sect. 3.3) note that the damping their convergence needs grows as the source density
   approaches zero or as either density becomes rough. Measured against the exact circle
@@ -314,7 +356,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 |---|---|---|
 | `kinet_re5e4` | developed flow | measured, run `comparison_1793657627`: the main results |
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
-| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not yet run; on this dataset the metric scores the member mean of the ensemble |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: its density is a signed two-scale pattern plus noise, with cells below zero, where the distance is undefined: every value there is NaN (measured on all 168 rows) |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
 

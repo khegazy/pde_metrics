@@ -1,0 +1,34 @@
+schema_version: 1
+
+name: h1_relative
+kind: metric
+
+# Same family as h1_seminorm and h_minus_one: "Norms that weight the scales differently from a
+# plain average -- Sobolev, the negative-order norms".
+category: functional
+
+summary: >-
+  Relative H1 error as the neural-operator library computes it: the error's value and centred
+  first differences over the reference's, per channel, summed over channels.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    Dimensionless sum over channels of the square root of the error's summed squares and
+    squared centred differences, on a domain one unit long per axis, over the same for the
+    reference plus 1e-8. A prediction of zero scores one per channel.
+  bounds:
+    lower: 0.0
+    upper: null
+
+math:
+  triangle_inequality: false   # each channel is divided by its own first argument's norm
+  scale_dependent: true        # only through the constant 1e-8, which is in the field's units
+  resolution_dependent: true   # the difference stencil and the sums depend on the grid
+  complexity: "O(N)"           # two rolled differences per channel and axis
+
+references: [neuraloperator2026, li2022mno, kossaifi2023, li2021fno, kovachki2023]
+
+review: null
