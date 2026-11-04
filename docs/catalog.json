@@ -14690,6 +14690,16 @@
         "dataset": "kinet_re5e4",
         "figures": [
           {
+            "file": "metrics/persistence_distance/_generated/companion_points__field-density.svg",
+            "name": "companion_points__field-density",
+            "numbers": "metrics/persistence_distance/_generated/companion_points__field-density.json"
+          },
+          {
+            "file": "metrics/persistence_distance/_generated/companion_points__field-vorticity.svg",
+            "name": "companion_points__field-vorticity",
+            "numbers": "metrics/persistence_distance/_generated/companion_points__field-vorticity.json"
+          },
+          {
             "file": "metrics/persistence_distance/_generated/damage_beside_controls.svg",
             "name": "damage_beside_controls",
             "numbers": "metrics/persistence_distance/_generated/damage_beside_controls.json"
@@ -14832,7 +14842,9 @@
             ],
             "kind": "curve",
             "name": "rank_histogram",
-            "one_field": false
+            "one_field": false,
+            "scales": null,
+            "style": "bars"
           }
         ],
         "cost": "cheap",
@@ -17465,6 +17477,11 @@
         ],
         "dataset": "kinet_re5e4",
         "figures": [
+          {
+            "file": "metrics/spectral_energy_flux/_generated/companion_curves__field-velocity.svg",
+            "name": "companion_curves__field-velocity",
+            "numbers": "metrics/spectral_energy_flux/_generated/companion_curves__field-velocity.json"
+          },
           {
             "file": "metrics/spectral_energy_flux/_generated/damage_beside_controls.svg",
             "name": "damage_beside_controls",

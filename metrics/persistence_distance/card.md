@@ -117,6 +117,14 @@ extended, so the metric does not assume periodicity and is not marked `requires_
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence persistence_distance --results results/comparison_1793657627`, do not edit -->
 
+![the point sets behind the number, each degraded set over the reference's, as its field draws them](_generated/companion_points__field-density.svg)
+
+*As this metric's own field draws it.* The point set behind persistence_distance on density, one panel per stored variant, on shared axes. Grey rings are the clean level's set of the same frame, the reference's, drawn under every panel. The grey diagonal is birth equal to death: a point's height above it is how long its feature persists. Triangles on a panel's edge are points with an infinite coordinate. Only the first 4 of the 10 stored sets are drawn, in time order; every set is in data/error_maps.npz.
+
+![the point sets behind the number, each degraded set over the reference's, as its field draws them](_generated/companion_points__field-vorticity.svg)
+
+*As this metric's own field draws it.* The point set behind persistence_distance on vorticity, one panel per stored variant, on shared axes. Grey rings are the clean level's set of the same frame, the reference's, drawn under every panel. The grey diagonal is birth equal to death: a point's height above it is how long its feature persists. Triangles on a panel's edge are points with an infinite coordinate. Only the first 4 of the 10 stored sets are drawn, in time order; every set is in data/error_maps.npz.
+
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
 Four measured statistics for persistence_distance, one row per degradation grouped by family and one marker per field. From left: the rank correlation between the metric and the applied strength within a frame, with the line showing the resampling interval; the separation of neighbouring strengths as Cliff's delta, where 0 means the metric cannot tell one strength from the next and the faint ticks at 0.12, 0.28 and 0.42 are Vargha and Delaney's small, medium and large anchors, for scale and not as grades; the damage charged per unit of field change at the harshest strength; and the upper confidence bound on the largest damage, beside the fixed margin of 0.05. A hollow marker is a field and degradation on which that bound lies below the margin, so the response is provably small. A missing marker is a statistic the analysis withheld, as the rank correlation is on an axis the metric is invariant to.
@@ -495,7 +503,7 @@ vorticity (-0.842).
 
 ![damage against applied strength for this metric beside the pointwise controls, log-log, one panel per displacement degradation and field](_generated/damage_beside_controls.svg)
 
-Median damage over frames against the applied strength, log-log, for persistence_distance (bold, in colour) and the pointwise controls mae, mse, rmse, nrmse (thin, grey), one column per displacement degradation and one row per field. The grey line is damage 1, the anchor (by default the field's own mean). Parallel lines charge in the same proportion at every strength; a steeper line charges relatively more for the larger shifts, which is what decides whether two metrics are interchangeable as training losses. These are the same numbers as the table beneath.
+Median damage over frames against the applied strength, log-log, for persistence_distance (bold, in colour) and the pointwise controls mae, mse, rmse (thin, grey), one column per displacement degradation and one row per field. The grey line is damage 1, the anchor (by default the field's own mean). Parallel lines charge in the same proportion at every strength; a steeper line charges relatively more for the larger shifts, which is what decides whether two metrics are interchangeable as training losses. These are the same numbers as the table beneath.
 
 **Displacement, density, `translate_subpixel`** (strength: distance).
 
@@ -505,7 +513,6 @@ Median damage over frames against the applied strength, log-log, for persistence
 | `mae` | 0.00383 | 0.00767 | 0.0153 | 0.0306 | 0.061 | 0.121 |
 | `mse` | 2.17e-05 | 8.68e-05 | 0.000347 | 0.00138 | 0.00551 | 0.0219 |
 | `rmse` | 0.00466 | 0.00931 | 0.0186 | 0.0372 | 0.0743 | 0.148 |
-| `nrmse` | 0.00463 | 0.00926 | 0.0185 | 0.037 | 0.0738 | 0.147 |
 
 **Displacement, density, `translate_x`** (strength: distance).
 
@@ -515,7 +522,6 @@ Median damage over frames against the applied strength, log-log, for persistence
 | `mae` | 0.0306 | 0.061 | 0.121 | 0.24 | 0.469 |
 | `mse` | 0.00138 | 0.00551 | 0.0219 | 0.0849 | 0.307 |
 | `rmse` | 0.0372 | 0.0743 | 0.148 | 0.291 | 0.555 |
-| `nrmse` | 0.037 | 0.0738 | 0.147 | 0.29 | 0.55 |
 
 **Displacement, velocity, `translate_subpixel`** (strength: distance).
 
@@ -525,7 +531,6 @@ Median damage over frames against the applied strength, log-log, for persistence
 | `mae` | 0.00279 | 0.00559 | 0.0112 | 0.0223 | 0.0441 | 0.0859 |
 | `mse` | 1.45e-05 | 5.81e-05 | 0.000232 | 0.000924 | 0.0036 | 0.0136 |
 | `rmse` | 0.00381 | 0.00762 | 0.0152 | 0.0304 | 0.06 | 0.117 |
-| `nrmse` | 0.00382 | 0.00763 | 0.0153 | 0.0304 | 0.06 | 0.117 |
 
 **Displacement, velocity, `translate_x`** (strength: distance).
 
@@ -535,7 +540,6 @@ Median damage over frames against the applied strength, log-log, for persistence
 | `mae` | 0.0223 | 0.0441 | 0.0859 | 0.163 | 0.31 |
 | `mse` | 0.000924 | 0.0036 | 0.0136 | 0.0489 | 0.165 |
 | `rmse` | 0.0304 | 0.06 | 0.117 | 0.221 | 0.406 |
-| `nrmse` | 0.0304 | 0.06 | 0.117 | 0.221 | 0.406 |
 
 **Displacement, vorticity, `translate_subpixel`** (strength: distance).
 
@@ -545,7 +549,6 @@ Median damage over frames against the applied strength, log-log, for persistence
 | `mae` | 0.0428 | 0.0854 | 0.169 | 0.328 | 0.582 | 0.86 |
 | `mse` | 0.00112 | 0.00448 | 0.0176 | 0.066 | 0.21 | 0.44 |
 | `rmse` | 0.0335 | 0.0669 | 0.133 | 0.257 | 0.458 | 0.663 |
-| `nrmse` | 0.0328 | 0.0654 | 0.13 | 0.253 | 0.456 | 0.67 |
 
 **Displacement, vorticity, `translate_x`** (strength: distance).
 
@@ -555,7 +558,6 @@ Median damage over frames against the applied strength, log-log, for persistence
 | `mae` | 0.328 | 0.582 | 0.86 | 1.1 | 1.31 |
 | `mse` | 0.066 | 0.21 | 0.44 | 0.679 | 1.1 |
 | `rmse` | 0.257 | 0.458 | 0.663 | 0.824 | 1.05 |
-| `nrmse` | 0.253 | 0.456 | 0.67 | 0.832 | 1.05 |
 
 Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 the anchor (by default the field's own mean); a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
 

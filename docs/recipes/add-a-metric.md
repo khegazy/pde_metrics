@@ -73,6 +73,10 @@ looping over all three; your metric sees two arrays and returns a number.
     The companion without a name, which carries the metric's own, is the one the number is
     computed from and the only one handed to the metric; the others are stored and drawn as
     `<metric>.<id>`. `AGENTS.md` §3.3 has the example.
+  - Declare the axes the field draws the curve or point set on, `scales=(x, y)` with each
+    `"linear"`, `"log"` or `"symlog"` (for a value that changes sign), and `style="bars"` for a
+    curve over fixed bins such as a rank histogram. The card's first figure is drawn from the
+    companion with them (`AGENTS.md` §3.1 and §3.3).
   - If the number is a summary of the curve that no source fixes, it is a convention: say so in
     the docstring and on the card, and write an issue.
 

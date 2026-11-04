@@ -48,10 +48,32 @@ The measured half of the page. Every number in Performance, and in Results outsi
 subsections headed with another experiment, comes from one recorded evaluation run, named at
 the top of Results along with the dataset, the grid and the number of snapshots it covered.
 
-**Performance** opens with two figures and then gives the table they summarise, so that
-the shape of the metric's behaviour is seen before any number is read.
+**Performance** opens with the figure the metric's own field draws, then two figures that
+every metric page shares, and then the table they summarise, so that the shape of the
+metric's behaviour is seen before any number is read.
 
-The first figure, the *sensitivity profile*, has one row per way of damaging the field,
+The field's own figure is the one a reader from that field would look for first, drawn from
+the recorded run and marked *As this metric's own field draws it*. Which figure that is
+follows from what the metric is:
+
+- **A curve behind the number**, such as an energy spectrum, a structure function or a rank
+  histogram: the curve against its coordinate, one panel per way of damaging the field, the
+  undamaged field's curve in black and each strength in the damage's colour, darker for
+  harsher. There is one such figure for each physical field.
+- **A set of points behind the number**, such as a persistence diagram or the positions of
+  detected shocks: each damaged field's points over the reference's, which are grey rings. A
+  persistence diagram carries its diagonal, where a feature is born and dies at once; on a
+  one-dimensional grid the points sit on the field's line-out, the reference's in grey.
+- **A property of one field**, such as the energy or the enstrophy: its value against time,
+  the undamaged field's history in black. A damaged line is the damage applied to each
+  snapshot on its own; it is not a simulation run forward from a damaged start, so it shows
+  what the damage does at each time, not how an error would grow.
+- **A comparison of two fields** with none of the above: on real forecasts, its error against
+  lead time; otherwise its damage against the applied shift beside the pointwise baselines,
+  the figure that also heads *Damage beside the other metrics* below.
+- **An ensemble score** with none of the above has no such figure yet, and the page says why.
+
+The next figure, the *sensitivity profile*, has one row per way of damaging the field,
 grouped by family, and four panels that share those rows. Each marker is one physical
 field (circle, square, triangle). From left to right the panels show: whether the metric
 put the strengths in the right order (the rank correlation, with a short line for its
@@ -64,7 +86,7 @@ field and degradation on which the metric's response lies provably below that ma
 A missing marker is a statistic the analysis withheld, which happens on an axis the
 metric cannot see at all.
 
-The second figure, the *response curves*, shows median damage against severity level,
+The figure after it, the *response curves*, shows median damage against severity level,
 with one row per family of degradation and one column per field, every panel on the same
 0-to-1 scale. The solid grey line is damage 1, the field's own mean. The dotted black line is
 the damage the metric assigned to the fake prediction with the right spectrum. The hollow
@@ -140,3 +162,13 @@ the physical field, so the figures can be read in greyscale. Reference lines mar
 conventions of the analysis, never a judgement: damage 1 is what the field's own mean
 scores, and the blindness margin is where a response counts as provably small. Nothing
 on a figure is coloured good or bad.
+
+The field's own figure keeps that field's axes. A spectrum or a structure function may be
+drawn on logarithmic axes, and a quantity that changes sign, such as an energy flux, on a
+*symmetric logarithmic* axis: logarithmic on both sides of zero and linear in a thin band
+around it, six decades below the largest value drawn, with the zero line marked. The
+caption names the axes whenever they are not plain linear ones. A histogram over fixed
+bins, such as a rank histogram, is drawn as bars. A set of several thousand points is drawn
+as an image inside the figure so the page stays light; its numbers are still in the JSON
+beside it. A metric page shows at most four panels of point sets, and the evaluation report
+shows up to twelve.

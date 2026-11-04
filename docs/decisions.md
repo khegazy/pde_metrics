@@ -177,7 +177,7 @@ in exception handlers to keep a run alive.
 
 ## Figures are committed, and only the numbers behind them must be byte-stable
 
-The example panels (PNG files) and the two figures on every metric card (SVG files) are
+The example panels (PNG files) and the figures on every metric card (SVG files) are
 committed so that pages render on GitHub with no build step. Regenerating a figure with the
 same matplotlib version must produce a byte-identical file; across different matplotlib
 versions the files may differ, and that is acceptable. For the SVGs that identity needs a

@@ -305,9 +305,15 @@ Seven sections, fixed order, all required: `## Definition`, `## Performance`, `#
 - **`## Performance` and `## Results`** — generated. Leave the marked blocks alone; write
   only the explanation below each Results block, saying what that test found about this
   metric. Link each subsection to the degradations it reports rather than describing them.
-  Performance opens with two figures drawn by `cards evidence` from the same run as its
-  table (`fmeval/cards/metric_figures.py`); they are committed SVGs with their numbers in
-  a JSON beside them, and nothing in them is ever drawn or edited by hand.
+  Performance opens with the figure the metric's own field draws, then the harness's two,
+  all drawn by `cards evidence` from the same run as its table
+  (`fmeval/cards/metric_figures.py`); they are committed SVGs with their numbers in a JSON
+  beside them, and nothing in them is ever drawn or edited by hand. Which figure is the
+  field's follows from what the metric declares (`standard_figure`): its curve or point-set
+  companion; else, for a single-field quantity, its value against time; else, for a
+  pairwise metric, its error against lead time on a forecast run or its damage against the
+  applied shift beside the pointwise controls. Declare the companion's axes and style
+  (§3.3) so the figure is drawn as the field draws it.
 
 There are no word counts. Say what the section needs to say and stop.
 
@@ -501,6 +507,19 @@ second *number* from the literature is still a sibling bundle that imports the f
   handed over under `COMPANION_KEY`; like a field map every point set is stored in
   `error_maps.npz` only on the frames `report.error_map` names, plus their clean level, and
   drawn by the `companion_points` figure. `metrics/persistence_distance` is the worked example.
+  A one-field set is drawn over the reference's; `birth` and `death` coordinates get the
+  diagonal.
+
+**How the field draws it.** A curve or a point set declares the axes its field plots it on
+with `scales=(x, y)`, each `"linear"`, `"log"` or `"symlog"` (the last for a quantity that
+changes sign, such as an energy flux); undeclared, the figure keeps its default. A curve over
+fixed bins, such as a rank histogram's counts, declares `style="bars"`. Both are recorded in
+the catalog. For a one-dimensional shock set, declare the positions as a one-field point set
+of `(("x", "cells"), ("<field>", "<units>"))` and the field itself as a named one-field field
+companion (`@companion(of=..., name="profile")` taking one field): it is stored on the clean
+level too, and `companion_points` draws the points on each variant's line-out over the
+reference's. Only a *named* field map may take one field; the metric's own reduces to its
+number and takes the metric's arguments.
 
 The contract tests run on every companion of every metric; the map-reduces-to-metric identity
 and the same-number-from-the-cache check apply to the metric's own companion, the one its

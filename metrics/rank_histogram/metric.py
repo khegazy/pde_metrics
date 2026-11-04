@@ -100,7 +100,9 @@ def rank_histogram(reference: np.ndarray, members: np.ndarray, *,
     return reliability_index(frequencies)
 
 
-@companion(of="rank_histogram", kind="curve", coordinate=("rank", "members below"))
+# A histogram over the fixed ranks 0 .. N, drawn as bars as its field draws it.
+@companion(of="rank_histogram", kind="curve", coordinate=("rank", "members below"),
+           style="bars")
 def rank_histogram_curve(reference: np.ndarray, members: np.ndarray, *,
                          ctx: FieldContext | None = None) -> tuple[np.ndarray, np.ndarray]:
     """The rank histogram: the fraction of draws at each rank ``0 .. N``.
