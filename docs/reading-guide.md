@@ -68,9 +68,11 @@ follows from what the metric is:
   the undamaged field's history in black. A damaged line is the damage applied to each
   snapshot on its own; it is not a simulation run forward from a damaged start, so it shows
   what the damage does at each time, not how an error would grow.
-- **A comparison of two fields** with none of the above: on real forecasts, its error against
-  lead time; otherwise its damage against the applied shift beside the pointwise baselines,
-  the figure that also heads *Damage beside the other metrics* below.
+- **A comparison of two fields** with none of the above: when the page cites a run of real
+  forecasts, its error against lead time from that run, as the forecasting benchmarks draw it,
+  and the caption names that run; everything else in Performance still comes from the main
+  run. Otherwise its damage against the applied shift beside the pointwise baselines, the
+  figure that also heads *Damage beside the other metrics* below.
 - **An ensemble score** with none of the above has no such figure yet, and the page says why.
 
 The next figure, the *sensitivity profile*, has one row per way of damaging the field,
@@ -110,6 +112,16 @@ table. A run on another experiment has its own subsection at the end of Results,
 the experiment's name. Its first line says what kind of evidence it is: an analytic check, for
 instance, says nothing about turbulence. The [coverage page](coverage.md) puts these tables for
 every metric on one page.
+
+The subsection on the real forecasts reads differently, because a forecast is not damaged by a
+chosen amount. It shows the metric against lead time, the physical time since a forecast
+started: one panel per starting time and one line per run, darker for a finer grid. Beneath the
+figure, one table per field gives the metric at every prediction step of every forecast, one row
+per lead time and one column per forecast, named by its run's grid and its starting time;
+nothing is averaged over steps, starts or runs. A second table gives the same predictions as
+damage, each step against its own target's spatial mean, so a growing or shrinking target does
+not read as a growing or shrinking error. A property of one field, such as the enstrophy, also
+gets a table of its value on the target, the truth the prediction is read against.
 
 The rest of **Results** breaks the summary down one test at a time. Each subsection links to the
 way of damaging the field that it reports, shows the numbers for that damage, and then

@@ -20,7 +20,8 @@ the targets?
    variant, labelled `forecast`.
 2. **The forecast is a probe.** `FORECAST_LEVEL` is declared not ordinal, so it is listed among
    the run's probe labels and the analysis withholds every ordering statistic on it (`rho`, the
-   separability, the thresholds), while `probe_summary` reports its median value and damage.
+   separability, the thresholds). It is reported at every prediction step, each scaled by its
+   own frame's anchor, and not as one median ([015](015-a-forecast-is-scaled-by-its-own-frame-and-reported-step-by-step.md)).
 3. **The lead time is drawn, not ranked.** `response_along_time` draws the metric against
    `lead_time`, one line per forecast file.
 4. **Runs at several resolutions are pooled only on one analysis grid.** The pipeline refuses a

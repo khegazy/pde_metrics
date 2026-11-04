@@ -73,7 +73,19 @@ on one grid.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126 --results results/mse_1793794935`, do not edit -->
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-density__along-lead.svg)
+
+*As this metric's own field draws it, from run `mse_1793794935`.* mse on density against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Each point is one prediction step of one forecast.
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-velocity__along-lead.svg)
+
+*As this metric's own field draws it, from run `mse_1793794935`.* mse on velocity against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Each point is one prediction step of one forecast.
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-vorticity__along-lead.svg)
+
+*As this metric's own field draws it, from run `mse_1793794935`.* mse on vorticity against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Each point is one prediction step of one forecast.
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -235,11 +247,11 @@ an artefact of the reader or the remap.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126 --results results/mse_1793794935`, do not edit -->
 
 Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `fdbd5d7872d6` (working tree dirty). Run `comparison_1793657627`.
 
-Every number in this section comes from that run, except in the subsections headed with another experiment, each of which names its own run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793657627 --results results/mse_1793784126`.
+Every number in this section comes from that run, except in the subsections headed with another experiment and in a figure whose caption names another run, each of which names its own run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793657627 --results results/mse_1793784126 --results results/mse_1793794935`.
 
 <!-- END GENERATED run -->
 
@@ -256,7 +268,7 @@ do, and what their strength numbers mean, is documented on their own pages.
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
 | `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not yet run; on this dataset the metric scores the member mean of the ensemble |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | measured, run `mse_1793784126`: under *On `sod_shock_tube`* |
-| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
+| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | measured, run `mse_1793794935`: under *On `forecast_re5e4`* |
 
 One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.
 
@@ -268,7 +280,7 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 [box_blur](../../degradations/box_blur/card.md) ·
 [median_blur](../../degradations/median_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126 --results results/mse_1793794935`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -291,7 +303,7 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 [highpass_ideal](../../degradations/highpass_ideal/card.md) ·
 [highpass_butterworth](../../degradations/highpass_butterworth/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126 --results results/mse_1793794935`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -315,7 +327,7 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126 --results results/mse_1793794935`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -340,7 +352,7 @@ about moderate ones, and the double penalty has no single onset.
 [coarsen](../../degradations/coarsen/card.md) ·
 [coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126 --results results/mse_1793794935`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -360,7 +372,7 @@ cause is not established; `issues/039` records what was ruled out.
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126 --results results/mse_1793794935`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -375,7 +387,7 @@ cause is not established; `issues/039` records what was ruled out.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126 --results results/mse_1793794935`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
 |---|---|---|---|---|
@@ -397,7 +409,7 @@ panel in which every metric rejects it is not evidence of a well-guarded panel.
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126 --results results/mse_1793794935`, do not edit -->
 
 | compared with | density | velocity | vorticity |
 |---|---|---|---|
@@ -434,11 +446,11 @@ errors that matter are errors of amplitude, not of position.
 
 ### Damage beside the other metrics
 
-<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126 --results results/mse_1793794935`, do not edit -->
 
 ![damage against applied strength for this metric beside the pointwise controls, log-log, one panel per displacement degradation and field](_generated/damage_beside_controls.svg)
 
-Median damage over frames against the applied strength, log-log, for mse (bold, in colour) and the pointwise controls mae, rmse, nrmse (thin, grey), one column per displacement degradation and one row per field. The grey line is damage 1, the anchor (by default the field's own mean). Parallel lines charge in the same proportion at every strength; a steeper line charges relatively more for the larger shifts, which is what decides whether two metrics are interchangeable as training losses. These are the same numbers as the table beneath.
+Median damage over frames against the applied strength, log-log, for mse (bold, in colour) and the pointwise controls mae, rmse (thin, grey), one column per displacement degradation and one row per field. The grey line is damage 1, the anchor (by default the field's own mean). Parallel lines charge in the same proportion at every strength; a steeper line charges relatively more for the larger shifts, which is what decides whether two metrics are interchangeable as training losses. These are the same numbers as the table beneath.
 
 **Displacement, density, `translate_subpixel`** (strength: distance).
 
@@ -447,7 +459,6 @@ Median damage over frames against the applied strength, log-log, for mse (bold, 
 | `mse` | 2.17e-05 | 8.68e-05 | 0.000347 | 0.00138 | 0.00551 | 0.0219 |
 | `mae` | 0.00383 | 0.00767 | 0.0153 | 0.0306 | 0.061 | 0.121 |
 | `rmse` | 0.00466 | 0.00931 | 0.0186 | 0.0372 | 0.0743 | 0.148 |
-| `nrmse` | 0.00463 | 0.00926 | 0.0185 | 0.037 | 0.0738 | 0.147 |
 
 **Displacement, density, `translate_x`** (strength: distance).
 
@@ -456,7 +467,6 @@ Median damage over frames against the applied strength, log-log, for mse (bold, 
 | `mse` | 0.00138 | 0.00551 | 0.0219 | 0.0849 | 0.307 |
 | `mae` | 0.0306 | 0.061 | 0.121 | 0.24 | 0.469 |
 | `rmse` | 0.0372 | 0.0743 | 0.148 | 0.291 | 0.555 |
-| `nrmse` | 0.037 | 0.0738 | 0.147 | 0.29 | 0.55 |
 
 **Displacement, velocity, `translate_subpixel`** (strength: distance).
 
@@ -465,7 +475,6 @@ Median damage over frames against the applied strength, log-log, for mse (bold, 
 | `mse` | 1.45e-05 | 5.81e-05 | 0.000232 | 0.000924 | 0.0036 | 0.0136 |
 | `mae` | 0.00279 | 0.00559 | 0.0112 | 0.0223 | 0.0441 | 0.0859 |
 | `rmse` | 0.00381 | 0.00762 | 0.0152 | 0.0304 | 0.06 | 0.117 |
-| `nrmse` | 0.00382 | 0.00763 | 0.0153 | 0.0304 | 0.06 | 0.117 |
 
 **Displacement, velocity, `translate_x`** (strength: distance).
 
@@ -474,7 +483,6 @@ Median damage over frames against the applied strength, log-log, for mse (bold, 
 | `mse` | 0.000924 | 0.0036 | 0.0136 | 0.0489 | 0.165 |
 | `mae` | 0.0223 | 0.0441 | 0.0859 | 0.163 | 0.31 |
 | `rmse` | 0.0304 | 0.06 | 0.117 | 0.221 | 0.406 |
-| `nrmse` | 0.0304 | 0.06 | 0.117 | 0.221 | 0.406 |
 
 **Displacement, vorticity, `translate_subpixel`** (strength: distance).
 
@@ -483,7 +491,6 @@ Median damage over frames against the applied strength, log-log, for mse (bold, 
 | `mse` | 0.00112 | 0.00448 | 0.0176 | 0.066 | 0.21 | 0.44 |
 | `mae` | 0.0428 | 0.0854 | 0.169 | 0.328 | 0.582 | 0.86 |
 | `rmse` | 0.0335 | 0.0669 | 0.133 | 0.257 | 0.458 | 0.663 |
-| `nrmse` | 0.0328 | 0.0654 | 0.13 | 0.253 | 0.456 | 0.67 |
 
 **Displacement, vorticity, `translate_x`** (strength: distance).
 
@@ -492,7 +499,6 @@ Median damage over frames against the applied strength, log-log, for mse (bold, 
 | `mse` | 0.066 | 0.21 | 0.44 | 0.679 | 1.1 |
 | `mae` | 0.328 | 0.582 | 0.86 | 1.1 | 1.31 |
 | `rmse` | 0.257 | 0.458 | 0.663 | 0.824 | 1.05 |
-| `nrmse` | 0.253 | 0.456 | 0.67 | 0.832 | 1.05 |
 
 Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 the anchor (by default the field's own mean); a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
 
@@ -500,7 +506,7 @@ Median damage over frames at every strength, this metric in the first row and th
 
 ### On `sod_shock_tube`
 
-<!-- GENERATED results_on_sod_shock_tube: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
+<!-- GENERATED results_on_sod_shock_tube: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126 --results results/mse_1793794935`, do not edit -->
 
 **An analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence.**
 
@@ -617,6 +623,146 @@ reason: at most 0.0008 on density and pressure and 0.0098 on velocity under `coa
 
 The phase-scrambled fake prediction is rejected as it is on the developed flow, with damage
 1.98, 1.86 and 2.10 on density, pressure and velocity.
+
+### On `forecast_re5e4`
+
+<!-- GENERATED results_on_forecast_re5e4: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126 --results results/mse_1793794935`, do not edit -->
+
+**Real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded.**
+
+Measured on `forecast_re5e4`, frames 0 to 59 (60 frames of real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded), on the 64 analysis grid, seed 20260807, at commit `ad4817e269cb`. Run `mse_1793794935`.
+
+[mean_field](../../degradations/mean_field/card.md)
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-density__along-lead.svg)
+
+mse on density against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Each point is one prediction step of one forecast.
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-velocity__along-lead.svg)
+
+mse on velocity against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Each point is one prediction step of one forecast.
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-vorticity__along-lead.svg)
+
+mse on vorticity against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Each point is one prediction step of one forecast.
+
+**density, mse on the prediction, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 5e-10 | 4.57e-11 | 1.59e-15 | 8.43e-08 | 5.49e-09 | 8.03e-14 |
+| 0.2255 | 3.66e-09 | 6.74e-10 | 1.31e-14 | 9.09e-08 | 1.1e-08 | 2.2e-13 |
+| 0.3383 | 4.6e-08 | 9.8e-09 | 3.27e-13 | 2.4e-07 | 3.1e-08 | 6.35e-13 |
+| 0.4511 | 4.8e-07 | 1.24e-07 | 9.35e-12 | 2.94e-07 | 4.79e-08 | 1.05e-12 |
+| 0.5638 | 4.41e-06 | 1.53e-06 | 9.55e-10 | 4.58e-07 | 7.19e-08 | 2.07e-12 |
+| 0.6766 | 6.83e-06 | 1.38e-06 | 1.41e-08 | 5.16e-07 | 8.2e-08 | 4.88e-12 |
+| 0.7893 | 4.24e-06 | 6.68e-07 | 3.73e-08 | 7.93e-07 | 1.51e-07 | 7.4e-12 |
+| 0.9021 | 2.98e-06 | 7.42e-07 | 5.79e-08 | 8.08e-07 | 1.3e-07 | 5.54e-12 |
+| 1.015 | 2.97e-06 | 8.55e-07 | 8.17e-08 | 1.02e-06 | 1.89e-07 | 9.29e-12 |
+| 1.128 | 2.95e-06 | 7.68e-07 | 1.09e-07 | 1.24e-06 | 2.48e-07 | 1.08e-11 |
+
+**density, mse damage, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.00119 | 0.00011 | 3.85e-09 | 0.00167 | 0.000108 | 1.59e-09 |
+| 0.2255 | 0.017 | 0.00304 | 5.83e-08 | 0.00203 | 0.000245 | 4.91e-09 |
+| 0.3383 | 0.0516 | 0.0111 | 3.73e-07 | 0.00515 | 0.000666 | 1.37e-08 |
+| 0.4511 | 0.107 | 0.0273 | 2.06e-06 | 0.00605 | 0.000984 | 2.16e-08 |
+| 0.5638 | 0.341 | 0.118 | 7.36e-05 | 0.0106 | 0.00166 | 4.77e-08 |
+| 0.6766 | 0.217 | 0.0438 | 0.000448 | 0.0105 | 0.00167 | 9.97e-08 |
+| 0.7893 | 0.117 | 0.0184 | 0.00103 | 0.0176 | 0.00336 | 1.64e-07 |
+| 0.9021 | 0.0696 | 0.0174 | 0.00135 | 0.0176 | 0.00284 | 1.21e-07 |
+| 1.015 | 0.0609 | 0.0175 | 0.00167 | 0.0208 | 0.00384 | 1.89e-07 |
+| 1.128 | 0.0673 | 0.0175 | 0.00249 | 0.0285 | 0.00571 | 2.49e-07 |
+
+**velocity, mse on the prediction, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 3.4e-06 | 3.95e-07 | 6.67e-12 | 1.37e-06 | 1.86e-07 | 3.81e-12 |
+| 0.2255 | 6.36e-06 | 1.06e-06 | 2.63e-11 | 2.86e-06 | 5.04e-07 | 1.57e-11 |
+| 0.3383 | 1.08e-05 | 2.11e-06 | 7.64e-11 | 4.33e-06 | 8.36e-07 | 3.41e-11 |
+| 0.4511 | 2.41e-05 | 5.82e-06 | 5.72e-10 | 4.36e-06 | 9.88e-07 | 5.77e-11 |
+| 0.5638 | 7.44e-05 | 2.47e-05 | 5.82e-08 | 5.37e-06 | 1.36e-06 | 1.18e-10 |
+| 0.6766 | 8.4e-05 | 2.74e-05 | 7e-07 | 6.83e-06 | 2.34e-06 | 2.87e-10 |
+| 0.7893 | 5.15e-05 | 1.95e-05 | 2.72e-06 | 8.88e-06 | 3.41e-06 | 4.16e-10 |
+| 0.9021 | 3.93e-05 | 1.88e-05 | 6.44e-06 | 8.31e-06 | 3.12e-06 | 4.87e-10 |
+| 1.015 | 3.33e-05 | 1.96e-05 | 1.15e-05 | 9.24e-06 | 3.2e-06 | 5.91e-10 |
+| 1.128 | 3.28e-05 | 1.7e-05 | 1.54e-05 | 1.01e-05 | 3.28e-06 | 7.15e-10 |
+
+**velocity, mse damage, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.00216 | 0.00025 | 4.23e-09 | 0.000878 | 0.000119 | 2.44e-09 |
+| 0.2255 | 0.00404 | 0.000671 | 1.67e-08 | 0.00183 | 0.000323 | 1.01e-08 |
+| 0.3383 | 0.00686 | 0.00134 | 4.86e-08 | 0.00277 | 0.000535 | 2.19e-08 |
+| 0.4511 | 0.0154 | 0.0037 | 3.64e-07 | 0.00279 | 0.000633 | 3.7e-08 |
+| 0.5638 | 0.0474 | 0.0157 | 3.7e-05 | 0.00344 | 0.000873 | 7.54e-08 |
+| 0.6766 | 0.0536 | 0.0174 | 0.000447 | 0.00438 | 0.0015 | 1.84e-07 |
+| 0.7893 | 0.0329 | 0.0125 | 0.00174 | 0.00569 | 0.00219 | 2.67e-07 |
+| 0.9021 | 0.0251 | 0.012 | 0.00411 | 0.00533 | 0.002 | 3.13e-07 |
+| 1.015 | 0.0213 | 0.0125 | 0.00737 | 0.00593 | 0.00205 | 3.8e-07 |
+| 1.128 | 0.021 | 0.0109 | 0.00986 | 0.00649 | 0.00211 | 4.59e-07 |
+
+**vorticity, mse on the prediction, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 9.49e-07 | 1.33e-07 | 2.57e-12 | 5.95e-07 | 1.01e-07 | 2.31e-12 |
+| 0.2255 | 1.36e-06 | 3.06e-07 | 9.69e-12 | 6.7e-07 | 1.82e-07 | 7.79e-12 |
+| 0.3383 | 1.74e-06 | 4.71e-07 | 2.34e-11 | 7.15e-07 | 2.46e-07 | 1.45e-11 |
+| 0.4511 | 2.29e-06 | 7.62e-07 | 1.82e-10 | 6.41e-07 | 2.74e-07 | 2.42e-11 |
+| 0.5638 | 3.57e-06 | 1.66e-06 | 2.7e-08 | 6.04e-07 | 2.74e-07 | 3.21e-11 |
+| 0.6766 | 3.71e-06 | 2.11e-06 | 1.96e-07 | 6.17e-07 | 3.11e-07 | 4.96e-11 |
+| 0.7893 | 3.14e-06 | 2.18e-06 | 5.65e-07 | 6.2e-07 | 3.23e-07 | 5.56e-11 |
+| 0.9021 | 2.82e-06 | 2.22e-06 | 9.11e-07 | 5.71e-07 | 2.87e-07 | 6.04e-11 |
+| 1.015 | 2.51e-06 | 2.14e-06 | 1.19e-06 | 5.53e-07 | 2.63e-07 | 6.93e-11 |
+| 1.128 | 2.24e-06 | 1.84e-06 | 1.25e-06 | 5.52e-07 | 2.72e-07 | 8.95e-11 |
+
+**vorticity, mse damage, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.0982 | 0.0138 | 2.65e-07 | 0.107 | 0.0182 | 4.18e-07 |
+| 0.2255 | 0.143 | 0.0322 | 1.02e-06 | 0.127 | 0.0343 | 1.47e-06 |
+| 0.3383 | 0.186 | 0.0506 | 2.51e-06 | 0.141 | 0.0485 | 2.87e-06 |
+| 0.4511 | 0.25 | 0.0832 | 1.98e-05 | 0.131 | 0.0562 | 4.97e-06 |
+| 0.5638 | 0.404 | 0.188 | 0.00305 | 0.128 | 0.0579 | 6.78e-06 |
+| 0.6766 | 0.457 | 0.261 | 0.0242 | 0.134 | 0.0674 | 1.08e-05 |
+| 0.7893 | 0.424 | 0.294 | 0.0763 | 0.138 | 0.0716 | 1.23e-05 |
+| 0.9021 | 0.417 | 0.329 | 0.135 | 0.129 | 0.0649 | 1.37e-05 |
+| 1.015 | 0.401 | 0.342 | 0.19 | 0.127 | 0.0603 | 1.59e-05 |
+| 1.128 | 0.386 | 0.316 | 0.214 | 0.128 | 0.0629 | 2.07e-05 |
+
+Every prediction of every forecast, nothing pooled: a cell is one prediction step of one forecast, a row the lead time (the physical time since the forecast started) and a column the forecast, named by its run's native grid and its starting time (`64², start 0` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-0`; `128², start 0` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-0`; `256², start 0` is `F-906861_64/forecast_t0-0`; `64², start 1.13` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250`; `128², start 1.13` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-2500`; `256², start 1.13` is `F-906861_64/forecast_t0-5000`). **Damage** is the prediction's departure from the target as a fraction of the anchor's in the same frame, by default the target's own spatial mean, so each step is scaled by its own target. A dash means no value there.
+
+<!-- END GENERATED results_on_forecast_re5e4 -->
+
+This is the kind of experiment the machine-learning benchmarks evaluate on: one model's
+predictions scored against the simulation at each step, read as error against lead time. On
+every field, at every lead time and from both starts, the error falls as the run's grid is
+refined, 64² above 128² above 256², in value and in damage alike (every row of the six tables
+above, for each start). The 256² run predicts on the reference grid itself, and its first-step error is
+far below the others: 1.59e-15 on density against 4.57e-11 at 128² and 5e-10 at 64², from
+t = 0. That run is therefore not a coarser solve, and the three runs are not a refinement
+sequence (issue 126).
+
+The two starts behave differently. From t = 0, while the flow develops out of its initial
+state, the error grows by orders of magnitude: on density from 5e-10 to a peak of 6.83e-06 at
+64², and from 1.59e-15 to 1.09e-07 at 256² over the ten steps. The coarse runs' errors peak and
+then fall back (density at 64², 6.83e-06 at lead time 0.677 and 2.95e-06 at 1.128). From
+t = 1.13, in the developed flow, they grow slowly: on vorticity at 64² the damage stays between
+0.107 and 0.141 across all ten steps.
+
+Damage reads each step against its own target's spatial mean, so the peak can move: on density
+at 64² from t = 0 the raw error peaks at lead time 0.677 and the damage at 0.564 (0.341), because
+the target's own variance grows over the same steps. Across fields, the coarse runs lose most on
+vorticity, the field that carries the small scales: at 64² from t = 0 the damage reaches 0.457
+on vorticity, against 0.341 on density and 0.0536 on velocity. Both readings are of this one
+model and two starting times, not of the many initialisations a benchmark averages over
+([EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md)).
 
 ## References
 

@@ -12456,6 +12456,21 @@
             "numbers": "metrics/mse/_generated/damage_beside_controls.json"
           },
           {
+            "file": "metrics/mse/_generated/response_along_time__dataset-forecast_re5e4__field-density__along-lead.svg",
+            "name": "response_along_time__dataset-forecast_re5e4__field-density__along-lead",
+            "numbers": "metrics/mse/_generated/response_along_time__dataset-forecast_re5e4__field-density__along-lead.json"
+          },
+          {
+            "file": "metrics/mse/_generated/response_along_time__dataset-forecast_re5e4__field-velocity__along-lead.svg",
+            "name": "response_along_time__dataset-forecast_re5e4__field-velocity__along-lead",
+            "numbers": "metrics/mse/_generated/response_along_time__dataset-forecast_re5e4__field-velocity__along-lead.json"
+          },
+          {
+            "file": "metrics/mse/_generated/response_along_time__dataset-forecast_re5e4__field-vorticity__along-lead.svg",
+            "name": "response_along_time__dataset-forecast_re5e4__field-vorticity__along-lead",
+            "numbers": "metrics/mse/_generated/response_along_time__dataset-forecast_re5e4__field-vorticity__along-lead.json"
+          },
+          {
             "file": "metrics/mse/_generated/response_curves.svg",
             "name": "response_curves",
             "numbers": "metrics/mse/_generated/response_curves.json"
@@ -12568,8 +12583,8 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": null,
-          "state": "not yet run"
+          "run": "mse_1793794935",
+          "state": "measured"
         }
       ],
       "kind": "metric",
@@ -13489,6 +13504,180 @@
             }
           ],
           "run": "mse_1793784126"
+        },
+        {
+          "axes": [
+            {
+              "axis": "forecast",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "forecast",
+              "field": "density",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": true,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "mean_field",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "smoothing",
+              "field": "density",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": true,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "forecast",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "forecast",
+              "field": "velocity",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": true,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "mean_field",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "smoothing",
+              "field": "velocity",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": true,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "forecast",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "forecast",
+              "field": "vorticity",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": true,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            },
+            {
+              "axis": "mean_field",
+              "blindness_q": null,
+              "cliffs_delta": null,
+              "detection_onset_severity": null,
+              "elasticity": null,
+              "elasticity_x": "",
+              "family": "smoothing",
+              "field": "vorticity",
+              "first_detected_level": null,
+              "half_damage_severity": null,
+              "is_probe": true,
+              "largest_response_upper_bound": null,
+              "levels": 1,
+              "monotone_fraction": null,
+              "rank_correlation": null,
+              "response_shape": "",
+              "severity_resolution": null,
+              "weakest_separation": null
+            }
+          ],
+          "dataset": "forecast_re5e4",
+          "frames": 60,
+          "measured": true,
+          "probes": [
+            {
+              "field": "density",
+              "impostor_damage": null,
+              "impostor_nearest_level": null,
+              "translation_probe_value": null
+            },
+            {
+              "field": "velocity",
+              "impostor_damage": null,
+              "impostor_nearest_level": null,
+              "translation_probe_value": null
+            },
+            {
+              "field": "vorticity",
+              "impostor_damage": null,
+              "impostor_nearest_level": null,
+              "translation_probe_value": null
+            }
+          ],
+          "profile": [
+            {
+              "blind_axes": [],
+              "elasticity_displacement": null,
+              "field": "density",
+              "least_sensitive_axis": null,
+              "most_sensitive_axis": null,
+              "selectivity": null
+            },
+            {
+              "blind_axes": [],
+              "elasticity_displacement": null,
+              "field": "velocity",
+              "least_sensitive_axis": null,
+              "most_sensitive_axis": null,
+              "selectivity": null
+            },
+            {
+              "blind_axes": [],
+              "elasticity_displacement": null,
+              "field": "vorticity",
+              "least_sensitive_axis": null,
+              "most_sensitive_axis": null,
+              "selectivity": null
+            }
+          ],
+          "run": "mse_1793794935"
         }
       ],
       "output": {

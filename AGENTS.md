@@ -311,9 +311,12 @@ Seven sections, fixed order, all required: `## Definition`, `## Performance`, `#
   beside them, and nothing in them is ever drawn or edited by hand. Which figure is the
   field's follows from what the metric declares (`standard_figure`): its curve or point-set
   companion; else, for a single-field quantity, its value against time; else, for a
-  pairwise metric, its error against lead time on a forecast run or its damage against the
-  applied shift beside the pointwise controls. Declare the companion's axes and style
-  (§3.3) so the figure is drawn as the field draws it.
+  pairwise metric, its error against lead time from a `forecast_re5e4` run the card cites
+  (the one figure drawn from a further run; its caption names the run) or its damage against
+  the applied shift beside the pointwise controls. Declare the companion's axes and style
+  (§3.3) so the figure is drawn as the field draws it. A forecast run's own subsection shows
+  the metric at every prediction step of every forecast, nothing pooled, beside its lead-time
+  figure (`judgements/015`).
 
 There are no word counts. Say what the section needs to say and stop.
 

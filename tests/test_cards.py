@@ -1397,15 +1397,16 @@ def test_a_card_cites_one_run_per_experiment(tmp_path, monkeypatch):
 def _forecast_run(path: pathlib.Path) -> pathlib.Path:
     """A run of real forecasts of mse on two fields: two forecasts of three prediction steps.
 
-    The anchor (the target's variance) doubles every frame, and each prediction's error is
-    0.1, 0.2 and 0.3 of its own frame's anchor, so damage read frame by frame is exactly the
-    step's tenth while a span shared by the frames would not be.
+    The anchor (the target's variance) doubles every frame from 1e-14, and each prediction's
+    error is 0.1, 0.2 and 0.3 of its own frame's anchor, so damage read frame by frame is exactly
+    the step's tenth while a span shared by the frames would not be; the smallest error, 1e-15,
+    is below what a JSON rounded to ten decimal places keeps (issues/134).
     """
     df = pd.concat([make_frame(metric="mse", field=field, n_frames=6,
                                axes={label: [1.0] for label in ("mean_field", "forecast")})
                     for field in ("density", "velocity")], ignore_index=True)
     step, start = df["frame_index"] % 3 + 1, df["frame_index"] // 3
-    anchor = 2.0 ** df["frame_index"]
+    anchor = 1e-14 * 2.0 ** df["frame_index"]
     forecast = df["degradation"] == "forecast"
     df["value"] = np.select([df["level"] == 0, forecast], [0.0, 0.1 * step * anchor], anchor)
     df = df.astype({"degradation_op": str, "degradation_family": str})
@@ -1458,6 +1459,7 @@ def test_a_card_cites_a_run_of_real_forecasts_step_by_step(tmp_path, monkeypatch
     recorded = json.loads(bundle.fingerprint.read_text())["other_runs"][1]
     assert recorded["run"] == "mse_forecast" and len(recorded["forecast"]) == 12
     assert sorted({round(r["damage"], 12) for r in recorded["forecast"]}) == [0.1, 0.2, 0.3]
+    assert min(r["value"] for r in recorded["forecast"]) == pytest.approx(1e-15, rel=1e-12)
     shown = set(re.findall(r"\]\(_generated/([^)]+\.svg)\)", text))
     assert shown == {p.name for p in bundle.generated.glob("*.svg")}
     before = (bundle.card_md.read_bytes(), bundle.fingerprint.read_bytes())
@@ -1546,10 +1548,10 @@ def test_a_reason_only_a_person_can_give_is_the_cards_not_run(monkeypatch):
         monkeypatch.setattr(catalog, "load_card",
                             lambda bundle: dataclasses.replace(real(bundle), not_run=not_run))
 
-    reason = "the forecasts are of density alone, which says nothing new here"
-    with_not_run(forecast_re5e4=reason)
+    reason = "the member mean of this ensemble says nothing new here"
+    with_not_run(synthetic_ensemble=reason)     # one mse does not cite
     row = {r["dataset"]: r for r in catalog.experiments(loader.find_bundle("mse"))}[
-        "forecast_re5e4"]
+        "synthetic_ensemble"]
     assert (row["state"], row["reason"]) == ("not applicable", reason)
     with_not_run(kinet_re5e4=reason)            # mse cites a run there
     with pytest.raises(ValueError, match="cites run"):

@@ -779,8 +779,11 @@ def _record(run: Run, metric: str) -> dict[str, Any]:
     """One run's entry in a fingerprint: its provenance and this metric's statistics, and on a
     run of real forecasts every prediction, the numbers of its lead-time tables."""
     lead = an.forecast_by_lead(run.scored, metric=metric, anchor_label=run.anchor_label)
+    # Exact floats, not `to_json`, which rounds to ten decimal places: a forecast's error spans
+    # 1e-15 to 1e-4 and would be written as zero at the small end (issues/134).
+    exact = lead.astype(object).where(lead.notna(), None).to_dict(orient="records")
     return {
-        **({"forecast": json.loads(lead.to_json(orient="records"))} if not lead.empty else {}),
+        **({"forecast": exact} if not lead.empty else {}),
         "dataset": dataset_of(run),
         "run": run.folder.name,
         "frames": sorted(int(f) for f in run.rows["frame_index"].unique()),

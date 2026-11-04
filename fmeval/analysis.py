@@ -268,10 +268,11 @@ def add_damage(df: pd.DataFrame, norm: pd.DataFrame) -> pd.DataFrame:
     own frame instead of the shared span, ``D = (v - clean_f) / (anchor_f - clean_f)``, and is
     NaN in a frame without an anchor row. A forecast's targets are the flow at different
     times and resolutions, and the anchor moves with them: on ``forecast_re5e4``, mean squared
-    error's anchor on density, the target's variance, grows from 2.2e-7 to 4.9e-5 over the ten
-    steps of each forecast from t = 0 (run ``mse_1793780539``), so a span shared by the frames
-    would read that growth as damage. PDEBench likewise normalises its nRMSE by the target of each
-    sample, channel and time step (``judgements/010``); the choice is ``judgements/015``.
+    error's anchor on density, the target's variance, ranges from 2.2e-7 to 4.9e-5 over the ten
+    steps of each forecast from t = 0 (run ``mse_1793794935``), so a span shared by the frames
+    would read that change of the target as damage. PDEBench likewise normalises its nRMSE by
+    the target of each sample, channel and time step (``judgements/010``); the choice is
+    ``judgements/015``.
     """
     out = df.merge(norm[[*GROUP_KEYS, "value_clean", "span", "degenerate", "anchor_source"]],
                    on=GROUP_KEYS, how="left")
