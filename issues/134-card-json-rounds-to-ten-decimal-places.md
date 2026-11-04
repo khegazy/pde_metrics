@@ -2,7 +2,7 @@
 
 **Category:** technical debt
 **Priority:** medium
-**Status:** open. The fingerprint's `forecast` records are written exactly; nothing else is.
+**Status:** open in part. Every card JSON is now written through `fmeval.cards.loader.json_records`, with exact floats; the committed JSONs still hold rounded values until each card is regenerated, which the final evidence pass of `update_metric_eval_principles` does. Delete this issue after that pass.
 
 ## Context
 
