@@ -963,6 +963,15 @@ def test_the_cross_metric_table_has_one_column_per_field(tmp_path):
     assert "separately for each physical field" in block
 
 
+def test_a_ladder_with_the_anchor_and_no_impostor_writes_no_trap_test_line(tmp_path):
+    """The ensemble ladder carries the mean-field anchor and no impostor: the anchor gives the
+    metric a probe row, which must not become a trap-test line reading `damage —`."""
+    df = make_frame(metric="mse", axes={"gaussian_blur": [1.0, 2.0, 3.0], "mean_field": [5.0]})
+    block = evidence.performance_block(
+        evidence.load_run(_run_folder(tmp_path / "comparison_anchor", df)), "mse")
+    assert "trap test" not in block
+
+
 def _bundle_copy(tmp_path, monkeypatch):
     """A throwaway copy of the mse bundle, so generators never touch tracked files."""
     dst = tmp_path / "mse"

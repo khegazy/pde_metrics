@@ -201,7 +201,11 @@ def performance_block(run: Run, metric: str, figures: Sequence[CardFigure] = (),
                      f"{_span(sub.get('elasticity', absent))} | "
                      f"level {_fmt(sub['sensitivity_level'].min())} |")
     probes = run.probes[run.probes["metric"] == metric]
-    for _, row in probes.iterrows():
+    # A ladder without the impostor (the ensemble ladder, which carries only the anchor) has no
+    # trap-test line: absent must look absent, not like a trap test that could not be scored.
+    impostor = (probes["gaussian_impostor_value"].notna()
+                if "gaussian_impostor_value" in probes.columns else probes["metric"].isna())
+    for _, row in probes[impostor].iterrows():
         lines.append(
             f"| trap test: fake prediction, right spectrum | {row['field']} | — | — | "
             f"damage {_fmt(_cell(row, 'gaussian_impostor_damage'))} |"
