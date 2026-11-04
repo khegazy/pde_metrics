@@ -57,6 +57,52 @@ finite number that would read as a measurement.
 None. Variance over members and the mean over cells are both pointwise; no cell consults a
 neighbour, so the domain edge never enters.
 
+### How its field reports it
+
+The field is ensemble forecast verification, in weather and hydrological forecasting.
+
+- **The object and its normalisation.** The RMS spread, the square root of the mean of the
+  members' unbiased variance over cases, set against the RMSE of the ensemble mean: for an
+  ensemble exchangeable with the observation, $\mathrm{RMSE} \approx \sqrt{(R+1)/R}$ times the
+  spread for $R$ members (Fortin and colleagues, Equations (9), (14) and (15); Equation (16)
+  drops the factor for large $R$) [@fortin2014]. Leutbecher and Palmer write the same relation
+  with the variance divided by $N$, so their factor is $(N+1)/(N-1)$ (Equation (7) of the
+  technical memorandum read) [@leutbecherpalmer2008]. Equation (3) here is Fortin's Equation
+  (15) as a ratio. Fortin and colleagues ask authors to "report the equation that they use to
+  compute ensemble spread" (Section 4), and show that the mean of the standard deviations,
+  used instead of the root of the mean variance, had produced "a diagnostic of
+  underdispersion" where the corrected spread agreed with the RMSE (Section 3, page 1711)
+  [@fortin2014].
+- **The figures.** Spread and RMSE of the ensemble mean against lead time, two lines on one
+  axis (Fortin and colleagues, Figure 1, 500-hPa height over lead times of 1 to 15 days)
+  [@fortin2014]; and the binned spread-error diagram, RMS error against RMS spread with the
+  cases "stratified according to the predicted spread and divided into 20 equally populated
+  bins" (Leutbecher and Palmer, Section 2.2, Figure 4 of the memorandum)
+  [@leutbecherpalmer2008]. **Neither is built here, because neither can be drawn honestly on the
+  data that exists.** `synthetic_ensemble` gives every cell and frame the same dispersion, and
+  its frames advance a phase rather than a lead time, so spread and error against "time" are
+  flat by construction. The binned diagram needs the spread to vary from case to case by more
+  than sampling noise, as Leutbecher and Palmer state: "the variability of the spread has to be
+  larger than that expected by pure sampling uncertainty for this prediction to be useful"
+  (Section 2.2) [@leutbecherpalmer2008]. With one true dispersion everywhere, the bins differ
+  only by sampling noise in the spread, and a calibrated ensemble would draw a flat line rather
+  than the diagonal (a derivation from the plan's review, not a measurement).
+- **The statistics reported beside it.** The ratio alone is not a calibration test: "Other
+  diagnostics, and in particular rank histograms, should be used" (Fortin and colleagues,
+  Section 4) [@fortin2014]. Here those are [rank_histogram](../../metrics/rank_histogram/card.md) and
+  [rank_histogram_chi2](../../metrics/rank_histogram_chi2/card.md); the error of the mean on its own is
+  [ensemble_mean_rmse](../../metrics/ensemble_mean_rmse/card.md).
+- **The experiment.** An operational ensemble verified over a season, at each lead time
+  (Fortin and colleagues, Section 3; Leutbecher and Palmer, Section 2.2). Here only the
+  calibrated null of `synthetic_ensemble` exists; real ensembles wait on
+  [issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md).
+  The experiments that would let both figures be drawn are
+  [EXP-spread_skill-heteroscedastic-synthetic-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-heteroscedastic-synthetic-ensemble.md)
+  (dispersion that varies from cell to cell, for the binned diagram),
+  [EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md)
+  (a real lead time) and
+  [EXP-crps-gneiting-forecaster-suite](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-crps-gneiting-forecaster-suite.md).
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence spread_skill --results results/spread_skill_1793780354`, do not edit -->
@@ -237,12 +283,12 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_ensemble -->
 
-The clean ensemble reads 0.995, within half a percent of the exchangeable value of one,
+The clean ensemble reads 0.990, within one percent of the exchangeable value of one,
 which is the closed-form check on the estimator: the Fortin form and the sqrt((M+1)/M)
 correction together land on the analytic answer at 16 members.
 
-From there the axes separate cleanly in both directions — 0.199 at the harshest deflation
-and 3.978 at the harshest inflation — with a rank correlation of 1 and no overlap between
+From there the axes separate cleanly in both directions — 0.198 at the harshest deflation
+and 3.962 at the harshest inflation — with a rank correlation of 1 and no overlap between
 neighbouring strengths on either. Note what that pair of numbers means for the ordering
 statistics: the raw value moves *down* on one axis and *up* on the other, so both score 1
 only because the analysis ranks on distance from the declared target rather than on the
@@ -258,7 +304,7 @@ dispersion axes leave the ensemble mean, and so the measured field change, uncha
 round-off; its "charges most for", "charges least for" and selectivity are therefore not
 meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/blob/main/issues/111-damage-per-change-divides-by-round-off-on-ensemble-axes.md)).
 
-The bias axis is the useful contrast. It falls from 0.995 to 0.378 without any change in
+The bias axis is the useful contrast. It falls from 0.990 to 0.378 without any change in
 dispersion at all, because biasing the members moves the ensemble mean away from the truth
 and so inflates the denominator. A low ratio therefore does not by itself mean an
 overconfident ensemble; it means spread and error disagree, and this axis is the reminder

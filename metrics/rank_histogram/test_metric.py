@@ -18,8 +18,13 @@ import numpy as np
 import pytest
 
 from degradations._shared.ensemble import scale_spread
+from fmeval.context import COMPANION_KEY
 from metrics.ensemble_mean_rmse.metric import ensemble_mean_rmse
-from metrics.rank_histogram.metric import rank_histogram, reliability_index
+from metrics.rank_histogram.metric import (
+    rank_histogram,
+    rank_histogram_curve,
+    reliability_index,
+)
 from tests.conftest import exchangeable_ensemble, make_ctx
 
 # --- the summary statistic itself ----------------------------------------------------
@@ -85,6 +90,36 @@ def test_a_reference_above_every_member_fills_the_last_bin():
     assert rank_histogram(reference, members, ctx=ctx) == pytest.approx(2 * 4 / 5)
 
 
+# --- the histogram itself: the curve companion ---------------------------------------
+
+
+def test_the_curve_is_the_fraction_of_draws_at_each_rank():
+    """Two members and six cells against a zero reference: ranks 0, 0, 0, 1, 2, 2.
+
+    The curve is every rank 0 .. 2 with the fractions 3/6, 1/6, 2/6, and the reliability
+    index of that curve is |1/2 - 1/3| + |1/6 - 1/3| + 0 = 1/3.
+    """
+    reference = np.zeros((1, 6))
+    members = np.array([
+        [1.0, 1.0, 1.0, -1.0, -1.0, -1.0],
+        [2.0, 2.0, 2.0, 1.0, -2.0, -2.0],
+    ]).reshape(2, 1, 6)
+    ranks, fractions = rank_histogram_curve(reference, members)
+    assert ranks.tolist() == [0, 1, 2]
+    assert fractions == pytest.approx([0.5, 1 / 6, 1 / 3])
+    assert rank_histogram(reference, members) == pytest.approx(1 / 3)
+
+
+def test_the_metric_summarises_the_histogram_it_is_handed():
+    """With the curve in the context's cache the metric reads it instead of ranking again: a
+    flat histogram handed over scores zero whatever the fields."""
+    reference = np.zeros((1, 8, 8))
+    members = np.ones((4, 1, 8, 8))           # every draw at rank 0 if ranked here
+    ctx = make_ctx(reference, field="density", label="test")
+    ctx.cache[COMPANION_KEY] = (np.arange(5), np.full(5, 0.2))
+    assert rank_histogram(reference, members, ctx=ctx) == pytest.approx(0.0)
+
+
 # --- calibration behaviour -----------------------------------------------------------
 
 
@@ -140,8 +175,8 @@ def test_detects_miscalibration_that_the_ensemble_mean_cannot_see():
 def test_ties_are_broken_at_random_so_a_discrete_calibrated_forecast_stays_flat():
     """A collapsed ensemble equal to the reference is all ties, spread evenly over the ranks.
 
-    Randomising among tied ranks is the standard treatment (Hamill 2001): it keeps the
-    histogram uniform for a genuinely calibrated but discretised forecast, where always
+    Randomising among tied ranks (this bundle's rule; Hamill 2001, Sect. 2, says ties need
+    one) keeps the histogram uniform for a calibrated but discretised forecast, where always
     taking the lowest rank -- or any one fixed rank -- would put every draw in a single bin
     and score the bound 2N/(N+1) = 1.6. With 1024 cells in five bins the random draw's
     sampling floor is about 0.05.

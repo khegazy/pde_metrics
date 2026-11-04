@@ -30,28 +30,73 @@ ensemble.
 
 **Ties are broken at random.** Where several members equal the reference exactly, Equation
 (1) is ambiguous, and resolving it by counting only members strictly below would place every
-tied draw in the lowest bin and manufacture a spike that reads as bias. The rank is instead
-drawn uniformly from the range the tie spans [@hamill2001], using the seeded generator the
-pipeline supplies, so a run remains reproducible. This matters for a collapsed ensemble and
-for any coarsely quantised field.
+tied draw in the lowest bin and manufacture a spike that reads as bias. Hamill notes that ties
+need a special rule and refers to earlier work for it (Section 2) [@hamill2001]; the rule here,
+this bundle's, draws the rank uniformly from the range the tie spans, which keeps an
+exchangeable but discretised forecast flat, because the reference is then equally likely to
+sit anywhere in the tied run. The draw uses the seeded generator the pipeline supplies, so a
+run remains reproducible. This matters for a collapsed ensemble and for any coarsely quantised
+field.
 
 The histogram is formed **per frame**, not pooled across frames. Pooling would average away
 a calibration failure that changes sign along the trajectory, and it is the same rule the
 rank correlations in this suite follow for the same reason.
 
-A chi-square goodness-of-fit statistic would be the other natural summary, and the
-repository's synthetic-ensemble tests (`tests/test_synthetic_ensemble.py`) use it where the
-draws really are independent. It is not what is reported: its
-scale depends on the bin count and the sample size, so it cannot be compared across ensemble
-sizes or grids, and interpreting it as a test would need an independence assumption these
-spatially correlated fields do not satisfy. Equation (2) is descriptive, bounded, and reads
-the same way at any ensemble size.
+The histogram itself, the fractions $f_0 \dots f_M$ against the rank, is the metric's curve
+companion, stored on every row and handed to the metric, so the number is computed from exactly
+the histogram that is stored and drawn. The chi-square goodness-of-fit statistic, the other
+summary the field reports, is the sibling bundle
+[rank_histogram_chi2](../../metrics/rank_histogram_chi2/card.md), computed from the same histogram. It
+grows with the number of draws, and its reading as a test needs independent draws, which the
+cells of a spatially correlated field are not; Equation (2) is descriptive, bounded, and does
+not grow with the number of cells.
 
 ### Boundary handling
 
 None in space: the rank at a cell uses only that cell's values across the ensemble. The
 "boundary" that does need a rule is at the ends of the rank ordering, and ties are handled
 as described above.
+
+### How its field reports it
+
+The field is ensemble forecast verification in meteorology, where the rank histogram is also
+called the Talagrand diagram.
+
+- **The object and the figure.** The histogram itself: bars of the relative frequency of each
+  rank against the rank, from 1 to $M + 1$ (Hamill, Figure 1, "P(rank)" against "Rank") or the
+  count of verifications in each bin (Anderson, Figure 8) [@hamill2001; @anderson1996]. Hamill's
+  and Anderson's figures carry no line at the flat value; Delle Monache and colleagues draw one
+  ("the perfect Talagrand diagram shape", Figure 4 of the preprint read) [@dellemonache2006].
+  Here the histogram is the metric's curve companion, as fractions against the rank $0 \dots M$
+  (the number of members below the reference), and is drawn from the stored curves on this
+  card.
+- **The summaries reported beside it.** The reliability index of Delle Monache and colleagues,
+  Equation (2) here, which is their Equation (1) without its factor of 100: they report it in
+  percent (Section 3.1 of the preprint read). They also give a form divided by
+  $\sqrt{M/M_{\min}}$, their Equation (2), because the index "tends to increase with increasing
+  ensemble size", with no derivation shown; the bundle registers the undivided index, whose
+  value has a fixed meaning for a given histogram [@dellemonache2006]. The chi-square statistic
+  and its test of uniformity (Anderson, Section 2c; Hamill, Section 4) [@anderson1996;
+  @hamill2001] are the sibling bundle [rank_histogram_chi2](../../metrics/rank_histogram_chi2/card.md),
+  which also records why Jolliffe and Primo's decomposition of it is not built.
+- **How the field reads it.** Hamill's warnings are part of the standard reading: "a uniform
+  rank histogram is a necessary but not sufficient criterion for determining that the ensemble
+  is reliable" (Section 3a), a U shape can come from conditional biases rather than too little
+  spread (Figure 4), correct variances with wrong covariances show only in histograms of
+  combinations of grid points such as differences (Section 3b, Figure 5), and observation error
+  makes a calibrated ensemble look U-shaped (Section 3c) [@hamill2001].
+- **The experiment.** Histograms over many forecasts at many grid points, by lead time
+  (Anderson), and synthetic ensembles of known miscalibration, including flat histograms from
+  unreliable ensembles (Hamill, Section 3, Figures 2 to 4). Here only the calibrated null of
+  `synthetic_ensemble` and its miscalibration ladder exist; real ensembles wait on
+  [issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md).
+  The missing experiments are
+  [EXP-spread_skill-heteroscedastic-synthetic-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-heteroscedastic-synthetic-ensemble.md)
+  (Hamill's flat-but-unreliable mixture),
+  [EXP-crps-gneiting-forecaster-suite](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-crps-gneiting-forecaster-suite.md)
+  (calibrated forecasters of different sharpness, whose histograms are all flat) and
+  [EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md)
+  (forecasts against lead time).
 
 ## Performance
 
@@ -156,6 +201,12 @@ is meaningful in the sense that the bound is nearly the same, but the sampling f
 so a small index on a four-member ensemble is weaker evidence than the same index on fifty.
 Comparison across resolutions changes the number of draws and therefore the floor.
 
+The curve companion is the histogram: one value per rank $0 \dots M$, the fraction of the
+frame's draws at which exactly that many members fell below the reference, summing to one. A
+flat histogram sits at $1/(M+1)$ in every bin; the analysis reads every rank as its own
+coordinate, so its tables say which ranks a degradation moved, the two ends for a U, the middle
+for a dome, one end for a bias.
+
 ## Limitations
 
 The index says how far from calibrated an ensemble is but not in which direction, and the two
@@ -234,7 +285,7 @@ The clean ensemble reads 0.0451, which is the sampling floor rather than zero: 1
 over a 64x64 grid give 17 bins and a finite histogram is never exactly flat. Every measured
 departure below should be read against 0.0451, not against zero.
 
-Both directions rise well clear of it — to 1.239 at the harshest deflation and 1.009 at the
+Both directions rise well clear of it — to 1.240 at the harshest deflation and 1.011 at the
 harshest inflation, a factor of 20 or more — with a rank correlation of 1 on each. The
 index cannot say which direction it saw, and that is the limitation stated above made
 concrete: 1.0 could be either fault, and only `spread_skill`'s side of one distinguishes

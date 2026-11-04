@@ -93,6 +93,40 @@ distance; cells near such an edge have fewer and farther partners, so their entr
 per-cell map are smaller for the same mismatch. No stencil or transform is involved, and the
 metric runs on any boundary the grid declares.
 
+### How its field reports it
+
+The field is the verification of multivariate probabilistic forecasts, where the variogram
+score was introduced to see the correlation between components that the energy score misses.
+
+- **The object and its normalisation.** The mean of Equation (1) over many cases, each a small
+  vector: Scheuerer and Hamill score $d = 5$ and 15 components in simulation and $d = 5$
+  wind-farm sites in their application, each lead time separately, with inverse-distance weights
+  in kilometres (Sections 3 and 4) [@scheuererhamill2015]. For components of different kinds
+  they propose standardising each by its climatological mean and standard deviation (Section 2),
+  and they note that weights "proportional to the inverse distances" are "conceptually similar
+  to covariance localization" (Section 2) and that going from $d = 5$ to 15 "has a slightly
+  negative effect on the discrimination ability", because more pairs are weakly correlated
+  (Section 3b) [@scheuererhamill2015]. **This bundle departs from that practice in dimension:**
+  it scores the raw field of one channel as one vector of $d = 4096$ cells on the 64 by 64
+  synthetic ensemble, over all $d(d-1)$ ordered pairs, with no standardisation (one variable in
+  one unit, so none is needed; this card's reasoning). No source read evaluates the score at
+  that dimension; Pacchiardi and colleagues use it on a 32 by 64 grid with $p = 1$ (their
+  Section 3.2.1 and Appendix E.4.1) [@pacchiardi2024].
+- **The statistics reported beside it.** Scores or skill scores relative to a reference
+  forecast, in tables per lead time (Scheuerer and Hamill, Table 1), always beside other scores:
+  "We strongly recommend that several different scores be always considered" (Section 5)
+  [@scheuererhamill2015]; here [energy_score](../../metrics/energy_score/card.md) and
+  [crps](../../metrics/crps/card.md), the second because this score is blind to a common bias.
+- **The experiment, and what this repository cannot show.** Simulated Gaussian vectors with an
+  exponential correlation model, the forecast's correlation length mis-specified (Section 3b,
+  Equation (5), Figure 2), and correlation models of a different shape (Section 3c, Figure 3)
+  [@scheuererhamill2015]. That is what the score exists to detect. The synthetic ensemble here
+  draws independent noise at every cell for the reference and every member, so its ensembles
+  never differ in correlation, and nothing in its evidence can show what this score adds over
+  `crps`. That experiment is
+  [EXP-energy_score-correlated-synthetic-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-energy_score-correlated-synthetic-ensemble.md);
+  real ensembles wait on [issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md).
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence variogram_score --results results/variogram_score_1793780354`, do not edit -->

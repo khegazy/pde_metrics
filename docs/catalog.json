@@ -1,7 +1,7 @@
 {
   "counts": {
     "degradations": 25,
-    "metrics": 31,
+    "metrics": 33,
     "reviewed": 0,
     "with_measurements": 27
   },
@@ -1430,6 +1430,105 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Continuous ranked probability score in its fair ensemble form, the proper scoring rule that generalises mean absolute error to a prediction that is a distribution."
+    },
+    {
+      "card": "metrics/crps_skill_score/card.md",
+      "category": "probabilistic",
+      "declared": {
+        "arity": "ensemble",
+        "companions": [],
+        "cost": "cheap",
+        "differentiable": true,
+        "fields": [
+          "*"
+        ],
+        "higher_is_better": true,
+        "measures": "error",
+        "reduction": "mean",
+        "requires_periodic": false,
+        "symmetric": false,
+        "target": null,
+        "units": "dimensionless"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        }
+      ],
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N M log M + N log N)",
+        "resolution_dependent": true,
+        "scale_dependent": false,
+        "triangle_inequality": false
+      },
+      "name": "crps_skill_score",
+      "other_evidence": [],
+      "output": {
+        "description": "One minus the ratio of the ensemble's mean CRPS to the climatological mean CRPS, dimensionless. One for a perfect ensemble, zero at climatology, negative below it.",
+        "lower_bound": null,
+        "upper_bound": 1.0
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/crps_skill_score",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Skill score of the fair ensemble CRPS against climatology, the empirical distribution of the reference's values over the frame; one is perfect, zero is climatology."
     },
     {
       "card": "metrics/energy_distance/card.md",
@@ -14710,7 +14809,18 @@
       "category": "probabilistic",
       "declared": {
         "arity": "ensemble",
-        "companions": [],
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              "rank",
+              "members below"
+            ],
+            "kind": "curve",
+            "name": "rank_histogram",
+            "one_field": false
+          }
+        ],
         "cost": "cheap",
         "differentiable": false,
         "fields": [
@@ -14912,6 +15022,105 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Reliability index of the rank histogram, measuring how far an ensemble's shape departs from the flat histogram a calibrated prediction produces."
+    },
+    {
+      "card": "metrics/rank_histogram_chi2/card.md",
+      "category": "probabilistic",
+      "declared": {
+        "arity": "ensemble",
+        "companions": [],
+        "cost": "cheap",
+        "differentiable": false,
+        "fields": [
+          "*"
+        ],
+        "higher_is_better": false,
+        "measures": "calibration",
+        "reduction": "mean",
+        "requires_periodic": false,
+        "symmetric": false,
+        "target": null,
+        "units": "dimensionless"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        }
+      ],
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N M)",
+        "resolution_dependent": true,
+        "scale_dependent": false,
+        "triangle_inequality": false
+      },
+      "name": "rank_histogram_chi2",
+      "other_evidence": [],
+      "output": {
+        "description": "Chi-square statistic of the rank counts against uniform, dimensionless. Zero for a flat histogram; the number of members in expectation for independent draws from a calibrated ensemble; at most the number of draws times the number of members.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/rank_histogram_chi2",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Pearson's chi-square statistic of the rank histogram against the flat one, the test statistic the field computes for an ensemble's calibration; grows with the sample."
     },
     {
       "card": "metrics/rmse/card.md",
