@@ -271,14 +271,54 @@ def test_load_runs_concatenates_and_tags(tmp_path, traj):
     for name in ("mse", "mae"):
         folder = fio.make_run_folder(tmp_path, name, 42)
         fio.write_results(folder, rows[rows["metric"] == name])
-    combined = fio.load_runs("*_42", root=tmp_path)
+    combined = fio.load_runs(tmp_path.glob("*_42"))
     assert set(combined["run_dir"]) == {"mse_42", "mae_42"}
     assert len(combined) == len(rows)
 
 
 def test_load_runs_without_matches_raises(tmp_path):
-    with pytest.raises(FileNotFoundError, match="no run folders"):
-        fio.load_runs("nothing_*", root=tmp_path)
+    with pytest.raises(FileNotFoundError, match="no results"):
+        fio.load_runs(tmp_path.glob("nothing_*"))
+
+
+def _member(tmp_path, rows, dataset: str, stamp: int, **config):
+    """A run folder as evaluate.py writes it, for one dataset of family ``fam``."""
+    folder = fio.make_run_folder(tmp_path, "comparison", stamp)
+    fio.write_results(folder, rows.assign(dataset=dataset, dataset_family="fam"))
+    for table in ("calibration", "calibration_spectrum"):
+        fio.write_table(folder, pd.DataFrame({"field": ["density"], "x": [stamp]}), table)
+    fio.write_config(folder, {"seed": 1, "dataset": {"name": dataset}, **config})
+    fio.write_run_meta(folder, dataset=dataset, analysis_grid=8, anchor_label="mean_field")
+    return folder.root
+
+
+def test_combine_runs_gathers_one_family_into_one_folder(tmp_path, traj):
+    rows = evaluate(traj).rows
+    members = [_member(tmp_path, rows, "a", 1), _member(tmp_path, rows, "b", 2)]
+    folder = fio.combine_runs(members, 3)
+    assert folder.root.name == "fam_3"
+    combined = fio.read_results(folder)
+    assert list(combined.columns) == list(rows.columns)
+    assert combined.groupby("dataset").size().to_dict() == {"a": len(rows), "b": len(rows)}
+    meta = fio.read_run_meta(folder)
+    assert meta["anchor_label"] == "mean_field" and meta["dataset_family"] == "fam"
+    assert {k: v["run"] for k, v in meta["members"].items()} == {
+        "a": "comparison_1", "b": "comparison_2"}
+    assert fio.read_config(folder)["dataset"] == {"a": {"name": "a"}, "b": {"name": "b"}}
+    assert sorted(pd.read_csv(folder.data / "calibration.csv")["dataset"]) == ["a", "b"]
+
+
+def test_combine_runs_refuses_members_on_different_scales(tmp_path, traj):
+    """Two members whose settings differ beyond the dataset would put two damage scales side
+    by side; one dataset run twice is not a comparison at all."""
+    rows = evaluate(traj).rows
+    a = _member(tmp_path, rows, "a", 1)
+    with pytest.raises(ValueError, match=r"\['analysis'\]"):
+        fio.combine_runs([a, _member(tmp_path, rows, "b", 2, analysis={"anchor": "x"})], 9)
+    with pytest.raises(ValueError, match="one dataset of its own"):
+        fio.combine_runs([a, _member(tmp_path, rows, "a", 3)], 9)
+    with pytest.raises(ValueError, match="at least two"):
+        fio.combine_runs([a], 9)
 
 
 def test_a_map_key_round_trips_even_when_the_label_contains_a_double_underscore():

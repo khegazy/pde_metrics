@@ -241,6 +241,21 @@ def test_invalid_reduction_raises():
         TimeSelection(reduction=0)
 
 
+def test_frame_stride_puts_a_finer_run_on_a_coarser_clock(kinet_file, tmp_path):
+    """Frame i of a strided reader is stored frame i * stride, values and clock alike, and a
+    stride that does not divide the solver steps is refused rather than dropping the last frame.
+    """
+    with KinetRawTrajectory(kinet_file) as plain, \
+            KinetRawTrajectory(kinet_file, frame_stride=2) as strided:
+        assert strided.times.tolist() == plain.times[::2].tolist()
+        assert len(strided) == (N_FRAMES - 1) // 2 + 1
+        assert np.array_equal(strided.frame(1, ["velocity"])["velocity"],
+                              plain.frame(2, ["velocity"])["velocity"])
+    for bad in (0, 3):
+        with pytest.raises(ValueError, match="frame_stride"):
+            KinetRawTrajectory(kinet_file, frame_stride=bad)
+
+
 def test_iter_frames_is_ascending(traj):
     idx = [f.index for f in traj.iter_frames(["density"], TimeSelection(start=1))]
     assert idx == sorted(idx) == [1, 2, 3, 4]

@@ -53,17 +53,15 @@ configuration as a fraction of the field's characteristic scale and resolved per
 against a measured spectrum, so the same configured number becomes a different radius on
 density than on vorticity.
 
-The strengths are configured at 0.06, 0.14 and 0.25 of the characteristic scale. This
-degradation is **disabled in the default set of degradations**: it overlaps heavily with
-the Gaussian and box kernels, and the set of degradations is kept short so that every one
-in a run earns its cost. Enable it when the question is specifically whether a metric
-distinguishes kernel shapes.
+The strengths are configured at 0.06, 0.14 and 0.25 of the characteristic scale. It overlaps
+heavily with the Gaussian and box kernels, and is in the default set because every metric is
+run on every degradation the repository has (`AGENTS.md` §1): it shows whether a metric tells
+kernel shapes apart.
 
 ## Limitations
 
-Disabled by default, so a run will not include this operator unless asked. Its transfer
-function is a Bessel function, which like the box kernel changes sign, so some wavenumbers
-return inverted.
+Its transfer function is a Bessel function, which like the box kernel changes sign, so some
+wavenumbers return inverted.
 
 The radius is rounded up to whole cells when the discrete kernel is built, so two
 configured severities that differ by less than one cell of radius produce the same

@@ -55,13 +55,15 @@ The severity is the relative gain error, so 0.1 means the fluctuation is multipl
 1.1. It is absolute in the sense of needing no per-field calibration: a ratio is already
 comparable between fields.
 
-The strengths are configured at 0.01, 0.05, 0.2 and 0.5. The degradation is disabled by
-default, because every metric in the current panel responds to it in the same trivially
-monotone way and it discriminates between none of them.
+The strengths are configured at 0.01, 0.05, 0.2 and 0.5, the same as `bias`, so that mean
+squared error charges the two the same at every level: the square of the strength, relative to
+the fluctuation variance. It is in the default set because every metric is run on every
+degradation the repository has (`AGENTS.md` §1); a metric that charges the two differently
+tells an amplitude error from a level error.
 
 ## Limitations
 
-Disabled by default; this is a control, not a discriminating test.
+This is a control, not a discriminating test.
 
 Scaling the fluctuation rather than the raw field is a deliberate choice with a
 consequence: on the density field, whose mean is 1.0 and whose fluctuations are of order

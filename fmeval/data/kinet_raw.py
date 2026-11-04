@@ -57,6 +57,7 @@ class KinetRawTrajectory(HDF5Trajectory):
         boundary: Sequence[str] | None = None,
         sim_index: int = 0,
         time_axis: TimeAxisMode = "auto",
+        frame_stride: int = 1,
     ) -> None:
         """Open a kinet raw HDF5 file, locally or over HTTP.
 
@@ -71,6 +72,13 @@ class KinetRawTrajectory(HDF5Trajectory):
             sim_index: Index along the leading simulation axis.
             time_axis: How to read the clock. See ``fmeval.data._timeaxis``; the default
                 only changes behaviour for a remote file whose clock is chunked per frame.
+            frame_stride: Expose every ``frame_stride``-th stored frame as one frame. The
+                runs of one family take a solver step proportional to the cell size at a
+                fixed Mach number, so a 1024^2 run stores four frames per frame of a 256^2
+                run over the same physical time. With the stride that makes them equal,
+                frame ``i`` is the same physical time on every member and one
+                ``dataset.time`` selection serves the whole family. The stride must divide
+                the number of solver steps, so the last stored frame stays on the clock.
         """
         self._open(path, chunk_cache_mb=chunk_cache_mb, nan_policy=nan_policy,
                    sim_index=sim_index)
@@ -129,16 +137,24 @@ class KinetRawTrajectory(HDF5Trajectory):
                 )
             available.append(canonical)
         self._fields = tuple(available)
+        if frame_stride < 1 or (n_frames - 1) % frame_stride:
+            raise ValueError(
+                f"{self.source}: frame_stride={frame_stride} must be a positive divisor of "
+                f"the {n_frames - 1} solver steps, so the strided frames end on the last one."
+            )
+        self._stride = frame_stride
+        self._times = self._times[::frame_stride]
 
     def read_frame(self, t: int, fields: Sequence[str]) -> dict[str, np.ndarray]:
         """Read one frame.
 
         ``ds[sim, :, t]`` returns ``(C, *spatial)`` directly for every channel count, so
         there is no squeeze, reshape or scalar special case. The time position is always a
-        plain int -- never a slice. See the module docstring in ``base.py``.
+        plain int -- never a slice. See the module docstring in ``base.py``. Frame ``t`` is
+        stored frame ``t * frame_stride``.
         """
         out: dict[str, np.ndarray] = {}
         for name in fields:
             ds = self._file[FIELD_MAP[name]]
-            out[name] = np.asarray(ds[self._sim, :, t], dtype=np.float64)
+            out[name] = np.asarray(ds[self._sim, :, int(t) * self._stride], dtype=np.float64)
         return out

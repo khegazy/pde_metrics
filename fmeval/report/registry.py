@@ -194,6 +194,10 @@ def check_preconditions(spec: RendererSpec, ctx) -> tuple[bool, str]:
         return False, f"needs {spec.min_frames} frames, has {df['frame_index'].nunique()}"
     if df["dataset"].nunique() < spec.min_datasets:
         return False, f"needs {spec.min_datasets} datasets, has {df['dataset'].nunique()}"
+    if df["dataset"].nunique() > 1 and SECTIONS_BY_NUMBER[spec.section].key != "complexity":
+        # Every other renderer pools the rows it is given, and a raw value means something
+        # different on each dataset; each member's own folder reports it.
+        return False, "the rows hold several datasets, which only section 12 compares"
     if spec.requires_maps and not ctx.maps:
         return False, "no pointwise metric maps were stored"
     return True, ""

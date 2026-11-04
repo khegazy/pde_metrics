@@ -233,8 +233,14 @@ def write_document(folder: RunFolder, ctx: ReportContext,
         preamble(f"Metric report: {metric}", f"dataset: {dataset}")
     )
 
+    # A folder gathered from a dataset family holds several datasets, and every section but the
+    # overview and section 12 would pool them (`check_preconditions`); each member's own folder
+    # reports those.
+    pooled = ctx.df["dataset"].nunique() > 1
     written: list[str] = []
     for section in SECTIONS:
+        if pooled and section.key not in ("overview", "complexity"):
+            continue
         items = [i for i in by_section.get(section.number, []) if i.status == "ok"]
         prose = _section_prose(section.key, ctx)
         if not items and not prose:

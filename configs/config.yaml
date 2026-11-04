@@ -12,6 +12,9 @@ defaults:
   - dataset: kinet_re5e4_dev
   - degradation: default
   - report: default
+  # None by default. `dataset_family=<name>` with `-m` runs every member of a family and
+  # gathers them into one folder (configs/dataset_family/).
+  - dataset_family: null
   - _self_
 
 paths:

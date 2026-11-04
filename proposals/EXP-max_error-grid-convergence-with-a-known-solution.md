@@ -1,7 +1,7 @@
 ---
 type: "EXP"
 kind: "protocol"
-related: ["max_error", "rmse", "mse", "mae", "nrmse", "h1_seminorm", "docs/ideas/infrastructure/grid_convergence.md", "issues/010"]
+related: ["max_error", "rmse", "mse", "mae", "nrmse", "h1_seminorm", "docs/ideas/infrastructure/grid_convergence.md", "docs/datasets/reynolds_ladder_2d.md"]
 seen_in: "Roy 2005, J. Comput. Phys. 205(1), 131-156, Sect. 2.5, Eqs. 5-8, Figs. 3-4"
 doi: "10.1016/j.jcp.2004.10.036"
 found_by: "update_metric_eval_principles, 2026-11-03"
@@ -53,7 +53,7 @@ does not change the observed order), `h1_seminorm`. On the Sod form, the shock m
 
 No experiment here refines a grid against a known answer. The coarsening degradations
 (`coarsen`, `coarsen_bandlimited`) remove resolution from a fixed reference, which is a model of
-a coarse surrogate, not a coarser solve; the three resolutions of the forecast runs (issue 010)
+a coarse surrogate, not a coarser solve; the three resolutions of the forecast runs (`forecast_re5e4`)
 come from one trajectory with no exact solution and are at most a partial resolution
 sequence, whose asymptotic range would have to be checked first. A numerical analyst who opens
 `max_error` or `rmse` expects to see the order-of-accuracy plot, error against grid spacing on

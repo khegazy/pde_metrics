@@ -1,7 +1,7 @@
 ---
 type: "EXP"
 kind: "protocol"
-related: ["kinetic_energy", "enstrophy", "palinstrophy", "issues/084", "issues/010", "proposals/EXP-orchestrator-20261023-temporal-ladder.md", "proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md"]
+related: ["kinetic_energy", "enstrophy", "palinstrophy", "issues/084", "docs/datasets/reynolds_ladder_2d.md", "proposals/EXP-orchestrator-20261023-temporal-ladder.md", "proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md"]
 seen_in: "Boffetta & Ecke 2012, Annu. Rev. Fluid Mech. 44, 427-451, Eqs. 5-6, p. 430"
 doi: "10.1146/annurev-fluid-120710-101240"
 found_by: "update_metric_eval_principles, 2026-11-03"
@@ -56,7 +56,7 @@ frames of `kinet_re5e4_dev` cover the first 100 solver steps, so `kinet_re5e4` a
 `dataset.time.reduction=1` stores consecutive solver steps, and the reference's residual can be
 computed today; the flow is unforced and decaying, which is the setting of Eqs. 5-6. What is
 missing is a candidate with consecutive states: the ladder damages one snapshot at a time, and
-the forecast pairs of issue 010 are 500 solver steps apart. Either a densely stored surrogate
+the forecast pairs (`forecast_re5e4`) are 500 solver steps apart. Either a densely stored surrogate
 rollout (the rollout proposal) or the consistent spatial damage of the temporal ladder
 proposal would supply one.
 

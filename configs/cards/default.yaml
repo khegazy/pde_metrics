@@ -43,8 +43,14 @@
 # statistics. Who produced the predictions is not recorded, and the label says so. Runs on it use
 # all of its frames, not `evidence_window`, with `analysis_grid.resolution=64` when they pool its
 # three runs.
+# `kinet_re1e6` is the same flow at twenty times the Reynolds number, the second member of
+# the Reynolds ladder (configs/dataset_family/reynolds_ladder_2d.yaml). Its frames are read on
+# kinet_re5e4's clock, so `evidence_window` selects the same physical times on both.
 evidence_datasets:
   kinet_re5e4: developed flow
+  kinet_re1e6: >-
+    developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same
+    initial condition
   synthetic_ensemble: >-
     a calibrated null: evidence that the estimator computes what it claims to compute,
     and nothing about turbulence

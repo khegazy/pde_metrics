@@ -28,6 +28,7 @@ These block criteria that are designed and implemented but cannot be exercised.
 | [037](037-increment-flatness-has-no-damage-scale.md) | The increment flatness is zero over zero on the mean-field anchor, so it alone has no damage scale | low |
 | [005](005-3d-and-cost-extrapolation.md) | All data is two-dimensional | low |
 | [034](034-the-well-format-copy-is-not-published.md) | The Well-format copy is not published, so that reader's HTTP path is only covered by a fixture | low |
+| [011](011-cross-dataset-comparison.md) | Four members of the Reynolds ladder cannot be read; the ladder runs on Re = 5e4 and 1e6 | medium |
 | [084](084-weak-residual-needs-consecutive-states.md) | Residual of the equations in weak form needs states one solver step apart | high |
 | [085](085-inviscid-invariants-need-other-data.md) | Helicity, potential vorticity and information transfer need data the repository does not have | unset |
 | [086](086-winding-angle-is-untestable.md) | Winding angle and Poincaré index: no experiment changes the vortices in a known way | high |
@@ -43,7 +44,6 @@ Designed, hooks in place, not built.
 
 | ID | Title | Priority |
 |---|---|---|
-| [011](011-cross-dataset-comparison.md) | Compare metrics across a Reynolds ladder | medium |
 | [126](126-forecast-runs-as-a-refinement-sequence.md) | The forecast runs at three resolutions are not yet a grid-refinement sequence: the finest is the reference itself, and the predictions' provenance is unrecorded | medium |
 | [013](013-remaining-intuition-figures.md) | Outlier, invariance, triangle-inequality figures | low |
 | [014](014-gradient-signal-criterion.md) | Gradient quality where L2 goes flat | medium |

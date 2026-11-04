@@ -1,7 +1,7 @@
 ---
 type: "EXP"
 kind: "benchmark suite or dataset"
-related: ["mse", "mae", "rmse", "nrmse", "max_error", "h1_seminorm", "spectrum_l2", "kinetic_energy", "enstrophy", "palinstrophy", "issues/004", "issues/010", "issues/078"]
+related: ["mse", "mae", "rmse", "nrmse", "max_error", "h1_seminorm", "spectrum_l2", "kinetic_energy", "enstrophy", "palinstrophy", "issues/004", "docs/datasets/reynolds_ladder_2d.md", "issues/078"]
 seen_in: "Takamoto et al. 2022, NeurIPS 35 Datasets and Benchmarks, 1596-1611 (PDEBench), Sect. 3.3, 4.3, App. B; Ohana et al. 2024, NeurIPS 37 Datasets and Benchmarks, 44989-45037 (The Well), Sect. 4, App. E.3"
 doi: "10.52202/068431-0117"
 found_by: "update_metric_eval_principles, 2026-11-03"
@@ -57,7 +57,7 @@ pairwise metric can run on it too.
 
 ## Why it is helpful
 
-The forecast pairs of issue 010 are the only model output here: one surrogate, two starting
+The forecast pairs (`forecast_re5e4`) are the only model output here: one surrogate, two starting
 times, ten prediction steps each. That is enough for an error-against-step curve on two cases,
 not for the mean over initial conditions that both benchmarks report, nor for the spread that
 says whether one metric separates two models more reliably than another. Issue 004 asks for
@@ -70,7 +70,7 @@ The Well would look for first.
 
 Several tens of solver runs at 256^2 (each the cost of one `kinet_re5e4`-like run, shortened to
 the rollout horizon), a trained surrogate (none exists in the repository; issues 071 and 083 also
-wait on one), and the forecast-pair reader of issue 010 generalised to many trajectories.
+wait on one), and the forecast-pair reader (`fmeval/data/forecast.py`) generalised to many trajectories.
 Alternatively, a dataset of The Well with many trajectories (Table 1 of Ohana et al.: for
 example 1,120 for `shear_flow`, 10,000 for `euler_multi_quadrants`) and a published baseline
 model's rollouts, read through the existing Well-format reader; licence to be checked per
