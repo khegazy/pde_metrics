@@ -19,6 +19,13 @@ reading, because the choices available at the edge (wrapping around to the oppos
 mirroring, padding with zeros) give different numbers from the same formula, and two
 implementations of one published equation can disagree on nothing else.
 
+Definition ends with *How its field reports it*: how the research community the metric comes
+from computes it, normalises it, draws it and tests it, each with a citation, and which of
+those experiments this repository has. Where two communities report the metric differently,
+each form is its own metric, and this subsection names the sibling. Read it before any
+comparison with other metrics; [Choosing a metric](choosing-a-metric.md) groups the metrics by
+the community they come from.
+
 ## Intuition
 
 The same content in words, with no notation at all, written for an early graduate student
@@ -103,7 +110,8 @@ metrics can be compared at a glance. To compare every metric on the same figures
 
 **Results** opens with a table headed *Across the experiments*. Every metric is run on every
 experiment where it makes sense, and the table has one row per experiment: the developed flow,
-the synthetic ensemble, the shock tube and the real forecasts. Each row says what a run on that
+the same flow at a higher Reynolds number, the synthetic ensemble, the shock tube and the real
+forecasts. Each row says what a run on that
 experiment is evidence of, and whether the page reports one. Where it does not, the row says
 why. The metric cannot be computed there, because the experiment lacks a periodic domain, an
 ensemble or the field the metric needs. Or a person judged the result would carry no
