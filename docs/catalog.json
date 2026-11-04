@@ -11336,6 +11336,53 @@
         "profile": [],
         "run": null
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N)",
@@ -11344,6 +11391,7 @@
         "triangle_inequality": true
       },
       "name": "max_error_channel_mean",
+      "other_evidence": [],
       "output": {
         "description": "Mean over channels of each channel's largest absolute field difference over the grid cells, in the field's own units.",
         "lower_bound": 0.0,
@@ -13380,10 +13428,10 @@
           "claim": "developed flow",
           "dataset": "kinet_re5e4",
           "note": null,
-          "primary": true,
+          "primary": false,
           "reason": null,
-          "run": "comparison_1793657627",
-          "state": "measured"
+          "run": null,
+          "state": "not yet run"
         },
         {
           "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
@@ -15962,6 +16010,53 @@
         "profile": [],
         "run": null
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N)",
@@ -15970,6 +16065,7 @@
         "triangle_inequality": true
       },
       "name": "rmse_channel_mean",
+      "other_evidence": [],
       "output": {
         "description": "Mean over channels of each channel's root mean squared field difference over the grid cells, in the field's own units.",
         "lower_bound": 0.0,
@@ -20942,6 +21038,53 @@
         "profile": [],
         "run": null
       },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
       "kind": "metric",
       "math": {
         "complexity": "O(N)",
@@ -20950,6 +21093,7 @@
         "triangle_inequality": false
       },
       "name": "vrmse",
+      "other_evidence": [],
       "output": {
         "description": "Dimensionless mean over channels of each channel's RMSE over the square root of the reference channel's variance plus 1e-7. Predicting the reference's spatial mean scores just under one.",
         "lower_bound": 0.0,
