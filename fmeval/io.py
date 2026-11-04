@@ -347,7 +347,8 @@ def combine_runs(folders: Sequence[Path | str], stamp: int, *,
             whose provenance differs in a :data:`SHARED_META` key (for shards, also in git state
             or calibration): their damages would not be on one scale. For datasets, a member
             holding several datasets or one the others hold too, or members of different
-            families; for shards, two members holding the same metric on the same frame.
+            families; for shards, two members holding the same metric on the same frame, or
+            metrics covering different frames (a shard is missing).
     """
     if across not in ("dataset", "shards"):
         raise ValueError(f"across must be 'dataset' or 'shards', got {across!r}")
@@ -362,11 +363,12 @@ def combine_runs(folders: Sequence[Path | str], stamp: int, *,
     free = {"dataset"} if across == "dataset" else {"metrics"}
 
     def settled(config: dict) -> dict:
-        """The configuration with the frame shard removed: shards may differ in it."""
+        """The configuration without the frame shard: shards may differ in how they split the
+        frames, and the merge checks instead that every metric covers the same frames."""
         if across == "dataset":
             return config
         time = {k: v for k, v in config.get("dataset", {}).get("time", {}).items()
-                if k != "shard"}
+                if k not in ("shard", "shards")}
         return {**config, "dataset": {**config.get("dataset", {}), "time": time}}
 
     for member, config, meta in zip(members[1:], configs[1:], metas[1:], strict=True):
@@ -393,6 +395,10 @@ def combine_runs(folders: Sequence[Path | str], stamp: int, *,
         if not repeated.empty:
             raise ValueError("two members hold the same metric on the same frame: "
                              f"{sorted(set(zip(repeated['metric'], repeated['frame_index'])))[:5]}")
+        covered = pairs.groupby("metric", observed=True)["frame_index"].apply(frozenset)
+        if covered.nunique() != 1:
+            raise ValueError("the metrics do not cover the same frames, so a shard is missing: "
+                             f"{ {m: len(f) for m, f in covered.items()} }")
         name = "comparison"
 
     folder = make_run_folder(members[0].root.parent, name, stamp)

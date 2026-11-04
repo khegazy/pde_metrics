@@ -383,6 +383,10 @@ def test_combine_runs_refuses_shards_that_overlap_or_ran_different_ladders(tmp_p
     a = _shard(tmp_path, rows, names, 1)
     with pytest.raises(ValueError, match="same metric on the same frame"):
         fio.combine_runs([a, _shard(tmp_path, rows, names[:1], 2)], 9, across="shards")
+    with pytest.raises(ValueError, match="a shard is missing"):
+        fio.combine_runs([_shard(tmp_path, rows, names[:1], 5),
+                          _shard(tmp_path, rows[rows["frame_index"] != rows["frame_index"].max()],
+                                 names[1:], 6)], 9, across="shards")
     with pytest.raises(ValueError, match="calibration tables differ"):
         fio.combine_runs([_shard(tmp_path, rows, names[:1], 3),
                           _shard(tmp_path, rows, names[1:], 4, calibration=1)], 9,
