@@ -15,7 +15,7 @@ import pytest
 
 from tests.conftest import cosine_mode, make_ctx
 
-from .metric import radial_energy_spectrum, spectrum_l2
+from .metric import energy_spectrum, radial_energy_spectrum, spectrum_l2
 
 
 def test_a_shifted_wave_is_at_distance_zero():
@@ -155,3 +155,44 @@ def test_a_uniform_reference_is_nan_rather_than_a_number():
     """No fluctuation energy means no scale to divide by, so the metric declines to answer."""
     ctx = make_ctx((8, 8))
     assert np.isnan(spectrum_l2(np.full((1, 8, 8), 3.0), cosine_mode((8, 8), mode=1), ctx=ctx))
+
+
+def test_worked_example_energy_spectrum_by_hand():
+    """E(k) of a 4 x 4 field, worked out by hand; the card's Reading the output quotes it.
+
+    f[x, y] = c_x + 0.5 (-1)^y with c = (1, 0, -1, 0): a wave across the domain along x and
+    the grid-scale alternation along y. Its normalised Fourier coefficients
+    (the transform over the 16 cells) are 1/2 at the modes (+-1, 0) and 0.5 at the single
+    Nyquist mode (0, 2), and zero elsewhere. E(k) is half the sum of |coefficient|^2 over the
+    shell rint(|m|) = k:
+
+        shell 1, modes (+-1, 0), |m| = 1:  (1/4 + 1/4) / 2 = 0.25
+        shell 2, mode (0, 2), |m| = 2:      (1/4) / 2       = 0.125
+        shell 3, the corner modes |m| = 2.83: nothing        = 0
+
+    They sum to 0.375, half the field's mean square, (1/2 + 1/4) / 2. Against a candidate
+    holding only the first wave, the spectra differ in shell 2 alone, by 0.125, and the
+    reference's norm is sqrt(0.25^2 + 0.125^2) = 0.2795, so spectrum_l2 = 0.125 / 0.2795 =
+    1 / sqrt 5 = 0.4472.
+    """
+    ctx = make_ctx((4, 4))
+    x, y = np.meshgrid(np.arange(4), np.arange(4), indexing="ij")
+    wave = np.cos(2.0 * np.pi * x / 4)
+    field = (wave + 0.5 * (-1.0) ** y)[np.newaxis]
+
+    shells, energy = energy_spectrum(field, ctx=ctx)
+    assert shells.tolist() == [1, 2, 3]
+    assert energy == pytest.approx([0.25, 0.125, 0.0], abs=1e-15)
+    assert energy.sum() == pytest.approx(0.5 * np.mean(field ** 2))
+    assert spectrum_l2(field, wave[np.newaxis], ctx=ctx) == pytest.approx(1.0 / np.sqrt(5.0))
+
+
+@pytest.mark.parametrize("shape", [(6, 4), (9, 16), (5, 7, 4)])
+def test_the_spectrum_sums_to_half_the_mean_square_on_any_grid(shape):
+    """Parseval with the field's normalisation, ``sum_k E(k) = <|f'|^2> / 2``, summed over
+    channels, on non-square, odd and three-dimensional grids, where the corner shells hold
+    modes of an incomplete shell and must still be counted."""
+    field = np.random.default_rng(2).standard_normal((2, *shape))
+    _, energy = energy_spectrum(field, ctx=make_ctx(field))
+    fluct = field - field.mean(axis=tuple(range(1, field.ndim)), keepdims=True)
+    assert energy.sum() == pytest.approx(0.5 * np.mean(np.sum(fluct ** 2, axis=0)), rel=1e-12)
