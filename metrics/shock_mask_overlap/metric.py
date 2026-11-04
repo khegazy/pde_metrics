@@ -14,11 +14,13 @@ import numpy as np
 from numpy.typing import NDArray
 
 from fmeval.context import FieldContext
-from metrics.registry import metric
-from metrics.shock_set_distance.metric import shock_mask
-
-#: ``ctx.cache`` key of the reference's shock masks, one per channel, computed once per frame.
-REFERENCE_MASKS = "shock_mask_overlap/reference_masks"
+from fmeval.data.base import GridSpec
+from metrics.registry import companion, metric
+from metrics.shock_set_distance.metric import (
+    pressure_profile,
+    shock_positions,
+    shock_set_score,
+)
 
 
 @metric(
@@ -37,7 +39,8 @@ def shock_mask_overlap(reference: NDArray[np.floating], candidate: NDArray[np.fl
                        ctx: FieldContext) -> float:
     """Dice coefficient between the shocked cells of two pressure fields.
 
-    With ``A`` and ``B`` the cells :func:`shock_mask` flags in the reference and in the
+    With ``A`` and ``B`` the cells :func:`~metrics.shock_set_distance.metric.shock_mask` flags
+    in the reference and in the
     candidate, the Dice coefficient of Taha & Hanbury (2015), BMC Med. Imaging 15, 29,
     Eq. (6)::
 
@@ -55,7 +58,7 @@ def shock_mask_overlap(reference: NDArray[np.floating], candidate: NDArray[np.fl
     Args:
         reference: The trusted pressure, shape ``(C, *spatial)`` on the analysis grid.
         candidate: The pressure being scored, same shape and grid.
-        ctx: Caches the reference's shock masks for the frame.
+        ctx: Supplies the grid, and caches the reference's shock masks for the frame.
 
     Returns:
         The Dice coefficient, dimensionless, in [0, 1]; NaN on a non-finite field.
@@ -65,18 +68,22 @@ def shock_mask_overlap(reference: NDArray[np.floating], candidate: NDArray[np.fl
             without its channel axis would otherwise be read as channels of single cells,
             none flagged, and score a perfect 1.
     """
-    if reference.shape != candidate.shape or reference.shape[1:] != ctx.grid.shape:
-        raise ValueError(f"shock_mask_overlap needs matching shapes on the grid "
-                         f"{ctx.grid.shape}, got {reference.shape} and {candidate.shape}")
-    if not (np.isfinite(reference).all() and np.isfinite(candidate).all()):
-        return float("nan")
-    if REFERENCE_MASKS not in ctx.cache:
-        ctx.cache[REFERENCE_MASKS] = [shock_mask(channel) for channel in reference]
-    values = []
-    for a, channel in zip(ctx.cache[REFERENCE_MASKS], candidate):
-        b = shock_mask(channel)
-        flagged = int(a.sum() + b.sum())
-        # Taha & Hanbury (2015) Eq. (6): 2 |A n B| / (|A| + |B|); 1 when both sets are empty
-        # (convention mine, issues/120).
-        values.append(2.0 * int((a & b).sum()) / flagged if flagged else 1.0)
-    return float(np.mean(values))
+    return shock_set_score(reference, candidate, ctx=ctx, score=dice)
+
+
+def dice(a: NDArray[np.bool_], b: NDArray[np.bool_], grid: GridSpec) -> float:
+    """Dice coefficient of two shock sets; 1 when both are empty (convention, ``issues/120``).
+
+    The grid is not read: an overlap counts cells.
+    """
+    flagged = int(a.sum() + b.sum())
+    # Taha & Hanbury (2015) Eq. (6): 2 |A n B| / (|A| + |B|); 1 when both sets are empty
+    # (convention mine, issues/120).
+    return 2.0 * int((a & b).sum()) / flagged if flagged else 1.0
+
+
+# The point set and the line-out behind the number, shared with shock_set_distance: the cells
+# the detector flags, drawn on the pressure profile of each variant over the reference's.
+companion(of="shock_mask_overlap", kind="points",
+          coordinate=(("x", "cells"), ("pressure", "field")))(shock_positions)
+companion(of="shock_mask_overlap", name="profile")(pressure_profile)

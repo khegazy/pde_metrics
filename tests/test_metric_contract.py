@@ -637,6 +637,10 @@ def test_response_to_a_small_displacement_has_the_declared_power(name: str, rati
     # The distance between shock sets is a length: the detector reads only pressure ratios,
     # so the same cells are flagged at any spacing and every distance between them doubles.
     pytest.param("shock_set_distance", 2.0, id="shock_set_distance-length"),
+    pytest.param("shock_set_hausdorff", 2.0, id="shock_set_hausdorff-length"),
+    pytest.param("shock_set_hausdorff95", 2.0, id="shock_set_hausdorff95-length"),
+    pytest.param("shock_set_masd", 2.0, id="shock_set_masd-length"),
+    pytest.param("shock_set_baddeley_delta", 2.0, id="shock_set_baddeley_delta-length"),
     # The Wasserstein distance is a length of transport: the same mode on a grid twice as
     # coarse moves the same fraction of the mass twice as far. Given on its positive domain.
     pytest.param("wasserstein", 2.0, id="wasserstein-length"),

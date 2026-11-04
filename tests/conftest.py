@@ -122,6 +122,14 @@ SQUARE_HALF_AMPLITUDE = np.array([[[0.0, 0.0, 0.0, 0.0],
                                    [0.0, 0.5, 0.5, 0.0],
                                    [0.0, 0.0, 0.0, 0.0]]])
 
+# The shock-set metrics' worked example, used by their tests and quoted in their cards: a
+# pressure step of ratio 10 on sixteen cells, whose jump flags cells 7 and 8; the same step two
+# cells further right (cells 9 and 10); and the step in place with a one-cell spike of 10 in the
+# high state, which flags its two neighbours, cells 0 and 2, as spurious shocks.
+SHOCK_STEP = np.array([[1.0] * 8 + [0.1] * 8])
+SHOCK_STEP_MOVED = np.array([[1.0] * 10 + [0.1] * 6])
+SHOCK_STEP_SPIKE = np.array([[1.0, 10.0] + [1.0] * 6 + [0.1] * 8])
+
 # --- grids, contexts and ensembles ----------------------------------------------------
 
 

@@ -1,7 +1,7 @@
 ---
 type: "EXP"
 kind: "benchmark problem"
-related: ["shock_mask_overlap", "shock_set_distance", "proposals/MTR-shock_mask_overlap-fractions-skill-score.md", "proposals/MTR-shock_set_distance-object-matched-shock-distance.md", "proposals/MTR-shock_set_distance-other-surface-distance-summaries.md", "proposals/EXP-shock_set_distance-2d-shock-dataset.md", "issues/002"]
+related: ["shock_mask_overlap", "shock_set_distance", "shock_set_hausdorff", "shock_set_hausdorff95", "shock_set_masd", "shock_set_baddeley_delta", "proposals/MTR-shock_mask_overlap-fractions-skill-score.md", "proposals/MTR-shock_set_distance-object-matched-shock-distance.md", "proposals/MTR-shock_set_distance-other-surface-distance-summaries.md", "proposals/EXP-shock_set_distance-2d-shock-dataset.md", "issues/002"]
 seen_in: "Ahijevych, Gilleland, Brown & Ebert 2009, Weather Forecast. 24(6), 1485-1497, Sects. 2-3, Tables 1 and 4; Gilleland et al. 2009, Weather Forecast. 24(5), 1416-1430, Sect. 1; Roberts & Lean 2008, Mon. Weather Rev. 136(1), 78-97, Sect. 2d, Fig. 4"
 doi: "10.1175/2009WAF2222298.1"
 found_by: "update_metric_eval_principles, 2026-11-03"

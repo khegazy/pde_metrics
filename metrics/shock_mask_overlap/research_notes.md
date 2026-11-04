@@ -113,8 +113,12 @@ card, where they are still open.
   misses plus false alarms. It has the form of the Jaccard index of the forecast and observed
   event sets (the builder's identification from the definitions, not read in a primary source),
   so it is not a new metric here. Recorded so that a later agent does not propose it.
-- **Metrics Reloaded's worst-value rule for the both-empty case** (0) was rejected for the reason
-  given under Method choices.
+- **Metrics Reloaded's general worst-value rule applied to the both-empty case** (0) was
+  rejected for the reason given under Method choices. The paper states that rule for undefined
+  values in general and no rule for both sets empty; its code returns NaN for Dice with both
+  empty and warns that it "can be set to 1 when aggregating" (`dsc` in
+  `MetricsReloaded/metrics/pairwise_measures.py`, read on 2026-11-04 by the
+  `metrics-topology-shocks` task).
 
 ## Evidence runs
 
@@ -273,7 +277,8 @@ quotation; and the fractions-skill-score algebra.
 
 ## Open questions and follow-ups
 
-- **The both-empty convention**, 1 against Metrics Reloaded's 0, has no evidence row on Sod:
+- **The both-empty convention**, 1 against the 0 that Metrics Reloaded's general worst-value
+  rule would give, has no evidence row on Sod:
   [issue 120](../../issues/120-shock-mask-overlap-both-empty-convention.md), open.
 - **The two readings on `shock_set_distance`'s card** (half-cell count, high-pass mechanism):
   routed to an issue; the card has since been corrected and the issue deleted.

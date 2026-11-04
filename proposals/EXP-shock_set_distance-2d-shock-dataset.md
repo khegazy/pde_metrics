@@ -1,7 +1,7 @@
 ---
 type: EXP
 kind: benchmark problem
-related: ["metrics/shock_set_distance", "metrics/shock_mask_overlap", "docs/ideas/shock_geometry/shock_turbulence_interaction.md", "issues/002"]
+related: ["metrics/shock_set_distance", "metrics/shock_mask_overlap", "metrics/shock_set_hausdorff", "metrics/shock_set_hausdorff95", "metrics/shock_set_masd", "metrics/shock_set_baddeley_delta", "docs/ideas/shock_geometry/shock_turbulence_interaction.md", "issues/002"]
 seen_in: "Lax & Liu 1998, SIAM J. Sci. Comput. 19(2), 319-340"
 doi: "10.1137/S1064827595291819"
 found_by: "shock_set_distance, 2026-10-30"
@@ -24,6 +24,15 @@ candidates, in order of cost:
 2. **Decaying compressible turbulence with eddy shocklets**, the case of issue 002, at the
    turbulent Mach number of Lee, Lele and Moin (1991, Phys. Fluids A 3(4), 657): many small
    shocks embedded in turbulence, the case the metric is meant for.
+3. **A Sedov-Taylor blast wave**, the known-answer test with which shock detection in
+   computational fluid dynamics validates a finder (Schaal & Springel 2015, MNRAS 446, 3992,
+   Sect. 3.1, Fig. 1: a point explosion on 25^3 to 100^3 cells, the detected shock zone and
+   surface on a cross-section against the analytic radius, and the detected surface area against
+   time beside 4 pi R(t)^2). Its shock is a closed curve or surface at a known radius, so a
+   candidate at a shifted time, or the same explosion at another resolution, displaces every
+   point of it by a known amount in every direction, which tests the axis-by-axis detector on a
+   front oblique to the grid everywhere. Added 2026-11-04 by the `metrics-topology-shocks` task
+   (arXiv HTML of Schaal & Springel, 1407.4117v2, read).
 
 ## What it tests
 
@@ -35,8 +44,12 @@ and the pooled average's weighting toward the larger set (the card's Limitations
 
 ## Metrics it would test
 
-`shock_set_distance`, and `shock_mask_overlap`, which imports the same detector; on shocklets,
-the shock-turbulence interaction statistics as well.
+`shock_set_distance`, its siblings `shock_set_hausdorff`, `shock_set_hausdorff95`,
+`shock_set_masd` and `shock_set_baddeley_delta`, and `shock_mask_overlap`, all of which import
+the same detector; on shocklets, the shock-turbulence interaction statistics as well. The
+weather-verification scores of thresholded fields that a single one-dimensional shock leaves
+degenerate, the fractions skill score over window width and the critical success index and
+equitable threat score, become measurable here.
 
 ## Why it is helpful
 

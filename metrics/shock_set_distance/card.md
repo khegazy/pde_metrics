@@ -78,19 +78,24 @@ than a misplaced one. Both are conventions
 ([issue 102](https://github.com/khegazy/pde_metrics/blob/main/issues/102-shock-set-distance-empty-and-non-positive-conventions.md)).
 Channels, of which pressure has one, are averaged.
 
-**Not registered.** [@taha2015] give three other summaries of the same nearest-point distances:
-the Hausdorff distance, the larger of the two directed maxima, Eq. (48), which they call
-"generally sensitive to outliers"; its quantile form, which they call "one way to handle
-outliers"; and the average distance, the larger of the two directed means, Eq. (50), which they
-call "stable and less sensitive to outliers than the HD". [@maierhein2024], Suppl. Note 2.3,
-recommends the mean average surface distance (MASD) as its default boundary metric when errors
-should be penalised by distance, because it "has mathematical advantages over" the average
-symmetric surface distance; I did not read its formula there. The summaries differ even for
-one shock in each field: a sharp step moved $s$ cells has a Hausdorff distance of $s$ cells,
-against $s - \tfrac{1}{2}$ for Equation (2) and for the larger of the two directed means; and
-once the two sets differ in size, the pooled mean of Equation (2) weights the larger set more
-than either directed mean does (my derivations). Each would be a sibling bundle importing
-`surface_distances`.
+**Other summaries, each its own bundle.** The same nearest-cell distances have other standard
+summaries, and each is a sibling bundle importing this one's detector, `surface_distances` and
+empty-set conventions: the Hausdorff distance, the larger of the two directed maxima
+([@taha2015], Eq. (48), "generally sensitive to outliers"), in
+[shock_set_hausdorff](../../metrics/shock_set_hausdorff/card.md); its 95th-percentile form, the
+"HD95" of medical segmentation, in [shock_set_hausdorff95](../../metrics/shock_set_hausdorff95/card.md);
+the mean average surface distance (MASD), the mean of the two directed means, which
+[@maierhein2024], Suppl. Note 2.3, recommend over Equation (2) as the default boundary distance
+when errors should be penalised by distance, in [shock_set_masd](../../metrics/shock_set_masd/card.md);
+and Baddeley's Delta, the distance of binary images that spatial forecast verification uses, in
+[shock_set_baddeley_delta](../../metrics/shock_set_baddeley_delta/card.md). The summaries
+differ even for one shock in each field: a sharp step moved $s$ cells has a Hausdorff distance of
+$s$ cells against $s - \tfrac{1}{2}$ for Equation (2), and once the two sets differ in size the
+pooled mean of Equation (2) weights the larger set more than either directed mean does (my
+derivations; the worked examples on those cards show both). The average distance of [@taha2015],
+the larger of the two directed means, Eq. (50), is not built: no field here reports it as its
+standard, and it is written up in
+[MTR-shock_set_distance-other-surface-distance-summaries](https://github.com/khegazy/pde_metrics/blob/main/proposals/MTR-shock_set_distance-other-surface-distance-summaries.md).
 
 ### Boundary handling
 
@@ -101,6 +106,69 @@ domain and never around it. On a periodic grid this misses a jump that sits exac
 seam and overstates the distance between two shocks on either side of it, so the metric is
 exact on bounded domains and approximate on periodic ones. It takes no Fourier transform and
 does not declare `requires_periodic`, and it runs on the bounded `sod_shock_tube`.
+
+### How its field reports it
+
+Three fields meet in this metric, and each reports it differently.
+
+- **Shock detection in computational fluid dynamics** [@schaal2015]. The object is the set of
+  shocked cells, a zone reduced to a surface one cell thick (Sect. 2.3.2-2.3.3), with a Mach
+  number on each surface cell (Sect. 2.3.4). The finder is validated against analytic solutions
+  (Sect. 3): on a Sedov-Taylor blast wave, a cross-section of the detected zone and surface
+  against the analytic radius, and the detected surface area against time beside the analytic
+  $4\pi R^2(t)$ (Sect. 3.1, Fig. 1, "a small systematic overestimation of ~5%"); and on ten shock
+  tubes of Mach number 1.5 to 1000 (Table 1), the histogram of detected Mach numbers for each
+  way of estimating them and the dissipated energy flux against the analytic one (Sect. 3.2,
+  Fig. 2). The field reports where the detector fires against where the exact shock is, not a
+  distance between two detected sets. `sod_shock_tube` is its shock-tube test; the card's first
+  figure, the pressure line-out of each degraded field with its detected shock cells over the
+  reference's, is the one-dimensional form of their cross-section (my reading). The Sedov-Taylor
+  test needs two or three dimensions and is added to
+  [EXP-shock_set_distance-2d-shock-dataset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_set_distance-2d-shock-dataset.md);
+  the Mach-number histogram needs the temperature or the velocity beside the pressure
+  ([issue 096](https://github.com/khegazy/pde_metrics/blob/main/issues/096-several-fields-handed-to-one-metric.md);
+  [MTR-shock_set_distance-full-shock-zone-detector](https://github.com/khegazy/pde_metrics/blob/main/proposals/MTR-shock_set_distance-full-shock-zone-detector.md)).
+- **Medical image segmentation** [@taha2015]; [@yeghiazaryan2018]; [@maierhein2024]. The object
+  is the set of surface distances between a segmentation and its reference, summarised per case
+  by Equation (2), by the Hausdorff distance and its 95th percentile, or by the mean of the two
+  directed means; the siblings above implement each. Implementations measure from the border of
+  each mask ([@medpy], `__surface_distances`, by one erosion; [@metricsreloadedcode],
+  `border_distance`); this bundle measures from every flagged cell, since a detected shock is already
+  one or two cells thick. For an empty set, [@maierhein2024], Suppl. Note 2.3, give a general
+  rule: set an undefined value to the worst possible value, for a distance the image diagonal.
+  They give no rule for a reference and a prediction both empty, and the consortium's code
+  returns NaN for a distance with any empty set and warns that it should be set to the worst
+  value when aggregating ([@metricsreloadedcode], `measured_distance`). This bundle's two conventions
+  are therefore its own
+  ([issue 102](https://github.com/khegazy/pde_metrics/blob/main/issues/102-shock-set-distance-empty-and-non-positive-conventions.md)).
+  The field's experiment is an annotated test set of many cases; the exact Sod solution is the
+  nearest thing here, one known answer per frame.
+- **Spatial forecast verification** [@gilleland2009]; [@ahijevych2009]. Its methods for
+  gridded fields fall into four families, neighbourhood, scale separation, features-based and
+  field deformation, compared on geometric cases with prescribed displacement, size and aspect
+  errors and on real fields shifted by known amounts [@ahijevych2009]. For two binary fields the
+  matching measure is a distance between binary images, Baddeley's Delta, "a mathematical
+  displacement metric" [@gilleland2011], built as
+  [shock_set_baddeley_delta](../../metrics/shock_set_baddeley_delta/card.md). The geometric and
+  perturbed cases are written up for shock sets in
+  [EXP-shock_mask_overlap-geometric-and-perturbed-cases](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_mask_overlap-geometric-and-perturbed-cases.md).
+  The field's other scores of thresholded fields, the fractions skill score over neighbourhood
+  width (a neighbourhood method, [@roberts2008]) and the older categorical scores, the critical
+  success index and the equitable threat score, are not built: on one one-dimensional shock in
+  2048 cells the chance-hit term of the equitable threat score is negligible, so it is about the
+  critical success index, which is a function of the overlap that
+  [shock_mask_overlap](../../metrics/shock_mask_overlap/card.md) already ranks, and the
+  fractions skill score against width is a step at the shift distance (reasoning, not a
+  measurement). They wait for two-dimensional shock data
+  ([issue 002](https://github.com/khegazy/pde_metrics/blob/main/issues/002-shocklet-dataset.md);
+  [EXP-shock_set_distance-2d-shock-dataset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_set_distance-2d-shock-dataset.md);
+  [MTR-shock_mask_overlap-fractions-skill-score](https://github.com/khegazy/pde_metrics/blob/main/proposals/MTR-shock_mask_overlap-fractions-skill-score.md)).
+
+**The experiments here.** The metric needs pressure, so of the repository's experiments it runs
+only on `sod_shock_tube`, an analytic check; `kinet_re5e4`, `kinet_re1e6`, `forecast_re5e4` and
+`synthetic_ensemble` hold no pressure, a skip derived from the data. A shock displaced by a
+physically consistent amount, the exact solution at a shifted time, is written up in
+[EXP-sod_evidence-sod-time-offset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-sod_evidence-sod-time-offset.md).
 
 ## Performance
 
@@ -213,6 +281,11 @@ state on either side of it, and every smooth part of the field.
   2048-cell grid, which the harness's equivalence test reads as a provably small response
   although the metric followed the shift exactly. Read the value in cells, not the damage, for
   a misplaced shock.
+- **Companions.** Two, both properties of one field, stored for the candidate on the frames
+  `report.error_map` names and on their clean level, the reference: `shock_set_distance`, the
+  detected shock cells as rows of (cell index along the first grid axis, pressure there), and
+  `shock_set_distance.profile`, the pressure itself. The card's first figure draws each variant's
+  profile over the reference's with both sets of detected cells marked on it.
 
 ## Limitations
 
@@ -246,6 +319,7 @@ state on either side of it, and every smooth part of the field.
 - **Pooling favours the larger set.** Equation (2) weights each direction by its number of
   points, so a candidate with many spurious detections is scored mostly by how far they lie
   from the true shock, and a missed weak shock beside a strong one barely moves the value.
+  [shock_set_masd](../../metrics/shock_set_masd/card.md) weighs the two directions equally.
 - **Only one dimension is evidenced.** The distance transform and the detector are written
   for any number of dimensions, but the only dataset with a shock is the one-dimensional Sod
   tube, where each field has one shock. Many shocklets in two or three dimensions, the case

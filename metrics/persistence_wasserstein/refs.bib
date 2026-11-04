@@ -1,0 +1,124 @@
+@inproceedings{cohensteiner2005,
+  author    = {Cohen-Steiner, David and Edelsbrunner, Herbert and Harer, John},
+  title     = {Stability of persistence diagrams},
+  booktitle = {Proceedings of the Twenty-First Annual Symposium on Computational Geometry
+               (SoCG '05)},
+  publisher = {ACM},
+  pages     = {263--271},
+  year      = {2005},
+  doi       = {10.1145/1064092.1064133},
+  note      = {Read in the authors' copy of this conference version (footer "SCG'05, June 6-8,
+               2005, Pisa", nine pages), served at a URL whose file name says 2007. The
+               persistence diagram of a tame function for one homology dimension, with points
+               at infinity for classes never killed and the diagonal at infinite multiplicity
+               (Sect. 2, Definition); the bottleneck distance with the L-infinity norm between
+               points (Sect. 3.1, Definition); and the Main Theorem, d_B(D(f), D(g)) <=
+               ||f - g||_inf for continuous tame functions (Sect. 3.1; inequality (1) in
+               Sect. 1), the precedent for the bound on this metric, whose cell-wise constant
+               filtration it does not cover}
+}
+
+@misc{skraba2020,
+  author       = {Skraba, Primoz and Turner, Katharine},
+  title        = {Wasserstein Stability for Persistence Diagrams},
+  howpublished = {arXiv preprint arXiv:2006.16824},
+  year         = {2020},
+  doi          = {10.48550/arXiv.2006.16824},
+  note         = {Read in the arXiv HTML of version 7 (10 Jul 2025); every number cited here is
+                  that version's. The bottleneck distance between the diagrams of all dimensions
+                  as the supremum over dimensions of the per-dimension bottleneck distances, each
+                  dimension matched on its own (Eq. 1): the reduction over dimensions this metric
+                  registers; the total p-Wasserstein distance, the p-th root of the sum over
+                  dimensions of the p-th powers, whose limit p -> inf that is (Definition 2.5);
+                  the distance between points at infinity, |a - b|, and their infinite distance
+                  to finite points and the diagonal (Definition 2.4); the interval decomposition,
+                  with birth and death the infimum and supremum of an interval (Sect. 2,
+                  Theorem 2.3), from which the Betti curves are read; the Cellular Wasserstein
+                  Stability Theorem (Theorem 4.6(i)), whose limit p -> inf bounds the metric by
+                  max_error, checked in test_metric.py; and "Method 1" for images, the pixel as a
+                  maximal cell and lower cells taking the minimum of their cofaces (Sect. 5.1)}
+}
+
+@incollection{bleile2022,
+  author    = {Bleile, Bea and Garin, Ad{\'e}lie and Heiss, Teresa and Maggs, Kelly and
+               Robins, Vanessa},
+  title     = {The Persistent Homology of Dual Digital Image Constructions},
+  booktitle = {Research in Computational Topology 2},
+  series    = {Association for Women in Mathematics Series},
+  volume    = {30},
+  publisher = {Springer},
+  pages     = {1--26},
+  year      = {2022},
+  doi       = {10.1007/978-3-030-95519-9_1},
+  note      = {Read as arXiv:2102.11397. The T-construction, in which a voxel is a
+               top-dimensional cube and a lower cube takes the smallest value of its adjacent top
+               cubes (Definition 4.4), against the V-construction, in which a voxel is a vertex
+               (Definition 4.3); the two give different diagrams for one image (Sect. 1). This
+               bundle uses the T-construction, which matches cell-averaged data, and the remark of
+               Sect. 4.2 that a periodic domain makes the complex a torus}
+}
+
+@misc{gudhicubical,
+  author       = {Dlotko, Pawe{\l}},
+  title        = {Cubical complex},
+  howpublished = {GUDHI User and Reference Manual, version 3.13, GUDHI Editorial Board},
+  url          = {https://gudhi.inria.fr/python/latest/cubical_complex_user.html},
+  note         = {The implementation this metric calls: filtrations given on the maximal cubes
+                  and extended to every face, and periodic boundary conditions that identify
+                  opposite sides, so that a complex periodic in every direction is a torus. That
+                  the faces take the minimum of their top cubes, and that periodic_dimensions
+                  follows the numpy axis order, were measured, not read}
+}
+
+@article{cohensteiner2010,
+  author  = {Cohen-Steiner, David and Edelsbrunner, Herbert and Harer, John and Mileyko, Yuriy},
+  title   = {Lipschitz Functions Have {$L_p$}-Stable Persistence},
+  journal = {Foundations of Computational Mathematics},
+  volume  = {10},
+  number  = {2},
+  pages   = {127--139},
+  year    = {2010},
+  doi     = {10.1007/s10208-010-9060-6},
+  note    = {Read in the authors' copy (pub.ista.ac.at/~edels/Papers/2010-01-LpStablePersistence.pdf,
+             two-column, text extracted with Ghostscript). Sect. 3, paragraph "Wasserstein
+             distance": the degree-p Wasserstein distance between the persistence diagrams of two
+             functions, the p-th root of the sum over all dimensions and over the points of a
+             bijection of the p-th powers of the L-infinity distances between matched points: the
+             form this metric registers at p = 1. Sect. 3 states the Wasserstein Stability
+             Theorem for tame Lipschitz functions on a triangulable compact space (not the
+             cell-wise constant fields here). Sect. 4 suggests W_2 for clustering gene-expression
+             time series. The journal pagination was not checked against this copy}
+}
+
+@misc{gudhiwasserstein,
+  author       = {{GUDHI Editorial Board}},
+  title        = {Wasserstein distance},
+  howpublished = {GUDHI User and Reference Manual, version 3.13, GUDHI Editorial Board},
+  note         = {Read in the installed gudhi 3.13.0 docstrings, not the web page: the
+                  optimal-transport route gudhi.wasserstein.wasserstein_distance(X, Y,
+                  matching=False, order=1.0, internal_p=inf, ...), whose defaults are the
+                  exponent 1 and the L-infinity ground norm this metric uses, and
+                  gudhi.hera.wasserstein_distance, "Relative error 1+delta", with points at
+                  infinity supported.}
+}
+
+@misc{rtda,
+  author       = {{TDA package authors}},
+  title        = {{TDA}: Statistical Tools for Topological Data Analysis, function wasserstein},
+  howpublished = {R package documentation},
+  url          = {https://rdrr.io/pkg/TDA/man/wasserstein.html},
+  note         = {Read: usage wasserstein(Diag1, Diag2, p = 1, dimension = 1); "The default value
+                  is 1" for p, one homology dimension per call}
+}
+
+@misc{giottotda,
+  author       = {{giotto-tda developers}},
+  title        = {gtda.diagrams.PairwiseDistance},
+  howpublished = {giotto-tda documentation, version 0.4.0, module source gtda/diagrams/distance.py},
+  url          = {https://giotto-ai.github.io/gtda-docs/0.4.0/_modules/gtda/diagrams/distance.html},
+  note         = {Read: metric="wasserstein" takes p (default 2.) and delta (default 0.01), "an
+                  exact algorithm is not available", computed by the Hera backend; the distances
+                  of the homology dimensions are combined by a p-norm of order `order`, default 2.
+                  The second software standard, which this bundle does not register (card,
+                  How its field reports it)}
+}

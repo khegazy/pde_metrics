@@ -240,3 +240,12 @@ critiques and their outcomes:
   harness gaps a new caller or a 3-D dataset would hit first.
 - Whether the clean level should always be stored for a point set, rather than only when the user
   lists it, is the builder's design choice and was not reviewed as a question.
+
+## Round of 2026-11-04 (task `metrics-topology-shocks`)
+
+The per-dimension step was extracted into `diagram_distances(reference, candidate, *, ctx,
+distance)`, shared with `persistence_wasserstein`. It now sorts each dimension's points and hands
+the two diagrams to the distance in an order fixed by their contents, so an approximate distance
+is exactly symmetric. The refactor gate, the old function against the new on 28 pairs of real
+`kinet_re5e4` fields (density and vorticity, 64 and 256 grids, three Gaussian blurs, a box filter,
+a roll and two noise levels), found every value bitwise equal.

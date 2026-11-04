@@ -42,15 +42,21 @@ and recall are $|A \cap B|/|B|$ and $|A \cap B|/|A|$, whose harmonic mean is Equ
 **Empty sets.** When one set is empty, Equation (1) gives 0. When both are, it is $0/0$, and
 the metric returns 1: both fields agree there is no shock (my convention,
 [issue 120](https://github.com/khegazy/pde_metrics/blob/main/issues/120-shock-mask-overlap-both-empty-convention.md)).
-[@maierhein2024], Suppl. Note 2.3, would instead set an undefined value to the worst possible
-one, 0, which charges a smooth prediction of a smooth reference as heavily as a missed shock.
+[@maierhein2024], Suppl. Note 2.3, give no rule for this case; their general rule, to set an
+undefined value to the worst possible one, would give 0, which charges a smooth prediction of a
+smooth reference as heavily as a missed shock. The consortium's code returns NaN when both are
+empty and warns that the value "can be set to 1 when aggregating" ([@metricsreloadedcode],
+`dsc`), the value this metric returns.
 Channels, of which pressure has one, are averaged. A field that is NaN or infinite anywhere
 scores NaN.
 
-The metric has no companion. The object behind the number is a per-cell map of which cells
-both fields flag, which only the reference flags and which only the candidate flags; it is a
-map of three classes, and none of the registry's reductions (a mean, a sum, a root mean or a
-maximum of one map) turns it into the ratio of Equation (1).
+The companions are those of
+[shock_set_distance](../../metrics/shock_set_distance/card.md), imported: the detected shock
+cells of one field, as (cell index, pressure) rows, and the pressure itself, which the card's
+first figure draws as each variant's line-out over the reference's with both sets of cells
+marked. No per-cell map is stored: the map of cells flagged by both fields, by the reference
+only and by the candidate only has three classes, and none of the registry's reductions (a mean,
+a sum, a root mean or a maximum of one map) turns it into the ratio of Equation (1).
 
 ### Boundary handling
 
@@ -59,6 +65,42 @@ beyond the domain, and there the field is extended by repeating its edge value, 
 zero-gradient wall, so nothing wraps around; a jump that sits exactly on the seam of a
 periodic grid is missed. The metric takes no Fourier transform, does not declare
 `requires_periodic`, and runs on the bounded `sod_shock_tube`.
+
+### How its field reports it
+
+- **Medical image segmentation** [@taha2015]; [@maierhein2024]. The Dice coefficient is the
+  overlap score of segmentation, "the most used metric" for medical volume segmentation
+  ([@taha2015], beside Eq. (6)), and [@maierhein2024] recommend the DSC or the IoU by default for
+  semantic segmentation (main-text Results, "Step 2 - Metric Selection"). It is computed per
+  case, an image and its reference annotation, on the field's own test sets; the consortium's
+  code computes it from the confusion counts and leaves the both-empty case undefined
+  ([@metricsreloadedcode], `dsc`; see Empty sets above). Overlap scores are reported beside a
+  boundary distance because they "provide the same value regardless of how far the segments are
+  from each other" ([@taha2015]); the boundary distances of the same detected shocks are
+  [shock_set_distance](../../metrics/shock_set_distance/card.md) and its siblings.
+- **Spatial forecast verification**. A thresholded forecast field is scored there by the
+  categorical scores, the critical success index and the equitable threat score, and by the
+  neighbourhood methods, of which the fractions skill score over window width is one
+  ([@roberts2008]; the families are in [@gilleland2009]). The critical success index of two
+  event sets is $|A \cap B| / |A \cup B|$, a monotone function of Equation (1) that ranks every
+  candidate alike (the identification is this bundle's builder's, from the definitions), and the
+  fractions skill score at zero width is Equation (1) for binary fields
+  ([MTR-shock_mask_overlap-fractions-skill-score](https://github.com/khegazy/pde_metrics/blob/main/proposals/MTR-shock_mask_overlap-fractions-skill-score.md)).
+  Neither is built. On the one one-dimensional shock in 2048 cells of `sod_shock_tube` the
+  chance-hit term of the equitable threat score is negligible, so it is about the critical
+  success index, and the fractions skill score against window width is a step at the shift
+  distance (reasoning, not a measurement): both say no more there than this metric and
+  `shock_set_distance` do. They wait for two-dimensional data with many shocks
+  ([issue 002](https://github.com/khegazy/pde_metrics/blob/main/issues/002-shocklet-dataset.md);
+  [EXP-shock_set_distance-2d-shock-dataset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_set_distance-2d-shock-dataset.md)),
+  and the field's geometric and perturbed test cases are written up in
+  [EXP-shock_mask_overlap-geometric-and-perturbed-cases](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_mask_overlap-geometric-and-perturbed-cases.md).
+- **Shock detection in computational fluid dynamics** validates a detector against the exact
+  shock position rather than by an overlap score; that field's practice, and the experiments
+  this detector is run on, are on `shock_set_distance`'s card. As there, the metric needs
+  pressure, so it runs only on `sod_shock_tube`, and
+  [EXP-sod_evidence-sod-time-offset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-sod_evidence-sod-time-offset.md)
+  is the missing physically consistent displacement.
 
 ## Performance
 
@@ -166,6 +208,10 @@ and every smooth part of the field.
 - **The damage scale.** The repository's damage 1 is the score of the field's spatial mean,
   which has no shock and so scores 0 against a reference that has one; damage is then one
   minus the value.
+- **Companions.** `shock_mask_overlap`, the detected shock cells of one field as rows of (cell
+  index along the first grid axis, pressure there), and `shock_mask_overlap.profile`, the
+  pressure itself; both are stored for the candidate on the frames `report.error_map` names and
+  on their clean level, the reference, and drawn together as the line-out figure.
 
 ## Limitations
 

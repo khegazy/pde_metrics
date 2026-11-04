@@ -10,11 +10,18 @@ shocked when the pressure ratio across it reaches that of a Mach 1.3 shock (Scha
 nearest shocked cell of the other field, from a Euclidean distance transform that never wraps
 around the domain. The registered number pools those distances into one mean, the average
 symmetric surface distance of image segmentation (Yeghiazaryan & Voiculescu 2018).
+
+The other metrics of detected shock sets import what they share from here: the checks, the
+cached reference masks and the channel mean (:func:`shock_set_score`), the scores of empty sets
+(:func:`set_distance`), and the point set and line-out their cards draw
+(:func:`shock_positions`, :func:`pressure_profile`).
 """
 
 from __future__ import annotations
 
 import inspect
+from collections.abc import Callable
+from functools import partial
 
 import numpy as np
 from numpy.typing import NDArray
@@ -22,7 +29,8 @@ from scipy.ndimage import distance_transform_edt
 
 from fmeval.context import FieldContext
 from fmeval.data.analytic import SodShockTube
-from metrics.registry import metric
+from fmeval.data.base import GridSpec
+from metrics.registry import companion, metric
 
 #: The weakest shock the detector reports, as a Mach number. Schaal & Springel (2015), MNRAS
 #: 446, 3992, Sect. 2.3.2, criterion (iii).
@@ -31,6 +39,8 @@ MACH_MIN: float = 1.3
 #: field and no equation of state, so it is fixed, and read from the one compressible dataset
 #: that stores a pressure, the Sod reader's default, rather than restated here.
 GAMMA: float = inspect.signature(SodShockTube).parameters["gamma"].default
+#: ``ctx.cache`` key of the reference's shock masks, one per channel, computed once per frame.
+REFERENCE_MASKS = "shock_set/reference_masks"
 
 
 def shock_mask(pressure: NDArray[np.floating], *, mach_min: float = MACH_MIN,
@@ -110,6 +120,84 @@ def surface_distances(a: NDArray[np.bool_], b: NDArray[np.bool_],
             distance_transform_edt(~a, sampling=spacing)[b])
 
 
+
+def shock_set_score(reference: NDArray[np.floating], candidate: NDArray[np.floating], *,
+                    ctx: FieldContext,
+                    score: Callable[[NDArray[np.bool_], NDArray[np.bool_], GridSpec], float],
+                    ) -> float:
+    """Compare the shock sets of two pressure fields channel by channel with ``score``.
+
+    The step every metric of a detected shock set shares: the shapes are checked against each
+    other and the grid, a field that is NaN or infinite anywhere scores NaN (it has no readable
+    pressure ratio there, and a pointwise error returns NaN too), the reference's masks
+    (:func:`shock_mask`) are computed once per frame and kept in ``ctx.cache``, and the
+    channels' scores are averaged; pressure has one channel.
+
+    Args:
+        reference: The trusted pressure, shape ``(C, *spatial)`` on the analysis grid.
+        candidate: The pressure being scored, same shape and grid.
+        ctx: Supplies the grid, and caches the reference's masks per frame.
+        score: Scores the reference's mask against the candidate's on the grid.
+
+    Returns:
+        The channel mean of ``score``, or NaN on a non-finite field.
+
+    Raises:
+        ValueError: If the shapes differ, or do not match the grid in ``ctx``: a field without
+            its channel axis would otherwise be read as channels of single cells, none flagged.
+    """
+    if reference.shape != candidate.shape or reference.shape[1:] != ctx.grid.shape:
+        raise ValueError(f"a shock-set metric needs matching shapes on the grid "
+                         f"{ctx.grid.shape}, got {reference.shape} and {candidate.shape}")
+    if not (np.isfinite(reference).all() and np.isfinite(candidate).all()):
+        return float("nan")
+    if REFERENCE_MASKS not in ctx.cache:
+        ctx.cache[REFERENCE_MASKS] = [shock_mask(channel) for channel in reference]
+    return float(np.mean([score(a, shock_mask(channel), ctx.grid)
+                          for a, channel in zip(ctx.cache[REFERENCE_MASKS], candidate)]))
+
+
+def set_distance(a: NDArray[np.bool_], b: NDArray[np.bool_], grid: GridSpec, *,
+                 summary: Callable[[NDArray[np.bool_], NDArray[np.bool_], tuple[float, ...]],
+                                   float]) -> float:
+    """A distance between two shock sets, with the empty sets scored by convention.
+
+    Two empty sets score 0: both fields agree there is no shock. One empty set scores the
+    length of the domain's diagonal, the worst-possible value Maier-Hein et al. (2024), Nature
+    Methods 21, 195-212, Suppl. Note 2.3, recommend for a distance that is undefined, naming the
+    image diagonal; it exceeds every distance two cell centres can have. Both are conventions of
+    this repository (``issues/102``), shared by every distance between shock sets so that they
+    treat a missing shock alike. Two non-empty sets are scored by ``summary``.
+
+    Args:
+        a, b: The reference's and the candidate's shocked cells.
+        grid: The analysis grid, for its spacing and extent.
+        summary: The distance between two non-empty sets at the grid's spacing.
+
+    Returns:
+        The distance, in the units of the grid spacing.
+    """
+    if not (a.any() or b.any()):
+        return 0.0
+    if not (a.any() and b.any()):
+        # Maier-Hein et al. (2024) Suppl. Note 2.3: the worst value, the diagonal.
+        return float(np.sqrt(sum((n * dx) ** 2 for n, dx in zip(grid.shape, grid.spacing))))
+    return float(summary(a, b, grid.spacing))
+
+
+def average_symmetric_surface_distance(a: NDArray[np.bool_], b: NDArray[np.bool_],
+                                       spacing: tuple[float, ...]) -> float:
+    """The pooled mean of the distances from each set to the other, Equation (2) of the card.
+
+    Yeghiazaryan & Voiculescu (2018), J. Med. Imaging 5(1), 015006, Sect. 2.3.2, unnumbered in
+    the copy read::
+
+        ASSD(A, B) = (sum_{a in A} d(a, B) + sum_{b in B} d(b, A)) / (|A| + |B|)
+    """
+    d_ab, d_ba = surface_distances(a, b, spacing)
+    return float((d_ab.sum() + d_ba.sum()) / (d_ab.size + d_ba.size))
+
+
 @metric(
     name="shock_set_distance",
     arity="pairwise",
@@ -127,19 +215,9 @@ def shock_set_distance(reference: NDArray[np.floating], candidate: NDArray[np.fl
     """Average symmetric surface distance between the shock sets of two pressure fields.
 
     With ``A`` and ``B`` the shocked cells of the reference and the candidate
-    (:func:`shock_mask`), the average of all distances from points of one set to the other
-    set and back, Yeghiazaryan & Voiculescu (2018), J. Med. Imaging 5(1), 015006,
-    Sect. 2.3.2, unnumbered in the copy read::
-
-        ASSD(A, B) = (sum_{a in A} d(a, B) + sum_{b in B} d(b, A)) / (|A| + |B|)
-
-    Two empty sets score 0: both fields agree there is no shock (convention mine). One
-    empty set scores the length of the domain's diagonal, the worst-possible value
-    Maier-Hein et al. (2024), Nature Methods 21, 195-212, Suppl. Note 2.3, recommend for a
-    distance that is undefined, naming the image diagonal; it exceeds every distance two
-    cell centres can have. Both are conventions, ``issues/102``. Channels are averaged. A
-    field that is NaN or infinite anywhere has no readable pressure ratio there, so the
-    distance is undefined and NaN is returned, as a pointwise error would return it.
+    (:func:`shock_mask`), :func:`average_symmetric_surface_distance`, with the empty sets
+    scored by the conventions of :func:`set_distance` (``issues/102``). Channels are averaged
+    and a non-finite field scores NaN (:func:`shock_set_score`).
 
     Args:
         reference: The trusted pressure, shape ``(C, *spatial)`` on the analysis grid.
@@ -153,26 +231,36 @@ def shock_set_distance(reference: NDArray[np.floating], candidate: NDArray[np.fl
     Raises:
         ValueError: If the shapes differ, or do not match the grid in ``ctx``.
     """
-    if reference.shape != candidate.shape or reference.shape[1:] != ctx.grid.shape:
-        raise ValueError(f"shock_set_distance needs matching shapes on the grid "
-                         f"{ctx.grid.shape}, got {reference.shape} and {candidate.shape}")
-    if not (np.isfinite(reference).all() and np.isfinite(candidate).all()):
-        return float("nan")
-    spacing = ctx.grid.spacing
-    diagonal = float(np.sqrt(sum((n * dx) ** 2 for n, dx in zip(ctx.grid.shape, spacing))))
-    key = "shock_set_distance/reference_masks"
-    if key not in ctx.cache:
-        ctx.cache[key] = [shock_mask(channel) for channel in reference]
-    values = []
-    for a, channel in zip(ctx.cache[key], candidate):
-        b = shock_mask(channel)
-        if not (a.any() or b.any()):
-            values.append(0.0)
-        elif not (a.any() and b.any()):
-            # Maier-Hein et al. (2024) Suppl. Note 2.3: the worst value, the diagonal.
-            values.append(diagonal)
-        else:
-            d_ab, d_ba = surface_distances(a, b, spacing)
-            # Yeghiazaryan & Voiculescu (2018) Sect. 2.3.2: the pooled mean of both directions.
-            values.append(float((d_ab.sum() + d_ba.sum()) / (d_ab.size + d_ba.size)))
-    return float(np.mean(values))
+    return shock_set_score(reference, candidate, ctx=ctx, score=partial(
+        set_distance, summary=average_symmetric_surface_distance))
+
+
+@companion(of="shock_set_distance", kind="points",
+           coordinate=(("x", "cells"), ("pressure", "field")))
+def shock_positions(pressure: NDArray[np.floating]) -> NDArray[np.float64]:
+    """The cells :func:`shock_mask` flags in one pressure field, as (cell index, pressure) rows.
+
+    The point set behind every shock-set metric, drawn by the card figure over the pressure's
+    line-out (:func:`pressure_profile`), the reference's and each degraded field's, so the
+    detected positions are read off the profile. The index is along the first grid axis, the
+    axis of a one-dimensional grid; on a grid of more dimensions the rows keep only that
+    coordinate. A non-finite field has no readable pressure ratio and gives no rows.
+
+    Args:
+        pressure: One pressure field, shape ``(C, *spatial)``.
+
+    Returns:
+        An ``(N, 2)`` array of (cell index along the first axis, pressure) of the flagged cells
+        of every channel.
+    """
+    if not np.isfinite(pressure).all():
+        return np.zeros((0, 2))
+    masks = [shock_mask(channel) for channel in pressure]
+    return np.concatenate([np.column_stack([np.nonzero(mask)[0], channel[mask]])
+                           for channel, mask in zip(pressure, masks)]).astype(np.float64)
+
+
+@companion(of="shock_set_distance", name="profile")
+def pressure_profile(pressure: NDArray[np.floating]) -> NDArray[np.float64]:
+    """The pressure itself, the line-out the detected shocks are drawn on; one channel."""
+    return np.asarray(pressure[0], dtype=np.float64)

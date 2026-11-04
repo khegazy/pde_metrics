@@ -50,11 +50,11 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 | [MTR-max_error-vector-magnitude.md](MTR-max_error-vector-magnitude.md) | Maximum of the error vector's length | proposed |
 | [MTR-persistence_distance-betti-curve-distance.md](MTR-persistence_distance-betti-curve-distance.md) | Distance between Betti curves | proposed |
 | [MTR-persistence_distance-signed-vortex-census.md](MTR-persistence_distance-signed-vortex-census.md) | Signed vortex census from zero-dimensional persistence | proposed |
-| [MTR-persistence_distance-wasserstein-diagram-distance.md](MTR-persistence_distance-wasserstein-diagram-distance.md) | p-Wasserstein distance between persistence diagrams | proposed |
+| [MTR-persistence_distance-wasserstein-diagram-distance.md](MTR-persistence_distance-wasserstein-diagram-distance.md) | 2-Wasserstein distance between persistence diagrams | proposed |
 | [MTR-shock_mask_overlap-fractions-skill-score.md](MTR-shock_mask_overlap-fractions-skill-score.md) | Fractions skill score of shock masks over neighbourhood width | proposed |
 | [MTR-shock_set_distance-full-shock-zone-detector.md](MTR-shock_set_distance-full-shock-zone-detector.md) | The full Schaal-Springel shock finder, with a compression gate and a single-layer surface | proposed |
 | [MTR-shock_set_distance-object-matched-shock-distance.md](MTR-shock_set_distance-object-matched-shock-distance.md) | Object-matched shock distance, after MODE | proposed |
-| [MTR-shock_set_distance-other-surface-distance-summaries.md](MTR-shock_set_distance-other-surface-distance-summaries.md) | Hausdorff, quantile-Hausdorff, AVD and MASD summaries of the same shock-set distances | proposed |
+| [MTR-shock_set_distance-other-surface-distance-summaries.md](MTR-shock_set_distance-other-surface-distance-summaries.md) | The average distance (AVD) summary of the same shock-set distances | proposed |
 | [MTR-shock_set_distance-shock-thickness-and-overshoot.md](MTR-shock_set_distance-shock-thickness-and-overshoot.md) | Shock thickness and overshoot at the detected shocks | proposed |
 | [MTR-spectral_energy_flux-enstrophy-flux.md](MTR-spectral_energy_flux-enstrophy-flux.md) | Spectral enstrophy flux of two-dimensional flow | proposed |
 | [MTR-spectral_energy_flux-flux-sign-agreement.md](MTR-spectral_energy_flux-flux-sign-agreement.md) | Direction-of-transfer disagreement, a dimension-neutral backscatter fraction | proposed |

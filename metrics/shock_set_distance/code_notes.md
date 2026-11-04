@@ -108,3 +108,18 @@ The tests are in `test_metric.py`. Each hand-computed value carries its derivati
 - **Higher dimensions.** The detector and the distance transform are written for any number of dimensions. The reviewer checked the stencil on 5×7 and 3×4×5 spikes, with no transposition error, but no dataset with a shock in two or three dimensions exercises them.
 - **Periodic grids.** On a periodic grid the metric misses a jump exactly on the seam and overstates distances across it (card, Boundary handling). This is untested.
 - **An unrun claim.** The reviewer's claim that a positive contract input would make the declaration test fail through a NaN $\rho$ was reasoned, not run.
+
+## Round of 2026-11-04 (task `metrics-topology-shocks`)
+
+- The metric's body was split into shared pieces: `shock_set_score` (checks, NaN rule, cached
+  reference masks under `REFERENCE_MASKS`, channel mean), `set_distance` (the empty-set
+  conventions) and `average_symmetric_surface_distance`. `shock_mask_overlap` and the four
+  siblings import them. The cache key changed from `shock_set_distance/reference_masks` to
+  `shock_set/reference_masks`; a cache lives for one metric, so nothing collides.
+- Companions added for the card's line-out figure: `shock_positions` (the metric's own point set,
+  (cell index, pressure) of the flagged cells; the metric does not read it from the cache, which
+  the contract allows) and `pressure_profile` (named `profile`, a one-field map).
+- Gate: 520 old-versus-new comparisons on the exact Sod pressure (rolls, noise, a blur, an
+  offset, zero, negative and constant fields, a NaN cell, both argument orders) all identical, and
+  the Sod smoke run `shock_set_distance_1793799367` matches the cited evidence run
+  `shock_set_distance_1793381550` on all 590 shared rows exactly.

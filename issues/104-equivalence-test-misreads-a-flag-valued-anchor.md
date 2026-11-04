@@ -56,6 +56,16 @@ Which one changes what "blind" means for a family of metrics, so it is a person'
 (or a judgement, under `AGENTS.md` §1, after researching how equivalence margins are set when the
 reference scale is a convention).
 
+## The standard that would settle it
+
+Equivalence testing sets its margin on a scale the field accepts as negligible (Lakens 2017); for
+a distance between shock positions the natural scale is a cell, or the shock's own detected width,
+which is option 1. By the same construction the misreading should reach the four distance siblings of
+`shock_set_distance` added on 2026-11-04 (`shock_set_hausdorff`, `shock_set_hausdorff95`,
+`shock_set_masd`, `shock_set_baddeley_delta`), whose anchor is the same diagonal (reasoning; their
+profiles, once generated, will show it), and not `shock_mask_overlap`, as measured above. A source that fixes how an equivalence margin is chosen when the
+anchor is a conventional flag value, or a decision among the options, would close it.
+
 ## Related
 
 - `issues/102` (the empty-set conventions of `shock_set_distance`, on its branch)
