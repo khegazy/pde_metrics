@@ -26,8 +26,8 @@ ladder:
   gaussian_blur:       {enabled: true,  severities: [0.02, 0.05, 0.10, 0.20]}
   box_blur:            {enabled: true,  severities: [0.06, 0.14, 0.25, 0.40]}
   median_blur:         {enabled: true,  severities: [0.06, 0.14, 0.22]}
-  disk_blur:           {enabled: false, severities: [0.06, 0.14, 0.25]}
-  epanechnikov_blur:   {enabled: false, severities: [0.06, 0.14, 0.25]}
+  disk_blur:           {enabled: true,  severities: [0.06, 0.14, 0.25]}
+  epanechnikov_blur:   {enabled: true,  severities: [0.06, 0.14, 0.25]}
 
   # --- spectral -----------------------------------------------------------------
   # Severities are the FRACTION OF FLUCTUATION ENERGY REMOVED, resolved to a cutoff wavenumber
@@ -59,12 +59,12 @@ ladder:
   lowpass_butterworth: {enabled: true,  severities: [0.05, 0.15, 0.30, 0.45]}
   highpass_ideal:      {enabled: true,  severities: [0.45, 0.70, 0.90, 0.97]}
   highpass_butterworth: {enabled: true, severities: [0.45, 0.70, 0.90, 0.97]}
-  band_attenuate:      {enabled: false, severities: [0.8, 0.5, 0.2, 0.0]}
+  band_attenuate:      {enabled: true,  severities: [0.8, 0.5, 0.2, 0.0]}
 
   # --- geometric: the double-penalty probe ----------------------------------------
   translate_x:         {enabled: true, op: translate, severities: [1, 2, 4, 8, 16]}
-  translate_y:         {op: translate, severities: [1, 2, 4, 8, 16],
-                        options: {axis: y}, enabled: false}
+  translate_y:         {enabled: true, op: translate, severities: [1, 2, 4, 8, 16],
+                        options: {axis: y}}
   translate_subpixel:  {enabled: true, severities: [0.125, 0.25, 0.5, 1.0, 2.0, 4.0]}
 
   # --- resolution / stochastic / pointwise ------------------------------------------
@@ -74,10 +74,11 @@ ladder:
   # coarsen's block edges as well as the lost resolution (issues/039); this isolates the
   # latter.
   coarsen_bandlimited: {enabled: true, severities: [2, 4, 8, 16]}
-  subsample:           {severities: [2, 4, 8, 16], enabled: false}
+  subsample:           {enabled: true, severities: [2, 4, 8, 16]}
   additive_noise:      {enabled: true, severities: [0.001, 0.01, 0.1, 0.5]}
-  multiplicative_noise: {enabled: false, severities: [0.01, 0.1, 0.5]}
-  gain:                {severities: [0.01, 0.05, 0.2, 0.5], enabled: false}
+  multiplicative_noise: {enabled: true, severities: [0.0001, 0.001, 0.01, 0.1, 0.5]}
+  gain:                {enabled: true, severities: [0.01, 0.05, 0.2, 0.5]}
+  bias:                {enabled: true, severities: [0.01, 0.05, 0.2, 0.5]}
 
   # IN-4. ordinal=False by declaration: excluded from every rank correlation.
   gaussian_impostor:   {enabled: true, severities: [0]}

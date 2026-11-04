@@ -70,15 +70,16 @@ The band edges are absolute wavenumbers, fixed at 16 and 64 by default, and are 
 calibrated per field. That is a real limitation of this degradation: the same band means
 different things on fields whose spectra differ.
 
-The degradation is disabled in the default set of degradations.
+It is in the default set because every metric is run on every degradation the repository
+has (`AGENTS.md` §1).
 
 ## Limitations
 
 The uncalibrated band edges are the main weakness. Every other spectral degradation
 resolves its cutoff per field against a measured spectrum; this one uses fixed
 wavenumbers, so the band may sit in the energetic range on one field and in the
-dissipation range on another, and the damage is not comparable between them. That is why
-this operator is disabled by default.
+dissipation range on another, and the damage is not comparable between them: read it one
+field at a time.
 
 The decreasing direction is also a trap for anyone reading the raw configuration: a list
 that looks like it descends is in fact ascending in damage. The declared direction handles
