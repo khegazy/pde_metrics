@@ -1388,6 +1388,35 @@ column, including those the typeset table leaves out.
 Every figure has a CSV of exactly the numbers plotted, in `data/figure_data/`. No number
 appears in the report without a machine-readable source in the same folder.
 
+## Across the experiments: which runs a metric's card cites
+
+A run is on one dataset, and every metric is run on every dataset where it makes sense, so a
+card cites one run per experiment. The datasets a card may cite are `evidence_datasets` in
+`configs/cards/default.yaml`, each with the kind of claim a run on it supports.
+
+- **The primary run** fills `## Performance` and the subsections of `## Results` per test. It is
+  the metric's field-standard experiment where this repository has one.
+- **Each further run** has its own subsection of `## Results`, headed *On `<dataset>`*. It opens
+  with the dataset's label in bold, so numbers from an analytic check or a calibrated null are
+  never read as numbers about turbulence, then the run's provenance, a link to each degradation
+  the run applied, and the per-family and trap-test tables of that run. The figures and the
+  comparisons with other metrics come from the primary run only.
+- **The "Across the experiments" table** sits at the top of `## Results`: one row per evidence
+  dataset, and in each row one of three states. *Measured* names the run the card cites.
+  *Not applicable* gives the reason. A reason the code can know is derived from what the
+  metric declares and what the dataset offers (`evidence_dataset_properties` in the same file,
+  and the dataset's own `fields`): a metric declaring `requires_periodic` on a dataset that is
+  not periodic, an ensemble metric on one realisation per frame, a metric of fields the dataset
+  does not provide, such as pressure on `kinet_re5e4`. A reason only a person can give, that
+  the result would carry no information, is the card's `not_run` entry in `card.yaml`.
+  *Not yet run* means the metric can run there and no run is cited yet. A pairwise or
+  single-field metric on an ensemble dataset scores the member mean, and the row says so.
+
+`docs/catalog.json` carries the same records: `evidence` is the primary run, `other_evidence`
+one record per further run, and `experiments` the table's rows (`dataset`, `claim`, `state`,
+`run`, `primary`, `reason`, `note`). The site's coverage page puts every metric's row in one
+table, with the proposals in `proposals/` whose front matter names the metric.
+
 ---
 
 ## Glossary

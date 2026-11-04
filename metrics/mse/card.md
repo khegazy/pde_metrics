@@ -73,7 +73,7 @@ on one grid.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -235,16 +235,32 @@ an artefact of the reader or the remap.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
 
 Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `fdbd5d7872d6` (working tree dirty). Run `comparison_1793657627`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793657627`.
+Every number in this section comes from that run, except in the subsections headed with another experiment, each of which names its own run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793657627 --results results/mse_1793784126`.
 
 <!-- END GENERATED run -->
 
 Each subsection links to the degradations that subsection reports. What those degradations
 do, and what their strength numbers mean, is documented on their own pages.
+
+<!-- GENERATED experiments: written by `python -m fmeval.cards catalog`, do not edit -->
+
+**Across the experiments.**
+
+| experiment | what a run on it is evidence of | on this card |
+|---|---|---|
+| `kinet_re5e4` | developed flow | measured, run `comparison_1793657627`: the main results |
+| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not yet run; on this dataset the metric scores the member mean of the ensemble |
+| `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | measured, run `mse_1793784126`: under *On `sod_shock_tube`* |
+| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
+
+One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.
+
+<!-- END GENERATED experiments -->
 
 ### Smoothing
 
@@ -252,7 +268,7 @@ do, and what their strength numbers mean, is documented on their own pages.
 [box_blur](../../degradations/box_blur/card.md) ·
 [median_blur](../../degradations/median_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -275,7 +291,7 @@ do, and what their strength numbers mean, is documented on their own pages.
 [highpass_ideal](../../degradations/highpass_ideal/card.md) ·
 [highpass_butterworth](../../degradations/highpass_butterworth/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -299,7 +315,7 @@ do, and what their strength numbers mean, is documented on their own pages.
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -324,7 +340,7 @@ about moderate ones, and the double penalty has no single onset.
 [coarsen](../../degradations/coarsen/card.md) ·
 [coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -344,7 +360,7 @@ cause is not established; `issues/039` records what was ruled out.
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -359,7 +375,7 @@ cause is not established; `issues/039` records what was ruled out.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
 |---|---|---|---|---|
@@ -381,7 +397,7 @@ panel in which every metric rejects it is not evidence of a well-guarded panel.
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
 
 | compared with | density | velocity | vorticity |
 |---|---|---|---|
@@ -418,7 +434,7 @@ errors that matter are errors of amplitude, not of position.
 
 ### Damage beside the other metrics
 
-<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
 
 ![damage against applied strength for this metric beside the pointwise controls, log-log, one panel per displacement degradation and field](_generated/damage_beside_controls.svg)
 
@@ -481,6 +497,126 @@ Median damage over frames against the applied strength, log-log, for mse (bold, 
 Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 the anchor (by default the field's own mean); a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
 
 <!-- END GENERATED results_damage_by_level -->
+
+### On `sod_shock_tube`
+
+<!-- GENERATED results_on_sod_shock_tube: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627 --results results/mse_1793784126`, do not edit -->
+
+**An analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence.**
+
+Measured on `sod_shock_tube`, frames 0 to 9 (10 frames of an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence), on the 2048 analysis grid, seed 20260807, at commit `440e07112085`. Run `mse_1793784126`.
+
+[additive_noise](../../degradations/additive_noise/card.md) ·
+[box_blur](../../degradations/box_blur/card.md) ·
+[coarsen](../../degradations/coarsen/card.md) ·
+[coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md) ·
+[gaussian_blur](../../degradations/gaussian_blur/card.md) ·
+[gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
+[highpass_butterworth](../../degradations/highpass_butterworth/card.md) ·
+[highpass_ideal](../../degradations/highpass_ideal/card.md) ·
+[lowpass_butterworth](../../degradations/lowpass_butterworth/card.md) ·
+[lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
+[mean_field](../../degradations/mean_field/card.md) ·
+[median_blur](../../degradations/median_blur/card.md) ·
+[translate_subpixel](../../degradations/translate_subpixel/card.md) ·
+[translate_x](../../degradations/translate/card.md) ·
+[uncorrelated](../../degradations/random_large_translation/card.md)
+
+**Smoothing.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `box_blur` | density | 4 | 1 | 1 | 1 |
+| `box_blur` | pressure | 4 | 1 | 1 | 1 |
+| `box_blur` | velocity | 4 | 1 | 1 | 1 |
+| `gaussian_blur` | density | 4 | 1 | 1 | 1 |
+| `gaussian_blur` | pressure | 4 | 1 | 1 | 1 |
+| `gaussian_blur` | velocity | 4 | 1 | 1 | 1 |
+
+**Spectral filtering.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `highpass_butterworth` | density | 2 | 1 | 1 | 1 |
+| `highpass_butterworth` | pressure | 2 | 1 | 1 | 1 |
+| `highpass_butterworth` | velocity | 4 | 1 | 1 | 0.78 |
+| `highpass_ideal` | density | 1 | — | — | — |
+| `highpass_ideal` | pressure | 1 | — | — | — |
+| `highpass_ideal` | velocity | 4 | 1 | 1 | 0.78 |
+| `lowpass_butterworth` | density | 1 | — | — | — |
+| `lowpass_butterworth` | pressure | 2 | 1 | 1 | 1 |
+| `lowpass_butterworth` | velocity | 4 | 1 | 1 | 1 |
+| `lowpass_ideal` | density | 1 | — | — | — |
+| `lowpass_ideal` | pressure | 2 | 1 | 1 | 1 |
+| `lowpass_ideal` | velocity | 4 | 1 | 1 | 1 |
+
+**Displacement.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `translate_subpixel` | density | 6 | 1 | 1 | 1 |
+| `translate_subpixel` | pressure | 6 | 1 | 1 | 1 |
+| `translate_subpixel` | velocity | 6 | 1 | 1 | 1 |
+| `translate_x` | density | 5 | 1 | 1 | 1 |
+| `translate_x` | pressure | 5 | 1 | 1 | 1 |
+| `translate_x` | velocity | 5 | 1 | 1 | 1 |
+
+**Resolution loss.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `coarsen` | density | 4 | 1 | 1 | 0.92 |
+| `coarsen` | pressure | 4 | 1 | 1 | 1 |
+| `coarsen` | velocity | 4 | 1 | 1 | 0.79 |
+| `coarsen_bandlimited` | density | 4 | 1 | 1 | 1 |
+| `coarsen_bandlimited` | pressure | 4 | 1 | 1 | 1 |
+| `coarsen_bandlimited` | velocity | 4 | 1 | 1 | 1 |
+
+**Noise.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `additive_noise` | density | 4 | 1 | 1 | 1 |
+| `additive_noise` | pressure | 4 | 1 | 1 | 1 |
+| `additive_noise` | velocity | 4 | 1 | 1 | 1 |
+
+**Trap tests.**
+
+| field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
+|---|---|---|---|---|
+| density | 1.98 | `highpass_butterworth=2.77538` | 3.29 | 0.128 |
+| pressure | 1.86 | `highpass_butterworth=3.73482` | 3.29 | 0.137 |
+| velocity | 2.1 | `highpass_ideal=17.1163` | 2.17 | 0.173 |
+
+The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
+
+<!-- END GENERATED results_on_sod_shock_tube -->
+
+On the exact Sod solution MSE orders every degradation that keeps two or more distinct
+strengths, with a rank correlation of 1 on density, pressure and velocity. The narrowest gaps
+between neighbouring strengths are on velocity: 0.78 under both high-pass filters and 0.79
+under `coarsen`. On density and pressure 99% of the fluctuation energy lies below wavenumber 6
+(the run's `data/calibration.csv`), so several calibrated spectral strengths resolve to the same
+cutoff and are excluded as repeats of a milder one, or leave the profile unchanged; that is why
+several rows hold one strength and no correlation.
+
+The displacement result differs from the developed flow in a way Equation (3) does not cover.
+Over the three mildest whole-cell shifts of `translate_x` the damage grows in proportion to the
+shift, with an elasticity of 1.04, 1.07 and 1.01 on density, pressure and velocity, where on
+`kinet_re5e4` it grows with the square (1.99 on density). Over the sub-cell shifts of
+`translate_subpixel` it is quadratic again, 1.94 on all three fields. Our own derivation, not
+taken from a source, accounts for both: Equation (3) assumes the field is smooth on the scale
+of the shift, which a jump is not. A jump of height $J$ moved by a whole number $\delta$ of
+cells changes $\delta$ cells by $J$ each, adding $J^2 \delta / N$ to the mean squared error on
+$N$ cells, which is linear in the shift; a sub-cell shift changes the cell at the jump
+continuously with $\delta$, so its error starts quadratic. The damage stays small, at most
+0.0042, 0.0044 and 0.041 under `translate_x` against 0.35 on density in the developed flow,
+because only the cells near the shock, the contact and the rarefaction change while the anchor,
+the field's spatial mean, is wrong along the whole tube. Coarsening is nearly free for the same
+reason: at most 0.0008 on density and pressure and 0.0098 on velocity under `coarsen`.
+
+The phase-scrambled fake prediction is rejected as it is on the developed flow, with damage
+1.98, 1.86 and 2.10 on density, pressure and velocity.
 
 ## References
 

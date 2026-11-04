@@ -61,6 +61,21 @@ evidence_datasets:
     real predictions scored against their targets at each prediction step; who produced
     the predictions, a trained model or a coarser solver, is not recorded
 
+# What each evidence dataset offers a metric, so every metric card's "Across the experiments"
+# table and the site's coverage page can say why a metric is not run on a dataset without
+# opening the data (`fmeval.cards.catalog.experiments`). `periodic`: every axis wraps, so a
+# metric declaring `requires_periodic` can run. `ensemble`: every frame carries members, so an
+# ensemble metric can run, and a pairwise or single-field metric scores the member mean
+# (`fmeval.ladder`). Both are properties of the dataset's reader; tests/test_cards.py checks
+# them against it. The fields a dataset provides are read from configs/dataset/<name>.yaml.
+# Every dataset of `evidence_datasets` needs an entry.
+evidence_dataset_properties:
+  kinet_re5e4: {periodic: true, ensemble: false}
+  kinet_re1e6: {periodic: true, ensemble: false}
+  synthetic_ensemble: {periodic: true, ensemble: true}
+  sod_shock_tube: {periodic: false, ensemble: false}      # walls at both ends
+  forecast_re5e4: {periodic: true, ensemble: false}
+
 # The window within kinet_re5e4 that counts as developed flow: the convention a run cited
 # as evidence follows (`dataset.time.start`, `dataset.time.reduction`). Nothing reads it to
 # select frames; a test checks the exemplar frame below lies inside it, and each fingerprint

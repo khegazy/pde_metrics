@@ -144,12 +144,33 @@ class Figures:
 
 
 @dataclass
+class DatasetProperties:
+    """What an evidence dataset offers a metric, for the reasons a card gives for not running on it.
+
+    Each is a property of the dataset's reader, stated here so the cards and the site can say it
+    without opening the data; ``tests/test_cards.py`` opens every dataset it can and checks both
+    against the reader. The fields a dataset provides are not restated: they are read from its
+    own config, ``configs/dataset/<name>.yaml``.
+    """
+
+    periodic: bool = MISSING
+    """Every axis wraps (``GridSpec.is_periodic``); a metric declaring ``requires_periodic`` is
+    never run otherwise (``fmeval.pipeline.run``)."""
+    ensemble: bool = MISSING
+    """Every frame carries ensemble members (``Frame.has_members``); an ensemble metric is
+    skipped on a dataset without them."""
+
+
+@dataclass
 class CardsConfig:
     """``configs/cards/default.yaml``, which is the only source of every value here."""
 
     evidence_datasets: dict[str, str] = MISSING
     """The datasets a card's measurements may come from, each mapped to the kind of claim a
     run on it supports, as the phrase that completes "n frames of ..." in a card's run summary."""
+    evidence_dataset_properties: dict[str, DatasetProperties] = MISSING
+    """What each dataset of ``evidence_datasets`` offers a metric. A dataset missing here is
+    refused where the reasons are derived (``fmeval.cards.catalog.experiments``), naming the fix."""
     evidence_window: EvidenceWindow = field(default_factory=EvidenceWindow)
     exemplar_frame: ExemplarFrame = field(default_factory=ExemplarFrame)
     figures: Figures = field(default_factory=Figures)

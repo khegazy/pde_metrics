@@ -32,15 +32,29 @@ Example panels come before measurements, because a metric's measurements may ref
 degradation's panel. The `evidence` step also redraws each card's figures (the sensitivity
 profile and the response curves) into `_generated/` as SVG with the numbers behind each in
 a JSON file of the same name, so a figure cannot go stale relative to the table beside it.
-`--all` skips any card whose metric the run does not contain and says so; the four
-probabilistic metrics are pinned to their own single-metric runs on `synthetic_ensemble`
-and are regenerated one at a time from those folders. Run from the repository root with a
-relative `--results` path, because the path is written into every block marker as typed.
+
+A card cites one run per experiment (dataset), and its fingerprint records them, the primary
+run first. `--all` regenerates every card from the runs it records: each `--results` run
+replaces the card's run on the same dataset, in the same place, and a run on a dataset the
+card does not cite yet is added after the others. `--results` may be repeated, one run per
+experiment. A card that none of the given runs contains is skipped and named, so a new kinet
+comparison run leaves the ensemble and Sod-only cards alone. With no `--results`, `--all`
+regenerates every card from the runs it already records, which is how a change to the
+generator reaches every card. Recorded runs are looked up by name under `results/`: link a run
+kept on scratch there (`ln -s $PSCRATCH/fluid_metrics_results/<run> results/<run>`). A run
+replaced by a given one is never read, so it may already be archived. Run from the repository
+root with a relative `--results` path, because the path is written into every block marker
+as typed.
+
 The `overview` step draws the cross-metric figures of the site's "Sensitivity at a glance"
 page into `docs/figures/<run>/`; delete the previous run's directory there when you replace
 the run, so the page shows one run. The catalog comes last, because it reads the fingerprint
-files the other steps write. The committed catalog is compared against a freshly built one in
-CI, so forgetting that last step fails the build rather than shipping a stale index.
+files the other steps write. It also rewrites the *Across the experiments* table on every
+metric card, which says which experiments the card cites a run on and why it cites none on
+the others; run it after any change to a card's runs, to its `not_run` in `card.yaml`, or to
+`evidence_datasets`. The committed catalog is compared against a freshly built one in CI, and
+each card's table against the records, so forgetting that last step fails the build rather
+than shipping a stale index.
 
 ## 3. The step that is easy to miss: the prose
 
