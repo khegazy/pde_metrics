@@ -324,7 +324,7 @@
       },
       {
         "blind": false,
-        "blindness_q": 0.2161478078,
+        "blindness_q": 0.2175222401,
         "cliffs_delta_min": 0.984028394,
         "damage_max_ucb": 0.0479514474,
         "damage_per_change": 3.5116483901,

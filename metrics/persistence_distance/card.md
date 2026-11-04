@@ -441,38 +441,37 @@ diagram is the reference's, which is the metric's blindness to position, not a t
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence persistence_distance --results results/comparison_1793657627`, do not edit -->
 
-| compared with | rank correlation over every degradation |
-|---|---|
-| `spectrum_l2` | 0.919 |
-| `increment_w1_by_separation` | 0.918 |
-| `spectral_energy_flux` | 0.917 |
-| `energy_distance` | 0.821 |
-| `increment_w1` | 0.809 |
-| `max_error` | 0.289 |
-| `nrmse` | 0.257 |
-| `rmse` | 0.227 |
-| `mse` | 0.227 |
-| `h_minus_one` | 0.212 |
-| `wasserstein` | 0.21 |
-| `mae` | 0.207 |
-| `h1_seminorm` | -0.0434 |
-| `tail_index` | -0.131 |
-| `increment_flatness` | -0.322 |
-| `tail_exceedance` | -0.687 |
-| `palinstrophy` | -0.693 |
-| `enstrophy` | -0.794 |
-| `kinetic_energy` | -0.799 |
+| compared with | density | vorticity |
+|---|---|---|
+| `spectrum_l2` | 0.929 | 0.931 |
+| `increment_w1_by_separation` | 0.931 | 0.902 |
+| `tail_exceedance` | 0.946 | 0.715 |
+| `increment_w1` | 0.867 | 0.742 |
+| `energy_distance` | 0.858 | 0.71 |
+| `max_error` | 0.341 | 0.106 |
+| `rmse` | 0.276 | 0.146 |
+| `mse` | 0.275 | 0.146 |
+| `nrmse` | 0.275 | 0.144 |
+| `mae` | 0.241 | 0.175 |
+| `wasserstein` | 0.2 | — |
+| `h_minus_one` | 0.2 | 0.142 |
+| `h1_seminorm` | 0.229 | -0.288 |
+| `increment_flatness` | -0.433 | 0.291 |
+| `tail_index` | -0.324 | -0.559 |
+| `palinstrophy` | — | -0.578 |
+| `enstrophy` | — | -0.842 |
 
-Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
 The bottleneck distance orders the degradations most like the other metrics that compare
-statistics rather than positions: `spectrum_l2` at 0.919, `increment_w1_by_separation` at 0.918
-and `spectral_energy_flux` at 0.917. Its correlation with the pointwise errors is between 0.207
-(`mae`) and 0.289 (`max_error`), so for ranking models it is close to the spectral and increment
-metrics and adds to the pointwise ones. It is anticorrelated with the single-field totals
-`kinetic_energy` (-0.799) and `enstrophy` (-0.794).
+statistics rather than positions: `spectrum_l2` at 0.929 and 0.931 on density and vorticity,
+`increment_w1_by_separation` at 0.931 and 0.902, and `tail_exceedance` at 0.946 and 0.715. Its
+correlation with the pointwise errors is between 0.241 and 0.341 on density and between 0.106 and
+0.175 on vorticity, so for ranking models it is close to the spectral and increment metrics and
+adds to the pointwise ones. It is anticorrelated with the single-field total `enstrophy` on
+vorticity (-0.842).
 
 ### Damage beside the other metrics
 

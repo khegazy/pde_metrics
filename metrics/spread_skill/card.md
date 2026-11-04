@@ -59,7 +59,7 @@ neighbour, so the domain edge never enters.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence spread_skill --results results/spread_skill_1787800137`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence spread_skill --results results/spread_skill_1793780354`, do not edit -->
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -80,15 +80,15 @@ Median damage over frames against severity level for spread_skill, one row per f
 
 | test family | field | change from clean at the harshest strength | elasticity | first strength detected |
 |---|---|---|---|---|
-| Ensemble dispersion | density | -0.8 to 3 | 0.832 to 1.37 | level 2 |
-| Cell-value distortion | density | -0.62 | 1.73 | level 3 |
+| Ensemble dispersion | density | -0.8 to 3 | 0.799 to 1.28 | level 1 |
+| Cell-value distortion | density | -0.62 | 1.72 | level 3 |
 
 **Consistency: how much does it vary from snapshot to snapshot?**
 
 | test family | field | consistency, in the strength's units | snapshots per independent block |
 |---|---|---|---|
-| Ensemble dispersion | density | 8.08e-17 to 3.23e-16 | — |
-| Cell-value distortion | density | 0.00163 | — |
+| Ensemble dispersion | density | 0.00061 to 0.00265 | 1 |
+| Cell-value distortion | density | 0.00201 | 1 |
 
 One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
 
@@ -98,7 +98,7 @@ These tables report what was measured and grade none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| density | — | — | — | — | — | 1 |
+| density | 0.631 | `spread_deflate` | `bias` | — | — | 1 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
@@ -184,11 +184,11 @@ unless they persist across frames.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence spread_skill --results results/spread_skill_1787800137`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence spread_skill --results results/spread_skill_1793780354`, do not edit -->
 
-Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `c49b363765d7` (working tree dirty). Run `spread_skill_1787800137`.
+Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `4afe76c2a0bb`. Run `spread_skill_1793780354`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/spread_skill_1787800137`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/spread_skill_1793780354`.
 
 <!-- END GENERATED run -->
 
@@ -212,7 +212,7 @@ regenerated against it and this section will say something different.
 [spread_inflate](../../degradations/spread_inflate/card.md) ·
 [spread_deflate](../../degradations/spread_deflate/card.md)
 
-<!-- GENERATED results_ensemble: written by `python -m fmeval.cards evidence spread_skill --results results/spread_skill_1787800137`, do not edit -->
+<!-- GENERATED results_ensemble: written by `python -m fmeval.cards evidence spread_skill --results results/spread_skill_1793780354`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -232,6 +232,15 @@ statistics: the raw value moves *down* on one axis and *up* on the other, so bot
 only because the analysis ranks on distance from the declared target rather than on the
 value itself. A metric like this scored as an ordinary error would read −1 on one of its
 two axes and look broken.
+
+The damage is read on the same distance from the target. The anchor, each member replaced by
+its own spatial mean, collapses the spread and reads 0.0040, on the low side of one; the
+harshest inflation still reads a damage of 0.609 and the harshest deflation 0.676, both
+positive, because the damage measures how far from one the ratio is, not which side it is on.
+The profile row above ranks the degradations by damage per unit of field change, but the two
+dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
+round-off; its "charges most for", "charges least for" and selectivity are therefore not
+meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/blob/main/issues/111-damage-per-change-divides-by-round-off-on-ensemble-axes.md)).
 
 The bias axis is the useful contrast. It falls from 0.995 to 0.378 without any change in
 dispersion at all, because biasing the members moves the ensemble mean away from the truth

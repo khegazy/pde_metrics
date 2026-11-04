@@ -33,7 +33,7 @@ consults its neighbours and the domain edge never enters.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence ensemble_mean_rmse --results results/ensemble_mean_rmse_1787800137`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence ensemble_mean_rmse --results results/ensemble_mean_rmse_1793780354`, do not edit -->
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -55,14 +55,14 @@ Median damage over frames against severity level for ensemble_mean_rmse, one row
 | test family | field | change from clean at the harshest strength | elasticity | first strength detected |
 |---|---|---|---|---|
 | Ensemble dispersion | density | 0 | — | level — |
-| Cell-value distortion | density | 1.63 | 1.82 | level 2 |
+| Cell-value distortion | density | 1.63 | 1.82 | level 3 |
 
 **Consistency: how much does it vary from snapshot to snapshot?**
 
 | test family | field | consistency, in the strength's units | snapshots per independent block |
 |---|---|---|---|
 | Ensemble dispersion | density | — | 1 |
-| Cell-value distortion | density | 0.00125 | 1 |
+| Cell-value distortion | density | 0.00121 | 1 |
 
 One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
 
@@ -147,11 +147,11 @@ for the missing feature and once for the spurious one.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence ensemble_mean_rmse --results results/ensemble_mean_rmse_1787800137`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence ensemble_mean_rmse --results results/ensemble_mean_rmse_1793780354`, do not edit -->
 
-Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `c49b363765d7` (working tree dirty). Run `ensemble_mean_rmse_1787800137`.
+Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `4afe76c2a0bb`. Run `ensemble_mean_rmse_1793780354`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/ensemble_mean_rmse_1787800137`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/ensemble_mean_rmse_1793780354`.
 
 <!-- END GENERATED run -->
 
@@ -175,7 +175,7 @@ regenerated against it and this section will say something different.
 [spread_inflate](../../degradations/spread_inflate/card.md) ·
 [spread_deflate](../../degradations/spread_deflate/card.md)
 
-<!-- GENERATED results_ensemble: written by `python -m fmeval.cards evidence ensemble_mean_rmse --results results/ensemble_mean_rmse_1787800137`, do not edit -->
+<!-- GENERATED results_ensemble: written by `python -m fmeval.cards evidence ensemble_mean_rmse --results results/ensemble_mean_rmse_1793780354`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|

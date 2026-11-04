@@ -334,34 +334,34 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence mae --results results/comparison_1793657627`, do not edit -->
 
-| compared with | rank correlation over every degradation |
-|---|---|
-| `rmse` | 0.986 |
-| `mse` | 0.986 |
-| `nrmse` | 0.963 |
-| `max_error` | 0.937 |
-| `h_minus_one` | 0.913 |
-| `wasserstein` | 0.9 |
-| `h1_seminorm` | 0.677 |
-| `spectral_energy_flux` | 0.301 |
-| `increment_w1_by_separation` | 0.217 |
-| `persistence_distance` | 0.207 |
-| `spectrum_l2` | 0.136 |
-| `energy_distance` | 0.0792 |
-| `increment_w1` | 0.0547 |
-| `tail_index` | -0.0681 |
-| `tail_exceedance` | -0.0956 |
-| `palinstrophy` | -0.0971 |
-| `increment_flatness` | -0.101 |
-| `enstrophy` | -0.103 |
-| `kinetic_energy` | -0.208 |
+| compared with | density | velocity | vorticity |
+|---|---|---|---|
+| `rmse` | 0.99 | 0.997 | 0.98 |
+| `mse` | 0.99 | 0.997 | 0.98 |
+| `nrmse` | 0.99 | 0.997 | 0.981 |
+| `max_error` | 0.936 | 0.948 | 0.939 |
+| `h_minus_one` | 0.934 | 0.946 | 0.917 |
+| `wasserstein` | 0.934 | — | — |
+| `h1_seminorm` | 0.763 | 0.663 | 0.605 |
+| `spectral_energy_flux` | — | 0.351 | — |
+| `increment_w1_by_separation` | 0.26 | 0.256 | 0.0906 |
+| `persistence_distance` | 0.241 | — | 0.175 |
+| `spectrum_l2` | 0.159 | 0.346 | 0.105 |
+| `energy_distance` | 0.189 | 0.149 | -0.132 |
+| `increment_w1` | 0.189 | 0.13 | -0.0942 |
+| `tail_exceedance` | 0.123 | 0.116 | -0.146 |
+| `palinstrophy` | — | — | 0.0141 |
+| `tail_index` | 0.00576 | -0.0219 | -0.154 |
+| `increment_flatness` | -0.152 | -0.123 | -0.105 |
+| `enstrophy` | — | — | -0.131 |
+| `kinetic_energy` | — | -0.28 | — |
 
-Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
-MAE and MSE correlate at 0.986 across every degradation, above the 0.95 redundancy
-threshold, and MAE against NRMSE at 0.963 — they order the degradations almost identically
+MAE and MSE correlate at 0.98 to 0.997 across every degradation of each field, above the 0.95
+redundancy threshold, and MAE against NRMSE at 0.981 to 0.997 — they order the degradations almost identically
 while differing by 38 times in sub-cell displacement damage. For ranking models the
 cell-by-cell baselines are duplicates of one another; as training losses they are not.
 

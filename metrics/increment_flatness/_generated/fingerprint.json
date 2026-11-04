@@ -1173,7 +1173,7 @@
     },
     {
       "blindness_block_length": 20.0,
-      "blindness_q": 0.8360882236,
+      "blindness_q": 0.8431789927,
       "cliffs_delta_min": 0.6249373095,
       "cost_s": 0.0025593749,
       "damage_max": null,
@@ -1212,7 +1212,7 @@
     },
     {
       "blindness_block_length": 21.0,
-      "blindness_q": 0.6340335696,
+      "blindness_q": 0.6389715804,
       "cliffs_delta_min": -0.0413178504,
       "cost_s": 0.0025092448,
       "damage_max": null,
@@ -1524,7 +1524,7 @@
     },
     {
       "blindness_block_length": 21.0,
-      "blindness_q": 0.6340335696,
+      "blindness_q": 0.6389715804,
       "cliffs_delta_min": -0.3060452915,
       "cost_s": 0.0025584486,
       "damage_max": null,

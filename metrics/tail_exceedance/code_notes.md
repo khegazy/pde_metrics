@@ -92,9 +92,11 @@ All in `metrics/tail_exceedance/test_metric.py`, each value derived by hand in i
   $\infty - \infty$ is NaN, which is also the source of numpy's "invalid value encountered in
   subtract" warning during `cards evidence`. In the evidence run this withheld `gaussian_blur`,
   `box_blur`, `lowpass_ideal` and `lowpass_butterworth` on density and velocity, the axes the metric
-  responds to most. `spread_skill`, the other target-valued metric, can also reach 0 and was not
-  re-examined. Routed to
-  [issues/123](../../issues/123-analysis-cannot-read-a-target-valued-metric.md).
+  responds to most. `spread_skill`, the other target-valued metric, can also reach 0. Fixed in the
+  shared harness: the distance from the target is now the bounded
+  $|v - t| / (v + t) = \tanh(|\ln(v/t)|/2)$, which orders values as the log ratio does and puts 0
+  at the finite maximum 1, and two neighbouring strengths both at that maximum count as in order
+  (`fmeval/analysis.py::_oriented`, `_monotone_fraction`).
 - **A target-valued metric gets direction +1 everywhere, no blindness bound, and an un-oriented
   damage** (same route). `summarise_axes` sets the sign to 1 when a target is declared and builds no
   damage, so `_blindness_bound` never runs and `blind_axes` is empty: the declared falls of the
@@ -102,8 +104,11 @@ All in `metrics/tail_exceedance/test_metric.py`, each value derived by hand in i
   raw `(v - clean) / span`, so with clean 1 and the anchor at 0 it is $1 - v$; noise at
   $v \approx 195$ has damage about −194, read as moving away from the anchor, and the fingerprint's
   `damage_max` on noise (0.0547, 0.0518, 0.0332) is the mildest level's dip below 1. The damage
-  columns and the noise response curve are therefore not readable for this metric; `spread_skill`
-  shares the path. Also in issue 123.
+  columns and the noise response curve were therefore not readable for this metric; `spread_skill`
+  shares the path. Fixed in the shared harness: `direction` now records the raw value's way, and
+  the damage is the distance from the target over the anchor's distance, zero at the target and
+  positive on both sides, so the blindness bound and the selectivity profile are built from it
+  (`fmeval/analysis.py::add_damage`; "Metrics with a target value" in `TEST_DESCRIPTION.md`).
 - **The reference cache is keyed by name only** (review round, likely future bug, not fixed in the
   bundle). A context filled with one reference and reused for another gave 21.625 instead of 1.0
   (the reviewer) and 0.0 instead of 1.0 (the builder), and a reference of a different shape gave

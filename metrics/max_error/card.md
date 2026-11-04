@@ -430,34 +430,34 @@ the right spectrum on a field like this density.
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence max_error --results results/comparison_1793657627`, do not edit -->
 
-| compared with | rank correlation over every degradation |
-|---|---|
-| `rmse` | 0.974 |
-| `mse` | 0.974 |
-| `nrmse` | 0.95 |
-| `mae` | 0.937 |
-| `h_minus_one` | 0.927 |
-| `wasserstein` | 0.919 |
-| `h1_seminorm` | 0.707 |
-| `spectral_energy_flux` | 0.397 |
-| `persistence_distance` | 0.289 |
-| `increment_w1_by_separation` | 0.273 |
-| `spectrum_l2` | 0.212 |
-| `energy_distance` | 0.186 |
-| `increment_w1` | 0.177 |
-| `enstrophy` | -0.175 |
-| `increment_flatness` | -0.242 |
-| `tail_index` | -0.244 |
-| `tail_exceedance` | -0.252 |
-| `palinstrophy` | -0.273 |
-| `kinetic_energy` | -0.307 |
+| compared with | density | velocity | vorticity |
+|---|---|---|---|
+| `rmse` | 0.969 | 0.957 | 0.972 |
+| `mse` | 0.969 | 0.957 | 0.972 |
+| `nrmse` | 0.967 | 0.956 | 0.972 |
+| `mae` | 0.936 | 0.948 | 0.939 |
+| `h_minus_one` | 0.913 | 0.898 | 0.946 |
+| `wasserstein` | 0.913 | — | — |
+| `h1_seminorm` | 0.762 | 0.763 | 0.639 |
+| `spectral_energy_flux` | — | 0.351 | — |
+| `spectrum_l2` | 0.228 | 0.264 | 0.0579 |
+| `increment_w1_by_separation` | 0.28 | 0.225 | 0.00511 |
+| `persistence_distance` | 0.341 | — | 0.106 |
+| `tail_exceedance` | 0.266 | 0.163 | -0.243 |
+| `energy_distance` | 0.205 | 0.152 | -0.197 |
+| `increment_w1` | 0.217 | 0.151 | -0.172 |
+| `palinstrophy` | — | — | 0.0539 |
+| `tail_index` | -0.204 | -0.121 | 0.0444 |
+| `enstrophy` | — | — | -0.128 |
+| `kinetic_energy` | — | -0.206 | — |
+| `increment_flatness` | -0.343 | -0.257 | 0.00399 |
 
-Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
-The maximum error orders the degradations almost as the pointwise norms do, at 0.974 with
-`mse` and `rmse` and 0.937 with `mae`, so for ranking models it adds little to them. What it
+The maximum error orders the degradations almost as the pointwise norms do, at 0.957 to 0.972
+with `mse` and `rmse` and 0.936 to 0.948 with `mae` across the fields, so for ranking models it adds little to them. What it
 adds is the size of the worst cell, which the tables above show it charges in a different
 proportion from the averages.
 

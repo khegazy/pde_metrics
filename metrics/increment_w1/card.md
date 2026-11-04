@@ -398,43 +398,45 @@ Displacement.
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence increment_w1 --results results/comparison_1793657627`, do not edit -->
 
-| compared with | rank correlation over every degradation |
-|---|---|
-| `energy_distance` | 0.984 |
-| `increment_w1_by_separation` | 0.918 |
-| `spectral_energy_flux` | 0.868 |
-| `persistence_distance` | 0.809 |
-| `spectrum_l2` | 0.749 |
-| `h1_seminorm` | 0.225 |
-| `max_error` | 0.177 |
-| `nrmse` | 0.0858 |
-| `rmse` | 0.0846 |
-| `mse` | 0.0844 |
-| `mae` | 0.0547 |
-| `h_minus_one` | -0.0552 |
-| `wasserstein` | -0.0571 |
-| `tail_index` | -0.129 |
-| `tail_exceedance` | -0.471 |
-| `increment_flatness` | -0.489 |
-| `enstrophy` | -0.495 |
-| `kinetic_energy` | -0.552 |
-| `palinstrophy` | -0.57 |
+| compared with | density | velocity | vorticity |
+|---|---|---|---|
+| `energy_distance` | 0.996 | 0.995 | 0.992 |
+| `increment_w1_by_separation` | 0.969 | 0.943 | 0.926 |
+| `tail_exceedance` | 0.817 | 0.875 | 0.884 |
+| `spectral_energy_flux` | — | 0.864 | — |
+| `persistence_distance` | 0.867 | — | 0.742 |
+| `spectrum_l2` | 0.81 | 0.773 | 0.662 |
+| `h1_seminorm` | 0.429 | 0.379 | -0.00855 |
+| `max_error` | 0.217 | 0.151 | -0.172 |
+| `mae` | 0.189 | 0.13 | -0.0942 |
+| `mse` | 0.188 | 0.123 | -0.159 |
+| `nrmse` | 0.188 | 0.123 | -0.159 |
+| `rmse` | 0.189 | 0.123 | -0.159 |
+| `tail_index` | 0.022 | 0.0139 | -0.543 |
+| `wasserstein` | 0.0069 | — | — |
+| `h_minus_one` | 0.00712 | -0.0457 | -0.219 |
+| `increment_flatness` | -0.23 | -0.235 | 0.394 |
+| `enstrophy` | — | — | -0.536 |
+| `kinetic_energy` | — | -0.575 | — |
+| `palinstrophy` | — | — | -0.623 |
 
-Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
 Every axis except displacement is ranked perfectly on every field. Displacement is ranked
 not at all, by construction.
 
-The number worth the most here is the cross-metric correlation: 0.09, 0.08, 0.08 and 0.05
-against `nrmse`, `rmse`, `mse` and `mae`. This metric is close to uncorrelated with the
+The number worth the most here is the cross-metric correlation: 0.188 to 0.189 on density,
+0.123 to 0.13 on velocity and -0.159 to -0.094 on vorticity against `nrmse`, `rmse`, `mse` and
+`mae`. This metric is close to uncorrelated with the
 entire pointwise family across the whole ladder, which is the strongest such result in the
-repository — `h_minus_one`, by contrast, correlates with them above 0.91. That is the
+repository — `h_minus_one`, by contrast, correlates with them above 0.91 on every field. That is the
 property this metric was proposed for, and it is now measured rather than argued: a panel containing
 this metric and a pointwise control is measuring two nearly independent things. It correlates
--0.49 with `increment_flatness`, which reads the same increment distribution through a single
-moment, so the two are related but far from redundant.
+-0.23 and -0.235 with `increment_flatness` on density and velocity and +0.394 on vorticity; that metric reads
+the same increment distribution through a single moment, so the two are related but far from
+redundant.
 
 ### Damage beside the other metrics
 

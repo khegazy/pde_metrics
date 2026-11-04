@@ -1035,20 +1035,22 @@ def _matrix_panel(ax, matrix: pd.DataFrame, cmap, title: str):
 
 
 @plot(
-    section=7, order=30, scope="global", min_metrics=2,
+    section=7, order=30, scope="per_field", min_metrics=2,
     title="Rank agreement beside magnitude agreement",
     requires_columns=("damage", "value"),
     defaults={"cmap": "RdBu_r"},
 )
 def concordance_matrix(ctx, df, opts) -> PlotResult:
-    """Spearman correlation of the metrics (left) beside Lin's concordance of their damage (right).
+    """Spearman correlation of the metrics (left) beside Lin's concordance of their damage (right),
+    on one field.
 
     Two metrics can order every degradation identically and still charge very different amounts
     for the same one; the left panel sees only the first, the right the second (Lin 1989,
     *Biometrics* 45(1):255-268).
     """
-    rho = an.cross_metric_correlation(df)
-    rc = an.concordance_matrix(df, probe_labels=ctx.probe_labels)
+    field = str(df["field"].iloc[0])
+    rho = an.cross_metric_correlation(df, field=field)
+    rc = an.concordance_matrix(df, field=field, probe_labels=ctx.probe_labels)
     ctx.require(not rho.empty and not rc.empty,
                 "needs two metrics with common ladder levels and a damage scale")
     names = sorted(set(rho.index) | set(rc.index))
@@ -1066,6 +1068,7 @@ def concordance_matrix(ctx, df, opts) -> PlotResult:
         for a in names for b in names
     ])
     caption = (
+        f"The metrics run on {field}. "
         "Left: rank correlation between metrics over the median value at every strength of "
         "every degradation, the existing redundancy statistic. Right: Lin's concordance "
         "coefficient on damage, which also penalises departure from the identity line, so two "
@@ -1074,7 +1077,7 @@ def concordance_matrix(ctx, df, opts) -> PlotResult:
         + (f" No damage scale, so undefined on the right: {', '.join(unscaled)}."
            if unscaled else "")
     )
-    return PlotResult([FigureItem(fig, {}, caption=caption, data=data)])
+    return PlotResult([FigureItem(fig, {"field": field}, caption=caption, data=data)])
 
 
 @plot(

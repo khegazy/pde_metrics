@@ -547,7 +547,7 @@ def test_deception_panel_says_which_metrics_have_no_damage_scale(run_folder):
 def test_concordance_is_below_spearman_for_a_shape_twin(run_folder):
     outcome = _rendered(run_folder, "concordance_matrix")
     assert outcome.status == "ok", outcome.reason
-    data = _figure_data(run_folder, "concordance_matrix")
+    data = _figure_data(run_folder, "concordance_matrix__field-vorticity")
     pair = data[(data["metric_a"] == "mae") & (data["metric_b"] == "mse")].iloc[0]
     assert pair["spearman"] == pytest.approx(1.0), "a monotone twin orders the ladder alike"
     assert pair["concordance"] < 0.99, "but charges different amounts"

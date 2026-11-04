@@ -70,7 +70,8 @@ along the trajectory and against a median over frames the drift would read as da
 the reference's spatial variance, so D is the error as a fraction of the fluctuation energy.
 Dividing by the clean value instead would not work, because mean squared error is exactly
 zero there. Why the anchor is the mean rather than a translated copy of the reference is
-recorded in `judgements/001`.
+recorded in `judgements/001`. A metric with a target value reads D on its distance from the
+target instead, zero at the target (see "Metrics with a target value").
 
 **The analysis grid.** Both fields are placed on one common grid before anything is
 measured, by averaging over blocks of cells. Fields that are computed from other fields —
@@ -175,7 +176,9 @@ currently a configured constant, not measured from the data.
 ### `monotone_fraction` — how often the ordering was perfect, with no ties
 
 **What it is.** The fraction of frames on which the severity levels are ordered *strictly* correctly,
-with no ties or inversions anywhere in the sequence.
+with no ties or inversions anywhere in the sequence. The one tie that counts as in order is a
+metric with a target value sitting at the furthest point from its target at two neighbouring
+strengths (see "Metrics with a target value"): it cannot move further.
 
 **Range.** 0 to 1. 1.0 means every frame was perfect.
 
@@ -295,7 +298,10 @@ response-curve data of each card.
 when it moves below, measured: the sign of the median, over frames, of the departure from clean at
 the harshest strength at which that median is more than round-off. It orients every ordering statistic of that degradation and carries
 no judgement: enstrophy falls under blur and rises under noise, and both are recorded as they are.
-For a metric with a target value it is +1, because its distance from the target is what is ordered.
+For a metric with a target value it is likewise the way its reported value moved, and it orients
+nothing: that metric's statistics read its distance from the target, which no sign changes. A blur
+that lowers an extreme-increment frequency ratio from 1 toward 0 reads −1 there, and noise that
+raises it reads +1, though both take it further from its target.
 
 **Caveats.** Measured from the data being described, one sign per degradation. A quantity that moves
 at mild strengths and is back on its clean value at the harshest ones (a translation-invariant
@@ -416,7 +422,7 @@ estimated block length (`blindness_block_length`) is shown beside this number fo
 `selectivity` compares across degradations. Both are medians at the same strength, so one extreme
 frame cannot dominate it. It is a size because a single-field quantity's damage is negative where
 the degradation raises the quantity (noise raises enstrophy), and a rise is as much a response as a
-fall. Empty for a metric with no damage scale and for a metric with a target value.
+fall. Empty for a metric with no damage scale.
 
 **Where it appears.** `axis_response__field-*.csv`.
 
@@ -469,8 +475,9 @@ damage falls wholly on one side of the margin, and with 200 resamples the fracti
 in steps of 0.005. `damage_max_ucb` carries the graded information. Not a
 verdict: being unresponsive to a harmless displacement is the property a position-tolerant metric
 is built for. The resampling runs along one trajectory, so the bound
-reflects variation along it, not between independent realisations. Both are empty for a metric
-with a target value, whose damage is on the raw ratio and is not oriented.
+reflects variation along it, not between independent realisations. For a metric with a target value
+the damage is its distance from the target, so a degradation that leaves it on the target, as a
+translation leaves an extreme-increment frequency ratio at exactly 1, is listed here.
 
 **Where they appear.** `axis_response__field-*.csv`; `blind_axes` in the summary.
 
@@ -663,13 +670,20 @@ not comparable between runs with different metric sets.
 
 ### The redundancy matrix — which metrics are duplicates of each other
 
-**What it is.** Rank correlation between every pair of metrics, over every degradation. Two
-metrics that correlate near 1 are near-duplicates and one of them is a wasted panel slot.
+**What it is.** Rank correlation between every pair of metrics run on one physical field, over
+every degradation. Two metrics that correlate near 1 are near-duplicates and one of them is a
+wasted panel slot.
 
-**How it is computed.** One observation per (degradation, severity level), using the median over frames — which
-is the level at which the panel decision is actually made. The **reference severity level is excluded**:
-every pairwise error metric is exactly zero there, so keeping it would add a point all metrics
-share by construction and pull every correlation toward +1.
+**How it is computed.** Separately for each field. One observation per (degradation, severity level),
+using the median over frames — which is the level at which the panel decision is actually made. The
+**reference severity level is excluded**: every pairwise error metric is exactly zero there, so
+keeping it would add a point all metrics share by construction and pull every correlation toward
++1. A metric with a target value enters by its distance from the target. Fields are never pooled:
+density, velocity and vorticity have different units and different metrics, and a median over all
+three fields' rows mostly reads whichever sits in the middle — on the pinned run
+`comparison_1793657627` it correlated `wasserstein`, which runs on density only, with
+`kinetic_energy`, which runs on velocity only. A metric's card shows one column per field it runs
+on, with a dash where the other metric does not run on that field.
 
 **Range.** -1 to 1. The configured reference for "redundant" is 0.95.
 
@@ -681,8 +695,8 @@ data, MAE and MSE correlate at 0.98 to 0.997 over every degradation, yet MAE ass
 in the displacement. For selecting between models by ranking they are duplicates; as training
 losses they are not. Read this matrix alongside the displacement figure, never alone.
 
-**Where it appears.** `redundancy_table.csv`, in the comparison folder only, since it needs at
-least two metrics.
+**Where it appears.** `redundancy_table__field-*.csv`, one per field, in the comparison folder only,
+since it needs at least two metrics; "Compared with the other metrics" on each card.
 
 ### The concordance matrix, damage by level, and the participation ratio — agreement in magnitude
 
@@ -814,7 +828,9 @@ its working range before any normalisation.
 
 `value_anchor` is the median value on the anchor entry, and `span` is
 `value_anchor - value_clean`: the metric's full working range, and the denominator of the
-damage score.
+damage score. For a metric with a target value `span` is instead the anchor's median distance
+from the target, between 0 and 1 (see "Metrics with a target value"), while `value_clean` and
+`value_anchor` stay in the metric's own units.
 
 ### `anchor_source`
 
@@ -894,8 +910,7 @@ field change is itself mean squared error on a fixed scale, mean squared error c
 every degradation and reads 0 here; every other metric's profile is what it charges relative to
 that reference.
 
-**Caveats.** It depends on which degradations were run. Empty for a metric with no damage scale and
-for a metric with a target value, whose damage is not oriented.
+**Caveats.** It depends on which degradations were run. Empty for a metric with no damage scale.
 
 ### `most_sensitive_axis`, `least_sensitive_axis` — the two ends of that profile
 
@@ -1130,12 +1145,39 @@ both are failures.
 
 The suite adapts rather than the metric. The reported value stays the raw ratio, as the
 forecast-verification literature reports it, so a reader who sees 0.4 knows immediately
-that the ensemble is too narrow. The **ordering** statistics are computed on the distance
-from the target, |log(value / target)|, which is zero when calibrated and rises in either
-direction. The log makes the scale symmetric, since half the calibrated spread and twice it
-are equally wrong. A value of zero — an ensemble collapsed onto its mean, claiming
-certainty it has not earned — is the furthest point from calibration there is, and is
-ranked as such rather than dropped.
+that the ensemble is too narrow. Everything else is read on the **distance from the target**,
+
+    q = |value - target| / (value + target) = tanh(|ln(value / target)| / 2),
+
+which is zero when calibrated and rises in either direction. It is a fixed increasing function
+of the log ratio |ln(value / target)|, the symmetric measure of relative change (Törnqvist,
+Vartia and Vartia 1985, *The American Statistician* 39(1), 43–46), so it puts every value in the
+same order and every rank statistic is the one the log ratio would give. Like the log ratio it is
+symmetric: half the calibrated spread and twice it are equally wrong (q = 1/3 for both). Unlike
+it, it is bounded, at 1: a value of zero — an ensemble collapsed onto its mean, claiming
+certainty it has not earned, or a smoothed field with no extreme increments left — is the
+furthest point from calibration there is, and the log ratio puts it infinitely far away, where
+two such values cannot be compared, nothing can be divided by it, and an anchor at zero would
+make every finite miscalibration read as no damage at all. An infinite value also reads 1, and a
+negative one, which a ratio does not take, is ranked with them rather than dropped.
+
+What is read on q:
+
+- **The ordering statistics** (`rho`, `monotone_fraction`, `separability_auc_min`, the
+  sensitivity and saturation levels). Two neighbouring strengths both at q = 1 count as in
+  order in `monotone_fraction`, since the value cannot get further from the target; they are
+  still a tie to the rank correlation, which then reads below 1, because the metric cannot tell
+  those strengths apart.
+- **The damage**, D = q(value) / q(anchor): zero at the target rather than at the clean value,
+  never negative, and rising toward the anchor on both sides of the target. With the anchor on
+  one side — the mean-field anchor collapses an ensemble's spread, and removes every extreme
+  increment — a departure to the other side still reads positive damage. The clean value's own
+  distance from the target, an ensemble's sampling miscalibration, is its damage.
+- **The response columns, the blindness bound and the selectivity profile**, through that
+  damage; a degradation that leaves the value on its target is listed in `blind_axes`.
+- **The redundancy matrix**, so that it is compared with other metrics in the same way.
+
+`direction` still records which way the reported value moved.
 
 Without this the axis would arrive flagged on three criteria at once, and the flags would
 be describing the analysis rather than the metric.
@@ -1311,7 +1353,7 @@ translates the ensemble rather than perturbing it, and would leave the spread un
 | `field_gallery` | 6 | The per-cell contribution to the metric, on **shared colour limits**. Autoscaling each panel would make a heavily smoothed field look identical to the reference. A displaced feature shows as two lobes — one where it should be and is not, one where it is and should not be |
 | `response_sparklines` | 6 | Every metric (rows) against every degradation (columns), each cell a tiny curve of median damage against severity level on one shared 0–1 scale, starting from the undamaged reference. The whole ladder in one view: onset, slope, saturation and a flat, blind response are all read by position. The red dot is the first level at which the metric has moved a tenth of the way to the anchor; the small number is the elasticity; degradations with three or fewer usable levels are drawn as dots; grey cells are metrics with no damage scale on that field. Below each column is the range of the severity actually applied |
 | `response_portrait` | 7 | Every metric against every degradation with each cell split into one wedge per field (key beside the grid), coloured by `cliffs_delta_min`. The one figure that holds all three fields at once: read a row for what a metric can tell apart, a column for which metrics see a degradation, a wedge for how that changes with the field. Grey wedges have no defined value, including fields a metric does not apply to. The colour-bar ticks at 0.12, 0.28 and 0.42 are the Vargha–Delaney small, medium and large anchors, for scale and not as grades. Like `rho`, it is read on the departure from clean in the measured direction, so a quantity that falls under smoothing reads positive when it falls steadily |
-| `concordance_matrix` | 7 | Two matrices side by side: the rank correlation between metrics over the ladder (the redundancy statistic), and Lin's concordance of their damage, which also penalises departure from the identity line. A pair high on the left and lower on the right orders the degradations alike but charges different amounts: mean absolute error and mean squared error are the standing example. Grey cells are undefined, which on the right means a metric with no damage scale. Comparison folder only |
+| `concordance_matrix` | 7 | One figure per field, two matrices side by side: the rank correlation between metrics over the ladder (the redundancy statistic), and Lin's concordance of their damage, which also penalises departure from the identity line. A pair high on the left and lower on the right orders the degradations alike but charges different amounts: mean absolute error and mean squared error are the standing example. Grey cells are undefined, which on the right means a metric with no damage scale. Comparison folder only |
 | `redundancy_dendrogram` | 7 | Average-linkage clustering of the metrics that have a damage scale, on one minus the absolute concordance of their damage. Metrics that join near zero assign nearly the same damage everywhere. Drawn in one colour because it shows structure, not groups to adopt. Needs three metrics with a damage scale |
 | `selectivity_profile` | 7 | Each metric's response across every degradation, as grouped bars. Needs two or more metrics |
 | `deception_panel` | 8 | Damage assigned to the Gaussian field (star) against the ordinary severity levels (open circles), one row per metric, so every metric in the run is compared on each field. A star near zero means the metric sees only second-order statistics. Rows marked "no damage scale" are metrics whose clean and anchor values coincide |

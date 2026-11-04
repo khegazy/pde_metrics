@@ -319,29 +319,29 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence rmse --results results/comparison_1793657627`, do not edit -->
 
-| compared with | rank correlation over every degradation |
-|---|---|
-| `mse` | 1 |
-| `mae` | 0.986 |
-| `max_error` | 0.974 |
-| `nrmse` | 0.974 |
-| `h_minus_one` | 0.937 |
-| `wasserstein` | 0.928 |
-| `h1_seminorm` | 0.708 |
-| `spectral_energy_flux` | 0.32 |
-| `persistence_distance` | 0.227 |
-| `increment_w1_by_separation` | 0.223 |
-| `spectrum_l2` | 0.147 |
-| `energy_distance` | 0.104 |
-| `increment_w1` | 0.0846 |
-| `tail_index` | -0.113 |
-| `enstrophy` | -0.116 |
-| `tail_exceedance` | -0.133 |
-| `increment_flatness` | -0.135 |
-| `palinstrophy` | -0.141 |
-| `kinetic_energy` | -0.23 |
+| compared with | density | velocity | vorticity |
+|---|---|---|---|
+| `mse` | 1 | 1 | 1 |
+| `nrmse` | 0.999 | 1 | 0.999 |
+| `mae` | 0.99 | 0.997 | 0.98 |
+| `max_error` | 0.969 | 0.957 | 0.972 |
+| `h_minus_one` | 0.949 | 0.951 | 0.961 |
+| `wasserstein` | 0.949 | — | — |
+| `h1_seminorm` | 0.759 | 0.657 | 0.592 |
+| `spectral_energy_flux` | — | 0.357 | — |
+| `increment_w1_by_separation` | 0.264 | 0.251 | 0.0349 |
+| `persistence_distance` | 0.276 | — | 0.146 |
+| `spectrum_l2` | 0.187 | 0.345 | 0.102 |
+| `energy_distance` | 0.187 | 0.139 | -0.194 |
+| `increment_w1` | 0.189 | 0.123 | -0.159 |
+| `tail_exceedance` | 0.172 | 0.121 | -0.203 |
+| `palinstrophy` | — | — | 0.0173 |
+| `tail_index` | -0.0631 | -0.0452 | -0.0627 |
+| `increment_flatness` | -0.224 | -0.137 | -0.0348 |
+| `enstrophy` | — | — | -0.16 |
+| `kinetic_energy` | — | -0.285 | — |
 
-Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 

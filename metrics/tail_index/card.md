@@ -471,36 +471,37 @@ intermittent field.
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793657627`, do not edit -->
 
-| compared with | rank correlation over every degradation |
-|---|---|
-| `increment_flatness` | 0.672 |
-| `palinstrophy` | 0.607 |
-| `tail_exceedance` | 0.596 |
-| `kinetic_energy` | 0.261 |
-| `enstrophy` | 0.205 |
-| `h1_seminorm` | 0.0283 |
-| `energy_distance` | -0.0372 |
-| `increment_w1_by_separation` | -0.051 |
-| `mae` | -0.0681 |
-| `nrmse` | -0.0904 |
-| `rmse` | -0.113 |
-| `mse` | -0.113 |
-| `spectrum_l2` | -0.116 |
-| `increment_w1` | -0.129 |
-| `persistence_distance` | -0.131 |
-| `wasserstein` | -0.159 |
-| `h_minus_one` | -0.18 |
-| `spectral_energy_flux` | -0.183 |
-| `max_error` | -0.244 |
+| compared with | density | velocity | vorticity |
+|---|---|---|---|
+| `increment_flatness` | 0.65 | 0.678 | 0.0242 |
+| `palinstrophy` | — | — | 0.649 |
+| `enstrophy` | — | — | 0.502 |
+| `kinetic_energy` | — | 0.249 | — |
+| `h1_seminorm` | 0.215 | 0.119 | 0.149 |
+| `energy_distance` | 0.0375 | 0.0412 | -0.479 |
+| `increment_w1` | 0.022 | 0.0139 | -0.543 |
+| `mae` | 0.00576 | -0.0219 | -0.154 |
+| `nrmse` | -0.0634 | -0.0452 | -0.0602 |
+| `rmse` | -0.0631 | -0.0452 | -0.0627 |
+| `mse` | -0.0634 | -0.0452 | -0.0629 |
+| `increment_w1_by_separation` | -0.0727 | -0.0372 | -0.648 |
+| `max_error` | -0.204 | -0.121 | 0.0444 |
+| `h_minus_one` | -0.139 | -0.168 | 0.0222 |
+| `wasserstein` | -0.139 | — | — |
+| `spectral_energy_flux` | — | -0.162 | — |
+| `spectrum_l2` | -0.176 | -0.115 | -0.503 |
+| `tail_exceedance` | -0.358 | -0.273 | -0.714 |
+| `persistence_distance` | -0.324 | — | -0.559 |
 
-Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
 The tail index orders the degradations unlike every other metric in the run. Its closest
-correlates are the other single-field shape statistics, `increment_flatness` at 0.672 and
-`palinstrophy` at 0.607, and its correlation with every pointwise norm is between -0.24 and
-0.03, so it carries information the pointwise panel does not.
+correlates are the other single-field shape statistics, `increment_flatness` at 0.65 and 0.678
+on density and velocity and `palinstrophy` at 0.649 on vorticity, and its correlation with every
+pointwise norm is between -0.204 and 0.044, so it carries information the pointwise panel does
+not.
 
 
 ### Damage beside the other metrics

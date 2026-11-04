@@ -428,34 +428,35 @@ error metric and says nothing about the displacement problem.
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence h1_seminorm --results results/comparison_1793657627`, do not edit -->
 
-| compared with | rank correlation over every degradation |
-|---|---|
-| `rmse` | 0.708 |
-| `mse` | 0.708 |
-| `max_error` | 0.707 |
-| `mae` | 0.677 |
-| `nrmse` | 0.661 |
-| `wasserstein` | 0.515 |
-| `h_minus_one` | 0.515 |
-| `enstrophy` | 0.25 |
-| `tail_exceedance` | 0.244 |
-| `increment_w1` | 0.225 |
-| `energy_distance` | 0.22 |
-| `kinetic_energy` | 0.147 |
-| `spectral_energy_flux` | 0.141 |
-| `increment_w1_by_separation` | 0.126 |
-| `palinstrophy` | 0.11 |
-| `tail_index` | 0.0283 |
-| `persistence_distance` | -0.0434 |
-| `spectrum_l2` | -0.132 |
-| `increment_flatness` | -0.139 |
+| compared with | density | velocity | vorticity |
+|---|---|---|---|
+| `max_error` | 0.762 | 0.763 | 0.639 |
+| `mae` | 0.763 | 0.663 | 0.605 |
+| `nrmse` | 0.758 | 0.658 | 0.596 |
+| `rmse` | 0.759 | 0.657 | 0.592 |
+| `mse` | 0.759 | 0.657 | 0.592 |
+| `wasserstein` | 0.55 | — | — |
+| `h_minus_one` | 0.55 | 0.493 | 0.484 |
+| `increment_w1` | 0.429 | 0.379 | -0.00855 |
+| `energy_distance` | 0.418 | 0.365 | -0.004 |
+| `enstrophy` | — | — | 0.352 |
+| `spectral_energy_flux` | — | 0.279 | — |
+| `increment_w1_by_separation` | 0.358 | 0.258 | -0.0871 |
+| `tail_exceedance` | 0.202 | 0.214 | -0.167 |
+| `palinstrophy` | — | — | 0.179 |
+| `tail_index` | 0.215 | 0.119 | 0.149 |
+| `spectrum_l2` | 0.123 | 0.132 | -0.373 |
+| `kinetic_energy` | — | 0.0355 | — |
+| `persistence_distance` | 0.229 | — | -0.288 |
+| `increment_flatness` | -0.135 | -0.179 | 0.00845 |
 
-Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
-This metric ranks the ladder most like the pointwise family, at 0.66 to 0.71 with `nrmse`,
-`mae`, `mse` and `rmse`, and less like `h_minus_one`, at 0.52. The two Sobolev orders agree on
+This metric ranks the ladder most like the pointwise family: with `nrmse`, `mae`, `mse` and
+`rmse` it correlates at 0.758 to 0.763 on density, 0.657 to 0.663 on velocity and 0.592 to 0.605
+on vorticity, and less like `h_minus_one`, at 0.484 to 0.55. The two Sobolev orders agree on
 direction for most degradations and disagree on which ones are severe, which is the whole
 content of Equation (2).
 

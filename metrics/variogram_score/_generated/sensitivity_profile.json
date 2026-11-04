@@ -21,11 +21,11 @@
         "rho_ci_lo": null
       },
       {
-        "blind": false,
-        "blindness_q": 1.0,
+        "blind": true,
+        "blindness_q": 0.0,
         "cliffs_delta_min": 1.0,
-        "damage_max_ucb": 0.1257282893,
-        "damage_per_change": 8.951014643e+30,
+        "damage_max_ucb": 0.0077950151,
+        "damage_per_change": 5.549530244e+29,
         "degradation": "spread_deflate",
         "degradation_family": "ensemble",
         "field": "density",
@@ -39,8 +39,8 @@
         "blind": false,
         "blindness_q": 1.0,
         "cliffs_delta_min": 1.0,
-        "damage_max_ucb": 0.9980324322,
-        "damage_per_change": 4.318899827e+30,
+        "damage_max_ucb": 0.0618769088,
+        "damage_per_change": 2.677670205e+29,
         "degradation": "spread_inflate",
         "degradation_family": "ensemble",
         "field": "density",
@@ -52,5 +52,5 @@
       }
     ]
   },
-  "run": "variogram_score_1793396098"
+  "run": "variogram_score_1793780354"
 }

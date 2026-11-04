@@ -473,29 +473,29 @@ be drawn from the trap test passing.
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence h_minus_one --results results/comparison_1793657627`, do not edit -->
 
-| compared with | rank correlation over every degradation |
-|---|---|
-| `wasserstein` | 0.996 |
-| `nrmse` | 0.946 |
-| `rmse` | 0.937 |
-| `mse` | 0.937 |
-| `max_error` | 0.927 |
-| `mae` | 0.913 |
-| `h1_seminorm` | 0.515 |
-| `spectral_energy_flux` | 0.239 |
-| `persistence_distance` | 0.212 |
-| `spectrum_l2` | 0.147 |
-| `increment_w1_by_separation` | 0.117 |
-| `energy_distance` | -0.0415 |
-| `increment_w1` | -0.0552 |
-| `increment_flatness` | -0.0907 |
-| `tail_index` | -0.18 |
-| `enstrophy` | -0.183 |
-| `palinstrophy` | -0.208 |
-| `tail_exceedance` | -0.257 |
-| `kinetic_energy` | -0.292 |
+| compared with | density | velocity | vorticity |
+|---|---|---|---|
+| `wasserstein` | 1 | — | — |
+| `nrmse` | 0.948 | 0.952 | 0.962 |
+| `rmse` | 0.949 | 0.951 | 0.961 |
+| `mse` | 0.949 | 0.951 | 0.961 |
+| `mae` | 0.934 | 0.946 | 0.917 |
+| `max_error` | 0.913 | 0.898 | 0.946 |
+| `h1_seminorm` | 0.55 | 0.493 | 0.484 |
+| `spectral_energy_flux` | — | 0.239 | — |
+| `persistence_distance` | 0.2 | — | 0.142 |
+| `spectrum_l2` | 0.139 | 0.275 | 0.12 |
+| `increment_w1_by_separation` | 0.119 | 0.109 | -0.0146 |
+| `tail_exceedance` | 0.0753 | 0.0225 | -0.262 |
+| `palinstrophy` | — | — | 0.00597 |
+| `energy_distance` | 0.0108 | -0.0295 | -0.259 |
+| `increment_w1` | 0.00712 | -0.0457 | -0.219 |
+| `increment_flatness` | -0.18 | -0.124 | 0.0185 |
+| `tail_index` | -0.139 | -0.168 | 0.0222 |
+| `enstrophy` | — | — | -0.192 |
+| `kinetic_energy` | — | -0.311 | — |
 
-Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
@@ -504,14 +504,14 @@ each of three fields; the two trap tests have no ordering) — every degradation
 every field, every frame. As a ranker of damage this metric has no failure in the recorded
 evidence.
 
-It correlates 0.91 to 0.95 with the four pointwise baselines across the whole ladder, and
-0.996 with [wasserstein](../../metrics/wasserstein/card.md), which on a density this close to uniform is
+It correlates 0.917 to 0.962 with the four pointwise baselines on each field, and
+0.99998 with [wasserstein](../../metrics/wasserstein/card.md) on density, which on a density this close to uniform is
 this metric to first order (that card's Definition). The first range is
 high, and it is the number most likely to be misread. A correlation in that range means the
 two order the degradations almost identically and are therefore close to redundant for model
 selection; it says nothing about whether they agree on magnitude, and on the displacement
 axes they do not. `AGENTS.md` records the same trap in its sharpest form for MAE against MSE,
-which on this run correlate at 0.986 and, at an eighth of a cell of displacement, differ by a
+which on this run correlate at 0.98 to 0.997 and, at an eighth of a cell of displacement, differ by a
 factor of 38 to 192 in damage. The case for adding this
 metric to a panel rests on the magnitudes, not on these correlations, and anyone reading the
 correlations alone would conclude the opposite.

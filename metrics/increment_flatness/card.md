@@ -449,29 +449,29 @@ Gaussian statistics.
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1793657627`, do not edit -->
 
-| compared with | rank correlation over every degradation |
-|---|---|
-| `tail_index` | 0.672 |
-| `tail_exceedance` | 0.552 |
-| `palinstrophy` | 0.459 |
-| `kinetic_energy` | 0.161 |
-| `enstrophy` | 0.0202 |
-| `wasserstein` | -0.0834 |
-| `h_minus_one` | -0.0907 |
-| `mae` | -0.101 |
-| `nrmse` | -0.121 |
-| `rmse` | -0.135 |
-| `mse` | -0.135 |
-| `h1_seminorm` | -0.139 |
-| `spectrum_l2` | -0.234 |
-| `max_error` | -0.242 |
-| `persistence_distance` | -0.322 |
-| `energy_distance` | -0.393 |
-| `increment_w1_by_separation` | -0.408 |
-| `increment_w1` | -0.489 |
-| `spectral_energy_flux` | -0.499 |
+| compared with | density | velocity | vorticity |
+|---|---|---|---|
+| `tail_index` | 0.65 | 0.678 | 0.0242 |
+| `kinetic_energy` | — | 0.00987 | — |
+| `persistence_distance` | -0.433 | — | 0.291 |
+| `spectrum_l2` | -0.263 | -0.11 | 0.411 |
+| `mae` | -0.152 | -0.123 | -0.105 |
+| `h_minus_one` | -0.18 | -0.124 | 0.0185 |
+| `h1_seminorm` | -0.135 | -0.179 | 0.00845 |
+| `nrmse` | -0.225 | -0.136 | -0.0412 |
+| `mse` | -0.225 | -0.137 | -0.0348 |
+| `rmse` | -0.224 | -0.137 | -0.0348 |
+| `wasserstein` | -0.18 | — | — |
+| `energy_distance` | -0.212 | -0.212 | 0.399 |
+| `increment_w1` | -0.23 | -0.235 | 0.394 |
+| `increment_w1_by_separation` | -0.3 | -0.245 | 0.311 |
+| `max_error` | -0.343 | -0.257 | 0.00399 |
+| `spectral_energy_flux` | — | -0.34 | — |
+| `palinstrophy` | — | — | -0.445 |
+| `tail_exceedance` | -0.491 | -0.466 | 0.284 |
+| `enstrophy` | — | — | -0.479 |
 
-Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
@@ -484,12 +484,14 @@ ordered (see Resolution loss). `CLAUDE.md`'s acceptance rule is that a
 metric joins the panel only if it is monotone with high rank correlation, and on that rule
 this does not qualify; `issues/036` sets out what should be done about it.
 
-Read as a tripwire, the picture is different and more favourable. It correlates -0.10 to
--0.14 with the four pointwise baselines and -0.09 with `h_minus_one`, so it is close to
-independent of all five and is carrying information none of them carry.
-Its correlations with `increment_w1` and `increment_w1_by_separation` are -0.49 and -0.41,
-which is expected, since all three read increment distributions; the only other substantial
-relationship is 0.46 with `palinstrophy`. The case for keeping it is that a drift in this
+Read as a tripwire, the picture is different and more favourable. It correlates -0.225 to
+-0.035 with the four pointwise baselines and -0.18 to 0.019 with `h_minus_one` across the three
+fields, so it is close to independent of all five and is carrying information none of them carry.
+Its correlations with `increment_w1` and `increment_w1_by_separation` are -0.23 to -0.30 on
+density and velocity and +0.31 to +0.39 on vorticity, as expected of three metrics that read
+increment distributions. The only other substantial
+relationships are 0.65 and 0.678 with `tail_index` on density and velocity and -0.445 with
+`palinstrophy` on vorticity. The case for keeping it is that a drift in this
 number means something specific that no other metric reports; the case against using it to choose between models is the sign
 change above.
 

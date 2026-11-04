@@ -446,37 +446,38 @@ a translation changes no Fourier amplitude.
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence spectrum_l2 --results results/comparison_1793657627`, do not edit -->
 
-| compared with | rank correlation over every degradation |
-|---|---|
-| `persistence_distance` | 0.919 |
-| `increment_w1_by_separation` | 0.869 |
-| `spectral_energy_flux` | 0.86 |
-| `energy_distance` | 0.782 |
-| `increment_w1` | 0.749 |
-| `nrmse` | 0.217 |
-| `max_error` | 0.212 |
-| `h_minus_one` | 0.147 |
-| `rmse` | 0.147 |
-| `wasserstein` | 0.147 |
-| `mse` | 0.147 |
-| `mae` | 0.136 |
-| `tail_index` | -0.116 |
-| `h1_seminorm` | -0.132 |
-| `increment_flatness` | -0.234 |
-| `tail_exceedance` | -0.647 |
-| `palinstrophy` | -0.694 |
-| `enstrophy` | -0.828 |
-| `kinetic_energy` | -0.883 |
+| compared with | density | velocity | vorticity |
+|---|---|---|---|
+| `persistence_distance` | 0.929 | — | 0.931 |
+| `spectral_energy_flux` | — | 0.877 | — |
+| `increment_w1_by_separation` | 0.879 | 0.875 | 0.813 |
+| `tail_exceedance` | 0.854 | 0.795 | 0.674 |
+| `energy_distance` | 0.811 | 0.783 | 0.633 |
+| `increment_w1` | 0.81 | 0.773 | 0.662 |
+| `max_error` | 0.228 | 0.264 | 0.0579 |
+| `rmse` | 0.187 | 0.345 | 0.102 |
+| `mse` | 0.186 | 0.346 | 0.102 |
+| `nrmse` | 0.186 | 0.346 | 0.0994 |
+| `mae` | 0.159 | 0.346 | 0.105 |
+| `h_minus_one` | 0.139 | 0.275 | 0.12 |
+| `wasserstein` | 0.139 | — | — |
+| `h1_seminorm` | 0.123 | 0.132 | -0.373 |
+| `increment_flatness` | -0.263 | -0.11 | 0.411 |
+| `tail_index` | -0.176 | -0.115 | -0.503 |
+| `palinstrophy` | — | — | -0.658 |
+| `kinetic_energy` | — | -0.893 | — |
+| `enstrophy` | — | — | -0.928 |
 
-Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
 The ranking this metric produces is close to independent of the pointwise family, correlating
-0.136 to 0.217 with `mae`, `mse`, `rmse` and `nrmse`, and closest to `persistence_distance`
-at 0.919, `increment_w1_by_separation` at 0.869 and `spectral_energy_flux` at 0.86.
-`increment_w1`, the other metric here that reads only a distribution rather than an
-arrangement, is at 0.75. The strong
+0.159 to 0.187 on density, 0.345 to 0.346 on velocity and 0.099 to 0.105 on vorticity with `mae`,
+`mse`, `rmse` and `nrmse`, and closest to `persistence_distance` at 0.929 and 0.931 on density and
+vorticity, `increment_w1_by_separation` at 0.813 to 0.879 and `spectral_energy_flux` at 0.877 on
+velocity. `increment_w1`, the other metric here that reads only a distribution rather than an
+arrangement, is at 0.662 to 0.81. The strong
 negative correlations with `enstrophy`, `palinstrophy` and `kinetic_energy` are orientation
 rather than disagreement: those are single-field quantities that fall as the damage rises.
 

@@ -1017,7 +1017,7 @@
     },
     {
       "blindness_block_length": 17.0,
-      "blindness_q": 0.2161478078,
+      "blindness_q": 0.2175222401,
       "cliffs_delta_min": 0.984028394,
       "cost_s": 0.0038104822,
       "damage_max": 0.0555537472,

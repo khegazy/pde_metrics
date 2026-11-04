@@ -355,35 +355,35 @@ panel in which every metric rejects it is not evidence of a well-guarded panel.
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence mse --results results/comparison_1793657627`, do not edit -->
 
-| compared with | rank correlation over every degradation |
-|---|---|
-| `rmse` | 1 |
-| `mae` | 0.986 |
-| `max_error` | 0.974 |
-| `nrmse` | 0.974 |
-| `h_minus_one` | 0.937 |
-| `wasserstein` | 0.928 |
-| `h1_seminorm` | 0.708 |
-| `spectral_energy_flux` | 0.32 |
-| `persistence_distance` | 0.227 |
-| `increment_w1_by_separation` | 0.222 |
-| `spectrum_l2` | 0.147 |
-| `energy_distance` | 0.104 |
-| `increment_w1` | 0.0844 |
-| `tail_index` | -0.113 |
-| `enstrophy` | -0.116 |
-| `tail_exceedance` | -0.133 |
-| `increment_flatness` | -0.135 |
-| `palinstrophy` | -0.141 |
-| `kinetic_energy` | -0.23 |
+| compared with | density | velocity | vorticity |
+|---|---|---|---|
+| `rmse` | 1 | 1 | 1 |
+| `nrmse` | 0.999 | 1 | 0.999 |
+| `mae` | 0.99 | 0.997 | 0.98 |
+| `max_error` | 0.969 | 0.957 | 0.972 |
+| `h_minus_one` | 0.949 | 0.951 | 0.961 |
+| `wasserstein` | 0.949 | — | — |
+| `h1_seminorm` | 0.759 | 0.657 | 0.592 |
+| `spectral_energy_flux` | — | 0.357 | — |
+| `increment_w1_by_separation` | 0.263 | 0.251 | 0.0346 |
+| `persistence_distance` | 0.275 | — | 0.146 |
+| `spectrum_l2` | 0.186 | 0.346 | 0.102 |
+| `energy_distance` | 0.186 | 0.14 | -0.195 |
+| `increment_w1` | 0.188 | 0.123 | -0.159 |
+| `tail_exceedance` | 0.171 | 0.122 | -0.203 |
+| `palinstrophy` | — | — | 0.0172 |
+| `tail_index` | -0.0634 | -0.0452 | -0.0629 |
+| `increment_flatness` | -0.225 | -0.137 | -0.0348 |
+| `enstrophy` | — | — | -0.16 |
+| `kinetic_energy` | — | -0.285 | — |
 
-Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
 MSE and RMSE correlate at exactly 1: the square root is monotone, so no ranking can ever
-separate them. Against the other baselines MSE sits at 0.986 with MAE and 0.974 with
-NRMSE, above the 0.95 redundancy threshold, yet MAE assigns 38 times the damage at an
+separate them. Against the other baselines MSE sits at 0.98 to 0.997 with MAE and 0.999 to 1
+with NRMSE across the fields, above the 0.95 redundancy threshold, yet MAE assigns 38 times the damage at an
 eighth of a cell. They order damage alike without weighting it alike, so for ranking
 models they are duplicates and as training losses they are not. Reach for MSE when the
 errors that matter are errors of amplitude, not of position.

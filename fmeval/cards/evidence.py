@@ -201,7 +201,11 @@ def performance_block(run: Run, metric: str, figures: Sequence[CardFigure] = (),
                      f"{_span(sub.get('elasticity', absent))} | "
                      f"level {_fmt(sub['sensitivity_level'].min())} |")
     probes = run.probes[run.probes["metric"] == metric]
-    for _, row in probes.iterrows():
+    # A ladder without the impostor (the ensemble ladder, which carries only the anchor) has no
+    # trap-test line: absent must look absent, not like a trap test that could not be scored.
+    impostor = (probes["gaussian_impostor_value"].notna()
+                if "gaussian_impostor_value" in probes.columns else probes["metric"].isna())
+    for _, row in probes[impostor].iterrows():
         lines.append(
             f"| trap test: fake prediction, right spectrum | {row['field']} | — | — | "
             f"damage {_fmt(_cell(row, 'gaussian_impostor_damage'))} |"
@@ -435,22 +439,37 @@ def canaries_block(run: Run, metric: str) -> str:
 def summary_block(run: Run, metric: str) -> str:
     """What holds across every degradation: how this metric relates to the others.
 
-    ``cross_metric_correlation`` returns a square matrix indexed by metric, so the row
-    for this metric is read and the self-correlation dropped.
+    ``cross_metric_correlation`` returns one square matrix per physical field, indexed by
+    metric, so this metric's row is read from each field it runs on, the self-correlation
+    dropped, and the fields set side by side as columns. Rows are sorted by the median over
+    those columns, highest first.
     """
-    matrix = an.cross_metric_correlation(run.rows)
-    if matrix.empty or metric not in matrix.columns:
+    fields = sorted(str(f) for f in run.rows.loc[run.rows["metric"] == metric, "field"].unique())
+    columns = {}
+    for field in fields:
+        matrix = an.cross_metric_correlation(run.rows, field=field)
+        if metric in matrix.columns:
+            columns[field] = matrix.loc[metric].drop(labels=[metric], errors="ignore")
+    if not columns:
         return NOT_MEASURED
 
-    row = matrix.loc[metric].drop(labels=[metric], errors="ignore").sort_values(ascending=False)
-    lines = _header("compared with", "rank correlation over every degradation")
-    for other, value in row.items():
-        lines.append(f"| `{other}` | {_fmt(float(value))} |")
+    table = pd.DataFrame(columns)
+    table = table.loc[table.median(axis=1).sort_values(ascending=False, kind="stable").index]
+    lines = _header("compared with", *columns)
+    for other, row in table.iterrows():
+        lines.append(f"| `{other}` | "
+                     + " | ".join(_fmt(float(v)) for v in row) + " |")
+    target = ("target_value" in run.rows.columns
+              and run.rows.loc[run.rows["metric"].isin([metric, *table.index]),
+                               "target_value"].notna().any())
     lines += [
         "",
-        "Computed on the median value at each combination of degradation and strength, "
-        "over every degradation and physical field in the run, with the undegraded "
-        "reference excluded. Two metrics correlating near 1 put the degradations in the "
+        "Rank correlation over every degradation, computed separately for each physical field "
+        "on the median value at each combination of degradation and strength, with the "
+        "undegraded reference excluded. A dash marks a metric that does not run on that field. "
+        + ("A metric with a target value enters by its distance from the target. " if target
+           else "")
+        + "Two metrics correlating near 1 put the degradations in the "
         "same order, but the two may still weight those degradations very differently. "
         "A correlation near 1 therefore means the two metrics are redundant for ranking "
         "models, not that the two are interchangeable as training losses.",
