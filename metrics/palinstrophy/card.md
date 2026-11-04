@@ -347,38 +347,37 @@ rather than from the data.
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1793657627`, do not edit -->
 
-| compared with | rank correlation over every degradation |
+| compared with | vorticity |
 |---|---|
-| `tail_exceedance` | 0.819 |
-| `kinetic_energy` | 0.805 |
 | `enstrophy` | 0.758 |
-| `tail_index` | 0.607 |
-| `increment_flatness` | 0.459 |
-| `h1_seminorm` | 0.11 |
-| `mae` | -0.0971 |
-| `rmse` | -0.141 |
-| `mse` | -0.141 |
-| `nrmse` | -0.158 |
-| `wasserstein` | -0.181 |
-| `h_minus_one` | -0.208 |
-| `max_error` | -0.273 |
-| `energy_distance` | -0.512 |
-| `increment_w1_by_separation` | -0.551 |
-| `increment_w1` | -0.57 |
-| `spectral_energy_flux` | -0.634 |
-| `persistence_distance` | -0.693 |
-| `spectrum_l2` | -0.694 |
+| `tail_index` | 0.649 |
+| `h1_seminorm` | 0.179 |
+| `max_error` | 0.0539 |
+| `nrmse` | 0.0195 |
+| `rmse` | 0.0173 |
+| `mse` | 0.0172 |
+| `mae` | 0.0141 |
+| `h_minus_one` | 0.00597 |
+| `increment_flatness` | -0.445 |
+| `energy_distance` | -0.566 |
+| `persistence_distance` | -0.578 |
+| `increment_w1` | -0.623 |
+| `spectrum_l2` | -0.658 |
+| `increment_w1_by_separation` | -0.667 |
+| `tail_exceedance` | -0.763 |
 
-Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
-The closest ranking is `tail_exceedance`'s, at 0.82, followed by those of the other two
-single-field quantities, `kinetic_energy` at 0.81 and `enstrophy` at 0.76. The last is expected of two moments of one spectrum, and it is
+The closest ranking is `enstrophy`'s, at 0.758, followed by `tail_index`'s at 0.649. The first
+is expected of two moments of one spectrum, and it is
 also the measure of how much palinstrophy adds: the two disagree most on
-high-pass filtering and on coarsening, both described above. The negative correlations with
-the pairwise metrics are orientation rather than disagreement, since this quantity falls
-under most damage while theirs rises.
+high-pass filtering and on coarsening, both described above. The negative correlations, -0.445 to
+-0.763, with the metrics that compare distributions or increments (`energy_distance`,
+`persistence_distance`, `spectrum_l2`, the increment metrics and `tail_exceedance`) are orientation rather than disagreement, since this
+quantity falls under most damage while theirs rises; with the pointwise errors it is close to
+uncorrelated (0.014 to 0.054).
 
 ### Damage beside the other metrics
 

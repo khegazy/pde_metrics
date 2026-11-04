@@ -410,33 +410,29 @@ The fake prediction with the right spectrum scores a damage of 1.33, more than t
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793657627`, do not edit -->
 
-| compared with | rank correlation over every degradation |
+| compared with | density |
 |---|---|
-| `h_minus_one` | 0.996 |
-| `nrmse` | 0.945 |
-| `mse` | 0.928 |
-| `rmse` | 0.928 |
-| `max_error` | 0.919 |
-| `mae` | 0.9 |
-| `h1_seminorm` | 0.515 |
-| `spectral_energy_flux` | 0.237 |
-| `persistence_distance` | 0.21 |
-| `spectrum_l2` | 0.147 |
-| `increment_w1_by_separation` | 0.121 |
-| `energy_distance` | -0.0373 |
-| `increment_w1` | -0.0571 |
-| `increment_flatness` | -0.0834 |
-| `tail_index` | -0.159 |
-| `enstrophy` | -0.171 |
-| `palinstrophy` | -0.181 |
-| `tail_exceedance` | -0.237 |
-| `kinetic_energy` | -0.281 |
+| `h_minus_one` | 1 |
+| `mse` | 0.949 |
+| `rmse` | 0.949 |
+| `nrmse` | 0.948 |
+| `mae` | 0.934 |
+| `max_error` | 0.913 |
+| `h1_seminorm` | 0.55 |
+| `persistence_distance` | 0.2 |
+| `spectrum_l2` | 0.139 |
+| `increment_w1_by_separation` | 0.118 |
+| `tail_exceedance` | 0.075 |
+| `energy_distance` | 0.0106 |
+| `increment_w1` | 0.0069 |
+| `tail_index` | -0.139 |
+| `increment_flatness` | -0.18 |
 
-Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
-[h_minus_one](../../metrics/h_minus_one/card.md) correlates with this metric at 0.996, the highest in the table, and every axis's largest damage and elasticity, and both probes, agree with its own to within about one percent. That is what the first-order relation in the Definition predicts for a density this close to uniform; Equation (5) alone would allow a factor of two. On kinet density the two metrics carry the same information, and this one costs 0.064 s per evaluation where `h_minus_one` takes 0.0022 s, a ratio of 29 in this run; Limitations gives the same ratio measured in one process.
+[h_minus_one](../../metrics/h_minus_one/card.md) correlates with this metric at 0.99998 on density, the highest in the table, and every axis's largest damage and elasticity, and both probes, agree with its own to within about one percent. That is what the first-order relation in the Definition predicts for a density this close to uniform; Equation (5) alone would allow a factor of two. On kinet density the two metrics carry the same information, and this one costs 0.064 s per evaluation where `h_minus_one` takes 0.0022 s, a ratio of 29 in this run; Limitations gives the same ratio measured in one process.
 
 ### Damage beside the other metrics
 

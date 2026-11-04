@@ -125,13 +125,13 @@ Median damage over frames against severity level for tail_exceedance, one row pe
 | Displacement | vorticity | 2 | -0.725 | 0 | 0.0557 |
 | Resolution loss | density | 2 | 0.8 to 1 | 0.385 to 0.634 | 0.506 to 0.647 |
 | Resolution loss | velocity | 2 | 0.8 to 1 | 0.304 to 0.559 | 0.424 to 0.632 |
-| Resolution loss | vorticity | 2 | -0.8 to 0.949 | 0 to 0.0745 | 0.0104 to 0.537 |
-| Smoothing | density | 3 | 1 | 1 | 1 |
-| Smoothing | velocity | 3 | 1 | 1 | 0.891 |
-| Smoothing | vorticity | 3 | 0.949 to 1 | 0 to 1 | 0.5 to 0.672 |
-| Spectral filtering | density | 4 | 1 | 0.571 to 0.975 | 0.773 to 0.968 |
+| Resolution loss | vorticity | 2 | -0.8 to 0.949 | 0 to 1 | 0.0104 to 0.537 |
+| Smoothing | density | 3 | 0.775 to 1 | 1 | 0.5 to 1 |
+| Smoothing | velocity | 3 | 0.775 to 1 | 1 | 0.5 to 0.891 |
+| Smoothing | vorticity | 3 | 0.775 to 1 | 1 | 0.5 to 0.672 |
+| Spectral filtering | density | 4 | 1 | 1 | 0.773 to 0.968 |
 | Spectral filtering | velocity | 4 | 1 | 0.969 to 1 | 0.952 to 0.965 |
-| Spectral filtering | vorticity | 4 | 0.949 to 1 | 0 to 0.584 | 0.5 to 0.713 |
+| Spectral filtering | vorticity | 4 | 0.775 to 1 | 0.615 to 1 | 0.5 to 0.713 |
 | Noise | density | 1 | 1 | 0.826 | 0.825 |
 | Noise | velocity | 1 | 1 | 0.994 | 0.995 |
 | Noise | vorticity | 1 | 1 | 0.739 | 0.754 |
@@ -143,18 +143,18 @@ Median damage over frames against severity level for tail_exceedance, one row pe
 | Displacement | density | -0.00195 to 0 | 0.167 | level — |
 | Displacement | velocity | -0.00195 to 0 | 0.208 | level — |
 | Displacement | vorticity | -0.00195 to 0 | 0.313 | level — |
-| Resolution loss | density | -1 to 5.44 | 0.252 to 1.88 | level 1 |
-| Resolution loss | velocity | -0.515 to 9.3 | 0.23 to 1.93 | level 1 |
-| Resolution loss | vorticity | -1 to -0.406 | -0.907 | level 1 |
-| Smoothing | density | -1 | — | level 1 |
-| Smoothing | velocity | -1 | — | level 1 |
-| Smoothing | vorticity | -1 to -0.818 | 1.92 | level 1 |
-| Spectral filtering | density | -1 | 4.83 | level 1 |
-| Spectral filtering | velocity | -1 to -0.901 | 1.39 | level 1 |
-| Spectral filtering | vorticity | -1 to -0.992 | 3.58 to 4.16 | level 2 |
-| Noise | density | 194 | 1.39 | level 3 |
-| Noise | velocity | 216 | 1.41 | level 2 |
-| Noise | vorticity | 27.2 | 0.941 | level 3 |
+| Resolution loss | density | -1 to 5.44 | 0.173 to 1.88 | level 1 |
+| Resolution loss | velocity | -0.515 to 9.3 | 0.127 to 1.92 | level 1 |
+| Resolution loss | vorticity | -1 to -0.406 | -0.794 to 1.4 | level 1 |
+| Smoothing | density | -1 | 0.248 to 1.9 | level 1 |
+| Smoothing | velocity | -1 | 0.00126 to 1.15 | level 1 |
+| Smoothing | vorticity | -1 to -0.818 | 0.0489 to 1.77 | level 1 |
+| Spectral filtering | density | -1 | 3.52 to 9.36 | level 2 |
+| Spectral filtering | velocity | -1 to -0.901 | 1.07 | level 1 |
+| Spectral filtering | vorticity | -1 to -0.992 | 0 to 3.97 | level 3 |
+| Noise | density | 194 | 1.25 | level 3 |
+| Noise | velocity | 216 | 1.23 | level 2 |
+| Noise | vorticity | 27.2 | 0.939 | level 3 |
 | trap test: fake prediction, right spectrum | density | — | — | damage 1 |
 | trap test: fake prediction, right spectrum | velocity | — | — | damage 1 |
 | trap test: fake prediction, right spectrum | vorticity | — | — | damage 1 |
@@ -163,21 +163,21 @@ Median damage over frames against severity level for tail_exceedance, one row pe
 
 | test family | field | consistency, in the strength's units | snapshots per independent block |
 |---|---|---|---|
-| Displacement | density | 0.918 | — |
-| Displacement | velocity | 1.79 | — |
-| Displacement | vorticity | 1.02 | — |
-| Resolution loss | density | 2.26 to 3.4 | — |
-| Resolution loss | velocity | 3.14 to 5.55 | — |
-| Resolution loss | vorticity | 1.49 to 1.6 | — |
-| Smoothing | density | 0.0143 | — |
-| Smoothing | velocity | 0.0414 | — |
-| Smoothing | vorticity | 0.0145 to 0.0807 | — |
-| Spectral filtering | density | 0.0833 to 0.109 | — |
-| Spectral filtering | velocity | 0.0456 to 0.187 | — |
-| Spectral filtering | vorticity | 0.0264 to 0.0721 | — |
-| Noise | density | 0.0105 | — |
-| Noise | velocity | 0.00444 | — |
-| Noise | vorticity | 0.0716 | — |
+| Displacement | density | 0.918 | 1 |
+| Displacement | velocity | 1.79 | 1 to 6 |
+| Displacement | vorticity | 1.02 | 1 |
+| Resolution loss | density | 2.24 to 3.62 | 11 to 20 |
+| Resolution loss | velocity | 3.39 to 4.69 | 20 to 22 |
+| Resolution loss | vorticity | 1.56 to 5.68 | 19 to 20 |
+| Smoothing | density | 0.00695 to 0.013 | 1 to 12 |
+| Smoothing | velocity | 0.023 to 0.055 | 1 to 21 |
+| Smoothing | vorticity | 0.0456 to 0.156 | 19 to 20 |
+| Spectral filtering | density | 0.0807 to 0.0896 | 1 to 20 |
+| Spectral filtering | velocity | 0.0305 to 0.164 | 1 to 19 |
+| Spectral filtering | vorticity | 0.0494 to 0.551 | 7 to 17 |
+| Noise | density | 0.00985 | 18 |
+| Noise | velocity | 0.00805 | 20 |
+| Noise | vorticity | 0.0476 | 22 |
 
 One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
 
@@ -187,9 +187,9 @@ These tables report what was measured and grade none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift, against severity (distance) | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| density | — | — | — | — | 0.167 | 59.4 |
-| velocity | — | — | — | — | 0.208 | 118 |
-| vorticity | — | — | — | — | 0.313 | 58.9 |
+| density | 0.895 | `coarsen_bandlimited` | `translate_x` | `translate_subpixel` `translate_x` | 0.167 | 59.4 |
+| velocity | 0.725 | `coarsen_bandlimited` | `translate_x` | `translate_subpixel` `translate_x` | 0.208 | 118 |
+| vorticity | 0.431 | `median_blur` | `translate_x` | `translate_subpixel` `translate_x` | 0.313 | 58.9 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
@@ -233,8 +233,10 @@ everything about the smaller jumps.
 ## Reading the output
 
 Dimensionless, zero or positive, and unbounded above; at most $n/k$, 256 on the 256 by 256 grid.
-The target is 1: the analysis orders the value by its distance from 1 on a logarithmic scale, so
-0.5 and 2 are equally far from right. Below 1 the prediction has fewer increments as large as the
+The target is 1: the analysis reads the value by its distance from 1, $|v - 1| / (v + 1)$, which
+orders values as the log ratio $|\ln v|$ does and is bounded at 1, so 0.5 and 2 are equally far
+from right and 0 is the furthest point (see "Metrics with a target value" in
+`TEST_DESCRIPTION.md`); the damage is that distance, since the anchor scores 0. Below 1 the prediction has fewer increments as large as the
 reference's extreme ones, above 1 more. The prediction that is the reference itself scores exactly
 1. When the reference's increments are independent values, an independent draw from their
 distribution scores $n/(n+1)$ on average (Equation (5)), with a spread across draws that grows as
@@ -254,14 +256,14 @@ one, and on 256 by 256 $\theta = 0.9$ counts about a third of all increments.
 ## Limitations
 
 The value saturates. Once a prediction has no increment as large as the reference's $\sqrt{n}$-th
-largest, it scores 0 however much further it is smoothed, and on the distance-from-1 scale that is
-infinitely far: two predictions both at 0 cannot be ranked against each other, and a mild blur and
-a total one are scored alike. On the evidence run, on density and velocity, the Gaussian and box
-blurs leave the value at 0 from their second strength in every frame and both low-pass filters
-at every strength, so the registered number cannot tell any blur strength beyond the first, nor
-any low-pass strength, from another, and the analysis withholds those axes' rank correlation
-(Results, "Smoothing" and "Spectral filtering"). The stored curve at larger $\theta$ is where such
-predictions are still told apart.
+largest, it scores 0 however much further it is smoothed, the furthest point from the target:
+two predictions both at 0 are tied, and a mild blur and a total one are scored alike. On the
+evidence run, on density and velocity, the Gaussian and box blurs leave the value at 0 from their
+second strength in every frame and both low-pass filters at every strength, so the registered
+number cannot tell any blur strength beyond the first, nor any low-pass strength, from another:
+the blurs' rank correlation is 0.775, the value of one graded point followed by three ties, and
+the low-pass filters' is withheld (Results, "Smoothing" and "Spectral filtering"). The stored
+curve at larger $\theta$ is where such predictions are still told apart.
 
 A value above 1 does not mean the prediction is more intermittent or more turbulent. Anything that
 puts more one-cell jumps above the reference's extreme level raises it: noise, and also a
@@ -300,12 +302,12 @@ Every number in this section comes from that one run. Regenerate with `python -m
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `box_blur` | density | 4 | — | — | — |
-| `box_blur` | velocity | 4 | — | — | — |
-| `box_blur` | vorticity | 4 | 0.949 | 0 | 0.5 |
-| `gaussian_blur` | density | 4 | — | — | — |
-| `gaussian_blur` | velocity | 4 | — | — | — |
-| `gaussian_blur` | vorticity | 4 | 0.949 | 0 | 0.5 |
+| `box_blur` | density | 4 | 0.775 | 1 | 0.5 |
+| `box_blur` | velocity | 4 | 0.775 | 1 | 0.5 |
+| `box_blur` | vorticity | 4 | 0.949 | 1 | 0.5 |
+| `gaussian_blur` | density | 4 | 0.775 | 1 | 0.5 |
+| `gaussian_blur` | velocity | 4 | 0.775 | 1 | 0.5 |
+| `gaussian_blur` | vorticity | 4 | 0.775 | 1 | 0.5 |
 | `median_blur` | density | 3 | 1 | 1 | 1 |
 | `median_blur` | velocity | 3 | 1 | 1 | 0.891 |
 | `median_blur` | vorticity | 3 | 1 | 1 | 0.672 |
@@ -316,16 +318,13 @@ All three smoothing axes were declared before the run, with the value falling. I
 field. The harshest strength of each takes the median to 0, a change from clean of -1 in the
 Performance tables, except the median blur on vorticity, which leaves a change of -0.818. The
 median blur is followed in every frame on every field (rank correlation 1, every frame in
-order). The Gaussian and box blurs are not graded at the registered point: on density and
-velocity the value is already 0 from the second strength in every frame, and the analysis, which
-places a value of 0 infinitely far from the target, then treats each frame's single finite point as
-no ordering at all and withholds the rank correlation (the dashes). On vorticity the second
-strength still leaves a few events in a minority of frames. Only in those frames is a rank
-correlation defined, and there the pattern is always two finite points and two ties at 0, whose
-rank correlation is 0.949 whatever the finite values are; so 0.949 records the tie pattern of the
-frames that have one, not a grading of the axis, and no frame is strictly in order. The
-analysis reports a direction of +1 on every axis of a metric with a target, because it orders by
-distance from the target; the fall declared as -1 is the raw value's.
+order). The Gaussian and box blurs are graded only at their first strength: on density and
+velocity the value is already 0 from the second strength in every frame, so each frame is one
+graded point and three ties at 0, the furthest point from the target, whose rank correlation is
+0.775 whatever the graded value is. Every frame counts as in order, because a value at 0 cannot
+move further, but the 0.775 records the tie pattern, not a grading of the axis. On vorticity the
+box blur's second strength still leaves a few events in at least half the frames, giving two graded points and
+two ties (0.949). The direction is -1 on all three, the fall declared before the run.
 
 ### Spectral filtering
 
@@ -336,26 +335,26 @@ distance from the target; the fall declared as -1 is the raw value's.
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| `highpass_butterworth` | density | 4 | 1 | 0.571 | 0.773 |
+| `highpass_butterworth` | density | 4 | 1 | 1 | 0.773 |
 | `highpass_butterworth` | velocity | 3 | 1 | 1 | 0.952 |
-| `highpass_butterworth` | vorticity | 4 | 1 | 0.584 | 0.713 |
-| `highpass_ideal` | density | 3 | 1 | 0.975 | 0.968 |
+| `highpass_butterworth` | vorticity | 4 | 1 | 0.646 | 0.713 |
+| `highpass_ideal` | density | 3 | 1 | 1 | 0.968 |
 | `highpass_ideal` | velocity | 2 | 1 | 0.969 | 0.965 |
-| `highpass_ideal` | vorticity | 4 | 1 | 0.553 | 0.658 |
+| `highpass_ideal` | vorticity | 4 | 1 | 0.615 | 0.658 |
 | `lowpass_butterworth` | density | 4 | — | — | — |
 | `lowpass_butterworth` | velocity | 3 | — | — | — |
-| `lowpass_butterworth` | vorticity | 4 | 0.949 | 0 | 0.5 |
+| `lowpass_butterworth` | vorticity | 4 | 0.775 | 1 | 0.5 |
 | `lowpass_ideal` | density | 3 | — | — | — |
 | `lowpass_ideal` | velocity | 2 | — | — | — |
-| `lowpass_ideal` | vorticity | 4 | 0.949 | 0 | 0.5 |
+| `lowpass_ideal` | vorticity | 4 | 0.775 | 1 | 0.5 |
 
 <!-- END GENERATED results_spectral -->
 
 The low-pass filters remove the extremes outright: the value is 0 at every strength on density and
-velocity, so their rows are withheld for the same reason as the blurs', and on vorticity it reaches
-0 by the harshest strength (rank correlation 0.949). The high-pass filters also lower the value,
-and they are followed with a rank correlation of 1 on every field, with 0.553 to 1 of frames in
-order: removing the large scales takes away the part of the largest one-cell jumps those scales
+velocity, so there is nothing to order and their rows are withheld, and on vorticity it reaches 0
+from the second strength (rank correlation 0.775, the blurs' tie pattern). The high-pass filters
+also lower the value, and they are followed with a rank correlation of 1 on every field, with
+0.615 to 1 of frames in order: removing the large scales takes away the part of the largest one-cell jumps those scales
 carried.
 
 ### Displacement
@@ -378,9 +377,9 @@ carried.
 
 An integer translation moves the increments without changing their sizes, so `translate_x` leaves
 the value at exactly 1 at every strength and its rows are withheld; this was declared as the blind
-axis. The analysis computes its equivalence bound, the "response provably below" column, only from
-a damage scale it does not build for a metric with a target, so `translate_x` is not listed there
-although the value never moves. `translate_subpixel` gives a negative rank correlation, -0.638 to
+axis, and the profile lists it as a degradation the response is provably small on, with a damage
+of exactly 0. `translate_subpixel` is listed there too: its largest damage is 0.027, 0.019 and
+0.109 on density, velocity and vorticity. It gives a negative rank correlation, -0.638 to
 -0.725: a fractional shift interpolates between cells and moves the count slightly away from 1,
 while its harshest strengths are whole cells, which return it to within -0.00195 of 1 (the
 remainder is the Fourier shift's treatment of the grid's highest mode, `issues/041`).
@@ -399,7 +398,7 @@ remainder is the Fourier shift's treatment of the grid's highest mode, `issues/0
 | `coarsen` | vorticity | 4 | -0.8 | 0 | 0.0104 |
 | `coarsen_bandlimited` | density | 4 | 1 | 0.634 | 0.647 |
 | `coarsen_bandlimited` | velocity | 4 | 1 | 0.559 | 0.632 |
-| `coarsen_bandlimited` | vorticity | 4 | 0.949 | 0.0745 | 0.537 |
+| `coarsen_bandlimited` | vorticity | 4 | 0.949 | 1 | 0.537 |
 
 <!-- END GENERATED results_resolution -->
 
@@ -461,33 +460,41 @@ position at all.
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence tail_exceedance --results results/comparison_1793657627`, do not edit -->
 
-| compared with | rank correlation over every degradation |
-|---|---|
-| `palinstrophy` | 0.819 |
-| `kinetic_energy` | 0.736 |
-| `enstrophy` | 0.602 |
-| `tail_index` | 0.596 |
-| `increment_flatness` | 0.552 |
-| `h1_seminorm` | 0.244 |
-| `mae` | -0.0956 |
-| `mse` | -0.133 |
-| `rmse` | -0.133 |
-| `nrmse` | -0.157 |
-| `wasserstein` | -0.237 |
-| `max_error` | -0.252 |
-| `h_minus_one` | -0.257 |
-| `energy_distance` | -0.412 |
-| `increment_w1` | -0.471 |
-| `increment_w1_by_separation` | -0.523 |
-| `spectrum_l2` | -0.647 |
-| `spectral_energy_flux` | -0.668 |
-| `persistence_distance` | -0.687 |
+| compared with | density | velocity | vorticity |
+|---|---|---|---|
+| `spectral_energy_flux` | — | 0.908 | — |
+| `increment_w1` | 0.817 | 0.875 | 0.884 |
+| `increment_w1_by_separation` | 0.864 | 0.871 | 0.878 |
+| `energy_distance` | 0.804 | 0.855 | 0.847 |
+| `persistence_distance` | 0.946 | — | 0.715 |
+| `spectrum_l2` | 0.854 | 0.795 | 0.674 |
+| `h1_seminorm` | 0.202 | 0.214 | -0.167 |
+| `max_error` | 0.266 | 0.163 | -0.243 |
+| `mse` | 0.171 | 0.122 | -0.203 |
+| `nrmse` | 0.171 | 0.121 | -0.207 |
+| `rmse` | 0.172 | 0.121 | -0.203 |
+| `mae` | 0.123 | 0.116 | -0.146 |
+| `wasserstein` | 0.075 | — | — |
+| `h_minus_one` | 0.0753 | 0.0225 | -0.262 |
+| `tail_index` | -0.358 | -0.273 | -0.714 |
+| `increment_flatness` | -0.491 | -0.466 | 0.284 |
+| `enstrophy` | — | — | -0.618 |
+| `kinetic_energy` | — | -0.678 | — |
+| `palinstrophy` | — | — | -0.763 |
 
-Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
-The evidence run held this metric alone, so there is no cross-metric correlation to read.
+Read by its distance from 1, it ranks the ladder most like the other metrics that compare
+distributions of increments or spectra rather than cell values: 0.817 to 0.884 with
+`increment_w1`, 0.864 to 0.878 with `increment_w1_by_separation`, 0.804 to 0.855 with
+`energy_distance`, 0.946 with `persistence_distance` on density and 0.908 with
+`spectral_energy_flux` on velocity. With the pointwise errors it correlates between -0.243 and
+0.266, so for ranking models it sits with the distribution metrics and adds to the pointwise ones.
+The negative correlations with `tail_index`, `enstrophy`, `palinstrophy` and `kinetic_energy` are
+mostly orientation: those single-field quantities are raw values that fall under the Gaussian and box blurs, while
+this distance only rises.
 
 ### Damage beside the other metrics
 
@@ -501,7 +508,7 @@ Median damage over frames against the applied strength, log-log, for tail_exceed
 
 | metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
 |---|---|---|---|---|---|---|
-| `tail_exceedance` | 0.00195 | 0.00391 | -0 | 0.00195 | 0.00195 | 0.00195 |
+| `tail_exceedance` | 0.00389 | 0.00392 | 0.00491 | 0.000978 | 0.000978 | 0.000978 |
 | `mae` | 0.00383 | 0.00767 | 0.0153 | 0.0306 | 0.061 | 0.121 |
 | `mse` | 2.17e-05 | 8.68e-05 | 0.000347 | 0.00138 | 0.00551 | 0.0219 |
 | `rmse` | 0.00466 | 0.00931 | 0.0186 | 0.0372 | 0.0743 | 0.148 |
@@ -511,7 +518,7 @@ Median damage over frames against the applied strength, log-log, for tail_exceed
 
 | metric | 1 | 2 | 4 | 8 | 16 |
 |---|---|---|---|---|---|
-| `tail_exceedance` | -0 | -0 | -0 | -0 | -0 |
+| `tail_exceedance` | 0 | 0 | 0 | 0 | 0 |
 | `mae` | 0.0306 | 0.061 | 0.121 | 0.24 | 0.469 |
 | `mse` | 0.00138 | 0.00551 | 0.0219 | 0.0849 | 0.307 |
 | `rmse` | 0.0372 | 0.0743 | 0.148 | 0.291 | 0.555 |
@@ -521,7 +528,7 @@ Median damage over frames against the applied strength, log-log, for tail_exceed
 
 | metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
 |---|---|---|---|---|---|---|
-| `tail_exceedance` | 0.00195 | 0.00195 | 0.00195 | 0.000977 | 0.000977 | 0.00195 |
+| `tail_exceedance` | 0.00294 | 0.00341 | 0.00392 | 0.000489 | 0.000489 | 0.000978 |
 | `mae` | 0.00279 | 0.00559 | 0.0112 | 0.0223 | 0.0441 | 0.0859 |
 | `mse` | 1.45e-05 | 5.81e-05 | 0.000232 | 0.000924 | 0.0036 | 0.0136 |
 | `rmse` | 0.00381 | 0.00762 | 0.0152 | 0.0304 | 0.06 | 0.117 |
@@ -531,7 +538,7 @@ Median damage over frames against the applied strength, log-log, for tail_exceed
 
 | metric | 1 | 2 | 4 | 8 | 16 |
 |---|---|---|---|---|---|
-| `tail_exceedance` | -0 | -0 | -0 | -0 | -0 |
+| `tail_exceedance` | 0 | 0 | 0 | 0 | 0 |
 | `mae` | 0.0223 | 0.0441 | 0.0859 | 0.163 | 0.31 |
 | `mse` | 0.000924 | 0.0036 | 0.0136 | 0.0489 | 0.165 |
 | `rmse` | 0.0304 | 0.06 | 0.117 | 0.221 | 0.406 |
@@ -541,7 +548,7 @@ Median damage over frames against the applied strength, log-log, for tail_exceed
 
 | metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
 |---|---|---|---|---|---|---|
-| `tail_exceedance` | 0.00195 | 0.00195 | 0.00195 | 0.00195 | 0.00195 | 0.00195 |
+| `tail_exceedance` | 0.00688 | 0.00967 | 0.0106 | 0.000978 | 0.000978 | 0.000978 |
 | `mae` | 0.0428 | 0.0854 | 0.169 | 0.328 | 0.582 | 0.86 |
 | `mse` | 0.00112 | 0.00448 | 0.0176 | 0.066 | 0.21 | 0.44 |
 | `rmse` | 0.0335 | 0.0669 | 0.133 | 0.257 | 0.458 | 0.663 |
@@ -551,7 +558,7 @@ Median damage over frames against the applied strength, log-log, for tail_exceed
 
 | metric | 1 | 2 | 4 | 8 | 16 |
 |---|---|---|---|---|---|
-| `tail_exceedance` | -0 | -0 | -0 | -0 | -0 |
+| `tail_exceedance` | 0 | 0 | 0 | 0 | 0 |
 | `mae` | 0.328 | 0.582 | 0.86 | 1.1 | 1.31 |
 | `mse` | 0.066 | 0.21 | 0.44 | 0.679 | 1.1 |
 | `rmse` | 0.257 | 0.458 | 0.663 | 0.824 | 1.05 |
@@ -561,7 +568,9 @@ Median damage over frames at every strength, this metric in the first row and th
 
 <!-- END GENERATED results_damage_by_level -->
 
-The evidence run held this metric alone, so there is nothing to place it beside.
+On displacement it charges almost nothing beside the pointwise controls: exactly 0 at every
+whole-cell translation, which moves increments without changing their sizes, and at most 0.0106
+under a sub-pixel shift, against pointwise damages that grow with the shift.
 
 ### The curve behind the number
 
@@ -572,15 +581,15 @@ The evidence run held this metric alone, so there is nothing to place it beside.
 | degradation | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | dominance |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `additive_noise` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.752 |
-| `box_blur` | — | — | — | — | — | 0.949 | 1 | 1 | 0.8 | 0.385 |
+| `box_blur` | — | — | — | — | 0.775 | 0.949 | 1 | 1 | 0.8 | 0.385 |
 | `coarsen` | 0.8 | 0.8 | 0.8 | 0.8 | 0.8 | 0.4 | -0.4 | 0.8 | 1 | 0 |
-| `coarsen_bandlimited` | 0.949 | 0.949 | 0.949 | 1 | 1 | 1 | 1 | 1 | 0.8 | 0.0124 |
-| `gaussian_blur` | — | — | — | — | — | — | 0.949 | 1 | 1 | 0.429 |
-| `highpass_butterworth` | 0.949 | 0.949 | 0.949 | 0.949 | 1 | 1 | 1 | 1 | 1 | 0.907 |
-| `highpass_ideal` | — | — | — | 1 | 1 | 1 | 1 | 1 | 1 | 0.901 |
-| `lowpass_butterworth` | — | — | — | — | — | — | — | 0.949 | 1 | 0 |
-| `lowpass_ideal` | — | — | — | — | — | — | — | 1 | 1 | 0 |
-| `median_blur` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+| `coarsen_bandlimited` | 0.775 | 0.775 | 0.949 | 1 | 1 | 1 | 1 | 1 | 0.8 | 0.0124 |
+| `gaussian_blur` | — | — | — | — | 0.775 | 0.775 | 0.949 | 1 | 1 | 0.429 |
+| `highpass_butterworth` | 0.775 | 0.949 | 0.949 | 0.949 | 1 | 1 | 1 | 1 | 1 | 0.907 |
+| `highpass_ideal` | 0.866 | 0.866 | 0.866 | 0.866 | 1 | 1 | 1 | 1 | 1 | 0.901 |
+| `lowpass_butterworth` | — | — | — | — | — | — | 0.775 | 0.949 | 1 | 0 |
+| `lowpass_ideal` | — | — | — | — | — | — | 0.866 | 1 | 1 | 0 |
+| `median_blur` | 0.866 | 0.866 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
 | `translate_subpixel` | -0.522 | -0.577 | -0.541 | -0.698 | -0.698 | -0.698 | -0.759 | -0.698 | -0.759 | 0 |
 | `translate_x` | — | — | — | — | — | — | — | — | — | — |
 
@@ -606,15 +615,15 @@ The evidence run held this metric alone, so there is nothing to place it beside.
 | degradation | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | dominance |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `additive_noise` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.981 |
-| `box_blur` | — | — | — | — | — | — | 0.949 | 1 | 1 | 0.752 |
+| `box_blur` | — | — | — | — | 0.775 | 0.775 | 0.949 | 1 | 1 | 0.752 |
 | `coarsen` | 1 | 1 | 1 | 1 | 0.8 | 0.8 | -0.4 | 0.4 | 1 | 0 |
 | `coarsen_bandlimited` | 0.8 | 0.8 | 0.8 | 0.4 | 1 | 1 | 1 | 1 | 1 | 0.0186 |
-| `gaussian_blur` | — | — | — | — | — | — | 0.949 | 1 | 1 | 0.764 |
-| `highpass_butterworth` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.634 |
+| `gaussian_blur` | — | — | — | — | 0.775 | 0.775 | 0.949 | 1 | 1 | 0.764 |
+| `highpass_butterworth` | 0.866 | 0.866 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.634 |
 | `highpass_ideal` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.77 |
-| `lowpass_butterworth` | — | — | — | — | — | — | — | 1 | 1 | 1 |
-| `lowpass_ideal` | — | — | — | — | — | — | — | -1 | 1 | 0.988 |
-| `median_blur` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.988 |
+| `lowpass_butterworth` | — | — | — | — | — | — | 0.866 | 0.866 | 1 | 1 |
+| `lowpass_ideal` | — | — | — | — | — | — | 1 | 1 | 1 | 0.988 |
+| `median_blur` | 0.866 | 0.866 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.988 |
 | `translate_subpixel` | -0.181 | -0.353 | -0.464 | -0.618 | -0.638 | -0.714 | -0.725 | -0.754 | -0.754 | 0 |
 | `translate_x` | — | — | — | — | — | — | — | — | — | — |
 
@@ -640,15 +649,15 @@ The evidence run held this metric alone, so there is nothing to place it beside.
 | degradation | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | dominance |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `additive_noise` | 0.949 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.0373 |
-| `box_blur` | — | — | — | — | 0.949 | 0.949 | 1 | 1 | 0.8 | 0.497 |
+| `box_blur` | — | — | — | 0.775 | 0.949 | 0.775 | 0.949 | 1 | 0.8 | 0.497 |
 | `coarsen` | -0.8 | -0.8 | -0.8 | -1 | -0.8 | 0.2 | 0.8 | 1 | 1 | 0 |
-| `coarsen_bandlimited` | — | 0.949 | 0.949 | 0.949 | 0.949 | 0.949 | 1 | 1 | 0.8 | 0.267 |
-| `gaussian_blur` | — | — | — | — | 0.949 | 0.949 | 0.949 | 1 | 1 | 0.59 |
-| `highpass_butterworth` | 0.738 | 0.8 | 0.8 | 0.949 | 1 | 1 | 1 | 1 | 0.4 | 0.329 |
-| `highpass_ideal` | 0.738 | 0.8 | 0.8 | 0.8 | 1 | 1 | 1 | 1 | 0.8 | 0.199 |
-| `lowpass_butterworth` | — | — | — | — | 0.949 | 0.949 | 0.949 | 1 | 1 | 0.696 |
-| `lowpass_ideal` | — | — | — | — | 0.949 | 0.949 | 0.949 | 0.949 | 1 | 0.839 |
-| `median_blur` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.863 |
+| `coarsen_bandlimited` | 0.775 | 0.775 | 0.775 | 0.775 | 0.949 | 0.949 | 1 | 1 | 0.8 | 0.267 |
+| `gaussian_blur` | — | — | 0.775 | 0.775 | 0.775 | 0.775 | 0.949 | 1 | 1 | 0.59 |
+| `highpass_butterworth` | 0.775 | 0.775 | 0.8 | 0.949 | 1 | 1 | 1 | 1 | 0.4 | 0.329 |
+| `highpass_ideal` | 0.775 | 0.775 | 0.8 | 0.8 | 1 | 1 | 1 | 1 | 0.8 | 0.199 |
+| `lowpass_butterworth` | — | — | — | 0.775 | 0.775 | 0.775 | 0.775 | 1 | 1 | 0.696 |
+| `lowpass_ideal` | — | — | 0.775 | 0.775 | 0.775 | 0.775 | 0.949 | 0.949 | 1 | 0.839 |
+| `median_blur` | 0.866 | 0.866 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.863 |
 | `translate_subpixel` | -0.577 | -0.667 | -0.676 | -0.706 | -0.725 | -0.754 | -0.754 | -0.754 | -0.754 | 0 |
 | `translate_x` | — | — | — | — | — | — | — | — | — | — |
 

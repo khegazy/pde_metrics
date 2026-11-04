@@ -6,7 +6,7 @@
   "panels": {
     "density": [
       {
-        "damage": 0.001953125,
+        "damage": 0.0038910506,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": true,
@@ -15,7 +15,7 @@
         "severity": 0.125
       },
       {
-        "damage": 0.00390625,
+        "damage": 0.0039215686,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": true,
@@ -24,7 +24,7 @@
         "severity": 0.25
       },
       {
-        "damage": 0.0,
+        "damage": 0.0049067713,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": true,
@@ -33,7 +33,7 @@
         "severity": 0.5
       },
       {
-        "damage": 0.001953125,
+        "damage": 0.0009775171,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": true,
@@ -42,7 +42,7 @@
         "severity": 1.0
       },
       {
-        "damage": 0.001953125,
+        "damage": 0.0009775171,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": true,
@@ -51,7 +51,7 @@
         "severity": 2.0
       },
       {
-        "damage": 0.001953125,
+        "damage": 0.0009775171,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": true,
@@ -458,7 +458,7 @@
     ],
     "velocity": [
       {
-        "damage": 0.001953125,
+        "damage": 0.0029382958,
         "degradation": "translate_subpixel",
         "field": "velocity",
         "is_this_metric": true,
@@ -467,7 +467,7 @@
         "severity": 0.125
       },
       {
-        "damage": 0.001953125,
+        "damage": 0.003406326,
         "degradation": "translate_subpixel",
         "field": "velocity",
         "is_this_metric": true,
@@ -476,7 +476,7 @@
         "severity": 0.25
       },
       {
-        "damage": 0.001953125,
+        "damage": 0.0039215686,
         "degradation": "translate_subpixel",
         "field": "velocity",
         "is_this_metric": true,
@@ -485,7 +485,7 @@
         "severity": 0.5
       },
       {
-        "damage": 0.0009765625,
+        "damage": 0.0004885198,
         "degradation": "translate_subpixel",
         "field": "velocity",
         "is_this_metric": true,
@@ -494,7 +494,7 @@
         "severity": 1.0
       },
       {
-        "damage": 0.0009765625,
+        "damage": 0.0004885198,
         "degradation": "translate_subpixel",
         "field": "velocity",
         "is_this_metric": true,
@@ -503,7 +503,7 @@
         "severity": 2.0
       },
       {
-        "damage": 0.001953125,
+        "damage": 0.0009775171,
         "degradation": "translate_subpixel",
         "field": "velocity",
         "is_this_metric": true,
@@ -910,7 +910,7 @@
     ],
     "vorticity": [
       {
-        "damage": 0.001953125,
+        "damage": 0.0068829892,
         "degradation": "translate_subpixel",
         "field": "vorticity",
         "is_this_metric": true,
@@ -919,7 +919,7 @@
         "severity": 0.125
       },
       {
-        "damage": 0.001953125,
+        "damage": 0.0096711799,
         "degradation": "translate_subpixel",
         "field": "vorticity",
         "is_this_metric": true,
@@ -928,7 +928,7 @@
         "severity": 0.25
       },
       {
-        "damage": 0.001953125,
+        "damage": 0.0106280193,
         "degradation": "translate_subpixel",
         "field": "vorticity",
         "is_this_metric": true,
@@ -937,7 +937,7 @@
         "severity": 0.5
       },
       {
-        "damage": 0.001953125,
+        "damage": 0.0009775171,
         "degradation": "translate_subpixel",
         "field": "vorticity",
         "is_this_metric": true,
@@ -946,7 +946,7 @@
         "severity": 1.0
       },
       {
-        "damage": 0.001953125,
+        "damage": 0.0009775171,
         "degradation": "translate_subpixel",
         "field": "vorticity",
         "is_this_metric": true,
@@ -955,7 +955,7 @@
         "severity": 2.0
       },
       {
-        "damage": 0.001953125,
+        "damage": 0.0009775171,
         "degradation": "translate_subpixel",
         "field": "vorticity",
         "is_this_metric": true,

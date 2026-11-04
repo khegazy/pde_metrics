@@ -8066,9 +8066,9 @@
     ],
     "tail_exceedance": [
       {
-        "damage_median": -0.001953125,
+        "damage_median": 0.0034296913,
         "degradation": "additive_noise",
-        "elasticity": 1.4126326885,
+        "elasticity": 1.2279508429,
         "elasticity_x": "severity (amplitude)",
         "field": "velocity",
         "has_scale": true,
@@ -8079,9 +8079,9 @@
         "severity": 0.001
       },
       {
-        "damage_median": -0.3291015625,
+        "damage_median": 0.1412997904,
         "degradation": "additive_noise",
-        "elasticity": 1.4126326885,
+        "elasticity": 1.2279508429,
         "elasticity_x": "severity (amplitude)",
         "field": "velocity",
         "has_scale": true,
@@ -8092,9 +8092,9 @@
         "severity": 0.01
       },
       {
-        "damage_median": -97.2236328125,
+        "damage_median": 0.9798435116,
         "degradation": "additive_noise",
-        "elasticity": 1.4126326885,
+        "elasticity": 1.2279508429,
         "elasticity_x": "severity (amplitude)",
         "field": "velocity",
         "has_scale": true,
@@ -8105,9 +8105,9 @@
         "severity": 0.1
       },
       {
-        "damage_median": -215.962890625,
+        "damage_median": 0.9908241261,
         "degradation": "additive_noise",
-        "elasticity": 1.4126326885,
+        "elasticity": 1.2279508429,
         "elasticity_x": "severity (amplitude)",
         "field": "velocity",
         "has_scale": true,
@@ -8118,61 +8118,61 @@
         "severity": 0.5
       },
       {
-        "damage_median": 0.880859375,
+        "damage_median": 0.7870855148,
         "degradation": "box_blur",
-        "elasticity": null,
+        "elasticity": 0.1761818494,
         "elasticity_x": "severity_nominal (width)",
         "field": "velocity",
         "has_scale": true,
         "level": 1,
         "metric": "tail_exceedance",
         "n_levels": 4,
-        "sensitivity_level": null,
+        "sensitivity_level": 1.0,
         "severity": 11.3262905423
       },
       {
         "damage_median": 1.0,
         "degradation": "box_blur",
-        "elasticity": null,
+        "elasticity": 0.1761818494,
         "elasticity_x": "severity_nominal (width)",
         "field": "velocity",
         "has_scale": true,
         "level": 2,
         "metric": "tail_exceedance",
         "n_levels": 4,
-        "sensitivity_level": null,
+        "sensitivity_level": 1.0,
         "severity": 26.4280112653
       },
       {
         "damage_median": 1.0,
         "degradation": "box_blur",
-        "elasticity": null,
+        "elasticity": 0.1761818494,
         "elasticity_x": "severity_nominal (width)",
         "field": "velocity",
         "has_scale": true,
         "level": 3,
         "metric": "tail_exceedance",
         "n_levels": 4,
-        "sensitivity_level": null,
+        "sensitivity_level": 1.0,
         "severity": 47.1928772595
       },
       {
         "damage_median": 1.0,
         "degradation": "box_blur",
-        "elasticity": null,
+        "elasticity": 0.1761818494,
         "elasticity_x": "severity_nominal (width)",
         "field": "velocity",
         "has_scale": true,
         "level": 4,
         "metric": "tail_exceedance",
         "n_levels": 4,
-        "sensitivity_level": null,
+        "sensitivity_level": 1.0,
         "severity": 75.5086036153
       },
       {
-        "damage_median": -4.44921875,
+        "damage_median": 0.6898849182,
         "degradation": "coarsen",
-        "elasticity": 0.2296561176,
+        "elasticity": 0.1271257978,
         "elasticity_x": "severity (factor)",
         "field": "velocity",
         "has_scale": true,
@@ -8183,9 +8183,9 @@
         "severity": 2.0
       },
       {
-        "damage_median": -6.734375,
+        "damage_median": 0.771019678,
         "degradation": "coarsen",
-        "elasticity": 0.2296561176,
+        "elasticity": 0.1271257978,
         "elasticity_x": "severity (factor)",
         "field": "velocity",
         "has_scale": true,
@@ -8196,9 +8196,9 @@
         "severity": 4.0
       },
       {
-        "damage_median": -9.2890625,
+        "damage_median": 0.8228373702,
         "degradation": "coarsen",
-        "elasticity": 0.2296561176,
+        "elasticity": 0.1271257978,
         "elasticity_x": "severity (factor)",
         "field": "velocity",
         "has_scale": true,
@@ -8209,9 +8209,9 @@
         "severity": 8.0
       },
       {
-        "damage_median": -9.296875,
+        "damage_median": 0.8229598893,
         "degradation": "coarsen",
-        "elasticity": 0.2296561176,
+        "elasticity": 0.1271257978,
         "elasticity_x": "severity (factor)",
         "field": "velocity",
         "has_scale": true,
@@ -8222,113 +8222,113 @@
         "severity": 16.0
       },
       {
-        "damage_median": 0.013671875,
+        "damage_median": 0.0098619329,
         "degradation": "coarsen_bandlimited",
-        "elasticity": 1.9266561679,
+        "elasticity": 1.921817177,
         "elasticity_x": "severity (factor)",
         "field": "velocity",
         "has_scale": true,
         "level": 1,
         "metric": "tail_exceedance",
         "n_levels": 4,
-        "sensitivity_level": 2.0,
+        "sensitivity_level": 3.0,
         "severity": 2.0
       },
       {
-        "damage_median": 0.1181640625,
+        "damage_median": 0.0627919045,
         "degradation": "coarsen_bandlimited",
-        "elasticity": 1.9266561679,
+        "elasticity": 1.921817177,
         "elasticity_x": "severity (factor)",
         "field": "velocity",
         "has_scale": true,
         "level": 2,
         "metric": "tail_exceedance",
         "n_levels": 4,
-        "sensitivity_level": 2.0,
+        "sensitivity_level": 3.0,
         "severity": 4.0
       },
       {
-        "damage_median": 0.248046875,
+        "damage_median": 0.1415830546,
         "degradation": "coarsen_bandlimited",
-        "elasticity": 1.9266561679,
+        "elasticity": 1.921817177,
         "elasticity_x": "severity (factor)",
         "field": "velocity",
         "has_scale": true,
         "level": 3,
         "metric": "tail_exceedance",
         "n_levels": 4,
-        "sensitivity_level": 2.0,
+        "sensitivity_level": 3.0,
         "severity": 8.0
       },
       {
-        "damage_median": 0.5146484375,
+        "damage_median": 0.3464825773,
         "degradation": "coarsen_bandlimited",
-        "elasticity": 1.9266561679,
+        "elasticity": 1.921817177,
         "elasticity_x": "severity (factor)",
         "field": "velocity",
         "has_scale": true,
         "level": 4,
         "metric": "tail_exceedance",
         "n_levels": 4,
-        "sensitivity_level": 2.0,
+        "sensitivity_level": 3.0,
         "severity": 16.0
       },
       {
-        "damage_median": 0.9990234375,
+        "damage_median": 0.9980487805,
         "degradation": "gaussian_blur",
-        "elasticity": null,
+        "elasticity": 0.0012615464,
         "elasticity_x": "severity_nominal (sigma)",
         "field": "velocity",
         "has_scale": true,
         "level": 1,
         "metric": "tail_exceedance",
         "n_levels": 4,
-        "sensitivity_level": null,
+        "sensitivity_level": 1.0,
         "severity": 3.7754301808
       },
       {
         "damage_median": 1.0,
         "degradation": "gaussian_blur",
-        "elasticity": null,
+        "elasticity": 0.0012615464,
         "elasticity_x": "severity_nominal (sigma)",
         "field": "velocity",
         "has_scale": true,
         "level": 2,
         "metric": "tail_exceedance",
         "n_levels": 4,
-        "sensitivity_level": null,
+        "sensitivity_level": 1.0,
         "severity": 9.4385754519
       },
       {
         "damage_median": 1.0,
         "degradation": "gaussian_blur",
-        "elasticity": null,
+        "elasticity": 0.0012615464,
         "elasticity_x": "severity_nominal (sigma)",
         "field": "velocity",
         "has_scale": true,
         "level": 3,
         "metric": "tail_exceedance",
         "n_levels": 4,
-        "sensitivity_level": null,
+        "sensitivity_level": 1.0,
         "severity": 18.8771509038
       },
       {
         "damage_median": 1.0,
         "degradation": "gaussian_blur",
-        "elasticity": null,
+        "elasticity": 0.0012615464,
         "elasticity_x": "severity_nominal (sigma)",
         "field": "velocity",
         "has_scale": true,
         "level": 4,
         "metric": "tail_exceedance",
         "n_levels": 4,
-        "sensitivity_level": null,
+        "sensitivity_level": 1.0,
         "severity": 37.7543018076
       },
       {
-        "damage_median": 0.45703125,
+        "damage_median": 0.2962025316,
         "degradation": "highpass_butterworth",
-        "elasticity": 1.3856865484,
+        "elasticity": 1.0748567437,
         "elasticity_x": "severity_nominal (energy removed)",
         "field": "velocity",
         "has_scale": true,
@@ -8339,9 +8339,9 @@
         "severity": 1.0
       },
       {
-        "damage_median": 0.6259765625,
+        "damage_median": 0.4555792466,
         "degradation": "highpass_butterworth",
-        "elasticity": 1.3856865484,
+        "elasticity": 1.0748567437,
         "elasticity_x": "severity_nominal (energy removed)",
         "field": "velocity",
         "has_scale": true,
@@ -8352,9 +8352,9 @@
         "severity": 2.1441232402
       },
       {
-        "damage_median": 0.919921875,
+        "damage_median": 0.8517179024,
         "degradation": "highpass_butterworth",
-        "elasticity": 1.3856865484,
+        "elasticity": 1.0748567437,
         "elasticity_x": "severity_nominal (energy removed)",
         "field": "velocity",
         "has_scale": true,
@@ -8365,7 +8365,7 @@
         "severity": 4.0229303936
       },
       {
-        "damage_median": 0.53515625,
+        "damage_median": 0.3653333333,
         "degradation": "highpass_ideal",
         "elasticity": null,
         "elasticity_x": "severity_nominal (energy removed)",
@@ -8378,7 +8378,7 @@
         "severity": 2.1441232402
       },
       {
-        "damage_median": 0.9013671875,
+        "damage_median": 0.8204444444,
         "degradation": "highpass_ideal",
         "elasticity": null,
         "elasticity_x": "severity_nominal (energy removed)",
@@ -8456,9 +8456,9 @@
         "severity": 1.2638882905
       },
       {
-        "damage_median": 0.3818359375,
+        "damage_median": 0.235968618,
         "degradation": "median_blur",
-        "elasticity": null,
+        "elasticity": 1.1539415749,
         "elasticity_x": "severity_nominal (width)",
         "field": "velocity",
         "has_scale": true,
@@ -8469,9 +8469,9 @@
         "severity": 11.3262905423
       },
       {
-        "damage_median": 0.8896484375,
+        "damage_median": 0.8012313105,
         "degradation": "median_blur",
-        "elasticity": null,
+        "elasticity": 1.1539415749,
         "elasticity_x": "severity_nominal (width)",
         "field": "velocity",
         "has_scale": true,
@@ -8484,7 +8484,7 @@
       {
         "damage_median": 1.0,
         "degradation": "median_blur",
-        "elasticity": null,
+        "elasticity": 1.1539415749,
         "elasticity_x": "severity_nominal (width)",
         "field": "velocity",
         "has_scale": true,
@@ -8495,9 +8495,9 @@
         "severity": 41.5297319884
       },
       {
-        "damage_median": 0.001953125,
+        "damage_median": 0.0029382958,
         "degradation": "translate_subpixel",
-        "elasticity": 0.2082272285,
+        "elasticity": 0.2082256066,
         "elasticity_x": "severity (distance)",
         "field": "velocity",
         "has_scale": true,
@@ -8508,9 +8508,9 @@
         "severity": 0.125
       },
       {
-        "damage_median": 0.001953125,
+        "damage_median": 0.003406326,
         "degradation": "translate_subpixel",
-        "elasticity": 0.2082272285,
+        "elasticity": 0.2082256066,
         "elasticity_x": "severity (distance)",
         "field": "velocity",
         "has_scale": true,
@@ -8521,9 +8521,9 @@
         "severity": 0.25
       },
       {
-        "damage_median": 0.001953125,
+        "damage_median": 0.0039215686,
         "degradation": "translate_subpixel",
-        "elasticity": 0.2082272285,
+        "elasticity": 0.2082256066,
         "elasticity_x": "severity (distance)",
         "field": "velocity",
         "has_scale": true,
@@ -8534,9 +8534,9 @@
         "severity": 0.5
       },
       {
-        "damage_median": 0.0009765625,
+        "damage_median": 0.0004885198,
         "degradation": "translate_subpixel",
-        "elasticity": 0.2082272285,
+        "elasticity": 0.2082256066,
         "elasticity_x": "severity (distance)",
         "field": "velocity",
         "has_scale": true,
@@ -8547,9 +8547,9 @@
         "severity": 1.0
       },
       {
-        "damage_median": 0.0009765625,
+        "damage_median": 0.0004885198,
         "degradation": "translate_subpixel",
-        "elasticity": 0.2082272285,
+        "elasticity": 0.2082256066,
         "elasticity_x": "severity (distance)",
         "field": "velocity",
         "has_scale": true,
@@ -8560,9 +8560,9 @@
         "severity": 2.0
       },
       {
-        "damage_median": 0.001953125,
+        "damage_median": 0.0009775171,
         "degradation": "translate_subpixel",
-        "elasticity": 0.2082272285,
+        "elasticity": 0.2082256066,
         "elasticity_x": "severity (distance)",
         "field": "velocity",
         "has_scale": true,

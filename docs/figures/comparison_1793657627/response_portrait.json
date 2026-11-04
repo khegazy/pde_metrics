@@ -3752,13 +3752,13 @@
         "metric": "tail_exceedance"
       },
       {
-        "cliffs_delta_min": null,
+        "cliffs_delta_min": 0.0,
         "degradation": "box_blur",
         "field": "density",
         "metric": "tail_exceedance"
       },
       {
-        "cliffs_delta_min": null,
+        "cliffs_delta_min": 0.0,
         "degradation": "box_blur",
         "field": "velocity",
         "metric": "tail_exceedance"
@@ -3806,13 +3806,13 @@
         "metric": "tail_exceedance"
       },
       {
-        "cliffs_delta_min": null,
+        "cliffs_delta_min": 0.0,
         "degradation": "gaussian_blur",
         "field": "density",
         "metric": "tail_exceedance"
       },
       {
-        "cliffs_delta_min": null,
+        "cliffs_delta_min": 0.0,
         "degradation": "gaussian_blur",
         "field": "velocity",
         "metric": "tail_exceedance"

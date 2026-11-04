@@ -273,29 +273,25 @@ quantity follows from the definition rather than from the data.
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793657627`, do not edit -->
 
-| compared with | rank correlation over every degradation |
+| compared with | velocity |
 |---|---|
-| `enstrophy` | 0.86 |
-| `palinstrophy` | 0.805 |
-| `tail_exceedance` | 0.736 |
-| `tail_index` | 0.261 |
-| `increment_flatness` | 0.161 |
-| `h1_seminorm` | 0.147 |
-| `mae` | -0.208 |
-| `mse` | -0.23 |
-| `rmse` | -0.23 |
-| `wasserstein` | -0.281 |
-| `nrmse` | -0.284 |
-| `h_minus_one` | -0.292 |
-| `max_error` | -0.307 |
-| `increment_w1` | -0.552 |
-| `energy_distance` | -0.573 |
-| `increment_w1_by_separation` | -0.669 |
+| `tail_index` | 0.249 |
+| `h1_seminorm` | 0.0355 |
+| `increment_flatness` | 0.00987 |
+| `max_error` | -0.206 |
+| `mae` | -0.28 |
+| `mse` | -0.285 |
+| `nrmse` | -0.285 |
+| `rmse` | -0.285 |
+| `h_minus_one` | -0.311 |
+| `increment_w1` | -0.575 |
+| `energy_distance` | -0.579 |
+| `tail_exceedance` | -0.678 |
+| `increment_w1_by_separation` | -0.689 |
 | `spectral_energy_flux` | -0.726 |
-| `persistence_distance` | -0.799 |
-| `spectrum_l2` | -0.883 |
+| `spectrum_l2` | -0.893 |
 
-Computed on the median value at each combination of degradation and strength, over every degradation and physical field in the run, with the undegraded reference excluded. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
