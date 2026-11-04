@@ -26,6 +26,7 @@ from scipy.cluster.hierarchy import dendrogram, linkage
 from scipy.spatial.distance import squareform
 
 from fmeval import analysis as an
+from fmeval.ladder import FORECAST_LEVEL
 from fmeval.pipeline import parse_map_key
 
 from . import vocabulary
@@ -42,6 +43,15 @@ from .style import (
 
 def _axis_frame(df: pd.DataFrame, axis: str) -> pd.DataFrame:
     return df[(df["degradation"] == axis) & (df["level"] > 0)]
+
+
+def _log_if_wide(ax, values: pd.Series, opts: dict) -> None:
+    """A log axis when asked for (``logy`` "auto" or True) and the positive values span over
+    two decades."""
+    positive = values[values > 0]
+    if ((opts["logy"] is True or opts["logy"] == "auto") and len(positive) >= 3
+            and positive.max() / positive.min() > 100):
+        ax.set_yscale("log")
 
 
 def _median_by_level(df: pd.DataFrame, column: str = "value") -> pd.DataFrame:
@@ -103,11 +113,7 @@ def ladder_curves(ctx, df, opts) -> PlotResult:
     ax.set_xlabel("severity level (0 = reference)")
     ax.set_ylabel(f"{metric} [{units}]")
     ax.set_title(f"{metric} on {field}")
-    # A log axis when asked for ("auto" or True) and the positive values span over two decades.
-    positive = df["value"][df["value"] > 0]
-    if ((opts["logy"] is True or opts["logy"] == "auto") and len(positive) >= 3
-            and positive.max() / positive.min() > 100):
-        ax.set_yscale("log")
+    _log_if_wide(ax, df["value"], opts)
     ax.legend(fontsize="x-small", ncol=2)
 
     return PlotResult(
@@ -310,45 +316,108 @@ def companion_points(ctx, df, opts) -> PlotResult:
     title="Response along time",
     requires_columns=("degradation", "level", "value", "time", "severity"),
     min_frames=2,
+    defaults={"logy": "auto"},
 )
 def response_along_time(ctx, df, opts) -> PlotResult:
-    """The metric against the frame's time, one line per strength, for each degradation whose
-    applied strength changes along the trajectory (``per_unit_time`` in the ladder).
+    """The metric along time: against the frame's time, one line per strength, for each
+    degradation whose applied strength changes along the trajectory (``per_unit_time`` in the
+    ladder); and against the lead time, one line per forecast, on a dataset of real forecasts.
 
     How a reader sees an error grow in time: a translation applied as a rate is a wrong advection
     speed, and its cost should rise frame by frame. Degradations whose strength is the same in
-    every frame are left out, since along time they show only the flow changing.
+    every frame are left out, since along time they show only the flow changing. A forecast's
+    error is drawn against its prediction step because the machine-learning benchmarks score a
+    rollout step by step: PDEBench computes its errors at every time step (Takamoto et al. 2022,
+    NeurIPS Datasets and Benchmarks, Sect. 3.3, and its code's ``metric_func``, as read in
+    ``metrics/max_error/research_notes.md``).
     """
     metric, field = str(df["metric"].iloc[0]), str(df["field"].iloc[0])
     ladder = df[df["level"] > 0]
     varying = ladder.groupby(["degradation", "level"], observed=True)["severity"].nunique()
     names = sorted({str(d) for (d, _), n in varying.items() if n > 1} - set(ctx.probe_labels))
-    ctx.require(bool(names), "no degradation whose strength changes along time")
-    fig, grid = ctx.style.figure(1, len(names), sharey=True)
-    tidy = []
-    for ax, name in zip(grid[0], names, strict=True):
-        block = df[(df["degradation"] == name) | (df["level"] == 0)]
-        levels = sorted(block["level"].unique())
-        damaged = [level for level in levels if level > 0]
-        colours = {0: "k", **dict(zip(damaged, ctx.style.level_colours(
-            ctx.style.axis_colour(name), len(damaged)), strict=True))}
-        for level in levels:
-            colour = colours[level]
-            line = (block[block["level"] == level].groupby("time", observed=True)["value"]
-                    .median().reset_index())
-            ax.plot(line["time"], line["value"], color=colour, marker="o", ms=2.5,
-                    label="clean" if level == 0 else f"level {level}")
-            tidy.append(line.assign(degradation=name, level=level))
-        ax.set_title(ctx.label(name), fontsize="small")
-        ax.set_xlabel("time")
-    grid[0, 0].set_ylabel(metric)
+    forecasts = df[df["lead_step"].notna()] if "lead_step" in df.columns else df.iloc[:0]
+    ctx.require(bool(names) or not forecasts.empty,
+                "no degradation whose strength changes along time, and no forecast")
+    items = []
+    if names:
+        fig, grid = ctx.style.figure(1, len(names), sharey=True)
+        tidy = []
+        for ax, name in zip(grid[0], names, strict=True):
+            block = df[(df["degradation"] == name) | (df["level"] == 0)]
+            levels = sorted(block["level"].unique())
+            damaged = [level for level in levels if level > 0]
+            colours = {0: "k", **dict(zip(damaged, ctx.style.level_colours(
+                ctx.style.axis_colour(name), len(damaged)), strict=True))}
+            for level in levels:
+                colour = colours[level]
+                line = (block[block["level"] == level].groupby("time", observed=True)["value"]
+                        .median().reset_index())
+                ax.plot(line["time"], line["value"], color=colour, marker="o", ms=2.5,
+                        label="clean" if level == 0 else f"level {level}")
+                tidy.append(line.assign(degradation=name, level=level))
+            ax.set_title(ctx.label(name), fontsize="small")
+            ax.set_xlabel("time")
+        grid[0, 0].set_ylabel(metric)
+        grid[0, 0].legend(fontsize="xx-small")
+        items.append(FigureItem(
+            fig, {"metric": metric, "field": field},
+            caption=f"{metric} on {field} against the frame's physical time, one line per "
+                    "strength of each degradation whose applied strength grows with time; the "
+                    "clean field in black. Median over frames at each time.",
+            data=pd.concat(tidy, ignore_index=True)))
+    if not forecasts.empty:
+        items.append(_forecast_lines(ctx, forecasts, metric, field, opts))
+    return PlotResult(items)
+
+
+def _forecast_lines(ctx, rows: pd.DataFrame, metric: str, field: str, opts: dict) -> FigureItem:
+    """The forecast view of :func:`response_along_time`: the metric against lead time, one panel
+    per start, one line per run, shaded darker the finer the run's grid.
+
+    A run's forecasts are numbered in order of their start, and panel ``i`` holds every run's
+    ``i``-th: the runs share their starting times to a fraction of a step, not exactly. A
+    single-field quantity is drawn for the target too, dashed and lighter, since its value on the
+    target is the truth the prediction's is read against; a two-field error is zero there.
+    """
+    single = rows["arity"].astype(str).eq("single").all()
+    keep = rows["degradation"].astype(str).eq(FORECAST_LEVEL.label)
+    if single:
+        keep |= rows["level"].eq(0)
+    tidy = (rows[keep]
+            .assign(side=lambda d: np.where(d["level"].eq(0), "target", "prediction"),
+                    start=lambda d: d["time"] - d["lead_time"],
+                    param_resolution=lambda d: d["param_resolution"].astype(int))
+            [["trajectory", "param_resolution", "side", "lead_step", "lead_time", "time",
+              "start", "value"]]
+            .sort_values(["trajectory", "side", "lead_time"]))
+    files = tidy.groupby("trajectory", observed=True)[["param_resolution", "start"]].first()
+    files["start_number"] = files.groupby("param_resolution")["start"].rank(method="first")
+    tidy["start_number"] = tidy["trajectory"].map(files["start_number"]).astype(int)
+    resolutions = sorted(files["param_resolution"].unique())
+    shades = dict(zip(resolutions, ctx.style.level_colours(okabe("blue"), len(resolutions)),
+                      strict=True))
+    numbers = sorted(tidy["start_number"].unique())
+    fig, grid = ctx.style.figure(1, len(numbers), sharey=True)
+    for ax, number in zip(grid[0], numbers, strict=True):
+        panel = tidy[tidy["start_number"] == number]
+        for (resolution, side), line in panel.groupby(["param_resolution", "side"]):
+            ax.plot(line["lead_time"], line["value"], color=shades[resolution],
+                    ls="-" if side == "prediction" else "--", marker="o", ms=2.5,
+                    alpha=1.0 if side == "prediction" else 0.5,
+                    label=f"{resolution}$^2$" + ("" if side == "prediction" else " target"))
+        ax.set_title(f"start t = {panel['start'].median():.2f}", fontsize="small")
+        ax.set_xlabel("lead time")
+    _log_if_wide(grid[0, 0], tidy["value"], opts)
+    grid[0, 0].set_ylabel(f"{metric} on {field}")
     grid[0, 0].legend(fontsize="xx-small")
-    return PlotResult([FigureItem(
-        fig, {"metric": metric, "field": field},
-        caption=f"{metric} on {field} against the frame's physical time, one line per strength of "
-                "each degradation whose applied strength grows with time; the clean field in "
-                "black. Median over frames at each time.",
-        data=pd.concat(tidy, ignore_index=True))])
+    return FigureItem(
+        fig, {"metric": metric, "field": field, "along": "lead"},
+        caption=f"{metric} on {field} against lead time, the physical time since the forecast "
+                "started, one panel per start and one line per run, darker the finer the run's "
+                "grid. "
+                + ("Dashed lighter lines are the target's own value. " if single else "")
+                + "Each point is one prediction step of one forecast.",
+        data=tidy)
 
 
 # --- the response at a glance: the two figures every metric card opens with -----------------

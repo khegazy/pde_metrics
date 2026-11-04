@@ -16,9 +16,17 @@ numbers after being sent to someone else.
 
 ## How the measurement works
 
-We have one trusted simulation and no model predictions to test against, so what we
-compare against is manufactured. The reference field is damaged in controlled steps, and
-each candidate metric is asked to score the damaged versions against the original.
+We have one trusted simulation, so what we compare against is mostly manufactured. The
+reference field is damaged in controlled steps, and each candidate metric is asked to score the
+damaged versions against the original.
+
+**Real forecasts.** One dataset, `forecast_re5e4`, holds real predictions of the same flow
+paired with their targets, at ten prediction steps from two starting times, in runs at three
+resolutions. On it the prediction takes the place of the damaged copy: each prediction is scored
+against its target, row by row, and the only ladder entry run is the anchor, so that D below
+keeps its meaning. Who produced the predictions, a trained model or a coarser solver, is not
+recorded. The ordering statistics of Group A are not computed on a forecast (see `forecast_value`
+below), and the figure that shows it is `response_along_time`.
 
 Four terms are used everywhere below.
 
@@ -560,6 +568,33 @@ responses are read against its largest ladder response instead.
 
 **Where they appear.** `deception_table.csv`; `results.csv` under `degradation = mean_field`.
 
+### `forecast_value`, `forecast_damage`, `forecast_nearest_level` — a real prediction scored against its target
+
+**What it is.** On a dataset of real forecasts, every frame pairs a target with the prediction
+made for it, and the prediction is scored as the candidate under `degradation = forecast`
+(family `forecast`, level 1). `forecast_value` is the median of the metric over every forecast
+row of the run, and `forecast_damage` that median on the damage scale: the prediction's error as
+a fraction of the error of the target's own spatial mean, frame by frame, the skill-score
+reading of D. `forecast_nearest_level` names the ordinary degradation as bad as the forecast,
+and is empty on a forecast run, which runs no ordinary degradation.
+
+**Why the ordering statistics are withheld.** A forecast has one prediction per frame, so there
+is no set of strengths within a frame to put in order. Its prediction step is an ordered axis,
+and errors usually grow along it, but that growth is a property of the predictor, not a strength
+chosen in advance, and this repository encodes no expected response (`docs/decisions.md`, "There
+is still no expectation per degradation"). The forecast is therefore read as a probe: `rho` and every
+other ordering statistic is empty on its rows, and the response along the prediction step is
+drawn rather than summarised.
+
+**Caveats.** The medians pool every prediction step, starting time and run of the dataset. The
+error grows with the prediction step by orders of magnitude (see the figure), so a median over
+steps is a coarse summary; read the figure, and the rows, which carry `lead_step` and
+`lead_time`.
+
+**Where they appear.** The run's analysis, as the columns of every probe are
+(`fmeval.analysis.probe_summary`, which the metric pages read); `results.csv` under
+`degradation = forecast`; the `response_along_time` figures with `along-lead` in their name.
+
 ### `uncorrelated_value`, `uncorrelated_damage`, `uncorrelated_nearest_level` — the right statistics in the wrong place
 
 **What it is.** The value the metric gives the reference moved by a large random offset, drawn
@@ -1042,10 +1077,21 @@ every row so a number is never separated from the grid it was computed on.
 
 Which dataset, and where it sits in an ordered family of increasing physical complexity.
 Present on every row as the groundwork for comparing metrics across datasets; not yet consumed.
+On a dataset of real forecasts, `trajectory` names the forecast file each row came from,
+`<run>/forecast_t0-<start>`, and `param_resolution` the native grid of that run.
 
 ### `frame_index`, `time`
 
-The index into the source trajectory, and the corresponding physical time.
+The index into the source trajectory, and the corresponding physical time. On a dataset of real
+forecasts the index runs over every prediction step of every forecast file, and the time is the
+prediction's clock.
+
+### `lead_step`, `lead_time` — how far ahead a forecast predicted
+
+On a dataset of real forecasts, the prediction step of the row: the number of solver steps from
+the forecast's start, as the file names it, and the physical time that covers. A run on a
+coarser grid takes fewer, longer steps to reach the same lead, so `lead_time` is the one
+comparable across runs. Empty on every row that is not a forecast's.
 
 ### `metric`, `arity`, `field`
 
@@ -1259,7 +1305,7 @@ translates the ensemble rather than perturbing it, and would leave the spread un
 | `ladder_curves` | 3 | Value against severity level for every degradation, with an interquartile band over frames. The curve the correlation summarises. Flat means blind to that failure mode |
 | `companion_curves` | 3 | For a metric with a curve companion: the curve against its coordinate, one panel per degradation, the median over frames at every strength (darker for harsher), the clean curve in black, the anchor dashed and the impostor dotted. The values are the literature's own. A second figure reads each coordinate as a metric of its own: its rank correlation with strength and its change from clean at the harshest strength, one line per degradation |
 | `companion_points` | 3 | For a metric with a point-set companion: the stored sets, one panel per stored variant, frames in time order with each frame's clean level first and at most twelve panels (the caption says when more were stored), on axes shared by every panel so a collapsed set cannot look like the clean one. The first two named coordinates are the axes and a third, if any, the colour. A triangle on a panel's edge is a point with an infinite coordinate, such as a persistence class that never dies |
-| `response_along_time` | 3 | The metric against the frame's physical time, one line per strength, for each degradation whose applied strength changes along the trajectory (`per_unit_time`); the clean field in black. Shows an error growing in time. Not drawn for a run with no such degradation |
+| `response_along_time` | 3 | The metric against the frame's physical time, one line per strength, for each degradation whose applied strength changes along the trajectory (`per_unit_time`); the clean field in black. Shows an error growing in time. On a dataset of real forecasts, a second figure (`along-lead` in its name): the metric against `lead_time`, one panel per starting time, one line per run, darker the finer the run's grid, with a single-field quantity's value on the target dashed. Machine-learning benchmarks score a rollout step by step: PDEBench computes its errors at every time step (Takamoto et al. 2022, Sect. 3.3, and its code, as read in `metrics/max_error/research_notes.md`). Not drawn for a run with neither |
 | `monotonicity_heatmap` | 4 | `rho` for every metric against every degradation. Down a column: is this metric monotone? Across a row: what does it detect? Hatched cells fall below the reference value |
 | `severity_level_separation` | 5 | The spread of each severity level across frames, as violins. Where neighbouring violins overlap, the metric cannot rank models one severity level apart |
 | `field_gallery` | 6 | The per-cell contribution to the metric, on **shared colour limits**. Autoscaling each panel would make a heavily smoothed field look identical to the reference. A displaced feature shows as two lobes — one where it should be and is not, one where it is and should not be |

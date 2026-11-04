@@ -16,7 +16,7 @@ The repository consumes stored fields only; no model is run. The related statist
 
 ## What would unblock it
 
-A way to run a model on transformed inputs, which belongs with [010](010-forecast-pair-reader.md) and the model interface.
+A way to run a model on transformed inputs, which belongs with a model interface. The forecast pairs of `forecast_re5e4` are stored predictions, not a model that can be run again.
 
 ## Related
 

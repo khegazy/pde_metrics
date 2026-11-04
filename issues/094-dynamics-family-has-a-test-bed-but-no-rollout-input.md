@@ -29,6 +29,11 @@ built. This one records what now exists to test them and what the harness still 
   fraction of a spectrum and is not a rate.
 - **The `response_along_time` figure**, one line per severity level against the frame's time:
   how a reader sees an error grow along a trajectory.
+- **`forecast_re5e4`** (`fmeval/data/forecast.py`, `docs/datasets/reynolds_ladder_2d.md`):
+  real predictions paired with their targets at ten prediction steps, from two starts, in three
+  runs. Its rows carry `lead_step` and `lead_time`, and `response_along_time` draws the metric
+  against the lead time. It is a rollout input, but ten steps long and not a controlled
+  experiment.
 
 ## What is not settled
 

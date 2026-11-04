@@ -367,6 +367,17 @@ class Trajectory(ABC):
     def __len__(self) -> int:
         return len(self.times)
 
+    def grid_at(self, t: int) -> GridSpec:
+        """The grid frame ``t`` is stored on: :attr:`grid`, unless the reader holds runs at
+        several resolutions (:mod:`fmeval.data.forecast`), whose frames then carry their own."""
+        return self.grid
+
+    def frame_columns(self, t: int) -> dict[str, Any]:
+        """Result-row columns whose value changes from frame to frame (``trajectory``,
+        ``lead_step``, ...), for a reader whose frames come from several files. None here: every
+        row of a single trajectory takes them from its dataset config."""
+        return {}
+
     def frame(self, t: int, fields: Sequence[str]) -> Frame:
         """Read and validate one frame.
 
@@ -391,7 +402,7 @@ class Trajectory(ABC):
             )
 
         raw = self.read_frame(int(t), requested)
-        grid = self.grid
+        grid = self.grid_at(int(t))
         out: dict[str, np.ndarray] = {}
         for name in requested:
             arr = np.ascontiguousarray(raw[name], dtype=np.float64)
