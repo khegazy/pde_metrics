@@ -183,8 +183,37 @@ def test_the_analysis_withholds_ordering_statistics_on_a_forecast(root):
                                                        FORECAST_LEVEL.label]}, n_bootstrap=0)
     forecast = analysis.axes[analysis.axes["degradation"] == FORECAST_LEVEL.label]
     assert forecast["is_probe"].all() and forecast["rho"].isna().all()
-    assert (analysis.probes["forecast_damage"] > 0).all()
     assert analysis.norm["anchor_source"].eq(an.MEAN_FIELD_LABEL).all()
+    assert not any(c.startswith(FORECAST_LEVEL.label) for c in analysis.probes.columns), (
+        "a forecast is reported step by step, never as one median over every step")
+
+
+def test_each_prediction_step_is_scaled_by_its_own_target(root):
+    """A forecast's damage is its error over the anchor's in the same frame: for mse, the
+    prediction's error over the target's variance, step by step; the table of every prediction
+    carries it unpooled, with the target's own value beside a single-field quantity's."""
+    with ForecastPairs(root, files=FILES, length=LENGTH) as targets:
+        rows = evaluate(targets, names=("mse", "enstrophy"), analysis_resolution=COARSE[0]).rows
+    analysis = an.analyse(rows, meta={"anchor_label": an.MEAN_FIELD_LABEL,
+                                      "probe_labels": [an.MEAN_FIELD_LABEL,
+                                                       FORECAST_LEVEL.label]}, n_bootstrap=0)
+    keys = ["field", "frame_index"]
+    scored = analysis.scored[analysis.scored["metric"] == "mse"]
+    anchor = scored[scored["degradation"] == an.MEAN_FIELD_LABEL].set_index(keys)["value"]
+    lead = an.forecast_by_lead(analysis.scored, metric="mse", anchor_label=an.MEAN_FIELD_LABEL)
+    predicted = scored[scored["degradation"] == FORECAST_LEVEL.label].set_index(keys)
+    assert len(lead) == len(predicted) == 12 * 3, "every step of every forecast, one row each"
+    own = anchor[predicted.index].to_numpy()
+    assert predicted["damage"][own == 0].isna().all() and (own == 0).any(), (
+        "a uniform target has no scale of its own, so no damage")
+    np.testing.assert_allclose(predicted["damage"][own > 0],
+                               predicted["value"][own > 0] / own[own > 0], rtol=1e-12)
+    assert anchor.groupby("field").nunique().gt(1).all(), "the anchor differs between frames"
+    assert set(lead["trajectory"]) == set(FILES) and lead["value_on_target"].eq(0).all()
+    single = an.forecast_by_lead(analysis.scored, metric="enstrophy",
+                                 anchor_label=an.MEAN_FIELD_LABEL)
+    assert len(single) == 12 and single["value_on_target"].gt(0).any(), "the target's own value"
+    assert sorted(single["lead_time"].unique()) == [0.5, 1.0, 1.5]
 
 
 def test_the_error_is_drawn_against_lead_time_one_line_per_forecast(pairs, tmp_path):
@@ -209,7 +238,8 @@ def test_the_error_is_drawn_against_lead_time_one_line_per_forecast(pairs, tmp_p
 
 
 def test_evaluate_scores_the_forecast_in_place_of_the_ladder(root, tmp_path):
-    """End to end: the ladder is cut to the anchor, and the forecast is recorded as a probe."""
+    """End to end: the ladder is cut to the anchor, the forecast is recorded as a probe, and no
+    severity calibration is measured or written, since no ladder operator needs one."""
     out = tmp_path / "out"
     subprocess.run(
         [sys.executable, str(REPO / "evaluate.py"), "dataset=forecast_re5e4", "metrics=[mse]",
@@ -224,6 +254,7 @@ def test_evaluate_scores_the_forecast_in_place_of_the_ladder(root, tmp_path):
     rows = read_results(folder)
     assert set(rows["degradation"]) == {"identity", an.MEAN_FIELD_LABEL, FORECAST_LEVEL.label}
     assert json.dumps(meta["reader_options"]["files"]) == json.dumps(FINE_FILES)
+    assert not list(folder.glob("data/calibration*")), "a forecast calibrates nothing"
 
 
 # --- the real files -----------------------------------------------------------------------

@@ -263,15 +263,35 @@ def add_damage(df: pd.DataFrame, norm: pd.DataFrame) -> pd.DataFrame:
 
     A metric with a target value has no drift to remove: its departure is its distance from the
     target (:func:`_oriented`), and its damage is zero at the target, not at the clean value.
+
+    A real forecast's row (one with a ``lead_step``) is divided by the anchor's departure in its
+    own frame instead of the shared span, ``D = (v - clean_f) / (anchor_f - clean_f)``, and is
+    NaN in a frame without an anchor row. A forecast's targets are the flow at different
+    times and resolutions, and the anchor moves with them: on ``forecast_re5e4``, mean squared
+    error's anchor on density, the target's variance, ranges from 2.2e-7 to 4.9e-5 over the ten
+    steps of each forecast from t = 0 (run ``mse_1793794935``), so a span shared by the frames
+    would read that change of the target as damage. PDEBench likewise normalises its nRMSE by
+    the target of each sample, channel and time step (``judgements/010``); the choice is
+    ``judgements/015``.
     """
-    out = df.merge(norm[[*GROUP_KEYS, "value_clean", "span", "degenerate"]], on=GROUP_KEYS,
-                   how="left")
+    out = df.merge(norm[[*GROUP_KEYS, "value_clean", "span", "degenerate", "anchor_source"]],
+                   on=GROUP_KEYS, how="left")
     clean = _frame_clean(out).fillna(out["value_clean"])
-    departure = (out["value"] - clean).where(~_has_target(out), _value_or_distance(out))
+    size = _value_or_distance(out)
+    departure = (out["value"] - clean).where(~_has_target(out), size)
+    span = out["span"]
+    if "lead_step" in out.columns and out["lead_step"].notna().any():
+        keys = [out[k] for k in (*GROUP_KEYS, "frame_index")]
+        on_anchor = out["degradation"].astype(str).eq(out["anchor_source"].astype(str))
+        anchor = size.where(on_anchor).groupby(keys, observed=True).transform("median")
+        own = (anchor - clean).where(~_has_target(out), anchor)
+        largest = size.abs().groupby(keys, observed=True).transform("max")
+        span = span.where(out["lead_step"].isna(),
+                          own.where(own.abs() >= DEGENERATE_SPAN * largest))
     with np.errstate(invalid="ignore", divide="ignore"):
-        out["damage"] = departure / out["span"]
+        out["damage"] = departure / span
     out.loc[out["degenerate"], "damage"] = np.nan
-    return out.drop(columns=["value_clean", "span", "degenerate"])
+    return out.drop(columns=["value_clean", "span", "degenerate", "anchor_source"])
 
 
 #: The largest distance from a target :func:`_oriented` assigns: a value of zero, or an
@@ -1026,7 +1046,13 @@ def probe_summary(df: pd.DataFrame, norm: pd.DataFrame, *,
     rows = []
     for key, g in scored.groupby(GROUP_KEYS, observed=True):
         record = dict(zip(GROUP_KEYS, key, strict=True))
-        present = sorted(probe_labels & set(g["degradation"].unique()))
+        # A real forecast is not summarised here: its error grows along the prediction step by
+        # orders of magnitude, so one median over every step, start and run would describe none
+        # of them. It is reported step by step (`forecast_by_lead`); the anchor beside it is
+        # summarised as on any run.
+        predicted = (g["lead_step"].notna() & g["degradation"].ne(anchor_label)
+                     if "lead_step" in g.columns else pd.Series(False, index=g.index))
+        present = sorted(probe_labels & set(g.loc[~predicted, "degradation"].unique()))
         if not present:
             continue
         for label in present:
@@ -1553,6 +1579,42 @@ def damage_by_level(scored: pd.DataFrame, *, field: str | None = None,
     wide.columns = [str(c) for c in wide.columns]
     wide.insert(0, "severity", sub.groupby(keys, observed=True)["severity"].median())
     return wide.reset_index()[[*LEVEL_KEYS, *wide.columns[1:]]]
+
+
+#: What names one prediction of a real forecast: the forecast (its file, the run's native grid,
+#: its starting time) and the prediction step, in solver steps and in physical time.
+LEAD_KEYS: tuple[str, ...] = ("field", "trajectory", "param_resolution", "start", "lead_step",
+                              "lead_time")
+
+
+def forecast_by_lead(scored: pd.DataFrame, *, metric: str, anchor_label: str) -> pd.DataFrame:
+    """Every prediction of a real forecast, unpooled: one row per field, forecast and prediction
+    step, with the metric's value on the prediction, on the target, and the damage.
+
+    A rollout's error is reported at each prediction step, not pooled over them: PDEBench draws
+    the RMSE against the unrolled time step (Takamoto et al. 2022, NeurIPS Datasets and
+    Benchmarks, Sect. 4.3, Fig. 5a and 5c) and WeatherBench 2 against lead time (Rasp et al.
+    2024, JAMES, Fig. 4), both as read for ``metrics/rmse/card.md``. ``value_on_target``
+    is the metric on the target alone, zero for a two-field error and the truth a single-field
+    quantity's prediction is read against. ``start`` is the forecast's starting time.
+
+    Raises:
+        KeyError: If ``scored`` has no ``damage`` column.
+    """
+    if "damage" not in scored.columns:
+        raise KeyError("forecast_by_lead needs the damage column; pass add_damage(df, norm)")
+    columns = [*LEAD_KEYS, "value", "value_on_target", "damage"]
+    if "lead_step" not in scored.columns:
+        return pd.DataFrame(columns=columns)
+    rows = scored[(scored["metric"].astype(str) == metric) & scored["lead_step"].notna()]
+    target = (rows.loc[rows["level"] == 0, ["field", "frame_index", "value"]]
+              .rename(columns={"value": "value_on_target"}))
+    predicted = rows[(rows["level"] > 0) & rows["degradation"].ne(anchor_label)]
+    out = (predicted.assign(start=predicted["time"] - predicted["lead_time"])
+           .merge(target, on=["field", "frame_index"], how="left", validate="many_to_one"))
+    out = out[columns].astype({"field": str, "trajectory": str})
+    return out.sort_values(["field", "start", "param_resolution", "lead_time"],
+                           kind="stable").reset_index(drop=True)
 
 
 def _metric_columns(wide: pd.DataFrame) -> list[str]:

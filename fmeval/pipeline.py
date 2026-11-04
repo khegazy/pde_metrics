@@ -329,8 +329,11 @@ def run(
             len(indices), expensive,
         )
 
-    calibration = _measure_calibration(trajectory, fields, indices, to_analysis,
-                                       calibration_frames)
+    # A forecast replaces the ladder, so no operator needs a calibration; one measured over its
+    # frames would pool runs at several native resolutions and calibrate nothing.
+    calibration = (Calibration() if prediction is not None else
+                   _measure_calibration(trajectory, fields, indices, to_analysis,
+                                        calibration_frames))
 
     # A per_unit_time level is a rate times the time since the trajectory's first frame.
     time_origin = float(trajectory.times[0])

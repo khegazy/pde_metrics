@@ -32,6 +32,7 @@ from fmeval.cards import catalog, cli, evidence, exemplars, loader, prose, revie
 from fmeval.cards.figures import Column, _row_limits, exemplar_panel
 from fmeval.cards.metric_figures import (
     ALT_TEXT,
+    LEAD,
     METRIC_FIGURES,
     STANDARD,
     metric_figures,
@@ -1384,12 +1385,85 @@ def test_a_card_cites_one_run_per_experiment(tmp_path, monkeypatch):
         evidence.generate("mse", kinet)
     with pytest.raises(ValueError, match="one run per experiment"):
         evidence.generate("mse", kinet, kinet)
-    # A run with no ladder, as a forecast run has, has no tables to report it by.
+    # A run with neither a ladder nor a real forecast has nothing to report it by.
     probes_only = rows[rows["degradation"].isin(["identity", "gaussian_impostor"])]
     forecast = evidence.load_run(_run_folder(tmp_path / "mse_forecast", probes_only,
                                              dataset="forecast_re5e4"))
-    with pytest.raises(ValueError, match="no degradation ladder"):
+    with pytest.raises(ValueError, match="neither a degradation ladder nor a real forecast"):
         evidence.generate("mse", kinet, sod, forecast)
+    assert (bundle.card_md.read_bytes(), bundle.fingerprint.read_bytes()) == before
+
+
+def _forecast_run(path: pathlib.Path) -> pathlib.Path:
+    """A run of real forecasts of mse on two fields: two forecasts of three prediction steps.
+
+    The anchor (the target's variance) doubles every frame from 1e-14, and each prediction's
+    error is 0.1, 0.2 and 0.3 of its own frame's anchor, so damage read frame by frame is exactly
+    the step's tenth while a span shared by the frames would not be; the smallest error, 1e-15,
+    is below what a JSON rounded to ten decimal places keeps (issues/134).
+    """
+    df = pd.concat([make_frame(metric="mse", field=field, n_frames=6,
+                               axes={label: [1.0] for label in ("mean_field", "forecast")})
+                    for field in ("density", "velocity")], ignore_index=True)
+    step, start = df["frame_index"] % 3 + 1, df["frame_index"] // 3
+    anchor = 1e-14 * 2.0 ** df["frame_index"]
+    forecast = df["degradation"] == "forecast"
+    df["value"] = np.select([df["level"] == 0, forecast], [0.0, 0.1 * step * anchor], anchor)
+    df = df.astype({"degradation_op": str, "degradation_family": str})
+    df.loc[forecast, ["degradation_op", "degradation_family"]] = "forecast"
+    df = df.assign(trajectory=np.where(start == 0, "run/forecast_t0-0", "run/forecast_t0-30"),
+                   lead_step=10 * step, lead_time=0.5 * step, time=1.5 * start + 0.5 * step,
+                   dataset="forecast_re5e4")
+    folder = RunFolder(path).create()
+    write_results(folder, df)
+    write_run_meta(folder, run_id=1, metric="mse", dataset="forecast_re5e4",
+                   anchor_label="mean_field", probe_labels=["mean_field", "forecast"])
+    return path
+
+
+def test_a_card_cites_a_run_of_real_forecasts_step_by_step(tmp_path, monkeypatch):
+    """A run of real forecasts is a further run like any other, reported as its field reports
+    it: the metric and its damage at every prediction step of every forecast, nothing pooled,
+    beside the lead-time figure. For a pairwise metric that figure is also the field's figure at
+    the top of Performance, while Performance keeps the primary run's ladder tables. Each step's
+    damage is read against its own frame's anchor; no pooled forecast median is reported."""
+    bundle = _bundle_copy(tmp_path, monkeypatch)
+    rows = _rows(tmp_path)
+    kinet = evidence.load_run(_run_folder(tmp_path / "comparison_kinet", rows))
+    sod = evidence.load_run(_run_folder(tmp_path / "mse_sod", rows, dataset="sod_shock_tube"))
+    forecast = evidence.load_run(_forecast_run(tmp_path / "mse_forecast"))
+    assert not any(c.startswith("forecast_") for c in forecast.probes.columns), (
+        "a forecast is reported step by step, never as one median over every step")
+    evidence.generate("mse", kinet, sod, forecast)
+
+    text = bundle.card_md.read_text()
+    blocks = prose.generated_blocks(text)
+    block = blocks["results_on_forecast_re5e4"]
+    assert "### On `forecast_re5e4`" in text and "Run `mse_forecast`" in block
+    lead = ("_generated/response_along_time__dataset-forecast_re5e4__field-density"
+            "__along-lead.svg")
+    assert lead in block and lead in blocks["performance"], (
+        "the lead-time figure heads the forecast subsection and is the field's figure")
+    assert "*As this metric's own field draws it, from run `mse_forecast`.*" in \
+        blocks["performance"]
+    assert "**Trend" in blocks["performance"], "Performance keeps the ladder's tables"
+    assert "Trap tests" not in block and "**density, mse damage, at each lead time.**" in block
+    damage = block.split("**density, mse damage, at each lead time.**")[1].split("\n\n")[1]
+    assert damage.splitlines()[2:] == ["| 0.5 | 0.1 | 0.1 |", "| 1 | 0.2 | 0.2 |",
+                                       "| 1.5 | 0.3 | 0.3 |"], damage
+    assert "`16², start 0` is `run/forecast_t0-0`" in block
+    assert "measured, run `mse_forecast`: under *On `forecast_re5e4`*" in blocks["experiments"]
+    assert {r["dataset"]: r["state"] for r in catalog.experiments(bundle)}[
+        "forecast_re5e4"] == "measured"
+
+    recorded = json.loads(bundle.fingerprint.read_text())["other_runs"][1]
+    assert recorded["run"] == "mse_forecast" and len(recorded["forecast"]) == 12
+    assert sorted({round(r["damage"], 12) for r in recorded["forecast"]}) == [0.1, 0.2, 0.3]
+    assert min(r["value"] for r in recorded["forecast"]) == pytest.approx(1e-15, rel=1e-12)
+    shown = set(re.findall(r"\]\(_generated/([^)]+\.svg)\)", text))
+    assert shown == {p.name for p in bundle.generated.glob("*.svg")}
+    before = (bundle.card_md.read_bytes(), bundle.fingerprint.read_bytes())
+    evidence.generate("mse", kinet, sod, forecast)
     assert (bundle.card_md.read_bytes(), bundle.fingerprint.read_bytes()) == before
 
 
@@ -1474,10 +1548,10 @@ def test_a_reason_only_a_person_can_give_is_the_cards_not_run(monkeypatch):
         monkeypatch.setattr(catalog, "load_card",
                             lambda bundle: dataclasses.replace(real(bundle), not_run=not_run))
 
-    reason = "the forecasts are of density alone, which says nothing new here"
-    with_not_run(forecast_re5e4=reason)
+    reason = "the member mean of this ensemble says nothing new here"
+    with_not_run(synthetic_ensemble=reason)     # one mse does not cite
     row = {r["dataset"]: r for r in catalog.experiments(loader.find_bundle("mse"))}[
-        "forecast_re5e4"]
+        "synthetic_ensemble"]
     assert (row["state"], row["reason"]) == ("not applicable", reason)
     with_not_run(kinet_re5e4=reason)            # mse cites a run there
     with pytest.raises(ValueError, match="cites run"):
@@ -1604,7 +1678,8 @@ def test_metric_figures_are_byte_identical_within_one_environment(tmp_path):
     run = evidence.load_run(_figure_run(tmp_path))
     first, _ = metric_figures(run, "mse", tmp_path / "a")
     second, _ = metric_figures(run, "mse", tmp_path / "b")
-    assert [f.slot for f in first] == list(METRIC_FIGURES)
+    assert [f.slot for f in first] == [s for s in METRIC_FIGURES if s != LEAD], (
+        "a run of real forecasts alone draws a lead-time figure")
     assert [f.name for f in first] == ["damage_beside_controls", "sensitivity_profile",
                                        "response_curves", "damage_beside_controls"], (
         "a pairwise metric with nothing behind its number opens with misfit against shift, "
@@ -1979,9 +2054,27 @@ def test_the_field_s_figure_follows_from_what_the_metric_declares(arity, lead, c
     first), else its value against time for a single-field quantity or a forecast, else misfit
     against shift; an ensemble score with none of these has none, and says why."""
     rows = pd.DataFrame({"metric": ["m"], "arity": [arity], "lead_step": [lead]})
-    name, why = standard_figure(_declared(rows, companions), "m")
-    assert name == expected
+    name, why, source = standard_figure([_declared(rows, companions)], "m")
+    assert name == expected and source == 0
     assert bool(why) == (expected is None)
+
+
+@pytest.mark.parametrize("arity,companions,expected", [
+    ("pairwise", [], ("response_along_time", 2)),
+    ("pairwise", [{"name": "m", "kind": "curve"}], ("companion_curves", 0)),
+    ("single", [], ("response_along_time", 0)),
+], ids=["pairwise", "curve", "single"])
+def test_a_further_run_of_real_forecasts_gives_a_pairwise_metric_its_field_s_figure(
+        arity, companions, expected):
+    """A two-field error with nothing behind its number is drawn as its field draws it, against
+    lead time, from the first run of real forecasts the card cites, while the primary ladder run
+    keeps the rest; a curve, a point set or a single-field quantity keeps its primary figure."""
+    ladder = pd.DataFrame({"metric": ["m"], "arity": [arity], "lead_step": [None]})
+    sod = ladder.copy()
+    forecast = ladder.assign(lead_step=[3.0])
+    contexts = [_declared(ladder, companions), _declared(sod), _declared(forecast)]
+    name, why, source = standard_figure(contexts, "m")
+    assert (name, source) == expected and not why
 
 
 def test_a_curve_metric_s_card_opens_with_its_curve_on_each_field(tmp_path, temporary_metric):

@@ -25,8 +25,9 @@ paired with their targets, at ten prediction steps from two starting times, in r
 resolutions. On it the prediction takes the place of the damaged copy: each prediction is scored
 against its target, row by row, and the only ladder entry run is the anchor, so that D below
 keeps its meaning. Who produced the predictions, a trained model or a coarser solver, is not
-recorded. The ordering statistics of Group A are not computed on a forecast (see `forecast_value`
-below), and the figure that shows it is `response_along_time`.
+recorded. The ordering statistics of Group A are not computed on a forecast; it is reported at
+every prediction step instead (see "A real prediction scored against its target" below), and the
+figure that shows it is `response_along_time`.
 
 Four terms are used everywhere below.
 
@@ -575,32 +576,48 @@ responses are read against its largest ladder response instead.
 
 **Where they appear.** `deception_table.csv`; `results.csv` under `degradation = mean_field`.
 
-### `forecast_value`, `forecast_damage`, `forecast_nearest_level` — a real prediction scored against its target
+### `value`, `value_on_target`, `damage` at each `lead_time` — a real prediction scored against its target
 
 **What it is.** On a dataset of real forecasts, every frame pairs a target with the prediction
 made for it, and the prediction is scored as the candidate under `degradation = forecast`
-(family `forecast`, level 1). `forecast_value` is the median of the metric over every forecast
-row of the run, and `forecast_damage` that median on the damage scale: the prediction's error as
-a fraction of the error of the target's own spatial mean, frame by frame, the skill-score
-reading of D. `forecast_nearest_level` names the ordinary degradation as bad as the forecast,
-and is empty on a forecast run, which runs no ordinary degradation.
+(family `forecast`, level 1). It is reported at every prediction step of every forecast, nothing
+pooled (`fmeval.analysis.forecast_by_lead`): one row per field, forecast (`trajectory`, its run's
+native grid `param_resolution`, and `start`, the physical time it started) and prediction step
+(`lead_step`, `lead_time`), carrying the metric's `value` on the prediction, its
+`value_on_target` (the metric on the target alone: zero for a two-field error, the truth a
+single-field quantity's prediction is read against), and its `damage`. That is how the
+forecasting benchmarks report a rollout: PDEBench draws the RMSE against the unrolled time step
+(Takamoto et al. 2022, Sect. 4.3, Fig. 5a and 5c) and WeatherBench 2 against lead time (Rasp et
+al. 2024, Fig. 4), both as read for the card of `rmse`.
+
+**Its damage is scaled by its own frame.** A forecast row's damage is its departure from the
+target over the anchor's departure in the same frame, `(v - clean_f) / (anchor_f - clean_f)`,
+not over the span the frames of a ladder share: the anchor moves with the target along a
+forecast (on run `mse_1793794935`, mean squared error's anchor on density, the target's
+variance, ranges from 2.2e-7 to 4.9e-5 over the ten steps of each forecast from t = 0). With the
+default anchor and mean squared error that is the prediction's error over the target's variance,
+the per-step normalisation of The Well's VRMSE and PDEBench's nRMSE (`judgements/015`, `010`). A
+frame whose own span is round-off gets no damage.
 
 **Why the ordering statistics are withheld.** A forecast has one prediction per frame, so there
 is no set of strengths within a frame to put in order. Its prediction step is an ordered axis,
 and errors usually grow along it, but that growth is a property of the predictor, not a strength
 chosen in advance, and this repository encodes no expected response (`docs/decisions.md`, "There
-is still no expectation per degradation"). The forecast is therefore read as a probe: `rho` and every
-other ordering statistic is empty on its rows, and the response along the prediction step is
-drawn rather than summarised.
+is still no expectation per degradation"). The forecast is therefore read as a probe: `rho` and
+every other ordering statistic is empty on its rows. Nor is it summarised by one median: its
+error grows along the prediction step by orders of magnitude, so `probe_summary` reports the
+anchor of a forecast run and not the forecast.
 
-**Caveats.** The medians pool every prediction step, starting time and run of the dataset. The
-error grows with the prediction step by orders of magnitude (see the figure), so a median over
-steps is a coarse summary; read the figure, and the rows, which carry `lead_step` and
-`lead_time`.
+**Caveats.** One model's predictions from two starting times, not the many initialisations a
+verification year or a test set averages over. A row of a metric page's table is a lead time
+shown to four significant figures, so forecasts whose lead times agree to that precision share a
+row; on `forecast_re5e4` the runs' lead times at one step differ by at most 4.9e-16 relative
+(run `mse_1793794935`).
 
-**Where they appear.** The run's analysis, as the columns of every probe are
-(`fmeval.analysis.probe_summary`, which the metric pages read); `results.csv` under
-`degradation = forecast`; the `response_along_time` figures with `along-lead` in their name.
+**Where they appear.** `results.csv` under `degradation = forecast`; the subsection *On
+`forecast_re5e4`* of a metric page that cites a forecast run, as tables and the lead-time figure,
+and its `fingerprint.json` under `other_runs[...].forecast`; the `response_along_time` figures
+with `along-lead` in their name.
 
 ### `uncorrelated_value`, `uncorrelated_damage`, `uncorrelated_nearest_level` — the right statistics in the wrong place
 
@@ -1014,7 +1031,8 @@ The calibration itself is measured once per (field, analysis grid) from frames s
 evenly across the selection, and then held fixed. Re-measuring per frame would make the
 strengths drift as the flow evolves, so two frames would no longer be running the same
 experiment and the per-frame rank correlation — the primary acceptance statistic — would
-be comparing different ladders. It is recorded in `data/calibration.csv`.
+be comparing different ladders. It is recorded in `data/calibration.csv`. A run of real
+forecasts runs no ladder operator, so it measures no calibration and writes neither table.
 
 ### `energy_removed`, `energy_changed` — what the degradation measurably did, not what was asked for
 
@@ -1359,7 +1377,7 @@ translates the ensemble rather than perturbing it, and would leave the spread un
 
 ## The figures
 
-**The field's own figure comes first on a metric card.** A metric's page opens with the figure its own field draws, from the run the page cites, before the figures below that every metric shares. Which renderer draws it follows from what the metric declares (`fmeval/cards/metric_figures.py`, `standard_figure`): a curve or a point set behind the number is drawn by `companion_curves` or `companion_points`, once per field; a single-field quantity by `response_along_time`, its value against time; a two-field metric on a run of real forecasts by `response_along_time`, its error against lead time; any other two-field metric by `damage_beside_controls`, its misfit against an applied shift beside the pointwise errors. An ensemble score with none of these has no such figure yet, and its page says why: its field draws it against lead time, and the synthetic ensemble has one spread at every frame. Each is a committed SVG with its numbers in a JSON beside it, like every card figure.
+**The field's own figure comes first on a metric card.** A metric's page opens with the figure its own field draws, from the run the page cites, before the figures below that every metric shares. Which renderer draws it follows from what the metric declares (`fmeval/cards/metric_figures.py`, `standard_figure`): a curve or a point set behind the number is drawn by `companion_curves` or `companion_points`, once per field; a single-field quantity by `response_along_time`, its value against time; a two-field metric whose page cites a run of real forecasts by `response_along_time` on that run, its error against lead time, while the rest of Performance stays on the main run; any other two-field metric by `damage_beside_controls`, its misfit against an applied shift beside the pointwise errors. An ensemble score with none of these has no such figure yet, and its page says why: its field draws it against lead time, and the synthetic ensemble has one spread at every frame. Each is a committed SVG with its numbers in a JSON beside it, like every card figure.
 
 | figure | section | what it shows, and how to read it |
 |---|---|---|

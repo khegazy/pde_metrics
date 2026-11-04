@@ -179,8 +179,9 @@ def main(cfg: DictConfig) -> Path:
         fio.write_results(folder, rows)
         if not companions.empty:
             fio.write_results(folder, companions, name=fio.COMPANIONS)
-        fio.write_table(folder, calibration_table, "calibration")
-        fio.write_table(folder, spectrum_table, "calibration_spectrum")
+        if result.calibration.fields:       # none on a forecast, which runs no ladder
+            fio.write_table(folder, calibration_table, "calibration")
+            fio.write_table(folder, spectrum_table, "calibration_spectrum")
         digest = fio.write_config(folder, cfg, overrides)
         fio.write_maps(folder, maps)
         fio.copy_documentation(folder)
