@@ -158,3 +158,13 @@ The suite counts recorded by `agent_verify.sh`: 2137 passed at the pre-registrat
 - Averaging Dice over channels, rather than pooling cells over channels, has never been exercised
   on data, since pressure has one channel.
 - Zero-channel input returns NaN with a warning rather than raising.
+
+## Round of 2026-11-04 (task `metrics-topology-shocks`)
+
+`shock_mask_overlap` now calls `shock_set_distance`'s `shock_set_score` with its `dice` score, and
+registers that bundle's `shock_positions` and `pressure_profile` as its companions for the
+line-out figure; its own cache key `REFERENCE_MASKS` was removed. The Sod smoke run
+`shock_mask_overlap_1793799367` matches the cited evidence run `shock_mask_overlap_1793494245` on
+all 590 shared rows exactly. The card gained `### How its field reports it`, and the both-empty
+text now says that Metrics Reloaded gives a general worst-value rule only, while its code returns
+NaN for Dice with both sets empty and suggests 1 at aggregation (`dsc`, read 2026-11-04).

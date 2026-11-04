@@ -35,5 +35,6 @@ math:
   # Which cells are flagged, and how many a shock occupies, depend on the grid.
   resolution_dependent: true
   complexity: "O(N)"    # one stencil pass per field and a count
-references: [taha2015, maierhein2024, dice1945, jaccard1912, schaal2015]
+references: [taha2015, maierhein2024, dice1945, jaccard1912, schaal2015, gilleland2009,
+             roberts2008, metricsreloadedcode]
 review: null

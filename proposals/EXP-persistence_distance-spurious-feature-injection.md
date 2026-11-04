@@ -1,7 +1,7 @@
 ---
 type: EXP
 kind: degradation
-related: ["metrics/persistence_distance", "proposals/EXP-orchestrator-20261023-known-vortex-field.md"]
+related: ["metrics/persistence_distance", "metrics/persistence_wasserstein", "proposals/EXP-orchestrator-20261023-known-vortex-field.md"]
 seen_in: "agent's own"
 doi: "none"
 found_by: "persistence_distance, 2026-10-31"

@@ -75,3 +75,48 @@
              converted by the Rankine-Hugoniot pressure ratio of Eq. (2). As read by that
              bundle in the arXiv copy 1407.4117v2}
 }
+
+@article{gilleland2009,
+  author  = {Gilleland, Eric and Ahijevych, David and Brown, Barbara G. and Casati, Barbara and
+             Ebert, Elizabeth E.},
+  title   = {Intercomparison of Spatial Forecast Verification Methods},
+  journal = {Weather and Forecasting},
+  volume  = {24},
+  number  = {5},
+  pages   = {1416--1430},
+  year    = {2009},
+  doi     = {10.1175/2009WAF2222269.1},
+  note    = {Abstract only, read through the Crossref record; the AMS pages refused the fetch.
+             The newer spatial methods grouped as filtering (neighbourhood and scale separation)
+             and displacement (features-based and field deformation)}
+}
+
+@article{roberts2008,
+  author  = {Roberts, Nigel M. and Lean, Humphrey W.},
+  title   = {Scale-Selective Verification of Rainfall Accumulations from High-Resolution
+             Forecasts of Convective Events},
+  journal = {Monthly Weather Review},
+  volume  = {136},
+  number  = {1},
+  pages   = {78--97},
+  year    = {2008},
+  doi     = {10.1175/2007MWR2123.1},
+  note    = {Abstract only, read through the Crossref record: verification by "fractional
+             coverage over different sized areas", skill as a function of spatial scale. The
+             fractions skill score's form is cited from
+             proposals/MTR-shock_mask_overlap-fractions-skill-score.md}
+}
+
+@misc{metricsreloadedcode,
+  author       = {{Metrics Reloaded consortium}},
+  title        = {{MetricsReloaded}: metrics/pairwise\_measures.py},
+  howpublished = {GitHub repository Project-MONAI/MetricsReloaded, branch main},
+  url          = {https://github.com/Project-MONAI/MetricsReloaded/blob/main/MetricsReloaded/metrics/pairwise_measures.py},
+  note         = {Read (raw source, 2026-11-04): measured_distance returns NaN for every distance
+                  when the prediction or the reference is empty, warning "need to set to worse case
+                  in aggregation"; measured_hausdorff_distance_perc is the maximum of the two
+                  directed np.percentile values, default 95; measured_masd is 0.5 * (mean of one
+                  directed set of border distances + mean of the other); dsc returns NaN when both
+                  are empty, warning that it "can be set to 1 when aggregating". Borders come from
+                  MorphologyOps.border_map, not read}
+}

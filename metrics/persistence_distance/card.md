@@ -96,8 +96,9 @@ whole run; there, run it with `fields=[density]` or another list of scalar field
 
 Four choices are this bundle's, not a source's. The bottleneck distance is registered rather
 than a Wasserstein distance between diagrams, because it is the distance with the stability
-theorem of Equation (5), which ties it to the pointwise maximum error; the Wasserstein distance
-counts every feature and is the natural sibling. The filtration is by sublevel sets of the signed
+theorem of Equation (5), which ties it to the pointwise maximum error; the 1-Wasserstein distance,
+which counts every feature, is the sibling bundle
+[persistence_wasserstein](../../metrics/persistence_wasserstein/card.md), on the same diagrams. The filtration is by sublevel sets of the signed
 field, not of its magnitude, so that on vorticity the cores of one sign (the minima) are born as
 pieces and the cores of the other sign (the maxima) are the levels at which the loops around
 them fill in, and both signs enter the diagram.
@@ -112,6 +113,42 @@ doubly periodic grid the complex of the whole domain is a torus [@bleile2022], S
 cell on the last row is a neighbour of the cell on the first. An axis with a wall is not wrapped,
 so a domain with walls on every side is a box with one piece and no loops. Nothing is padded or
 extended, so the metric does not assume periodicity and is not marked `requires_periodic`.
+
+### How its field reports it
+
+The field is topological data analysis, where a distance between persistence diagrams compares
+two functions by the features of their sublevel sets.
+
+- **The object and the distance.** One persistence diagram per homology dimension, compared by
+  the bottleneck distance of Equation (3) [@cohensteiner2005], Sect. 3.1, or by a Wasserstein
+  distance of some degree $p$, which sums over matched points rather than taking the largest; the
+  bottleneck distance is its limit $p \to \infty$ [@skraba2020], Definition 2.5 and Eq. 1. Both
+  are the field's standard, and the second is built as
+  [persistence_wasserstein](../../metrics/persistence_wasserstein/card.md), with GUDHI's default
+  exponent 1 and ground norm $L^\infty$. Software differs on combining the dimensions: the maximum
+  of Equation (4) is [@skraba2020], Eq. 1, while giotto-tda's `PairwiseDistance` takes a norm of
+  order 2 over the dimensions by default (its documentation, read by this bundle's builder; see
+  `research_notes.md`). The maximum is registered because it keeps Equation (5) exact.
+- **The figure.** The persistence diagram itself: birth on one axis, death on the other, the
+  diagonal drawn, points that never die placed above the largest death, coloured by dimension
+  (GUDHI's `plot_persistence_diagram`). The card's first figure draws the candidate's diagram over
+  the reference's in that form.
+- **What is reported beside the number.** The stability theorem, the distance bounded by a norm
+  of the difference of the two functions: for the bottleneck distance the largest pointwise
+  difference, Equation (5) ([@cohensteiner2005], Sect. 3.1, Main Theorem, for continuous tame
+  functions; [@skraba2020], Theorem 4.6, for the cell-wise constant fields here). No interval or
+  decomposition is standard.
+- **The experiment.** The theorems concern perturbed functions, which are the noise and smoothing
+  axes of the degradation ladder on `kinet_re5e4`, with the real forecasts of `forecast_re5e4` and
+  the Reynolds ladder beside them. Fields whose features are known, features injected at a known
+  depth, and features removed by a known amount are not experiments here; they are written up in
+  [EXP-orchestrator-20261023-known-vortex-field](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-orchestrator-20261023-known-vortex-field.md),
+  [EXP-persistence_distance-spurious-feature-injection](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-persistence_distance-spurious-feature-injection.md)
+  and
+  [EXP-persistence_distance-topological-simplification](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-persistence_distance-topological-simplification.md).
+  The metric is not run on `sod_shock_tube`, whose exact density never rises along the tube, so
+  that its diagram is a single point at the minimum, nor on `synthetic_ensemble`, whose axes leave
+  the member mean unchanged or shift it uniformly (`card.yaml`, `not_run`).
 
 ## Performance
 
@@ -301,8 +338,8 @@ Every number in this section comes from that one run. Regenerate with `python -m
 |---|---|---|
 | `kinet_re5e4` | developed flow | measured, run `comparison_1793657627`: the main results |
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
-| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not yet run; on this dataset the metric scores the member mean of the ensemble |
-| `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not yet run |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: its dispersion axes leave the member mean, the field this metric reads, unchanged by construction, and its bias axis moves every point of the candidate's diagram by the offset, a response persistence_wasserstein's tests pin exactly |
+| `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: Sod's exact density never rises along the tube, so its diagram is one point, born at the minimum, and the distance only compares two minima |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
 
 One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.

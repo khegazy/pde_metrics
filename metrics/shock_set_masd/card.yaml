@@ -1,0 +1,32 @@
+schema_version: 1
+
+name: shock_set_masd
+kind: metric
+
+# "Where features are, and what shape they have": the metric finds the shocks in each field
+# and measures how far apart they lie, never comparing values cell by cell.
+category: geometric
+
+summary: >-
+  Mean average surface distance between the shocks detected in the reference and in the candidate pressure: the mean of the two fields' average distances from a shocked cell to the other field's nearest one.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    The mean of the two directed average nearest-cell distances between the two sets of shocked cells, in the units of the grid spacing; zero when the sets coincide or both are empty, and the length of the domain's diagonal when only one field has a shock.
+  bounds:
+    lower: 0.0
+    upper: null    # the diagonal of the domain, which depends on the grid
+
+math:
+  triangle_inequality: false   # on a line, A = {0}, B = {0, 10}, C = {10} give MASD(A, C) = 10 but MASD(A, B) + MASD(B, C) = 2.5 + 2.5
+  # The detector reads pressure ratios, so scaling both fields by a positive constant flags the
+  # same cells and leaves the distance unchanged (issues/122 for a non-positive constant).
+  scale_dependent: false
+  # Which cells are flagged, and the width of a flagged shock, depend on the grid.
+  resolution_dependent: true
+  complexity: "O(N)"    # one stencil pass and two exact Euclidean distance transforms
+references: [schaal2015, taha2015, maierhein2024, metricsreloadedcode, spatialvx]
+review: null

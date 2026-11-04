@@ -35,5 +35,6 @@ math:
   # Which cells are flagged, and the width of a flagged shock, depend on the grid.
   resolution_dependent: true
   complexity: "O(N)"    # one stencil pass and two exact Euclidean distance transforms
-references: [schaal2015, yeghiazaryan2018, taha2015, maierhein2024, ducros1999, davis2006a]
+references: [schaal2015, yeghiazaryan2018, taha2015, maierhein2024, ducros1999, davis2006a,
+             gilleland2009, ahijevych2009, gilleland2011, roberts2008, metricsreloadedcode, medpy]
 review: null

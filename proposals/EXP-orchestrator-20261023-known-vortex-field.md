@@ -1,7 +1,7 @@
 ---
 type: EXP
 kind: benchmark suite or dataset
-related: ["persistence_distance", "issues/060", "issues/073", "issues/082", "issues/086"]
+related: ["persistence_distance", "persistence_wasserstein", "issues/060", "issues/073", "issues/082", "issues/086"]
 seen_in: "orchestrator's own"
 doi: "none"
 found_by: "orchestrator, 2026-10-23"

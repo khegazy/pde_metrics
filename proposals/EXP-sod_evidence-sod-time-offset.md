@@ -1,7 +1,7 @@
 ---
 type: EXP
 kind: benchmark problem
-related: ["metrics/shock_set_distance", "metrics/shock_mask_overlap", "docs/ideas/shock_geometry/shock_front_error.md"]
+related: ["metrics/shock_set_distance", "metrics/shock_mask_overlap", "metrics/shock_set_hausdorff", "metrics/shock_set_hausdorff95", "metrics/shock_set_masd", "metrics/shock_set_baddeley_delta", "docs/ideas/shock_geometry/shock_front_error.md"]
 seen_in: "agent's own idea, built on the closed form in fmeval/data/analytic.py (Toro 2009, Sect. 4.5, eqs. 4.55-4.59)"
 doi: "none"
 found_by: "sod_evidence, 2026-10-23"

@@ -1,7 +1,7 @@
 {
   "counts": {
     "degradations": 25,
-    "metrics": 33,
+    "metrics": 38,
     "reviewed": 0,
     "with_measurements": 27
   },
@@ -15031,20 +15031,20 @@
         {
           "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
           "dataset": "synthetic_ensemble",
-          "note": "scores the member mean",
+          "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "its dispersion axes leave the member mean, the field this metric reads, unchanged by construction, and its bias axis moves every point of the candidate's diagram by the offset, a response persistence_wasserstein's tests pin exactly",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
           "dataset": "sod_shock_tube",
           "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "Sod's exact density never rises along the tube, so its diagram is one point, born at the minimum, and the distance only compares two minima",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
@@ -15079,6 +15079,129 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Bottleneck distance between the persistence diagrams of the reference and the candidate: how far the levels at which the field's connected pieces and loops appear and vanish have to move to match, wherever in the domain those features sit."
+    },
+    {
+      "card": "metrics/persistence_wasserstein/card.md",
+      "category": "topological",
+      "declared": {
+        "arity": "pairwise",
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              [
+                "birth",
+                "field"
+              ],
+              [
+                "death",
+                "field"
+              ],
+              [
+                "dimension",
+                ""
+              ]
+            ],
+            "kind": "points",
+            "name": "persistence_wasserstein",
+            "one_field": true,
+            "scales": null,
+            "style": "line"
+          }
+        ],
+        "cost": "expensive",
+        "differentiable": false,
+        "fields": [
+          "density",
+          "vorticity"
+        ],
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "mean",
+        "requires_periodic": false,
+        "symmetric": true,
+        "target": null,
+        "units": "field"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "its dispersion axes leave the member mean, the field this metric reads, unchanged by construction, and its bias axis moves every point of the candidate's diagram by the offset, a response test_metric.py pins exactly",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": "Sod's exact density never rises along the tube, so its diagram is one point, born at the minimum, and the distance only compares two minima",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        }
+      ],
+      "kind": "metric",
+      "math": {
+        "complexity": "measured, not derived: 0.2 to 3 s per comparison on a 128 x 128 vorticity field and 5 to 25 s on 256 x 256",
+        "resolution_dependent": true,
+        "scale_dependent": true,
+        "triangle_inequality": true
+      },
+      "name": "persistence_wasserstein",
+      "other_evidence": [],
+      "output": {
+        "description": "The sum over homology dimensions of the 1-Wasserstein distance, with the L-infinity ground norm, between the two fields' sublevel-set persistence diagrams, in the field's own units.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/persistence_wasserstein",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "1-Wasserstein distance between the persistence diagrams of the reference and the candidate: the summed change of level needed to match every connected piece and loop of one field to the other's, wherever in the domain those features sit."
     },
     {
       "card": "metrics/rank_histogram/card.md",
@@ -16575,7 +16698,35 @@
       "category": "geometric",
       "declared": {
         "arity": "pairwise",
-        "companions": [],
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              [
+                "x",
+                "cells"
+              ],
+              [
+                "pressure",
+                "field"
+              ]
+            ],
+            "kind": "points",
+            "name": "shock_mask_overlap",
+            "one_field": true,
+            "scales": null,
+            "style": "line"
+          },
+          {
+            "analysed": null,
+            "coordinate": null,
+            "kind": "field",
+            "name": "profile",
+            "one_field": true,
+            "scales": null,
+            "style": "line"
+          }
+        ],
         "cost": "cheap",
         "differentiable": false,
         "fields": [
@@ -16979,11 +17130,166 @@
       "summary": "Dice coefficient of the shocks detected in the reference and in the candidate pressure: the number of shocked cells the two fields share, over the mean number each has."
     },
     {
+      "card": "metrics/shock_set_baddeley_delta/card.md",
+      "category": "geometric",
+      "declared": {
+        "arity": "pairwise",
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              [
+                "x",
+                "cells"
+              ],
+              [
+                "pressure",
+                "field"
+              ]
+            ],
+            "kind": "points",
+            "name": "shock_set_baddeley_delta",
+            "one_field": true,
+            "scales": null,
+            "style": "line"
+          },
+          {
+            "analysed": null,
+            "coordinate": null,
+            "kind": "field",
+            "name": "profile",
+            "one_field": true,
+            "scales": null,
+            "style": "line"
+          }
+        ],
+        "cost": "cheap",
+        "differentiable": false,
+        "fields": [
+          "pressure"
+        ],
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "mean",
+        "requires_periodic": false,
+        "symmetric": true,
+        "target": null,
+        "units": "length"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        }
+      ],
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N)",
+        "resolution_dependent": true,
+        "scale_dependent": false,
+        "triangle_inequality": true
+      },
+      "name": "shock_set_baddeley_delta",
+      "other_evidence": [],
+      "output": {
+        "description": "Baddeley's Delta with p = 2 and no cutoff between the two sets of shocked cells, in the units of the grid spacing; zero when the sets coincide or both are empty, and the length of the domain's diagonal when only one field has a shock.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/shock_set_baddeley_delta",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Baddeley's Delta between the shocks detected in the reference and in the candidate pressure: the root mean square, over every cell, of the difference between the two fields' distances to their nearest shocked cell."
+    },
+    {
       "card": "metrics/shock_set_distance/card.md",
       "category": "geometric",
       "declared": {
         "arity": "pairwise",
-        "companions": [],
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              [
+                "x",
+                "cells"
+              ],
+              [
+                "pressure",
+                "field"
+              ]
+            ],
+            "kind": "points",
+            "name": "shock_set_distance",
+            "one_field": true,
+            "scales": null,
+            "style": "line"
+          },
+          {
+            "analysed": null,
+            "coordinate": null,
+            "kind": "field",
+            "name": "profile",
+            "one_field": true,
+            "scales": null,
+            "style": "line"
+          }
+        ],
         "cost": "cheap",
         "differentiable": false,
         "fields": [
@@ -17388,6 +17694,387 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Average distance between the shocks detected in the reference and in the candidate pressure, each shocked cell measured to the nearest shocked cell of the other field."
+    },
+    {
+      "card": "metrics/shock_set_hausdorff/card.md",
+      "category": "geometric",
+      "declared": {
+        "arity": "pairwise",
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              [
+                "x",
+                "cells"
+              ],
+              [
+                "pressure",
+                "field"
+              ]
+            ],
+            "kind": "points",
+            "name": "shock_set_hausdorff",
+            "one_field": true,
+            "scales": null,
+            "style": "line"
+          },
+          {
+            "analysed": null,
+            "coordinate": null,
+            "kind": "field",
+            "name": "profile",
+            "one_field": true,
+            "scales": null,
+            "style": "line"
+          }
+        ],
+        "cost": "cheap",
+        "differentiable": false,
+        "fields": [
+          "pressure"
+        ],
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "mean",
+        "requires_periodic": false,
+        "symmetric": true,
+        "target": null,
+        "units": "length"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        }
+      ],
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N)",
+        "resolution_dependent": true,
+        "scale_dependent": false,
+        "triangle_inequality": true
+      },
+      "name": "shock_set_hausdorff",
+      "other_evidence": [],
+      "output": {
+        "description": "The larger of the two directed Hausdorff distances between the two sets of shocked cells, in the units of the grid spacing; zero when the sets coincide or both are empty, and the length of the domain's diagonal when only one field has a shock.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/shock_set_hausdorff",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Hausdorff distance between the shocks detected in the reference and in the candidate pressure: the largest distance from any shocked cell of either field to the nearest shocked cell of the other."
+    },
+    {
+      "card": "metrics/shock_set_hausdorff95/card.md",
+      "category": "geometric",
+      "declared": {
+        "arity": "pairwise",
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              [
+                "x",
+                "cells"
+              ],
+              [
+                "pressure",
+                "field"
+              ]
+            ],
+            "kind": "points",
+            "name": "shock_set_hausdorff95",
+            "one_field": true,
+            "scales": null,
+            "style": "line"
+          },
+          {
+            "analysed": null,
+            "coordinate": null,
+            "kind": "field",
+            "name": "profile",
+            "one_field": true,
+            "scales": null,
+            "style": "line"
+          }
+        ],
+        "cost": "cheap",
+        "differentiable": false,
+        "fields": [
+          "pressure"
+        ],
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "mean",
+        "requires_periodic": false,
+        "symmetric": true,
+        "target": null,
+        "units": "length"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        }
+      ],
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N)",
+        "resolution_dependent": true,
+        "scale_dependent": false,
+        "triangle_inequality": false
+      },
+      "name": "shock_set_hausdorff95",
+      "other_evidence": [],
+      "output": {
+        "description": "The larger of the two directed 95th percentiles of the nearest-cell distances between the two sets of shocked cells, in the units of the grid spacing; zero when the sets coincide or both are empty, and the length of the domain's diagonal when only one field has a shock.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/shock_set_hausdorff95",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "95th-percentile Hausdorff distance between the shocks detected in the reference and in the candidate pressure: the larger of the two fields' 95th percentiles of distance from a shocked cell to the other field's nearest one."
+    },
+    {
+      "card": "metrics/shock_set_masd/card.md",
+      "category": "geometric",
+      "declared": {
+        "arity": "pairwise",
+        "companions": [
+          {
+            "analysed": null,
+            "coordinate": [
+              [
+                "x",
+                "cells"
+              ],
+              [
+                "pressure",
+                "field"
+              ]
+            ],
+            "kind": "points",
+            "name": "shock_set_masd",
+            "one_field": true,
+            "scales": null,
+            "style": "line"
+          },
+          {
+            "analysed": null,
+            "coordinate": null,
+            "kind": "field",
+            "name": "profile",
+            "one_field": true,
+            "scales": null,
+            "style": "line"
+          }
+        ],
+        "cost": "cheap",
+        "differentiable": false,
+        "fields": [
+          "pressure"
+        ],
+        "higher_is_better": false,
+        "measures": "error",
+        "reduction": "mean",
+        "requires_periodic": false,
+        "symmetric": true,
+        "target": null,
+        "units": "length"
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "experiments": [
+        {
+          "claim": "developed flow",
+          "dataset": "kinet_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
+          "dataset": "kinet_re1e6",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
+          "dataset": "synthetic_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
+          "dataset": "sod_shock_tube",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded",
+          "dataset": "forecast_re5e4",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        }
+      ],
+      "kind": "metric",
+      "math": {
+        "complexity": "O(N)",
+        "resolution_dependent": true,
+        "scale_dependent": false,
+        "triangle_inequality": false
+      },
+      "name": "shock_set_masd",
+      "other_evidence": [],
+      "output": {
+        "description": "The mean of the two directed average nearest-cell distances between the two sets of shocked cells, in the units of the grid spacing; zero when the sets coincide or both are empty, and the length of the domain's diagonal when only one field has a shock.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "metrics/shock_set_masd",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Mean average surface distance between the shocks detected in the reference and in the candidate pressure: the mean of the two fields' average distances from a shocked cell to the other field's nearest one."
     },
     {
       "card": "metrics/spectral_energy_flux/card.md",

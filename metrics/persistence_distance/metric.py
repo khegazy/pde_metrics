@@ -15,6 +15,8 @@ Betti and Euler-characteristic curves are read off the same diagram by :func:`be
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import gudhi
 import numpy as np
 from numpy.typing import NDArray
@@ -74,8 +76,41 @@ def persistence_distance(reference: NDArray[np.floating], candidate: NDArray[np.
     Raises:
         ValueError: If the shapes differ, or a field is not one finite channel.
     """
+    # Cohen-Steiner et al. (2005), Sect. 3.1: d_B = inf over bijections of the largest
+    # L-infinity displacement, the diagonal free to absorb points. Skraba & Turner (2020),
+    # Eq. 1: the supremum over dimensions of the per-dimension distances.
+    return float(max(diagram_distances(reference, candidate, ctx=ctx,
+                                       distance=gudhi.bottleneck_distance)))
+
+
+def diagram_distances(reference: NDArray[np.floating], candidate: NDArray[np.floating], *,
+                      ctx: FieldContext,
+                      distance: Callable[[NDArray, NDArray], float]) -> list[float]:
+    """One distance per homology dimension 0 .. n between the two fields' diagrams.
+
+    The step every distance between persistence diagrams shares: the reference's diagram is
+    computed once per frame and kept in ``ctx.cache``, the candidate's is read from
+    :data:`~fmeval.context.COMPANION_KEY` when the pipeline computed it, and each dimension's
+    (birth, death) points are matched on their own (Skraba & Turner 2020, arXiv:2006.16824v7,
+    Definition 2.5 and Eq. 1). Two diagrams equal as multisets are at distance exactly 0 by the
+    identity matching, so ``distance`` is not called for them. Otherwise the two diagrams are
+    handed to ``distance`` in an order fixed by their contents, not by which field is the
+    reference, so an approximate ``distance`` still returns the same number both ways.
+
+    Args:
+        reference: The trusted field, shape ``(1, *spatial)``.
+        candidate: The field being scored, same shape and grid.
+        ctx: The pipeline's context, as :func:`persistence_distance` takes it.
+        distance: The distance between two ``(n, 2)`` arrays of (birth, death) points.
+
+    Returns:
+        The distances in dimensions 0 to the number of spatial axes, in order.
+
+    Raises:
+        ValueError: If the shapes differ, or a field is not one finite channel.
+    """
     if reference.shape != candidate.shape:
-        raise ValueError(f"persistence_distance needs matching shapes, got {reference.shape} "
+        raise ValueError(f"persistence diagrams need matching shapes, got {reference.shape} "
                          f"and {candidate.shape}")
     if REFERENCE_DIAGRAM not in ctx.cache:
         ctx.cache[REFERENCE_DIAGRAM] = persistence_diagram(reference, ctx=ctx)
@@ -84,13 +119,15 @@ def persistence_distance(reference: NDArray[np.floating], candidate: NDArray[np.
               else persistence_diagram(candidate, ctx=ctx))
     distances = []
     for k in range(reference.ndim):          # homology dimensions 0 .. n_spatial
-        a, b = first[first[:, 2] == k, :2], second[second[:, 2] == k, :2]
-        same = a.shape == b.shape and np.array_equal(a[np.lexsort(a.T)], b[np.lexsort(b.T)])
-        # Cohen-Steiner et al. (2005), Sect. 3.1: d_B = inf over bijections of the largest
-        # L-infinity displacement, the diagonal free to absorb points.
-        distances.append(0.0 if same else gudhi.bottleneck_distance(a, b))
-    # Skraba & Turner (2020), Eq. 1: the supremum over dimensions of the per-dimension distances.
-    return float(max(distances))
+        a, b = (d[d[:, 2] == k, :2] for d in (first, second))
+        a, b = a[np.lexsort(a.T)], b[np.lexsort(b.T)]
+        if a.shape == b.shape and np.array_equal(a, b):
+            distances.append(0.0)
+            continue
+        # A canonical order of the two sorted diagrams: by size, then by their contents.
+        swap = (len(a), a.tobytes()) > (len(b), b.tobytes())
+        distances.append(float(distance(*((b, a) if swap else (a, b)))))
+    return distances
 
 
 @companion(of="persistence_distance", kind="points",

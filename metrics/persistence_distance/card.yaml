@@ -32,4 +32,7 @@ math:
 references: [bleile2022, cohensteiner2005, cohensteiner2007, gudhibottleneck, gudhicubical,
              martinez2026, muszynski2019, skraba2020, smith2024, tierny2018]
 
+not_run:
+  sod_shock_tube: Sod's exact density never rises along the tube, so its diagram is one point, born at the minimum, and the distance only compares two minima
+  synthetic_ensemble: its dispersion axes leave the member mean, the field this metric reads, unchanged by construction, and its bias axis moves every point of the candidate's diagram by the offset, a response persistence_wasserstein's tests pin exactly
 review: null

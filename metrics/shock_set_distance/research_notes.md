@@ -142,3 +142,18 @@ The reviewer raised 14 critiques against commit 2469846 on #22 and audited the b
   2. Check that the detector never wraps, and that `requires_periodic=False` is correct.
   3. Check that every number in the Results readings is in `_generated/fingerprint.json` or in the tables.
 - **Untested setting.** Only the one-dimensional Sod tube with one shock per field is evidenced. Many shocklets in two or three dimensions are untested (card, Limitations).
+
+## Round of 2026-11-04 (task `metrics-topology-shocks`)
+
+- The card gained `### How its field reports it` for its three fields: shock detection (Schaal &
+  Springel 2015, Sect. 3 validation, read in the arXiv HTML), medical segmentation (Metrics
+  Reloaded's code and medpy's code read; the paper's empty-set rule is general, with no both-empty
+  rule) and spatial forecast verification (Gilleland et al. 2009, Ahijevych et al. 2009,
+  Gilleland 2011 and Roberts & Lean 2008, abstracts only through Crossref; the AMS pages refused
+  automated fetches).
+- Four siblings were built: `shock_set_hausdorff`, `shock_set_hausdorff95`, `shock_set_masd`,
+  `shock_set_baddeley_delta`; the MTR was narrowed to the average distance and medpy's pooled HD95.
+  The MASD formula, open in this file's earlier record, is now read from the Metrics Reloaded code.
+- The fractions skill score, critical success index and equitable threat score were not built:
+  degenerate on one one-dimensional shock (critique finding 2, reasoning). A Sedov-Taylor blast
+  wave was added to `proposals/EXP-shock_set_distance-2d-shock-dataset.md`.

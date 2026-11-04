@@ -1,0 +1,32 @@
+schema_version: 1
+
+name: shock_set_baddeley_delta
+kind: metric
+
+# "Where features are, and what shape they have": the metric finds the shocks in each field
+# and measures how far apart they lie, never comparing values cell by cell.
+category: geometric
+
+summary: >-
+  Baddeley's Delta between the shocks detected in the reference and in the candidate pressure: the root mean square, over every cell, of the difference between the two fields' distances to their nearest shocked cell.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    Baddeley's Delta with p = 2 and no cutoff between the two sets of shocked cells, in the units of the grid spacing; zero when the sets coincide or both are empty, and the length of the domain's diagonal when only one field has a shock.
+  bounds:
+    lower: 0.0
+    upper: null    # the diagonal of the domain, which depends on the grid
+
+math:
+  triangle_inequality: true    # Baddeley's Delta is a metric on non-empty sets (spatstatdelta)
+  # The detector reads pressure ratios, so scaling both fields by a positive constant flags the
+  # same cells and leaves the distance unchanged (issues/122 for a non-positive constant).
+  scale_dependent: false
+  # Which cells are flagged, and the width of a flagged shock, depend on the grid.
+  resolution_dependent: true
+  complexity: "O(N)"    # one stencil pass and two exact Euclidean distance transforms
+references: [schaal2015, baddeley1992, spatstatdelta, spatialvx, gilleland2011, gilleland2009, ahijevych2009, maierhein2024]
+review: null

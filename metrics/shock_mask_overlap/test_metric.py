@@ -14,10 +14,10 @@ import numpy as np
 import pytest
 
 from fmeval.data.analytic import SodShockTube
-from metrics.shock_set_distance.metric import shock_mask
+from metrics.shock_set_distance.metric import REFERENCE_MASKS, shock_mask
 from tests.conftest import make_ctx
 
-from .metric import REFERENCE_MASKS, shock_mask_overlap
+from .metric import shock_mask_overlap
 
 #: A pressure step on eight cells, high on the left as in Sod's tube. Its ratio of 10 exceeds
 #: the detector's 1.805, so cells 3 and 4, on either side of the jump, are flagged.

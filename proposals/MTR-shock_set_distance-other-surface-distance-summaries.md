@@ -1,60 +1,54 @@
 ---
 type: MTR
 kind: variant of metrics/shock_set_distance
-related: ["metrics/shock_set_distance"]
-seen_in: "Taha & Hanbury 2015, BMC Medical Imaging 15, 29"
+related: ["metrics/shock_set_distance", "metrics/shock_set_masd", "metrics/shock_set_hausdorff95"]
+seen_in: "Taha & Hanbury 2015, BMC Medical Imaging 15, 29, Eqs. 50-51"
 doi: "10.1186/s12880-015-0068-x"
-found_by: "shock_set_distance, 2026-10-30"
+found_by: "shock_set_distance, 2026-10-30; narrowed by metrics-topology-shocks, 2026-11-04"
 ---
 
-# MTR: Hausdorff, quantile-Hausdorff, AVD and MASD summaries of the same shock-set distances
+# MTR: The average distance (AVD) summary of the same shock-set distances
+
+The Hausdorff distance, its 95th percentile and the mean average surface distance are built as
+`shock_set_hausdorff`, `shock_set_hausdorff95` and `shock_set_masd` (2026-11-04), beside
+Baddeley's Delta, `shock_set_baddeley_delta`. What remains is the average distance of Taha &
+Hanbury and medpy's pooled form of HD95.
 
 ## What it measures
 
 The same nearest-cell distances between the shock sets of two pressure fields that
-`shock_set_distance` computes (`surface_distances`), summarised differently: by the worst
-distance, by a high quantile of the distances, or by the two directed means kept apart.
+`shock_set_distance` computes (`surface_distances`), summarised by the larger of the two directed
+means: the worse of "how far are the reference's shocks from the candidate's, on average" and the
+reverse.
 
 ## Definition
 
 With $d(A, B) = \frac{1}{|A|}\sum_{a \in A} \min_{b \in B} \lVert a - b \rVert$ the directed
-average distance (Taha & Hanbury 2015, Eq. 51) and $h(A, B) = \max_{a} \min_{b} \lVert a-b\rVert$
-the directed Hausdorff distance (Eq. 49):
-
-- Hausdorff distance, $\max(h(A,B), h(B,A))$ (Eq. 48); its quantile form replaces the maximum
-  by the $q$-th quantile of the distances (text after Eq. 49; the 95th percentile is the common
-  choice, Maier-Hein et al. 2024, Tab. SN 2.2, "HD95").
-- Average distance AVD, $\max(d(A,B), d(B,A))$ (Eq. 50), "stable and less sensitive to outliers
-  than the HD" in Taha and Hanbury's words.
-- Mean average surface distance MASD, $\frac{1}{2}(d(A,B) + d(B,A))$, the default boundary
-  metric recommended by Maier-Hein et al. (2024, Suppl. Note 2.3) over ASSD; its formula is
-  from their cheat sheet, which I did not see, so this form is my reading of the name and
-  should be checked against Benes and Zitova (2015) before building.
+average distance (Taha & Hanbury 2015, Eq. 51), the average distance is
+$\mathrm{AVD}(A, B) = \max(d(A,B), d(B,A))$ (Eq. 50), "stable and less sensitive to outliers
+than the HD" in their words. A second variant is medpy's `hd95`, the 95th percentile of both
+directions' distances pooled, which differs from `shock_set_hausdorff95`'s per-direction form
+(6.5 against 6.7 on that bundle's worked example).
 
 ## Relation to existing work
 
-`shock_set_distance` registers the pooled average (ASSD). For one shock in each field all of
-these agree. They differ when the detector flags cells away from the shock: the pooled ASSD
-weights each direction by its number of points, so spurious detections in the candidate dominate
-it; MASD weighs the two directions equally; HD and HD95 report the worst false detection. None
-is in the catalog or `docs/ideas/`; the deleted idea page named HD95 and ASSD.
+AVD is `shock_set_masd` with the maximum of the two directed means in place of their mean. No
+field read so far reports AVD as its standard; Taha & Hanbury list it among their twenty metrics.
 
 ## How it could be tested
 
-On `sod_shock_tube` with `translate_x` (for a sharp step moved $s \ge 1$ cells, AVD and MASD give
-$s - 1/2$ cells like ASSD, and the Hausdorff forms give $s$ cells; my derivation) and
-`additive_noise`, where the false detections
-separate them: HD would jump to the farthest false detection at the first noisy strength.
+On `sod_shock_tube` with `translate_x` (for a sharp step moved $s \ge 1$ cells, AVD gives
+$s - 1/2$ cells like ASSD and MASD; my derivation) and `additive_noise`, where the false
+detections make the two directed means differ.
 
 ## Why it is helpful
 
-The choice among them decides how much a scattering of false shocks costs relative to a
-misplaced true one, which is the behaviour that matters on shocklet-populated data. Each is a
-sibling bundle that imports `surface_distances` and adds a few lines.
+It is the worst-direction form of the average, so it charges a candidate with false shocks and one
+missing a true shock alike, where MASD averages the two. Each variant is a sibling bundle of a few
+lines on `shock_set_distance`'s `shock_set_score`, `set_distance` and `surface_distances`.
 
 ## References
 
-- Taha, A. A. & Hanbury, A. (2015). *BMC Medical Imaging* 15, 29, Eqs. 48-51.
+- Taha, A. A. & Hanbury, A. (2015). *BMC Medical Imaging* 15, 29, Eqs. 50-51.
   <https://doi.org/10.1186/s12880-015-0068-x> (full text read, PMC4533825).
-- Maier-Hein, L. et al. (2024). Metrics reloaded. *Nature Methods* 21, 195-212, Suppl. Note 2.3
-  and Tab. SN 2.2. <https://doi.org/10.1038/s41592-023-02151-z> (arXiv HTML read).
+- medpy, `medpy/metric/binary.py`, `hd95` (source read 2026-11-04).

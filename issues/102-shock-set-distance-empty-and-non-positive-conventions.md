@@ -49,6 +49,26 @@ NaN on one empty set and reporting the fraction of frames with a missed or inven
 separate number, which would keep the distance a distance. Either changes the registered
 number of every row where a set is empty, so it is a decision for a person.
 
+## The standard each convention would need
+
+- **Both empty and one empty.** Metrics Reloaded's paper gives a general rule, the worst value,
+  naming the image diagonal for a distance (Suppl. Note 2.3), and no both-empty rule; its code
+  returns NaN for every boundary distance when either set is empty and warns that the value must
+  be set to the worst case when aggregating (`measured_distance` in
+  `MetricsReloaded/metrics/pairwise_measures.py`, read 2026-11-04). medpy's distances raise an
+  error on an empty mask. The weather-verification package SpatialVx returns 0 for two empty
+  fields and the larger grid dimension for one (`distob` in `LocMeasures.R`, read 2026-11-04),
+  close to this metric's conventions. So the per-case value is a convention everywhere, and a
+  published rule for aggregating it in a model-selection score is what would settle it.
+- **Non-positive pressure.** A thermodynamic statement that a ratio detector is undefined there
+  is the standard; what remains open is whether to report the frame as NaN plus a separate
+  admissibility count (issue 101 for the declaration that would allow it).
+
+Since 2026-11-04 the conventions live in one function, `set_distance` in
+`metrics/shock_set_distance/metric.py`, shared by `shock_set_hausdorff`,
+`shock_set_hausdorff95`, `shock_set_masd` and `shock_set_baddeley_delta`; a change moves all five
+bundles together.
+
 ## Related
 
 Written with the first shock metric, `shock_set_distance`, 2026-10-30. The detector it
