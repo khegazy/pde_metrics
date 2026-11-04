@@ -12,6 +12,10 @@ Order of operations within a frame:
 4. Apply every ladder severity level.
 5. Evaluate every metric against every variant.
 
+On a dataset of real forecasts the trajectory holds the targets and a second one, ``prediction``,
+the prediction paired with each frame; the prediction is remapped as its target is and joins the
+variants as :data:`fmeval.ladder.FORECAST_LEVEL`, in place of a damaged field.
+
 Remapping *before* degrading is deliberate. It keeps severity units meaningful: a one-cell
 translation means one analysis-grid cell whatever the analysis resolution, rather than
 silently becoming half a cell when the grid is halved. It also means derived fields are
@@ -22,7 +26,7 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from dataclasses import field as dc_field
 from typing import Any
@@ -35,7 +39,13 @@ from metrics.registry import MetricSpec
 from .calibration import Calibration, calibrate
 from .context import COMPANION_KEY, FieldContext, derive_rng, fluctuation_rms
 from .data.base import Frame, TimeSelection, Trajectory
-from .ladder import SeverityLevel, SeverityLevelApplication, apply_severity_level
+from .ladder import (
+    FORECAST_LEVEL,
+    SeverityLevel,
+    SeverityLevelApplication,
+    apply_prediction,
+    apply_severity_level,
+)
 from .remap import DEFAULT_METHOD, RemapMethod, coarsen_factor, remap_frame
 
 log = logging.getLogger(__name__)
@@ -54,6 +64,8 @@ RESULT_DTYPES: dict[str, str] = {
     # position in the trajectory
     "frame_index": "int32",
     "time": "float64",
+    "lead_step": "Int32",            # a forecast's prediction step: solver steps since its start;
+    "lead_time": "float64",          # and the physical time since its start. Null off a forecast
     # what was measured, on what
     "field": "category",
     "analysis_grid": "int32",
@@ -165,18 +177,19 @@ def _emit(
     frame: Frame,
     severity_level: SeverityLevel,
     applied: SeverityLevelApplication,
-    run_columns: dict[str, Any],
+    frame_columns: dict[str, Any],
     value: Any,
     wall: float,
     n_members: int | None = None,
 ) -> dict[str, Any]:
     """The result row of one metric evaluation: one number per (frame, field, metric, variant).
 
-    ``run_columns`` are the columns every row of the run shares; column order is fixed later by
+    ``frame_columns`` are the columns every row of the frame shares: the run's, and those the
+    reader states per frame (``Trajectory.frame_columns``). Column order is fixed later by
     :data:`RESULT_DTYPES`, not here.
     """
     return {
-        **run_columns,
+        **frame_columns,
         "frame_index": frame.index,
         "time": frame.time,
         "field": field,
@@ -234,6 +247,7 @@ def run(
     remap_method: RemapMethod = DEFAULT_METHOD,
     maps: MapRequest | None = None,
     calibration_frames: int = 5,
+    prediction: Trajectory | None = None,
 ) -> PipelineResult:
     """Evaluate every metric against every severity level, over the selected frames.
 
@@ -250,15 +264,40 @@ def run(
         maps: Which pointwise maps to retain.
         calibration_frames: How many frames to average the per-field spectral calibration
             over. Measured once and held fixed for the whole run; see :mod:`fmeval.calibration`.
+        prediction: The prediction paired with every frame of ``trajectory``, on the same frame
+            axis, for a dataset of real forecasts (:mod:`fmeval.data.forecast`). Each frame's
+            prediction is scored against it as one more variant, :data:`FORECAST_LEVEL`.
 
     Returns:
         A :class:`PipelineResult` whose ``rows`` follow :data:`RESULT_DTYPES` exactly.
+
+    Raises:
+        ValueError: If the selection is empty, the selected frames land on more than one
+            analysis grid, or ``prediction`` does not share the trajectory's frame axis.
     """
     selection = selection or TimeSelection()
     maps = maps or MapRequest()
     indices = selection.resolve(len(trajectory))
     if len(indices) == 0:
         raise ValueError("time selection is empty; check dataset.time.start / stop")
+    if prediction is not None and not np.array_equal(prediction.times, trajectory.times):
+        raise ValueError("the prediction and its targets do not share one frame axis")
+
+    def to_analysis(frame: Frame) -> Frame:
+        """``frame`` on the analysis grid, coarsened by its own factor: a reader may hold runs
+        at several resolutions (``Trajectory.grid_at``)."""
+        return remap_frame(frame, coarsen_factor(frame.grid, analysis_resolution),
+                           method=remap_method)
+
+    # One analysis grid per run: every statistic pools frames, and a number computed on 64^2
+    # cells pooled with one computed on 256^2 would be neither.
+    shapes = sorted({grid.coarsened(coarsen_factor(grid, analysis_resolution)).shape
+                     for grid in {trajectory.grid_at(int(i)) for i in indices}})
+    if len(shapes) > 1:
+        raise ValueError(
+            f"the selected frames lie on grids that remap to {shapes} cells, not to one grid. "
+            f"Set analysis_grid.resolution to compare them on a common grid (at most "
+            f"{shapes[0][0]}), or select frames of one resolution.")
 
     if not trajectory.grid.is_periodic:
         # A metric built on a Fourier transform or a wrap-around difference would read the
@@ -277,8 +316,7 @@ def run(
                         "were produced for them", ", ".join(periodic_only), dataset.name,
                         trajectory.grid.boundary)
 
-    factor = coarsen_factor(trajectory.grid, analysis_resolution)
-    grid_size = trajectory.grid.shape[0] // factor
+    grid_size = shapes[0][0]
     keep_frames = _map_frames(maps, indices)
 
     expensive = [m.name for m in metrics if m.cost == "expensive"]
@@ -288,21 +326,19 @@ def run(
             len(indices), expensive,
         )
 
-    calibration = _measure_calibration(
-        trajectory, fields, indices, factor, remap_method, calibration_frames
-    )
+    calibration = _measure_calibration(trajectory, fields, indices, to_analysis,
+                                       calibration_frames)
 
     # A per_unit_time level is a rate times the time since the trajectory's first frame.
     time_origin = float(trajectory.times[0])
-    probe = remap_frame(trajectory.frame(int(indices[0]), fields), factor,
-                        method=remap_method)
+    probe = to_analysis(trajectory.frame(int(indices[0]), fields))
     severity_levels = _runnable_levels(
         severity_levels, probe, fields, seed=seed, calibration=calibration,
         analysis_grid=grid_size, times=trajectory.times[indices], time_origin=time_origin,
     )
 
     run_columns = {**dataset.row(), "analysis_grid": grid_size, "remap_op": remap_method,
-                   "seed": seed}
+                   "seed": seed, "lead_step": None, "lead_time": np.nan}
     rows: list[dict[str, Any]] = []
     curve_rows: list[dict[str, Any]] = []
     stored_maps: dict[str, np.ndarray] = {}
@@ -312,10 +348,11 @@ def run(
     for index in indices:
         t_read = time.perf_counter()
         frame = trajectory.frame(int(index), fields)
+        predicted = None if prediction is None else prediction.frame(int(index), fields)
         t_io += time.perf_counter() - t_read
 
         t0 = time.perf_counter()
-        frame = remap_frame(frame, factor, method=remap_method)
+        frame = to_analysis(frame)
         available = [f for f in fields if f in frame.fields]
         ref_rms = {name: fluctuation_rms(frame.fields[name]) for name in available}
         variants = {
@@ -328,7 +365,11 @@ def run(
             )
             for severity_level in severity_levels
         }
+        if predicted is not None:
+            variants[FORECAST_LEVEL.variant_label] = (
+                FORECAST_LEVEL, apply_prediction(frame, to_analysis(predicted), available))
         t_deg += time.perf_counter() - t0
+        frame_columns = {**run_columns, **trajectory.frame_columns(int(index))}
 
         for spec in metrics:
             if spec.arity == "ensemble" and not frame.has_members:
@@ -376,7 +417,7 @@ def run(
                     value = spec.fn(*args, **kwargs)
                     wall = time.perf_counter() - t1
                     t_metric += wall
-                    row = _emit(spec, field, frame, severity_level, applied, run_columns,
+                    row = _emit(spec, field, frame, severity_level, applied, frame_columns,
                                 value, wall, n_members=n_members)
                     rows.append(row)
                     if kind == "curve":
@@ -616,8 +657,7 @@ def _measure_calibration(
     trajectory: Trajectory,
     fields: Sequence[str],
     indices: np.ndarray,
-    factor: int,
-    remap_method: str,
+    to_analysis: Callable[[Frame], Frame],
     n_sample: int,
 ) -> Calibration:
     """Measure each field's spectral properties on the analysis grid, once.
@@ -631,8 +671,7 @@ def _measure_calibration(
 
     frames_by_field: dict[str, list[np.ndarray]] = {f: [] for f in fields}
     for index in chosen:
-        frame = remap_frame(trajectory.frame(int(index), fields), factor,
-                            method=remap_method)
+        frame = to_analysis(trajectory.frame(int(index), fields))
         for name, array in frame.fields.items():
             frames_by_field[name].append(array)
 

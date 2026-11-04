@@ -1,6 +1,7 @@
 # Shared by every config of the Re=5e4, Ma=0.1 D2Q9 simulation: the raw production trajectory,
-# its 101-frame development sibling, and the Well-format copy. Each of those states its name,
-# format and trajectory, and only what differs from this file.
+# its 101-frame development sibling, the Well-format copy, and the forecast pairs whose targets
+# are its frames. Each of those states its name, format and trajectory, and only what differs
+# from this file.
 #
 # A file whose name starts with `_` is a fragment inherited through a `defaults:` list, not a
 # dataset you can select.

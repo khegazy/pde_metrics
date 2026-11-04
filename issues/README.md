@@ -43,8 +43,8 @@ Designed, hooks in place, not built.
 
 | ID | Title | Priority |
 |---|---|---|
-| [010](010-forecast-pair-reader.md) | Read the real prediction/target pairs | **high** |
 | [011](011-cross-dataset-comparison.md) | Compare metrics across a Reynolds ladder | medium |
+| [126](126-forecast-runs-as-a-refinement-sequence.md) | The forecast runs at three resolutions are not yet a grid-refinement sequence: the finest is the reference itself, and the predictions' provenance is unrecorded | medium |
 | [013](013-remaining-intuition-figures.md) | Outlier, invariance, triangle-inequality figures | low |
 | [014](014-gradient-signal-criterion.md) | Gradient quality where L2 goes flat | medium |
 | [015](015-rotation-degradation.md) | Rotation, which must rotate vector components | low |

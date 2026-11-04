@@ -1,0 +1,49 @@
+# Real forecasts of the Re = 5e4 simulation: a prediction paired with its target at ten
+# prediction steps, from two starting times, in three runs at 256^2, 128^2 and 64^2. Read by
+# fmeval/data/forecast.py; see docs/datasets/reynolds_ladder_2d.md, "Forecast pairs".
+#
+# The prediction replaces the degradation ladder: evaluate.py scores each prediction against its
+# target and keeps only the anchor entry of the ladder (analysis.anchor), so the damage scale is
+# defined. Ensemble metrics are skipped, since each frame holds one prediction.
+#
+# WHO PRODUCED THE PREDICTIONS IS NOT RECORDED: the files carry no attributes, and the run names
+# do not say whether a trained model or a coarser solver made them. Nothing here assumes either.
+#
+# The three runs lie on different grids, and one evaluation pools its frames, so a run over all
+# three needs a common analysis grid, `analysis_grid.resolution=64`; without it the run stops
+# and says so. One run alone at its own resolution:
+# `dataset.reader.files=[F-906861_64/forecast_t0-0,F-906861_64/forecast_t0-5000]`.
+defaults:
+  - _re5e4_simulation
+  - _self_
+
+name: forecast_re5e4
+format: forecast_pairs
+trajectory: entropic_D2Q9
+path: ${paths.data}/results/${.trajectory}
+
+reader:
+  # <run>/forecast_t0-<start>, the solver step each forecast starts from. The two starts are at
+  # physical time 0 and 1.1276 in every run, to within the coarse runs' clock offsets of at most
+  # 3.4e-4 (docs/datasets/reynolds_ladder_2d.md).
+  files:
+    - F-906861_64/forecast_t0-0
+    - F-906861_64/forecast_t0-5000
+    - F-906861_64_Re_50k_from_256_to128/forecast_t0-0
+    - F-906861_64_Re_50k_from_256_to128/forecast_t0-2500
+    - F-906861_64_Re_50k_from_256_to_64/forecast_t0-0
+    - F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250
+  # The files do not record the domain. The 256^2 targets are frames of kinet_re5e4 (to 1.9e-9
+  # in density and 1.4e-8 in velocity, the largest difference over all 20), whose file declares
+  # a 256 x 256 domain (`discretization.spatial.length`), and the stored target vorticity of the
+  # coarse runs matches a spectral curl at spacing 256 / n.
+  length: [256.0, 256.0]
+
+# All 60 frames: ten prediction steps, two starts, three runs.
+time:
+  start: 0
+  reduction: 1
+
+notes: "Prediction/target pairs of the Re=5e4, Ma=0.1 D2Q9 entropic flow at ten prediction
+  steps from two starting times, in runs at 256^2, 128^2 and 64^2. Who produced the predictions
+  (a trained model or a coarser solver) is not recorded."

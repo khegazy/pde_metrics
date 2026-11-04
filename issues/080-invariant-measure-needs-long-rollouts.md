@@ -16,7 +16,7 @@ It needs long predicted trajectories, which no dataset supplies, and the Lyapuno
 
 ## What would unblock it
 
-Long rollouts ([010](010-forecast-pair-reader.md) is the first step), model access for the Lyapunov exponents, and a temporal experiment (see [the temporal ladder proposal](../proposals/EXP-orchestrator-20261023-temporal-ladder.md)).
+Long rollouts (the forecast pairs of `forecast_re5e4` reach ten prediction steps), model access for the Lyapunov exponents, and a temporal experiment (see [the temporal ladder proposal](../proposals/EXP-orchestrator-20261023-temporal-ladder.md)).
 
 ## Related
 

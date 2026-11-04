@@ -59,8 +59,9 @@ The reader already evaluates the solution at any time up to 0.2854; the candidat
 second evaluation per frame, which costs 0.3 ms per frame on 2048 cells (the measurement in
 the `fmeval/data/analytic.py` module docstring). It does not fit the current degradation
 interface, which receives one field and no closed form, so it needs either a
-dataset-specific operator with access to the trajectory or a paired-dataset reader (issue
-010, forecast-pair reader). A person must choose between those.
+dataset-specific operator with access to the trajectory or a reader that pairs each frame
+with a second one, as `fmeval/data/forecast.py` does for stored forecasts (the pipeline's
+`prediction` argument). A person must choose between those.
 
 ## References
 
