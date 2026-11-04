@@ -170,6 +170,14 @@ def normalisation(df: pd.DataFrame, *, anchor_label: str = MEAN_FIELD_LABEL,
     level is exactly zero. Per-figure min-max scaling is not usable either, because the figure would
     change whenever a severity level is added.
 
+    A metric with a target value is wrong on both sides of it, so its damage is read on its
+    distance from the target, ``q(v)`` of :func:`_oriented`, and is zero at the target:
+
+        D = q(v) / q(anchor)
+
+    ``span`` is then ``q(anchor)``, the median distance of the anchor rows, and ``value_clean``
+    and ``value_anchor`` stay in the metric's own units.
+
     Returns:
         One row per (dataset, metric, field) with ``value_clean``, ``value_anchor``,
         ``span``, ``anchor_source`` and ``degenerate``.
@@ -190,8 +198,13 @@ def normalisation(df: pd.DataFrame, *, anchor_label: str = MEAN_FIELD_LABEL,
     rows = []
     for key, g in df.groupby(GROUP_KEYS, observed=True):
         clean = float(g.loc[g["level"] == 0, "value"].median())    # NaN with no reference rows
-        high, source = _anchor(g, anchor_label, probe_labels)
-        span = high - clean
+        # A metric with a target value is scaled on its distance from the target
+        # (:func:`_oriented`), which is zero at the target: the span is the anchor's distance.
+        size = _value_or_distance(g).abs()
+        anchor, source = _anchor(g, size, anchor_label, probe_labels)
+        high = float(anchor["value"].median())
+        span = (high - clean if _target(g) is None
+                else float(size.loc[anchor.index].median()))
         # The scale is the LARGEST value anywhere in the group, not the median. The median is
         # defeated in exactly the case this guard exists for: a metric invariant to the
         # operator the anchor is built from returns round-off on the anchor, on the impostor
@@ -199,7 +212,7 @@ def normalisation(df: pd.DataFrame, *, anchor_label: str = MEAN_FIELD_LABEL,
         # round-off and the median collapses to round-off with them -- the guard then compares
         # noise against noise and passes, and the impostor reads as "worse than the anchor"
         # for a metric that cannot separate any of them.
-        scale = float(np.nanmax(np.abs(g["value"].to_numpy()))) or 1.0
+        scale = float(np.nanmax(size.to_numpy())) or 1.0
         rows.append(
             {
                 **dict(zip(GROUP_KEYS, key, strict=True)),
@@ -213,12 +226,15 @@ def normalisation(df: pd.DataFrame, *, anchor_label: str = MEAN_FIELD_LABEL,
     return pd.DataFrame(rows)
 
 
-def _anchor(g: pd.DataFrame, preferred: str,
-            probe_labels: frozenset[str] = PROBE_LABELS) -> tuple[float, str]:
-    """The anchor value of one group and where it came from."""
+def _anchor(g: pd.DataFrame, size: pd.Series, preferred: str,
+            probe_labels: frozenset[str] = PROBE_LABELS) -> tuple[pd.DataFrame, str]:
+    """The rows of one group that define its anchor, and where they came from.
+
+    ``size`` is each row's distance from the best value, ``|value|`` or a target metric's
+    distance from its target, and picks the worst row when nothing better is available.
+    """
     if preferred and (g["degradation"] == preferred).any():
-        sub = g[g["degradation"] == preferred]
-        return float(sub["value"].median()), preferred
+        return g[g["degradation"] == preferred], preferred
 
     # A run without its anchor entry falls back to the largest configured translation. That is
     # a different reference, not an estimate of the anchor, so the source is recorded and the
@@ -226,15 +242,14 @@ def _anchor(g: pd.DataFrame, preferred: str,
     for label in ("translate_x", "translate_subpixel", "translate_y"):
         sub = g[g["degradation"] == label]
         if not sub.empty:
-            top = sub.loc[sub["level"] == sub["level"].max()]
-            return float(top["value"].median()), f"{label}@max"
+            return sub.loc[sub["level"] == sub["level"].max()], f"{label}@max"
 
     # Otherwise fall back to the worst severity level of any ordinal axis, and say so.
     ordinal = g[~g["degradation"].isin(probe_labels)]
     if ordinal.empty:
-        return float("nan"), "none"
-    worst = ordinal.loc[ordinal["value"].abs().idxmax()]
-    return float(worst["value"]), f"{worst['degradation']}@max"
+        return g.iloc[:0], "none"
+    worst = size.loc[ordinal.index].idxmax()
+    return g.loc[[worst]], f"{g.at[worst, 'degradation']}@max"
 
 
 def add_damage(df: pd.DataFrame, norm: pd.DataFrame) -> pd.DataFrame:
@@ -245,17 +260,26 @@ def add_damage(df: pd.DataFrame, norm: pd.DataFrame) -> pd.DataFrame:
     single-field quantity drifts along the trajectory, and against the trajectory's median clean
     value that drift reads as damage, even on an operator that cannot change the quantity. A
     frame with no clean row is read against that median instead.
+
+    A metric with a target value has no drift to remove: its departure is its distance from the
+    target (:func:`_oriented`), and its damage is zero at the target, not at the clean value.
     """
     out = df.merge(norm[[*GROUP_KEYS, "value_clean", "span", "degenerate"]], on=GROUP_KEYS,
                    how="left")
     clean = _frame_clean(out).fillna(out["value_clean"])
+    departure = (out["value"] - clean).where(~_has_target(out), _value_or_distance(out))
     with np.errstate(invalid="ignore", divide="ignore"):
-        out["damage"] = (out["value"] - clean) / out["span"]
+        out["damage"] = departure / out["span"]
     out.loc[out["degenerate"], "damage"] = np.nan
     return out.drop(columns=["value_clean", "span", "degenerate"])
 
 
-def _oriented(values: pd.Series, sign: int, target: float | None) -> pd.Series:
+#: The largest distance from a target :func:`_oriented` assigns: a value of zero, or an
+#: infinite one, is as far from the target as a value can be.
+FURTHEST_FROM_TARGET: float = 1.0
+
+
+def _oriented(values: pd.Series, sign: int, target: float | np.ndarray | None) -> pd.Series:
     """``values`` on the scale every ordering statistic runs on, where larger is always worse.
 
     For an ordinary metric that is ``sign * values``, with ``sign`` from
@@ -265,21 +289,72 @@ def _oriented(values: pd.Series, sign: int, target: float | None) -> pd.Series:
 
     A ratio lives on a multiplicative scale: half the calibrated spread and twice it are
     equally wrong, and a difference from the target would call the second one four times
-    worse than the first. The log ratio makes them equal, which is the whole reason the
-    spread-to-skill literature reads this quantity multiplicatively.
+    worse than the first. The log change ``|ln(v / target)|`` makes them equal; it is the
+    symmetric measure of relative change (Tornqvist, Vartia & Vartia 1985, Am. Stat. 39(1):43-46).
+    The distance used is a bounded, increasing function of it,
 
-    Zero and negative values are real and reachable -- an ensemble collapsed onto its
-    mean has exactly no spread -- and a log cannot take them. They are the furthest thing
-    from calibrated there is, so they map to positive infinity rather than to NaN: a NaN
-    would drop the severity level from the rank correlation and quietly shrink the axis
-    it is meant to be the worst point of.
+        q(v) = |v - target| / (v + target) = tanh(|ln(v / target)| / 2),
+
+    since (x - 1) / (x + 1) = (e^u - 1) / (e^u + 1) = tanh(u / 2) for x = v / target = e^u. It
+    orders every value exactly as the log change does, so no rank statistic can tell the two
+    apart, and it is equally symmetric: ``q(target * x) = q(target / x)``.
+
+    It is bounded because zero is a real, reachable value -- an ensemble collapsed onto its mean
+    has no spread, a smoothed field has no extreme increments -- and the log change puts zero
+    infinitely far away. An infinite distance cannot be ranked against another (``inf - inf`` is
+    NaN), cannot be divided by to give a damage, and makes every finite miscalibration read as
+    no damage at all when it is the anchor. ``q`` gives zero and an infinite value
+    :data:`FURTHEST_FROM_TARGET`, the furthest point from calibration there is, and so does a
+    negative value, which a ratio does not take and which is ranked last rather than dropped.
+    NaN stays NaN. ``target`` must be positive (:func:`_target`).
     """
     if target is None:
         return sign * values
     v = values.to_numpy(dtype=float)
     with np.errstate(divide="ignore", invalid="ignore"):
-        out = np.abs(np.log(v / target))
-    return pd.Series(np.where(v > 0, out, np.inf), index=values.index)
+        distance = np.abs(v - target) / (v + target)
+    distance = np.where((v > 0) & np.isfinite(v), distance, FURTHEST_FROM_TARGET)
+    return pd.Series(np.where(np.isnan(v), np.nan, distance), index=values.index)
+
+
+def _target(g: pd.DataFrame) -> float | None:
+    """The target value one (dataset, metric, field) group declares, or None for an ordinary
+    metric.
+
+    Raises:
+        ValueError: If the group declares more than one target or a target that is not
+            positive, which the distance of :func:`_oriented` cannot be measured from.
+    """
+    if "target_value" not in g.columns:
+        return None
+    declared = g["target_value"].dropna().unique()
+    if len(declared) == 0:
+        return None
+    if len(declared) > 1 or not (np.isfinite(declared[0]) and declared[0] > 0):
+        raise ValueError(
+            f"target_value {list(declared)} for {g[GROUP_KEYS].iloc[0].to_dict()}: one finite "
+            "positive target per metric is required, since the distance from it is a ratio"
+        )
+    return float(declared[0])
+
+
+def _has_target(df: pd.DataFrame) -> pd.Series:
+    """Which rows a metric with a target value produced."""
+    if "target_value" not in df.columns:
+        return pd.Series(False, index=df.index)
+    return df["target_value"].notna()
+
+
+def _value_or_distance(df: pd.DataFrame) -> pd.Series:
+    """Each row's value, or, for a metric with a target value, its distance from the target
+    (:func:`_oriented`): the scale on which a metric's size and its damage are read."""
+    targeted = _has_target(df)
+    if not targeted.any():
+        return df["value"]
+    out = df["value"].astype(float)
+    out[targeted] = _oriented(df.loc[targeted, "value"], 1,
+                              df.loc[targeted, "target_value"].to_numpy(float))
+    return out
 
 
 def response_direction(df: pd.DataFrame) -> dict[tuple, int]:
@@ -384,10 +459,8 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
     # threshold levels fall back to each axis's own range, and passing it through would make
     # them meaningless in the other direction: a tenth of a round-off span is cleared by any
     # real response, so every family would read "first strength detected: level 1".
+    # A target-valued metric's span is already on the distance scale its statistics run on.
     spans = _anchor_by_group(norm, "span")
-    # The anchor itself, for a target-valued metric: its onset span must be measured on the same
-    # |log(value / target)| scale its ordering statistics run on, not in raw units.
-    highs = _anchor_by_group(norm, "value_anchor")
     rows = []
 
     # Severity levels that resolved to the same experiment as a milder one are not independent
@@ -405,8 +478,9 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
     # by the axis being ranked (see :func:`_is_round_off`). The scale is taken per frame for the
     # per-frame statistics because a metric's magnitude drifts along a trajectory by many orders
     # -- density's perturbation grows six -- and a whole-trajectory maximum would call early
-    # frames round-off.
-    magnitude = df.assign(_abs=df["value"].abs())
+    # frames round-off. A target-valued metric's magnitude is on its distance scale, as its
+    # ordering statistics are.
+    magnitude = df.assign(_abs=_value_or_distance(df).abs())
     frame_scales = magnitude.groupby([*GROUP_KEYS, "frame_index"], observed=True)["_abs"].max()
     group_scales = magnitude.groupby(GROUP_KEYS, observed=True)["_abs"].max()
     largest = _largest_responses(pd.concat([reference, ladder]), GROUP_KEYS, probe_labels)
@@ -421,9 +495,7 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
         is_probe = axis in probe_labels
         # The value a calibrated prediction attains, when the metric declares one; None for the
         # ordinary case, where the metric is an error and zero is best.
-        declared = g["target_value"].dropna().unique() if "target_value" in g.columns else []
-        first = float(declared[0]) if len(declared) else np.nan
-        target = first if np.isfinite(first) and first > 0 else None
+        target = _target(g)
         clean_rows = references.get(key, reference.iloc[:0])
         clean = float(clean_rows["value"].median())
         # Every ordering statistic below is computed on the oriented value (:func:`_oriented`),
@@ -432,13 +504,14 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
         # same frame times the degradation's measured sign (:func:`response_direction`): the
         # clean level is not a point of the trend, and a value that crosses its clean value
         # while moving steadily one way still follows the degradation. A target-valued metric
-        # keeps its distance from the target. The reported values stay in the metric's own units.
+        # keeps its distance from the target, so no sign enters; ``direction`` still records
+        # which way its value moved. The reported values stay in the metric's own units.
         base = clean_base = 0.0
         if target is None:
             by_frame = clean_rows.groupby("frame_index", observed=True)["value"].median()
             base = g["frame_index"].map(by_frame)
             clean_base = clean_rows["frame_index"].map(by_frame)
-        sign = directions.get((*key, axis), 1) if target is None else 1
+        sign = directions.get((*key, axis), 1)
         oriented = g.assign(value=_oriented(g["value"] - base, sign, target))
         # The clean value on the same scale: zero by construction for an ordinary metric, and
         # near zero for a calibrated prediction.
@@ -495,7 +568,8 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                 rho_ci_lo=lo,
                 rho_ci_hi=hi,
                 monotone_fraction=(
-                    np.nan if axis_round_off else _monotone_fraction(oriented)),
+                    np.nan if axis_round_off else _monotone_fraction(
+                        oriented, None if target is None else FURTHEST_FROM_TARGET)),
                 separability_auc_min=(
                     np.nan if axis_round_off else _min_adjacent_auc(oriented)),
                 # Thresholds compare against the clean severity level on whatever scale the
@@ -506,16 +580,8 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
                 saturation_level=np.nan if axis_round_off else _threshold_level(
                     oriented, oriented_clean, SATURATION_FRACTION, span_size, group_scale),
             )
-            if target is None:
-                response_span = np.nan if span_size is None else span_size
-            else:
-                high = highs.get(key, np.nan)
-                response_span = (
-                    float(_oriented(pd.Series([high]), sign, target).iloc[0]) - oriented_clean
-                    if np.isfinite(high) else np.nan
-                )
             record.update(_response_statistics(
-                g, oriented, oriented_clean, target, response_span,
+                g, oriented, oriented_clean, target, np.nan if span_size is None else span_size,
                 frame_scale, axis_round_off, record["separability_auc_min"],
                 largest.get(key, np.nan), n_bootstrap,
                 derive_rng(seed, f"blindness/{dataset}/{metric}/{axis}", 0, str(field)),
@@ -635,7 +701,8 @@ def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean
 
     Everything is read on the oriented scale the ordering statistics use, so a metric where larger
     is better and a target-valued metric are handled as the other statistics handle them; ``span``
-    is the clean-to-anchor span on that scale (NaN when the anchor is degenerate).
+    is the clean-to-anchor span on that scale, the anchor's distance from the target for a
+    target-valued metric (NaN when the anchor is degenerate).
 
     * ``cliffs_delta_min`` -- ``2 A - 1`` of the weakest adjacent pair, so 0 is no separation
       (Cliff 1993, *Psychol. Bull.* 114(3):494-509; Vargha & Delaney 2000, *J. Educ. Behav. Stat.*
@@ -690,10 +757,11 @@ def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean
             if "energy_changed" in g.columns else np.nan
         ),
     )
-    # Damage relative to the clean field of the same frame, where a damage scale exists. Not for a
-    # target-valued metric: its damage is on the raw ratio and is not oriented.
+    # Damage relative to the clean field of the same frame, where a damage scale exists. A
+    # target-valued metric's damage is its distance from the target (:func:`add_damage`), so an
+    # axis on which it stays on the target reads zero here.
     damage = None
-    if target is None and "damage" in g.columns and "damage" in clean.columns:
+    if "damage" in g.columns and "damage" in clean.columns:
         damage = by_frame_and_level(g, "damage") - clean["damage"].to_numpy(float)[:, None]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
@@ -830,17 +898,23 @@ def _is_round_off(values: np.ndarray, scale: float | None = None) -> bool:
     return bool(float(np.ptp(finite)) < DEGENERATE_SPAN * scale)
 
 
-def _monotone_fraction(g: pd.DataFrame) -> float:
+def _monotone_fraction(g: pd.DataFrame, ceiling: float | None = None) -> float:
     """Fraction of frames on which the severity level ordering is strictly correct.
 
     A metric can look fine pooled and be non-monotone within every individual frame, which
     a single correlation hides.
+
+    ``ceiling`` is the largest value the scale can take, :data:`FURTHEST_FROM_TARGET` for a
+    target-valued metric. Two neighbouring levels both on it are in order: a value cannot move
+    further than the furthest point, so a smoothed field whose extreme increments are gone at
+    every harsher strength is ordered, not tied out of order.
     """
     ok = 0
     frames = g["frame_index"].unique()
     for frame in frames:
-        sub = g[g["frame_index"] == frame].sort_values("level")
-        if np.all(np.diff(sub["value"].to_numpy()) > 0):
+        v = g[g["frame_index"] == frame].sort_values("level")["value"].to_numpy(float)
+        at_ceiling = (v[1:] == ceiling) & (v[:-1] == ceiling) if ceiling is not None else False
+        if np.all((np.diff(v) > 0) | at_ceiling):
             ok += 1
     return ok / len(frames) if len(frames) else float("nan")
 
@@ -932,10 +1006,10 @@ def probe_summary(df: pd.DataFrame, norm: pd.DataFrame, *,
     is what makes it interpretable: "the Gaussian field looks as bad as coarsening to 64".
 
     A group that ran no probe contributes no row. The probes are ordinary ladder entries
-    and a custom ladder may omit them -- the ensemble miscalibration ladder does, since a
-    phase-scrambled field says nothing about whether an ensemble is honestly dispersed. A row
-    carrying only the group keys would make the card generator write a trap-test line with an
-    em dash for its score, which a reader cannot distinguish from a trap test that ran and
+    and a custom ladder may omit them -- the ensemble miscalibration ladder omits the impostor,
+    since a phase-scrambled field says nothing about whether an ensemble is honestly dispersed. A
+    row carrying only the group keys would make the card generator write a trap-test line with
+    an em dash for its score, which a reader cannot distinguish from a trap test that ran and
     could not be scored.
 
     When the anchor is degenerate the impostor has no damage, so ``gaussian_impostor_relative``
@@ -1312,19 +1386,25 @@ def flag(card: pd.DataFrame, thresholds: Mapping[str, float]) -> pd.DataFrame:
 # --- cross-metric ------------------------------------------------------------------------
 
 
-def cross_metric_correlation(df: pd.DataFrame, *, field: str | None = None) -> pd.DataFrame:
-    """Spearman correlation between metrics across the ladder, for pruning.
+def cross_metric_correlation(df: pd.DataFrame, *, field: str) -> pd.DataFrame:
+    """Spearman correlation between metrics across the ladder of one physical field, for pruning.
 
     One observation per (axis, level), using the median over time, which is the level at
     which the panel decision is actually made. Using every raw row instead would inflate
     the correlation through shared time trends.
 
+    One field at a time: the fields have different units and different metrics, and a median
+    taken over density, velocity and vorticity rows together reads whichever field sits in the
+    middle, and correlates metrics that never see the same field. Only metrics run on ``field``
+    enter.
+
     The reference severity level is excluded. Every pairwise error metric is exactly zero there, so
     keeping it would add a point all metrics share by construction and pull every
-    correlation towards +1.
+    correlation towards +1. A metric with a target value enters by its distance from the target
+    (:func:`_oriented`), since its raw value moves both ways along one ladder.
     """
-    sub = df if field is None else df[df["field"] == field]
-    sub = sub[sub["level"] > 0]
+    sub = df[(df["field"] == field) & (df["level"] > 0)]
+    sub = sub.assign(value=_value_or_distance(sub))
     pivot = (
         sub.groupby(["degradation", "level", "metric"], observed=True)["value"]
         .median()

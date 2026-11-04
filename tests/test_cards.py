@@ -947,6 +947,22 @@ def test_load_run_goes_through_the_one_analysis_entry_point(tmp_path):
     assert run.anchor_label == "uncorrelated"
 
 
+def test_the_cross_metric_table_has_one_column_per_field(tmp_path):
+    """The card reads the redundancy matrix field by field, never pooled: mae runs on one of
+    mse's two fields only, so it gets a number there and a dash on the other."""
+    ladder = {"gaussian_blur": [1.0, 2.0, 3.0, 4.0], "translate_x": [0.5, 1.0, 2.0, 4.0]}
+    df = pd.concat([make_frame(metric="mse", field="density", axes=ladder),
+                    make_frame(metric="mse", field="velocity", axes=ladder),
+                    make_frame(metric="rmse", field="velocity", axes=ladder),
+                    make_frame(metric="mae", field="density", axes=ladder)], ignore_index=True)
+    block = evidence.summary_block(
+        evidence.load_run(_run_folder(tmp_path / "comparison_fields", df)), "mse")
+    lines = block.splitlines()
+    assert lines[0] == "| compared with | density | velocity |"
+    assert "| `mae` | 1 | — |" in lines and "| `rmse` | — | 1 |" in lines
+    assert "separately for each physical field" in block
+
+
 def _bundle_copy(tmp_path, monkeypatch):
     """A throwaway copy of the mse bundle, so generators never touch tracked files."""
     dst = tmp_path / "mse"

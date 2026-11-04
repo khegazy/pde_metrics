@@ -216,15 +216,15 @@ quotations from JWGFVR and ETCCDI; and the narrowed idea page.
   ([proposals/EXP-energy_distance-tail-only-degradation.md](../../proposals/EXP-energy_distance-tail-only-degradation.md))
   should lower it with a known answer when the damped quantile is at or below the $\sqrt{n}$-th
   largest. No new document was written.
-- **The analysis cannot read a target-valued metric**:
-  [issues/123](../../issues/123-analysis-cannot-read-a-target-valued-metric.md) (details in
-  [code_notes.md](code_notes.md)).
+- **The analysis could not read a target-valued metric** (direction, damage, blindness and a
+  zero); fixed in the shared harness, details in [code_notes.md](code_notes.md).
 
 ## For the next agent
 
 - The builder was least sure whether the analysis's withholding of the blur axes should be read as
-  a defect of the analysis or as the honest consequence of the metric saturating; it argued the
-  former in issue 123, but the saturation itself is real (issue 118).
+  a defect of the analysis or as the honest consequence of the metric saturating. The analysis
+  part was a defect and is fixed (a value of 0 is now the finite furthest point from the target),
+  but the saturation itself is real (issue 118).
 - Not verified: Ferro & Stephenson (2011) and Stephenson et al. (2008) could not be opened; the
   frequency bias is cited from the JWGFVR web page, not a paper; Zhang et al. (2005) only through
   its abstract.
