@@ -74,12 +74,11 @@ def test_hydra_output_dirs_resolve_without_a_live_hydra_context():
 #: Directories under `configs/` that Hydra never composes, so their files are not group
 #: options and cannot be checked by composing them.
 #:
-#: `dataset_family` is not yet consumed (issues/011). `cards` holds the settings for
-#: generating documentation -- the canonical exemplar frame, which datasets a card may cite,
-#: figure DPI -- read directly with OmegaConf by `python -m fmeval.cards`. Generating
-#: documentation is not an experiment: it must not create a run folder or a `.hydra`
-#: directory, so it does not go through `hydra.main`.
-NOT_HYDRA_GROUPS = {"dataset_family", "cards"}
+#: `cards` holds the settings for generating documentation -- the canonical exemplar frame,
+#: which datasets a card may cite, figure DPI -- read directly with OmegaConf by
+#: `python -m fmeval.cards`. Generating documentation is not an experiment: it must not create
+#: a run folder or a `.hydra` directory, so it does not go through `hydra.main`.
+NOT_HYDRA_GROUPS = {"cards"}
 
 #: The Hydra groups on disk.
 GROUPS = sorted(d.name for d in CONFIGS.iterdir()
@@ -478,6 +477,27 @@ def test_the_card_settings_refuse_an_unknown_missing_or_mistyped_key(old, new, e
     monkeypatch.setattr(fmeval_config, "CONFIGS", tmp_path)
     with pytest.raises(error, match=key):
         load_cards_config()
+
+
+@pytest.mark.parametrize("family", _options("dataset_family"))
+def test_a_family_sweeps_its_own_members_on_one_analysis_grid(family):
+    """The sweep a family option declares names datasets of that family, at distinct ranks,
+    each of whose native grids the family's analysis grid divides: a member that belongs
+    elsewhere, shares a rank or cannot be remapped would put a wrong point on section 12."""
+    members = str(OmegaConf.load(CONFIGS / "dataset_family" / f"{family}.yaml")
+                  .hydra.sweeper.params.dataset).split(",")
+    jobs = [build_job(compose_config(f"dataset_family={family}", f"dataset={m}"))
+            for m in members]
+    assert len(jobs) >= 2, f"{family} sweeps {members}: a comparison needs two members"
+    for job in jobs:
+        assert job.dataset.complexity.family == family, (
+            f"{job.dataset.name} is in family {job.dataset.complexity.family!r}, not {family!r}")
+        native = int(job.dataset.complexity.params["resolution"])
+        assert native % job.analysis_grid.resolution == 0, (
+            f"{job.dataset.name}: native {native} is not a multiple of the family's analysis "
+            f"grid {job.analysis_grid.resolution}")
+    ranks = [job.dataset.complexity.rank for job in jobs]
+    assert len(set(ranks)) == len(ranks), f"{family} members share a rank: {ranks}"
 
 
 def test_every_evidence_dataset_is_a_real_config():

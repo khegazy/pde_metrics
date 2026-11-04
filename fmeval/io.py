@@ -23,7 +23,8 @@ import platform
 import shutil
 import subprocess
 import sys
-from collections.abc import Mapping
+import time
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -32,6 +33,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import yaml
+from hydra.core.utils import JobReturn, JobStatus
+from hydra.experimental.callback import Callback
 from omegaconf import DictConfig, ListConfig, OmegaConf
 
 from degradations import registry as deg_registry
@@ -240,29 +243,132 @@ def dump_yaml(data: Any) -> str:
     return yaml.safe_dump(data, sort_keys=True, default_flow_style=False)
 
 
-def load_runs(pattern: str, root: Path | str = "results") -> pd.DataFrame:
+def load_runs(folders: Iterable[Path | str], name: str = "results") -> pd.DataFrame:
     """Concatenate the results of several run folders, tagged by folder name.
 
-    How a multirun sweep becomes one cross-dataset or cross-metric table.
+    How a multirun sweep becomes one cross-dataset or cross-metric table, e.g.
+    ``load_runs(sorted(Path("results").glob("mse_*")))``.
 
     Args:
-        pattern: Glob relative to ``root``, e.g. ``"mse_*"`` or ``"*_1786224531"``.
-        root: Results directory.
+        folders: Run folders; one without a ``data/`` directory or without the file is
+            skipped with a warning.
+        name: ``"results"``, or :data:`COMPANIONS` for the curve-companion rows.
+
+    Raises:
+        FileNotFoundError: If no folder held the file.
     """
     frames = []
-    for folder in sorted(Path(root).glob(pattern)):
-        if not (folder / "data").is_dir():
-            continue
-        try:
-            df = read_results(folder)
-        except FileNotFoundError:
-            log.warning("no results in %s; skipping", folder)
+    folders = [Path(f) for f in folders]
+    for folder in sorted(folders):
+        df = read_results(folder, name, missing_ok=True) if (folder / "data").is_dir() else None
+        if df is None:
+            log.warning("no %s in %s; skipping", name, folder)
             continue
         df["run_dir"] = folder.name
         frames.append(df)
     if not frames:
-        raise FileNotFoundError(f"no run folders matching {pattern!r} under {root}")
+        raise FileNotFoundError(f"no {name} in any of {[str(f) for f in folders]}")
     return pd.concat(frames, ignore_index=True)
+
+
+#: Provenance that must be the same in every member of a combined folder: the report reads it
+#: once for all of them, and a damage means the same thing in two members only if the ladder,
+#: the anchor and the analysis grid agree.
+SHARED_META: tuple[str, ...] = ("metric", "fields", "analysis_grid", "ladder_axes",
+                                "n_severity_levels", "anchor_label", "probe_labels", "seed",
+                                "boundary")
+
+
+def combine_runs(folders: Sequence[Path | str], stamp: int) -> RunFolder:
+    """Write one folder holding the rows of one run per dataset of a family, for section 12.
+
+    Each member is a folder ``evaluate.py`` wrote for one dataset; the combined folder is
+    ``<family>_<stamp>`` beside the first. It holds every member's rows and companion rows,
+    their calibration tables with a ``dataset`` column, and a ``run_meta.json`` whose
+    ``members`` maps each dataset to its own folder's provenance. Error maps are not carried:
+    their keys do not name the dataset. A member's own folder remains its full report.
+
+    Raises:
+        ValueError: On fewer than two members, a member holding several datasets or one the
+            others hold too, members of different families, or members whose configurations
+            differ in anything but the dataset, or whose provenance differs in a
+            :data:`SHARED_META` key: their damages would not be on one scale.
+    """
+    members = [_folder(f) for f in folders]
+    if len(members) < 2:
+        raise ValueError(f"a comparison needs at least two runs, got {len(members)}")
+    configs = [read_config(m) for m in members]
+    metas = [read_run_meta(m) for m in members]
+    for member, config, meta in zip(members[1:], configs[1:], metas[1:], strict=True):
+        differ = sorted(k for k in {*configs[0], *config} - {"dataset"}
+                        if config.get(k) != configs[0].get(k))
+        differ += [f"run_meta.{k}" for k in SHARED_META if meta.get(k) != metas[0].get(k)]
+        if differ:
+            raise ValueError(
+                f"{member.root.name} differs from {members[0].root.name} in {differ}; the "
+                "members of one comparison must share ladder, metrics, grid and anchor"
+            )
+    rows = load_runs(m.root for m in members)
+    datasets = rows.groupby("run_dir", observed=True)["dataset"].unique()
+    if any(len(d) != 1 for d in datasets) or len({d[0] for d in datasets}) != len(members):
+        raise ValueError(f"each member must hold one dataset of its own: {datasets.to_dict()}")
+    families = rows["dataset_family"].dropna().unique()
+    if len(families) != 1 or not families[0]:
+        raise ValueError(f"the members must belong to one dataset family, got {list(families)}")
+
+    folder = make_run_folder(members[0].root.parent, str(families[0]), stamp)
+    write_results(folder, rows.drop(columns="run_dir"))
+    if any((m.data / f"{COMPANIONS}.csv").exists() or (m.data / f"{COMPANIONS}.csv.gz").exists()
+           for m in members):
+        write_results(folder, load_runs((m.root for m in members), COMPANIONS)
+                      .drop(columns="run_dir"), name=COMPANIONS)
+    for table in ("calibration", "calibration_spectrum"):
+        write_table(folder, pd.concat(
+            [pd.read_csv(m.data / f"{table}.csv").assign(dataset=meta["dataset"])
+             for m, meta in zip(members, metas, strict=True)], ignore_index=True), table)
+    digest = write_config(folder, {**configs[0], "dataset": {
+        meta["dataset"]: config["dataset"] for config, meta in zip(configs, metas, strict=True)}})
+    copy_documentation(folder)
+    write_run_meta(
+        folder,
+        run_id=stamp,
+        config_hash=digest,
+        **{k: metas[0][k] for k in SHARED_META if k in metas[0]},
+        n_frames=sum(int(meta.get("n_frames", 0)) for meta in metas),
+        dataset=", ".join(meta["dataset"] for meta in metas),
+        dataset_family=str(families[0]),
+        comparison=True,
+        members={meta["dataset"]: {"run": m.root.name, **meta}
+                 for m, meta in zip(members, metas, strict=True)},
+    )
+    return folder
+
+
+class FamilyComparison(Callback):
+    """Gather the jobs of a family multirun into one folder (:func:`combine_runs`).
+
+    Named in ``hydra.callbacks`` by a ``configs/dataset_family/`` option. Each job returns the
+    folder holding all of its metrics' rows (``evaluate.main``); the callback collects them as
+    the jobs end and combines them once the sweep is over. A job that failed contributes
+    nothing, and the comparison is then not written, since it would silently lack a member.
+    """
+
+    def __init__(self) -> None:
+        self.folders: list[Path] = []
+        self.failed = 0
+
+    def on_job_end(self, config: DictConfig, job_return: JobReturn, **kwargs: Any) -> None:
+        if job_return.status == JobStatus.COMPLETED:
+            self.folders.append(Path(job_return.return_value))
+        else:
+            self.failed += 1
+
+    def on_multirun_end(self, config: DictConfig, **kwargs: Any) -> None:
+        if self.failed:
+            log.error("%d member job(s) failed; no comparison folder written", self.failed)
+            return
+        folder = combine_runs(self.folders, int(time.time()))
+        log.info("wrote %s", folder.root)
 
 
 # --- provenance helpers ---------------------------------------------------------------

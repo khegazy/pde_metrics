@@ -33,6 +33,8 @@ from fmeval.cards.figures import Column, _row_limits, exemplar_panel
 from fmeval.cards.metric_figures import ALT_TEXT, METRIC_FIGURES, metric_figures
 from fmeval.cards.overview import overview_figures, page_markdown
 from fmeval.cards.schema import CATEGORIES, SCHEMA_VERSION, STATUSES, CardError, parse_card
+from fmeval.data import readers  # noqa: F401  (registers every format)
+from fmeval.data.base import READERS
 from fmeval.report import vocabulary
 from fmeval.report.style import OKABE_ITO
 from metrics import registry as metric_registry
@@ -960,11 +962,14 @@ def _bundle_copy(tmp_path, monkeypatch):
 @pytest.mark.parametrize("dataset", list(fmeval_config.load_cards_config().evidence_datasets))
 def test_the_run_summary_says_what_kind_of_claim_its_dataset_supports(dataset, tmp_path):
     """A card on a calibrated null or an analytic check says so beside the frame count, in the
-    words ``evidence_datasets`` gives, and only kinet_re5e4 is called developed flow."""
+    words ``evidence_datasets`` gives, and only a simulation read from disk is called developed
+    flow."""
     block = evidence.run_block(evidence.load_run(_synthetic_run(tmp_path, dataset=dataset)))
     claim = fmeval_config.load_cards_config().evidence_datasets[dataset]
     assert f"frames of {claim})" in block, block
-    assert ("developed flow" in block) == (dataset == "kinet_re5e4"), block
+    simulated = READERS[fmeval_config.compose_config(f"dataset={dataset}").dataset.format] \
+        .reads_from_disk
+    assert ("developed flow" in block) == simulated, block
 
 
 def test_sod_evidence_runs_end_to_end_and_calls_itself_an_analytic_check(tmp_path, monkeypatch):

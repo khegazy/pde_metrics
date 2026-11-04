@@ -101,9 +101,11 @@ did not evaluate it the way that field does.
   without pressure) or where the result would carry no information. Every skip is stated on
   the card in one line with its reason. The experiments that exist today are the degradation
   ladder on `kinet_re5e4` (`configs/degradation/default.yaml`), the miscalibration ladder on
-  `synthetic_ensemble`, and `sod_shock_tube` as an analytic check; the forecast pairs in
-  `datasets/results/entropic_D2Q9/` (issue 010) and the Reynolds ladder (issue 011) join the
-  list when their readers exist. Fixtures (`advecting_blobs`, `taylor_green_2d`) are not
+  `synthetic_ensemble`, `sod_shock_tube` as an analytic check, and the Reynolds ladder
+  (`dataset_family=reynolds_ladder_2d` with `-m`: `kinet_re5e4` and `kinet_re1e6` on one
+  128^2 grid, compared in report section 12; issue 011 holds its unreadable members); the
+  forecast pairs in `datasets/results/entropic_D2Q9/` (issue 010) join the list when their
+  reader exists. Fixtures (`advecting_blobs`, `taylor_green_2d`) are not
   evidence (`docs/decisions.md`). Until `python -m fmeval.cards evidence` can cite more than one
   run, the card's generated blocks cite one run and the Results prose names the other runs'
   folders and what each found, with no number that the card's fingerprint does not hold.

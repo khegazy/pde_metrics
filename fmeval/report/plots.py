@@ -1486,6 +1486,55 @@ def cost_frontier(ctx, df, opts) -> PlotResult:
                                   data=card[["metric", "field", "cost_s", "rho_min"]])])
 
 
+# --- section 12: does it hold as complexity rises? ------------------------------------------
+
+
+@plot(
+    section=12, order=10, scope="per_metric", min_datasets=2,
+    title="Response against physical complexity",
+    requires_columns=("complexity_rank", "dataset_family"),
+)
+def complexity_response(ctx, df, opts) -> PlotResult:
+    """Rank correlation, impostor damage and sensitivity level of each dataset of one family,
+    against the dataset's complexity rank, one line per field.
+
+    Only statistics that are normalised within each dataset are set side by side: a raw value
+    depends on that dataset's field amplitudes, so two datasets' values are never compared.
+    """
+    metric = str(df["metric"].iloc[0])
+    ctx.require(df["dataset_family"].nunique() == 1,
+                f"the datasets belong to several families: {sorted(df['dataset_family'].unique())}")
+    ranks = df.groupby("dataset", observed=True)["complexity_rank"].first().sort_values()
+    card = ctx.card[ctx.card["metric"] == metric].merge(
+        ranks.rename("complexity_rank"), left_on="dataset", right_index=True)
+    panels = [(column, label) for column, label in (
+        ("rho_median", "median rank correlation over degradations"),
+        ("gaussian_impostor_damage", "Gaussian-impostor damage"),
+        ("sensitivity_level_median", "median sensitivity level"),
+    ) if column in card.columns]
+    ctx.require(bool(panels), "the report card has none of the compared statistics")
+
+    fig, grid = ctx.style.figure(1, len(panels))
+    for ax, (column, label) in zip(grid[0], panels, strict=True):
+        for i, (field, rows) in enumerate(card.groupby("field", observed=True)):
+            rows = rows.sort_values("complexity_rank")
+            ax.plot(rows["complexity_rank"], rows[column], marker=field_marker(i),
+                    ls=LINE_STYLES[i % len(LINE_STYLES)], color=ctx.style.metric_colour(metric),
+                    label=field)
+        ax.set_xticks(ranks.to_numpy(), [ctx.label(d) for d in ranks.index], rotation=30,
+                      ha="right", fontsize="x-small")
+        ax.set_title(label, fontsize="small")
+    grid[0, 0].legend(fontsize="x-small")
+    fig.suptitle(f"{metric} across {ctx.label(df['dataset_family'].iloc[0])}")
+    return PlotResult([FigureItem(
+        fig, {"metric": metric},
+        caption="Each statistic measured on each dataset of the family by itself, against the "
+                "dataset's complexity rank. Damage is relative to each dataset's own anchor, "
+                "and the correlation and sensitivity level are rank statistics, so the points "
+                "are comparable across datasets where the raw values are not.",
+        data=card[["dataset", "complexity_rank", "field", *(c for c, _ in panels)]])])
+
+
 @plot(
     section=3, order=5, scope="per_field",
     title="Where the field keeps its energy",

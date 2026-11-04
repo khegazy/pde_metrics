@@ -36,7 +36,12 @@ the numbers behind each are in the JSON beside it under `docs/datasets/_generate
 | `kinet_re5e4` | The production trajectory: 10001 frames, 167 GiB. Evaluated by default on every 50th frame. A run that a metric's page cites starts at frame 2000, where the flow is developed |
 | `kinet_re5e4_dev` | The first 101 frames of the same run, 1.7 GB, for checking that code runs. **Not physically representative**: the shear layers have not yet rolled up (figure below) |
 | `well_re5e4` | The same simulation in the PolymathicAI Well format, in float32 and without the distribution functions. A data-marked test reads it beside `kinet_re5e4` and requires identical values, so it is not drawn separately |
-| Reynolds ladder (`configs/dataset_family/reynolds_ladder_2d.yaml`) | Five runs at $\mathrm{Re} = 5 \times 10^4$ to $10^5$ with the same Mach number and initial condition, on disk but without dataset configs yet ([issue 011](https://github.com/khegazy/pde_metrics/blob/main/issues/011-cross-dataset-comparison.md)). When they are added they belong on this page |
+| `kinet_re1e6` | The same flow at $\mathrm{Re} = 10^6$, on $1024^2$ cells: 40001 frames, 11.4 TB. Read every fourth stored frame, so its frame $i$ is the same physical time as frame $i$ of `kinet_re5e4` (below) |
+
+![Vorticity at Re = 10^6 at five times](_generated/kinet_re1e6_vorticity.png)
+
+*The $\mathrm{Re} = 10^6$ run at the same five times as `kinet_re5e4` above. The other fields
+of `kinet_re1e6` are drawn beside these figures under `docs/datasets/_generated/`.*
 
 ![Vorticity of the development dataset at five times](_generated/kinet_re5e4_dev_vorticity.png)
 

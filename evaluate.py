@@ -72,7 +72,12 @@ def dataset_info(job: Config) -> DatasetInfo:
 
 
 @hydra.main(version_base=None, config_path=str(CONFIGS), config_name="config")
-def main(cfg: DictConfig) -> None:
+def main(cfg: DictConfig) -> Path:
+    """Run one evaluation and return the folder holding every metric's rows.
+
+    That is the comparison folder when several metrics ran and the one metric's folder
+    otherwise; a dataset-family multirun gathers these (``fmeval.io.FamilyComparison``).
+    """
     logging.basicConfig(
         level=logging.INFO, format="%(levelname)s %(name)s: %(message)s",
         stream=sys.stdout, force=True,
@@ -218,6 +223,7 @@ def main(cfg: DictConfig) -> None:
 
     for path in written:
         log.info("wrote %s", path)
+    return written[-1]
 
 
 def _overrides() -> list[str]:

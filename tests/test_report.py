@@ -217,6 +217,24 @@ def full_report(tmp_path_factory):
     return folder, rendered
 
 
+def test_a_family_folder_draws_only_the_complexity_comparison(tmp_path):
+    """Two datasets of one family: section 12 is drawn from per-dataset statistics, and no
+    other figure or section pools the two datasets' raw values."""
+    rows = synthetic_rows()
+    df = pd.concat([rows.assign(dataset=name, dataset_family="fam", complexity_rank=rank)
+                    for rank, name in enumerate(("low", "high"))], ignore_index=True)
+    folder = _write_run(tmp_path / "fam_1", df)
+    ctx = build_context(folder, bootstrap=0)
+    rendered = render(folder, ctx, formats=("png",))
+    write_document(folder, ctx, rendered)
+    assert [r.name for r in rendered if r.status == "ok"] == ["complexity_response"]
+    assert sorted(p.stem for p in folder.sections.glob("*.tex")) == [
+        "01_overview", "12_complexity"]
+    data = _figure_data(folder, "complexity_response__metric-mse")
+    assert sorted(data["dataset"].unique()) == ["high", "low"]
+    assert data.groupby("dataset")["complexity_rank"].first().to_dict() == {"high": 1, "low": 0}
+
+
 def test_full_render(full_report):
     folder, rendered = full_report
     assert any(r.status == "ok" for r in rendered)
