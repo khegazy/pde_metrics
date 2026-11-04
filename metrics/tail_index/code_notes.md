@@ -50,6 +50,14 @@ exact-zero axis rule, open as an issue with a strict expected-failure test.
   `test_the_catalog_supports_the_query_it_exists_for` in `tests/test_cards.py`, since it is
   differentiable, cheap and measured. No shared code needed a new argument.
 
+- **2026-11-04 (task `metrics-tails`).** The estimator moved into `hill_estimates(x, field, ks)`,
+  shared by the two curve companions `tail_index_curve` (theta = 0.01 to 0.99, `analysed` at the
+  tenths) and `tail_index_by_order` (k = 1 to n // 10, `analysed=(10,)`); `orders(n, thetas)`
+  reads each theta as its printed decimal p/q (`fractions.Fraction(str(theta))`) and finds the
+  least k with k^q >= n^p, exact for any grid the harness can hold (the float first guess is
+  within one of the root only while n^theta is far below 2^53). The increments come from
+  `increment_samples(x, ctx.field)`, so `ctx` is now required.
+
 ## Tests
 
 All in `metrics/tail_index/test_metric.py`; the contract tests already cover one finite float,
@@ -84,6 +92,10 @@ copy: with the correction loops of `orders` disabled, the orders test failed wit
 `[2, 4, 8, 17, 32, 64, ...] == [2, 4, 8, 16, 32, 64, ...]`; with the finite check replaced by
 `if False:`, the refusal test failed with "DID NOT RAISE ValueError"; with the threshold mutated
 to $X_{(k)}$, only the distinct-value test failed among the four estimator tests.
+
+- 2026-11-04: `test_dense_orders_are_exact_at_hundredths` (on 2^20 cells a float power is one
+  too large at 7 of the 19 exact roots j = 5, 10, ..., 95); `test_the_classical_hill_plot_by_hand`;
+  `test_the_two_hill_plots_agree_where_their_orders_meet`; `test_velocity_reads_its_longitudinal_increments`.
 
 ## Bugs and fixes
 

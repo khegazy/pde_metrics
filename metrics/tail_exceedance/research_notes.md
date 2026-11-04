@@ -29,7 +29,10 @@ statistics. Which point of the curve to register is a convention, open as issue 
 | DTC/NCAR, *MET User's Guide* v9.1.2, Appendix C, https://metplus.readthedocs.io/projects/met/en/v9.1.2/Users_Guide/appendixC.html | Full text | Sect. 29.2.5 | The same definition, citing no source | Not cited; confirms the JWGFVR definition |
 | ETCCDI, *Definitions of the 27 core indices*, web page, last updated 2009-09-15, https://etccdi.pacificclimate.org/list_27_indices.shtml | Full text | Items 10 (TN10p) and 13 (TX90p) | TX90p counts days above the calendar-day 90th percentile of a base period, with a bootstrap inside the base period (citing Zhang et al. 2005): an exceedance frequency against a percentile threshold set by a reference sample. The indices use a strict inequality | Card, refs.bib, `metric.py` |
 | Zhang, Hegerl, Zwiers & Kenyon 2005, *J. Climate* 18(11), 1641–1651, doi:10.1175/JCLI3366.1 | Abstract (Crossref; the AMS site refused the fetch) | Abstract | Percentile indices jump at the base-period boundary because sampling error in the thresholds makes out-of-base exceedance rates differ from in-base ones (inflating them); a bootstrap removes it | Card, refs.bib, `metric.py`, judgement 005 |
-| Ferro & Stephenson 2011, *Weather and Forecasting* 26(5), 699–713, doi:10.1175/WAF-D-10-05030.1 | Not opened (the Exeter repository and the AMS page refused) | None | The extremal dependence indices EDI and SEDI for rare binary events, described by search summaries as base-rate independent; they need hits paired cell by cell | Not cited; [proposals/MTR-tail_exceedance-paired-extreme-events.md](../../proposals/MTR-tail_exceedance-paired-extreme-events.md) |
+| WWRP/WGNE Joint Working Group on Verification 2004, "Recommendations for the verification and intercomparison of QPFs from operational NWP models" | Full text (read 2026-11-04, task `metrics-tails`) | Sects. 2, 4, 5(c) | BIAS highly recommended; scores plotted against rain threshold, at fixed amounts | Card (How its field reports it), refs.bib, `metric.py`, judgement 014 |
+| Magnusson, Haiden & Richardson 2014, ECMWF Tech. Memo. 731 | Full text (read 2026-11-04) | Sect. 2; Sect. 5, Fig. 8 | SEDI and the frequency bias; calibrate to bias 1 before SEDI (citing Ferro & Stephenson 2011); a frequency bias at the 98th percentile, a research choice | Card, refs.bib, judgement 014 |
+| Haiden et al. 2025, ECMWF Tech. Memo. 931; Sillmann et al. 2013, *J. Geophys. Res. Atmos.* 118 | Full text (read 2026-11-04) | TM 931 Sect. 5.1; Sillmann Eqs. (1)-(3) | No headline frequency bias at a fixed percentile; the climate indices evaluated by RMSE of climatologies, not a ratio of counts | Judgement 014 |
+| Ferro & Stephenson 2011, *Weather and Forecasting* 26(5), 699–713, doi:10.1175/WAF-D-10-05030.1 | Not opened (the Exeter repository and the AMS page refused, again on 2026-11-04) | None | The extremal dependence indices EDI and SEDI for rare binary events, described by search summaries as base-rate independent; they need hits paired cell by cell | Not cited; [proposals/MTR-tail_exceedance-paired-extreme-events.md](../../proposals/MTR-tail_exceedance-paired-extreme-events.md) |
 | Stephenson, Casati, Ferro & Wilson 2008, *Meteorol. Appl.* 15(1), 41–50, doi:10.1002/met.53 | Not opened (the Wiley page refused) | None | The extreme dependency score paper, a candidate primary source for the frequency bias of rare events | Not cited |
 | Clauset, Shalizi & Newman 2009, *SIAM Review* 51(4), 661–703, doi:10.1137/070710111 | Full text of the cited sections (the HTML of arXiv 0706.1062: the first 100,000 characters, Sects. 3.3 to 4; re-fetched as arxiv.org/html/0706.1062v2 in the review round) | Sect. 3.5; Sect. 4 | Sect. 3.5 calls keeping the largest $\sqrt{n}$ or $n/10$ observations "an alternative approach, quite common in the quantitative finance literature", attributed to its reference [17], and says the KS method of Sect. 3.3 gives estimates "at least as good while being simple to implement". Sect. 4 says the fitting tools do not tell whether a power law is plausible, which concerns a fitted tail parameter and stays on the idea page. Whether the HTML numbering matches the journal was not checked | Card, refs.bib, `metric.py` |
 | Boucheron & Thomas 2015, *Electronic Journal of Statistics* 9(2), 2751–2792, doi:10.1214/15-EJS1088 | Secondary (through `tail_index`'s card and refs.bib) | Sect. 1 | The Hill estimator is consistent exactly when the tail has a positive index. This bundle estimates no tail parameter, so the reference stays on the narrowed idea page for the peaks-over-threshold tier and is not in this bundle's refs.bib | Idea page |
@@ -77,6 +80,20 @@ definitions. A WIREs paper's publisher page refused the fetch.
   thereafter, median 0.63 to 0.86, 0.12 to 0.30 and 0 to 0.23 at its three strengths); blind to
   `translate_x`; all fields; target 1.0; dimensionless; reduction mean. The low-pass axes were not
   declared, because the exploration showed them at 0 at every strength on density and velocity.
+
+- **The percentile curve, 2026-11-04 (task `metrics-tails`).** The field states a threshold as a
+  percentile of a reference sample (ETCCDI) and draws a score against its threshold (WWRP/WGNE
+  2004, Sect. 5(c)), so the frequency bias against the reference percentile 90 to 99.99 is the
+  companion `tail_exceedance.percentile`, analysed at the ETCCDI levels 90, 95 and 99. The theta
+  curve and the registered theta = 1/2 are unchanged (critique finding 7: the 99th percentile
+  saturates as theta = 1/2 does; the saturation was the harness's reading, issue 123, since
+  fixed). No fixed-percentile sibling: judgement 014.
+- **The target on companion rows, 2026-11-04.** The rows of every curve companion of a target
+  metric carry `target_value` (the pipeline copies the metric's row), and the per-coordinate
+  statistics already read them by distance from the target; the dominance fraction did not and
+  now does (`fmeval/analysis.py::dominance`).
+- **Longitudinal velocity, 2026-11-04.** As `tail_index`: `increment_samples`, a declared number
+  change on velocity.
 
 ## Rejected formulations and negative results
 

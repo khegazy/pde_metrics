@@ -13,7 +13,9 @@ $$
 (\delta_j f)_{\mathbf{m}} = f_{\mathbf{m} + \mathbf{e}_j} - f_{\mathbf{m}} \tag{1}
 $$
 
-The reference's $n$ absolute increments along axis $j$, sorted from largest to smallest, are
+read on the channel-and-axis pairs every increment metric reads (`increment_samples`): every
+channel along every axis for a scalar field, and for velocity only the longitudinal pairs,
+component $j$ along axis $j$. The reference's $n$ absolute increments along one pair, sorted from largest to smallest, are
 $X_{(1)} \ge X_{(2)} \ge \dots \ge X_{(n)}$, and the threshold at order $k$ is the $k$-th
 largest of them,
 
@@ -90,9 +92,26 @@ independent; the one-cell increments of a real field are correlated, and for the
 is not established. A test in `test_metric.py` checks Equation (5) at $k = 2$ on samples whose
 increments are independent up to their zero sum.
 
-**The curve behind the number** is Equation (4) at every $\theta$ of Equation (2). Small $\theta$
-reads the few largest increments; large $\theta$ lowers the threshold into the body of the
-distribution, where the count is no longer about extremes.
+**The curves behind the number.** `tail_exceedance` is Equation (4) at every $\theta$ of
+Equation (2). Small $\theta$ reads the few largest increments; large $\theta$ lowers the
+threshold into the body of the distribution, where the count is no longer about extremes.
+`tail_exceedance.percentile` is the same ratio with the threshold stated as the reference
+percentile $p$ it is, the form its field states thresholds in (next subsection):
+
+$$
+k(p) = \Bigl\lceil \frac{n\,(100 - p)}{100} \Bigr\rceil, \qquad
+p \in \{90, 91, \dots, 99,\; 99.1, \dots, 99.9,\; 99.91, \dots, 99.99\} \tag{6}
+$$
+
+computed exactly in integers, so the reference has $(100 - p)$% of its increments at or above
+its threshold (more only on ties). The 28 thresholds take the reference's exceedance fraction
+through one to nine times each of 1%, 0.1% and 0.01%; on the 256 by 256 grid $p = 99.99$ is
+$k = 7$ and $p = 90$ is $k = 6554$. The analysis reads it at 90, 95 and 99, the percentiles of
+the ETCCDI indices; the grid between them is this bundle's choice. The registered point
+$\theta = 1/2$ is $p = 100\,(1 - 256/65536) = 99.61$ on that grid, between the stored 99.6 and
+99.7. Both curves are drawn with the frequency bias on a symmetric-log axis, which shows 0 and
+values of several thousand together; the percentile curve is stored whole on the frames
+`report.error_map` names.
 
 ### Boundary handling
 
@@ -103,6 +122,58 @@ discontinuous, as `issues/103` records for `tail_index`. A field holding NaN or 
 refused with an error rather than scored, because a NaN fails every comparison and would lower a
 count silently. The metric declares `requires_periodic`, so the harness does not run it on a
 dataset with a non-periodic axis, such as the Sod shock tube.
+
+### How its field reports it
+
+Two fields count exceedances of a threshold: forecast verification, which scores a forecast of a
+yes-or-no event against observations, and climate-extremes monitoring, which counts exceedances
+of a base period's percentile.
+
+- **Forecast verification.** The object is the frequency bias, forecast events over observed
+  events, perfect at 1 [@jwgfvr], section "Frequency bias (bias score)"; this bundle reports it
+  raw, with that target. It is computed per threshold, and the figure is the score against the
+  threshold: the WWRP/WGNE recommendations [@wwrp2004] rate the bias "highly recommended"
+  (Section 4) and ask for "scores ... as a function of rain threshold" (Section 5(c)), at fixed
+  amounts (1 to 50 mm per day, Section 2). The curves above are that figure, with the
+  threshold read as a reference percentile because the increments of different fields share no
+  units. For rare events the field reports the bias beside a score of association that does not
+  degenerate as the event gets rarer, the symmetric extremal dependence index (SEDI) of Ferro and
+  Stephenson (2011, Weather Forecast. 26(5), 699-713, not readable here; described in [@jwgfvr],
+  section "Methods for rare events", and [@magnusson2014], Section 2). SEDI pairs forecast and
+  observed events cell by cell, which a count does not; it is
+  [proposals/MTR-tail_exceedance-paired-extreme-events.md](https://github.com/khegazy/pde_metrics/blob/main/proposals/MTR-tail_exceedance-paired-extreme-events.md).
+  Ferro and Stephenson's recommendation, as [@magnusson2014], Section 2, reports it, is to
+  calibrate a forecast to a frequency bias of 1 before computing SEDI, so the bias is the first
+  thing a verifier of extremes checks.
+- **Climate-extremes indices.** ETCCDI [@etccdi] counts the percentage of days beyond a
+  calendar-day percentile of the 1961-1990 base period: the 10th or 90th for temperature (items
+  10 to 13, TN10p to TX90p) and the 95th or 99th of wet days for precipitation totals (items 25
+  and 26). The threshold of this bundle is the same construction, a percentile of a reference
+  sample, with the reference frame in the place of the base period and the threshold taken from
+  the same sample it is counted in; Zhang et al. [@zhang2005] show that an in-sample threshold is
+  exceeded at a different rate than an out-of-sample one, which Equation (5) addresses for this
+  bundle. None of the indices is a ratio of one dataset's count to another's; each dataset is
+  counted against its own base period.
+- **No fixed-percentile number is registered as a sibling.** No source read fixes one percentile
+  at which a frequency bias is the field's standard number: the verification recommendations
+  draw the bias across thresholds [@wwrp2004], the ETCCDI indices use different percentiles for
+  different variables and are not biases [@etccdi], and the one fixed-percentile frequency bias
+  found, the 98th percentile of ECMWF's Technical Memorandum 731 [@magnusson2014], Section 5 and
+  Figure 8, is a research choice. The percentiles of the indices, 90, 95 and 99, are the analysed
+  coordinates of `tail_exceedance.percentile`, so their values sit in the per-coordinate tables
+  beside the registered number (`judgements/014`).
+- **The experiments** of both fields are long records: a verification sample of many forecasts,
+  and a base period of decades against which later years are counted. Here the reference
+  trajectory of kinet decays, so no base period is stationary; the experiment is
+  [proposals/EXP-tail_exceedance-base-period-climatology.md](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-tail_exceedance-base-period-climatology.md).
+  A degradation with a known effect on the count is missing too:
+  [proposals/EXP-tail_index-pareto-spike-injection.md](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-tail_index-pareto-spike-injection.md)
+  and
+  [proposals/EXP-energy_distance-tail-only-degradation.md](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-energy_distance-tail-only-degradation.md);
+  and the increments of developed three-dimensional turbulence,
+  [proposals/EXP-increment_flatness-isotropic-3d-turbulence-cutouts.md](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-increment_flatness-isotropic-3d-turbulence-cutouts.md).
+  The real forecasts of `forecast_re5e4`, scored against their targets, are the experiment here
+  closest to the field's own.
 
 ## Performance
 
@@ -249,9 +320,14 @@ comparable across predictions of the same reference. Values at different analysi
 resolutions are not comparable: the increment is one cell long, and $k$ is set by the number of
 cells.
 
-The companion is the curve `tail_exceedance[theta]`: Equation (4) at $k = \lceil n^{\theta}
-\rceil$ for $\theta$ from 0.1 to 0.9. Small $\theta$ is a rarer event, larger $\theta$ a commoner
-one, and on 256 by 256 $\theta = 0.9$ counts about a third of all increments.
+The companions are the curves `tail_exceedance[theta]`, Equation (4) at
+$k = \lceil n^{\theta} \rceil$ for $\theta$ from 0.1 to 0.9, and
+`tail_exceedance.percentile[p]`, the same at the reference's $p$-th percentile, Equation (6).
+Small $\theta$ or large $p$ is a rarer event; on 256 by 256 $\theta = 0.9$ counts about a third of
+all increments and $p = 90$ a tenth. Read the percentile curve as a verifier reads the bias
+against threshold: where it sits on 1, the prediction has the reference's number of increments
+beyond that percentile; where it falls to 0 at the high percentiles and recovers at the low ones,
+the prediction has lost only its most extreme increments.
 
 ## Limitations
 
@@ -300,7 +376,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 |---|---|---|
 | `kinet_re5e4` | developed flow | measured, run `comparison_1793657627`: the main results |
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
-| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not yet run; on this dataset the metric scores the member mean of the ensemble |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: the member mean has no increment as large as the reference's extremes, so the value is 0 at every level of every axis (measured), and the dispersion axes do not move the member mean |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
 

@@ -18955,7 +18955,29 @@
             "kind": "curve",
             "name": "tail_exceedance",
             "one_field": false,
-            "scales": null,
+            "scales": [
+              "linear",
+              "symlog"
+            ],
+            "style": "line"
+          },
+          {
+            "analysed": [
+              90.0,
+              95.0,
+              99.0
+            ],
+            "coordinate": [
+              "threshold",
+              "reference percentile"
+            ],
+            "kind": "curve",
+            "name": "percentile",
+            "one_field": false,
+            "scales": [
+              "linear",
+              "symlog"
+            ],
             "style": "line"
           }
         ],
@@ -19974,11 +19996,11 @@
         {
           "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
           "dataset": "synthetic_ensemble",
-          "note": "scores the member mean",
+          "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "the member mean has no increment as large as the reference's extremes, so the value is 0 at every level of every axis (measured), and the dispersion axes do not move the member mean",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
@@ -20009,7 +20031,7 @@
       "name": "tail_exceedance",
       "other_evidence": [],
       "output": {
-        "description": "The frequency bias, the prediction's count of absolute one-cell increments at least as large as the reference's k-th largest over the reference's own count, pooled over channels and spatial axes, at k = ceil(sqrt(n)). Dimensionless, 1 for a prediction with as many extremes as the reference. NaN when the reference is constant. The same ratio at nine orders k = ceil(n^theta) is stored beside it.",
+        "description": "The frequency bias, the prediction's count of absolute one-cell increments at least as large as the reference's k-th largest over the reference's own count, pooled over channels and spatial axes, at k = ceil(sqrt(n)). Dimensionless, 1 for a prediction with as many extremes as the reference. On velocity only the longitudinal components are read. NaN when the reference is constant. The same ratio is stored at nine orders k = ceil(n^theta) and against the reference percentile from 90 to 99.99.",
         "lower_bound": 0.0,
         "upper_bound": null
       },
@@ -20030,7 +20052,17 @@
         "arity": "single",
         "companions": [
           {
-            "analysed": null,
+            "analysed": [
+              0.1,
+              0.2,
+              0.3,
+              0.4,
+              0.5,
+              0.6,
+              0.7,
+              0.8,
+              0.9
+            ],
             "coordinate": [
               "theta",
               "log k / log n"
@@ -20038,7 +20070,27 @@
             "kind": "curve",
             "name": "tail_index",
             "one_field": false,
-            "scales": null,
+            "scales": [
+              "linear",
+              "linear"
+            ],
+            "style": "line"
+          },
+          {
+            "analysed": [
+              10
+            ],
+            "coordinate": [
+              "k",
+              "order statistics"
+            ],
+            "kind": "curve",
+            "name": "by_order",
+            "one_field": false,
+            "scales": [
+              "linear",
+              "linear"
+            ],
             "style": "line"
           }
         ],
@@ -21056,11 +21108,11 @@
         {
           "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
           "dataset": "synthetic_ensemble",
-          "note": "scores the member mean",
+          "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "every axis there leaves the member mean, the field this metric reads, unchanged (dispersion scales members about their mean; a bias cancels in an increment); measured 3.8e-14 relative",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence",
@@ -21091,7 +21143,7 @@
       "name": "tail_index",
       "other_evidence": [],
       "output": {
-        "description": "Mean over channels and spatial axes of the Hill estimate of the absolute one-cell increments at k = ceil(sqrt(n)), the mean log-ratio of the k largest to the (k+1)-th largest. For a power-law tail with exponent alpha it estimates 1/alpha. Dimensionless. NaN on a constant field. The Hill estimate at nine orders k = ceil(n^theta) is stored beside it.",
+        "description": "Mean over channels and spatial axes (on velocity, over the longitudinal components) of the Hill estimate of the absolute one-cell increments at k = ceil(sqrt(n)), the mean log-ratio of the k largest to the (k+1)-th largest. For a power-law tail with exponent alpha it estimates 1/alpha. Dimensionless. NaN on a constant field. Both Hill plots are stored beside it: the estimate against theta = log k / log n (alternative Hill plot) and against k up to n/10 (classical Hill plot).",
         "lower_bound": 0.0,
         "upper_bound": null
       },

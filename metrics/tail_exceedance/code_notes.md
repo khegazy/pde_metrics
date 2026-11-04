@@ -53,6 +53,13 @@ brief allowed no harness change.
   to change the tests rather than transform the metric, following the rule of adapting the harness
   to the metric.
 
+- **2026-11-04 (task `metrics-tails`).** The ratio moved into `frequency_bias(reference,
+  candidate, ks, ctx=, curve=)`, shared by `tail_exceedance_curve` (the nine tenths,
+  `ANALYSED_THETAS` from `tail_index`) and the named companion `tail_exceedance_percentile`
+  (k = ceil(n (100 - p)/100) in integers, `PERCENTILE_HUNDREDTHS`). The reference's thresholds
+  are cached per curve, `REFERENCE_EVENTS + "/" + curve`. The increments come from
+  `increment_samples(x, ctx.field)`, so `ctx` is now required.
+
 ## Tests
 
 All in `metrics/tail_exceedance/test_metric.py`, each value derived by hand in its docstring.
@@ -72,6 +79,10 @@ All in `metrics/tail_exceedance/test_metric.py`, each value derived by hand in i
   Changed in the review round; see Bugs and fixes.
 - `test_scaling_both_fields_and_moving_the_candidate_change_nothing`: scaling both fields by 7 and an
   integer roll of the candidate leave the value exactly unchanged.
+
+- 2026-11-04: `test_the_percentile_curve_by_hand` (steps 1, 1, 2, 2, ..., 50, 50 against the
+  field doubled: 5.6, 9 and 26 at 90, 95 and 99), `test_the_percentile_grid_holds_the_analysed_levels_exactly`,
+  `test_velocity_reads_its_longitudinal_increments`.
 
 ## Bugs and fixes
 

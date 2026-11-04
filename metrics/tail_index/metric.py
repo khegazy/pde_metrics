@@ -153,9 +153,10 @@ def hill_estimates(x: NDArray[np.floating], field: str,
 
     The mean over pairs, rather than one estimate from every pair's increments pooled, gives each
     channel and axis an equal say. Pooled, the k largest values come from whichever pair has the
-    largest increments: on kinet velocity at frames 2000 and 8000 a single pair supplies all of
-    them. Averaging over pairs whose estimates differ (0.018 to 0.121 across the four velocity
-    pairs at frame 2000) is itself a mixture, which the card states.
+    largest increments: when every kinet velocity pair was read, one transverse pair supplied all
+    of them at frames 2000 and 8000, and the four estimates ranged from 0.018 to 0.121 at frame
+    2000. The two longitudinal pairs now read agree within 3% on frames 2000, 5000 and 8000 (card,
+    Definition); a mean over pairs that differ is still a mixture, which the card states.
 
     Args:
         x: The field, shape ``(C, *spatial)`` on the analysis grid.

@@ -29,8 +29,10 @@ judgement 002.
 | Boucheron & Thomas 2015, *Electronic Journal of Statistics* 9(2), 2751–2792, doi:10.1214/15-EJS1088 | Full text (arXiv 1503.05077 on ar5iv) | Sect. 1 (the definition is unnumbered in the copy read); Sect. 2.3 | The Hill estimator $\hat\gamma(k) = (1/k)\sum_{i\le k}\ln(X_{(i)}/X_{(k+1)})$ with the sample sorted descending, and the statement that it converges to $\gamma$ for every intermediate sequence ($k\to\infty$, $k/n\to 0$) exactly when the tail is in the max-domain of attraction with $\gamma>0$ (crediting Mason 1982 and de Haan & Ferreira 2006); a Lepski-type rule for $k$; a mention of alternative Hill plots | Card (Definition), refs.bib, `metric.py`, tests |
 | Hill 1975, *Ann. Stat.* 3(5), 1163–1174, doi:10.1214/aos/1176343247 | Abstract (Crossref record) | None | Inference about a tail from the conditional likelihood of the most extreme order statistics, singling out Zipf-type tails. The full text was not retrieved, so no equation number is cited and the formula is taken from Boucheron & Thomas | Card, refs.bib, `metric.py` |
 | Granero-Belinchón & Cabeza Gallucci 2024, *Mach. Learn.: Sci. Technol.* 5(2), 025032, doi:10.1088/2632-2153/ad43b3 | Abstract | None | The idea page's only reference. It trains a GAN against the variance, skewness and flatness of increments and says nothing about tail indices; it is the reason the quantity whose tail is read is the increment | Card, refs.bib, idea page |
-| Drees, de Haan & Resnick 2000, *Ann. Stat.* 28(1), 254–274, doi:10.1214/aos/1016120372 | Not opened (Project Euclid empty; Cornell eCommons technical report TR 1215 rate-limited, then served HTML) | None | The usual source for the alternative Hill plot, known only through Boucheron & Thomas Sect. 2.3 and the R package evmix's documentation | Not cited |
-| Resnick & Stărică 1997, *Adv. Appl. Probab.* 29, 271–293 | Secondary (the evmix R documentation, read by the builder and the reviewer) | None | With Drees et al. 2000, attributed by evmix as the origin of the plot of the Hill estimate at $k=\lceil n^\theta\rceil$ against $\theta$, which is exactly this bundle's curve coordinate | Not cited; the card labels $\theta$ the bundle's choice |
+| Drees, de Haan & Resnick 2000, *Ann. Stat.* 28(1), 254–274, doi:10.1214/aos/1016120372 | Full text of the Tinbergen discussion paper 98-090/4 and Cornell ORIE TR 1215 (read 2026-11-04, task `metrics-tails`); the journal's pages not opened | Eq. (1.2); Eq. (1.4); Sect. 1; Theorems 1-3, Eq. (2.3) | The Hill estimator; its consistency for iid and dependent data; the classical Hill plot against k "usually done in practice" and the alternative plot against theta; which is better when; the iid Brownian approximation from which gamma/sqrt(k) follows. Set notation in alpha, figures in gamma; no bands drawn | Card (Definition, How its field reports it), refs.bib, `metric.py` |
+| Resnick & Stărică 1997, *Adv. Appl. Probab.* 29, 271–293 | Full text of Cornell ORIE TR 1114 (1995) (read 2026-11-04); the journal version not opened | pp. 2-4 | The iid asymptotic variance alpha^-2; the alternative Hill plot against theta, introduced so the few largest order statistics show more clearly; figures in alpha | Card, refs.bib (`resnick1997`) |
+| Hsing 1991, *Ann. Stat.* 19(3), 1547–1569 | Abstract (Crossref); theorem numbers through J. B. Hill, econwpa 0505005 | Abstract; Thms 2.2, 2.4 (secondary) | Consistency and asymptotic normality of Hill's estimator for stationary mixing sequences | Card (How its field reports it), issue 132 |
+| Drees 2008, *Extremes* 11, 35–53 (arXiv 0710.5879) | Full text (LaTeX source) | Sect. 2.2 | The Hill estimator's variance under serial dependence is gamma^2 times an inflation factor | Card, issue 132 |
 | Dekkers, Einmahl & de Haan 1989, *Ann. Stat.* 17(4), 1833–1855, doi:10.1214/aos/1176347397 | Abstract | None | The moment estimator generalises Hill's estimator to the index of any extreme-value distribution, consistent and asymptotically normal | [proposals/MTR-tail_index-moment-estimator.md](../../proposals/MTR-tail_index-moment-estimator.md), judgement 002 |
 
 The equation numbers of Clauset et al. are those of the arXiv PDF, which numbers equations by
@@ -76,6 +78,21 @@ distance.
   reference's on every kinet field measured (frames 2000 and 5000: density 0.052 and 0.064,
   velocity 0.070 and 0.037, vorticity 0.082 and 0.092); blind to `translate_x`; all fields;
   `higher_is_better: false`; dimensionless; reduction mean.
+
+- **Both Hill plots, 2026-11-04 (task `metrics-tails`).** With Drees et al. (2000) and Resnick &
+  Stărică (1997) read, the theta coordinate is attributed to them and made dense (theta = 0.01 to
+  0.99, analysed at the tenths, so the per-coordinate tables are unchanged); the classical plot
+  against k = 1 to n // 10 is the companion `tail_index.by_order`, analysed at k = 10 because the
+  analysed coordinate must exist on the 16 x 8 contract fixture (n // 10 = 12). Both are drawn on
+  linear axes, as Drees et al. draw them, with the estimate of gamma, the registered quantity.
+- **No interval, 2026-11-04.** gamma/sqrt(k) is the iid standard error; on spatially clustered
+  increments it would be too narrow by an unknown factor; issue 132.
+- **Longitudinal velocity, 2026-11-04.** On velocity the estimate now reads only the
+  longitudinal pairs (`increment_samples`), as the increment family does after task
+  `metrics-increments`; no source was found in which tail estimation of turbulent velocity
+  increments pools longitudinal and transverse components, and the old per-pair spread (a
+  factor of 4 to 7 across the four pairs) came from the transverse pairs. Declared number
+  change on velocity, measured in the task log of `metrics-tails`.
 
 ## Rejected formulations and negative results
 
@@ -239,6 +256,9 @@ and README edits.
   [issues/103](../../issues/103-exact-zero-axis-rule-is-discontinuous.md) (details in
   [code_notes.md](code_notes.md)).
 - **The card's wording on Clauset et al. and $\sqrt{n}$**: since reworded on the card.
+
+- **Hill's estimator under spatial dependence**: no interval until its variance is known for a
+  random field: [issues/132](../../issues/132-hill-estimator-interval-on-spatially-correlated-increments.md).
 
 ## For the next agent
 

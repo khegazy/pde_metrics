@@ -12,16 +12,18 @@ $$
 (\delta_j f)_{\mathbf{m}} = f_{\mathbf{m} + \mathbf{e}_j} - f_{\mathbf{m}} \tag{1}
 $$
 
-and its $n$ absolute values, sorted from largest to smallest, are
+read on the channel-and-axis pairs every increment metric reads (`increment_samples`): every
+channel along every axis for a scalar field, and for velocity only the longitudinal pairs,
+component $j$ along axis $j$. Along one pair its $n$ absolute values, sorted from largest to smallest, are
 $X_{(1)} \ge X_{(2)} \ge \dots \ge X_{(n)}$. The Hill estimator from the $k$ largest of them is
 
 $$
 H_j^{(c)}(k) = \frac{1}{k} \sum_{i=1}^{k} \ln \frac{X_{(i)}}{X_{(k+1)}} \tag{2}
 $$
 
-the form printed by Boucheron and Thomas [@boucheron2015], Section 1, of the estimator of Hill
-[@hill1975]; the copy of the first that was read shows no number on the definition, and the
-second was read only through its abstract, so neither is cited by equation. It is the mean
+Drees, de Haan and Resnick [@drees2000], Eq. (1.2), and the form printed by Boucheron and
+Thomas [@boucheron2015], Section 1, of the estimator of Hill [@hill1975], which was read only
+through its abstract and is not cited by equation. It is the mean
 log-ratio of each of the $k$ largest values to one threshold, the $(k+1)$-th largest. When the
 tail is a power law, $P(X > x) \propto x^{-\alpha}$, it estimates the extreme-value index
 $\gamma = 1/\alpha$: Boucheron and Thomas state that $H(k)$ converges to $\gamma$ for every $k$
@@ -40,11 +42,11 @@ The order $k$ is set on a logarithmic scale,
 
 $$
 k(\theta) = \min\bigl(\lceil n^{\theta} \rceil,\; n - 1\bigr), \qquad
-\theta \in \{0.1, 0.2, \dots, 0.9\} \tag{3}
+\theta \in \{0.01, 0.02, \dots, 0.99\} \tag{3}
 $$
 
 the cap leaving an $X_{(k+1)}$ to divide by. $k(\theta)$ is computed exactly in integers, as the
-least $k$ with $k^{10} \ge n^{10\theta}$, because a floating-point power can land just above an
+least $k$ with $k^{100} \ge n^{100\theta}$, because a floating-point power can land just above an
 exact root and make the ceiling one too large. The reported value is the mean of Equation (2) at
 $\theta = 1/2$ over the set $A$ of channel-and-axis pairs whose $X_{(k+1)}$ is positive,
 
@@ -69,18 +71,25 @@ increment statistics are the physics criteria Granero-Belinchón and Cabeza Gall
 [@granero2024] train a generative turbulence model against; both signs of increment are pooled
 into one tail. Equation (4) averages per-pair estimates rather than estimating once from every
 pair's increments pooled, so that each channel and axis has an equal say: pooled, the $k$
-largest values come from whichever pair has the largest increments, and on kinet velocity at
-frames 2000 and 8000 a single pair of the four supplies all of them. The mean is itself a
-mixture of pairs whose estimates differ, by a factor of 4 to 7 across the four velocity pairs of
-those frames. The coordinate $\theta$ of Equation (3), which puts $k$ on a logarithmic scale, and
-its nine values a tenth apart, are this bundle's choice. Boucheron and Thomas [@boucheron2015],
-Section 2.3, mention "alternative Hill plots", but the source that defines one was not read, so
-the coordinate is not attributed to it.
+largest values come from whichever pair has the largest increments. When every velocity pair
+was read, a single transverse pair of the four supplied all of them on kinet frames 2000 and
+8000, and the four estimates differed by a factor of 4 to 7. The two longitudinal pairs read now
+agree closely: at $\theta = 1/2$ on the 256 by 256 grid they score 0.0712 and 0.0703 at frame
+2000, 0.0368 and 0.0356 at frame 5000, and 0.1543 and 0.1552 at frame 8000, and pooled they share
+the $k$ largest values about evenly (53%, 53% and 48% from the first). The mean is still a mixture
+on a field with several channels of different character. The coordinate $\theta = \log k / \log n$ of Equation (3) is the alternative Hill
+plot's (next subsection); its spacing of a hundredth is this bundle's choice.
 
-**The curve behind the number** is Equation (2), averaged as in Equation (4), at every $\theta$
-of Equation (3): a Hill plot, as Section 3.5 of Clauset, Shalizi and Newman [@clauset2009] names
-the estimate plotted against its threshold, here with $k$ on a logarithmic scale. It is stored
-on every row; the registered number is its value at $\theta = 1/2$.
+**The curves behind the number.** Two companions, the two Hill plots of the next subsection.
+`tail_index` is Equation (2), averaged as in Equation (4), at every $\theta$ of Equation (3), the
+alternative Hill plot; the registered number is its value at $\theta = 1/2$, and the analysis
+reads it at the nine values $\theta = 0.1, 0.2, \dots, 0.9$. `tail_index.by_order` is the same
+average at every $k$ from 1 to $\lfloor n/10 \rfloor$, the classical Hill plot, analysed at
+$k = 10$, a value present on every grid the harness runs; it stops at $n/10$, the larger of the two
+fixed rules of Clauset, Shalizi and Newman [@clauset2009], Section 3.5, beyond which the estimate
+reads the bulk of the distribution. On the 256 by 256 grid that is $k$ up to 6553. Both curves are
+stored whole on the frames `report.error_map` names and drawn with both axes linear, as Drees, de
+Haan and Resnick [@drees2000] draw them.
 
 ### Boundary handling
 
@@ -91,6 +100,56 @@ is discontinuous, as the Limitations say. A field holding NaN or an infinity is 
 error rather than scored. The metric
 declares `requires_periodic`, so the harness does not run it on a dataset with a non-periodic
 axis, such as the Sod shock tube.
+
+### How its field reports it
+
+The field is the statistics of extremes; the estimator is fitted to tails in finance, insurance,
+hydrology and network data.
+
+- **The object** is the Hill estimate $H(k)$ of Equation (2), an estimate of the extreme-value
+  index $\gamma$ ([@drees2000], Eq. (1.2); [@clauset2009], Eq. (3.1), as the exponent
+  $\hat\alpha_{\mathrm{C}} = 1 + 1/H$ of the density). Its normalisation is none: it is
+  scale-free.
+- **The figure is the Hill plot**, the estimate against the number of order statistics. Drees,
+  de Haan and Resnick [@drees2000], Section 1, call the plot against $k$ on a linear axis "what is
+  usually done in practice", and define beside it the alternative Hill plot against
+  $\theta = \log k / \log n$ for $0 \le \theta < 1$, "a logarithmic scale for the $k$-axis",
+  introduced by Resnick and Stărică [@resnick1997] (technical-report version, p. 3) so that the
+  few largest order statistics are "shown more clearly". Drees et al. prove the alternative plot
+  better for tails with a second-order term and the classical one better for an exact Pareto
+  tail (Section 1, Theorems 2 and 3). Both are stored here (`tail_index.by_order` and
+  `tail_index`). Their set notation plots $1/H$, an estimate of $\alpha$, and Resnick and
+  Stărică's figures do too, while Drees et al.'s figures draw $H$, the estimate of $\gamma$; this
+  bundle draws $H$, the number it registers. A reader expecting $\alpha$ reads the reciprocal.
+- **The number** is read off where the plot is stable (Clauset, Shalizi and Newman
+  [@clauset2009], Section 3.5), or at a fixed order, the largest $\sqrt{n}$ or $n/10$, which they
+  call common in quantitative finance; their own method chooses the threshold by minimising a
+  Kolmogorov-Smirnov distance (Section 3.3, Eq. (3.9)). This bundle registers the fixed
+  $\sqrt{n}$ order, for the reason given above; the data-chosen threshold is
+  [proposals/MTR-tail_index-ks-threshold.md](https://github.com/khegazy/pde_metrics/blob/main/proposals/MTR-tail_index-ks-threshold.md).
+- **The statistics beside it** are an interval and a test of fit. For independent samples the
+  estimate is asymptotically normal with variance $\gamma^2/k$ (Resnick and Stărică
+  [@resnick1997], p. 2, as $\alpha^{-2}$; Clauset et al. [@clauset2009], Eq. (3.2) and Appendix B,
+  $\sigma = (\hat\alpha - 1)/\sqrt{n}$ for independent, identically distributed data); the
+  standard error $\gamma/\sqrt{k}$ follows from Drees et al.'s Theorem 1, Eq. (2.3), by this
+  bundle's derivation. Clauset et al., Section 4, test whether a power law fits at all with a
+  bootstrap Kolmogorov-Smirnov p-value. **Neither is reported here**: both assume independent
+  samples, and one-cell increments of a flow field are strongly correlated in space (Limitations).
+  Under serial dependence the Hill estimator stays consistent and asymptotically normal, but its
+  variance is $\gamma^2/k$ times an inflation factor set by the dependence (Hsing 1991, Ann.
+  Stat. 19(3), 1547-1569, read through its abstract and a secondary source; Drees 2008, Extremes
+  11, 35-53, Section 2.2), and nothing read gives that factor for a spatial random field, so an
+  interval of $\gamma/\sqrt{k}$ would be too narrow by an unknown amount
+  ([issues/132](https://github.com/khegazy/pde_metrics/blob/main/issues/132-hill-estimator-interval-on-spatially-correlated-increments.md)).
+- **The experiments** are samples with a known power-law tail, where the plot should settle on
+  $1/\alpha$ (here the independent Pareto unit tests in `test_metric.py`), and real heavy-tailed
+  data. Missing here: a degradation that injects a tail of known index
+  ([proposals/EXP-tail_index-pareto-spike-injection.md](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-tail_index-pareto-spike-injection.md)),
+  one that alters only the tail
+  ([proposals/EXP-energy_distance-tail-only-degradation.md](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-energy_distance-tail-only-degradation.md)),
+  and the intermittent increments of developed three-dimensional turbulence, where tails of the
+  increment distribution are the object of study
+  ([proposals/EXP-increment_flatness-isotropic-3d-turbulence-cutouts.md](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-increment_flatness-isotropic-3d-turbulence-cutouts.md)).
 
 ## Performance
 
@@ -231,9 +290,10 @@ Dimensionless, zero or positive, and unbounded above. There is no direction in w
 is better: what is read is the drift of a prediction's value from the reference field's own value,
 in either direction. A value above the reference's means the prediction's largest increments are
 more spread out relative to one another than the reference's are; a value below means they are
-more uniform. It does not mean a heavier or a lighter tail on a spatially correlated field: on the
-evidence run the reference scores below the fake prediction that keeps its spectrum and scrambles
-its structure, on velocity (see the trap tests under Results).
+more uniform. It does not mean a heavier or a lighter tail on a spatially correlated field: on
+run `comparison_1793657627`, which read every velocity pair before the longitudinal rule, the
+reference scored below the fake prediction that keeps its spectrum and scrambles its structure,
+on velocity.
 
 Because Equation (2) uses only ratios of increments, multiplying a field by a constant or adding
 one to it changes nothing, so values can be compared across fields of different magnitude. For a
@@ -246,9 +306,13 @@ Values at different analysis-grid resolutions are not comparable, for two reason
 is one cell long, so its physical length changes with the grid, and $k$ is set by the number of
 cells, so the order read changes too.
 
-The companion is the curve `tail_index[theta]`: Equation (4) at $k = \lceil n^{\theta} \rceil$ for
-$\theta$ from 0.1 to 0.9. Small $\theta$ reads the few largest increments and is noisy; large
-$\theta$ reaches into the bulk of the distribution and stops being a statement about its tail.
+The companions are the two Hill plots: `tail_index[theta]`, Equation (4) at
+$k = \lceil n^{\theta} \rceil$, and `tail_index.by_order[k]`, the same at each $k$ up to $n/10$.
+Small $\theta$ or small $k$ reads the few largest increments and is noisy; large $\theta$ reaches
+into the bulk of the distribution and stops being a statement about its tail. Where a plot is
+flat over a range of orders, the estimate does not depend on the choice of $k$ there; where it
+slopes, a different fixed rule would give a different number. No interval is drawn around either
+curve (see "How its field reports it").
 
 ## Limitations
 
@@ -263,7 +327,11 @@ structures, so the largest few hundred are a handful of events counted many time
 the value even when the tail is a power law: on a 128 by 64 independent power-law field, a
 two-cell blur halves it in the mean over eight seeds (a test in `test_metric.py` pins this),
 while a blurred independent Gaussian field keeps its value. A value below that of independent Gaussian noise therefore does not show that the
-tail is lighter than Gaussian; it may show only that the largest increments are clustered. The
+tail is lighter than Gaussian; it may show only that the largest increments are clustered. For
+the same reason the field's interval, $\gamma/\sqrt{k}$, and its goodness-of-fit p-value are
+not reported: both assume independent samples, and under dependence the variance is larger by a
+factor nothing read here gives for a spatial field
+([issues/132](https://github.com/khegazy/pde_metrics/blob/main/issues/132-hill-estimator-interval-on-spatially-correlated-increments.md)). The
 value is also a property of those few structures and can jump from frame to frame when one of
 them grows or decays.
 
@@ -301,7 +369,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 |---|---|---|
 | `kinet_re5e4` | developed flow | measured, run `comparison_1793657627`: the main results |
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
-| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not yet run; on this dataset the metric scores the member mean of the ensemble |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: every axis there leaves the member mean, the field this metric reads, unchanged (dispersion scales members about their mean; a bias cancels in an increment); measured 3.8e-14 relative |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
 

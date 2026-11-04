@@ -19,10 +19,12 @@ owners: [khegazy]
 
 output:
   description: >-
-    Mean over channels and spatial axes of the Hill estimate of the absolute one-cell
-    increments at k = ceil(sqrt(n)), the mean log-ratio of the k largest to the (k+1)-th
-    largest. For a power-law tail with exponent alpha it estimates 1/alpha. Dimensionless. NaN on
-    a constant field. The Hill estimate at nine orders k = ceil(n^theta) is stored beside it.
+    Mean over channels and spatial axes (on velocity, over the longitudinal components) of
+    the Hill estimate of the absolute one-cell increments at k = ceil(sqrt(n)), the mean
+    log-ratio of the k largest to the (k+1)-th largest. For a power-law tail with exponent alpha
+    it estimates 1/alpha. Dimensionless. NaN on a constant field. Both Hill plots are stored
+    beside it: the estimate against theta = log k / log n (alternative Hill plot) and against k
+    up to n/10 (classical Hill plot).
   bounds:
     # Every one of the k largest is at least the (k+1)-th largest, so each log-ratio is >= 0;
     # 0 is attained when the k + 1 largest are equal.
@@ -37,5 +39,8 @@ math:
   # twice over.
   resolution_dependent: true
   complexity: "O(N log N)"     # one sort per channel and axis
-references: [boucheron2015, clauset2009, granero2024, hill1975]
+references: [boucheron2015, clauset2009, drees2000, granero2024, hill1975, resnick1997]
+
+not_run:
+  synthetic_ensemble: every axis there leaves the member mean, the field this metric reads, unchanged (dispersion scales members about their mean; a bias cancels in an increment); measured 3.8e-14 relative
 review: null
