@@ -180,13 +180,19 @@ def test_a_companion_cannot_move_its_metric_s_number(temporary_metric):
 
 
 def test_an_analysed_coordinate_the_curve_lacks_stops_the_run(temporary_metric):
-    """A curve's coordinates must include every coordinate it is analysed at; one it lacks would
-    silently leave a hole in every table, so the run stops and names both lists."""
+    """A curve's coordinates must include every coordinate it is analysed at inside its range;
+    one it lacks there would silently leave a hole in every table, so the run stops and names
+    it. One beyond the curve's largest coordinate is a shell a coarser grid does not have, and
+    the curve is analysed at the coordinates it holds."""
     _register_two_way(temporary_metric, "_lacks", with_curve=False)
     metric_registry.companion(of="_lacks", kind="curve", coordinate=("moment", "index"),
-                              analysed=(2, 3))(lambda x: (np.array([1, 2]), np.array([0.0, 1.0])))
-    with pytest.raises(ValueError, match=r"do not include every analysed one.*\[2, 3\]"):
-        run(SyntheticTrajectory(), [metric_registry.get("_lacks")],
+                              analysed=(1.5, 2, 3))(
+        lambda x: (np.array([1, 2]), np.array([0.0, 1.0])))
+    spec = metric_registry.get("_lacks")
+    assert spec.companions[0].unmatched_analysed([1, 2]) == [1.5]
+    assert spec.companions[0].unmatched_analysed([1, 1.5, 2]) == []
+    with pytest.raises(ValueError, match=r"do not include the analysed \[1\.5\]"):
+        run(SyntheticTrajectory(), [spec],
             build_ladder({"gaussian_blur": {"severities": [1.0]}}), fields=["density"],
             dataset=DatasetInfo(name="synthetic"), seed=0)
 
