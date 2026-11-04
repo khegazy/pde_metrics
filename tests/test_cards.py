@@ -2108,3 +2108,13 @@ def test_a_curve_metric_s_card_opens_with_its_curve_on_each_field(tmp_path, temp
     assert numbers["figure"] == "companion_curves" and numbers["panels"]
     lines = evidence.figure_lines(figures, reasons, "performance")
     assert lines[0] == f"![{ALT_TEXT['companion_curves']}](_generated/{standard[0].path.name})"
+
+
+def test_card_json_keeps_exact_floats():
+    """`DataFrame.to_json` rounds to ten decimal places, so a forecast error of 1.59e-15 would be
+    written as 0.0; every card JSON goes through `json_records`, which keeps floats exact."""
+    frame = pd.DataFrame({"value": [1.59e-15, 4.57e-11, float("nan")], "level": [0, 1, 2],
+                          "is_probe": [False, True, False]})
+    records = loader.json_records(frame)
+    assert [r["value"] for r in records] == [1.59e-15, 4.57e-11, None], records
+    assert json.loads(json.dumps(records)) == records

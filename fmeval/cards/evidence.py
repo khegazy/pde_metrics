@@ -13,7 +13,6 @@ report of the same run cannot disagree.
 from __future__ import annotations
 
 import dataclasses
-import json
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -30,7 +29,7 @@ from fmeval.report.registry import PLOTS
 from fmeval.report.vocabulary import FAMILY_INFO, family_label, label
 
 from . import catalog, loader
-from .loader import write_strict_json
+from .loader import json_records, write_strict_json
 from .metric_figures import (
     FIGURE_BLOCKS,
     METRIC_FIGURES,
@@ -764,8 +763,7 @@ def generate(metric: str, run: Run, *others: Run) -> Path:
     fingerprint = {
         "metric": metric,
         **_record(run, metric),
-        **({"companion": json.loads(curve.to_json(orient="records")),
-            "dominance": json.loads(dominance.to_json(orient="records"))}
+        **({"companion": json_records(curve), "dominance": json_records(dominance)}
            if not curve.empty else {}),
         # Further runs, in the order given; `catalog.recorded_runs` reads them back.
         **({"other_runs": [_record(r, metric) for r in others]} if others else {}),
@@ -779,18 +777,15 @@ def _record(run: Run, metric: str) -> dict[str, Any]:
     """One run's entry in a fingerprint: its provenance and this metric's statistics, and on a
     run of real forecasts every prediction, the numbers of its lead-time tables."""
     lead = an.forecast_by_lead(run.scored, metric=metric, anchor_label=run.anchor_label)
-    # Exact floats, not `to_json`, which rounds to ten decimal places: a forecast's error spans
-    # 1e-15 to 1e-4 and would be written as zero at the small end (issues/134).
-    exact = lead.astype(object).where(lead.notna(), None).to_dict(orient="records")
     return {
-        **({"forecast": exact} if not lead.empty else {}),
+        **({"forecast": json_records(lead)} if not lead.empty else {}),
         "dataset": dataset_of(run),
         "run": run.folder.name,
         "frames": sorted(int(f) for f in run.rows["frame_index"].unique()),
         "seed": run.meta.get("seed"),
         "analysis_grid": run.meta.get("analysis_grid"),
         "git": run.meta.get("git", {}),
-        "axes": json.loads(run.axes[run.axes["metric"] == metric].to_json(orient="records")),
-        "probes": json.loads(run.probes[run.probes["metric"] == metric].to_json(orient="records")),
-        "profile": json.loads(run.card[run.card["metric"] == metric].to_json(orient="records")),
+        "axes": json_records(run.axes[run.axes["metric"] == metric]),
+        "probes": json_records(run.probes[run.probes["metric"] == metric]),
+        "profile": json_records(run.card[run.card["metric"] == metric]),
     }

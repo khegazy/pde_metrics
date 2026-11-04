@@ -26,7 +26,6 @@ Three rules, each enforced by a test in ``tests/test_cards.py``:
 
 from __future__ import annotations
 
-import json
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -44,7 +43,7 @@ from fmeval.report.latex import slug
 from fmeval.report.plots import companion_records  # importing registers the renderers
 from fmeval.report.registry import PLOTS, RendererSpec, check_preconditions, draw, iter_scope
 
-from .loader import write_strict_json
+from .loader import json_records, write_strict_json
 from .prose import EXPERIMENT_BLOCK
 
 if TYPE_CHECKING:
@@ -135,10 +134,10 @@ class CardFigure:
 
 
 def _panels(data: pd.DataFrame | None, key: str) -> dict[str, list[dict]]:
-    """The renderer's data split into panels, through ``to_json`` so numpy scalars serialise."""
+    """The renderer's data split into panels, as exact JSON-ready records."""
     if data is None or data.empty:
         return {}
-    records = json.loads(data.to_json(orient="records"))
+    records = json_records(data)
     if key not in data.columns:
         return {"all": records}
     panels: dict[str, list[dict]] = {}
