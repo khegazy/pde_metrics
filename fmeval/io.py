@@ -357,7 +357,9 @@ def combine_runs(folders: Sequence[Path | str], stamp: int, *,
         raise ValueError(f"a comparison needs at least two runs, got {len(members)}")
     configs = [read_config(m) for m in members]
     metas = [read_run_meta(m) for m in members]
-    shared = [k for k in SHARED_META if not (across == "shards" and k == "metric")]
+    # Shards may score different fields (a density-only metric reads density alone), so for them
+    # the fields and the metric list are unions, and the calibration is checked field by field.
+    shared = [k for k in SHARED_META if not (across == "shards" and k in ("metric", "fields"))]
     if across == "shards":
         shared.append("git")
     free = {"dataset"} if across == "dataset" else {"metrics"}
@@ -417,9 +419,15 @@ def combine_runs(folders: Sequence[Path | str], stamp: int, *,
                 [f.assign(dataset=meta["dataset"]) for f, meta in zip(frames, metas, strict=True)],
                 ignore_index=True), table)
         else:
-            if any(not f.equals(frames[0]) for f in frames[1:]):
-                raise ValueError(f"the shards' {table} tables differ; they did not run one ladder")
-            write_table(folder, frames[0], table)
+            union: dict[str, pd.DataFrame] = {}
+            for frame in frames:
+                for field, part in frame.groupby("field", sort=False):
+                    part = part.reset_index(drop=True)
+                    if field in union and not part.equals(union[field]):
+                        raise ValueError(f"the shards' {table} tables differ on {field}; they did "
+                                         "not run one ladder")
+                    union.setdefault(field, part)
+            write_table(folder, pd.concat(union.values(), ignore_index=True), table)
     if across == "dataset":
         digest = write_config(folder, {**configs[0], "dataset": {
             meta["dataset"]: config["dataset"]
@@ -438,6 +446,7 @@ def combine_runs(folders: Sequence[Path | str], stamp: int, *,
         meta_extra = {**{k: v for k, v in metas[0].items() if k not in _OWN_META},
                       "git": metas[0].get("git"), "registries": metas[0].get("registries"),
                       "metric": ", ".join(ran),
+                      "fields": list(dict.fromkeys(f for m in metas for f in m.get("fields", []))),
                       "n_frames": int(rows["frame_index"].nunique()), "n_rows": len(rows),
                       "members": {m.root.name: meta.get("metric")
                                   for m, meta in zip(members, metas, strict=True)}}

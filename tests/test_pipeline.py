@@ -331,13 +331,15 @@ def test_combine_runs_refuses_members_on_different_scales(tmp_path, traj):
         fio.combine_runs([a], 9)
 
 
-def _shard(tmp_path, rows, metrics: list[str], stamp: int, calibration: int = 0):
+def _shard(tmp_path, rows, metrics: list[str], stamp: int, calibration: int = 0,
+           fields: tuple[str, ...] = ("density",)):
     """A run folder as evaluate.py writes it for some of the metrics of one evaluation."""
     folder = fio.make_run_folder(tmp_path, "comparison", stamp)
     fio.write_results(folder, rows[rows["metric"].isin(metrics)])
     fio.write_maps(folder, {f"{m}__map": np.full(2, stamp, dtype=float) for m in metrics})
     for table in ("calibration", "calibration_spectrum"):
-        fio.write_table(folder, pd.DataFrame({"field": ["density"], "x": [calibration]}), table)
+        fio.write_table(folder, pd.DataFrame({"field": list(fields),
+                                              "x": [calibration] * len(fields)}), table)
     fio.write_config(folder, {"seed": 1, "dataset": {"name": "a"}, "metrics": metrics})
     fio.write_run_meta(folder, dataset="a", analysis_grid=8, anchor_label="mean_field",
                        metric=", ".join(metrics))
@@ -375,6 +377,17 @@ def test_frame_shards_together_are_the_whole_run(traj):
     expected = whole.sort_values(key).reset_index(drop=True)
     pd.testing.assert_series_equal(merged["value"], expected["value"])
     pd.testing.assert_series_equal(merged["severity"], expected["severity"])
+
+
+def test_shards_scoring_different_fields_merge_with_one_calibration_per_field(tmp_path, traj):
+    """A density-only metric's shard calibrates density alone; the merge keeps each field's
+    calibration once."""
+    rows = evaluate(traj).rows
+    names = sorted(rows["metric"].unique())
+    shards = [_shard(tmp_path, rows, names[:1], 1),
+              _shard(tmp_path, rows, names[1:], 2, fields=("density", "velocity"))]
+    folder = fio.combine_runs(shards, 3, across="shards")
+    assert sorted(pd.read_csv(folder.data / "calibration.csv")["field"]) == ["density", "velocity"]
 
 
 def test_combine_runs_refuses_shards_that_overlap_or_ran_different_ladders(tmp_path, traj):
