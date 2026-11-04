@@ -708,8 +708,8 @@ at the smallest orders, the rarest events. The direction of `coarsen` changes al
 raises the rare-event orders and lowers the common ones on every field, which is the block-edge
 mechanism of the Resolution loss reading seen at every threshold. Dominance is 1 for the median
 blur on density and 0.988 on velocity, so there any summary of the curve would order its strengths
-as the registered point does; for the Gaussian blur it is 0.429, 0.764 and 0.59, and for noise on
-vorticity 0.0373, so there the registered point alone does not stand for the curve (`issues/118`).
+as the registered point does; for the Gaussian blur it is 0.559, 0.894 and 0.64, and for noise on
+vorticity 0.118, so there the registered point alone does not stand for the curve (`issues/118`).
 
 ## References
 

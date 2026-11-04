@@ -34,7 +34,7 @@ the scale the analysis orders by, so the harsher strengths of those axes tie. Th
 and box blurs are at 0 from their second strength in every frame and both low-pass filters at every
 strength, so their rank correlation is withheld at $\theta = 1/2$. The blurs are graded again from
 $\theta = 0.6$ or 0.7 upward; the low-pass filters only at 0.8 and 0.9, and not consistently there; the dominance of the weakest pair of
-Gaussian-blur strengths is 0.429, 0.764 and 0.59 on the three fields, so there the registered
+Gaussian-blur strengths is 0.559, 0.894 and 0.64 on the three fields (each coordinate read by its distance from the target), so there the registered
 point does not stand for the curve (the card's "The curve behind the number").
 
 ## What would settle it

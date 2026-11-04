@@ -808,7 +808,10 @@ strength's curve has moved at least as far from clean as the milder one's at *ev
 each coordinate in its own measured direction. `dominance_min` is the fraction of frames in
 which that held, for the weakest pair of neighbouring strengths (after the forecast dominance of
 Ehm, Gneiting, Jordan and Krüger 2016, *J. R. Stat. Soc. B* 78(3):505–562). `n_coordinates` is how many coordinates it was read over: a coordinate whose
-departure is round-off has no direction and is left out.
+departure is round-off has no direction and is left out. The curve of a metric with a target
+value is read, like the metric, by each coordinate's distance from the target (see "Metrics with
+a target value"): a harsher strength dominates when every coordinate is at least as far from the
+target.
 
 **How to read it.** Near 1, every number built from the curve that grows with each
 coordinate's departure orders those strengths the same way: a root-mean-square, a largest

@@ -28,11 +28,15 @@ from fmeval.analysis import (
     GROUP_KEYS,
     _oriented,
     add_damage,
+    dominance,
     normalisation,
     report_card,
     summarise_axes,
 )
-from tests.conftest import make_frame
+from fmeval.ladder import build_ladder
+from fmeval.pipeline import DatasetInfo, run
+from metrics import registry as metric_registry
+from tests.conftest import SyntheticTrajectory, make_frame
 
 
 def _frame(values: list[float], *, metric: str = "spread_skill",
@@ -214,3 +218,41 @@ def test_a_target_that_is_not_positive_is_refused():
     df["target_value"] = 0.0
     with pytest.raises(ValueError, match="positive target"):
         normalisation(df)
+
+
+def test_every_curve_companion_of_a_target_metric_carries_the_target(temporary_metric):
+    """A curve of a target-valued metric is on the metric's scale, so its rows carry the target
+    the analysis reads it by: the metric's own curve and a named one alike."""
+
+    def ratio(reference, candidate):
+        """Variance ratio, 1 on identical fields."""
+        return float(np.var(candidate) / np.var(reference))
+
+    temporary_metric(name="_ratio", arity="pairwise", fields=("*",), units="dimensionless",
+                     symmetric=False, target=1.0)(ratio)
+    metric_registry.companion(of="_ratio", kind="curve", coordinate=("power", "index"))(
+        lambda reference, candidate: (np.array([1, 2]), np.array(
+            [ratio(reference, candidate), ratio(reference, candidate) ** 2])))
+    metric_registry.companion(of="_ratio", name="other", kind="curve",
+                              coordinate=("power", "index"))(
+        lambda reference, candidate: (np.array([3]), np.array([ratio(reference, candidate)])))
+    result = run(SyntheticTrajectory(), [metric_registry.get("_ratio")],
+                 build_ladder({"gaussian_blur": {"severities": [1.0]}}), fields=["density"],
+                 dataset=DatasetInfo(name="synthetic"), seed=0)
+    curves = result.companions
+    assert set(curves["metric"].astype(str)) == {"_ratio", "_ratio.other"}
+    assert (curves["target_value"] == 1.0).all()
+
+
+def test_dominance_reads_a_target_curve_by_its_distance_from_the_target():
+    """Hand-computed. One coordinate, clean 1, levels 1.07, 1.41, 0. The raw value's direction
+    is set by the harshest level (down to 0), so the raw reading orients 1.07 and 1.41 as -0.07
+    and -0.41 and calls the second strength better than the first in every frame (dominance 0).
+    By distance from the target, |v - 1| / (v + 1) = 0.034, 0.171 and 1: each strength is further
+    from right than the one before (dominance 1). The same rows without a target keep the raw
+    reading."""
+    rows = make_frame(metric="m", field="density", n_frames=6, reference=1.0,
+                      axes={"gaussian_blur": [1.07, 1.41, 0.0]}).assign(coordinate=1)
+    assert dominance(rows)["dominance_min"].iloc[0] == 0.0
+    rows["target_value"] = 1.0
+    assert dominance(rows)["dominance_min"].iloc[0] == 1.0

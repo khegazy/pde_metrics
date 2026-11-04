@@ -1225,11 +1225,17 @@ def dominance(curve: pd.DataFrame, probe_labels: frozenset[str] = PROBE_LABELS) 
     value at one of those coordinates does not enter that pair's fraction: an unknown departure
     neither dominates nor fails to.
 
+    A curve of a metric with a target value carries the target on its rows, and is read as
+    :func:`summarise_axes` reads it: each coordinate by its distance from the target
+    (:func:`_oriented`), larger always worse, with no sign; the raw direction only decides which
+    coordinates moved.
+
     Returns:
         One row per (dataset, metric, field, ordinal degradation) with ``dominance_min`` and
         ``n_coordinates``, the coordinates it was read over.
     """
     directions = response_direction(per_coordinate(curve))
+    curve = curve.assign(value=_value_or_distance(curve))
     clean = dict(list(curve[curve["level"] == 0].groupby(GROUP_KEYS, observed=True)))
     scales = {key: g.assign(value=g["value"].abs()).pivot_table(
                   index="frame_index", columns="coordinate", values="value", aggfunc="max")
@@ -1245,6 +1251,8 @@ def dominance(curve: pd.DataFrame, probe_labels: frozenset[str] = PROBE_LABELS) 
                                       aggfunc="first")
         signs = {c: directions.get((key[0], f"{key[1]}[{coordinate_label(c)}]", key[2], axis))
                  for c in base.columns}
+        if _target(g) is not None:
+            signs = {c: None if sign is None else 1 for c, sign in signs.items()}
         coordinates = [c for c, sign in signs.items() if sign is not None]
         levels = sorted(g["level"].unique())
         values = g.pivot_table(index="frame_index", columns=["level", "coordinate"],
