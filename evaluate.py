@@ -125,7 +125,7 @@ def main(cfg: DictConfig) -> Path:
         fields = select_fields(job, trajectory, specs)
         selection = job.dataset.time
         trajectory_frames = len(trajectory)
-        n_frames = len(selection.resolve(trajectory_frames))
+        n_frames = len(selection.part(selection.resolve(trajectory_frames)))
         log.info(
             "dataset %s: %d of %d frames (reduction %d), fields %s",
             job.dataset.name, n_frames, trajectory_frames, selection.reduction, fields,

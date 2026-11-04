@@ -343,6 +343,8 @@ def run(
         analysis_grid=grid_size, times=trajectory.times[indices], time_origin=time_origin,
     )
 
+    # This process's part of the selection; the calibration above used all of it.
+    indices = selection.part(indices)
     run_columns = {**dataset.row(), "analysis_grid": grid_size, "remap_op": remap_method,
                    "seed": seed, "lead_step": None, "lead_time": np.nan}
     rows: list[dict[str, Any]] = []

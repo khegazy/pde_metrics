@@ -349,7 +349,7 @@ def test_combine_runs_merges_the_shards_of_one_evaluation(tmp_path, traj):
     names = sorted(rows["metric"].unique())
     assert len(names) >= 2, names
     shards = [_shard(tmp_path, rows, names[:1], 1), _shard(tmp_path, rows, names[1:], 2)]
-    folder = fio.combine_runs(shards, 3, across="metrics")
+    folder = fio.combine_runs(shards, 3, across="shards")
     assert folder.root.name == "comparison_3"
     assert len(fio.read_results(folder)) == len(rows)
     assert sorted(fio.read_maps(folder)) == sorted(f"{m}__map" for m in names)
@@ -360,16 +360,31 @@ def test_combine_runs_merges_the_shards_of_one_evaluation(tmp_path, traj):
     assert len(pd.read_csv(folder.data / "calibration.csv")) == 1
 
 
+def test_frame_shards_together_are_the_whole_run(traj):
+    """A frame shard evaluates every shards-th frame of the selection under the calibration of
+    the whole selection, so the shards' rows together are the unsharded run's, value for value."""
+    whole = evaluate(traj).rows
+    parts = [evaluate(traj, selection=TimeSelection(start=1, shard=k, shards=2)).rows
+             for k in range(2)]
+    frames = [set(p["frame_index"]) for p in parts]
+    assert not frames[0] & frames[1] and frames[0] | frames[1] == set(whole["frame_index"])
+    key = ["metric", "field", "degradation", "level", "frame_index"]
+    merged = pd.concat(parts).sort_values(key).reset_index(drop=True)
+    expected = whole.sort_values(key).reset_index(drop=True)
+    pd.testing.assert_series_equal(merged["value"], expected["value"])
+    pd.testing.assert_series_equal(merged["severity"], expected["severity"])
+
+
 def test_combine_runs_refuses_shards_that_overlap_or_ran_different_ladders(tmp_path, traj):
     rows = evaluate(traj).rows
     names = sorted(rows["metric"].unique())
     a = _shard(tmp_path, rows, names, 1)
-    with pytest.raises(ValueError, match="metrics of its own"):
-        fio.combine_runs([a, _shard(tmp_path, rows, names[:1], 2)], 9, across="metrics")
+    with pytest.raises(ValueError, match="same metric on the same frame"):
+        fio.combine_runs([a, _shard(tmp_path, rows, names[:1], 2)], 9, across="shards")
     with pytest.raises(ValueError, match="calibration tables differ"):
         fio.combine_runs([_shard(tmp_path, rows, names[:1], 3),
                           _shard(tmp_path, rows, names[1:], 4, calibration=1)], 9,
-                         across="metrics")
+                         across="shards")
 
 
 def test_a_map_key_round_trips_even_when_the_label_contains_a_double_underscore():

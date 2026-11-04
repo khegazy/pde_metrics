@@ -333,33 +333,45 @@ def combine_runs(folders: Sequence[Path | str], stamp: int, *,
     ``members`` maps each dataset to its own folder's provenance. Error maps are not carried:
     their keys do not name the dataset. A member's own folder remains its full report.
 
-    ``across="metrics"``: the shards of one evaluation, each run with a different set of metrics
-    on the same dataset, ladder, grid and commit, so it can be spread over several processes.
-    The combined folder is ``comparison_<stamp>`` beside the first and is the folder one process
-    running every metric would have written: every row, companion row and stored map, the
-    calibration once (it depends on the dataset and ladder only, and is checked equal), and the
-    first member's provenance, including its git state, with ``metric`` naming every metric.
+    ``across="shards"``: the parts of one evaluation spread over several processes, each run on
+    the same dataset, selection, ladder, grid and commit with its own set of metrics, its own
+    part of the frames (``dataset.time.shard`` of ``shards``), or both. The combined folder is
+    ``comparison_<stamp>`` beside the first and is the folder one process would have written:
+    every row, companion row and stored map, the calibration once (it is measured over the whole
+    selection, so it is checked equal), and the first member's provenance, including its git
+    state, with ``metric`` naming every metric and ``n_frames`` every frame.
 
     Raises:
         ValueError: On fewer than two members; members whose configurations differ in anything
-            but ``across``, or whose provenance differs in a :data:`SHARED_META` key (for
-            shards, also in git state or calibration): their damages would not be on one
-            scale. For datasets, a member holding several datasets or one the others hold too,
-            or members of different families; for metrics, two members sharing a metric.
+            but the dataset (for datasets) or the metric list and frame shard (for shards), or
+            whose provenance differs in a :data:`SHARED_META` key (for shards, also in git state
+            or calibration): their damages would not be on one scale. For datasets, a member
+            holding several datasets or one the others hold too, or members of different
+            families; for shards, two members holding the same metric on the same frame.
     """
-    if across not in ("dataset", "metrics"):
-        raise ValueError(f"across must be 'dataset' or 'metrics', got {across!r}")
+    if across not in ("dataset", "shards"):
+        raise ValueError(f"across must be 'dataset' or 'shards', got {across!r}")
     members = [_folder(f) for f in folders]
     if len(members) < 2:
         raise ValueError(f"a comparison needs at least two runs, got {len(members)}")
     configs = [read_config(m) for m in members]
     metas = [read_run_meta(m) for m in members]
-    shared = [k for k in SHARED_META if not (across == "metrics" and k == "metric")]
-    if across == "metrics":
+    shared = [k for k in SHARED_META if not (across == "shards" and k == "metric")]
+    if across == "shards":
         shared.append("git")
+    free = {"dataset"} if across == "dataset" else {"metrics"}
+
+    def settled(config: dict) -> dict:
+        """The configuration with the frame shard removed: shards may differ in it."""
+        if across == "dataset":
+            return config
+        time = {k: v for k, v in config.get("dataset", {}).get("time", {}).items()
+                if k != "shard"}
+        return {**config, "dataset": {**config.get("dataset", {}), "time": time}}
+
     for member, config, meta in zip(members[1:], configs[1:], metas[1:], strict=True):
-        differ = sorted(k for k in {*configs[0], *config} - {across}
-                        if config.get(k) != configs[0].get(k))
+        differ = sorted(k for k in {*configs[0], *config} - free
+                        if settled(config).get(k) != settled(configs[0]).get(k))
         differ += [f"run_meta.{k}" for k in shared if meta.get(k) != metas[0].get(k)]
         if differ:
             raise ValueError(
@@ -376,9 +388,11 @@ def combine_runs(folders: Sequence[Path | str], stamp: int, *,
             raise ValueError(f"the members must belong to one dataset family, got {list(families)}")
         name = str(families[0])
     else:
-        metrics = rows.groupby("run_dir", observed=True)["metric"].unique()
-        if sum(len(m) for m in metrics) != len({x for m in metrics for x in m}):
-            raise ValueError(f"each member must hold metrics of its own: {metrics.to_dict()}")
+        pairs = rows.drop_duplicates(["run_dir", "metric", "frame_index"])
+        repeated = pairs[pairs.duplicated(["metric", "frame_index"], keep=False)]
+        if not repeated.empty:
+            raise ValueError("two members hold the same metric on the same frame: "
+                             f"{sorted(set(zip(repeated['metric'], repeated['frame_index'])))[:5]}")
         name = "comparison"
 
     folder = make_run_folder(members[0].root.parent, name, stamp)
@@ -411,14 +425,14 @@ def combine_runs(folders: Sequence[Path | str], stamp: int, *,
                       "members": {meta["dataset"]: {"run": m.root.name, **meta}
                                   for m, meta in zip(members, metas, strict=True)}}
     else:
-        ran = [x for config in configs for x in config["metrics"]]
-        digest = write_config(folder, {**configs[0], "metrics": ran})
+        ran = list(dict.fromkeys(x for config in configs for x in config["metrics"]))
+        digest = write_config(folder, {**settled(configs[0]), "metrics": ran})
         maps = {k: v for m in members for k, v in read_maps(m).items()}
         write_maps(folder, maps)
         meta_extra = {**{k: v for k, v in metas[0].items() if k not in _OWN_META},
                       "git": metas[0].get("git"), "registries": metas[0].get("registries"),
                       "metric": ", ".join(ran),
-                      "n_rows": len(rows),
+                      "n_frames": int(rows["frame_index"].nunique()), "n_rows": len(rows),
                       "members": {m.root.name: meta.get("metric")
                                   for m, meta in zip(members, metas, strict=True)}}
     copy_documentation(folder)
