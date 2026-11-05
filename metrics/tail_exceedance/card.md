@@ -370,8 +370,9 @@ two predictions both at 0 are tied, and a mild blur and a total one are scored a
 evidence run, on density and velocity, the Gaussian and box blurs leave the value at 0 from their
 second strength in every frame and both low-pass filters at every strength, so the registered
 number cannot tell any blur strength beyond the first, nor any low-pass strength, from another:
-the blurs' rank correlation is 0.775, the value of one graded point followed by three ties, and
-the low-pass filters' is withheld (Results, "Smoothing" and "Spectral filtering"). The stored
+the blurs' rank correlation is 0.775, the value of one graded point followed by three ties
+(the Gaussian blur on velocity is at 0 from its first strength and withheld), and the
+low-pass filters' is withheld (Results, "Smoothing" and "Spectral filtering"). The stored
 curve at larger $\theta$ is where such predictions are still told apart.
 
 A value above 1 does not mean the prediction is more intermittent or more turbulent. Anything that
@@ -445,17 +446,18 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_smoothing -->
 
-All three smoothing axes were declared before the run, with the value falling. It falls on every
-field. The harshest strength of each takes the median to 0, a change from clean of -1 in the
-Performance tables, except the median blur on vorticity, which leaves a change of -0.818. The
-median blur is followed in every frame on every field (rank correlation 1, every frame in
-order). The Gaussian and box blurs are graded only at their first strength: on density and
-velocity the value is already 0 from the second strength in every frame, so each frame is one
-graded point and three ties at 0, the furthest point from the target, whose rank correlation is
-0.775 whatever the graded value is. Every frame counts as in order, because a value at 0 cannot
-move further, but the 0.775 records the tie pattern, not a grading of the axis. On vorticity the
-box blur's second strength still leaves a few events in at least half the frames, giving two graded points and
-two ties (0.949). The direction is -1 on all three, the fall declared before the run.
+Every blur lowers the value on every field, and the harshest strength of each takes the median to
+0, a change from clean of -1 in the Performance tables, except the median blur on vorticity, which
+leaves a change of -0.818. The median blur is followed in every frame on every field (rank
+correlation 1, every frame in order). The linear blurs saturate: on density and velocity the
+Gaussian and box blurs leave the value at 0 from the second strength in every frame, so each frame
+is one graded point and three ties at 0, the furthest point from the target, whose rank
+correlation is 0.775 whatever the graded value is; every frame counts as in order, because a value
+at 0 cannot move further, but the 0.775 records the tie pattern, not a grading of the axis. The
+Gaussian blur on velocity, the disk blur on density and velocity and the Epanechnikov blur on
+velocity are at 0 from their mildest strength, so their rows are withheld. On vorticity a few
+events survive longer: the box blur reads 0.949 and the disk and Epanechnikov blurs 0.866.
+
 
 ### Spectral filtering
 
@@ -488,8 +490,11 @@ The low-pass filters remove the extremes outright: the value is 0 at every stren
 velocity, so there is nothing to order and their rows are withheld, and on vorticity it reaches 0
 from the second strength (rank correlation 0.775, the blurs' tie pattern). The high-pass filters
 also lower the value, and they are followed with a rank correlation of 1 on every field, with
-0.615 to 1 of frames in order: removing the large scales takes away the part of the largest one-cell jumps those scales
-carried.
+0.615 to 1 of frames in order: removing the large scales takes away the part of the largest
+one-cell jumps those scales carried. `band_attenuate` lowers it too (rank correlation 1 on density
+and 0.949 on velocity and vorticity), and it is the degradation the metric charges most for per
+unit of field change on density and velocity (Profile).
+
 
 ### Displacement
 
@@ -512,14 +517,15 @@ carried.
 
 <!-- END GENERATED results_geometric -->
 
-An integer translation moves the increments without changing their sizes, so `translate_x` leaves
-the value at exactly 1 at every strength and its rows are withheld; this was declared as the blind
-axis, and the profile lists it as a degradation the response is provably small on, with a damage
-of exactly 0. `translate_subpixel` is listed there too: its largest damage is 0.027, 0.019 and
-0.109 on density, velocity and vorticity. It gives a negative rank correlation, -0.638 to
--0.725: a fractional shift interpolates between cells and moves the count slightly away from 1,
-while its harshest strengths are whole cells, which return it to within -0.00195 of 1 (the
-remainder is the Fourier shift's treatment of the grid's highest mode, `issues/041`).
+An integer translation moves the increments without changing their sizes, so `translate_x` and
+`translate_y` leave the value at exactly 1 at every strength and their rows are withheld; the
+Profile lists them as degradations the response is provably small on, with a damage of exactly 0.
+`translate_subpixel` is listed there too: its largest damage is 0.0271, 0.0321 and 0.109 on
+density, velocity and vorticity. It gives a negative rank correlation, -0.698 to -0.754: a
+fractional shift interpolates between cells and moves the count slightly away from 1, while its
+harshest strengths are whole cells, which return it to within -0.00195 of 1 (the remainder is the
+Fourier shift's treatment of the grid's highest mode, `issues/041`).
+
 
 ### Resolution loss
 
@@ -543,13 +549,16 @@ remainder is the Fourier shift's treatment of the grid's highest mode, `issues/0
 <!-- END GENERATED results_resolution -->
 
 `coarsen` raises the value far above 1 on density and velocity: at the harshest strength it
-exceeds its clean value of 1 by 5.44 and 9.3 times that value (the 0.5 column of the curve tables
-below, a change from clean): a block reconstruction
+exceeds its clean value of 1 by 5.44 and 8.34 times that value (the 0.5 column of the curve tables
+below, a change from clean), with rank correlations of 0.8 and 0.4. A block reconstruction
 concentrates the change between blocks into one-cell jumps at block edges, and many of those reach
-the reference's extreme level. A value above 1 therefore does not mean a more intermittent field.
-On vorticity it first rises above 1 and then falls below, to a change of -0.406, so its distance
-from 1 shrinks with the factor and the rank correlation is -0.8. `coarsen_bandlimited` lowers the
-value and is followed on density and velocity (rank correlation 1) and on vorticity (0.949).
+the reference's extreme level, so a value above 1 does not mean a more intermittent field. On
+vorticity it first rises above 1 and then falls below, to a change of -0.406, so its distance from
+1 shrinks with the factor and the rank correlation is -0.8. `subsample` behaves the same way (a
+change of 5.28 and 8.72 on density and velocity, rank correlation -0.8 on vorticity).
+`coarsen_bandlimited` lowers the value and is followed on density and velocity (rank correlation
+1) and on vorticity (0.949).
+
 
 ### Noise
 
@@ -568,12 +577,14 @@ value and is followed on density and velocity (rank correlation 1) and on vortic
 
 <!-- END GENERATED results_stochastic -->
 
-This axis was declared before the run, with the value rising, and it rises on every field, with a
-rank correlation of 1 and its interval at 1. At the harshest strength the value exceeds its clean value of 1 by
-194, 216 and 27.2 times that value on density, velocity and vorticity (the reactivity table), below
-the ceiling of $n/k$ that a prediction with every increment above the threshold would reach. The mildest strength barely
-moves it, so 0.739 to 0.994 of frames are strictly in order: there a few counts scatter on either
-side of 1.
+Both noise axes raise the value on every field, with a rank correlation of 1 (0.975 for
+multiplicative noise on vorticity). At the harshest strength additive noise puts it above its clean
+value of 1 by 194, 232 and 27.2 times that value on density, velocity and vorticity (the curve
+tables below, column 0.5). Multiplicative noise on density reaches 255, so its value is 256, the
+ceiling $n/k$ that a prediction with every increment above the threshold reaches. The mildest
+strength barely moves the value, so 0.739 to 0.988 of frames are strictly in order under additive
+noise: there a few counts scatter on either side of 1.
+
 
 ### Cell-value distortion
 
@@ -644,15 +655,17 @@ Rank correlation over every degradation, computed separately for each physical f
 
 <!-- END GENERATED results_summary -->
 
-Read by its distance from 1, it ranks the ladder most like the other metrics that compare
-distributions of increments or spectra rather than cell values: 0.817 to 0.884 with
-`increment_w1`, 0.864 to 0.878 with `increment_w1_by_separation`, 0.804 to 0.855 with
-`energy_distance`, 0.946 with `persistence_distance` on density and 0.908 with
-`spectral_energy_flux` on velocity. With the pointwise errors it correlates between -0.243 and
-0.266, so for ranking models it sits with the distribution metrics and adds to the pointwise ones.
-The negative correlations with `tail_index`, `enstrophy`, `palinstrophy` and `kinetic_energy` are
-mostly orientation: those single-field quantities are raw values that fall under the Gaussian and box blurs, while
-this distance only rises.
+Read by its distance from 1, it orders the ladder most like the other metrics that compare
+distributions of increments or spectra rather than cell values: `increment_w1_by_separation`,
+`increment_w1`, `energy_distance`, `spectrum_l2`, `persistence_distance` where it runs and
+`spectral_energy_flux` on velocity all correlate with it well above the rest of the table. With the
+pointwise errors and the $H^1$ norms its correlation is weak on density and velocity and near zero
+on vorticity, so the order it gives the ladder is not theirs. The negative correlations with
+`tail_index`, `kinetic_energy`, `enstrophy` and `palinstrophy` are, by this card's reading, mostly
+orientation: those single-field quantities enter as raw values that fall under the blurs and
+low-pass filters, while this distance rises. `increment_flatness` correlates negatively on density
+and velocity and positively on vorticity.
+
 
 ### Damage beside the other metrics
 
@@ -757,8 +770,10 @@ Median damage over frames at every strength, this metric in the first row and th
 <!-- END GENERATED results_damage_by_level -->
 
 On displacement it charges almost nothing beside the pointwise controls: exactly 0 at every
-whole-cell translation, which moves increments without changing their sizes, and at most 0.0106
-under a sub-pixel shift, against pointwise damages that grow with the shift.
+whole-cell translation, which moves increments without changing their sizes, and a damage that
+stays small and does not grow under a sub-pixel shift, against pointwise damages that grow with the
+shift.
+
 
 ### The curve behind the number
 
@@ -1072,18 +1087,43 @@ Each coordinate of the curve read as a metric of its own, with the same statisti
 
 <!-- END GENERATED results_companion -->
 
-The registered number is the column 0.5. The curve shows where the saturation of the blurs and
-low-pass filters ends. At the larger orders, a lower threshold, the Gaussian and box blurs are
-graded again, with rank correlations of 0.8 to 1 from 0.6 or 0.7 upward on density and velocity
-and from 0.5 upward on vorticity, where the dashes stop. The low-pass filters are graded only at
-0.8 and 0.9 on density and velocity, and not consistently there (`lowpass_ideal` on velocity reads
--1 at 0.8). Additive noise raises every order on every field, most
-at the smallest orders, the rarest events. The direction of `coarsen` changes along the curve: it
-raises the rare-event orders and lowers the common ones on every field, which is the block-edge
-mechanism of the Resolution loss reading seen at every threshold. Dominance is 1 for the median
-blur on density and 0.988 on velocity, so there any summary of the curve would order its strengths
-as the registered point does; for the Gaussian blur it is 0.559, 0.894 and 0.64, and for noise on
+**The theta curve.** The registered number is the column 0.5. The curve shows where the saturation
+of the blurs and low-pass filters ends. At the larger orders, a lower threshold, the blurs are
+graded again where the dashes stop: on density the box blur reaches a rank correlation of 1 from
+0.7 and the Gaussian blur from 0.8; on velocity they are graded only from 0.5, 0.6 or 0.7 and
+reach 1 at 0.9; on vorticity the dashes stop at 0.3 or 0.4. The low-pass filters are graded on
+density only from 0.7, and on velocity only at 0.8 and 0.9 (the ideal filter only at 0.9). Additive noise raises every order on every field,
+most at the smallest orders, the rarest events. The direction of `coarsen` changes along the curve:
+it raises the rare-event orders and lowers the common ones on every field, the block-edge mechanism
+of the Resolution loss reading seen at every threshold. Dominance is 1 for the median blur on
+density and 0.988 on velocity, so there any summary of the curve would order its strengths as the
+registered point does; for the Gaussian blur it is 0.559, 0.807 and 0.64, and for additive noise on
 vorticity 0.118, so there the registered point alone does not stand for the curve (`issues/118`).
+
+**The frequency bias against threshold, read as its field reads it.** The verification
+recommendations draw the bias against the event threshold and read where it leaves 1
+([@wwrp2004], Section 5(c)); the percentile curves in Performance are that figure. The clean curve
+is 1 at every percentile, as it must be. The mildest Gaussian blur keeps the bias near 1 up to
+about the 98th percentile on density, holds it below 1 already at the 90th on velocity, and drops
+it to 0 at the highest percentiles on both; each harsher strength moves the drop to a lower
+percentile, the pattern "Reading the output" describes for a
+prediction that has lost only its most extreme increments. The fake prediction with the right
+spectrum has a bias above 1 at the 90th percentile on density and velocity and near 1 on
+vorticity, and falls to 0 at the highest percentiles: it has as many moderate increments as the
+reference or more, and none of the extreme ones.
+
+**At the analysed percentiles 90, 95 and 99.** The linear blurs take density's bias to 0 at the 95th and
+99th percentiles but leave part of it at the 90th (a change of -0.285 to -0.592 for the box, disk
+and Epanechnikov blurs), and take velocity's to 0 at all three. The low-pass filters take the bias
+to 0 at all three percentiles on every field. The high-pass filters lower it at all three, most at
+the 99th (-0.986 and -0.998 on density). Additive noise raises it more the rarer the event: 8.45,
+17.3 and 79.3 on density at the 90th, 95th and 99th, and 8.65, 18 and 91 on velocity. `coarsen`
+lowers the bias at the 90th and 95th percentiles of density and velocity and raises it at the 99th
+(1.88 and 3 on density and velocity), the block-edge mechanism again. Read over these three
+percentiles, the Gaussian blur's dominance is 0.925, 1 and 0.988, higher than over the nine orders
+of the theta curve; as for `tail_index`'s classical plot, fewer coordinates make dominance easier
+to meet, so the difference is not a property of the percentile form (this card's reasoning).
+
 
 ### On `forecast_re5e4`
 
@@ -1200,6 +1240,33 @@ tail_exceedance on vorticity against lead time, the physical time since the fore
 Every prediction of every forecast, nothing pooled: a cell is one prediction step of one forecast, a row the lead time (the physical time since the forecast started) and a column the forecast, named by its run's native grid and its starting time (`64², start 0` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-0`; `128², start 0` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-0`; `256², start 0` is `F-906861_64/forecast_t0-0`; `64², start 1.13` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250`; `128², start 1.13` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-2500`; `256², start 1.13` is `F-906861_64/forecast_t0-5000`). **Damage** is the prediction's departure from the target as a fraction of the anchor's in the same frame, by default the target's own spatial mean, so each step is scaled by its own target. A dash means no value there.
 
 <!-- END GENERATED results_on_forecast_re5e4 -->
+
+Each cell is read as a verifier reads a frequency bias, against the target 1 [@jwgfvr]: below 1
+the prediction has fewer increments at the target's extreme level than the target has, above 1
+more. The damage is the distance from 1, $|v - 1|/(v + 1)$, since the anchor scores 0
+(`judgements/008`), so a forecast with no extreme increment at all has damage 1, the anchor's. On
+this 64 analysis grid the threshold is the target's 64th largest increment per channel and axis.
+This card draws no frequency-bias curve from this run; the subsection reads the registered point
+only.
+
+- **The forecasts run on the 256² grid keep the target's count of extremes, with one exception.**
+  From start 1.13 the bias stays between 0.969 and 1.02 at every step on every field, and from
+  start 0 on density between 0.969 and 1.01. From start 0 on velocity it falls to 0.547 at lead
+  0.9021 and returns to 0.984 at the last step, and on vorticity it rises at every step from lead
+  0.5638 to 1.53 at the last, an over-forecast of extreme increments with damage 0.21.
+- **The forecasts run on coarser grids under-forecast the extremes, down to none.** The 64²
+  forecast from start 0 has no increment at the target's extreme level at any step on velocity and
+  vorticity, and on density from lead 0.4511 on, after an over-forecast of 1.88 at the first step.
+  The 128² forecast from start 0 reaches 0 on all three fields: from lead 0.4511 on density (0.0156
+  at lead 0.7893 apart), from lead 0.7893 on velocity (0.0312 at the last step apart), and at the
+  first four steps on vorticity. From start 1.13 the 128² forecast stays between 0.531 and 0.992
+  on density, 0.242 and 0.734 on velocity and 0.359 and 0.664 on vorticity, while the 64² forecast
+  falls to 0 on density and velocity before the last step and stays at or below 0.164 on vorticity.
+- **Order.** At every one of the 60 steps the damage of the 64² forecast is at least the 128²'s
+  and the 128²'s at least the 256²'s, with ties where two forecasts score the same, most often both
+  0 (this card's check of the tables). A verifier would add a score of association such as SEDI
+  for events this rare ("How its field reports it"); none is computed here.
+
 
 ### On `kinet_re1e6`
 
@@ -1334,6 +1401,34 @@ Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_on_kinet_re1e6 -->
+
+The values here are on the 128 analysis grid, where $k = 128$ and the ceiling $n/k$ is 128, and
+are not comparable with the main run's on 256 ("Reading the output"). What can be compared is the
+direction and order of each response.
+
+- **Smoothing and spectral filtering saturate as on `kinet_re5e4`.** Every blur and both low-pass
+  filters take the value to 0 at the harshest strength (a change of -1), apart from the median blur
+  on vorticity, which keeps one usable strength (-0.93). The Gaussian and box blurs read 0.775 on
+  density and velocity, the one-graded-point tie pattern; the disk and Epanechnikov blurs on
+  velocity and the low-pass filters on density and velocity are at 0 from their mildest strength
+  and withheld. The high-pass filters lower the value with a rank correlation of 1 on every field,
+  in 0.944 to 1 of frames. `band_attenuate` on density barely moves it here (a change of 0.00781,
+  largest damage 0.094), where on `kinet_re5e4` it lowered it.
+- **Resolution loss.** `coarsen` still raises the value on density and velocity, but is followed
+  weakly (rank correlation 0.2 and 0.4, with 0.00621 of frames in order), and on vorticity it
+  lowers it to 0 (a change of -1). `subsample` raises it on density and velocity (2.94 and 3.06)
+  and lowers it on vorticity with a rank correlation of -0.8, as on `kinet_re5e4`.
+  `coarsen_bandlimited` lowers it with rank correlations of 0.775 to 1.
+- **Noise and gain raise it on every field** with a rank correlation of 1 (0.9 for multiplicative
+  noise on vorticity). Multiplicative noise on density reaches 128, the ceiling (a change of 127);
+  additive noise reaches a change of 72.2, 102 and 1.95.
+- **Displacement.** Whole-cell translations leave the value at exactly 1. `translate_subpixel`
+  gives negative rank correlations of -0.577 to -0.698 again, with a largest damage of 0.0492,
+  0.123 and 0.21.
+- **Trap tests.** The fake prediction with the right spectrum scores 0, 0.00391 and 0.0117 (damage
+  1, 0.992 and 0.977), close to the anchor, as on `kinet_re5e4`, and the reference moved far away
+  scores exactly 1.
+
 
 ## References
 

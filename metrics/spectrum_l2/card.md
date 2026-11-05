@@ -423,18 +423,22 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_smoothing -->
 
-Every smoothing axis is ordered correctly in every frame on all three fields, which is what
-Equation (2) implies for any operator that only removes energy. The size of the response is
-set by where the removed energy sat. Writing $r(\kappa) = 1 - E_g(\kappa)/E_f(\kappa)$ for
-the fraction a candidate removes from shell $\kappa$, Equation (2) is exactly
+Every smoothing axis is ordered in every frame on all three fields (rank correlation 1, every
+frame in order). By our reading this follows from Equation (2) for an operator whose loss in
+every shell grows with its strength. The median blur is not such an operator everywhere: at its
+harshest strength it raises density's shells 16 and 32, by 0.693 and 0.799 of their clean
+energy (the per-shell tables under "The curve behind the number"), and it is still ordered.
+The size of the response is set by where the removed energy sat. Writing
+$r(\kappa) = 1 - E_g(\kappa)/E_f(\kappa)$ for the fraction a candidate removes from shell
+$\kappa$, Equation (2) is exactly
 $S = \bigl(\sum_\kappa r(\kappa)^2 E_f(\kappa)^2 / \sum_\kappa E_f(\kappa)^2\bigr)^{1/2}$,
-an average of the per-shell losses weighted by the *square* of each shell's energy. A blur
-takes its energy from high shells, which that weight discounts. At the strongest
-`gaussian_blur` the metric reads 0.63 on density and 0.58 on velocity, where the blur removes
-70% and 64% of the fluctuation energy, and 0.24 on vorticity, where it removes 47%: vorticity's
-energy reaches much higher shells (half of it lies above wavenumber 4, a tenth above 23, in
-this run's calibration), so more of what the blur removes is discounted. The weakest
-separation in the family, 0.685 on `box_blur` applied to vorticity, is on the same field.
+an average of the per-shell losses weighted by the *square* of each shell's energy. The largest
+damage of `gaussian_blur`, over every frame and strength, is 0.696 on density, 0.594 on velocity
+and 0.521 on vorticity. On density and velocity the harshest blur reaches the most energetic
+shell: shell 1 loses 0.604 and 0.578 of its energy. On vorticity shell 1 loses only 0.0256, and
+the response comes from shells 8 and up, which hold a larger share of vorticity's spectrum than
+of the other fields' (the reference spectra under "The curve behind the number"). The weakest
+separation in the family, 0.685 on `box_blur` applied to vorticity, is on that field.
 
 ### Spectral filtering
 
@@ -463,12 +467,15 @@ separation in the family, 0.685 on `box_blur` applied to vorticity, is on the sa
 
 <!-- END GENERATED results_spectral -->
 
-Ordered correctly everywhere, and this is the family where the energy-squared weighting is
-most visible. `highpass_ideal` at its mildest strength removes 45% of vorticity's energy, all
-of it from the lowest, most energetic shells, and the metric already reads 0.92, close to the
-value of a flat prediction. `lowpass_ideal`, removing between 6% and 47% from the other end of
-the spectrum, reads 0.03 to 0.31 on the same field. Energy lost at large scales costs far more
-here than the same energy lost at small scales, which is the Limitations point measured.
+Ordered in every frame on every field, and this is the family where the energy-squared
+weighting is most visible. Both high-pass filters empty shells 1 and 2 at their harshest
+strength (a change from clean of -1 in the per-shell tables, on every field) and reach a largest
+damage of 1, the value of a flat prediction, on every field. `band_attenuate` removes up to all
+of shell 32 and about half of shells 16 and 64 (-0.523, -1 and -0.499 on density) and reaches
+at most 0.000123 on density, 0.000707 on velocity and 0.192 on vorticity. On velocity,
+`lowpass_ideal` empties every octave shell from 2 up while keeping shell 1 (-0.00959) and
+reaches at most 0.123. Energy lost at the largest scales costs far more here than energy lost
+at small scales, which is the Limitations point measured.
 
 ### Displacement
 
@@ -492,10 +499,12 @@ here than the same energy lost at small scales, which is the Limitations point m
 <!-- END GENERATED results_geometric -->
 
 Blind, as the definition requires. A whole-cell translation leaves every Fourier amplitude
-unchanged, and the medians on `translate_x` are round-off, 2e-17 to 1.9e-16. The Fourier-shift
-interpolation in `translate_subpixel` moves individual values to at most 8e-11. Every ordering
-statistic in the table is withheld on both axes, because a ranking of those values is a
-ranking of the last bits of floating-point arithmetic.
+unchanged: the largest damage of `translate_x` is 8.8e-16, 4.84e-16 and 4.62e-16 on density,
+velocity and vorticity, round-off. The Fourier-shift interpolation of `translate_subpixel`
+reaches at most 7.86e-11, 7.08e-11 and 9.52e-13, consistent with the fractional shift dropping
+part of the grid's Nyquist mode (`issues/041`). Every ordering statistic in the table is
+withheld on all three axes, because a ranking of those values is a ranking of the last bits of
+floating-point arithmetic.
 
 ### Resolution loss
 
@@ -518,19 +527,22 @@ ranking of the last bits of floating-point arithmetic.
 
 <!-- END GENERATED results_resolution -->
 
-Ordered correctly on all three fields in every frame. The response is small on the smooth
-fields, 0.068 on density and 0.031 on velocity at a factor of 16, where block averaging removes
-6% and 3% of their energy. Neither reaches 0.1, a tenth of the way to the anchor, so no
-strength is detected on those two fields. On vorticity it removes 41% and the metric reaches
-0.23; the weakest separation, 0.813, is on the same field.
+All three axes have rank correlation 1 on every field, and every frame is in order except under
+`coarsen_bandlimited` on density. Under `coarsen` the largest damage is 0.119 on density, 0.0426
+on velocity and 0.455 on vorticity. In this family no strength's median reaches a tenth of the
+way to the anchor on density or velocity (no first strength detected in the reactivity table),
+and on vorticity the third does. The per-shell tables show the mechanism: block averaging lowers
+the low shells and adds energy to the high ones, by 3.07, 73.2 and 113 times the clean energy at
+shells 16, 32 and 64 of density, because the staircase's block edges put energy at small
+scales, and those shells weigh little in Equation (2). `subsample` does the same and reaches at
+most 0.0968, 0.0329 and 0.912.
 
-Under `coarsen_bandlimited` it is ordered correctly too, but much smaller on the smooth
-fields: at a factor of 16, 0.0025 on density and 0.0014 on velocity, against 0.068 and 0.031
-under `coarsen`. The staircase's block edges put energy into high shells that the band-limited
-reconstruction leaves empty. On vorticity the two are closer, 0.16 against 0.23. Density is in
-the right order in only 52% of frames under the band-limited operator, where factors 2 and 4
-read 1e-6 and 2e-6; `issues/039` records this density pattern, which the pointwise metrics
-and `h1_seminorm` show as well.
+`coarsen_bandlimited` empties the shells from 16 up instead (-1 in the per-shell tables) and
+reaches at most 0.0147 on density, 0.00895 on velocity and 0.514 on vorticity, more than
+`coarsen` on vorticity, whose spectrum gives the high shells more weight. Density is in the
+right order in only 0.522 of frames under the band-limited operator, whose mildest factors
+leave the value near round-off (its smallest value is 9.17e-10); `issues/039` records this
+density pattern, which the pointwise metrics and `h1_seminorm` show as well.
 
 ### Noise
 
@@ -549,13 +561,18 @@ and `h1_seminorm` show as well.
 
 <!-- END GENERATED results_stochastic -->
 
-Ordered correctly with complete separation between neighbouring strengths, but the values
-are small beside the energy involved. The strongest noise *adds* 25% to the fluctuation energy
-of every field, and the metric reads 0.031 on density, 0.026 on velocity and 0.069 on
-vorticity, none of them a tenth of the way to the anchor, so no noise strength is detected.
-White noise adds energy to each shell in proportion to the number of modes in it, so most of
-it lands in the high shells, where the energy-squared weight described under Smoothing is
-smallest.
+Ordered in every frame, with neighbouring strengths separated in nearly every frame (weakest
+gap 0.996 to 1). Additive noise reaches a largest damage of only 0.0406 on density, 0.0274 on
+velocity and 0.0865 on vorticity, and the profile lists it among the degradations with a
+provably small response on density and velocity. The per-shell tables show why: at its
+harshest strength it raises density's shells 16, 32 and 64 by 45.9, 3.65e+03 and 3.07e+04 times
+their clean energy, while shells 1 to 4 move by at most 0.00201 of theirs. White noise adds
+energy to each shell in proportion to the number of modes in it, so most of it lands in the
+high shells, where the energy-squared weight described under Smoothing is smallest.
+Multiplicative noise on density is the exception, with a largest damage of 6.45e+03 and shell 1
+raised by 1.11 times its clean energy. By our reading, noise proportional to the local value
+scales with density's mean of about 1, two to three orders of magnitude larger than its
+fluctuation (Definition), so it adds far more energy than the fluctuation holds.
 
 ### Cell-value distortion
 
@@ -586,10 +603,11 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 <!-- END GENERATED results_canaries -->
 
 The trap catches this metric, as it was built to. The fake prediction has the reference's
-exact Fourier amplitudes, and the metric scored it at damage 2.8e-15, 1.6e-16 and 2.0e-16 on
+exact Fourier amplitudes, and the metric scored it at damage 2.75e-15, 1.62e-16 and 2.01e-16 on
 density, velocity and vorticity: zero to round-off, indistinguishable from the undegraded
-reference. The reference moved far away scores 1.6e-16 to 1.8e-16, round-off as well, because
-a translation changes no Fourier amplitude.
+reference. In the spectrum figures of Performance its dotted curve lies on the reference's.
+The reference moved far away scores 1.59e-16 to 1.81e-16, round-off as well, because a
+translation changes no Fourier amplitude.
 
 ### Compared with the other metrics
 
@@ -625,14 +643,15 @@ Rank correlation over every degradation, computed separately for each physical f
 
 <!-- END GENERATED results_summary -->
 
-The ranking this metric produces is close to independent of the pointwise family, correlating
-0.159 to 0.187 on density, 0.345 to 0.346 on velocity and 0.099 to 0.105 on vorticity with `mae`,
-`mse`, `rmse` and `vrmse` (`nrmse` in the run cited), and closest to `persistence_distance` at 0.929 and 0.931 on density and
-vorticity, `increment_w1_by_separation` at 0.813 to 0.879 and `spectral_energy_flux` at 0.877 on
-velocity. `increment_w1`, the other metric here that reads only a distribution rather than an
-arrangement, is at 0.662 to 0.81. The strong
-negative correlations with `enstrophy`, `palinstrophy` and `kinetic_energy` are orientation
-rather than disagreement: those are single-field quantities that fall as the damage rises.
+Its closest correlates in the table are the metrics that compare distributions or spectra
+rather than cell values: `persistence_distance` on density and vorticity, `spectral_energy_flux`
+on velocity, then `increment_w1_by_separation`, `tail_exceedance`, `energy_distance` and
+`increment_w1`. Its correlation with the pointwise family (`mae`, `mse`, `rmse`, `nrmse`,
+`vrmse`, the channel means and `max_error`) is weak and positive on every field, so it orders
+the ladder differently from them. By our reading, the negative correlations with `enstrophy`,
+`palinstrophy` and `kinetic_energy` are orientation rather than disagreement: those are
+single-field raw values that fall under the smoothing and filtering axes as this metric's
+damage rises.
 
 ### Damage beside the other metrics
 
@@ -735,6 +754,14 @@ Median damage over frames against the applied strength, log-log, for spectrum_l2
 Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 the anchor (by default the field's own mean); a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
 
 <!-- END GENERATED results_damage_by_level -->
+
+On every displacement, at every strength and on every field, this metric's damage is round-off,
+many orders of magnitude below the pointwise controls, whose damage grows with the shift. A
+translation leaves the amplitude spectrum unchanged except for the part of the Nyquist mode a
+fractional shift drops (`issues/041`), which puts the fractional strengths a few orders of
+magnitude above the whole-cell ones, still near round-off. On displacement, then, this metric
+charges nothing of what the pointwise controls charge, and there is no proportion between the
+two to compare.
 
 ### The curve behind the number
 
@@ -894,8 +921,25 @@ Each coordinate of the curve read as a metric of its own, with the same statisti
 
 <!-- END GENERATED results_companion -->
 
-The spectrum read shell by shell at the octaves, written when the evidence is regenerated from
-a run that stores the curve.
+The field-standard figures in Performance draw $E(k)$ on log-log axes. The reference's spectrum
+falls steeply with the shell. At the octave shells, as the fingerprint records the reference's
+value, density's falls from 1.55e-05 at shell 1 to 3.91e-12 at shell 32, velocity's from 0.00134
+to 1.93e-08, and vorticity's only from 8.17e-07 to 1.19e-08. By our reading, that is why the
+energy-squared weight of Equation (2) discounts small-scale damage least on vorticity. No
+power law is drawn over the spectra and none is read: the card does not compensate the spectrum
+(see "How its field reports it"). The fake prediction's dotted curve lies on the reference's, and
+each strength of the Gaussian blur falls below the reference from the high shells down.
+
+Read shell by shell, the tables show where each operator acts. The blurs and low-pass filters
+lower the shells they reach. The high-pass filters empty shells 1 and 2 on every field. Noise
+raises the high shells by orders of magnitude and changes shells 1 to 4 by at most 0.00519 of
+their clean energy. `coarsen` and `subsample` lower the low shells and raise the high ones, so
+their direction changes along the curve. Dominance is 1 for the Gaussian blur and for both
+low-pass and both high-pass filters on every field: there, any summary that grows with each
+shell's departure orders their strengths as Equation (2) does. It is 0 to 0.0186 for `coarsen`,
+0 for `box_blur` and `disk_blur` on density and vorticity, and 0.0124 to 0.0497 for additive
+noise. There, the order of neighbouring strengths can depend on how the shells are summarised
+(`issues/136`).
 
 ### On `forecast_re5e4`
 
@@ -1012,6 +1056,25 @@ spectrum_l2 on vorticity against lead time, the physical time since the forecast
 Every prediction of every forecast, nothing pooled: a cell is one prediction step of one forecast, a row the lead time (the physical time since the forecast started) and a column the forecast, named by its run's native grid and its starting time (`64², start 0` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-0`; `128², start 0` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-0`; `256², start 0` is `F-906861_64/forecast_t0-0`; `64², start 1.13` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250`; `128², start 1.13` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-2500`; `256², start 1.13` is `F-906861_64/forecast_t0-5000`). **Damage** is the prediction's departure from the target as a fraction of the anchor's in the same frame, by default the target's own spatial mean, so each step is scaled by its own target. A dash means no value there.
 
 <!-- END GENERATED results_on_forecast_re5e4 -->
+
+The surrogate literature draws each forecast's spectrum over its target's at several lead
+times ([@rasp2024], Fig. 10; [@kochkov2021], Fig. 2c). This card stores the forecasts' spectra
+only through the number, so it reads the number at each step, for its growth along the rollout,
+the order of the runs and its distance from no skill (our summary of how such a figure is read,
+as the pointwise cards read theirs). The damage equals the value at every step, because the
+anchor scores 1 (Reading the output).
+
+- **Order.** At every lead time, from both starts and on every field, the forecast on the
+  finest native grid scores lowest and the one on the coarsest highest: 64² above 128² above
+  256².
+- **Growth.** From start 1.13 the damage grows along every rollout, with small reversals
+  (density at 64²: 0.151 at lead 0.7893, then 0.149). From start 0 the 256² forecast grows by
+  orders of magnitude, from 7.79e-05 to 0.0408 on density, from 9.54e-06 to 0.0163 on velocity
+  and from 0.000464 to 0.114 on vorticity. The 64² and 128² forecasts from start 0 peak
+  mid-rollout on density (0.631 and 0.368 at lead 0.5638) and on vorticity, and then fall.
+- **Distance from no skill.** The largest damage over every step is 0.631 on density, 0.0587 on
+  velocity and 0.423 on vorticity, all below the 1 of a flat prediction. Velocity's spectrum
+  stays closest to its target's.
 
 ### On `kinet_re1e6`
 
@@ -1146,6 +1209,25 @@ Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_on_kinet_re1e6 -->
+
+This run is on the 128 analysis grid and kinet_re5e4's on the 256 one, and values on different
+grids are not comparable (Reading the output), so across the two runs only the orderings are
+read here. They hold as on kinet_re5e4. Every smoothing, filtering, resolution, noise and
+`gain` axis has rank correlation 1 on every field, with every frame in order except `subsample`
+on vorticity (0.981) and `multiplicative_noise` on velocity (0.988). `median_blur` on vorticity
+keeps one usable strength and is not ranked.
+
+The displacements differ. `translate_x` and `translate_y` stay at round-off. `translate_subpixel`
+on velocity and vorticity does not: its largest damage is 7.69e-07 and 0.00024, and its rank
+correlation is -0.714 with no frame in order. A negative correlation is what the pattern of
+kinet_re5e4's "Damage beside the other metrics" table gives: the fractional strengths move the
+value and the whole-cell strengths, which are exact shifts, return it to round-off. By our reading it is the Nyquist mode the fractional shift drops
+(`issues/041`), which holds more of the spectrum on this grid at this Reynolds number; the issue
+measured kinet_re5e4 at 256 only. The trap scores the fake prediction at 3.43e-15, 1.65e-16 and
+2.26e-16 and the far-moved reference at 1.61e-16 to 1.9e-16, round-off as on kinet_re5e4. On
+velocity, `coarsen` and `subsample` reach a largest damage of 0.13 and 0.149, and they are not
+among the degradations with a provably small response, as they were on kinet_re5e4. This test
+cannot separate the change of grid from the change of Reynolds number.
 
 ## References
 
