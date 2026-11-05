@@ -314,12 +314,16 @@ because the synthetic ensemble has no spatial correlation for it to see.
 
 <!-- END GENERATED results_pointwise -->
 
-A uniform offset raises the score in every frame, by 2.08 times the clean value at the
-harshest offset, reaching a damage of 0.431, with an elasticity of 1.87 over the mildest
-offsets: close to quadratic,
-because the offset adds to every member's distance from the reference in quadrature with the
-members' own scatter, and the root of a sum of squares grows with the square of the smaller
-term while that term is small.
+Only the offset ran here: the synthetic ensemble's ladder
+(`configs/degradation/ensemble_miscalibration.yaml`) carries `bias` as its one axis that moves
+the ensemble mean, and no `gain`. A uniform offset raises the score in every frame, by 2.08
+times the clean value at the harshest offset, reaching a damage of 0.431, first detected at
+level 3, with an elasticity of 1.87 over the mildest offsets. The energy score is in the units
+of the field and charges every member's distance from the truth, so it is not invariant to an
+offset. The response is close to quadratic because the offset adds to every member's distance
+from the reference in quadrature with the members' own scatter, and the root of a sum of
+squares grows with the square of the smaller term while that term is small (this card's
+reasoning).
 
 ### Compared with the other metrics
 
@@ -345,6 +349,20 @@ term while that term is small.
 Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
+
+The synthetic ensemble has one field, density, and the comparison runs over its three axes,
+`bias` and the two dispersion axes, and the anchor. `crps` orders the degradations exactly as
+the energy score does (1), and `crps_skill_score` exactly in reverse (−1), which is the same
+order, because the skill score is higher where the CRPS is lower; the dispersion paragraph
+above says why the energy score and the CRPS coincide on this dataset. The rank-histogram
+summaries follow closely, `rank_histogram` at 0.94 and `rank_histogram_chi2` at 0.929, then
+`spread_skill` at 0.753. The metrics that order them least like the energy score are `vrmse`
+(0.46), `variogram_score` (0.482) and the errors of the ensemble mean, `mse`, `rmse`, `mae`,
+`nrmse`, `h1_relative` and `ensemble_mean_rmse` (0.542 each), with `max_error` at 0.653. In the
+run's `results.csv` the mean-based errors give all eight dispersion strengths the same value,
+to round-off, because neither dispersion axis moves the member mean they receive, and
+`variogram_score` does not move under the offset (its card); each therefore shares only part of
+the energy score's ordering.
 
 ## References
 

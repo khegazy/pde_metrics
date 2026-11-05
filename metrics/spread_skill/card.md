@@ -311,17 +311,10 @@ The profile row above ranks the degradations by damage per unit of field change,
 dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
 round-off; its "charges most for", "charges least for" and selectivity are therefore not
 meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/blob/main/issues/111-damage-per-change-divides-by-round-off-on-ensemble-axes.md)).
-
-The bias axis, in the Performance tables, is the useful contrast. The ratio falls by 0.62 of
-its clean value at the harshest offset, to a smallest single value of 0.374, with a damage of
-0.459, without any change in dispersion at all, because biasing the members moves the
-ensemble mean away from the truth and so inflates the denominator. A low ratio therefore does
-not by itself mean an overconfident ensemble; it means spread and error disagree, and this axis is the reminder
-that the error can be the thing that moved.
+The `bias` axis is read under Cell-value distortion below.
 
 ### Cell-value distortion
 
-[gain](../../degradations/gain/card.md) ·
 [bias](../../degradations/bias/card.md)
 
 <!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence spread_skill --results results/comparison_1793812401`, do not edit -->
@@ -331,6 +324,17 @@ that the error can be the thing that moved.
 | `bias` | density | 4 | 1 | 1 | 1 |
 
 <!-- END GENERATED results_pointwise -->
+
+Only the offset ran here: the synthetic ensemble's ladder
+(`configs/degradation/ensemble_miscalibration.yaml`) carries `bias` as its one axis that moves
+the ensemble mean, and no `gain`. It is the useful contrast to the dispersion axes. Adding the
+same offset to every member leaves the spread of Equation (1) unchanged and adds to the error
+of the ensemble mean in Equation (2), so the ratio is not invariant to an offset: it falls in
+every frame and at every strength, with a rank correlation of 1, by 0.62 of its clean value at
+the harshest offset, to a smallest single value of 0.374, with a damage of 0.459, first
+detected at level 3. A low ratio therefore does not by itself mean an overconfident ensemble;
+it means spread and error disagree, and this axis is the reminder that the error can be the
+thing that moved.
 
 ### Compared with the other metrics
 
@@ -356,6 +360,19 @@ that the error can be the thing that moved.
 Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
+
+The synthetic ensemble has one field, density, and the comparison runs over its three axes,
+`bias` and the two dispersion axes, and the anchor, with this ratio entering by its distance
+from one. `rank_histogram` orders the degradations most like it (0.918), then
+`rank_histogram_chi2` (0.83) and `variogram_score` (0.816); `crps` and `energy_score` read
+0.753, and `crps_skill_score` −0.753, the same agreement with the sign of a higher-is-better
+score. The errors of the ensemble mean order them least like it, with correlations near zero:
+`mse`, `rmse`, `mae`, `nrmse`, `h1_relative` and `ensemble_mean_rmse` at −0.0094 each, `vrmse`
+at −0.0341, and `max_error` at 0.325. In the run's `results.csv` those errors give all eight
+dispersion strengths the same value, to round-off, because neither dispersion axis moves the
+member mean they receive, so only the offsets and the anchor order them, while this ratio
+places the harshest inflation above the anchor and the two harshest inflations above every
+offset.
 
 ## References
 

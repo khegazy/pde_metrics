@@ -516,6 +516,25 @@ false detections' distance from the true shock, not a displaced shock.
 
 <!-- END GENERATED results_pointwise -->
 
+Neither operator moves the shock, and the metric reads them as it reads every degradation: by
+whether the detector's verdict changes. In every frame the three milder strengths of each
+score exactly the clean value, 0, because the detector flags the same cells as on the
+reference; at the harshest strength of each it flags none, and the empty-set convention charges
+the diagonal, 1, the anchor's value (the run's `results.csv`). The damage is therefore 1, the
+first strength detected is level 4, and the rank correlation of 0.775 in every frame is what
+three tied strengths followed by one step give. The metric is invariant to a gain or an offset
+until the verdict flips and then moves by its whole range, so its value says nothing about how
+large the amplitude or level error is.
+
+Why the verdict flips, from the reader's exact solution with the two operators applied as
+their code applies them (this card's arithmetic, not a run output, checked in all ten frames):
+the harshest offset raises the pressure on both sides of the shock by the same amount, which
+lowers their ratio below $R$ of Equation (1); the harshest gain pushes the undisturbed gas ahead
+of the shock to a negative pressure, and a cell beside a non-positive pressure is never flagged
+(Limitations, "A failure of positivity is invisible"). The milder gains raise the ratio across
+the shock and change nothing the detector reports. The trap tests' closest real degradation,
+`bias=0.5`, is this same loss of the shock.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -559,6 +578,16 @@ a mirrored window, whose shock lies elsewhere in the tube, and the metric report
 Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
+
+On Sod's pressure, the only field this metric runs on, the other shock-set distances order the
+degradations most like it: `shock_set_masd` and `shock_set_baddeley_delta` at 1,
+`shock_set_hausdorff95` at 0.999 and `shock_set_hausdorff` at 0.998. The pointwise errors agree
+only moderately, `rmse`, `mse` and `nrmse` at 0.698, `vrmse` at 0.697, `max_error` at 0.68 and
+`mae` least, at 0.644. `shock_mask_overlap` reads −0.881, strong agreement in the opposite
+sign, since the overlap falls where a distance rises. My reading, not a measurement: on Sod
+most degradations either keep the shock in place or lose it, so any metric built on the same
+detector sorts them alike; the pooling that sets this distance apart from `shock_set_masd`
+moves its values under noise (that card's Noise section) more than its order.
 
 ## References
 

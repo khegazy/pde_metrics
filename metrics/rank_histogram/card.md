@@ -324,8 +324,7 @@ On the damage scale the anchor, each member replaced by its own spatial mean, sc
 collapsed ensemble ranks the truth below or above every member at almost every cell, putting
 about half of the draws in each end bin. Against it the harshest deflation reaches a damage of
 0.718, the harshest inflation 0.577 and the harshest offset 0.870 (the largest in any frame).
-The `bias` axis has no subsection of its own on this card; its numbers are those of the
-Performance tables and the card's fingerprint.
+The `bias` axis is read under Cell-value distortion below.
 
 The profile row above ranks the degradations by damage per unit of field change, but the two
 dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
@@ -334,7 +333,6 @@ meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/b
 
 ### Cell-value distortion
 
-[gain](../../degradations/gain/card.md) ·
 [bias](../../degradations/bias/card.md)
 
 <!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence rank_histogram --results results/comparison_1793812401`, do not edit -->
@@ -344,6 +342,18 @@ meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/b
 | `bias` | density | 4 | 1 | 1 | 1 |
 
 <!-- END GENERATED results_pointwise -->
+
+Only the offset ran here: the synthetic ensemble's ladder
+(`configs/degradation/ensemble_miscalibration.yaml`) carries `bias` as its one axis that moves
+the ensemble mean, and no `gain`. The index is not invariant to an offset of the members
+alone, because Equation (1) counts members below the truth, and moving every member the same
+way moves the truth's rank toward one end. It rises in every frame and at every strength, with
+a rank correlation of 1 and no overlap between neighbouring strengths, from the clean 0.0451
+to a largest single value of 1.53; the change from clean at the harshest offset is 32.5 times
+the clean value, the largest of the three axes, and the damage 0.870. It is first detected at
+level 2, and its elasticity over the mildest offsets is 1.07. The shape behind it is the
+slope drawn in the dispersion section above: rank 0 rising by 11.3 times its clean value and
+rank 16 emptying.
 
 ### Compared with the other metrics
 
@@ -369,6 +379,17 @@ meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/b
 Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
+
+The synthetic ensemble has one field, density, and the comparison runs over its three axes,
+`bias` and the two dispersion axes, and the anchor. `rank_histogram_chi2`, the test statistic
+on the same histogram, orders the degradations most like this index (0.967), then `crps` and
+`energy_score` (0.94 each) and `spread_skill` (0.918); `crps_skill_score` reads −0.94, the
+same agreement as `crps` with the sign of a higher-is-better score. `variogram_score` (0.616)
+and `max_error` (0.579) agree less, and the errors of the ensemble mean least: `mse`, `rmse`,
+`mae`, `nrmse`, `h1_relative` and `ensemble_mean_rmse` at 0.323 each and `vrmse` at 0.267. In
+the run's `results.csv` those errors give all eight dispersion strengths the same value, to
+round-off, because neither dispersion axis moves the member mean they receive, so they share
+only this index's ordering of the offsets and the anchor.
 
 ## References
 

@@ -250,20 +250,11 @@ reporting a correlation computed on round-off.
 Read beside `crps` on the same run, this is what the probabilistic panel buys: the CRPS rises
 on both of these axes (its card) while this number does not move at all. A panel carrying
 only mean-based scores would have reported both of those ensembles as identical to the
-calibrated one.
-
-The `bias` axis, in the Performance tables, is the one that moves the ensemble mean, and the
-metric responds to it as root-mean-square error does: it rises by 1.63 times its clean value
-at the harshest offset, with an elasticity of 1.82 over the mildest offsets, and reaches a
-damage of 0.542 against the anchor, each member replaced by its own spatial mean, which scores
-0.629. This card has no subsection of its own for that axis; the numbers are those of the
-Performance tables and the card's fingerprint. In this run every row equals the `rmse` row of
-the same frame, axis and strength exactly, because a pairwise metric already receives the
-member mean (Definition).
+calibrated one. The `bias` axis, the one that moves the ensemble mean, is read under
+Cell-value distortion below.
 
 ### Cell-value distortion
 
-[gain](../../degradations/gain/card.md) ·
 [bias](../../degradations/bias/card.md)
 
 <!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence ensemble_mean_rmse --results results/comparison_1793812401`, do not edit -->
@@ -273,6 +264,18 @@ member mean (Definition).
 | `bias` | density | 4 | 1 | 1 | 1 |
 
 <!-- END GENERATED results_pointwise -->
+
+Only the offset ran here: the synthetic ensemble's ladder
+(`configs/degradation/ensemble_miscalibration.yaml`) carries `bias` as its one axis that moves
+the ensemble mean, and no `gain`. Adding the same offset to every member adds it to the
+ensemble mean of Equation (1) and so to every cell's error in Equation (2); the metric is in
+the units of the field and not invariant to an offset, and it responds as root-mean-square
+error does. It rises in every frame and at every strength, with a rank correlation of 1, by
+1.63 times its clean value at the harshest offset, with an elasticity of 1.82 over the mildest
+offsets; it is first detected at level 3 and reaches a damage of 0.542 against the anchor, each
+member replaced by its own spatial mean, which scores 0.629. In this run every row equals the
+`rmse` row of the same frame, axis and strength exactly, because a pairwise metric already
+receives the member mean (Definition).
 
 ### Compared with the other metrics
 
@@ -298,6 +301,20 @@ member mean (Definition).
 Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
+
+The synthetic ensemble has one field, density, and the comparison runs over its three axes,
+`bias` and the two dispersion axes, and the anchor. `mse`, `rmse`, `mae`, `nrmse` and
+`h1_relative` order the degradations exactly as this metric does (1): all receive the same
+member mean, give all eight dispersion strengths one value and order the offsets and the
+anchor alike. `vrmse` (0.907) and `max_error` (0.67) are computed on the same member mean and
+agree less. In the run's `results.csv`, `vrmse`'s eight dispersion values differ from one
+another only in their last digits, so round-off breaks the tie this metric keeps, and
+`max_error`'s median at the mildest offset lies below its value at the dispersion strengths.
+The probabilistic scores order the degradations least like it, because they separate the eight
+dispersion strengths this metric ties: `crps` and `energy_score` at 0.542, `rank_histogram_chi2`
+at 0.392, `rank_histogram` at 0.323, `spread_skill` near zero (−0.0094) and `variogram_score`,
+which does not move under the offset, at −0.21; `crps_skill_score` reads −0.542, the same
+agreement as `crps` with the sign of a higher-is-better score.
 
 ## References
 
