@@ -455,6 +455,20 @@ velocity (the profile table). Where a row lists fewer than four strengths, the o
 severity on that field and were excluded, as the calibration of a sharp filter on these
 spectra predicts (see the degradation pages).
 
+**The transverse distance beside the number.** The figure that opens Performance draws the
+transverse distance of velocity, `energy_distance.transverse`, at every strength. It follows
+every degradation the number follows, with a rank correlation of 1, and it is as blind to the
+whole-cell shifts. It differs in size, each on its own damage scale, and the filters split the
+two most. A low-pass costs the transverse distance about half what it costs the number: the
+largest damage of `lowpass_ideal` is 0.466 against 1.09, and of `lowpass_butterworth` 0.605
+against 1.09. A high-pass costs it more: 0.55 against 0.329 for `highpass_ideal` and 0.603 against
+0.392 for `highpass_butterworth`, with more frames in order (0.857 for both, against 0.683 and
+0.795). The blurs and the noises also cost it less: `gaussian_blur` 0.455 against 0.975,
+`additive_noise` 4.53 against 7.83. By our reading the filters split the two for the reason
+`increment_w1_by_separation`'s card gives for its transverse curve: this flow's largest scales
+are two shear layers whose streamwise velocity varies across the stream, so its large-scale
+increments are transverse, and a low-pass keeps them while a high-pass removes them.
+
 ### Displacement
 
 [translate_x](../../degradations/translate/card.md) ·
@@ -560,6 +574,19 @@ whole increment distribution without bound, so its distance is not capped by the
 
 <!-- END GENERATED results_pointwise -->
 
+`gain` is followed in every frame on every field, and the metric grows close to in proportion to
+the strength over the mildest strengths (elasticity 0.981, 0.982 and 0.981 on density, velocity
+and vorticity). By our reading this follows from Equation (3): stretching every increment by
+$1 + a$ moves the cumulative function by an amount proportional to $a$ when $a$ is small, and
+Equation (4) is the square root of the integral of that gap squared. At the harshest strength,
+0.5, the largest damage is 0.318, 0.336 and 0.321, smaller than `increment_w1` charges the same
+stretch; neighbouring strengths overlap in a few frames on vorticity (weakest gap 0.939). `bias`
+cancels in every increment of Equation (1): its largest damage is 2.99e-09 on density, 5.26e-10
+on velocity and 1.8e-10 on vorticity, and every ordering statistic is withheld. Those values are
+far above machine precision; by our reading they are round-off in the squared distance of
+Equation (4), which the square root raises to its own square root. On `kinet_re1e6` `gain`
+reaches 0.315, 0.332 and 0.316 and `bias` at most 9.76e-09.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -584,11 +611,6 @@ lower than the other two fields. The fake prediction keeps the reference's spect
 therefore the variance of its increments, so what this metric sees there is a difference in
 the shape of the increment distribution. The reference moved far away scores exactly 0 on
 every field, for the reason given under Displacement.
-
-This card has no table comparing it with other metrics. The run it cites holds every metric,
-and on the card of [increment_w1](../../metrics/increment_w1/card.md), which reads the same
-one-cell increments by a different distance, the two order the ladder almost identically on
-every field.
 
 ### Compared with the other metrics
 
@@ -623,6 +645,18 @@ every field.
 Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
+
+On every field the metric orders the degradations most like `increment_w1` (0.997, 0.995 and
+0.987 on density, velocity and vorticity), which reads the same one-cell increments by the
+transport distance, and next like `increment_w1_by_separation` (0.966, 0.961 and 0.901). It
+follows them on each field with `tail_exceedance`, `persistence_distance`, `spectrum_l2` and, on
+velocity, `spectral_energy_flux`, between 0.714 and 0.878. With the pointwise family, `mae` to
+`max_error_channel_mean`, the correlation is weak on density (0.241 to 0.311) and velocity
+(0.149 to 0.291) and near zero on vorticity (-0.0167 to 0.0163). It orders the degradations
+least like the single-field values: `increment_flatness` on density (-0.233) and velocity
+(-0.44), `kinetic_energy` on velocity (-0.423) and `enstrophy` on vorticity (-0.51). With
+`increment_flatness` the sign changes between fields, and on vorticity the correlation is
+positive, 0.5.
 
 ### On `forecast_re5e4`
 

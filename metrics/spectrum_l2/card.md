@@ -592,6 +592,17 @@ fluctuation (Definition), so it adds far more energy than the fluctuation holds.
 
 <!-- END GENERATED results_pointwise -->
 
+`gain` is ordered in every frame on every field, with a largest damage of 1.25 on all three
+fields. By our reading this is Equation (2) evaluated exactly: a gain of strength $a$
+multiplies every shell's energy by $(1+a)^2$, so $S = (1+a)^2 - 1$ whatever the field or frame,
+which is 1.25 at the harshest strength, 0.5, and 0.0201 at the mildest, 0.01, the smallest value
+the run recorded on the axis. The metric is scale-free only when both fields are scaled
+together (Definition); scaling the candidate alone is what it charges. `bias` leaves every
+fluctuation unchanged, and Equation (1) removes the mean before the transform, so its largest
+damage is 4.33e-14 on density, 4.9e-16 on velocity and 3.15e-16 on vorticity, round-off, and
+every ordering statistic is withheld. On `kinet_re1e6` the two axes do the same: `gain` reaches
+1.25 on every field and `bias` at most 4.32e-14.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

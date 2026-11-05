@@ -621,6 +621,14 @@ most 0.186 of frames in order, and on vorticity the flatness rises (a change fro
 
 <!-- END GENERATED results_pointwise -->
 
+Neither axis moves the value. The change from clean at the harshest strength is 0 on every
+field under both, except -1.25e-16 on density under `bias`, round-off, so every ordering
+statistic is withheld. By our reading this is Equation (2) itself: an offset added to every
+cell cancels in each increment of Equation (1), and a gain of strength $a$ multiplies the fourth
+moment and the squared second moment alike by $(1+a)^4$. The metric is a shape statistic of the
+increment distribution and is blind, by construction, to an error in amplitude or level. On
+`kinet_re1e6` the same holds, with at most -3.96e-16 on density under `bias`.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
