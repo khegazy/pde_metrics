@@ -304,8 +304,8 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_smoothing -->
 
-Both linear blurs smear Sod's shock beyond the detector's reach at every calibrated strength,
-so the candidate has no shock and scores 0, the formula's value for one empty set. The values
+The four blurs in the table smear Sod's shock beyond the detector's reach at every calibrated
+strength, so the candidate has no shock and scores 0, the formula's value for one empty set. The values
 are equal across strengths, so no rank correlation is defined. This axis tests only whether
 the metric notices that the shock is gone, which it does at the mildest strength. The median
 blur, also in this family, is absent from the table because it left Sod's pressure unchanged
@@ -330,7 +330,9 @@ scored 1 there.
 <!-- END GENERATED results_spectral -->
 
 The low-pass filters smear the shock away at every distinct strength and score 0 throughout,
-so they carry no ranking. The high-pass filters score 0 for a different reason: they keep the
+so they carry no ranking. `band_attenuate` leaves the shocked cells where they were and scores 1
+at every strength, so the Profile lists it as provably small and as the degradation charged least
+for. The high-pass filters score 0 for a different reason: they keep the
 jump across the shock nearly intact but raise the pressure on both sides of it, so the ratio
 the detector reads falls below its threshold while the shock is still there (checked off the
 run in this bundle's review, by applying the operators as the pipeline does). The rank
@@ -371,8 +373,14 @@ one; checked off the run in this bundle's review, through the pipeline's wall ex
 value at half a cell therefore reflects the operator's ringing as well as the shift. The
 damage scale is not the problem it is for
 [shock_set_distance](../../metrics/shock_set_distance/card.md): the anchor scores 0 and a lost
-overlap scores the same 0, so a misplaced shock reads as full damage, and the profile lists no
-axis as provably small.
+overlap scores the same 0, so a misplaced shock reads as full damage, and the profile lists
+neither translation as provably small.
+
+The first figure under Performance shows why, as a line-out of the last frame: each panel is the
+pressure translated by 1, 2, 4 and 8 cells over the reference's in grey, with the two marked
+cells on either side of the jump moving with the step. At one cell the moved pair still shares a
+cell with the reference's pair; from two cells on the pairs are disjoint, and the panels at 2, 4
+and 8 cells, which a distance tells apart, all score 0 here.
 
 ### Resolution loss
 
@@ -391,11 +399,12 @@ axis as provably small.
 Block averaging moves the shock to a block edge, by an amount set by where the block
 boundaries fall rather than by the factor alone: at the mildest factor the staircase
 reconstruction scores 1 in some frames and 0.5 in others, and in most frames every harsher
-factor ties at 0, so the rank correlation is 0.775 on both reconstructions. The band-limited
+factor ties at 0, so the rank correlation is 0.775 on all three reductions; `subsample` scores
+exactly as `coarsen` does in every frame of this run. The band-limited
 reconstruction keeps shocked cells only at the mildest factor, where it scores at most 0.8
 (`value_max`, three marked cells sharing two with the reference); from the next factor on it
-smears the shock away and scores 0. Both reconstructions reach full damage, so neither is
-charged more in damage; the profile names `coarsen_bandlimited` as the degradation the metric
+smears the shock away and scores 0. All three reach full damage, so none is charged more in
+damage; the profile names `coarsen_bandlimited` as the degradation the metric
 charges most for because it does so with a smaller change to the field (`damage_per_change`
 in `_generated/fingerprint.json`), its smooth reconstruction departing less from the
 reference than the staircase does.
@@ -419,8 +428,10 @@ candidate's falsely marked cells so outnumber the reference's two that the value
 change from clean at the harshest strength is -0.996 in the Reactivity table, and the first
 strength detected is level 3. Every frame ranks the four amplitudes the same way, and the
 worst frame's rank correlation is 0.949, the ties at the two weakest amplitudes being all
-that keeps it below 1. The fall measures how many cells the detector marks falsely, not
-whether the true shock was found.
+that keeps it below 1. Multiplicative noise does the same one amplitude later: its three
+weakest amplitudes score 1 in every frame, the fourth marks false cells in two frames only, and
+the fifth collapses the value in every frame; the ties leave its rank correlation at 0.707. The
+fall measures how many cells the detector marks falsely, not whether the true shock was found.
 
 ### Trap tests
 
