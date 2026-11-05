@@ -227,7 +227,8 @@ names; the `companion_points` figure draws it over the reference's.
   extreme adds its overshoot to the value.
 - **An approximation, and an expensive one.** The value is within a relative $10^{-6}$ of the
   exact distance, and one comparison of two 256 by 256 vorticity fields took 5 to 25 s
-  (measured on one frame of `kinet_re5e4`, blurred and noisy candidates), tens of times as long
+  (timed off the evidence runs on one frame of `kinet_re5e4`, blurred and noisy candidates;
+  `issues/144` holds the timings), tens of times as long
   as the bottleneck distance; on 128 by 128 it took 0.2 to 3 s. At that cost the degradation
   ladders on the turbulence datasets did not finish in about ten hours.
 - **Only scalar fields, and no fluid-dynamics precedent.** The limits stated on
@@ -262,6 +263,41 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED experiments -->
 
+**What the forecasts found.** This card's only run is `forecast_re5e4`, and the evidence pass
+writes no lead-time table or figure for a card whose main run is a forecast run, so the numbers
+below are read from the card's `_generated/fingerprint.json`, which holds every prediction step.
+The columns are named as on the other cards' forecast tables: a forecast's native grid and its
+start, 0 or 1.13. Every forecast is scored on the 64 analysis grid, so all six share one grid and
+the caveat about comparing resolutions (Reading the output) does not separate them. Damage is the
+prediction's value over that of the target's own spatial mean in the same frame. Topological data
+analysis has no standard figure of a diagram distance along a rollout; beside the number it
+reports a stability bound, Equation (3).
+
+- **Order.** At every lead time, from both starts and on both fields, the forecast on the coarsest
+  native grid has the largest damage and the one on the finest the smallest: 64² above 128² above
+  256².
+- **Growth.** From start 0 on density, the 64² and 128² forecasts rise to their largest damage at
+  lead time 0.5638, 0.828 and 0.522, and settle to 0.501 and 0.274 at the last step; the 256²
+  forecast grows from 7.69e-05 to 0.121, with one dip at lead time 0.9021. From start 1.13 on
+  density the 64² forecast first falls, from 0.155 to 0.0608, and then grows to 0.321; it and the
+  128² one, which grows to 0.141, both dip once at lead time 0.6766; the 256² one stays at or below
+  0.000686. On vorticity from start 0 the 64² and 128² forecasts rise, with small reversals, to
+  0.939 and 0.878 at lead time 1.015, and the 256² one from 0.00195 to 0.472 at the same step.
+  From start 1.13 the 64² and 128² forecasts start high, at 0.76 and 0.612 at the first step, and
+  reach at most 0.858 and 0.79, while the 256² one grows from 0.0058 to 0.0395.
+- **Distance from no skill.** The largest damage over every step is 0.828 on density and 0.939 on
+  vorticity, below the 1 of the target's spatial mean.
+- **Beside the bottleneck distance.** At every one of the 60 prediction steps of both fields the
+  value is at least `persistence_distance`'s value for the same prediction, as Reading the output
+  says it must be, and the damage is larger too. The value exceeds `persistence_distance`'s by a
+  larger factor on vorticity than on density at every one of those steps (all three compared off
+  the card, from the two cards' fingerprints).
+
+The diagram figures of Performance draw only the target's diagram, at the last stored frame; they
+hold no prediction's diagram. On density that diagram holds a handful of points and on vorticity
+thousands. By our reading that difference in feature count is why the sum of Equation (2) exceeds
+the bottleneck distance by more on vorticity: there are many more features to add up.
+
 ### Smoothing
 
 [gaussian_blur](../../degradations/gaussian_blur/card.md) ·
@@ -273,6 +309,10 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_smoothing -->
+
+Not measured. This family is tested by the degradation ladders of `kinet_re5e4` and `kinet_re1e6`,
+on which the metric is held back until issue 144 is settled; `forecast_re5e4`, this card's
+only run, has no ladder.
 
 ### Spectral filtering
 
@@ -287,6 +327,10 @@ No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_spectral -->
 
+Not measured. This family is tested by the degradation ladders of `kinet_re5e4` and `kinet_re1e6`,
+on which the metric is held back until issue 144 is settled; `forecast_re5e4`, this card's
+only run, has no ladder.
+
 ### Displacement
 
 [translate_x](../../degradations/translate/card.md) ·
@@ -297,6 +341,10 @@ No measurements for this test in the recorded run.
 No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_geometric -->
+
+Not measured. This family is tested by the degradation ladders of `kinet_re5e4` and `kinet_re1e6`,
+on which the metric is held back until issue 144 is settled; `forecast_re5e4`, this card's
+only run, has no ladder.
 
 ### Resolution loss
 
@@ -309,6 +357,10 @@ No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_resolution -->
 
+Not measured. This family is tested by the degradation ladders of `kinet_re5e4` and `kinet_re1e6`,
+on which the metric is held back until issue 144 is settled; `forecast_re5e4`, this card's
+only run, has no ladder.
+
 ### Noise
 
 [additive_noise](../../degradations/additive_noise/card.md)
@@ -318,6 +370,10 @@ No measurements for this test in the recorded run.
 No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_stochastic -->
+
+Not measured. This family is tested by the degradation ladders of `kinet_re5e4` and `kinet_re1e6`,
+on which the metric is held back until issue 144 is settled; `forecast_re5e4`, this card's
+only run, has no ladder.
 
 ### Cell-value distortion
 
@@ -329,6 +385,12 @@ No measurements for this test in the recorded run.
 No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_pointwise -->
+
+Not measured. This family is tested by the degradation ladders of `kinet_re5e4` and `kinet_re1e6`,
+on which the metric is held back until issue 144 is settled; `forecast_re5e4`, this card's
+only run, has no ladder. The response to an offset is pinned in `test_metric.py`, not
+measured on a run: an offset moves every point of the diagram by its size and each point
+counts, as the Intuition's worked example shows.
 
 ### Trap tests
 
@@ -346,6 +408,12 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 
 <!-- END GENERATED results_canaries -->
 
+Neither trap was run: `forecast_re5e4` scores real predictions and holds no fake prediction
+and no far-moved reference. The anchor is each target's own spatial mean; the table's value on
+it, 0.0702 on density and 0.196 on vorticity, summarises it over all 60 frames, while every damage
+under *What the forecasts found* divides a prediction's value by the anchor's value in the same
+frame.
+
 ### Compared with the other metrics
 
 <!-- GENERATED results_summary: written by `python -m fmeval.cards evidence persistence_wasserstein --results results/comparison_1793811840`, do not edit -->
@@ -353,6 +421,10 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_summary -->
+
+No table. The rank correlations with the other metrics are computed over the degradation ladder
+of a card's main run, and this card's main run, `forecast_re5e4`, has none. Beside
+`persistence_distance` on the same forecasts, see *What the forecasts found*.
 
 ## References
 

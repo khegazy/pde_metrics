@@ -508,6 +508,18 @@ than its fluctuation, which sets the anchor.
 
 <!-- END GENERATED results_pointwise -->
 
+`gain` is ordered in every frame on every field, and the metric grows in proportion to the
+strength (elasticity 1). By our reading this is Equation (2) evaluated exactly: a gain of
+strength $a$ multiplies every increment by $1 + a$ and keeps their order, so each sorted pair
+differs by $a\,|a_{(i)}|$ and the value is $a$ times the mean absolute increment of the frame.
+The largest damage is 0.541 on density, 0.536 on velocity and 0.611 on vorticity, a little above
+the harshest strength, 0.5, because each frame's value is divided by one anchor value shared by
+the whole run while the size of the increments varies from frame to frame. The same variation is
+why neighbouring strengths overlap in a few frames on density and vorticity (weakest gaps 0.972
+and 0.996). `bias` cancels in every increment of Equation (1): its largest damage is 1.13e-13 on
+density, 3.8e-15 on velocity and 3.39e-16 on vorticity, round-off, and every ordering statistic is
+withheld. On `kinet_re1e6` `gain` reaches 0.538, 0.53 and 0.554 and `bias` at most 2.91e-13.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

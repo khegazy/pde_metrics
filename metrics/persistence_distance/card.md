@@ -521,6 +521,22 @@ values centre on zero; the global extremes, which always count (Limitations), mo
 
 <!-- END GENERATED results_pointwise -->
 
+Both axes move the metric up in every frame on both fields, in proportion to the strength
+(elasticity 1 for each). The metric is in the field's own units and reads the levels at which
+features appear and vanish, so neither a contrast nor a level change escapes it. `bias` is
+charged far less than `gain` at the same strength: at the harshest, 0.5, the largest damage is
+0.0927 on density and 0.0933 on vorticity under `bias`, against 0.523 and 0.522 under `gain`. By
+our reading the two differ in how far they move each point of the diagram. An offset of $b$
+moves every birth and death by exactly $b$. A feature that never dies must be matched to another
+that never dies, and the nearest is its own shifted copy, $b$ away, while Equation (5) caps the
+distance at $b$: the distance is $b$ and the bound is attained. A gain moves each level in
+proportion to its distance from the mean, so the extremes, where the features that never die are
+born, move the most. Both axes size their change as the strength times the fluctuation's rms (see
+the degradation pages), so the ratio of the two damages says that the levels the gain moves most
+lie several rms from the mean. Neighbouring strengths overlap in a few density frames (weakest
+gaps 0.969 and 0.971). On `kinet_re1e6` the largest damage is 0.0889 and 0.088 under `bias` and 0.519 and 0.551
+under `gain`.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

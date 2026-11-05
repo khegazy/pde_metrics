@@ -478,6 +478,17 @@ density and velocity and almost separated on vorticity (0.992).
 
 <!-- END GENERATED results_pointwise -->
 
+`gain` is ordered in every frame on every field, and its largest damage is 0.5 on all three, the
+harshest strength itself; the smallest value the run recorded on the axis is 0.01, the mildest.
+By our reading this is Equation (3) evaluated exactly: a gain of strength $a$ multiplies every
+increment by $1 + a$ and keeps their order, so $W_1(\ell) = a\,s(\ell)$ at every separation, and
+dividing by the reference's own $s(\ell)$ leaves $a$ in every frame. That per-frame division is
+why the damage here is the strength exactly, where `increment_w1`, which has no such division,
+varies a little from frame to frame. `bias` cancels in every increment of Equation (1): its
+largest damage is 5.52e-14 on density, 1.63e-15 on velocity and 2.2e-16 on vorticity, round-off,
+and every ordering statistic is withheld. On `kinet_re1e6` `gain` again reaches 0.5 on every field
+and `bias` at most 8.57e-14.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -777,9 +788,27 @@ with the departure at each separation orders the strengths alike, so the convent
 (3) does not decide the trend. Among the degradations it follows, it is lowest for the low-pass
 filters on vorticity (0.578 for the Butterworth and 0.472 for the ideal low-pass), where a
 summary weighting other separations could order the weakest pair of strengths differently in
-about half the frames (`issues/098`). The transverse curve of velocity is not tabulated: the
-run's rows hold no `increment_w1_by_separation.transverse` values on `kinet_re5e4`. Under the sub-pixel
-shift it is 0, as it must be for a curve that returns to zero at whole-cell strengths.
+about half the frames (`issues/098`). Under the sub-pixel shift it is 0, as it must be for a
+curve that returns to zero at whole-cell strengths.
+
+The transverse curve of velocity, the third figure of Performance and the last table above,
+follows every degradation the longitudinal curve follows, at every separation, with one
+exception: under `lowpass_ideal`, which has two usable strengths on velocity, the harsher one
+moves the transverse curve less than the milder one at 128 cells (rank correlation -1, 0.174 of
+frames in order, dominance 0.174), where the longitudinal curve is ordered in every frame. The
+low-pass and high-pass filters, whose dominance is 1 on the longitudinal curve, are 0.888 to
+0.981 on the transverse one. Read on the damage scale of each separation, the filters split the
+two curves most. The largest damage of `lowpass_ideal` is 1.07 at one cell and 1.22 at 128 on
+the longitudinal curve, against 0.704 and 0.225 on the transverse one; in the figures the
+longitudinal curve of the harsh low-pass lies on the anchor's. The high-pass filters charge the
+transverse curve more: at one cell 0.539 against 0.322 for `highpass_ideal` and 0.592 against
+0.376 for `highpass_butterworth`. By our reading both follow from where this flow keeps its
+largest scales, in two shear layers whose streamwise velocity varies across the stream, so its
+large-scale increments are transverse. A low-pass that keeps only the largest shell keeps that
+shear, whose longitudinal increments are small beside the reference's, so the longitudinal curve
+reads the candidate as no better than the mean while the transverse curve stays close to the
+reference at large separations; a high-pass removes the shear, which the transverse curve
+carries far more of than the longitudinal one.
 
 ### On `forecast_re5e4`
 

@@ -442,6 +442,18 @@ formed without dealiasing, so part of that flux is aliased rather than transferr
 
 <!-- END GENERATED results_pointwise -->
 
+`gain` is ordered in every frame, with a largest damage of 2.38. By our reading this is
+Equation (1) evaluated exactly: the flux is cubic in the velocity, so a gain of strength $a$
+multiplies the flux at every octave by $(1+a)^3$ and Equation (2) gives $(1+a)^3 - 1$, which is
+2.38 at the harshest strength, 0.5, and 0.0303 at the mildest, 0.01, the smallest value the run
+recorded on the axis. The cube is why this metric charges a gain more than `spectrum_l2` does,
+whose spectra are quadratic. `bias` adds the same velocity to every cell, and its largest damage
+is 1.04e-13, round-off, with every ordering statistic withheld. By our reading that is the flux's
+invariance under a uniform velocity: the added mode is $\mathbf{k} = 0$, whose product with
+$\nabla \cdot (\mathbf{u}\mathbf{u})$ averages to zero on the periodic domain, and advection by a
+uniform velocity moves no energy between scales. On `kinet_re1e6` `gain` again reaches 2.38 and
+`bias` at most 8.8e-14.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -494,6 +506,17 @@ moved far away scores 4.06e-15, because a translation leaves the flux unchanged.
 Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
+
+The metric runs on velocity only. It orders the degradations most like the other metrics that
+compare distributions or spectra: `increment_w1_by_separation` (0.925), `spectrum_l2` (0.896),
+`energy_distance` (0.866), and `tail_exceedance` and `increment_w1` (0.859 each). Its
+correlation with the pointwise family, `mae` to `max_error_channel_mean`, is positive and
+moderate, 0.384 to 0.447, and with the gradient norms `h1_relative`, `h1_seminorm` and
+`h_minus_one` 0.318 to 0.363. It orders them least like `kinetic_energy` (-0.572),
+`increment_flatness` (-0.429) and `tail_index` (-0.152), whose correlations are negative. By our
+reading the negative correlation with `kinetic_energy` is orientation, as on `spectrum_l2`'s
+card: a single-field raw value that falls under the smoothing and filtering axes while this
+metric's damage rises.
 
 ### The curve behind the number
 

@@ -604,6 +604,14 @@ strength (rank correlation 0.9) to a change of 1.17 and 1.03 at the harshest.
 
 <!-- END GENERATED results_pointwise -->
 
+Neither axis moves the value. The change from clean at the harshest strength is 0 on every field
+under both, except -6.31e-15 on density under `gain`, round-off, so every ordering statistic is
+withheld. By our reading this is Equation (2) itself: an offset added to every cell cancels in
+each increment of Equation (1), and a gain multiplies every $X_{(i)}$ and the threshold
+$X_{(k+1)}$ alike, leaving each log-ratio unchanged. The estimator reads the shape of the tail and
+is blind, by construction, to an error in amplitude or level. On `kinet_re1e6` the same holds,
+with at most 4.07e-15 on density under `gain`.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

@@ -604,6 +604,21 @@ noise: there a few counts scatter on either side of 1.
 
 <!-- END GENERATED results_pointwise -->
 
+`gain` raises the value on every field, in every frame. A gain multiplies the prediction's
+increments while the threshold of Equation (2) stays the reference's, so more of them reach it: at
+the mildest strength, 0.01, the value is already 1.04, 1.02 and 1.03 on density, velocity and
+vorticity, and at the harshest, 0.5, it reaches 6.31, 11 and 9.81, a largest damage of 0.726,
+0.834 and 0.815. This is the frequency bias doing what its field defines it to do: a prediction
+whose extremes are too large over-forecasts the extreme event. Scaling both fields together
+changes nothing (Reading the output); scaling the prediction alone is what the metric charges.
+`bias` cancels in every increment of Equation (1), and the value stays within a few counts of 1:
+its smallest value is 0.998 on density and 0.996 on velocity and vorticity, a largest damage of
+0.000978 and 0.00196, with no frame in order and rank correlations of 0.258 or 0. By our reading
+these are increments tied with the threshold that round-off in the offset pushes just below it:
+two channel-and-axis pairs of 256 events each make 512 events, and one or two lost give 0.998 and
+0.996. On `kinet_re1e6` `gain` reaches a largest damage of 0.574, 0.705 and 0.774 and `bias` at
+most 0.00392.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
