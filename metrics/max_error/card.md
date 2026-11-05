@@ -376,10 +376,11 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_smoothing -->
 
-All three blurs are ordered correctly on every field, with a rank correlation of 1. On density
-and velocity neighbouring strengths are almost never confused (weakest gap 0.915 or more). On
-vorticity they overlap more, with weakest gaps of 0.614 to 0.675, and `median_blur` is in order
-in 0.981 of frames.
+Every blur is ordered with a rank correlation of 1 on every field. On density and velocity
+neighbouring strengths are almost never confused (weakest gap 0.915 or more). On vorticity they
+overlap more, with weakest gaps of 0.614 to 0.681, and `median_blur` is in order in 0.981 of
+frames. On velocity the blurs come close to the field's mean: the largest damage is 0.991 under
+`gaussian_blur` and 0.966 under `disk_blur`, against 0.774 on density under `gaussian_blur`.
 
 ### Spectral filtering
 
@@ -412,8 +413,11 @@ in 0.981 of frames.
 
 Every filter is ordered with a rank correlation of 1 except `highpass_ideal` on vorticity, at
 0.8, in order in only 0.478 of frames, with a weakest gap of 0.489: two of its neighbouring
-strengths cannot be told apart by the worst cell. The low-pass filters, which remove the small
+strengths cannot be told apart by the worst cell. `highpass_butterworth` on vorticity has a rank
+correlation of 1 but is in order in 0.894 of frames. The low-pass filters, which remove the small
 scales that set a field's sharpest extrema, are ordered in every frame on every field.
+`band_attenuate` registers least on density, with a largest damage of 0.0205, and the Profile
+table lists it as the one degradation there on which the response is provably below 0.05.
 
 ### Displacement
 
@@ -436,8 +440,8 @@ scales that set a field's sharpest extrema, are ordered in every frame on every 
 
 <!-- END GENERATED results_geometric -->
 
-Both displacements are ordered with a rank correlation of 1 on every field; on vorticity the
-whole-cell shift is in order in 0.925 of frames and the sub-cell shift in 0.969. The response
+Every shift is ordered with a rank correlation of 1 on every field; on vorticity `translate_x`
+is in order in 0.925 of frames, `translate_y` in 0.95 and the sub-cell shift in 0.969. The response
 is linear in the displacement, as Equation (3) gives: the elasticity to a sub-pixel shift in
 the Profile table is 0.998, 0.999 and 0.983 on density, velocity and vorticity. On these
 smooth fields no jump is displaced, so the saturation at the jump height described under
@@ -464,10 +468,11 @@ Limitations does not appear here.
 
 <!-- END GENERATED results_resolution -->
 
-Both coarsenings are ordered with a rank correlation of 1 on every field. Under
-`coarsen_bandlimited`, density is in order in 0.988 of frames and vorticity in 0.913, and the
-Profile table names `coarsen_bandlimited` as what this metric charges most for, per unit of
-field change, on density and velocity.
+Every coarsening is ordered with a rank correlation of 1 on every field, but not in every frame:
+under `coarsen_bandlimited` density is in order in 0.988 of frames, velocity in 0.994 and
+vorticity in 0.913, and on vorticity `coarsen` is in order in 0.938 and `subsample` in 0.969. The
+largest damage under `coarsen` is 0.383, 0.987 and 0.919 on density, velocity and vorticity, and
+under `coarsen_bandlimited` 0.0851, 0.334 and 0.843.
 
 ### Noise
 
@@ -487,9 +492,12 @@ field change, on density and velocity.
 <!-- END GENERATED results_stochastic -->
 
 Noise is ordered perfectly on every field, with no overlap between neighbouring strengths. It
-is first detected, a tenth of the way to the anchor, only at level 4 on density and vorticity
-and level 3 on velocity (Reactivity table): the anchor is the field's largest excursion from
-its mean, so the worst noisy cell must reach a tenth of that before it registers.
+is first detected, a tenth of the way to the anchor, at level 2 on density, 3 on velocity and 4
+on vorticity (Reactivity table); `additive_noise` alone is first detected at level 4 on density.
+The anchor is the field's largest excursion from its mean, so the worst noisy cell must reach a
+tenth of that before it registers. Multiplicative noise on density reaches a largest damage of
+65.7, because it scales the whole density, mean included, while the anchor measures the largest
+excursion about that mean (our reading).
 
 ### Trap tests
 
@@ -552,10 +560,12 @@ Rank correlation over every degradation, computed separately for each physical f
 
 <!-- END GENERATED results_summary -->
 
-The maximum error orders the degradations almost as the pointwise norms do, at 0.957 to 0.972
-with `mse` and `rmse` and 0.936 to 0.948 with `mae` across the fields, so for ranking models it adds little to them. What it
-adds is the size of the worst cell, which the tables above show it charges in a different
-proportion from the averages.
+The maximum error correlates at 1 or very near it with its per-channel sibling
+`max_error_channel_mean`, a little below 1 with the squared errors, and lower again with `mae`,
+while the metrics that compare spectra, increments or distributions order the degradations
+differently. It orders the degradations much as the averaged errors do; what it adds is the size
+of the worst cell, which the tables above show it charges in a different proportion from the
+averages.
 
 ### Damage beside the other metrics
 
@@ -659,6 +669,11 @@ Median damage over frames at every strength, this metric in the first row and th
 
 <!-- END GENERATED results_damage_by_level -->
 
+The maximum error's line runs parallel to `mae`'s, `rmse`'s and `vrmse`'s at small shifts, all
+linear in the shift, and has half the slope of `mse`'s. It sits above the averaged errors on
+density until it meets `rmse` at the largest shift, and well above them on velocity, where at the largest whole-cell shift it passes the
+anchor while they stay well below it, and below `mae` and `rmse` on vorticity, where every line
+flattens as it nears the anchor.
 
 ### On `sod_shock_tube`
 
@@ -787,6 +802,26 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 
 <!-- END GENERATED results_on_sod_shock_tube -->
 
+On the exact Sod solution the jumps decide almost everything this metric reports, as Equation (4)
+and *Limitations* describe. Under `translate_x` the value is the same at every whole-cell shift
+on every frame, 0.161, 0.203 and 0.927 on density, pressure and velocity, so the five strengths
+cannot be ordered and no correlation is reported: one cell of every shifted jump sits on the
+wrong side of it, and the worst cell is the largest jump whatever the shift. The damage there is
+0.367, 0.431 and 1.55; on velocity the shift scores worse than the field's mean. The sub-cell
+shift and the operators that move or resample a jump by a fraction of a cell behave alike:
+`translate_subpixel`, `coarsen` and `subsample` have rank correlations of 0.775 to 0.986, with
+at most half the frames in order. The largest damage of `translate_subpixel` and `subsample`
+reaches the same 0.367, 0.431 and 1.55 as the whole-cell shift, and that of `coarsen` 0.321,
+0.404 and 1.46.
+
+The blurs are ordered in every frame, but on velocity they saturate: the value moves only from
+0.451 to 0.464 across the strengths of `gaussian_blur`, with an elasticity of 0.0139. On velocity
+the high- and low-pass filters are out of order as well, with rank correlations of 0.8 to 0.9 and
+weakest gaps down to 0.19; on density three of them keep a single strength. The noises and the
+cell-value distortions, which do not move the jumps, are ordered in every frame, as is
+`coarsen_bandlimited`. The phase-scrambled fake prediction scores close to twice the mean's
+damage on every field, 1.92, 1.96 and 2.07.
+
 ### On `synthetic_ensemble`
 
 <!-- GENERATED results_on_synthetic_ensemble: written by `python -m fmeval.cards evidence max_error --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
@@ -822,6 +857,17 @@ Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_on_synthetic_ensemble -->
+
+On the synthetic ensemble this metric scores the member mean against the reference, so it is
+already 0.634 before any degradation: the mean of a finite ensemble is not the reference, and its
+worst cell is far from it. A bias raises it with a rank correlation of 1, but only 0.833 of
+frames keep every strength in order (weakest gap 0.771), and its largest damage is 0.301. Our
+reading, not measured: a uniform shift adds to the worst cell only where the existing error has
+the same sign, so the cell that sets the value can change with the strength. Narrowing or
+widening the members (`spread_deflate`, `spread_inflate`) leaves the value unchanged in every
+frame, to rounding, which is why those rows carry no correlation: the
+dispersion of an ensemble does not reach a metric of its mean. The trap tests are not run on
+this dataset.
 
 ### On `forecast_re5e4`
 
@@ -938,6 +984,39 @@ max_error on vorticity against lead time, the physical time since the forecast s
 Every prediction of every forecast, nothing pooled: a cell is one prediction step of one forecast, a row the lead time (the physical time since the forecast started) and a column the forecast, named by its run's native grid and its starting time (`64², start 0` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-0`; `128², start 0` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-0`; `256², start 0` is `F-906861_64/forecast_t0-0`; `64², start 1.13` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250`; `128², start 1.13` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-2500`; `256², start 1.13` is `F-906861_64/forecast_t0-5000`). **Damage** is the prediction's departure from the target as a fraction of the anchor's in the same frame, by default the target's own spatial mean, so each step is scaled by its own target. A dash means no value there.
 
 <!-- END GENERATED results_on_forecast_re5e4 -->
+
+The numerical-analysis standard for this metric, the norm against grid spacing with the observed
+order beside it [@roy2005], cannot be read from these runs: the 256² run predicts on the
+reference grid itself, its first-step error from t = 0 is 9.66e-08 on density against 4.82e-05
+at 128² and 8.74e-05 at 64², and the three runs are not a refinement sequence (issue 126). What
+the run does give is the machine-learning benchmarks' object, the maximum error of each
+prediction step, which PDEBench computes at every step and offers as a proxy for the stability
+of time-stepping [@takamoto2022] (Sect. 3.3). Such a curve is read, in our summary, for whether
+the worst cell grows along the rollout, whether the predictors keep their order at every lead
+time, and how close the worst cell comes to the no-skill landmark. Here damage 1 is the target's
+spatial mean, which for this metric is the target's own largest excursion from its mean: a damage
+of 0.5 says the worst cell is off by half the largest excursion in the field.
+
+- **Order.** On density and velocity, at every lead time and from both starts, the error falls as
+  the run's grid is refined, 64² above 128² above 256², in value and in damage. On vorticity from
+  t = 0 the curves cross: the 256² run's worst cell grows at every step and passes both coarser
+  runs from lead time 0.7893, where it is 0.0108 against 0.0091 at 64² and 0.0085 at 128², to
+  0.0146 at the last step against 0.00895 and 0.00718. From t = 1.13 the order holds on every
+  field.
+- **Growth.** From t = 0 the coarse runs' worst cells peak at lead time 0.5638 or 0.6766 and then
+  fall back (density at 64²: 8.74e-05 at the first step, 0.0223 at the peak, 0.017 at the last).
+  From t = 1.13 they grow more slowly, on density at 64² at every step, from damage 0.0498 to
+  0.285.
+- **Distance from no skill.** No prediction reaches damage 1. The closest is the 256² run's last
+  vorticity step from t = 0, at 0.903: its worst cell is off by nine tenths of the target's
+  largest vorticity excursion. The largest damage of the 64² run from t = 0 is 0.715 on density,
+  0.631 on velocity and 0.643 on vorticity.
+
+The averaged errors keep the 256² run below the coarse runs on vorticity at every step (on
+`mse`'s and `rmse`'s cards), so the crossing is a property of the worst cell alone; why that
+cell grows past the coarse runs' was not measured. Each cell of the tables is one forecast of one model from
+one of two starts, not an average over a test set
+([EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md)).
 
 ### On `kinet_re1e6`
 
@@ -1072,6 +1151,18 @@ Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_on_kinet_re1e6 -->
+
+At twenty times the Reynolds number, on a 128 analysis grid rather than 256, more of the
+degradations lose their order in some frames. On vorticity both high-pass filters fall to a rank
+correlation of 0.4, with almost no frame in order (0.0373 and 0.0186) and weakest gaps of 0.084
+and 0.129; on `kinet_re5e4` only `highpass_ideal` was out of order there, at 0.8. On velocity
+`lowpass_ideal` has a rank correlation of 0.5 and `subsample` 0.8, and `coarsen` is in order in
+0.702 of frames. Whole-cell shifts of velocity reach a largest damage of 2.09 and 2.13, twice the
+field's mean. On vorticity several blur strengths are excluded as repeats or no-ops, leaving two
+strengths of `box_blur`, `disk_blur` and `epanechnikov_blur` and one of `median_blur`. The trap
+test repeats the pattern of `kinet_re5e4`: on density the fake prediction scores 0.984 and the
+reference moved far away 0.958, both near the mean's 1, while on velocity and vorticity they
+score 1.54 and 1.16.
 
 ## References
 
