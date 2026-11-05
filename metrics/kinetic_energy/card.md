@@ -63,7 +63,7 @@ ladder and on `sod_shock_tube`, whose one-dimensional velocity it reads as an an
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793846511 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 ![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__field-velocity.svg)
 
@@ -196,11 +196,11 @@ form is the one to reach for.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793846511 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793829127`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793846511`.
 
-Every number in this section comes from that run, except in the subsections headed with another experiment and in a figure whose caption names another run, each of which names its own run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`.
+Every number in this section comes from that run, except in the subsections headed with another experiment and in a figure whose caption names another run, each of which names its own run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793846511 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793846600`.
 
 <!-- END GENERATED run -->
 
@@ -219,8 +219,8 @@ is the relative error of the integral of `### How its field reports it`, with it
 
 | experiment | what a run on it is evidence of | on this card |
 |---|---|---|
-| `kinet_re5e4` | developed flow | measured, run `comparison_1793829127`: the main results |
-| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | measured, run `comparison_1793829231`: under *On `kinet_re1e6`* |
+| `kinet_re5e4` | developed flow | measured, run `comparison_1793846511`: the main results |
+| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | measured, run `comparison_1793846600`: under *On `kinet_re1e6`* |
 | `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: needs velocity, which this dataset does not provide |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | measured, run `comparison_1793812304`: under *On `sod_shock_tube`* |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | measured, run `comparison_1793811840`: under *On `forecast_re5e4`* |
@@ -235,7 +235,7 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 [box_blur](../../degradations/box_blur/card.md) ·
 [median_blur](../../degradations/median_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793846511 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -261,7 +261,7 @@ the one blur whose neighbouring strengths overlap at all across frames (weakest 
 [highpass_ideal](../../degradations/highpass_ideal/card.md) ·
 [highpass_butterworth](../../degradations/highpass_butterworth/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793846511 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -287,7 +287,7 @@ overlap across frames (weakest gap 0.537). The low-pass filters lie between: $-0
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793846511 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -309,7 +309,7 @@ reference-free diagnostic is useful for.
 [coarsen](../../degradations/coarsen/card.md) ·
 [coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793846511 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -333,7 +333,7 @@ the energy.
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793846511 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -356,9 +356,12 @@ the next.
 [gain](../../degradations/gain/card.md) ·
 [bias](../../degradations/bias/card.md)
 
-<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence kinetic_energy`, do not edit -->
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793846511 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence kinetic_energy`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `bias` | velocity | 4 | 1 | 1 | 1 |
+| `gain` | velocity | 4 | 1 | 1 | 1 |
 
 <!-- END GENERATED results_pointwise -->
 
@@ -367,7 +370,7 @@ Not generated yet. Run `python -m fmeval.cards evidence kinetic_energy`.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793846511 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
 |---|---|---|---|---|
@@ -385,7 +388,7 @@ quantity follows from the definition rather than from the data.
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793846511 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 | compared with | velocity |
 |---|---|
@@ -422,7 +425,7 @@ and positively, and weakly, only with the two other single-field statistics, `ta
 
 ### Damage beside the other metrics
 
-<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793846511 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 ![damage against applied strength for this metric beside the pointwise controls, log-log, one panel per displacement degradation and field](_generated/damage_beside_controls.svg)
 
@@ -529,7 +532,7 @@ any size.
 
 ### On `sod_shock_tube`
 
-<!-- GENERATED results_on_sod_shock_tube: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_on_sod_shock_tube: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793846511 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 **An analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence.**
 
@@ -640,7 +643,7 @@ prediction's energy to the reference's.
 
 ### On `forecast_re5e4`
 
-<!-- GENERATED results_on_forecast_re5e4: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_on_forecast_re5e4: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793846511 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 **Real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded.**
 
@@ -719,11 +722,11 @@ lost.
 
 ### On `kinet_re1e6`
 
-<!-- GENERATED results_on_kinet_re1e6: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_on_kinet_re1e6: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793846511 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 **Developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition.**
 
-Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition), on the 128 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793829231`.
+Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition), on the 128 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793846600`.
 
 [additive_noise](../../degradations/additive_noise/card.md) ·
 [band_attenuate](../../degradations/band_attenuate/card.md) ·

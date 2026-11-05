@@ -358,9 +358,12 @@ amplitude below a weaker one.
 [gain](../../degradations/gain/card.md) ·
 [bias](../../degradations/bias/card.md)
 
-<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence shock_set_masd`, do not edit -->
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence shock_set_masd --results results/comparison_1793812304`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence shock_set_masd`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `bias` | pressure | 4 | 0.775 | 0 | 0.5 |
+| `gain` | pressure | 4 | 0.775 | 0 | 0.5 |
 
 <!-- END GENERATED results_pointwise -->
 

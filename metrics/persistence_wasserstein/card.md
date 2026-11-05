@@ -106,9 +106,11 @@ standard way to compare two functions.
   the functions' difference: Equation (3) here, [@skraba2020], Theorem 4.6, and, for tame
   Lipschitz functions, the Wasserstein Stability Theorem of [@cohensteiner2010], Sect. 3. No
   interval or decomposition is standard.
-- **The experiment.** The theorems are tested on perturbed functions, which here are the noise
-  and smoothing axes of the degradation ladder on `kinet_re5e4`, with the real forecasts of
-  `forecast_re5e4` and the Reynolds ladder beside them. Fields with a known feature population,
+- **The experiment.** The theorems are tested on perturbed functions, which here would be the
+  noise and smoothing axes of the degradation ladder on `kinet_re5e4` and the Reynolds ladder.
+  Both are held back because the metric is too slow on them for now
+  ([issue 144](https://github.com/khegazy/pde_metrics/blob/main/issues/144-persistence-wasserstein-too-slow-on-turbulence-runs.md)),
+  so the real forecasts of `forecast_re5e4`, on a 64 by 64 grid, are its evidence. Fields with a known feature population,
   features injected at a known depth, and features removed by a known amount do not exist here:
   [EXP-orchestrator-20261023-known-vortex-field](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-orchestrator-20261023-known-vortex-field.md),
   [EXP-persistence_distance-spurious-feature-injection](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-persistence_distance-spurious-feature-injection.md)
@@ -226,7 +228,8 @@ names; the `companion_points` figure draws it over the reference's.
 - **An approximation, and an expensive one.** The value is within a relative $10^{-6}$ of the
   exact distance, and one comparison of two 256 by 256 vorticity fields took 5 to 25 s
   (measured on one frame of `kinet_re5e4`, blurred and noisy candidates), tens of times as long
-  as the bottleneck distance; on 128 by 128 it took 0.2 to 3 s.
+  as the bottleneck distance; on 128 by 128 it took 0.2 to 3 s. At that cost the degradation
+  ladders on the turbulence datasets did not finish in about ten hours.
 - **Only scalar fields, and no fluid-dynamics precedent.** The limits stated on
   `persistence_distance`'s card hold here too.
 
@@ -249,8 +252,8 @@ do, and what their strength numbers mean, is documented on their own pages.
 
 | experiment | what a run on it is evidence of | on this card |
 |---|---|---|
-| `kinet_re5e4` | developed flow | not yet run |
-| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
+| `kinet_re5e4` | developed flow | not applicable: too slow for the evidence pass at 256 x 256, 5 to 25 s per vorticity comparison; held back on Kareem's instruction until issue 144 is settled |
+| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not applicable: too slow for the evidence pass, whose shards had not finished after about ten hours; held back on Kareem's instruction until issue 144 is settled |
 | `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: its dispersion axes leave the member mean, the field this metric reads, unchanged by construction, and its bias axis moves every point of the candidate's diagram by the offset, a response test_metric.py pins exactly |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: Sod's exact density never rises along the tube, so its diagram is one point, born at the minimum, and the distance only compares two minima |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | measured, run `comparison_1793811840`: the main results |
@@ -321,9 +324,9 @@ No measurements for this test in the recorded run.
 [gain](../../degradations/gain/card.md) ·
 [bias](../../degradations/bias/card.md)
 
-<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence persistence_wasserstein`, do not edit -->
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence persistence_wasserstein --results results/comparison_1793811840`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`.
+No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_pointwise -->
 

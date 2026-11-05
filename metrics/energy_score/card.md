@@ -323,9 +323,26 @@ term while that term is small.
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence energy_score`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence energy_score --results results/comparison_1793812401`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence energy_score`.
+| compared with | density |
+|---|---|
+| `crps` | 1 |
+| `rank_histogram` | 0.94 |
+| `rank_histogram_chi2` | 0.929 |
+| `spread_skill` | 0.753 |
+| `max_error` | 0.653 |
+| `ensemble_mean_rmse` | 0.542 |
+| `h1_relative` | 0.542 |
+| `mae` | 0.542 |
+| `mse` | 0.542 |
+| `nrmse` | 0.542 |
+| `rmse` | 0.542 |
+| `variogram_score` | 0.482 |
+| `vrmse` | 0.46 |
+| `crps_skill_score` | -1 |
+
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 

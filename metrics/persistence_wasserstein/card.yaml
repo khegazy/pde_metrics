@@ -34,6 +34,8 @@ references: [cohensteiner2005, cohensteiner2010, skraba2020, bleile2022, gudhicu
              gudhiwasserstein, giottotda]
 
 not_run:
+  kinet_re5e4: too slow for the evidence pass at 256 x 256, 5 to 25 s per vorticity comparison; held back on Kareem's instruction until issue 144 is settled
+  kinet_re1e6: too slow for the evidence pass, whose shards had not finished after about ten hours; held back on Kareem's instruction until issue 144 is settled
   sod_shock_tube: Sod's exact density never rises along the tube, so its diagram is one point, born at the minimum, and the distance only compares two minima
   synthetic_ensemble: its dispersion axes leave the member mean, the field this metric reads, unchanged by construction, and its bias axis moves every point of the candidate's diagram by the offset, a response test_metric.py pins exactly
 review: null

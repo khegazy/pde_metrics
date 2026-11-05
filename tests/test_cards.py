@@ -1405,7 +1405,8 @@ def _forecast_run(path: pathlib.Path) -> pathlib.Path:
     The anchor (the target's variance) doubles every frame from 1e-14, and each prediction's
     error is 0.1, 0.2 and 0.3 of its own frame's anchor, so damage read frame by frame is exactly
     the step's tenth while a span shared by the frames would not be; the smallest error, 1e-15,
-    is below what a JSON rounded to ten decimal places keeps (issues/134).
+    is below what a JSON rounded to ten decimal places would keep, so the card's JSON must
+    carry exact floats.
     """
     df = pd.concat([make_frame(metric="mse", field=field, n_frames=6,
                                axes={label: [1.0] for label in ("mean_field", "forecast")})

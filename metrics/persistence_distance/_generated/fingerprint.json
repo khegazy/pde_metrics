@@ -5631,7 +5631,7 @@
           "worst_axis": "translate_subpixel"
         }
       ],
-      "run": "comparison_1793829231",
+      "run": "comparison_1793846600",
       "seed": 20260807
     }
   ],
@@ -5737,6 +5737,6 @@
       "worst_axis": "translate_subpixel"
     }
   ],
-  "run": "comparison_1793829127",
+  "run": "comparison_1793846511",
   "seed": 20260807
 }

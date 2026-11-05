@@ -507,9 +507,12 @@ false detections' distance from the true shock, not a displaced shock.
 [gain](../../degradations/gain/card.md) ·
 [bias](../../degradations/bias/card.md)
 
-<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence shock_set_distance`, do not edit -->
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence shock_set_distance --results results/comparison_1793812304`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence shock_set_distance`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `bias` | pressure | 4 | 0.775 | 0 | 0.5 |
+| `gain` | pressure | 4 | 0.775 | 0 | 0.5 |
 
 <!-- END GENERATED results_pointwise -->
 
@@ -537,9 +540,23 @@ a mirrored window, whose shock lies elsewhere in the tube, and the metric report
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence shock_set_distance`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence shock_set_distance --results results/comparison_1793812304`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence shock_set_distance`.
+| compared with | pressure |
+|---|---|
+| `shock_set_baddeley_delta` | 1 |
+| `shock_set_masd` | 1 |
+| `shock_set_hausdorff95` | 0.999 |
+| `shock_set_hausdorff` | 0.998 |
+| `nrmse` | 0.698 |
+| `rmse` | 0.698 |
+| `mse` | 0.698 |
+| `vrmse` | 0.697 |
+| `max_error` | 0.68 |
+| `mae` | 0.644 |
+| `shock_mask_overlap` | -0.881 |
+
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 

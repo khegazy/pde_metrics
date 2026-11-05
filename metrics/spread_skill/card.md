@@ -324,17 +324,36 @@ that the error can be the thing that moved.
 [gain](../../degradations/gain/card.md) ·
 [bias](../../degradations/bias/card.md)
 
-<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence spread_skill`, do not edit -->
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence spread_skill --results results/comparison_1793812401`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence spread_skill`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `bias` | density | 4 | 1 | 1 | 1 |
 
 <!-- END GENERATED results_pointwise -->
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence spread_skill`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence spread_skill --results results/comparison_1793812401`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence spread_skill`.
+| compared with | density |
+|---|---|
+| `rank_histogram` | 0.918 |
+| `rank_histogram_chi2` | 0.83 |
+| `variogram_score` | 0.816 |
+| `crps` | 0.753 |
+| `energy_score` | 0.753 |
+| `max_error` | 0.325 |
+| `ensemble_mean_rmse` | -0.0094 |
+| `h1_relative` | -0.0094 |
+| `mae` | -0.0094 |
+| `mse` | -0.0094 |
+| `nrmse` | -0.0094 |
+| `rmse` | -0.0094 |
+| `vrmse` | -0.0341 |
+| `crps_skill_score` | -0.753 |
+
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 

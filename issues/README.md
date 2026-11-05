@@ -120,9 +120,9 @@ Designed, hooks in place, not built.
 | ID | Title | Priority |
 |---|---|---|
 | [020](020-import-name-collision.md) | `metrics` is a very generic top-level import name | low |
-| [134](134-card-json-rounds-to-ten-decimal-places.md) | A card's figure JSON and most of its fingerprint round every number to ten decimal places (`to_json`), so values below 5e-11 read 0 | medium |
 | [142](142-run-stamps-are-claimed-per-results-root.md) | Run stamps are claimed per results root, so runs started in one second under different roots share a folder name that cards cannot tell apart | low |
 | [143](143-committed-figures-exceed-the-size-budget.md) | The committed generated files exceed the 40 MB budget and the 50 MB line for Git LFS after the final evidence pass; needs Kareem's decision | high |
+| [144](144-persistence-wasserstein-too-slow-on-turbulence-runs.md) | `persistence_wasserstein` is too slow to run on the turbulence evidence datasets, so its card cites only the forecast run | medium |
 | [110](110-uniform-reference-nan-guard-needs-round-off-bound.md) | A uniform reference gives NaN only when its floating-point mean is exact (`spectrum_l2`) | unset |
 | [032](032-prose-numbers-can-go-stale.md) | Numbers written into card prose can go stale unnoticed | medium |
 | [033](033-link-rewriting-is-only-checked-for-deadness.md) | Site link rewriting is checked for dead links, not correct destinations | medium |

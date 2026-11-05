@@ -3057,6 +3057,11 @@
         "dataset": "kinet_re5e4",
         "figures": [
           {
+            "file": "metrics/energy_distance/_generated/companion_curves__field-velocity__companion-transverse.svg",
+            "name": "companion_curves__field-velocity__companion-transverse",
+            "numbers": "metrics/energy_distance/_generated/companion_curves__field-velocity__companion-transverse.json"
+          },
+          {
             "file": "metrics/energy_distance/_generated/damage_beside_controls.svg",
             "name": "damage_beside_controls",
             "numbers": "metrics/energy_distance/_generated/damage_beside_controls.json"
@@ -3152,7 +3157,7 @@
             "selectivity": 0.5084648544950263
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -3161,7 +3166,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -3170,7 +3175,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -4831,7 +4836,7 @@
               "selectivity": 0.4343953664898732
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -5802,7 +5807,7 @@
             "selectivity": 0.4455254736886737
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -5811,7 +5816,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -5820,7 +5825,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -6414,7 +6419,7 @@
               "selectivity": 0.43899647763004923
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -7921,7 +7926,7 @@
             "selectivity": 0.2969073507247231
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -7930,7 +7935,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -7939,7 +7944,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -9701,7 +9706,7 @@
               "selectivity": 0.25601401571336313
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -11218,7 +11223,7 @@
             "selectivity": 0.469143850708298
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -11227,7 +11232,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -11236,7 +11241,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -12888,7 +12893,7 @@
               "selectivity": 0.3087995766265599
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -14417,7 +14422,7 @@
             "selectivity": 0.5483378438811792
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -14426,7 +14431,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -14435,7 +14440,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -16100,7 +16105,7 @@
               "selectivity": 0.557073956078382
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -17670,7 +17675,7 @@
             "selectivity": null
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -17679,7 +17684,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -17688,7 +17693,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -19354,7 +19359,7 @@
               "selectivity": null
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -20889,7 +20894,7 @@
             "selectivity": 0.5810899338087492
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -20898,7 +20903,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -20907,7 +20912,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -22568,7 +22573,7 @@
               "selectivity": 0.4135341931193016
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -24026,6 +24031,11 @@
             "numbers": "metrics/increment_w1_by_separation/_generated/companion_curves__field-velocity.json"
           },
           {
+            "file": "metrics/increment_w1_by_separation/_generated/companion_curves__field-velocity__companion-transverse.svg",
+            "name": "companion_curves__field-velocity__companion-transverse",
+            "numbers": "metrics/increment_w1_by_separation/_generated/companion_curves__field-velocity__companion-transverse.json"
+          },
+          {
             "file": "metrics/increment_w1_by_separation/_generated/companion_curves__field-vorticity.svg",
             "name": "companion_curves__field-vorticity",
             "numbers": "metrics/increment_w1_by_separation/_generated/companion_curves__field-vorticity.json"
@@ -24126,7 +24136,7 @@
             "selectivity": 0.3895326803983812
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -24135,7 +24145,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -24144,7 +24154,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -25805,7 +25815,7 @@
               "selectivity": 0.34753838256575786
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -26361,7 +26371,7 @@
             "selectivity": 0.5454677223062039
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -26370,7 +26380,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -26379,7 +26389,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -27428,7 +27438,7 @@
               "selectivity": 0.5320320301564048
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -28944,7 +28954,7 @@
             "selectivity": 0.16468013582060614
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -28953,7 +28963,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -28962,7 +28972,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -32055,7 +32065,7 @@
               "selectivity": 0.2051065342423627
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -33568,7 +33578,7 @@
             "selectivity": 0.36093919441811484
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -33577,7 +33587,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -33586,7 +33596,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -36657,7 +36667,7 @@
               "selectivity": 0.34482285125458456
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -38160,7 +38170,7 @@
             "selectivity": 0.36093919441811484
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -38169,7 +38179,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -38178,7 +38188,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -39826,7 +39836,7 @@
               "selectivity": 0.34482285125458456
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -41348,7 +41358,7 @@
             "selectivity": 0.002443598813524961
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -41357,7 +41367,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -41366,7 +41376,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -44463,7 +44473,7 @@
               "selectivity": 0.0011760063305820134
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -45968,7 +45978,7 @@
             "selectivity": 0.10190303096124453
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -45977,7 +45987,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -45986,7 +45996,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -49071,7 +49081,7 @@
               "selectivity": 0.09955050956694333
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -49624,7 +49634,7 @@
             "selectivity": 0.7858014151435242
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -49633,7 +49643,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -49642,7 +49652,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -50237,7 +50247,7 @@
               "selectivity": 0.43188516913661945
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -51303,7 +51313,7 @@
             "selectivity": 0.5687254861322082
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -51312,7 +51322,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -51321,7 +51331,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -52448,7 +52458,7 @@
               "selectivity": 0.518596436387527
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -52647,18 +52657,18 @@
           "dataset": "kinet_re5e4",
           "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "too slow for the evidence pass at 256 x 256, 5 to 25 s per vorticity comparison; held back on Kareem's instruction until issue 144 is settled",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition",
           "dataset": "kinet_re1e6",
           "note": null,
           "primary": false,
-          "reason": null,
+          "reason": "too slow for the evidence pass, whose shards had not finished after about ten hours; held back on Kareem's instruction until issue 144 is settled",
           "run": null,
-          "state": "not yet run"
+          "state": "not applicable"
         },
         {
           "claim": "a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence",
@@ -54643,7 +54653,7 @@
             "selectivity": 0.1038770027240552
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -54652,7 +54662,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -54661,7 +54671,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -57746,7 +57756,7 @@
               "selectivity": 0.10271904698750067
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -59251,7 +59261,7 @@
             "selectivity": 0.1038770027240552
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -59260,7 +59270,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -59269,7 +59279,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -60919,7 +60929,7 @@
               "selectivity": 0.10271904698750067
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -65040,7 +65050,7 @@
             "selectivity": 0.6531014574808043
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -65049,7 +65059,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -65058,7 +65068,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -65653,7 +65663,7 @@
               "selectivity": 0.6409267983538613
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -67218,7 +67228,7 @@
             "selectivity": 0.643895240380902
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -67227,7 +67237,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -67236,7 +67246,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -68903,7 +68913,7 @@
               "selectivity": 0.6347758142766098
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -70692,7 +70702,7 @@
             "selectivity": 0.40901496331707177
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -70701,7 +70711,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -70710,7 +70720,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -72371,7 +72381,7 @@
               "selectivity": 0.3865909854548054
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -73965,7 +73975,7 @@
             "selectivity": null
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -73974,7 +73984,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -73983,7 +73993,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -75652,7 +75662,7 @@
               "selectivity": null
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -77378,7 +77388,7 @@
             "selectivity": 0.10172397143424128
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -77387,7 +77397,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -77396,7 +77406,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -80481,7 +80491,7 @@
               "selectivity": 0.09974002038386642
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {
@@ -81040,7 +81050,7 @@
             "selectivity": 0.5921130052118703
           }
         ],
-        "run": "comparison_1793829127"
+        "run": "comparison_1793846511"
       },
       "experiments": [
         {
@@ -81049,7 +81059,7 @@
           "note": null,
           "primary": true,
           "reason": null,
-          "run": "comparison_1793829127",
+          "run": "comparison_1793846511",
           "state": "measured"
         },
         {
@@ -81058,7 +81068,7 @@
           "note": null,
           "primary": false,
           "reason": null,
-          "run": "comparison_1793829231",
+          "run": "comparison_1793846600",
           "state": "measured"
         },
         {
@@ -81652,7 +81662,7 @@
               "selectivity": 0.5585322008020905
             }
           ],
-          "run": "comparison_1793829231"
+          "run": "comparison_1793846600"
         }
       ],
       "output": {

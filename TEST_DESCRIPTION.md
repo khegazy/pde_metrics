@@ -697,7 +697,7 @@ using the median over frames — which is the level at which the panel decision 
 keeping it would add a point all metrics share by construction and pull every correlation toward
 +1. A metric with a target value enters by its distance from the target. Fields are never pooled:
 density, velocity and vorticity have different units and different metrics, and a median over all
-three fields' rows mostly reads whichever sits in the middle — on the pinned run
+three fields' rows mostly reads whichever sits in the middle — on the earlier run
 `comparison_1793657627` it correlated `wasserstein`, which runs on density only, with
 `kinetic_energy`, which runs on velocity only. A metric's card shows one column per field it runs
 on, with a dash where the other metric does not run on that field.
@@ -707,7 +707,7 @@ on, with a dash where the other metric does not run on that field.
 **Caveats, and an important one.** High rank correlation means the metrics *order* the
 degradations the same way. It does **not** mean they weight them the same. Measured on our
 data, MAE and MSE correlate at 0.98 to 0.997 over every degradation, yet MAE assigns 38 (vorticity) to 192
-(velocity) times the damage MSE does at an eighth of a cell of displacement (pinned run
+(velocity) times the damage MSE does at an eighth of a cell of displacement (earlier run
 `comparison_1793657627`), because one is linear and the other quadratic
 in the displacement. For selecting between models by ranking they are duplicates; as training
 losses they are not. Read this matrix alongside the displacement figure, never alone.

@@ -137,7 +137,7 @@ has no velocity, or on `sod_shock_tube`, whose walls rule out a periodic transfo
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793846511 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 ![the curve behind the number against its coordinate, as its field draws it, at every strength of each degradation, the clean curve in black](_generated/companion_curves__field-velocity.svg)
 
@@ -279,11 +279,11 @@ see at which scales the transfer departs and in which direction.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793846511 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793829127`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793846511`.
 
-Every number in this section comes from that run, except in the subsections headed with another experiment and in a figure whose caption names another run, each of which names its own run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`.
+Every number in this section comes from that run, except in the subsections headed with another experiment and in a figure whose caption names another run, each of which names its own run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793846511 --results results/comparison_1793811840 --results results/comparison_1793846600`.
 
 <!-- END GENERATED run -->
 
@@ -293,8 +293,8 @@ Every number in this section comes from that run, except in the subsections head
 
 | experiment | what a run on it is evidence of | on this card |
 |---|---|---|
-| `kinet_re5e4` | developed flow | measured, run `comparison_1793829127`: the main results |
-| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | measured, run `comparison_1793829231`: under *On `kinet_re1e6`* |
+| `kinet_re5e4` | developed flow | measured, run `comparison_1793846511`: the main results |
+| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | measured, run `comparison_1793846600`: under *On `kinet_re1e6`* |
 | `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: needs velocity, which this dataset does not provide |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | measured, run `comparison_1793811840`: under *On `forecast_re5e4`* |
@@ -309,7 +309,7 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 [box_blur](../../degradations/box_blur/card.md) ·
 [median_blur](../../degradations/median_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793846511 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -337,7 +337,7 @@ clean of size 0.889 to 1.
 [highpass_ideal](../../degradations/highpass_ideal/card.md) ·
 [highpass_butterworth](../../degradations/highpass_butterworth/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793846511 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -366,7 +366,7 @@ rank-correlation interval in the fingerprint is -1, though the typical frame ran
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793846511 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -388,7 +388,7 @@ margin.
 [coarsen](../../degradations/coarsen/card.md) ·
 [coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793846511 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -411,7 +411,7 @@ flux is aliased (Limitations). `coarsen_bandlimited` instead removes the flux fr
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793846511 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -433,9 +433,12 @@ formed without dealiasing, so part of that flux is aliased rather than transferr
 [gain](../../degradations/gain/card.md) ·
 [bias](../../degradations/bias/card.md)
 
-<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence spectral_energy_flux`, do not edit -->
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793846511 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `bias` | velocity | 4 | — | — | — |
+| `gain` | velocity | 4 | 1 | 1 | 1 |
 
 <!-- END GENERATED results_pointwise -->
 
@@ -444,7 +447,7 @@ Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793846511 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
 |---|---|---|---|---|
@@ -464,15 +467,37 @@ moved far away scores 4.06e-15, because a translation leaves the flux unchanged.
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence spectral_energy_flux`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793846511 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
+| compared with | velocity |
+|---|---|
+| `increment_w1_by_separation` | 0.925 |
+| `spectrum_l2` | 0.896 |
+| `energy_distance` | 0.866 |
+| `tail_exceedance` | 0.859 |
+| `increment_w1` | 0.859 |
+| `max_error_channel_mean` | 0.447 |
+| `nrmse` | 0.414 |
+| `vrmse` | 0.414 |
+| `rmse_channel_mean` | 0.41 |
+| `max_error` | 0.406 |
+| `rmse` | 0.399 |
+| `mse` | 0.399 |
+| `mae` | 0.384 |
+| `h1_relative` | 0.363 |
+| `h1_seminorm` | 0.334 |
+| `h_minus_one` | 0.318 |
+| `tail_index` | -0.152 |
+| `increment_flatness` | -0.429 |
+| `kinetic_energy` | -0.572 |
+
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
 ### The curve behind the number
 
-<!-- GENERATED results_companion: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_companion: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793846511 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 **velocity, rank correlation, at each coordinate.**
 
@@ -549,7 +574,7 @@ test could have been fixed for it.
 
 ### On `forecast_re5e4`
 
-<!-- GENERATED results_on_forecast_re5e4: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_on_forecast_re5e4: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793846511 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 **Real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded.**
 
@@ -619,11 +644,11 @@ Beside `spectrum_l2` on the same forecasts, whose velocity damage stays small at
 
 ### On `kinet_re1e6`
 
-<!-- GENERATED results_on_kinet_re1e6: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+<!-- GENERATED results_on_kinet_re1e6: written by `python -m fmeval.cards evidence spectral_energy_flux --results results/comparison_1793846511 --results results/comparison_1793811840 --results results/comparison_1793846600`, do not edit -->
 
 **Developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition.**
 
-Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition), on the 128 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793829231`.
+Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition), on the 128 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793846600`.
 
 [additive_noise](../../degradations/additive_noise/card.md) ·
 [band_attenuate](../../degradations/band_attenuate/card.md) ·

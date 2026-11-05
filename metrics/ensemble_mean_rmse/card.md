@@ -266,17 +266,36 @@ member mean (Definition).
 [gain](../../degradations/gain/card.md) ·
 [bias](../../degradations/bias/card.md)
 
-<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence ensemble_mean_rmse`, do not edit -->
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence ensemble_mean_rmse --results results/comparison_1793812401`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence ensemble_mean_rmse`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `bias` | density | 4 | 1 | 1 | 1 |
 
 <!-- END GENERATED results_pointwise -->
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence ensemble_mean_rmse`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence ensemble_mean_rmse --results results/comparison_1793812401`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence ensemble_mean_rmse`.
+| compared with | density |
+|---|---|
+| `h1_relative` | 1 |
+| `mae` | 1 |
+| `mse` | 1 |
+| `nrmse` | 1 |
+| `rmse` | 1 |
+| `vrmse` | 0.907 |
+| `max_error` | 0.67 |
+| `crps` | 0.542 |
+| `energy_score` | 0.542 |
+| `rank_histogram_chi2` | 0.392 |
+| `rank_histogram` | 0.323 |
+| `spread_skill` | -0.0094 |
+| `variogram_score` | -0.21 |
+| `crps_skill_score` | -0.542 |
+
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 

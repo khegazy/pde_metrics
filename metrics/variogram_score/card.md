@@ -343,9 +343,26 @@ why this score is read beside `crps` or `energy_score`, which both rise on this 
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence variogram_score`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence variogram_score --results results/comparison_1793812401`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence variogram_score`.
+| compared with | density |
+|---|---|
+| `spread_skill` | 0.816 |
+| `rank_histogram` | 0.616 |
+| `crps` | 0.482 |
+| `energy_score` | 0.482 |
+| `rank_histogram_chi2` | 0.462 |
+| `max_error` | -0.0745 |
+| `ensemble_mean_rmse` | -0.21 |
+| `h1_relative` | -0.21 |
+| `mae` | -0.21 |
+| `mse` | -0.21 |
+| `nrmse` | -0.21 |
+| `rmse` | -0.21 |
+| `vrmse` | -0.259 |
+| `crps_skill_score` | -0.482 |
+
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 

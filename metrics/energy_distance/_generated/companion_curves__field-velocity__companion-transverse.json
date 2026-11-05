@@ -1,0 +1,557 @@
+{
+  "caption": "The curve behind energy_distance.transverse on velocity: the median over frames at every strength of every degradation, the clean curve in black, the anchor dashed and the impostor dotted. Values are the literature's own, untransformed.",
+  "dataset": "kinet_re5e4",
+  "figure": "companion_curves",
+  "metric": "energy_distance",
+  "panels": {
+    "all": [
+      {
+        "coordinate": 1.0,
+        "degradation": "additive_noise",
+        "level": 1,
+        "value_median": 0.0001417777102029
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "additive_noise",
+        "level": 2,
+        "value_median": 0.0033115379543023
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "additive_noise",
+        "level": 3,
+        "value_median": 0.0391649298071274
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "additive_noise",
+        "level": 4,
+        "value_median": 0.1080873116347087
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "band_attenuate",
+        "level": 1,
+        "value_median": 0.0005632695352822
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "band_attenuate",
+        "level": 2,
+        "value_median": 0.0013646989618416
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "band_attenuate",
+        "level": 3,
+        "value_median": 0.0020179926923757
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "band_attenuate",
+        "level": 4,
+        "value_median": 0.0022945903046026
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "bias",
+        "level": 1,
+        "value_median": 1.8286539068874056e-12
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "bias",
+        "level": 2,
+        "value_median": 2.432039769346083e-12
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "bias",
+        "level": 3,
+        "value_median": 4.435679520725372e-12
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "bias",
+        "level": 4,
+        "value_median": 6.929846665622854e-12
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "box_blur",
+        "level": 1,
+        "value_median": 0.002455883591652
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "box_blur",
+        "level": 2,
+        "value_median": 0.0037985798590084
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "box_blur",
+        "level": 3,
+        "value_median": 0.0046896134735295
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "box_blur",
+        "level": 4,
+        "value_median": 0.0062146736374497
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen",
+        "level": 1,
+        "value_median": 0.011160176576216
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen",
+        "level": 2,
+        "value_median": 0.0173076983837456
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen",
+        "level": 3,
+        "value_median": 0.0206443879097448
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen",
+        "level": 4,
+        "value_median": 0.0224699288021319
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen_bandlimited",
+        "level": 1,
+        "value_median": 7.545983239591021e-05
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen_bandlimited",
+        "level": 2,
+        "value_median": 0.0007443772783236
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen_bandlimited",
+        "level": 3,
+        "value_median": 0.0019974106163683
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen_bandlimited",
+        "level": 4,
+        "value_median": 0.0031203753208023
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "disk_blur",
+        "level": 1,
+        "value_median": 0.0032513465452377
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "disk_blur",
+        "level": 2,
+        "value_median": 0.0046732179568139
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "disk_blur",
+        "level": 3,
+        "value_median": 0.0065992902204818
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "epanechnikov_blur",
+        "level": 1,
+        "value_median": 0.0030089270243185
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "epanechnikov_blur",
+        "level": 2,
+        "value_median": 0.0042686735549044
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "epanechnikov_blur",
+        "level": 3,
+        "value_median": 0.0057005820944664
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gain",
+        "level": 1,
+        "value_median": 0.0002086194373076
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gain",
+        "level": 2,
+        "value_median": 0.0010278554867677
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gain",
+        "level": 3,
+        "value_median": 0.0039203679021036
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gain",
+        "level": 4,
+        "value_median": 0.0089730077287498
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.002621299953282
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.004057975616321
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0056305136355102
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0094866451462295
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0063798010284669
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_butterworth",
+        "level": 1,
+        "value_median": 0.0074909487291182
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_butterworth",
+        "level": 2,
+        "value_median": 0.0074909487291182
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_butterworth",
+        "level": 3,
+        "value_median": 0.0114252278377931
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_butterworth",
+        "level": 4,
+        "value_median": 0.0139956614881738
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_ideal",
+        "level": 1,
+        "value_median": 1.7733560236265136e-11
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_ideal",
+        "level": 2,
+        "value_median": 1.7733560236265136e-11
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_ideal",
+        "level": 3,
+        "value_median": 0.0087226973831981
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_ideal",
+        "level": 4,
+        "value_median": 0.012787006518719
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_butterworth",
+        "level": 1,
+        "value_median": 0.0035941920706721
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_butterworth",
+        "level": 2,
+        "value_median": 0.0068207551134774
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_butterworth",
+        "level": 3,
+        "value_median": 0.0131475067513949
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_butterworth",
+        "level": 4,
+        "value_median": 0.0131475067513949
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_ideal",
+        "level": 1,
+        "value_median": 0.0033556260777455
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_ideal",
+        "level": 2,
+        "value_median": 0.0056079721114471
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_ideal",
+        "level": 3,
+        "value_median": 0.0056079721114471
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_ideal",
+        "level": 4,
+        "value_median": 0.0056079721114471
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "mean_field",
+        "level": 1,
+        "value_median": 0.0243710045227617
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "median_blur",
+        "level": 1,
+        "value_median": 0.0023416672699708
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "median_blur",
+        "level": 2,
+        "value_median": 0.0033736530370397
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "median_blur",
+        "level": 3,
+        "value_median": 0.0039327620672199
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "multiplicative_noise",
+        "level": 1,
+        "value_median": 1.083324229645589e-05
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "multiplicative_noise",
+        "level": 2,
+        "value_median": 6.429507312848286e-05
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "multiplicative_noise",
+        "level": 3,
+        "value_median": 0.0026262062593598
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "multiplicative_noise",
+        "level": 4,
+        "value_median": 0.0318633541856684
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "multiplicative_noise",
+        "level": 5,
+        "value_median": 0.089844099351815
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "subsample",
+        "level": 1,
+        "value_median": 0.011177295501061
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "subsample",
+        "level": 2,
+        "value_median": 0.0173591393876574
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "subsample",
+        "level": 3,
+        "value_median": 0.0206837037589768
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "subsample",
+        "level": 4,
+        "value_median": 0.0224859437507997
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_subpixel",
+        "level": 1,
+        "value_median": 2.304703746778301e-05
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_subpixel",
+        "level": 2,
+        "value_median": 3.0845024488168465e-05
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_subpixel",
+        "level": 3,
+        "value_median": 3.665755565684824e-05
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_subpixel",
+        "level": 4,
+        "value_median": 1.7819024050081923e-11
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_subpixel",
+        "level": 5,
+        "value_median": 1.7783163590308968e-11
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_subpixel",
+        "level": 6,
+        "value_median": 1.7770684674315882e-11
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_y",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_y",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_y",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_y",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_y",
+        "level": 5,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "uncorrelated",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "uncorrelated",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "uncorrelated",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "uncorrelated",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "uncorrelated",
+        "level": 5,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "uncorrelated",
+        "level": 6,
+        "value_median": 0.0
+      }
+    ]
+  },
+  "run": "comparison_1793846511"
+}
