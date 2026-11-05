@@ -91,7 +91,7 @@ benchmarks is [max_error_channel_mean](../../metrics/max_error_channel_mean/card
   Table 1, five grids at $r = 2$).
 - **Machine-learning benchmarks for PDEs** [@takamoto2022; @ohana2024]. PDEBench's maximum error
   is the per-channel maximum averaged over channels, reported in its tables per PDE and model
-  (App. E) and drawn against a PDE parameter beside the RMSE (Sect. 4.2, Fig. 3a): that is
+  (App. E; in the arXiv version read on 2026-11-04 no figure was found that draws it): that is
   [max_error_channel_mean](../../metrics/max_error_channel_mean/card.md). The Well's $L^\infty$ error is
   one value per field (App. E.3).
 
@@ -311,8 +311,9 @@ scores higher with nothing else about the prediction changed.
 Like every pointwise error, it is meaningful only while the prediction is still aligned with
 the reference. Once a rollout has decorrelated from the truth, the maximum error measures the
 size of the field's own excursions and carries no information about the model. Its use as a
-stability diagnostic, its growth along a rollout, is not tested by this suite, which scores
-single snapshots against a degraded copy and has no rollout input (`issues/094`).
+stability diagnostic, its growth along a rollout, is read here only on the forecast pairs
+(`forecast_re5e4`, one predictor at ten prediction steps); rollouts over many initial conditions
+are a proposal.
 
 On velocity, pooling the channels means the number is the largest single-component error,
 which depends on the orientation of the axes: the same error vector pointing along an axis or

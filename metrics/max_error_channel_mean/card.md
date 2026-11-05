@@ -53,7 +53,7 @@ order-of-accuracy test it is used in.
   over the samples of each batch, then averaged over batches, channels and time steps (code
   above); it is described as the local worst case and a proxy for the stability of time-stepping
   (Sect. 3.3, table of metrics). It is reported in the tables of every metric per PDE and model
-  (App. E); no figure of it is drawn. The experiment is autoregressive rollouts on a held-out
+  (App. E); in the arXiv version read on 2026-11-04 no figure was found that draws it. The experiment is autoregressive rollouts on a held-out
   tenth of each dataset's samples (Sect. 4.1).
 - **The Well** [@ohana2024]. The $L^\infty$ error is one of its library's spatial metrics, one
   value per field (App. E.3); its tables and figures report VRMSE, not this.
