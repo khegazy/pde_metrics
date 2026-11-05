@@ -308,8 +308,8 @@ The second limitation is structural rather than a matter of degree. At a true di
 $\dot{H}^1$ seminorm of the error does not converge as the grid is refined: the gradient at the
 jump grows without bound as the cell size shrinks. Any value reported for a shocked flow is
 therefore a statement about the mesh as much as about the fields, and two runs at different
-resolutions are not measuring the same quantity even approximately. This is the structural
-reason the tracker rates the idea Low, and it is not repairable by normalisation.
+resolutions are not measuring the same quantity even approximately. No normalisation repairs
+this.
 
 Finally, its sensitivity to fine scales makes it sensitive to numerical artefacts of the
 prediction rather than to its physics. Grid-scale ringing that a viewer would dismiss produces a
