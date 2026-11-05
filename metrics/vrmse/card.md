@@ -439,8 +439,8 @@ cell-by-cell errors; its cause is not established, and `issues/039` records what
 Both noises are ordered in every frame on every field, and neighbouring strengths never overlap
 (weakest gap 1). The elasticity is 1 throughout: either noise adds an error proportional to its
 amplitude. On density and vorticity additive noise reaches a largest value of 0.503 and 0.501, on
-velocity 1.19; `bias` also reaches 1.19 on velocity, where `gain` stays at 0.5. Our reading, not a
-measured decomposition: those two operators add an error sized to the velocity field as a whole,
+velocity 1.19, as `bias` does (*Cell-value distortion*). Our reading, not a measured
+decomposition: the noise adds an error sized to the velocity field as a whole,
 and the mean over components then weights a component whose own spread is small as heavily as the
 other, so the same error is a larger fraction of that component's spread. Multiplicative noise on
 density reaches a largest value of 233: it scales the whole density, whose mean is near 1, while
@@ -464,6 +464,19 @@ the denominator is the fluctuation about that mean, two to three orders of magni
 | `gain` | vorticity | 4 | 1 | 1 | 1 |
 
 <!-- END GENERATED results_pointwise -->
+
+Both distortions are ordered in every frame on every field, with an elasticity of 1, and
+neighbouring strengths never overlap across frames (weakest gap 1), on density too, where
+`rmse`'s and `nrmse`'s do. Equation (2) divides each frame's error by that frame's own spread, so
+a gain error $a$ scores about $a$ in every frame whatever the frame's energy. The values sit just
+under the strength, at most 0.4995 on density and 0.4975 on vorticity at the harshest strength
+(fingerprint); in our reading that is the $\epsilon$ of Equation (2) acting on small variances.
+On density and vorticity `gain` and `bias` are charged identically. On velocity `bias` reaches
+1.19 while `gain` stays at 0.5. The run's per-frame values put that maximum at the first frame of
+the window, frame 2000, falling toward 0.5 over about the first fifth of it. Our reading, not a
+measured decomposition: `bias` adds the strength times the pooled velocity fluctuation RMS to both
+components, and the mean over components then weighs a component whose own spread is small as
+heavily as the other, so the same offset is a larger fraction of that component's spread.
 
 ### Trap tests
 
@@ -531,7 +544,9 @@ again, and the metrics that compare spectra, increments or distributions order t
 differently. Within one frame of a one-channel field it orders candidates as `rmse` does
 (*Reading the output*), so what separates them here is, in our reading, the per-frame
 normalisation before the median over frames and, on velocity, the mean over components. For
-ranking models these cell-by-cell errors are near duplicates.
+ranking models these cell-by-cell errors are near duplicates. The least alike, field by field,
+are `increment_flatness` on density (-0.208), `kinetic_energy` on velocity (-0.261) and
+`enstrophy` on vorticity (-0.243), single-field quantities that enter by their raw value.
 
 ### Damage beside the other metrics
 

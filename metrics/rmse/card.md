@@ -451,6 +451,17 @@ only the fluctuation about that mean (our reading, as on `mse`'s card).
 
 <!-- END GENERATED results_pointwise -->
 
+Both distortions are ordered in every frame on every field, with an elasticity of 1, and RMSE
+charges them identically: the largest damage is 0.532, 0.502 and 0.634 on density, velocity and
+vorticity under either (fingerprint). By Equation (1) both add an error whose RMS is the strength
+times the fluctuation RMS, so the metric cannot tell a level error from a contrast error of the
+same size; this is `mse`'s result under a square root. The damage is about the strength itself,
+because the anchor scores the fluctuation RMS. It exceeds 0.5 at the harshest strength in the
+most energetic frames because damage divides by the anchor's median over frames. On density
+neighbouring strengths overlap across frames (weakest gap 0.969) while every frame stays in
+order. Our reading: density's fluctuation, which the error scales with, changes size along the
+trajectory by more than the factor between neighbouring strengths.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -511,9 +522,11 @@ Rank correlation over every degradation, computed separately for each physical f
 <!-- END GENERATED results_summary -->
 
 RMSE agrees with MSE on every ordering across every degradation, and correlates with it at
-exactly 1. The other cell-by-cell errors sit just below 1 on every field and the two maximum
-errors a little lower, while the metrics that compare spectra, increments or distributions order
-the degradations differently. Reporting both RMSE and MSE is redundant for ranking; the choice
+exactly 1. The other root-mean-square errors sit at 0.998 to 1 on every field, `mae` at 0.973 to
+0.995 and the two maximum errors at 0.933 to 0.956, while the metrics that compare spectra,
+increments or distributions order the degradations differently. The least alike, field by field,
+are `increment_flatness` on density (-0.208), `kinetic_energy` on velocity (-0.249) and
+`enstrophy` on vorticity (-0.252), single-field quantities that enter by their raw value. Reporting both RMSE and MSE is redundant for ranking; the choice
 between them is a choice of units.
 
 ### Damage beside the other metrics

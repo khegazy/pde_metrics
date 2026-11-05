@@ -459,6 +459,20 @@ that mean, two to three orders of magnitude smaller (`AGENTS.md` §4).
 
 <!-- END GENERATED results_pointwise -->
 
+Both distortions are ordered in every frame on every field, with an elasticity of 2, and MSE
+charges them identically: the largest damage is 0.283 on density, 0.252 on velocity and 0.402 on
+vorticity under `gain` and under `bias` alike (fingerprint). That is Equation (1) at work. An
+offset of $b$ fluctuation RMS and a gain error $a$ both add an error whose mean square is the
+strength squared times the fluctuation variance, which is why the two operators share their
+strengths ([gain](../../degradations/gain/card.md), *Severity scale*). A squared error therefore
+cannot tell a field at the wrong level from one at the wrong contrast by the same amount. Because
+the damage is the strength squared, the metric first moves a tenth of the way to the anchor only
+at the harshest strength (level 4 in the Reactivity table). On density neighbouring strengths
+overlap across frames (weakest gap 0.969) while every frame stays in order. Our reading:
+density's fluctuation variance, to which the error is proportional, changes along the trajectory
+by more than the factor between the two harshest strengths, so the milder strength in an
+energetic frame can outscore the harsher one in a quiet frame.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -519,9 +533,13 @@ Rank correlation over every degradation, computed separately for each physical f
 <!-- END GENERATED results_summary -->
 
 MSE and RMSE correlate at exactly 1: the square root is monotone, so no ranking can ever
-separate them. The other cell-by-cell errors (`rmse_channel_mean`, `vrmse`, `nrmse`, `mae`) sit
-just below 1 on every field and the two maximum errors a little lower, while the metrics that
-compare spectra, increments or distributions order the degradations differently. MAE orders the
+separate them. The other root-mean-square errors (`rmse_channel_mean`, `vrmse`, `nrmse`) sit at
+0.998 to 1 on every field, `mae` at 0.973 to 0.995 and the two maximum errors at 0.933 to 0.956,
+while the metrics that compare spectra, increments or distributions order the degradations
+differently. The least alike, field by field, are `increment_flatness` on density (-0.209),
+`kinetic_energy` on velocity (-0.249) and `enstrophy` on vorticity (-0.252); the last two are
+single-field quantities that enter by their raw value, which falls under smoothing while every
+error rises (their cards). MAE orders the
 degradations almost as MSE does without charging them alike: its damage grows linearly with a
 small shift where this metric's grows with the square (*Damage beside the other metrics*), so
 for ranking they are near duplicates and as training losses they are not.

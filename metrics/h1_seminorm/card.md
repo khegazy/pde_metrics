@@ -532,6 +532,16 @@ Uncorrelated cell-to-cell noise is almost pure gradient.
 
 <!-- END GENERATED results_pointwise -->
 
+`bias` leaves this metric at round-off on every field, which is why its rows have no rank
+correlation: the largest damage is 2.09e-13, on density (fingerprint). That is Equation (1): the
+metric sees only the gradient of the difference, and a constant has none. `gain` is ordered in
+every frame on every field, with an elasticity of 1 and a largest damage of 0.526, 0.634 and
+0.695 on density, velocity and vorticity: the difference is $a$ times the fluctuation, so its
+gradient is $a$ times the anchor's. Neighbouring strengths overlap across frames on density and,
+slightly, on vorticity (weakest gap 0.971 and 0.994) while every frame stays in order. Our
+reading: the value follows the size of each frame's gradients, which changes along the
+trajectory by more than the factor between neighbouring strengths.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -593,7 +603,10 @@ This metric orders the ladder most like its relative, inhomogeneous sibling
 family (`rmse`, `mse`, `nrmse`, `vrmse`, `mae`), and less like `h_minus_one`. The two Sobolev
 orders agree on direction for most degradations and disagree on which ones are severe, which
 is the whole content of Equation (2). On vorticity its ordering is close to unrelated to the
-distribution, increment and spectrum metrics.
+distribution, increment and spectrum metrics. Field by field, the closest is `h1_relative`
+(0.935, 0.939 and 0.964 on density, velocity and vorticity), and the least alike are
+`increment_flatness` on density (-0.127), `kinetic_energy` on velocity (-0.133) and
+`spectrum_l2` on vorticity (-0.0731).
 
 ### Damage beside the other metrics
 

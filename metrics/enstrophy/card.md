@@ -368,6 +368,16 @@ order, neighbouring strengths overlapping (weakest gap 0.536).
 
 <!-- END GENERATED results_pointwise -->
 
+Both distortions raise the enstrophy, in order of strength on every frame, and neighbouring
+strengths never overlap (weakest gap 1). At the harshest strength the relative error of the
+integral is $+1.25$ under `gain` and $+0.25$ under `bias` (the *change from clean* in the
+Performance tables), with elasticities 1.03 and 2; `gain` is first detected at level 2 and
+`bias` at level 4 (fingerprint). Our derivation from Equation (1): a gain error $a$ multiplies
+the enstrophy by $(1 + a)^2$; an offset of $b$ fluctuation RMS adds $b^2$ times it, because the
+vorticity of a periodic flow has zero spatial mean and the offset adds a net circulation the
+reference does not have ([bias](../../degradations/bias/card.md), *Limitations*). Both measured
+changes are what this gives at the harshest strength.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

@@ -231,7 +231,7 @@ genuinely better-resolved filaments.
 
 Finally, it inherits everything that is uncertain about the vorticity it is computed from.
 Vorticity here is a derived field, recomputed from velocity after any remap rather than
-averaged, and the calibration recorded with `comparison_1793829127` (its
+averaged, and the calibration recorded with `comparison_1793846511` (its
 `data/calibration.csv`, column `scale_spread`) gives its characteristic scale a relative spread
 of 0.32 across the sampled frames, against 0.06 for density and 0.07 for velocity. A palinstrophy drift of comparable size says as much about which frames were
 evaluated as about the prediction.
@@ -410,6 +410,17 @@ multiplicative noise keeps the order in 0.845 of frames (weakest gap 0.835).
 | `gain` | vorticity | 4 | 1 | 1 | 0.887 |
 
 <!-- END GENERATED results_pointwise -->
+
+`bias` leaves palinstrophy unchanged in every frame (a change from clean of 0, the low end of the
+Reactivity row), which is why its row has no rank correlation: Equation (1) is built from the
+gradient of the vorticity, and a constant has none. `gain` raises it in order of strength on
+every frame, by $+1.25$ at the harshest strength, with an elasticity of 1.03, first detected at
+level 2. Our derivation: a gain error $a$ multiplies every gradient by $1 + a$ and the
+palinstrophy by $(1 + a)^2$, the same factor as the enstrophy, since the operator scales the
+whole spectrum without changing its shape (Equation (2)). Neighbouring strengths overlap across
+frames (weakest gap 0.887) while every frame stays in order. Our reading: the palinstrophy itself
+changes along the trajectory by more than the factor between neighbouring strengths, as the
+spread of vorticity's characteristic scale in *Limitations* suggests.
 
 ### Trap tests
 

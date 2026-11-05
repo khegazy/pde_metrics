@@ -453,6 +453,18 @@ anchor measures only the fluctuation about that mean, two to three orders of mag
 
 <!-- END GENERATED results_pointwise -->
 
+Both distortions are ordered in every frame on every field, with an elasticity of 1. Unlike the
+squared errors, MAE charges them differently: the largest damage under `bias` is 0.802, 0.576 and
+1.61 on density, velocity and vorticity, against 0.541, 0.508 and 0.516 under `gain`
+(fingerprint), and on vorticity `bias` is first detected one strength earlier (level 2 in the
+Reactivity table). Our derivation from Equation (1): a gain error $a$ adds $a\,|f - \bar f|$ to
+every cell, so its MAE is $a$ times the mean absolute fluctuation, which is what the anchor
+scores; an offset adds the same $b\,\sigma$ to every cell, so its damage is $b$ times the ratio of
+the fluctuation's RMS to its mean absolute value. That ratio is never below 1 and grows with the
+weight of the tails, which is why the two differ most on vorticity, the most intermittent of the
+three fields. On density neighbouring strengths overlap across frames (weakest gap 0.969 and
+0.97) while every frame stays in order, as on `mse`.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -511,8 +523,12 @@ Rank correlation over every degradation, computed separately for each physical f
 <!-- END GENERATED results_summary -->
 
 MAE correlates just below 1 with the squared errors (`mse`, `rmse`, `rmse_channel_mean`,
-`vrmse`, `nrmse`) on every field, and a little lower with the two maximum errors, while the
-metrics that compare spectra, increments or distributions order the degradations differently.
+`vrmse`, `nrmse`) on every field, 0.988 on density, 0.995 on velocity and 0.973 to 0.974 on
+vorticity, and a little lower with the two maximum errors, 0.872 to 0.915, while the metrics that
+compare spectra, increments or distributions order the degradations differently. The least alike,
+field by field, are `increment_flatness` on density (-0.145), `kinetic_energy` on velocity
+(-0.221) and `enstrophy` on vorticity (-0.245), single-field quantities that enter by their raw
+value.
 It orders the degradations almost as the squared errors do without charging them alike: its
 damage grows linearly with a small shift where theirs grows with the square
 (*Damage beside the other metrics*), so for ranking they are near duplicates and as training

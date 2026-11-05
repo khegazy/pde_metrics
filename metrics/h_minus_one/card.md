@@ -555,6 +555,17 @@ at the high wavenumbers this metric discounts most.
 
 <!-- END GENERATED results_pointwise -->
 
+`bias` leaves this metric at round-off on every field (largest damage 7.39e-15, on density;
+fingerprint), which is why its rows have no rank correlation: Equation (3) sums over every mode
+except $\mathbf{m} = 0$, and a constant offset lives entirely in that mode. `gain` is ordered in
+every frame on every field, with an elasticity of 1, and its largest damage, 0.54, 0.501 and
+0.502 on density, velocity and vorticity, is about the strength itself: the difference is $a$
+times the fluctuation, which is what the anchor scores. Neighbouring strengths overlap across
+frames on density (weakest gap 0.97) while every frame stays in order. On density
+[wasserstein](../../metrics/wasserstein/card.md) responds to `gain` almost as this metric does,
+and, unlike it, does see `bias`, faintly, through its division by each field's own mean (that
+card's reading).
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -626,7 +637,9 @@ two trap tests have no ordering): no degradation in this run puts a frame out of
 Across the degradations, it orders the ladder almost exactly like
 [wasserstein](../../metrics/wasserstein/card.md) on density, which on a density this close to
 uniform is this metric to first order (that card's Definition), and next like `max_error` and
-the pointwise family. Those correlations are high, and they are the numbers most likely to be
+the pointwise family. On velocity the closest is `max_error` (0.856) and on vorticity `mse`,
+`rmse` and `rmse_channel_mean` (0.903). The least alike are `increment_flatness` on density
+(-0.113), `kinetic_energy` on velocity (-0.355) and `enstrophy` on vorticity (-0.255). Those correlations are high, and they are the numbers most likely to be
 misread. A high correlation means the two order the degradations almost identically and are
 therefore close to redundant for model selection; it says nothing about whether they agree on
 magnitude, and on the displacement axes on vorticity they do not (*Damage beside the other

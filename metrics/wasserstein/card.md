@@ -477,6 +477,18 @@ All three operators follow the factor on every frame. The response of the two co
 
 <!-- END GENERATED results_pointwise -->
 
+Both distortions are ordered in every frame, on very different scales. `gain` reaches a largest
+damage of 0.541, with an elasticity of 1; `bias` reaches 0.00384 and never moves a tenth of the
+way to the anchor (fingerprint). Our derivation from Equation (1): each density is divided by its
+own mean, so an offset of $b\,\sigma$ raises the candidate's mean and shrinks its normalised
+fluctuation by the factor $\langle \rho \rangle / (\langle \rho \rangle + b\,\sigma)$. On a density
+whose mean is near 1 and whose fluctuation RMS is a few thousandths of it (`AGENTS.md` §4), that
+is a gain error of order a thousandth at the harshest strength, and the damage is
+correspondingly small. The metric is therefore nearly, but not exactly, invariant to an offset,
+where [h_minus_one](../../metrics/h_minus_one/card.md) is exactly invariant. Neighbouring strengths
+overlap across frames under both (weakest gap 0.93 under `bias` and 0.97 under `gain`) while every
+frame stays in order.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -524,7 +536,7 @@ Rank correlation over every degradation, computed separately for each physical f
 
 <!-- END GENERATED results_summary -->
 
-[h_minus_one](../../metrics/h_minus_one/card.md) orders the ladder almost exactly as this metric does on density, the highest correlation in the table, followed by `max_error` and the pointwise errors. On every axis but two, the largest damage and the elasticity of the two metrics, and both trap-test damages, agree to within about one percent (the two fingerprints). The exceptions are `bias`, which this metric orders and `h_minus_one` does not see, and `multiplicative_noise`, whose harshest level this metric cannot score. That agreement is the first-order relation in the Definition at work on a density this close to uniform; Equation (5) alone would allow a factor of two. On kinet density the two metrics carry nearly the same information, and this one costs 0.267 s per evaluation in this run, 1.09e+03 times the cheapest metric (Profile), many times what `h_minus_one` costs in the same run (its card's Profile); Limitations gives the ratio measured in one process.
+[h_minus_one](../../metrics/h_minus_one/card.md) orders the ladder almost exactly as this metric does on density, the highest correlation in the table, followed by `max_error` and the pointwise errors. The least alike are `increment_flatness` (-0.111) and `tail_index` (-0.0811). On every axis but two, the largest damage and the elasticity of the two metrics, and both trap-test damages, agree to within about one percent (the two fingerprints). The exceptions are `bias`, which this metric orders and `h_minus_one` does not see, and `multiplicative_noise`, whose harshest level this metric cannot score. That agreement is the first-order relation in the Definition at work on a density this close to uniform; Equation (5) alone would allow a factor of two. On kinet density the two metrics carry nearly the same information, and this one costs 0.267 s per evaluation in this run, 1.09e+03 times the cheapest metric (Profile), many times what `h_minus_one` costs in the same run (its card's Profile); Limitations gives the ratio measured in one process.
 
 ### Damage beside the other metrics
 

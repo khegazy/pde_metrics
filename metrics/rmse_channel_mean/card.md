@@ -434,6 +434,15 @@ damage is 0.506 under both `additive_noise` and `multiplicative_noise`.
 
 <!-- END GENERATED results_pointwise -->
 
+On density and vorticity, one channel each, the rows are `rmse`'s: both distortions are ordered
+in every frame and charged identically, with a largest damage of 0.532 and 0.634 (fingerprint).
+On velocity the two separate slightly, 0.505 under `bias` against 0.503 under `gain`. Our
+derivation from Equation (2): `bias` adds the strength times the velocity field's pooled
+fluctuation RMS to both components, while `gain` scales each component's own fluctuation, and
+the mean of the components' RMS is at most their pooled RMS, equal to it only when the components
+are equally spread. The elasticity is 1 throughout, and on density neighbouring strengths overlap
+across frames (weakest gap 0.969) as they do on `rmse`.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -494,7 +503,9 @@ On density and vorticity the correlations are `rmse`'s. On velocity this metric 
 degradations exactly as the other means of per-channel values, `vrmse` and `nrmse`, and very
 nearly as the pooled `rmse` and `mse`; the reduction over components changes almost no ordering
 of the ladder. Like every cell-by-cell error it correlates only weakly with the metrics that
-compare spectra, increments or distributions.
+compare spectra, increments or distributions. The least alike, field by field, are
+`increment_flatness` on density (-0.208), `kinetic_energy` on velocity (-0.259) and `enstrophy`
+on vorticity (-0.252), single-field quantities that enter by their raw value.
 
 ### Damage beside the other metrics
 

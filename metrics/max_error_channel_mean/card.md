@@ -425,6 +425,15 @@ maximum grows with it.
 
 <!-- END GENERATED results_pointwise -->
 
+On density and vorticity, one channel each, the rows are `max_error`'s. Both distortions are
+ordered in every frame on every field, with an elasticity of 1, and `gain` is charged far more
+than `bias`: the largest damage under `gain` is 0.523, 0.558 and 0.522 on density, velocity and
+vorticity, against 0.0927, 0.218 and 0.0933 under `bias` (fingerprint), which on density and
+vorticity never moves a tenth of the way to the anchor. The derivation on `max_error`'s card
+applies per channel: a gain error scales the largest fluctuation, which the anchor scores, while
+an offset adds only $b$ fluctuation RMS, small beside the extremes. On density neighbouring
+strengths overlap across frames (weakest gap 0.969 and 0.971) while every frame stays in order.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -484,7 +493,9 @@ Rank correlation over every degradation, computed separately for each physical f
 The correlation with `max_error` is exactly 1 on density and vorticity, where the two are the
 same number, and just below 1 on velocity, so for ranking the two are near duplicates. Against
 the squared errors it sits a little below 1, and lower against `mae`; the metrics that compare
-spectra, increments or distributions order the degradations differently.
+spectra, increments or distributions order the degradations differently. The least alike, field
+by field, are `increment_flatness` on density (-0.295), `kinetic_energy` on velocity (-0.307) and
+`enstrophy` on vorticity (-0.202), single-field quantities that enter by their raw value.
 
 ### Damage beside the other metrics
 

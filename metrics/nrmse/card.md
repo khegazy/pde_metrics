@@ -457,6 +457,20 @@ weights a component whose own size is small as heavily as the other.
 
 <!-- END GENERATED results_pointwise -->
 
+Both distortions are ordered in every frame on every field, with an elasticity of 1. On density
+and vorticity the two are charged identically, with a largest damage of 0.532 and 0.5
+(fingerprint). The value on density is compressed, as under every degradation, to at most
+0.00357 against 0.5 on vorticity, because Equation (1) divides by a root mean square that
+includes density's mean; damage divides by the anchor's value and undoes that factor. On density
+neighbouring strengths overlap across frames (weakest gap 0.969), where `vrmse`'s do not. Our
+reading: this denominator is set by the mean, so the value still follows the size of each
+frame's fluctuation, which changes along the trajectory. On velocity `bias` reaches a largest
+damage of 1.19 against 0.5 under `gain`. The run's per-frame values put that maximum at the first
+frame of the window, frame 2000, falling toward 0.5 over about the first fifth of it. Our reading,
+not a measured decomposition: `bias` adds the strength times the pooled velocity fluctuation RMS
+to both components, and the mean over components in Equation (1) weighs a component whose own
+spread is small as heavily as the other.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -520,7 +534,9 @@ On every field this metric orders the degradations exactly as `vrmse` does and a
 again, and the metrics that compare spectra, increments or distributions order the degradations
 differently. The compression on density changes the size of every value there but not the order
 within a frame, so it does not show in this table. For ranking models these cell-by-cell errors
-are near duplicates.
+are near duplicates. The least alike, field by field, are `increment_flatness` on density
+(-0.208), `kinetic_energy` on velocity (-0.261) and `enstrophy` on vorticity (-0.243),
+single-field quantities that enter by their raw value.
 
 ### Damage beside the other metrics
 

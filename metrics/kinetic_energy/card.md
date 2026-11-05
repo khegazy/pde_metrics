@@ -365,6 +365,18 @@ the next.
 
 <!-- END GENERATED results_pointwise -->
 
+Both distortions raise the energy, in order of strength on every frame, and neighbouring
+strengths never overlap (weakest gap 1). Read as the field reads it, the relative error of the
+integral at the harshest strength is $+1.25$ under `gain` and $+0.247$ under `bias` (the *change
+from clean* in the Performance tables), with elasticities 1.03 and 2.25; `gain` is first
+detected at level 2 and `bias` at level 4 (fingerprint). Our derivation from Equation (1), for a
+flow whose mean velocity is negligible, as the anchor's energy of 2.54e-8 shows: a gain error
+$a$ multiplies the energy by $(1 + a)^2$, a change of $+1.25$ at the harshest strength and nearly
+linear in $a$ at the mild ones; an offset of $b$ times the pooled fluctuation RMS on every
+component adds $b^2$ times the energy, $+0.25$ at the harshest strength against the $+0.247$
+measured. The remaining difference is not traced. Damage is negative under both, since the
+energy rises away from the anchor's.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

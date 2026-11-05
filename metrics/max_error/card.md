@@ -518,6 +518,16 @@ excursion about that mean (our reading).
 
 <!-- END GENERATED results_pointwise -->
 
+Both distortions are ordered in every frame on every field, with an elasticity of 1, but the
+worst cell sees them very differently. Under `gain` the largest damage is 0.523, 0.564 and 0.522
+on density, velocity and vorticity, about the strength itself; under `bias` it is 0.0927, 0.212
+and 0.0933 (fingerprint), and on density and vorticity it never moves a tenth of the way to the
+anchor. Our derivation from Equation (1): a gain error $a$ multiplies the largest fluctuation,
+which is what the anchor scores, so its damage is $a$; an offset adds $b$ fluctuation RMS to every
+cell, so its damage is $b$ times the ratio of the fluctuation's RMS to its largest value, which is
+small wherever the extremes stand far above the RMS. On density neighbouring strengths overlap
+across frames (weakest gap 0.969 and 0.971) while every frame stays in order.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -580,9 +590,11 @@ Rank correlation over every degradation, computed separately for each physical f
 <!-- END GENERATED results_summary -->
 
 The maximum error correlates at 1 or very near it with its per-channel sibling
-`max_error_channel_mean`, a little below 1 with the squared errors, and lower again with `mae`,
-while the metrics that compare spectra, increments or distributions order the degradations
-differently. It orders the degradations much as the averaged errors do; what it adds is the size
+`max_error_channel_mean` (0.996 on velocity), at 0.93 to 0.956 with the squared errors, and lower
+again with `mae`, 0.872 to 0.911, while the metrics that compare spectra, increments or
+distributions order the degradations differently. The least alike, field by field, are
+`increment_flatness` on density (-0.295), `kinetic_energy` on velocity (-0.288) and `enstrophy`
+on vorticity (-0.202), single-field quantities that enter by their raw value. It orders the degradations much as the averaged errors do; what it adds is the size
 of the worst cell, which the tables above show it charges in a different proportion from the
 averages.
 

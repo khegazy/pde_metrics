@@ -487,6 +487,19 @@ derivative does.
 
 <!-- END GENERATED results_pointwise -->
 
+Unlike [h1_seminorm](../../metrics/h1_seminorm/card.md), this metric sees `bias`, but only
+faintly: it is ordered in every frame on every field, with a largest damage of 0.0391, 0.0673 and
+0.0092 on density, velocity and vorticity (fingerprint), and on none of them does it move a tenth
+of the way to the anchor. `gain` reaches 0.526, 0.5 and 0.5. Both have an elasticity of 1. Our
+derivation from Equation (1): a constant enters only the value term, while a gain error scales
+the value and derivative terms alike, and the derivative term, which weighs a mode with $m$
+periods across the box by about $(2\pi m)^2$, carries most of the reference's norm. The damage
+under `bias` is accordingly smallest on vorticity, whose structure sits at the smallest scales,
+and largest on velocity, whose energy sits at the largest. On velocity the value under `gain`
+reaches 1 at the harshest strength: 0.5 on each component, summed over the two by Equation (2).
+On density neighbouring strengths overlap across frames (weakest gap 0.969 and 0.971) while every
+frame stays in order.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -548,7 +561,10 @@ every field, then like `max_error` and the pointwise errors, then like `wasserst
 `h_minus_one`. The two $H^1$ bundles share their slope term and differ in the value term, the
 normalisation and the derivative, and on this ladder those differences reorder little; they show
 in the magnitudes, under *Resolution loss* and *Noise*. On vorticity its ordering is close to
-unrelated to the distribution, increment and spectrum metrics.
+unrelated to the distribution, increment and spectrum metrics. Field by field, the closest is
+`h1_seminorm` (0.935, 0.939 and 0.964 on density, velocity and vorticity), and the least alike
+are `increment_flatness` on density (-0.21), `kinetic_energy` on velocity (-0.181) and
+`spectrum_l2` on vorticity (-0.0648).
 
 ### Damage beside the other metrics
 
