@@ -279,6 +279,13 @@ Every number in this section comes from that run, except in the subsections head
 Each subsection links to the degradations that subsection reports. What those degradations
 do, and what their strength numbers mean, is documented on their own pages.
 
+The field reads the value itself, and the damage below is that value over the anchor's, since
+the clean value is zero. The anchor, the field's own mean, scores 0.0908 on density, 2 on
+velocity and 1 on vorticity (*Trap tests*): on velocity and vorticity the mean is close to
+zero and scores one per channel, as a prediction of zero does, so a damage there is the value
+divided by two and by one. On density the mean sets most of the denominator, so a value of
+0.0908 is already an error as large as predicting the mean (Reading the output).
+
 <!-- GENERATED experiments: written by `python -m fmeval.cards catalog`, do not edit -->
 
 **Across the experiments.**
@@ -323,6 +330,15 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_smoothing -->
 
+Ordered correctly on every blur and field, with every frame in order, and first detected at
+level 1 or 2 everywhere. In size it follows its finite-element sibling
+[h1_seminorm](../../metrics/h1_seminorm/card.md): on the damage scale the two response curves
+are close, this one slightly lower at the mildest strengths, and both depart from clean far
+sooner than [rmse](../../metrics/rmse/card.md) (the response curves of the three cards). On velocity it saturates early, as the seminorm does: its elasticity over the mildest
+strengths is 0.291 to 0.404, and at the harshest blurs its value reaches 1.87 in some frames
+(fingerprint), close to the 2 a prediction of zero scores. Velocity's neighbouring strengths
+overlap most (weakest gaps 0.726 to 0.915).
+
 ### Spectral filtering
 
 [lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
@@ -352,6 +368,14 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_spectral -->
 
+Ordered correctly on every filter and field, every frame in order. As for
+[h1_seminorm](../../metrics/h1_seminorm/card.md), the response splits by which end of the
+spectrum is removed: every low-pass filter is detected at level 1, while `highpass_ideal` is
+detected only at level 3 on density and velocity and level 2 on vorticity, because error at
+large scales has shallow slopes, and the slope term dominates this norm on the unit domain
+(Limitations). `band_attenuate` on vorticity is the one filter with complete separation of its
+strengths (weakest gap 1).
+
 ### Displacement
 
 [translate_x](../../degradations/translate/card.md) ·
@@ -372,6 +396,17 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 | `translate_y` | vorticity | 5 | 0.7 | 0.0683 | 0.172 |
 
 <!-- END GENERATED results_geometric -->
+
+Ordered correctly on seven of the nine rows. Over the smallest shifts the damage grows in
+proportion to the shift (elasticity to a sub-pixel shift 0.993, 0.994 and 0.991 on density,
+velocity and vorticity, Profile), and it charges a shift a larger share of the anchor than
+`rmse` does on every field (*Damage beside the other metrics*). On vorticity it saturates: from
+four cells on its median damage sits at or above the 1.41 of the reference moved far away, and
+the remaining strengths differ only by frame-to-frame scatter,
+which is why the vorticity `translate_x` and `translate_y` rows read 0.7, with 0.186 and 0.0683
+of frames in order and weakest gaps of 0.242 and 0.172. This is the pattern of
+[h1_seminorm](../../metrics/h1_seminorm/card.md), whose Limitations derive why a gradient norm
+charges a small shift more than a pointwise norm does.
 
 ### Resolution loss
 
@@ -394,6 +429,19 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_resolution -->
 
+Here this metric departs from its finite-element sibling. Under `coarsen`, which
+[h1_seminorm](../../metrics/h1_seminorm/card.md) does not order on vorticity, this metric is
+ordered on every field (rank correlation 1, with 0.925 of vorticity frames in order), and the
+response curves show it charging factor 2 far less than the seminorm charges. My reading: replacing each pair of cells by their mean leaves an error
+that alternates from one cell to the next, which the centred difference does not see (the
+checkerboard under Limitations); the spectral derivative of the seminorm sees it in full.
+`coarsen` still reaches a largest damage of 2.40 on density and 2.29 on velocity at the coarsest
+factors (fingerprint), above the anchor.
+
+Two rows are not in order: `coarsen_bandlimited` on density (rank correlation 0.8, 0.348 of
+frames, weakest gap 0.518), the same density pattern `h1_seminorm` shows and `issues/039`
+leaves open, and `subsample` on vorticity (0.8, 0.23 of frames).
+
 ### Noise
 
 [additive_noise](../../degradations/additive_noise/card.md)
@@ -411,6 +459,16 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_stochastic -->
 
+Ordered correctly with complete separation on every field. Noise is the degradation this
+metric charges most on density and velocity: the largest damage under `additive_noise` is 10.0,
+17.3 and 2.35 on density, velocity and vorticity (fingerprint), and under `multiplicative_noise`
+on density 1420, because that noise scales with the density itself, whose mean is far larger
+than its fluctuation (my reading of the operator). On the response curves these sit well under
+half of the seminorm's damage at the same strength. My reading: the centred difference
+responds to a mode of wavenumber $k$ as $\sin(kh)/h$ rather than as $k$, so it weighs the
+grid-scale modes where uncorrelated noise puts most of its energy less than a spectral
+derivative does.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -427,6 +485,11 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_canaries -->
+
+The fake prediction scores worse than the field's own mean on every field (damage 1.38, 1.41
+and 1.41), close to the reference moved far away (1.38, 1.49 and 1.41), so this metric is not
+fooled by it. That follows from comparing the two fields cell by cell and says nothing about the
+displacement problem.
 
 ### Compared with the other metrics
 
@@ -461,6 +524,13 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
+
+This metric orders the ladder most like [h1_seminorm](../../metrics/h1_seminorm/card.md) on
+every field, then like `max_error` and the pointwise errors, then like `wasserstein` and
+`h_minus_one`. The two $H^1$ bundles share their slope term and differ in the value term, the
+normalisation and the derivative, and on this ladder those differences reorder little; they show
+in the magnitudes, under *Resolution loss* and *Noise*. On vorticity its ordering is close to
+unrelated to the distribution, increment and spectrum metrics.
 
 ### Damage beside the other metrics
 
@@ -564,6 +634,12 @@ Median damage over frames at every strength, this metric in the first row and th
 
 <!-- END GENERATED results_damage_by_level -->
 
+On density and velocity this metric charges more than every pointwise control at every shift,
+by a roughly constant factor over the smaller shifts, with lines close to parallel to theirs.
+On vorticity it levels off from four cells while the controls keep rising, and `mae` reaches
+it at the largest `translate_y`. The rows are close to those of
+[h1_seminorm](../../metrics/h1_seminorm/card.md) at every shift.
+
 ### On `synthetic_ensemble`
 
 <!-- GENERATED results_on_synthetic_ensemble: written by `python -m fmeval.cards evidence h1_relative --results results/comparison_1793829127 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
@@ -599,6 +675,15 @@ Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_on_synthetic_ensemble -->
+
+On the synthetic ensemble the metric scores the member mean against the reference. The member
+mean is not the reference here, and its relative $H^1$ error is 0.761 before any degradation
+(the run's clean value), against 1 for the anchor. `bias` raises it in order on every frame
+(rank correlation 1), by a relative 0.000722 at the harshest strength, small enough to be among
+the degradations whose response is provably below 0.05. The two dispersion axes change the
+spread of the members and not their mean, so the value does not move (largest damage 0 and
+4.65e-16) and they have no ordering. The run therefore checks that the metric is computed on
+the member mean and is blind to dispersion, and says nothing about turbulence.
 
 ### On `forecast_re5e4`
 
@@ -715,6 +800,22 @@ h1_relative on vorticity against lead time, the physical time since the forecast
 Every prediction of every forecast, nothing pooled: a cell is one prediction step of one forecast, a row the lead time (the physical time since the forecast started) and a column the forecast, named by its run's native grid and its starting time (`64², start 0` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-0`; `128², start 0` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-0`; `256², start 0` is `F-906861_64/forecast_t0-0`; `64², start 1.13` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250`; `128², start 1.13` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-2500`; `256², start 1.13` is `F-906861_64/forecast_t0-5000`). **Damage** is the prediction's departure from the target as a fraction of the anchor's in the same frame, by default the target's own spatial mean, so each step is scaled by its own target. A dash means no value there.
 
 <!-- END GENERATED results_on_forecast_re5e4 -->
+
+This is the field's own experiment: test trajectories predicted step by step and scored by the
+relative $H^1$ error at each step, here drawn against lead time. The value table is what that
+field would report.
+
+- **On velocity and vorticity the coarser forecasts reach errors of the order of the
+  reference's own norm.** The 64² velocity forecast from start 0 goes from 0.405 at the first
+  step to 1.29 at lead time 0.5638, more than a whole channel's norm (velocity sums two
+  channels), and ends at 1.08; its vorticity error ends at 0.905. The 128² forecasts lie lower
+  at every step on velocity, from 0.145 and 0.135 at the first step.
+- **From start 1.13 the 256² forecast stays close to its target**: at most 0.000114 on density,
+  0.00666 on velocity and 0.0102 on vorticity over the ten steps. From start 0 it rises steeply
+  from lead time 0.5638 and ends at 0.786 on velocity and 0.737 on vorticity.
+- **On density the values are small** (at most 0.0603) although the damage reaches 0.793: the
+  density's mean sets most of the denominator, so the density value must be read against the
+  anchor, as Reading the output says.
 
 ### On `kinet_re1e6`
 
@@ -849,6 +950,21 @@ Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_on_kinet_re1e6 -->
+
+At twenty times the Reynolds number, on a 128² grid instead of 256², the metric is again ordered
+on every blur, filter, noise and cell-value axis, and it again rejects the fake prediction
+(damage 1.39, 1.39 and 1.41, beside 1.38 to 1.49 for the reference moved far away). What
+differs:
+
+- **Displacement on vorticity is barely ordered**: rank correlation 0.943, 0.3 and 0.1 under
+  `translate_subpixel`, `translate_x` and `translate_y`, with 0.348, 0.137 and no frames in order.
+- **`coarsen` on vorticity is no longer fully in order** (rank correlation 0.8, 0.379 of
+  frames), nor is `subsample` (0.8, 0.286 of frames).
+- **`coarsen_bandlimited` on density is in order on every frame**, where on `kinet_re5e4` it was
+  in order in 0.348 of frames.
+- **Fewer usable blur strengths on vorticity**: `median_blur` has one, so no ordering.
+
+The grid differs between the two runs as well as the Reynolds number.
 
 ## References
 
