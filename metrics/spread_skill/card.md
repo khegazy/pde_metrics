@@ -57,9 +57,57 @@ finite number that would read as a measurement.
 None. Variance over members and the mean over cells are both pointwise; no cell consults a
 neighbour, so the domain edge never enters.
 
+### How its field reports it
+
+The field is ensemble forecast verification, in weather and hydrological forecasting.
+
+- **The object and its normalisation.** The RMS spread, the square root of the mean of the
+  members' unbiased variance over cases, set against the RMSE of the ensemble mean: for an
+  ensemble exchangeable with the observation, $\mathrm{RMSE} \approx \sqrt{(R+1)/R}$ times the
+  spread for $R$ members (Fortin and colleagues, Equations (9), (14) and (15); Equation (16)
+  drops the factor for large $R$) [@fortin2014]. Leutbecher and Palmer write the same relation
+  with the variance divided by $N$, so their factor is $(N+1)/(N-1)$ (Equation (7) of the
+  technical memorandum read) [@leutbecherpalmer2008]. Equation (3) here is Fortin's Equation
+  (15) as a ratio. Fortin and colleagues ask authors to "report the equation that they use to
+  compute ensemble spread" (Section 4), and show that the mean of the standard deviations,
+  used instead of the root of the mean variance, had produced "a diagnostic of
+  underdispersion" where the corrected spread agreed with the RMSE (Section 3, page 1711)
+  [@fortin2014].
+- **The figures.** Spread and RMSE of the ensemble mean against lead time, two lines on one
+  axis (Fortin and colleagues, Figure 1, 500-hPa height over lead times of 1 to 15 days)
+  [@fortin2014]; and the binned spread-error diagram, RMS error against RMS spread with the
+  cases "stratified according to the predicted spread and divided into 20 equally populated
+  bins" (Leutbecher and Palmer, Section 2.2, Figure 4 of the memorandum)
+  [@leutbecherpalmer2008]. **Neither is built here, because neither can be drawn honestly on the
+  data that exists.** `synthetic_ensemble` gives every cell and frame the same dispersion, and
+  its frames advance a phase rather than a lead time, so spread and error against "time" are
+  flat by construction. The binned diagram needs the spread to vary from case to case by more
+  than sampling noise, as Leutbecher and Palmer state: "the variability of the spread has to be
+  larger than that expected by pure sampling uncertainty for this prediction to be useful"
+  (Section 2.2) [@leutbecherpalmer2008]. With one true dispersion everywhere, the bins differ
+  only by sampling noise in the spread, and a calibrated ensemble would draw a flat line rather
+  than the diagonal (a derivation from the plan's review, not a measurement).
+- **The statistics reported beside it.** The ratio alone is not a calibration test: "Other
+  diagnostics, and in particular rank histograms, should be used" (Fortin and colleagues,
+  Section 4) [@fortin2014]. Here those are [rank_histogram](../../metrics/rank_histogram/card.md) and
+  [rank_histogram_chi2](../../metrics/rank_histogram_chi2/card.md); the error of the mean on its own is
+  [ensemble_mean_rmse](../../metrics/ensemble_mean_rmse/card.md).
+- **The experiment.** An operational ensemble verified over a season, at each lead time
+  (Fortin and colleagues, Section 3; Leutbecher and Palmer, Section 2.2). Here only the
+  calibrated null of `synthetic_ensemble` exists; real ensembles wait on
+  [issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md).
+  The experiments that would let both figures be drawn are
+  [EXP-spread_skill-heteroscedastic-synthetic-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-heteroscedastic-synthetic-ensemble.md)
+  (dispersion that varies from cell to cell, for the binned diagram),
+  [EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md)
+  (a real lead time) and
+  [EXP-crps-gneiting-forecaster-suite](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-crps-gneiting-forecaster-suite.md).
+
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence spread_skill --results results/spread_skill_1787800137`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence spread_skill --results results/comparison_1793812401`, do not edit -->
+
+No field-standard figure: an ensemble score with no curve or point set behind it; its field draws it against lead time, which the synthetic ensemble, one spread at every frame, cannot show.
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -80,15 +128,15 @@ Median damage over frames against severity level for spread_skill, one row per f
 
 | test family | field | change from clean at the harshest strength | elasticity | first strength detected |
 |---|---|---|---|---|
-| Ensemble dispersion | density | -0.8 to 3 | 0.832 to 1.37 | level 2 |
-| Cell-value distortion | density | -0.62 | 1.73 | level 3 |
+| Ensemble dispersion | density | -0.8 to 3 | 0.799 to 1.28 | level 1 |
+| Cell-value distortion | density | -0.62 | 1.72 | level 3 |
 
 **Consistency: how much does it vary from snapshot to snapshot?**
 
 | test family | field | consistency, in the strength's units | snapshots per independent block |
 |---|---|---|---|
-| Ensemble dispersion | density | 8.08e-17 to 3.23e-16 | — |
-| Cell-value distortion | density | 0.00163 | — |
+| Ensemble dispersion | density | 0.00061 to 0.00265 | 1 |
+| Cell-value distortion | density | 0.00201 | 1 |
 
 One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
 
@@ -98,7 +146,7 @@ These tables report what was measured and grade none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| density | — | — | — | — | — | 1 |
+| density | 0.631 | `spread_deflate` | `bias` | — | — | 28 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
@@ -184,11 +232,11 @@ unless they persist across frames.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence spread_skill --results results/spread_skill_1787800137`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence spread_skill --results results/comparison_1793812401`, do not edit -->
 
-Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `c49b363765d7` (working tree dirty). Run `spread_skill_1787800137`.
+Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793812401`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/spread_skill_1787800137`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793812401`.
 
 <!-- END GENERATED run -->
 
@@ -207,12 +255,28 @@ tables for that reason, and so are the trap tests. When an ensemble of real runs
 ([issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md)), this card should be
 regenerated against it and this section will say something different.
 
+<!-- GENERATED experiments: written by `python -m fmeval.cards catalog`, do not edit -->
+
+**Across the experiments.**
+
+| experiment | what a run on it is evidence of | on this card |
+|---|---|---|
+| `kinet_re5e4` | developed flow | not applicable: needs an ensemble, and this dataset has one realisation per frame |
+| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not applicable: needs an ensemble, and this dataset has one realisation per frame |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | measured, run `comparison_1793812401`: the main results |
+| `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs an ensemble, and this dataset has one realisation per frame |
+| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not applicable: needs an ensemble, and this dataset has one realisation per frame |
+
+One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.
+
+<!-- END GENERATED experiments -->
+
 ### Ensemble dispersion
 
 [spread_inflate](../../degradations/spread_inflate/card.md) ·
 [spread_deflate](../../degradations/spread_deflate/card.md)
 
-<!-- GENERATED results_ensemble: written by `python -m fmeval.cards evidence spread_skill --results results/spread_skill_1787800137`, do not edit -->
+<!-- GENERATED results_ensemble: written by `python -m fmeval.cards evidence spread_skill --results results/comparison_1793812401`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -221,23 +285,94 @@ regenerated against it and this section will say something different.
 
 <!-- END GENERATED results_ensemble -->
 
-The clean ensemble reads 0.995, within half a percent of the exchangeable value of one,
+The clean ensemble reads 0.990, within one percent of the exchangeable value of one,
 which is the closed-form check on the estimator: the Fortin form and the sqrt((M+1)/M)
 correction together land on the analytic answer at 16 members.
 
-From there the axes separate cleanly in both directions — 0.199 at the harshest deflation
-and 3.978 at the harshest inflation — with a rank correlation of 1 and no overlap between
-neighbouring strengths on either. Note what that pair of numbers means for the ordering
+From there the axes separate cleanly in both directions, with a rank correlation of 1 and no
+overlap between neighbouring strengths on either. At the harshest strengths the ratio has
+fallen by 0.8 of its clean value under deflation and risen by three times its clean value
+under inflation (the reactivity table). These are exactly the factors the operators apply to
+the spread, a fifth and four times the calibrated width, because both leave the ensemble mean,
+and so the error in the denominator, unchanged. The smallest value in any frame is 0.197 and
+the largest 4.05. Note what that pair of directions means for the ordering
 statistics: the raw value moves *down* on one axis and *up* on the other, so both score 1
 only because the analysis ranks on distance from the declared target rather than on the
 value itself. A metric like this scored as an ordinary error would read −1 on one of its
-two axes and look broken.
+two axes and look broken. The ratio moves a tenth of the way to the anchor at the mildest
+strength of both axes (level 1).
 
-The bias axis is the useful contrast. It falls from 0.995 to 0.378 without any change in
-dispersion at all, because biasing the members moves the ensemble mean away from the truth
-and so inflates the denominator. A low ratio therefore does not by itself mean an
-overconfident ensemble; it means spread and error disagree, and this axis is the reminder
-that the error can be the thing that moved.
+The damage is read on the same distance from the target (`judgements/008`). The anchor, each
+member replaced by its own spatial mean, collapses the spread and reads 0.00399, on the low
+side of one; the harshest inflation still reads a damage of 0.609 and the harshest deflation
+0.676 (the largest in any frame), both positive, because the damage measures how far from one
+the ratio is, not which side it is on.
+The profile row above ranks the degradations by damage per unit of field change, but the two
+dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
+round-off; its "charges most for", "charges least for" and selectivity are therefore not
+meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/blob/main/issues/111-damage-per-change-divides-by-round-off-on-ensemble-axes.md)).
+The `bias` axis is read under Cell-value distortion below.
+
+### Cell-value distortion
+
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence spread_skill --results results/comparison_1793812401`, do not edit -->
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `bias` | density | 4 | 1 | 1 | 1 |
+
+<!-- END GENERATED results_pointwise -->
+
+Only the offset ran here: the synthetic ensemble's ladder
+(`configs/degradation/ensemble_miscalibration.yaml`) carries `bias` as its one axis that moves
+the ensemble mean, and no `gain`. It is the useful contrast to the dispersion axes. Adding the
+same offset to every member leaves the spread of Equation (1) unchanged and adds to the error
+of the ensemble mean in Equation (2), so the ratio is not invariant to an offset: it falls in
+every frame and at every strength, with a rank correlation of 1, by 0.62 of its clean value at
+the harshest offset, to a smallest single value of 0.374, with a damage of 0.459, first
+detected at level 3. A low ratio therefore does not by itself mean an overconfident ensemble;
+it means spread and error disagree, and this axis is the reminder that the error can be the
+thing that moved.
+
+### Compared with the other metrics
+
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence spread_skill --results results/comparison_1793812401`, do not edit -->
+
+| compared with | density |
+|---|---|
+| `rank_histogram` | 0.918 |
+| `rank_histogram_chi2` | 0.83 |
+| `variogram_score` | 0.816 |
+| `crps` | 0.753 |
+| `energy_score` | 0.753 |
+| `max_error` | 0.325 |
+| `ensemble_mean_rmse` | -0.0094 |
+| `h1_relative` | -0.0094 |
+| `mae` | -0.0094 |
+| `mse` | -0.0094 |
+| `nrmse` | -0.0094 |
+| `rmse` | -0.0094 |
+| `vrmse` | -0.0341 |
+| `crps_skill_score` | -0.753 |
+
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+
+<!-- END GENERATED results_summary -->
+
+The synthetic ensemble has one field, density, and the comparison runs over its three axes,
+`bias` and the two dispersion axes, and the anchor, with this ratio entering by its distance
+from one. `rank_histogram` orders the degradations most like it (0.918), then
+`rank_histogram_chi2` (0.83) and `variogram_score` (0.816); `crps` and `energy_score` read
+0.753, and `crps_skill_score` −0.753, the same agreement with the sign of a higher-is-better
+score. The errors of the ensemble mean order them least like it, with correlations near zero:
+`mse`, `rmse`, `mae`, `nrmse`, `h1_relative` and `ensemble_mean_rmse` at −0.0094 each, `vrmse`
+at −0.0341, and `max_error` at 0.325. In the run's `results.csv` those errors give all eight
+dispersion strengths the same value, to round-off, because neither dispersion axis moves the
+member mean they receive, so only the offsets and the anchor order them, while this ratio
+places the harshest inflation above the anchor and the two harshest inflations above every
+offset.
 
 ## References
 

@@ -33,5 +33,5 @@ math:
   scale_dependent: false
   resolution_dependent: true   # the octaves and the shells are set by the analysis grid
   complexity: "O(N log N)"     # a fixed number of FFTs per component, then a bincount
-references: [alexakis2018, aluie2011, aluie2013, aluieli2012, kraichnan1967]
+references: [alexakis2018, aluie2011, aluie2013, aluieli2012, boffetta2012, kraichnan1967]
 review: null

@@ -1,9 +1,28 @@
-# Warm start for comparing metrics across datasets of increasing physical complexity.
-# Not yet consumed by evaluate.py -- see issues/011-cross-dataset-comparison.md.
+# @package _global_
 #
-# On disk at datasets/kinet/doubly_periodic/old/ : five runs at Re = 5e4, 6.25e4, 7.5e4,
-# 8.75e4 and 1e5, all at Ma = 0.1 with identical initial conditions, so Reynolds number
-# is the only varying parameter. Native resolutions differ (mostly 512^2), which is why
-# the analysis grid must be pinned for any comparison across them.
-members: [kinet_re5e4, kinet_re625e2, kinet_re75e3, kinet_re875e2, kinet_re1e5]
-analysis_grid: {resolution: 128, method: block_mean}
+# The doubly periodic Reynolds ladder: runs that differ only in Reynolds number, compared on one
+# analysis grid so that a metric's behaviour can be read against rising physical complexity
+# (report section 12). Run every member and gather them into one folder with
+#
+#   python evaluate.py -m dataset_family=reynolds_ladder_2d 'metrics=[mse,mae]' \
+#       dataset.time.start=2000
+#
+# Hydra runs one job per member, each writing its usual folders, and `FamilyComparison`
+# then writes `reynolds_ladder_2d_<time>/` holding every member's rows;
+# `python make_report.py` on that folder draws section 12.
+#
+# Members: the readable runs that share the initial condition (lambda = 80, epsilon = 0.05),
+# Mach number 0.1 and end time 2.2553. The Re = 6.25e4, 7.5e4, 8.75e4 and 1e5 runs under
+# datasets/kinet/doubly_periodic/old/ cannot be opened and join when they can (issues/011).
+hydra:
+  sweeper:
+    params:
+      dataset: kinet_re5e4,kinet_re1e6
+  callbacks:
+    family_comparison:
+      _target_: fmeval.io.FamilyComparison
+
+# Native resolutions differ (256^2 and 1024^2), so every member is remapped onto one grid, the
+# 128^2 the family was declared with.
+analysis_grid:
+  resolution: 128

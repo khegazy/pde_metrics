@@ -39,6 +39,37 @@ def mse(reference: NDArray[np.floating], candidate: NDArray[np.floating]) -> flo
     return float(np.mean(d * d))
 
 
+def channel_mse(
+    reference: NDArray[np.floating], candidate: NDArray[np.floating]
+) -> NDArray[np.floating]:
+    """Mean squared error of each channel over its cells, one value per channel.
+
+    This is The Well's MSE, which reduces over the spatial axes only and keeps one value per
+    field (Ohana et al. 2024, NeurIPS 37 Datasets and Benchmarks, App. E.3; code
+    ``the_well/benchmark/metrics/spatial.py``, ``MSE.eval``). Every channel has the same cells,
+    so its mean over channels is :func:`mse`. The bundles that apply a nonlinearity per channel
+    before averaging over channels -- ``rmse_channel_mean``, ``nrmse`` and ``vrmse`` -- start
+    from it.
+
+    Args:
+        reference: The trusted field, shape ``(C, *spatial)``.
+        candidate: The field being scored, same shape.
+
+    Returns:
+        An array of shape ``(C,)``.
+
+    Raises:
+        ValueError: If the shapes differ. Numpy would broadcast a one-channel field against a
+            two-channel one and return a plausible value per channel.
+    """
+    if reference.shape != candidate.shape:
+        raise ValueError(
+            f"channel_mse needs matching shapes, got {reference.shape} and {candidate.shape}"
+        )
+    d = (reference - candidate).reshape(reference.shape[0], -1)
+    return np.mean(d * d, axis=1)
+
+
 @companion(of="mse")
 def mse_map(
     reference: NDArray[np.floating], candidate: NDArray[np.floating]

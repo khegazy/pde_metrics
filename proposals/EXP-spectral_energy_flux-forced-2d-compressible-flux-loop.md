@@ -1,7 +1,7 @@
 ---
 type: "EXP"
 kind: "benchmark problem"
-related: ["spectral_energy_flux", "docs/ideas/turbulence_statistics/energy_transfer_checks.md", "docs/ideas/turbulence_statistics/inviscid_invariants.md", "docs/ideas/physics_invariants/helmholtz_split.md"]
+related: ["spectral_energy_flux", "spectrum_l2", "docs/ideas/turbulence_statistics/energy_transfer_checks.md", "docs/ideas/turbulence_statistics/inviscid_invariants.md", "docs/ideas/physics_invariants/helmholtz_split.md"]
 seen_in: "Kritsuk 2018, arXiv:1802.08228; Falkovich & Kritsuk 2017, Physical Review Fluids 2(9), 092603(R)"
 doi: "10.1103/PhysRevFluids.2.092603"
 found_by: "spectral_energy_flux, 2026-10-30"
@@ -30,7 +30,13 @@ does not.
 `spectral_energy_flux` on a flow where the velocity-only flux is no longer a good approximation
 (judgements/003), the compressible budget and the reference-free flux checks on the
 energy-transfer checks idea page, the two-dimensional cascade checks of issue 085, the Helmholtz
-split, and the shock metrics.
+split, and the shock metrics. Also `spectrum_l2` (added by update_metric_eval_principles,
+2026-11-03): its field compares energy spectra of forced, statistically steady turbulence,
+whose two-dimensional inertial ranges have known slopes, k^-5/3 for the inverse energy
+cascade and k^-3 for the direct enstrophy cascade in the incompressible case (Boffetta &
+Ecke 2012, Annu. Rev. Fluid Mech. 44, 427-451, Eqs. 12-13, p. 431,
+doi:10.1146/annurev-fluid-120710-101240); `kinet_re5e4` decays and is unforced, so it has no
+such range to recover.
 
 ## Why it is helpful
 

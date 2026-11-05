@@ -12,7 +12,7 @@ The valid prediction time is the first time a rollout's normalised error exceeds
 
 ## Why it is not built
 
-The rule this follows: a metric is built only if an existing experiment changes, in a controlled and known way, the property it is built to detect; a degradation that moves it only incidentally does not count. The current experiments are the 24 degradations (`python -m degradations`) applied to single snapshots of `kinet_re5e4`, `synthetic_ensemble` and `sod_shock_tube`. The metric needs a predicted trajectory and a reference trajectory. The degradation ladder damages single snapshots, and the forecast pairs on disk are not read yet ([010](010-forecast-pair-reader.md)). Even with them, real forecasts are not a controlled experiment.
+The rule this follows: a metric is built only if an existing experiment changes, in a controlled and known way, the property it is built to detect; a degradation that moves it only incidentally does not count. The current experiments are the 24 degradations (`python -m degradations`) applied to single snapshots of `kinet_re5e4`, `synthetic_ensemble` and `sod_shock_tube`. The metric needs a predicted trajectory and a reference trajectory. The degradation ladder damages single snapshots. The forecast pairs of `forecast_re5e4` supply a predicted and a reference trajectory at ten prediction steps, but real forecasts are not a controlled experiment.
 
 ## What would unblock it
 

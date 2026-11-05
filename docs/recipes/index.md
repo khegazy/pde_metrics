@@ -52,7 +52,11 @@ once; a recipe repeats one only where it bites hardest.
    apart without any test noticing: the filters and the spectral calibration once had two
    definitions of |k|, and a low-pass asked to remove 30% of the energy removed 99.997%.
    `AGENTS.md` §1 lists where the shared code lives.
-10. **Prove that a refactor changes no number.** Follow
+10. **Evaluate a metric the way its own field does, on every experiment where it makes
+    sense.** Build every standard where fields disagree; state on the card why any experiment
+    was skipped; write up as a proposal the experiment the field relies on when it does not
+    exist here. `AGENTS.md` §1, "How every metric is evaluated", has the full rule.
+11. **Prove that a refactor changes no number.** Follow
     [verify-a-refactor.md](verify-a-refactor.md) before and after the change; every result
     must agree within the tolerance it states. A larger difference is a bug you introduced,
     not an improvement: splitting one module once lost 630 rows of results while every test

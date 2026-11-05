@@ -143,15 +143,16 @@ The fields in `tests/analytic_fields.py` — a Gaussian bump, a stripe, a single
 responses known in closed form and exist to test the statistics. Nothing measured on them may
 appear on a metric's page. Of the datasets computed from exact solutions, `taylor_green_2d` is
 the same kind of fixture and is not in `evidence_datasets`. `sod_shock_tube` is, as an
-**analytic check**, for the metrics that need a shock or pressure: its evidence says that a
-metric locates and scores a known shock correctly, and nothing about turbulence. A metric that
-needs a periodic domain is never run on it.
+**analytic check**, for every metric that can run on it: its evidence says how a metric scores
+a known shock, contact and rarefaction, and nothing about turbulence. A metric that needs a
+periodic domain is never run on it.
 
 Why: a closed form says what a metric does to an idealised feature, not to turbulence. Numbers
 from a fixture, once written into a page, would read exactly like numbers from a flow. Sod is
-admitted anyway because `kinet_re5e4` has neither shocks nor pressure, so without it a shock or
-pressure metric would have no evidence at all; that is safe only because the label travels with
-the numbers. `evidence_datasets` maps each dataset to the kind of claim it supports, and every
+admitted anyway: `kinet_re5e4` has neither shocks nor pressure, so without it a shock or
+pressure metric would have no evidence at all, and every metric is run on every experiment where
+that makes sense (`AGENTS.md` §1, "How every metric is evaluated"). That is safe only because
+the label travels with the numbers. `evidence_datasets` maps each dataset to the kind of claim it supports, and every
 card's generated run summary quotes it, as it does for the calibrated null `synthetic_ensemble`.
 Taylor–Green stays refused: every frame is a scalar multiple of the first.
 
@@ -176,7 +177,7 @@ in exception handlers to keep a run alive.
 
 ## Figures are committed, and only the numbers behind them must be byte-stable
 
-The example panels (PNG files) and the two figures on every metric card (SVG files) are
+The example panels (PNG files) and the figures on every metric card (SVG files) are
 committed so that pages render on GitHub with no build step. Regenerating a figure with the
 same matplotlib version must produce a byte-identical file; across different matplotlib
 versions the files may differ, and that is acceptable. For the SVGs that identity needs a
@@ -204,10 +205,12 @@ by its own test. Where the two disagree, the recipe wins.
   `docs/recipes/refresh-the-evidence.md`.
 - The committed generated files total 13.6 MB (measured 2026-10-01: 7.2 MB of example
   panels, 6.3 MB under `metrics/`, of which 5.8 MB are the card figures and their numbers).
-  A test caps the total at 40 MB and names the largest files when it trips; the cap was 25 MB
-  until 2026-11-02, when `main` reached 24.3 MB with roughly 0.3 to 1 MB added per metric. If the
-  repository grows past roughly 50 MB, the fallback is Git LFS — raise the question, do not
-  delete panels or figures.
+  A test caps the total at 120 MB and names the largest files when it trips. Kareem raised it from
+  40 MB on 2026-11-04, when running every metric on every experiment brought the files to
+  79.3 MB (17.3 MB compressed in Git); it was 25 MB until 2026-11-02. GitHub blocks single files
+  over 100 MiB and recommends repositories under 1 GB, and Git keeps every committed version, so
+  the cost of a higher cap is history growth with each regeneration. If the files grow past the
+  cap, raise Git LFS or another raise with Kareem — do not delete panels or figures.
 - Your local copy of the repository may sit in a directory named `fluid_metrics`. The
   repository is `pde_metrics`; the directory name is historical and means nothing.
 

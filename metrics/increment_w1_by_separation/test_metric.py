@@ -15,9 +15,14 @@ import numpy as np
 import pytest
 
 from metrics.increment_w1.metric import increment_w1
-from tests.conftest import alternating_field, step_field
+from tests.conftest import alternating_field, make_ctx, oriented_velocity_field, step_field
 
-from .metric import increment_w1_by_separation, increment_w1_curve, mean_absolute_increment
+from .metric import (
+    increment_w1_by_separation,
+    increment_w1_curve,
+    increment_w1_curve_transverse,
+    mean_absolute_increment,
+)
 
 
 def test_worked_example_from_the_card():
@@ -34,20 +39,23 @@ def test_worked_example_from_the_card():
     The reference's mean absolute increment is 0.5 along x at both separations and 0 along y,
     0.25 averaged. Each separation's ratio is then 0.25 / 0.25 = 1, and their mean is 1.
     """
-    separations, curve = increment_w1_curve(step_field(), alternating_field())
+    ctx = make_ctx(step_field())
+    separations, curve = increment_w1_curve(step_field(), alternating_field(), ctx=ctx)
     assert separations.tolist() == [1, 2]
     assert curve == pytest.approx([0.25, 0.25])
-    assert mean_absolute_increment(step_field(), separations) == pytest.approx([0.25, 0.25])
-    assert increment_w1_by_separation(step_field(), alternating_field()) == pytest.approx(1.0)
+    assert mean_absolute_increment(step_field(), separations, ctx.field) == pytest.approx(
+        [0.25, 0.25])
+    assert increment_w1_by_separation(step_field(), alternating_field(), ctx=ctx) == pytest.approx(
+        1.0)
 
 
 def test_the_one_cell_value_is_increment_w1_itself():
     """At one cell the curve is ``increment_w1``, exactly: the same function computes both."""
     rng = np.random.default_rng(4)
     reference, candidate = rng.standard_normal((2, 2, 32, 16))
-    separations, curve = increment_w1_curve(reference, candidate)
+    separations, curve = increment_w1_curve(reference, candidate, ctx=make_ctx(reference))
     assert separations[0] == 1
-    assert curve[0] == increment_w1(reference, candidate)
+    assert curve[0] == increment_w1(reference, candidate, ctx=make_ctx(reference))
 
 
 @pytest.mark.parametrize("factor", [0.5, 2.0, 3.0])
@@ -60,16 +68,16 @@ def test_a_scaled_candidate_scores_the_size_of_its_scale_error(factor: float):
     out. The registered number is therefore ``|c - 1|``, whatever the field.
     """
     reference = np.random.default_rng(5).standard_normal((1, 32, 16))
-    assert increment_w1_by_separation(reference, factor * reference) == pytest.approx(
-        abs(factor - 1.0), rel=1e-12)
+    value = increment_w1_by_separation(reference, factor * reference, ctx=make_ctx(reference))
+    assert value == pytest.approx(abs(factor - 1.0), rel=1e-12)
 
 
 def test_a_separation_with_no_reference_increments_is_zero_or_infinite():
     """Where the reference has no increments at all, a candidate with none adds 0 and one with
     any adds an infinite term: nothing in the reference sets a scale for a departure there."""
     flat = np.zeros((1, 4, 4))
-    assert increment_w1_by_separation(flat, flat) == 0.0
-    assert increment_w1_by_separation(flat, alternating_field()) == np.inf
+    assert increment_w1_by_separation(flat, flat, ctx=make_ctx(flat)) == 0.0
+    assert increment_w1_by_separation(flat, alternating_field(), ctx=make_ctx(flat)) == np.inf
 
 
 @pytest.mark.parametrize("shape", [(1, 3, 1), (1, 1)])
@@ -77,4 +85,23 @@ def test_a_grid_too_small_for_any_separation_is_refused(shape: tuple[int, ...]):
     """An axis of one cell admits no separation, and a mean over none is NaN, not a number."""
     field = np.arange(np.prod(shape), dtype=float).reshape(shape)
     with pytest.raises(ValueError, match="at least two cells"):
-        increment_w1_by_separation(field, field + 1.0)
+        increment_w1_by_separation(field, field + 1.0, ctx=make_ctx(field))
+
+
+def test_velocity_curves_are_longitudinal_and_transverse():
+    """``oriented_velocity_field`` against a zero field, at separations 1, 2 and 4 cells.
+
+    Against a field with no increments each pair's distance is the reference's mean absolute
+    increment. Longitudinally, u_x along x is a lone step, two unit increments in 16 at every
+    separation, 0.125, and u_y along y is 0: the curve is 0.0625 throughout. It is also the
+    reference's own scale, so every ratio is 1 and so is the number. Transversely u_x along y
+    is 0 and u_y along x is a square wave of period 8, with 4, 8 and 16 unit increments in 16
+    at one, two and four cells: averaged with the zero, 0.125, 0.25 and 0.5.
+    """
+    field, zero = oriented_velocity_field(), np.zeros((2, 16, 8))
+    ctx = make_ctx(field, field="velocity")
+    separations, curve = increment_w1_curve(field, zero, ctx=ctx)
+    assert separations.tolist() == [1, 2, 4] and curve == pytest.approx([0.0625] * 3)
+    assert increment_w1_by_separation(field, zero, ctx=ctx) == pytest.approx(1.0)
+    _, transverse = increment_w1_curve_transverse(field, zero, ctx=ctx)
+    assert transverse == pytest.approx([0.125, 0.25, 0.5])

@@ -26,7 +26,9 @@ from scipy.cluster.hierarchy import dendrogram, linkage
 from scipy.spatial.distance import squareform
 
 from fmeval import analysis as an
+from fmeval.ladder import FORECAST_LEVEL, REFERENCE_VARIANT
 from fmeval.pipeline import parse_map_key
+from metrics import registry as metric_registry
 
 from . import vocabulary
 from .context import FigureItem, PlotResult
@@ -42,6 +44,15 @@ from .style import (
 
 def _axis_frame(df: pd.DataFrame, axis: str) -> pd.DataFrame:
     return df[(df["degradation"] == axis) & (df["level"] > 0)]
+
+
+def _log_if_wide(ax, values: pd.Series, opts: dict) -> None:
+    """A log axis when asked for (``logy`` "auto" or True) and the positive values span over
+    two decades."""
+    positive = values[values > 0]
+    if ((opts["logy"] is True or opts["logy"] == "auto") and len(positive) >= 3
+            and positive.max() / positive.min() > 100):
+        ax.set_yscale("log")
 
 
 def _median_by_level(df: pd.DataFrame, column: str = "value") -> pd.DataFrame:
@@ -103,11 +114,7 @@ def ladder_curves(ctx, df, opts) -> PlotResult:
     ax.set_xlabel("severity level (0 = reference)")
     ax.set_ylabel(f"{metric} [{units}]")
     ax.set_title(f"{metric} on {field}")
-    # A log axis when asked for ("auto" or True) and the positive values span over two decades.
-    positive = df["value"][df["value"] > 0]
-    if ((opts["logy"] is True or opts["logy"] == "auto") and len(positive) >= 3
-            and positive.max() / positive.min() > 100):
-        ax.set_yscale("log")
+    _log_if_wide(ax, df["value"], opts)
     ax.legend(fontsize="x-small", ncol=2)
 
     return PlotResult(
@@ -122,11 +129,40 @@ def ladder_curves(ctx, df, opts) -> PlotResult:
 #: Most panels one stored-map or point-set figure draws, so a figure stays legible on a page.
 _MAX_PANELS = 12
 
+#: Largest point set drawn as vector markers; a larger one is rasterised inside the figure.
+_VECTOR_POINTS = 1000
 
-def _companion(ctx, metric: str) -> dict:
-    """A metric's companion (kind, coordinate) as the run's own registry snapshot recorded it;
-    empty for a metric without one or a run that predates the record."""
-    return ctx.meta.get("registries", {}).get("metrics", {}).get(metric, {}).get("companion") or {}
+#: Most coordinates a dense curve is drawn at. A curve stored at every order or shell (the
+#: classical Hill plot holds k = 1 to n/10, 6553 orders on 256^2) is drawn at this many, spaced
+#: evenly on the axis it is drawn on, plus its analysed coordinates: more is invisible at figure
+#: size and made one figure's JSON 10.8 MB, a large share of the size budget for every
+#: committed figure (``tests/test_cards.py``).
+_DENSE_DRAWN = 256
+
+
+def companion_records(ctx, metric: str) -> list[dict]:
+    """A metric's companions (name, kind, coordinate, analysed, scales, style) as the run's own
+    registry snapshot recorded them, in declaration order; empty for a metric without one or a
+    run that predates the record. A run recorded when a metric had at most one names it
+    ``companion``. A key the snapshot lacks, because the run predates it, is read from the live
+    declaration of the companion of the same name: ``scales`` and ``style`` say how a figure is
+    drawn, not what was measured, as :meth:`ReportContext.preserved_by` reads an operator."""
+    entry = ctx.meta.get("registries", {}).get("metrics", {}).get(metric, {})
+    if "companions" in entry:
+        records = entry["companions"]
+    else:
+        records = [{"name": metric, **entry["companion"]}] if entry.get("companion") else []
+    metric_registry.discover()
+    spec = metric_registry.REGISTRY.get(metric)
+    live = {c.name: c.describe() for c in (spec.companions if spec is not None else ())}
+    return [{**live.get(r["name"], {}), **r} for r in records]
+
+
+def _companion(ctx, label: str) -> dict:
+    """One companion's record by its label (:func:`metrics.registry.companion_label`), as
+    :func:`companion_records` reads it; empty if the snapshot has none."""
+    metric, _, name = label.partition(".")
+    return next((c for c in companion_records(ctx, metric) if c["name"] == (name or metric)), {})
 
 
 def _axis_label(name: str, units: str) -> str:
@@ -134,9 +170,41 @@ def _axis_label(name: str, units: str) -> str:
     return f"{name} [{units}]" if units else str(name)
 
 
-def _coordinate_label(ctx, metric: str) -> str:
-    """``name [units]`` of a metric's curve coordinate, from the run's own registry snapshot."""
-    return _axis_label(*(_companion(ctx, metric).get("coordinate") or ["coordinate", ""]))
+#: Decades a symlog axis shows on each side of zero: it is linear within this many decades of
+#: its largest magnitude, so a curve that changes sign keeps its small values visible.
+_SYMLOG_DECADES = 6
+
+
+def _scale_axes(ax, scales, x, y, *, log_base_x: float = 10) -> None:
+    """Put a companion's declared ``scales`` (x, y) on ``ax``, from the values drawn there.
+
+    None is the default a run without the declaration drew: a base-2 log x axis when every
+    coordinate is positive and they span more than a factor of ten, all else linear. A symlog
+    axis is linear within :data:`_SYMLOG_DECADES` decades of the largest magnitude drawn and is
+    drawn with its zero line, the sign change a reader looks for in an energy flux.
+    """
+    x = np.asarray(x, dtype=float)
+    finite = x[np.isfinite(x)]
+    if scales is None:
+        log = finite.size > 0 and (finite > 0).all() and finite.max() / finite.min() > 10
+        scales, log_base_x = ("log" if log else "linear", "linear"), 2
+    for axis, scale, values in (("x", scales[0], x), ("y", scales[1], np.asarray(y, float))):
+        magnitude = np.abs(values[np.isfinite(values)])
+        set_scale = ax.set_xscale if axis == "x" else ax.set_yscale
+        if scale == "log":
+            set_scale("log", base=log_base_x if axis == "x" else 10)
+        elif scale == "symlog" and magnitude.size and magnitude.max() > 0:
+            set_scale("symlog", linthresh=float(magnitude.max()) * 10.0 ** -_SYMLOG_DECADES)
+            (ax.axvline if axis == "x" else ax.axhline)(0.0, color="0.75", lw=0.6, zorder=0)
+
+
+def _scales_sentence(scales) -> str:
+    """The caption's sentence for a companion's declared ``scales``; empty for the default."""
+    if scales is None:
+        return ""
+    symlog = (f"; a symlog axis is linear within {_SYMLOG_DECADES} decades of its largest "
+              "magnitude and carries its zero line" if "symlog" in scales else "")
+    return f"Axes as the field draws them: {scales[0]} x, {scales[1]} y{symlog}. "
 
 
 @plot(
@@ -145,66 +213,130 @@ def _coordinate_label(ctx, metric: str) -> str:
     requires_columns=("degradation", "level", "value"),
 )
 def companion_curves(ctx, df, opts) -> PlotResult:
-    """The metric's curve companion against its coordinate, one panel per degradation.
+    """Each of the metric's curve companions against its coordinate, one panel per degradation.
 
     The literature's own values, untransformed: in each panel the clean curve in black, one line
     per strength in the degradation's colour, darker with strength, and in every panel the
     anchor dashed and the impostor dotted, so a reader sees which coordinates a degradation moves
-    and how far toward the anchor. A second figure gives the
-    per-coordinate trend and change from clean that :func:`fmeval.analysis.analyse` computes.
+    and how far toward the anchor. A curve that declares ``analysed`` is drawn at every coordinate
+    from the dense curves stored on the frames and ladder entries ``report.error_map`` names, and
+    from its analysed coordinates when none were stored. The axes are those the companion
+    declares (``scales``, :func:`_scale_axes`), and a companion declaring ``style="bars"`` is a
+    histogram over fixed bins: its strengths and clean curve are grouped bars in each bin, the
+    anchor and impostor steps. A second figure gives the
+    per-coordinate trend and change from clean that :func:`fmeval.analysis.analyse` computes, at
+    the analysed coordinates.
     """
     metric, field = str(df["metric"].iloc[0]), str(df["field"].iloc[0])
     scored = ctx.companion_scored
+    # Every curve writes its analysed coordinates to companions.csv, a dense one included.
     ctx.require(not scored.empty, "this run stored no curve companion")
-    rows = scored[scored["metric"].astype(str).str.startswith(f"{metric}[")
-                  & (scored["field"].astype(str) == field)]
-    ctx.require(not rows.empty, f"{metric} has no curve companion")
+    items = []
+    for entry in (c for c in companion_records(ctx, metric) if c["kind"] == "curve"):
+        label = metric_registry.companion_label(metric, entry["name"])
+        meta = {"metric": metric, "field": field,
+                **({"companion": entry["name"]} if label != metric else {})}
+        stored = {k: v for k, v in ctx.maps.items() if parse_map_key(k)[:2] == (label, field)}
+        dense = entry.get("analysed") is not None and bool(stored)
+        if dense:
+            levels = df.drop_duplicates("variant_label").set_index("variant_label")
+            rows = pd.concat([
+                pd.DataFrame({"degradation": levels.at[variant, "degradation"],
+                              "level": levels.at[variant, "level"], "frame_index": frame,
+                              "coordinate": curve[:, 0], "value": curve[:, 1]})
+                for key, curve in stored.items()
+                for _, _, variant, frame in [parse_map_key(key)]], ignore_index=True)
+        else:
+            rows = scored[scored["metric"].astype(str).str.startswith(f"{label}[")
+                          & (scored["field"].astype(str) == field)]
+        if rows.empty:
+            continue
+        items += _companion_curve_items(ctx, label, field, meta, rows, entry, dense)
+    ctx.require(bool(items), f"{metric} has no curve companion")
+    return PlotResult(items)
+
+
+def _companion_curve_items(ctx, label: str, field: str, meta: dict, rows: pd.DataFrame,
+                           entry: dict, dense: bool) -> list[FigureItem]:
+    """The two figures :func:`companion_curves` draws for one curve companion, ``label``."""
+    coordinate_label = _axis_label(*(entry.get("coordinate") or ["coordinate", ""]))
     medians = (rows.groupby(["degradation", "level", "coordinate"], observed=True)["value"]
                .median().rename("value_median").reset_index())
     numeric = pd.api.types.is_numeric_dtype(medians["coordinate"])
+    coordinates = np.unique(medians["coordinate"].to_numpy(float)) if numeric else []
+    if dense and len(coordinates) > _DENSE_DRAWN:
+        log_x = (entry.get("scales") or ("linear",))[0] == "log" and coordinates[0] > 0
+        spaced = (np.geomspace if log_x else np.linspace)(coordinates[0], coordinates[-1],
+                                                          _DENSE_DRAWN)
+        nearest = coordinates[np.abs(coordinates[:, None] - spaced[None, :]).argmin(axis=0)]
+        keep = np.union1d(nearest, np.asarray(entry.get("analysed") or [], dtype=float))
+        medians = medians[medians["coordinate"].isin(keep)]
     clean = medians[medians["level"] == 0].sort_values("coordinate")
     names = [a for a in ctx.ordinal_axes if a in set(medians["degradation"].astype(str))]
     ctx.require(bool(names), "no ordinal ladder axes")
     ncols = min(4, len(names))
     nrows = -(-len(names) // ncols)
     fig, grid = ctx.style.figure(nrows, ncols, sharex=True, sharey=True)
-    positive = numeric and (medians["coordinate"] > 0).all()
+    scales = entry.get("scales")
+    bars = entry.get("style") == "bars" and numeric
+    # A dense curve has hundreds of coordinates: a marker on each would hide the line and
+    # multiply the size of a committed SVG.
+    marker = {} if dense else {"marker": "o", "ms": 2.5}
     for k, name in enumerate(names):
         ax = grid[k // ncols, k % ncols]
         block = medians[medians["degradation"] == name]
         levels = sorted(block["level"].unique())
-        for level, colour in zip(levels, ctx.style.level_colours(ctx.style.axis_colour(name),
-                                                                  len(levels)), strict=True):
-            line = block[block["level"] == level].sort_values("coordinate")
-            ax.plot(line["coordinate"], line["value_median"], color=colour, lw=1.2,
-                    marker="o", ms=2.5, label=f"level {level}")
-        ax.plot(clean["coordinate"], clean["value_median"], color="k", lw=1.6, label="clean")
-        for label, ls in ((ctx.anchor_label, "--"), ("gaussian_impostor", ":")):
+        series = [(f"level {level}", colour, 1.2, block[block["level"] == level])
+                  for level, colour in zip(levels, ctx.style.level_colours(
+                      ctx.style.axis_colour(name), len(levels)), strict=True)]
+        series.append(("clean", "k", 1.6, clean))
+        bins = np.diff(np.unique(medians["coordinate"].to_numpy(float))) if bars else []
+        width = 0.8 * (float(bins.min()) if len(bins) else 1.0) / len(series)
+        for j, (text, colour, lw, line) in enumerate(series):
+            line = line.sort_values("coordinate")
+            if bars:
+                ax.bar(line["coordinate"] + (j - (len(series) - 1) / 2) * width,
+                       line["value_median"], width, color=colour, label=text)
+            else:
+                ax.plot(line["coordinate"], line["value_median"], color=colour, lw=lw,
+                        label=text, **(marker if text != "clean" else {}))
+        for probe_label, ls in ((ctx.anchor_label, "--"), ("gaussian_impostor", ":")):
             # One line per draw: the anchor's draws are levels of one label, and a single line
             # through all of them would zigzag between draws at every coordinate.
-            probe = medians[medians["degradation"] == label]
+            probe = medians[medians["degradation"] == probe_label]
             for n, (_, draw) in enumerate(probe.groupby("level", observed=True)):
                 draw = draw.sort_values("coordinate")
                 ax.plot(draw["coordinate"], draw["value_median"], color="0.45", ls=ls, lw=1,
-                        label=ctx.label(label) if n == 0 else None)
-        if positive and medians["coordinate"].max() / medians["coordinate"].min() > 10:
-            ax.set_xscale("log", base=2)
+                        drawstyle="steps-mid" if bars else "default",
+                        label=ctx.label(probe_label) if n == 0 else None)
+        if numeric:
+            _scale_axes(ax, scales, medians["coordinate"], medians["value_median"],
+                        log_base_x=2)
         ax.set_title(ctx.label(name), fontsize="small")
     for k in range(len(names), nrows * ncols):
         grid[k // ncols, k % ncols].set_visible(False)
     for ax in grid[-1, :]:
-        ax.set_xlabel(_coordinate_label(ctx, metric))
-    grid[0, 0].set_ylabel(metric)
+        ax.set_xlabel(coordinate_label)
+    grid[0, 0].set_ylabel(label)
     grid[0, 0].legend(fontsize="xx-small")
-    items = [FigureItem(fig, {"metric": metric, "field": field},
-                        caption=f"The curve behind {metric} on {field}: the median over frames "
-                                "at every strength of every degradation, the clean curve in "
-                                "black, the anchor dashed and the impostor dotted. "
-                                "Values are the literature's own, untransformed.",
+    items = [FigureItem(fig, meta,
+                        caption=(f"The dense curve behind {label} on {field}, at every coordinate "
+                                 "the curve returns, on the frames and ladder entries "
+                                 "report.error_map stored: the median over those frames at every "
+                                 "stored strength, the clean curve in black, the anchor dashed "
+                                 "and the impostor dotted where stored. "
+                                 if dense else
+                                 f"The curve behind {label} on {field}: the median over frames "
+                                 "at every strength of every degradation, the clean curve in "
+                                 "black, the anchor dashed and the impostor dotted. ")
+                                + ("Each bin's bars are the strengths, mildest first, then the "
+                                   "clean level. " if bars else "")
+                                + (_scales_sentence(scales) if numeric else "")
+                                + "Values are the literature's own, untransformed.",
                         data=medians)]
 
     stats = ctx.companion_axes
-    stats = stats[(stats["metric"].astype(str) == metric) & (stats["field"].astype(str) == field)
+    stats = stats[(stats["metric"].astype(str) == label) & (stats["field"].astype(str) == field)
                   & ~stats["is_probe"]] if not stats.empty else stats
     if not stats.empty:
         fig2, grid2 = ctx.style.figure(1, 2, sharex=True)
@@ -216,75 +348,152 @@ def companion_curves(ctx, df, opts) -> PlotResult:
                         label=ctx.label(name))
         for ax, column in zip(grid2[0], ("rho", "relative_change_max"), strict=True):
             ax.set_ylabel(vocabulary.label(column), fontsize="small")
-            ax.set_xlabel(_coordinate_label(ctx, metric))
-            if positive and medians["coordinate"].max() / medians["coordinate"].min() > 10:
-                ax.set_xscale("log", base=2)
+            ax.set_xlabel(coordinate_label)
+            if numeric:
+                _scale_axes(ax, None if scales is None else (scales[0], "linear"),
+                            medians["coordinate"], stats[column], log_base_x=2)
         grid2[0, 1].legend(fontsize="xx-small", ncol=2)
         items.append(FigureItem(
-            fig2, {"metric": metric, "field": field, "view": "per-coordinate"},
-            caption=f"Each coordinate of {metric}'s curve on {field} read as a metric of its own: "
+            fig2, {**meta, "view": "per-coordinate"},
+            caption=f"Each coordinate of {label}'s curve on {field} read as a metric of its own: "
                     "its rank correlation with strength and its change from clean at the "
                     "harshest strength. Neighbouring coordinates of one curve are strongly "
                     "correlated, so this localises the evidence and does not multiply it.",
             data=stats[["degradation", "coordinate", "rho", "monotone_fraction",
                         "relative_change_max", "elasticity", "severity_resolution"]]))
-    return PlotResult(items)
+    return items
 
 
 @plot(
     section=3, order=13, scope="per_metric_field",
     title="The point set behind the number",
     requires_maps=True,
+    defaults={"max_panels": _MAX_PANELS},
 )
 def companion_points(ctx, df, opts) -> PlotResult:
     """The metric's point-set companion on every stored variant, on shared axes.
 
-    One panel per stored variant and frame, frames in time order and the clean level first in
-    each, at most :data:`_MAX_PANELS`; the caption says when more were stored. The first two
-    declared coordinates are the axes and a third, if declared, colours the points on one scale
-    for the whole figure. The axes are shared for the reason the gallery shares its colour scale:
-    limits fitted to each panel would make a collapsed set look like the clean one. A point with
-    an infinite coordinate, such as a persistence class that never dies, is drawn as a triangle
-    on the edge of the panel rather than dropped.
+    One panel per stored variant and frame, frames in time order, at most ``max_panels``;
+    the caption says when more were stored. The first two declared coordinates are the axes, on
+    the scales the companion declares (linear by default), and a third, if declared, colours the
+    points on one scale for the whole figure. The axes are shared for the reason the gallery
+    shares its colour scale: limits fitted to each panel would make a collapsed set look like the
+    clean one. A point with an infinite coordinate, such as a persistence class that never dies,
+    is drawn as a triangle on the edge of the panel rather than dropped.
+
+    A point set of one field is compared with the clean level's set of the same frame, the
+    reference's, so that set is drawn under every panel as grey rings rather than in a panel of
+    its own; a set computed from both fields has its clean level as the first panel of each
+    frame. Coordinates named ``birth`` and ``death`` are a persistence diagram, drawn with its
+    diagonal, the line of zero persistence. Where the metric also stores a field map of one
+    field on a one-dimensional grid, it is drawn under the points as the line-out of each
+    variant, the clean level's in grey, against the cell index, so a point set of ``(x, cells)``
+    and the field's value marks where on the profile each set was detected.
     """
     metric, field = str(df["metric"].iloc[0]), str(df["field"].iloc[0])
-    entry = _companion(ctx, metric)
-    ctx.require(entry.get("kind") == "points", f"{metric} has no point-set companion")
-    stored = {k: v for k, v in ctx.maps.items() if parse_map_key(k)[:2] == (metric, field)}
-    ctx.require(bool(stored), f"no point sets of {metric} on {field} were stored")
+    records = companion_records(ctx, metric)
+    entries = [c for c in records if c["kind"] == "points"]
+    ctx.require(bool(entries), f"{metric} has no point-set companion")
+    line_label = next((metric_registry.companion_label(metric, c["name"]) for c in records
+                       if c["kind"] == "field" and c.get("one_field")), None)
+    lineout = {parse_map_key(k)[2:]: v for k, v in ctx.maps.items()
+               if parse_map_key(k)[:2] == (line_label, field) and v.ndim == 1}
+    items = []
+    for entry in entries:
+        label = metric_registry.companion_label(metric, entry["name"])
+        stored = {k: v for k, v in ctx.maps.items() if parse_map_key(k)[:2] == (label, field)}
+        if stored:
+            items.append(_point_set_item(ctx, label, field, entry, stored, lineout,
+                                         opts["max_panels"], {
+                "metric": metric, "field": field,
+                **({"companion": entry["name"]} if label != metric else {})}))
+    ctx.require(bool(items), f"no point sets of {metric} on {field} were stored")
+    return PlotResult(items)
+
+
+def _point_set_item(ctx, label: str, field: str, entry: dict, stored: dict[str, np.ndarray],
+                    lineout: dict[tuple[str, int], np.ndarray], max_panels: int,
+                    meta: dict) -> FigureItem:
+    """The figure :func:`companion_points` draws for one point-set companion, ``label``, over
+    the line-outs ``lineout`` holds by ``(variant, frame)``."""
     names = [name for name, _ in entry["coordinate"]]
+    overlay = bool(entry.get("one_field"))
+    diagram = names[:2] == ["birth", "death"]
     # Frames in time order, the clean level first within each frame.
-    order = sorted(stored, key=lambda k: (parse_map_key(k)[3], parse_map_key(k)[2] != "reference",
-                                          k))
-    panels = order[:_MAX_PANELS]
-    points = np.concatenate([stored[k] for k in panels])
+    order = sorted(stored, key=lambda k: (parse_map_key(k)[3],
+                                          parse_map_key(k)[2] != REFERENCE_VARIANT, k))
+    clean = {parse_map_key(k)[3]: stored[k] for k in order
+             if overlay and parse_map_key(k)[2] == REFERENCE_VARIANT}
+    # A clean set drawn under every panel needs no panel of its own, unless it is all there is.
+    panels = ([k for k in order if parse_map_key(k)[2] != REFERENCE_VARIANT] if overlay
+              else order) or order
+    shown, panels = len(panels), panels[:max_panels]
+    frames = sorted({parse_map_key(k)[3] for k in panels})
+    under = {f: clean[f] for f in frames if f in clean}
+    lines = {w: lineout[w] for w in {*(parse_map_key(k)[2:] for k in panels),
+                                     *((REFERENCE_VARIANT, f) for f in frames)} if w in lineout}
+
+    points = np.concatenate([stored[k] for k in panels] + list(under.values()))
     limits = []
-    for column in points[:, :2].T:
+    for j in range(2):
+        column = points[:, j]
+        if lines:   # the line-out spans every cell and every value of the profile
+            extra = [np.arange(len(v), dtype=float) if j == 0 else v for v in lines.values()]
+            column = np.concatenate([column, *extra])
         finite = column[np.isfinite(column)]
         low, high = (float(finite.min()), float(finite.max())) if finite.size else (0.0, 1.0)
         pad = 0.05 * (high - low) or 0.5
         limits.append((low - pad, high + pad))
+    if diagram:     # one square frame, so the diagonal is the diagonal
+        limits = [(min(lo for lo, _ in limits), max(hi for _, hi in limits))] * 2
     shade = points[:, 2][np.isfinite(points[:, 2])] if len(names) > 2 else np.empty(0)
     colour = ({"cmap": "viridis", "norm": Normalize(shade.min(), shade.max())}
               if shade.size else {})
-    ncols = min(4, len(panels))
-    nrows = -(-len(panels) // ncols)
-    fig, grid = ctx.style.figure(nrows, ncols, sharex=True, sharey=True)
-    tidy = []
-    for n, key in enumerate(panels):
-        ax = grid[n // ncols, n % ncols]
-        _, _, variant, frame = parse_map_key(key)
-        p = stored[key]
-        # Clipping to the limits puts an infinite coordinate on the panel's edge.
+
+    def scatter(ax, p: np.ndarray, *, ring: bool) -> None:
+        """One set; clipping to the limits puts an infinite coordinate on the panel's edge."""
         xy = np.column_stack([np.clip(p[:, j], *limits[j]) for j in range(2)])
         edge = ~np.isfinite(p[:, :2]).all(axis=1)
         for mask, marker in ((~edge, "o"), (edge, "^")):
-            ax.scatter(xy[mask, 0], xy[mask, 1], s=6, marker=marker, linewidths=0,
-                       **({"c": p[mask, 2], **colour} if colour else {"color": "k"}))
+            if not mask.any():
+                continue
+            look = ({"facecolors": "none", "edgecolors": "0.55", "linewidths": 0.6, "s": 12}
+                    if ring else {"linewidths": 0, "s": 6,
+                                  **({"c": p[mask, 2], **colour} if colour else {"color": "k"})})
+            # A set of thousands of points is drawn as an image inside the vector figure: as
+            # markers, persistence_distance's vorticity diagrams made one card SVG 18.8 MB.
+            ax.scatter(xy[mask, 0], xy[mask, 1], marker=marker,
+                       rasterized=len(p) > _VECTOR_POINTS, **look)
+
+    ncols = min(4, len(panels))
+    nrows = -(-len(panels) // ncols)
+    fig, grid = ctx.style.figure(nrows, ncols, sharex=True, sharey=True)
+    tidy = [pd.DataFrame(p, columns=names).assign(variant=REFERENCE_VARIANT, frame_index=f,
+                                                  drawn="points")
+            for f, p in under.items()]
+    for n, key in enumerate(panels):
+        ax = grid[n // ncols, n % ncols]
+        _, _, variant, frame = parse_map_key(key)
+        for where, grey in (((REFERENCE_VARIANT, frame), True), ((variant, frame), False)):
+            if where in lines and not (grey and variant == REFERENCE_VARIANT):
+                ax.plot(np.arange(len(lines[where])), lines[where], lw=0.8 if grey else 0.9,
+                        color="0.6" if grey else "k", zorder=1)
+        if frame in under and variant != REFERENCE_VARIANT:
+            scatter(ax, under[frame], ring=True)
+        p = stored[key]
+        scatter(ax, p, ring=False)
+        if diagram:
+            ax.plot(limits[0], limits[0], color="0.6", lw=0.6, zorder=0)
         ax.set_xlim(*limits[0])
         ax.set_ylim(*limits[1])
+        if entry.get("scales") is not None:
+            _scale_axes(ax, entry["scales"], points[:, 0], points[:, 1])
         ax.set_title(f"{variant}, frame {frame}: {len(p)} points", fontsize="xx-small")
-        tidy.append(pd.DataFrame(p, columns=names).assign(variant=variant, frame_index=frame))
+        tidy.append(pd.DataFrame(p, columns=names).assign(variant=variant, frame_index=frame,
+                                                          drawn="points"))
+    tidy += [pd.DataFrame({names[0]: np.arange(len(v), dtype=float), names[1]: v})
+             .assign(variant=variant, frame_index=frame, drawn="line-out")
+             for (variant, frame), v in sorted(lines.items(), key=lambda kv: (kv[0][1], kv[0][0]))]
     for k in range(len(panels), nrows * ncols):
         grid[k // ncols, k % ncols].set_visible(False)
     for ax in grid[-1, :]:
@@ -294,15 +503,27 @@ def companion_points(ctx, df, opts) -> PlotResult:
     if colour:
         fig.colorbar(ScalarMappable(**colour), ax=list(grid.ravel()), shrink=0.7,
                      label=_axis_label(*entry["coordinate"][2]))
-    return PlotResult([FigureItem(
-        fig, {"metric": metric, "field": field},
-        caption=f"The point set behind {metric} on {field}, one panel per stored variant, the "
-                "clean level first in each frame, on shared axes. Triangles on a panel's edge are "
-                "points with an infinite coordinate."
-                + (f" Only the first {len(panels)} of the {len(order)} stored sets are drawn, in "
+    return FigureItem(
+        fig, meta,
+        caption=f"The point set behind {label} on {field}, one panel per stored variant, on "
+                "shared axes. "
+                + ("Grey rings are the clean level's set of the same frame, the reference's, "
+                   "drawn under every panel. " if under else
+                   "The clean level comes first in each frame. ")
+                + ("The grey diagonal is birth equal to death: a point's height above it is how "
+                   "long its feature persists. " if diagram else "")
+                + ("The lines are the field's line-out on this one-dimensional grid against the "
+                   "cell index, the clean level's in grey. " if lines else "")
+                + _scales_sentence(entry.get("scales"))
+                + "Triangles on a panel's edge are points with an infinite coordinate."
+                + (f" Only the first {len(panels)} of the {shown} stored sets are drawn, in "
                    "time order; every set is in data/error_maps.npz."
-                   if len(order) > len(panels) else ""),
-        data=pd.concat(tidy, ignore_index=True))])
+                   if shown > len(panels) else ""),
+        data=pd.concat(tidy, ignore_index=True))
+
+
+#: The longest trace along time drawn with a marker on every frame.
+_MARKED_FRAMES = 20
 
 
 @plot(
@@ -310,45 +531,135 @@ def companion_points(ctx, df, opts) -> PlotResult:
     title="Response along time",
     requires_columns=("degradation", "level", "value", "time", "severity"),
     min_frames=2,
+    defaults={"logy": "auto"},
 )
 def response_along_time(ctx, df, opts) -> PlotResult:
-    """The metric against the frame's time, one line per strength, for each degradation whose
-    applied strength changes along the trajectory (``per_unit_time`` in the ladder).
+    """The metric along time: against the frame's time, one line per strength, for each
+    degradation whose applied strength changes along the trajectory (``per_unit_time`` in the
+    ladder), and for a single-field metric also for each ladder entry ``report.error_map.axes``
+    names (every one when it names none); and against the lead time, one line per forecast, on
+    a dataset of real forecasts.
 
     How a reader sees an error grow in time: a translation applied as a rate is a wrong advection
-    speed, and its cost should rise frame by frame. Degradations whose strength is the same in
-    every frame are left out, since along time they show only the flow changing.
+    speed, and its cost should rise frame by frame. For a two-field metric, degradations whose
+    strength is the same in every frame are left out, since along time they show only the flow
+    changing. A single-field quantity against time, the clean field's in black, is its field's
+    own figure, as an energy or enstrophy decay curve; the same operator applied to each frame is
+    drawn beside it and captioned as what it is, not a rollout. The entries are those the run
+    chose for its detailed views, the frames ``report.error_map`` stores maps for, which keeps
+    the figure to a few panels. A forecast's
+    error is drawn against its prediction step because the machine-learning benchmarks score a
+    rollout step by step: PDEBench computes its errors at every time step (Takamoto et al. 2022,
+    NeurIPS Datasets and Benchmarks, Sect. 3.3, and its code's ``metric_func``, as read in
+    ``metrics/max_error/research_notes.md``).
     """
     metric, field = str(df["metric"].iloc[0]), str(df["field"].iloc[0])
-    ladder = df[df["level"] > 0]
+    ladder = df[(df["level"] > 0) & (df["degradation"].astype(str) != FORECAST_LEVEL.label)]
     varying = ladder.groupby(["degradation", "level"], observed=True)["severity"].nunique()
-    names = sorted({str(d) for (d, _), n in varying.items() if n > 1} - set(ctx.probe_labels))
-    ctx.require(bool(names), "no degradation whose strength changes along time")
-    fig, grid = ctx.style.figure(1, len(names), sharey=True)
-    tidy = []
-    for ax, name in zip(grid[0], names, strict=True):
-        block = df[(df["degradation"] == name) | (df["level"] == 0)]
-        levels = sorted(block["level"].unique())
-        damaged = [level for level in levels if level > 0]
-        colours = {0: "k", **dict(zip(damaged, ctx.style.level_colours(
-            ctx.style.axis_colour(name), len(damaged)), strict=True))}
-        for level in levels:
-            colour = colours[level]
-            line = (block[block["level"] == level].groupby("time", observed=True)["value"]
-                    .median().reset_index())
-            ax.plot(line["time"], line["value"], color=colour, marker="o", ms=2.5,
-                    label="clean" if level == 0 else f"level {level}")
-            tidy.append(line.assign(degradation=name, level=level))
-        ax.set_title(ctx.label(name), fontsize="small")
-        ax.set_xlabel("time")
-    grid[0, 0].set_ylabel(metric)
+    names = {str(d) for (d, _), n in varying.items() if n > 1}
+    single = "arity" in df.columns and df["arity"].astype(str).eq("single").all()
+    if single:
+        chosen = ((ctx.config.get("report") or {}).get("error_map") or {}).get("axes") or []
+        names |= {str(d) for d in ladder["degradation"].unique() if not chosen or d in chosen}
+    names = sorted(names - set(ctx.probe_labels))
+    forecasts = df[df["lead_step"].notna()] if "lead_step" in df.columns else df.iloc[:0]
+    ctx.require(bool(names) or not forecasts.empty,
+                "no degradation whose strength changes along time, and no forecast"
+                + ("" if single else " (a two-field metric's error under a fixed strength "
+                                     "is not drawn along time)"))
+    items = []
+    if names:
+        ncols = min(4, len(names))
+        nrows = -(-len(names) // ncols)
+        fig, grid = ctx.style.figure(nrows, ncols, sharex=True, sharey=True)
+        for k in range(len(names), nrows * ncols):
+            grid[k // ncols, k % ncols].set_visible(False)
+        tidy = []
+        for ax, name in zip(grid.ravel(), names):
+            block = df[(df["degradation"] == name) | (df["level"] == 0)]
+            levels = sorted(block["level"].unique())
+            damaged = [level for level in levels if level > 0]
+            colours = {0: "k", **dict(zip(damaged, ctx.style.level_colours(
+                ctx.style.axis_colour(name), len(damaged)), strict=True))}
+            for level in levels:
+                colour = colours[level]
+                line = (block[block["level"] == level].groupby("time", observed=True)["value"]
+                        .median().reset_index())
+                # A marker per frame hides a long trace, and multiplies a committed SVG's size.
+                ax.plot(line["time"], line["value"], color=colour,
+                        **({"marker": "o", "ms": 2.5} if len(line) <= _MARKED_FRAMES else {}),
+                        label="clean" if level == 0 else f"level {level}")
+                tidy.append(line.assign(degradation=name, level=level))
+            ax.set_title(ctx.label(name), fontsize="small")
+        for ax in grid[-1, :]:
+            ax.set_xlabel("time")
+        grid[0, 0].set_ylabel(metric)
+        grid[0, 0].legend(fontsize="xx-small")
+        items.append(FigureItem(
+            fig, {"metric": metric, "field": field},
+            caption=f"{metric} on {field} against the frame's physical time, one line per "
+                    "strength of each degradation "
+                    + ("the run chose for its detailed views, or whose applied strength grows "
+                       "with time; the clean field in black is the quantity's own history. A "
+                       "degraded line is the operator applied to each frame on its own, not a "
+                       "rollout: it says what the operator does at each time, not how an error "
+                       "would grow. " if single else
+                       "whose applied strength grows with time; the clean field in black. ")
+                    + "Median over frames at each time.",
+            data=pd.concat(tidy, ignore_index=True)))
+    if not forecasts.empty:
+        items.append(_forecast_lines(ctx, forecasts, metric, field, opts))
+    return PlotResult(items)
+
+
+def _forecast_lines(ctx, rows: pd.DataFrame, metric: str, field: str, opts: dict) -> FigureItem:
+    """The forecast view of :func:`response_along_time`: the metric against lead time, one panel
+    per start, one line per run, shaded darker the finer the run's grid.
+
+    A run's forecasts are numbered in order of their start, and panel ``i`` holds every run's
+    ``i``-th: the runs share their starting times to a fraction of a step, not exactly. A
+    single-field quantity is drawn for the target too, dashed and lighter, since its value on the
+    target is the truth the prediction's is read against; a two-field error is zero there.
+    """
+    single = rows["arity"].astype(str).eq("single").all()
+    keep = rows["degradation"].astype(str).eq(FORECAST_LEVEL.label)
+    if single:
+        keep |= rows["level"].eq(0)
+    tidy = (rows[keep]
+            .assign(side=lambda d: np.where(d["level"].eq(0), "target", "prediction"),
+                    start=lambda d: d["time"] - d["lead_time"],
+                    param_resolution=lambda d: d["param_resolution"].astype(int))
+            [["trajectory", "param_resolution", "side", "lead_step", "lead_time", "time",
+              "start", "value"]]
+            .sort_values(["trajectory", "side", "lead_time"]))
+    files = tidy.groupby("trajectory", observed=True)[["param_resolution", "start"]].first()
+    files["start_number"] = files.groupby("param_resolution")["start"].rank(method="first")
+    tidy["start_number"] = tidy["trajectory"].map(files["start_number"]).astype(int)
+    resolutions = sorted(files["param_resolution"].unique())
+    shades = dict(zip(resolutions, ctx.style.level_colours(okabe("blue"), len(resolutions)),
+                      strict=True))
+    numbers = sorted(tidy["start_number"].unique())
+    fig, grid = ctx.style.figure(1, len(numbers), sharey=True)
+    for ax, number in zip(grid[0], numbers, strict=True):
+        panel = tidy[tidy["start_number"] == number]
+        for (resolution, side), line in panel.groupby(["param_resolution", "side"]):
+            ax.plot(line["lead_time"], line["value"], color=shades[resolution],
+                    ls="-" if side == "prediction" else "--", marker="o", ms=2.5,
+                    alpha=1.0 if side == "prediction" else 0.5,
+                    label=f"{resolution}$^2$" + ("" if side == "prediction" else " target"))
+        ax.set_title(f"start t = {panel['start'].median():.2f}", fontsize="small")
+        ax.set_xlabel("lead time")
+    _log_if_wide(grid[0, 0], tidy["value"], opts)
+    grid[0, 0].set_ylabel(f"{metric} on {field}")
     grid[0, 0].legend(fontsize="xx-small")
-    return PlotResult([FigureItem(
-        fig, {"metric": metric, "field": field},
-        caption=f"{metric} on {field} against the frame's physical time, one line per strength of "
-                "each degradation whose applied strength grows with time; the clean field in "
-                "black. Median over frames at each time.",
-        data=pd.concat(tidy, ignore_index=True))])
+    return FigureItem(
+        fig, {"metric": metric, "field": field, "along": "lead"},
+        caption=f"{metric} on {field} against lead time, the physical time since the forecast "
+                "started, one panel per start and one line per run, darker the finer the run's "
+                "grid. "
+                + ("Dashed lighter lines are the target's own value. " if single else "")
+                + "Each point is one prediction step of one forecast.",
+        data=tidy)
 
 
 # --- the response at a glance: the two figures every metric card opens with -----------------
@@ -804,9 +1115,10 @@ def field_gallery(ctx, df, opts) -> PlotResult:
     figure is for.
     """
     field = str(df["field"].iloc[0])
-    # Point sets share the store and are drawn by companion_points.
+    # Point sets and dense curves share the store and are drawn by companion_points and
+    # companion_curves.
     stored = {k: v for k, v in ctx.maps.items() if parse_map_key(k)[1] == field
-              and _companion(ctx, parse_map_key(k)[0]).get("kind") != "points"}
+              and _companion(ctx, parse_map_key(k)[0]).get("kind") not in ("points", "curve")}
     ctx.require(bool(stored), f"no stored maps for {field}")
     ctx.require(all(m.ndim == 2 for m in stored.values()),
                 f"the gallery draws two-dimensional maps and the maps of {field} are not")
@@ -966,20 +1278,22 @@ def _matrix_panel(ax, matrix: pd.DataFrame, cmap, title: str):
 
 
 @plot(
-    section=7, order=30, scope="global", min_metrics=2,
+    section=7, order=30, scope="per_field", min_metrics=2,
     title="Rank agreement beside magnitude agreement",
     requires_columns=("damage", "value"),
     defaults={"cmap": "RdBu_r"},
 )
 def concordance_matrix(ctx, df, opts) -> PlotResult:
-    """Spearman correlation of the metrics (left) beside Lin's concordance of their damage (right).
+    """Spearman correlation of the metrics (left) beside Lin's concordance of their damage (right),
+    on one field.
 
     Two metrics can order every degradation identically and still charge very different amounts
     for the same one; the left panel sees only the first, the right the second (Lin 1989,
     *Biometrics* 45(1):255-268).
     """
-    rho = an.cross_metric_correlation(df)
-    rc = an.concordance_matrix(df, probe_labels=ctx.probe_labels)
+    field = str(df["field"].iloc[0])
+    rho = an.cross_metric_correlation(df, field=field)
+    rc = an.concordance_matrix(df, field=field, probe_labels=ctx.probe_labels)
     ctx.require(not rho.empty and not rc.empty,
                 "needs two metrics with common ladder levels and a damage scale")
     names = sorted(set(rho.index) | set(rc.index))
@@ -997,6 +1311,7 @@ def concordance_matrix(ctx, df, opts) -> PlotResult:
         for a in names for b in names
     ])
     caption = (
+        f"The metrics run on {field}. "
         "Left: rank correlation between metrics over the median value at every strength of "
         "every degradation, the existing redundancy statistic. Right: Lin's concordance "
         "coefficient on damage, which also penalises departure from the identity line, so two "
@@ -1005,7 +1320,7 @@ def concordance_matrix(ctx, df, opts) -> PlotResult:
         + (f" No damage scale, so undefined on the right: {', '.join(unscaled)}."
            if unscaled else "")
     )
-    return PlotResult([FigureItem(fig, {}, caption=caption, data=data)])
+    return PlotResult([FigureItem(fig, {"field": field}, caption=caption, data=data)])
 
 
 @plot(
@@ -1484,6 +1799,55 @@ def cost_frontier(ctx, df, opts) -> PlotResult:
     ax.set_title("Cost against reliability")
     return PlotResult([FigureItem(fig, {}, caption="Each point is one metric and field.",
                                   data=card[["metric", "field", "cost_s", "rho_min"]])])
+
+
+# --- section 12: does it hold as complexity rises? ------------------------------------------
+
+
+@plot(
+    section=12, order=10, scope="per_metric", min_datasets=2,
+    title="Response against physical complexity",
+    requires_columns=("complexity_rank", "dataset_family"),
+)
+def complexity_response(ctx, df, opts) -> PlotResult:
+    """Rank correlation, impostor damage and sensitivity level of each dataset of one family,
+    against the dataset's complexity rank, one line per field.
+
+    Only statistics that are normalised within each dataset are set side by side: a raw value
+    depends on that dataset's field amplitudes, so two datasets' values are never compared.
+    """
+    metric = str(df["metric"].iloc[0])
+    ctx.require(df["dataset_family"].nunique() == 1,
+                f"the datasets belong to several families: {sorted(df['dataset_family'].unique())}")
+    ranks = df.groupby("dataset", observed=True)["complexity_rank"].first().sort_values()
+    card = ctx.card[ctx.card["metric"] == metric].merge(
+        ranks.rename("complexity_rank"), left_on="dataset", right_index=True)
+    panels = [(column, label) for column, label in (
+        ("rho_median", "median rank correlation over degradations"),
+        ("gaussian_impostor_damage", "Gaussian-impostor damage"),
+        ("sensitivity_level_median", "median sensitivity level"),
+    ) if column in card.columns]
+    ctx.require(bool(panels), "the report card has none of the compared statistics")
+
+    fig, grid = ctx.style.figure(1, len(panels))
+    for ax, (column, label) in zip(grid[0], panels, strict=True):
+        for i, (field, rows) in enumerate(card.groupby("field", observed=True)):
+            rows = rows.sort_values("complexity_rank")
+            ax.plot(rows["complexity_rank"], rows[column], marker=field_marker(i),
+                    ls=LINE_STYLES[i % len(LINE_STYLES)], color=ctx.style.metric_colour(metric),
+                    label=field)
+        ax.set_xticks(ranks.to_numpy(), [ctx.label(d) for d in ranks.index], rotation=30,
+                      ha="right", fontsize="x-small")
+        ax.set_title(label, fontsize="small")
+    grid[0, 0].legend(fontsize="x-small")
+    fig.suptitle(f"{metric} across {ctx.label(df['dataset_family'].iloc[0])}")
+    return PlotResult([FigureItem(
+        fig, {"metric": metric},
+        caption="Each statistic measured on each dataset of the family by itself, against the "
+                "dataset's complexity rank. Damage is relative to each dataset's own anchor, "
+                "and the correlation and sensitivity level are rank statistics, so the points "
+                "are comparable across datasets where the raw values are not.",
+        data=card[["dataset", "complexity_rank", "field", *(c for c, _ in panels)]])])
 
 
 @plot(

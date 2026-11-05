@@ -119,3 +119,11 @@ Review round and here under Performance.
   with float64 to 1.3e-8 relative.
 - If the sort-once speed-up is built, the numbers change at round-off, so the evidence must be
   re-run and compared.
+
+## Orientation of velocity increments (2026-11-04)
+
+The (channel, axis) loop is now `increment_samples` in `metrics/increment_flatness/metric.py`,
+shared by the four increment bundles; the metric therefore takes `ctx` (for `ctx.field`). Scalar
+fields iterate in the same order as before and are bitwise unchanged (measured on a dev and a
+forecast smoke run, task log `task-metrics-increments.md`). The transverse companion is a
+one-point curve at separation 1, empty for a scalar field.

@@ -6,7 +6,6 @@ Every kernel here wraps at the boundary, matching the doubly periodic domain.
 from __future__ import annotations
 
 import numpy as np
-from scipy.ndimage import convolve
 
 
 def _radial_kernel(radius: float, n_spatial: int, profile: str) -> np.ndarray:
@@ -55,8 +54,21 @@ def _window_filter(x: np.ndarray, severity: float, ctx, filt) -> np.ndarray:
 def _radial_blur(x: np.ndarray, severity: float, ctx, profile: str) -> np.ndarray:
     """Convolve with a normalised isotropic kernel of radius ``severity``; identity below 1.
 
-    The kernel gets a leading axis of length one, so channels never mix; the boundary wraps.
+    The boundary wraps, so the convolution is circular and is computed by FFT: the centred
+    kernel is folded onto the periodic grid (offsets taken modulo each axis's length, so a
+    kernel wider than the grid wraps as it does in a direct periodic convolution) and
+    multiplied in Fourier space, channel by channel. A direct convolution gives the same field
+    to round-off at a cost growing with the kernel's area; on 256^2 with a radius of 47 cells it
+    took about 4.4 s per frame.
     """
     if severity < 1:
         return x
-    return convolve(x, _radial_kernel(severity, ctx.grid.n_spatial, profile)[None], mode="wrap")
+    kernel = _radial_kernel(severity, ctx.grid.n_spatial, profile)
+    spatial = x.shape[1:]
+    offsets = np.indices(kernel.shape).reshape(kernel.ndim, -1) \
+        - (np.array(kernel.shape) // 2)[:, None]
+    folded = np.zeros(spatial)
+    np.add.at(folded, tuple(offsets % np.array(spatial)[:, None]), kernel.ravel())
+    axes = tuple(range(1, x.ndim))
+    return np.fft.irfftn(np.fft.rfftn(x, axes=axes) * np.fft.rfftn(folded)[None],
+                         s=spatial, axes=axes)

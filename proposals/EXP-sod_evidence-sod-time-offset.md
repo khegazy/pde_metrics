@@ -1,7 +1,7 @@
 ---
 type: EXP
 kind: benchmark problem
-related: ["metrics/shock_set_distance", "metrics/shock_mask_overlap", "docs/ideas/shock_geometry/shock_front_error.md"]
+related: ["metrics/shock_set_distance", "metrics/shock_mask_overlap", "metrics/shock_set_hausdorff", "metrics/shock_set_hausdorff95", "metrics/shock_set_masd", "metrics/shock_set_baddeley_delta", "docs/ideas/shock_geometry/shock_front_error.md"]
 seen_in: "agent's own idea, built on the closed form in fmeval/data/analytic.py (Toro 2009, Sect. 4.5, eqs. 4.55-4.59)"
 doi: "none"
 found_by: "sod_evidence, 2026-10-23"
@@ -59,8 +59,9 @@ The reader already evaluates the solution at any time up to 0.2854; the candidat
 second evaluation per frame, which costs 0.3 ms per frame on 2048 cells (the measurement in
 the `fmeval/data/analytic.py` module docstring). It does not fit the current degradation
 interface, which receives one field and no closed form, so it needs either a
-dataset-specific operator with access to the trajectory or a paired-dataset reader (issue
-010, forecast-pair reader). A person must choose between those.
+dataset-specific operator with access to the trajectory or a reader that pairs each frame
+with a second one, as `fmeval/data/forecast.py` does for stored forecasts (the pipeline's
+`prediction` argument). A person must choose between those.
 
 ## References
 

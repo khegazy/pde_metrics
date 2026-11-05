@@ -64,3 +64,43 @@
              intermittency, as physics-based criteria for a generative turbulence model: the
              reason the quantity whose tail this bundle reads is the increment}
 }
+
+@article{drees2000,
+  author  = {Drees, Holger and de Haan, Laurens and Resnick, Sidney},
+  title   = {How to make a {H}ill plot},
+  journal = {The Annals of Statistics},
+  volume  = {28},
+  number  = {1},
+  pages   = {254--274},
+  year    = {2000},
+  doi     = {10.1214/aos/1016120372},
+  note    = {Read in full in its Tinbergen Institute Discussion Paper 98-090/4 and Cornell ORIE
+             technical report 1215 versions, whose abstract is word for word the journal's; the
+             journal's own page numbers were not checked. Eq. (1.2) is the Hill estimator
+             implemented; Eq. (1.4) its consistency, listed for iid data and for mixing,
+             moving-average and other dependent sequences. Section 1 defines the Hill plot,
+             the estimate against k for 1 <= k <= n - 1, as "what is usually done in practice",
+             with k on a linear axis, and the alternative (altHill) plot against
+             theta = log k / log n, 0 <= theta < 1, "a logarithmic scale for the k-axis", which
+             gives more of the plot to small k. Its set notation is in alpha = 1/H while its
+             Figs. 1 to 9 draw the estimate of gamma = H. It finds the alternative plot better for
+             tails satisfying a second-order condition and the classical one better for an exact
+             Pareto (Section 1; Theorems 2 and 3). Section 2 assumes iid data; its Theorem 1,
+             Eq. (2.3), approximates H by gamma + gamma W(k)/k, from which the iid standard error
+             gamma / sqrt(k) follows (this bundle's derivation, not a sentence of the paper). The
+             figures draw no confidence band}
+}
+
+@techreport{resnick1997,
+  author      = {Resnick, Sidney and St{\u{a}}ric{\u{a}}, C{\u{a}}t{\u{a}}lin},
+  title       = {Smoothing the {H}ill estimator},
+  institution = {School of Operations Research and Industrial Engineering, Cornell University},
+  number      = {1114},
+  year        = {1995},
+  note        = {Published as Adv. Appl. Probab. 29(1), 271--293 (1997), which was not opened;
+                 the technical report was read in full. Page 2 states that under further
+                 assumptions the Hill estimator of iid data is asymptotically normal with variance
+                 alpha^-2, that is gamma^2; page 3 introduces the alternative Hill plot against
+                 theta, so that the part of the plot for few order statistics "gets to be shown
+                 more clearly"; its figures plot the estimate of alpha}
+}

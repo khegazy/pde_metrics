@@ -2,7 +2,11 @@
 
 **Category:** pipeline / data
 **Priority:** medium
-**Status:** open. Reproduced and pinned by a strict xfail; not fixed.
+**Status:** open in part. `evaluate.py::select_fields` now reads a derived field's inputs
+whenever the dataset recomputes derived fields, so no run of `evaluate.py` scores the stored
+operator (`tests/test_pipeline.py::test_a_derived_field_is_read_with_its_inputs`). What remains is
+the direct path: `RecomputingTrajectory.frame(t, ["vorticity"])` called without velocity still
+keeps the stored field, pinned by the strict xfail below.
 
 ## Context
 
@@ -42,6 +46,13 @@ vorticity-only metric does not, and its numbers are not comparable with the card
 
 `tests/test_pipeline.py::test_a_derived_field_is_the_same_whether_or_not_its_inputs_are_requested`
 reproduces it on the `write_kinet_raw` fixture and is marked `xfail(strict=True)`.
+
+On `forecast_re5e4` the stored field would be wrong by a factor, not a few percent: the stored
+vorticity of a coarse run's prediction is computed at unit grid spacing and its target's at the
+physical spacing, so at the first step of the $128^2$ run the prediction's is about 1.9 times
+the target's for the same velocity (`docs/datasets/reynolds_ladder_2d.md`, "Forecast pairs").
+Its reader therefore refuses vorticity requested without velocity, which turns this issue into an
+error there; a `metrics=[enstrophy]` run on it fails until this is fixed.
 
 ## What would fix it
 

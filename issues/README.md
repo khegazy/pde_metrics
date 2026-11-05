@@ -28,6 +28,7 @@ These block criteria that are designed and implemented but cannot be exercised.
 | [037](037-increment-flatness-has-no-damage-scale.md) | The increment flatness is zero over zero on the mean-field anchor, so it alone has no damage scale | low |
 | [005](005-3d-and-cost-extrapolation.md) | All data is two-dimensional | low |
 | [034](034-the-well-format-copy-is-not-published.md) | The Well-format copy is not published, so that reader's HTTP path is only covered by a fixture | low |
+| [011](011-cross-dataset-comparison.md) | Four members of the Reynolds ladder cannot be read; the ladder runs on Re = 5e4 and 1e6 | medium |
 | [084](084-weak-residual-needs-consecutive-states.md) | Residual of the equations in weak form needs states one solver step apart | high |
 | [085](085-inviscid-invariants-need-other-data.md) | Helicity, potential vorticity and information transfer need data the repository does not have | unset |
 | [086](086-winding-angle-is-untestable.md) | Winding angle and Poincaré index: no experiment changes the vortices in a known way | high |
@@ -43,8 +44,7 @@ Designed, hooks in place, not built.
 
 | ID | Title | Priority |
 |---|---|---|
-| [010](010-forecast-pair-reader.md) | Read the real prediction/target pairs | **high** |
-| [011](011-cross-dataset-comparison.md) | Compare metrics across a Reynolds ladder | medium |
+| [126](126-forecast-runs-as-a-refinement-sequence.md) | The forecast runs at three resolutions are not yet a grid-refinement sequence: the finest is the reference itself, and the predictions' provenance is unrecorded | medium |
 | [013](013-remaining-intuition-figures.md) | Outlier, invariance, triangle-inequality figures | low |
 | [014](014-gradient-signal-criterion.md) | Gradient quality where L2 goes flat | medium |
 | [015](015-rotation-degradation.md) | Rotation, which must rotate vector components | low |
@@ -101,42 +101,49 @@ Designed, hooks in place, not built.
 | [095](095-pooling-across-frames-for-distributional-estimates.md) | Pooling across frames for a distributional estimate; the contract of a series-level procedure, should a metric need one | unset |
 | [104](104-equivalence-test-misreads-a-flag-valued-anchor.md) | The blindness test lists an axis as blind for a metric whose anchor is a worst-case flag value (`shock_set_distance` follows `translate_x` with rho 1 yet is listed blind to it); needs a decision | unset |
 | [106](106-max-error-scores-the-density-impostor-under-the-anchor.md) | `max_error` scores the Gaussian impostor on density near the anchor because density's extreme is one deep minimum on a vortex core; why the harness's 0.955 sits below the per-frame medians near 1.02 is unexplained | unset |
-| [112](112-crps-card-overclaims-comparison-at-one-member.md) | The `crps` card says ensemble sizes compare fairly; at one member the score doubles (1.14 against 0.57) | low |
 | [097](097-stochastic-ladder-for-comparable-magnitudes.md) | A stochastic ladder (several draws per severity) would make response magnitudes comparable across a metric's functional forms | none set |
 | [098](098-increment-w1-registered-number-is-a-convention.md) | The number `increment_w1_by_separation` registers, a normalised mean over separations, is a convention with no source | unset |
 | [105](105-spectral-energy-flux-summary-is-a-convention.md) | The number `spectral_energy_flux` registers, a relative L2 distance between flux curves sampled at octaves, is a convention with no source | unset |
 | [118](118-tail-exceedance-registered-threshold-is-a-convention.md) | The threshold at which `tail_exceedance` registers its frequency bias, the reference's sqrt(n)-th largest increment, is a convention with no source, and it saturates at 0 under smoothing | unset |
 | [102](102-shock-set-distance-empty-and-non-positive-conventions.md) | The scores `shock_set_distance` gives an empty shock set and a non-positive pressure are conventions | unset |
 | [120](120-shock-mask-overlap-both-empty-convention.md) | The score `shock_mask_overlap` gives two empty shock sets, 1, is a convention | unset |
+| [127](127-crps-decomposition-has-no-settled-form-for-a-fair-ensemble-score.md) | The CRPS decomposition the field reports is not built: the recommended isotonic form needs isotonic distributional regression, and Hersbach's sums to the plug-in score, not the fair one `crps` registers | low |
+| [128](128-increment-metrics-one-cell-separation-is-a-convention.md) | The one-cell separation at which `increment_w1` and `energy_distance` register their number is a convention with no source; their field reads many separations | unset |
+| [132](132-hill-estimator-interval-on-spatially-correlated-increments.md) | The Hill estimator's interval, gamma / sqrt(k), assumes independent samples; its variance on spatially correlated increments is unknown, so `tail_index` reports no interval | low |
+| [136](136-spectrum-l2-linear-summary-is-a-convention.md) | The number `spectrum_l2` registers, a linear relative L2 over shells, is a convention with no source, and the few lowest shells decide it | unset |
+| [137](137-log-spectral-distance-is-undefined-on-empty-shells.md) | A log-spectral distance has sources but is undefined on the shells a prediction or the anchor empties; not built | unset |
+| [138](138-relative-h1-has-two-implementations-in-its-field.md) | The neural-operator relative H1 error has two implementations in its field (the library's centred differences, the MNO authors' spectral weights), and the papers do not say which produced their tables | unset |
+| [139](139-multiplicative-noise-makes-density-negative.md) | `multiplicative_noise` at its harshest severity makes density negative in some cells, where `wasserstein` is undefined, so that level scores NaN | unset |
 
 ## Technical debt
 
 | ID | Title | Priority |
 |---|---|---|
 | [020](020-import-name-collision.md) | `metrics` is a very generic top-level import name | low |
-| [110](110-uniform-reference-nan-guard-needs-round-off-bound.md) | A uniform reference gives NaN only when its floating-point mean is exact (`spectrum_l2`, `nrmse`) | unset |
+| [142](142-run-stamps-are-claimed-per-results-root.md) | Run stamps are claimed per results root, so runs started in one second under different roots share a folder name that cards cannot tell apart | low |
+| [144](144-persistence-wasserstein-too-slow-on-turbulence-runs.md) | `persistence_wasserstein` is too slow to run on the turbulence evidence datasets, so its card cites only the forecast run | medium |
+| [145](145-cross-metric-correlation-ranks-round-off.md) | The cross-metric correlation ranks medians that differ only by round-off, so ensemble cards report correlations between metrics of one unchanged mean | medium |
+| [146](146-forecast-runs-store-no-prediction-companions.md) | A forecast run stores no prediction's point set, and a card whose only run is the forecasts has no forecast table | medium |
+| [110](110-uniform-reference-nan-guard-needs-round-off-bound.md) | A uniform reference gives NaN only when its floating-point mean is exact (`spectrum_l2`) | unset |
 | [032](032-prose-numbers-can-go-stale.md) | Numbers written into card prose can go stale unnoticed | medium |
 | [033](033-link-rewriting-is-only-checked-for-deadness.md) | Site link rewriting is checked for dead links, not correct destinations | medium |
 | [101](101-a-metric-cannot-declare-it-needs-an-absolute-positive-field.md) | A metric cannot declare that it needs an absolute, positive field; `shock_set_distance` runs on the gauge pressure of `taylor_green_2d` | low |
 | [100](100-site-shows-citations-as-raw-text.md) | The documentation site shows a card's citations as raw `[@key]` and `\bibliography`, and a bundle's three reference lists disagree | medium |
 | [107](107-increment-flatness-drops-a-non-finite-channel.md) | `increment_flatness` silently scores the other channels when one channel holds a NaN or an infinity | low |
 | [108](108-field-gallery-hides-the-cell-a-maximum-map-is-about.md) | The report's field gallery clips the colour scale at the 0.995 quantile, saturating the worst cell a `max` map is about, and captions every map as a per-cell share | low |
-| [109](109-pointwise-controls-accept-broadcastable-shapes.md) | `mae`, `mse`, `rmse` and `nrmse` return a number for shapes numpy can broadcast, and the contract test's mismatch cannot broadcast | low |
+| [109](109-pointwise-controls-accept-broadcastable-shapes.md) | `mae`, `mse` and `rmse` return a number for shapes numpy can broadcast, and the contract test's mismatch cannot broadcast | low |
 | [113](113-not-monotone-declaration-passes-on-round-off.md) | A metric falsely declaring `monotone_under_smoothing=False` passes the contract test when Spearman's rho is 0.9999999999999999 | low |
 | [114](114-cost-warning-ignores-grid-and-maps-are-computed-twice.md) | The cost warning counts frames, not grid cells, and a stored map is computed beside its metric | low |
-| [099](099-derived-field-read-without-its-inputs.md) | A run that reads vorticity without velocity scores the solver's stored vorticity, not the recomputed one, without warning | medium |
+| [099](099-derived-field-read-without-its-inputs.md) | `RecomputingTrajectory.frame` asked for vorticity without velocity keeps the solver's stored vorticity; `evaluate.py` now always reads velocity beside it | low |
 | [103](103-exact-zero-axis-rule-is-discontinuous.md) | `tail_index` and `increment_flatness` leave out an axis only when it is exactly constant, so round-off on that axis changes the value by a third | unset |
 | [111](111-damage-per-change-divides-by-round-off-on-ensemble-axes.md) | Damage per unit field change divides by round-off on the ensemble-dispersion axes, so the ensemble cards' profile ranking is meaningless | medium |
-| [123](123-analysis-cannot-read-a-target-valued-metric.md) | The analysis cannot read a metric with a target: direction fixed at +1, no blindness bound, damage on the raw ratio, and a zero withholds the rank correlation | medium |
 | [119](119-refactor-gate-fails-on-ill-conditioned-small-values.md) | A refactor gate at rtol 1e-12 cannot pass where a metric's value is ill-conditioned (`wasserstein` on near-identical pairs) | low |
 | [125](125-costs-from-different-runs-are-not-comparable.md) | Costs recorded in different runs are not comparable on shared login nodes, and the catalog lists them side by side | low |
 | [036](036-increment-flatness-is-not-monotone-under-smoothing.md) | Increment flatness is not monotone under smoothing on any field, so it fails the stated acceptance rule; needs a decision, not a fix | medium |
 | [115](115-run-meta-records-the-git-state-at-the-end.md) | A run's `run_meta.json` records the git commit at its end, so a commit made during the run is recorded as the code that ran | medium |
 | [116](116-context-cache-trusts-one-context-per-frame.md) | Four bundles cache the reference in `ctx.cache` under a fixed key, so a reused context silently returns the first reference's answer | low |
 | [117](117-one-metric-error-stops-the-run.md) | One metric's error stops the whole run, a metric cannot declare the grids it accepts, and `field_gallery` orders frames as strings | low |
-| [121](121-shock-set-distance-card-half-cell-and-high-pass-readings.md) | `shock_set_distance`'s card says a half-cell shift flags three cells (it flags one) and reads the high-pass filters as removing the shock (they raise the pressure level) | low |
 | [122](122-scale-dependent-does-not-say-which-constants.md) | The schema's `scale_dependent` does not say whether the constant may be negative | low |
-| [124](124-tail-index-card-overstates-clauset-on-sqrt-n.md) | `tail_index`'s card says Clauset et al. name the square-root rule, which they do not recommend | low |
 | [022](022-sim-config-parsing.md) | Solver configs carry executable YAML tags | low |
 | [023](023-vendored-kinet-drift.md) | Vendored kinet code is pinned and may drift | low |
 | [045](045-retired-tracker-ids-in-code.md) | Retired tracker IDs remain in code comments, tests and six issues | low |

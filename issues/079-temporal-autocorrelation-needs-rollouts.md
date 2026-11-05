@@ -12,7 +12,7 @@ The metric compares a rollout's autocorrelation function and integral time scale
 
 ## Why it is not built
 
-The rule this follows: a metric is built only if an existing experiment changes, in a controlled and known way, the property it is built to detect; a degradation that moves it only incidentally does not count. The current experiments are the 24 degradations (`python -m degradations`) applied to single snapshots of `kinet_re5e4`, `synthetic_ensemble` and `sod_shock_tube`. It needs time series from a predicted trajectory, which the single-snapshot ladder does not produce and which [010](010-forecast-pair-reader.md) would supply only as uncontrolled real forecasts.
+The rule this follows: a metric is built only if an existing experiment changes, in a controlled and known way, the property it is built to detect; a degradation that moves it only incidentally does not count. The current experiments are the 24 degradations (`python -m degradations`) applied to single snapshots of `kinet_re5e4`, `synthetic_ensemble` and `sod_shock_tube`. It needs time series from a predicted trajectory, which the single-snapshot ladder does not produce and which the forecast pairs of `forecast_re5e4` supply only as uncontrolled real forecasts.
 
 ## What would unblock it
 

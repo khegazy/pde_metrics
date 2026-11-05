@@ -294,18 +294,29 @@ class TimeSelection:
         reduction: Evaluate every Nth frame. This is the temporal size knob: a 10001-frame
             trajectory at ``reduction=50`` is 201 frames.
         max_frames: Hard cap, applied *after* reduction.
+        shard: Which part of the selection this process evaluates, out of ``shards``: frames
+            ``shard, shard + shards, ...`` of the selection. Everything measured over the
+            selection as a whole, the severity calibration first, still uses every selected
+            frame, so the parts run one experiment and merge with
+            ``fmeval.io.combine_runs(..., across="shards")``. The default, 0 of 1, is the
+            whole selection.
+        shards: How many parts the selection is split into.
     """
 
     start: int = 0
     stop: int | None = None
     reduction: int = 1
     max_frames: int | None = None
+    shard: int = 0
+    shards: int = 1
 
     def __post_init__(self) -> None:
         if self.reduction < 1:
             raise ValueError(f"reduction must be >= 1, got {self.reduction}")
         if self.start < 0:
             raise ValueError(f"start must be >= 0, got {self.start}")
+        if not 0 <= self.shard < self.shards:
+            raise ValueError(f"shard must be in [0, shards), got {self.shard} of {self.shards}")
 
     def resolve(self, n_frames: int) -> np.ndarray:
         """The source indices this selection picks out of ``n_frames``."""
@@ -314,6 +325,10 @@ class TimeSelection:
         if self.max_frames is not None:
             idx = idx[: self.max_frames]
         return idx
+
+    def part(self, indices: np.ndarray) -> np.ndarray:
+        """This process's part of the resolved ``indices``: every ``shards``-th from ``shard``."""
+        return indices[self.shard::self.shards]
 
 
 class Trajectory(ABC):
@@ -367,6 +382,17 @@ class Trajectory(ABC):
     def __len__(self) -> int:
         return len(self.times)
 
+    def grid_at(self, t: int) -> GridSpec:
+        """The grid frame ``t`` is stored on: :attr:`grid`, unless the reader holds runs at
+        several resolutions (:mod:`fmeval.data.forecast`), whose frames then carry their own."""
+        return self.grid
+
+    def frame_columns(self, t: int) -> dict[str, Any]:
+        """Result-row columns whose value changes from frame to frame (``trajectory``,
+        ``lead_step``, ...), for a reader whose frames come from several files. None here: every
+        row of a single trajectory takes them from its dataset config."""
+        return {}
+
     def frame(self, t: int, fields: Sequence[str]) -> Frame:
         """Read and validate one frame.
 
@@ -391,7 +417,7 @@ class Trajectory(ABC):
             )
 
         raw = self.read_frame(int(t), requested)
-        grid = self.grid
+        grid = self.grid_at(int(t))
         out: dict[str, np.ndarray] = {}
         for name in requested:
             arr = np.ascontiguousarray(raw[name], dtype=np.float64)

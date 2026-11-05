@@ -61,13 +61,11 @@ directly comparable. The strengths are configured at 2, 4, 8 and 16.
 The factor must divide the analysis grid size; larger factors that do not fit are dropped
 before the run rather than silently doing something else.
 
-This degradation is disabled in the default set of degradations. It is a control for the
-coarsening degradation rather than a failure mode worth measuring on its own, and the set
-of degradations is kept short.
+It is a control for the coarsening degradation rather than a failure mode worth measuring on
+its own, and it is in the default set because every metric is run on every degradation the
+repository has (`AGENTS.md` §1).
 
 ## Limitations
-
-Disabled by default, so a run will not include this operator unless asked.
 
 The displacement that point sampling introduces is real and is not part of the failure
 being imitated. Structures shift by up to half a sampling cell depending on where the grid

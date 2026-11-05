@@ -1,0 +1,107 @@
+{
+  "caption": "The point set behind persistence_wasserstein on density, one panel per stored variant, on shared axes. Grey rings are the clean level's set of the same frame, the reference's, drawn under every panel. The grey diagonal is birth equal to death: a point's height above it is how long its feature persists. Triangles on a panel's edge are points with an infinite coordinate.",
+  "dataset": "forecast_re5e4",
+  "figure": "companion_points",
+  "metric": "persistence_wasserstein",
+  "panels": {
+    "all": [
+      {
+        "birth": 0.9623532809437286,
+        "death": 1.001823356744658,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 59,
+        "variant": "reference"
+      },
+      {
+        "birth": 0.9620944698828007,
+        "death": null,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 59,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018467503958033,
+        "death": 1.006572372829436,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 59,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001834896852968,
+        "death": null,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 59,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018381750353202,
+        "death": null,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 59,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0065771502576177,
+        "death": null,
+        "dimension": 2.0,
+        "drawn": "points",
+        "frame_index": 59,
+        "variant": "reference"
+      },
+      {
+        "birth": 0.9623532809437286,
+        "death": 1.001823356744658,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 59,
+        "variant": "reference"
+      },
+      {
+        "birth": 0.9620944698828007,
+        "death": null,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 59,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018467503958033,
+        "death": 1.006572372829436,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 59,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001834896852968,
+        "death": null,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 59,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018381750353202,
+        "death": null,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 59,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0065771502576177,
+        "death": null,
+        "dimension": 2.0,
+        "drawn": "points",
+        "frame_index": 59,
+        "variant": "reference"
+      }
+    ]
+  },
+  "run": "comparison_1793811840"
+}

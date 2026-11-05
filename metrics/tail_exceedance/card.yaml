@@ -20,8 +20,9 @@ output:
     The frequency bias, the prediction's count of absolute one-cell increments at least as large
     as the reference's k-th largest over the reference's own count, pooled over channels and
     spatial axes, at k = ceil(sqrt(n)). Dimensionless, 1 for a prediction with as many extremes
-    as the reference. NaN when the reference is constant. The same ratio at nine orders
-    k = ceil(n^theta) is stored beside it.
+    as the reference. On velocity only the longitudinal components are read. NaN when the
+    reference is constant. The same ratio is stored at nine orders k = ceil(n^theta) and against
+    the reference percentile from 90 to 99.99.
   bounds:
     # A ratio of counts: 0 when the prediction has no increment as large as the threshold, and at
     # most n / k when every one of its n increments is.
@@ -35,5 +36,8 @@ math:
   # One-cell increments and k set by the number of cells: it depends on the grid twice over.
   resolution_dependent: true
   complexity: "O(N log N)"     # one sort of the reference's increments per channel and axis
-references: [clauset2009, etccdi, granero2024, jwgfvr, zhang2005]
+references: [clauset2009, etccdi, granero2024, jwgfvr, magnusson2014, wwrp2004, zhang2005]
+
+not_run:
+  synthetic_ensemble: the member mean has no increment as large as the reference's extremes, so the value is 0 at every level of every axis (measured), and the dispersion axes do not move the member mean
 review: null

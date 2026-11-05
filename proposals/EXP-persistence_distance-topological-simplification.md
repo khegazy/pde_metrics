@@ -1,7 +1,7 @@
 ---
 type: EXP
 kind: degradation
-related: ["metrics/persistence_distance", "proposals/EXP-orchestrator-20261023-known-vortex-field.md", "issues/073", "issues/086"]
+related: ["metrics/persistence_distance", "metrics/persistence_wasserstein", "proposals/EXP-orchestrator-20261023-known-vortex-field.md", "issues/073", "issues/086"]
 seen_in: "Edelsbrunner, Morozov & Pascucci 2006, Proc. 22nd Annu. Symp. Comput. Geom., 127-134"
 doi: "10.1145/1137856.1137878"
 found_by: "persistence_distance, 2026-10-31"

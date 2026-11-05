@@ -1,0 +1,1179 @@
+{
+  "caption": "The point set behind persistence_distance on density, one panel per stored variant, on shared axes. Grey rings are the clean level's set of the same frame, the reference's, drawn under every panel. The grey diagonal is birth equal to death: a point's height above it is how long its feature persists. Triangles on a panel's edge are points with an infinite coordinate. Only the first 4 of the 10 stored sets are drawn, in time order; every set is in data/error_maps.npz.",
+  "dataset": "kinet_re5e4",
+  "figure": "companion_points",
+  "metric": "persistence_distance",
+  "panels": {
+    "all": [
+      {
+        "birth": 1.0017599931671781,
+        "death": 1.0017607054368303,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0017557955415806,
+        "death": 1.0017661719762025,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0017722097007447,
+        "death": 1.0017729138408586,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0017668803258895,
+        "death": 1.0017740940305235,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0017876426721477,
+        "death": 1.0017888332850982,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0017845901738478,
+        "death": 1.0017933641221708,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0017983298552826,
+        "death": 1.0018000500464435,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001796710170463,
+        "death": 1.0018003825888844,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0017962858096507,
+        "death": 1.0018035978802327,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0017973485060125,
+        "death": 1.0018159361296703,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018143161363051,
+        "death": 1.0018170861690112,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018081249233781,
+        "death": 1.0018225405369738,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018100635295055,
+        "death": 1.0018233717896854,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001825535578138,
+        "death": 1.0018274743619553,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001827599234954,
+        "death": 1.001830748028361,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 0.9616821599179857,
+        "death": 1.0018333419231518,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018227680470944,
+        "death": 1.001835051033583,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018238566288584,
+        "death": 1.0018350815051384,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018363437122422,
+        "death": 1.0018397006488737,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018266060902432,
+        "death": 1.001840098071989,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018347245260455,
+        "death": 1.0018462442209435,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001845077121403,
+        "death": 1.0018472512345027,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018404906822367,
+        "death": 1.001851485380843,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 0.961652249215541,
+        "death": null,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0017633969031066,
+        "death": 1.001764517471782,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001766184282752,
+        "death": 1.0017743073161987,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001779503455967,
+        "death": 1.0017802543791374,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0017784906310916,
+        "death": 1.0017844228641923,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001786435365235,
+        "death": 1.001790389331454,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0017946252637189,
+        "death": 1.0018002660432836,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018044837031983,
+        "death": 1.001811575682114,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018046589619967,
+        "death": 1.0018122681227632,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018072766574304,
+        "death": 1.0018169683594498,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001809112360924,
+        "death": 1.0018192953035268,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018183798756666,
+        "death": 1.0018221473749074,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018180183024137,
+        "death": 1.0018229550531699,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018213435148262,
+        "death": 1.0018249563278396,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018180183024137,
+        "death": 1.001826072450132,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018237097993796,
+        "death": 1.0018280256565268,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001826589277742,
+        "death": 1.0018314401711867,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018294161455266,
+        "death": 1.001832224437482,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018310304699853,
+        "death": 1.001833164664609,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018275500564027,
+        "death": 1.001833437659962,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018299115818525,
+        "death": 1.0018335779381808,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018283810724056,
+        "death": 1.0018340197169957,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018275514945514,
+        "death": 1.001836589892061,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018352090240583,
+        "death": 1.0018367494162712,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018351921779063,
+        "death": 1.0018377664940585,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018372355492773,
+        "death": 1.0018386159930919,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018351921779063,
+        "death": 1.0018423871966406,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.00183497583755,
+        "death": 1.0018428769780512,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018416728052815,
+        "death": 1.0018437363379509,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018401192761888,
+        "death": 1.0018437393086386,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018407978464392,
+        "death": 1.0018460521076387,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018419477669909,
+        "death": 1.001846875638256,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018406607050108,
+        "death": 1.0018495784924317,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018428723813881,
+        "death": 1.0018496180369016,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018393423296477,
+        "death": 1.0018497865558442,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018426433340581,
+        "death": 1.001849800679773,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018517056123497,
+        "death": 1.0018526088413335,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018401241297412,
+        "death": 1.0018541862825463,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018513293512394,
+        "death": 1.0018549796955005,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018504794938818,
+        "death": 1.0018556869176072,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018438433561485,
+        "death": 1.0018559149244808,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001853452986293,
+        "death": 1.001856692423618,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018548891398755,
+        "death": 1.0018584406447557,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018564077581902,
+        "death": 1.0018586137131293,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001859151827043,
+        "death": 1.0018609001610632,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018429907713389,
+        "death": 1.001861142133785,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018608978404608,
+        "death": 1.0018618934786465,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018569928782552,
+        "death": 1.0018634522312706,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018556073942755,
+        "death": 1.0018639454628009,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018590364854045,
+        "death": 1.0018641220560338,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018628619771184,
+        "death": 1.0018652000655754,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001865488081024,
+        "death": 1.0018671713893263,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001865766419455,
+        "death": 1.0018699184263358,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018677732094896,
+        "death": 1.0018699508545634,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001860934635526,
+        "death": 1.0018699520446173,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018616182153512,
+        "death": 1.0018706557346455,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001858160837307,
+        "death": 1.001870725052745,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001868227005203,
+        "death": 1.001872702274667,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018647217072014,
+        "death": 1.0018732604745002,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018517010727812,
+        "death": 1.001874371482789,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018776394475002,
+        "death": 1.0018804037411009,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018777166280235,
+        "death": 1.001880585808161,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018761609414313,
+        "death": 1.0018807317070624,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018708321079646,
+        "death": 1.0018817101852866,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018813040149444,
+        "death": 1.0018818794921542,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018796510869115,
+        "death": 1.0018821678247614,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018689498623172,
+        "death": 1.0018838543435247,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018691149397347,
+        "death": 1.0018854110530047,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018834747518133,
+        "death": 1.0018873528868466,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018747619428727,
+        "death": 1.001887927440185,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.00188299648168,
+        "death": 1.0018936297557408,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018733632933379,
+        "death": 1.0018943554613724,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018920447468367,
+        "death": 1.001900701655729,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018962060496204,
+        "death": 1.0019019902903192,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001902057734867,
+        "death": 1.001909584929133,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001919923415079,
+        "death": 1.0019236576781316,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0019210480608312,
+        "death": 1.00192384102694,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001922544422747,
+        "death": 1.0019280770746093,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001937739750252,
+        "death": 1.0019393489830186,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0019621184530705,
+        "death": 1.0019629336350895,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.00656331112443,
+        "death": 1.0065637845319009,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0065658025155075,
+        "death": 1.0065660793266655,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0065676725198096,
+        "death": 1.0065681610820123,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0065671246111538,
+        "death": 1.006570455069932,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0065697824815856,
+        "death": 1.0065735034786467,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0065719788838208,
+        "death": 1.006573954831976,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0065741888798754,
+        "death": 1.0065748377324424,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.006573905022719,
+        "death": 1.0065750840942922,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0065751102111784,
+        "death": 1.0065752312119636,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0065748048861691,
+        "death": 1.006575409606595,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0065736288965588,
+        "death": 1.0065769820423878,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0065728817539825,
+        "death": 1.0065771446730505,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.001860115055471,
+        "death": 1.0065782903441716,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0065747921452664,
+        "death": 1.0065795377508895,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.006581890573806,
+        "death": 1.0065822758376584,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0065784286046777,
+        "death": 1.0065823788191812,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018471704346454,
+        "death": null,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0018491035460992,
+        "death": null,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 1.0065823970075325,
+        "death": null,
+        "dimension": 2.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "reference"
+      },
+      {
+        "birth": 0.9630731688533503,
+        "death": 1.0018278044853919,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l1"
+      },
+      {
+        "birth": 0.9630470645138709,
+        "death": null,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l1"
+      },
+      {
+        "birth": 1.0018589048229651,
+        "death": 1.006556588746216,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l1"
+      },
+      {
+        "birth": 1.0018409132521144,
+        "death": null,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l1"
+      },
+      {
+        "birth": 1.001846419807451,
+        "death": null,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l1"
+      },
+      {
+        "birth": 1.00656182472286,
+        "death": null,
+        "dimension": 2.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l1"
+      },
+      {
+        "birth": 0.9690484307865951,
+        "death": 1.0018226913024373,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l2"
+      },
+      {
+        "birth": 0.9690300558698475,
+        "death": null,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l2"
+      },
+      {
+        "birth": 1.001856118105076,
+        "death": 1.0064634834872734,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l2"
+      },
+      {
+        "birth": 1.001837681327773,
+        "death": null,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l2"
+      },
+      {
+        "birth": 1.001842799505373,
+        "death": null,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l2"
+      },
+      {
+        "birth": 1.0064688957533807,
+        "death": null,
+        "dimension": 2.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l2"
+      },
+      {
+        "birth": 0.9791414960557651,
+        "death": 1.0017849007727269,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l3"
+      },
+      {
+        "birth": 0.9791342156094719,
+        "death": null,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l3"
+      },
+      {
+        "birth": 1.0018214215249996,
+        "death": 1.006134345050607,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l3"
+      },
+      {
+        "birth": 1.001805595552597,
+        "death": null,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l3"
+      },
+      {
+        "birth": 1.0018005501621057,
+        "death": null,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l3"
+      },
+      {
+        "birth": 1.0061393216434082,
+        "death": null,
+        "dimension": 2.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l3"
+      },
+      {
+        "birth": 0.9901897860690723,
+        "death": 1.0013336959753416,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l4"
+      },
+      {
+        "birth": 0.9901875368066,
+        "death": null,
+        "dimension": 0.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l4"
+      },
+      {
+        "birth": 1.0013824344201154,
+        "death": 1.0049382989478155,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l4"
+      },
+      {
+        "birth": 1.001364465804884,
+        "death": null,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l4"
+      },
+      {
+        "birth": 1.0013530590835495,
+        "death": null,
+        "dimension": 1.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l4"
+      },
+      {
+        "birth": 1.0049420139434162,
+        "death": null,
+        "dimension": 2.0,
+        "drawn": "points",
+        "frame_index": 10000,
+        "variant": "gaussian_blur_l4"
+      }
+    ]
+  },
+  "run": "comparison_1793846511"
+}

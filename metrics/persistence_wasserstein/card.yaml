@@ -1,0 +1,41 @@
+schema_version: 1
+
+name: persistence_wasserstein
+kind: metric
+
+# Compares which features exist (pieces, loops) and at which levels they appear and vanish,
+# never where they sit; every feature counts, where persistence_distance reports the worst.
+category: topological
+
+summary: >-
+  1-Wasserstein distance between the persistence diagrams of the reference and the candidate:
+  the summed change of level needed to match every connected piece and loop of one field to the
+  other's, wherever in the domain those features sit.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    The sum over homology dimensions of the 1-Wasserstein distance, with the L-infinity ground
+    norm, between the two fields' sublevel-set persistence diagrams, in the field's own units.
+  bounds:
+    lower: 0.0
+    upper: null      # bounded by the sum over every cell of the cubical complex of |f - g|
+
+math:
+  triangle_inequality: true    # W_1 is a metric on diagrams; between fields it is a
+                               # pseudometric, zero for any two fields with one diagram
+  scale_dependent: true        # scaling both fields by c scales every birth and death by c
+  resolution_dependent: true   # the grid sets which features exist, and the sum grows with
+                               # their number
+  complexity: "measured, not derived: 0.2 to 3 s per comparison on a 128 x 128 vorticity field and 5 to 25 s on 256 x 256"
+references: [cohensteiner2005, cohensteiner2010, skraba2020, bleile2022, gudhicubical, rtda,
+             gudhiwasserstein, giottotda]
+
+not_run:
+  kinet_re5e4: too slow for the evidence pass at 256 x 256, 5 to 25 s per vorticity comparison; held back on Kareem's instruction until issue 144 is settled
+  kinet_re1e6: too slow for the evidence pass, whose shards had not finished after about ten hours; held back on Kareem's instruction until issue 144 is settled
+  sod_shock_tube: Sod's exact density never rises along the tube, so its diagram is one point, born at the minimum, and the distance only compares two minima
+  synthetic_ensemble: its dispersion axes leave the member mean, the field this metric reads, unchanged by construction, and its bias axis moves every point of the candidate's diagram by the offset, a response test_metric.py pins exactly
+review: null

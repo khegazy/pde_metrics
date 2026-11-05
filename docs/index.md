@@ -19,15 +19,17 @@ prediction *worse* than a prediction containing no shock at all. This is called 
 **double penalty**, and avoiding it is why choosing a metric is a research question
 rather than a matter of taste.
 
-This repository answers that question by measurement rather than by argument. A trusted
+This repository answers that question by measurement rather than by argument. Each metric is
+first evaluated the way the research community it comes from evaluates it. Then a trusted
 simulation is damaged in controlled, increasing steps, every metric is asked to score the
 damaged versions, and everything measured is written down beside the metric it describes.
 
 ## What is here
 
-Each metric, and each way of damaging a field, gets its own page: what it computes, what
-the number means, where it misleads, and the figures and measurements from a recorded run
-on real turbulence data.
+Each metric, and each way of damaging a field, gets its own page: what it computes, what the
+number means, where it misleads, and the figures and measurements from recorded runs on the
+repository's datasets. A metric's page also says how its own research community computes and
+reports it.
 
 **[Start with the gallery](degradations/gallery.md)** if you have never looked at a fluid
 simulation before. The gallery shows every way of damaging a field, each applied to the

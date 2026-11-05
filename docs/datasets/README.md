@@ -1,7 +1,8 @@
 # Datasets
 
 Every metric here is tested by damaging a trusted field in controlled steps and scoring the
-damaged versions. These pages describe the trusted fields. There is one page per physical
+damaged versions, and, on one dataset, by scoring real predictions against their targets. These
+pages describe the trusted fields. There is one page per physical
 problem, and each page lists every configuration of that problem: a different Reynolds number,
 a different file format, or a development subset.
 
@@ -19,7 +20,7 @@ Two kinds of dataset appear:
 
 | Problem | Configurations | Kind | Grid | Boundaries |
 |---|---|---|---|---|
-| [Doubly periodic weakly compressible flow](reynolds_ladder_2d.md) | `kinet_re5e4`, `kinet_re5e4_dev`, `well_re5e4` | simulated | $256^2$ | periodic |
+| [Doubly periodic weakly compressible flow](reynolds_ladder_2d.md) | `kinet_re5e4`, `kinet_re5e4_dev`, `well_re5e4`, `kinet_re1e6`, `forecast_re5e4` | simulated; `forecast_re5e4` pairs real predictions with their targets | $256^2$; $1024^2$ at $\mathrm{Re} = 10^6$; the forecasts also $128^2$ and $64^2$ | periodic |
 | [Sod shock tube](sod_shock_tube.md) | `sod_shock_tube` | computed: exact solution of the Euler equations | 2048 cells, 1D | Neumann walls |
 | [Taylor–Green vortex](taylor_green_vortex.md) | `taylor_green_2d` | computed: exact solution of the Navier–Stokes equations | $256^2$ | periodic |
 | [Synthetic exchangeable ensemble](synthetic_ensemble.md) | `synthetic_ensemble` | computed: a formula and a seed | $64^2$ | periodic |

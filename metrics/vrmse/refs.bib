@@ -1,0 +1,40 @@
+% References cited by this bundle's card.md, and nothing else. One file per bundle, so a
+% bundle can be added or removed without touching anyone else's citations.
+@inproceedings{ohana2024,
+  author    = {Ohana, Ruben and McCabe, Michael and Meyer, Lucas and Morel, Rudy and Agocs,
+               Fruzsina and Beneitez, Miguel and Berger, Marsha and Burkhart, Blakesley and
+               Dalziel, Stuart and Fielding, Drummond and Fortunato, Daniel and
+               Goldberg, Jared and others},
+  title     = {The Well: a Large-Scale Collection of Diverse Physics Simulations for Machine
+               Learning},
+  booktitle = {Advances in Neural Information Processing Systems 37 (Datasets and Benchmarks
+               Track)},
+  pages     = {44989--45037},
+  year      = {2024},
+  doi       = {10.52202/079017-1430},
+  note      = {App. E.3: MSE, RMSE, NMSE and NRMSE (epsilon 1e-7), VMSE and VRMSE, L-infinity,
+               binned spectral errors. Sect. 4, Table 2: one-step VRMSE averaged over all
+               physical fields; Table 3: VRMSE averaged over prediction-step windows 6:12 and
+               13:30; Fig. 6: VRMSE per state variable and binned spectral error against step.
+               Sect. 3: trajectories split 0.8/0.1/0.1. Numbering read from the arXiv source,
+               arXiv:2412.00568. Code: the_well/benchmark/metrics/spatial.py (one value per
+               field) and the_well/benchmark/trainer/training.py, split_up_losses (per field and
+               their mean)}
+}
+
+@inproceedings{takamoto2022,
+  author    = {Takamoto, Makoto and Praditia, Timothy and Leiteritz, Raphael and MacKinlay,
+               Daniel and Alesiani, Francesco and Pfl{\"u}ger, Dirk and Niepert, Mathias},
+  title     = {{PDEBench}: An Extensive Benchmark for Scientific Machine Learning},
+  booktitle = {Advances in Neural Information Processing Systems 35 (Datasets and Benchmarks
+               Track)},
+  pages     = {1596--1611},
+  year      = {2022},
+  doi       = {10.52202/068431-0117},
+  note      = {Sect. 3.3: RMSE, nRMSE and max error as the data-view metrics. App. B: nRMSE as
+               the ratio of L2 norms. Sect. 4.1: a tenth of the samples held out for testing.
+               Sect. 4.3, Fig. 5a and 5c: RMSE against the unrolled time step. App. E: tables
+               of every metric per PDE and model. Numbering read from the arXiv source,
+               arXiv:2210.07182. Code: pdebench/models/metrics.py, metric_func (per sample,
+               channel and time step, then the mean over samples, channels and time steps)}
+}

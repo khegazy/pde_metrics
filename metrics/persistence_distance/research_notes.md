@@ -280,3 +280,21 @@ Muszynski 2019 or Smith 2024 against their full texts.
 - The builder's reading that the coefficient field does not change any 2-D diagram was by
   reasoning (subcomplexes of the torus have torsion-free homology); the reviewer then tested it
   on 200 random 2-D and 3-D fields over $\mathbb{Z}/2$, $\mathbb{Z}/3$ and $\mathbb{Z}/11$ and found identical diagrams.
+
+## Round of 2026-11-04 (task `metrics-topology-shocks`)
+
+- The card gained `### How its field reports it` (topological data analysis: the diagram, the
+  bottleneck and Wasserstein distances, the stability theorem beside the number, the diagram
+  figure, the perturbation experiments and the three missing-experiment proposals).
+- The Wasserstein sibling was built as `persistence_wasserstein` (p = 1, GUDHI's default; p = 2
+  left in the narrowed MTR, judgement 018). Sources read for it are in its own notes, including
+  Cohen-Steiner, Edelsbrunner, Harer & Mileyko 2010 (authors' copy, Sect. 3).
+- `not_run` added: `sod_shock_tube`, whose exact density is non-increasing along the tube at all
+  ten frames, so its diagram is the one point (0.125, inf) (measured); `synthetic_ensemble`,
+  whose dispersion axes leave the member mean unchanged and whose bias axis shifts every point.
+  The orchestrator's brief had called the metric periodic-only; it is not (`requires_periodic`
+  is False and the complex wraps only the periodic axes), so the Sod skip is a `not_run` reason,
+  not a derived one.
+- The card's existing diagram figure (first four stored sets, the `gaussian_blur` levels of frame
+  10000, over the reference's rings, diagonal drawn, coloured by dimension) was checked against
+  its JSON and reads as the field draws a diagram.

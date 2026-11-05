@@ -17,7 +17,14 @@
                   infinity, perfect score 1, below 1 under-forecasting and above 1
                   over-forecasting, and no measure of correspondence. The page numbers no
                   equations, so the section is cited. This bundle's number is that score, with
-                  the reference as the observation; its target of 1 is the perfect score}
+                  the reference as the observation; its target of 1 is the perfect score.
+                  Re-read in full on 2026-11-04: the frequency-bias section does not say to
+                  compute or plot it against threshold; section "Methods for rare events" says
+                  the extreme dependency score "should be presented together with the frequency
+                  bias" and that EDI and SEDI (Ferro and Stephenson 2011) are independent of the
+                  base rate; section "Quantile-based categorical statistics" (Jenkner et al.)
+                  says that fixing the margins of the contingency table by quantiles calibrates
+                  the problem, the bias then being expressed as a quantile difference}
 }
 
 @misc{etccdi,
@@ -30,7 +37,42 @@
                   for this bundle's event, an exceedance of a threshold set by the reference
                   sample's own percentile, with the reference in the place of the base period.
                   The indices use a strict inequality (TXij > TXin90); this bundle's non-strict
-                  one is its own choice}
+                  one is its own choice. Re-read on 2026-11-04: items 10 to 13 (TN10p, TX10p,
+                  TN90p, TX90p) are percentages of days beyond a calendar-day percentile of the
+                  1961-1990 base period; items 25 and 26 (R95pTOT, R99pTOT) are precipitation
+                  totals above the 95th and 99th wet-day percentiles. None is a ratio of one
+                  dataset's count to another's}
+}
+
+@techreport{wwrp2004,
+  author      = {{WWRP/WGNE Joint Working Group on Verification}},
+  title       = {Recommendations for the verification and intercomparison of {QPF}s from
+                 operational {NWP} models},
+  institution = {World Weather Research Programme / Working Group on Numerical Experimentation},
+  year        = {2004},
+  month       = {December},
+  url         = {https://jwgfvr.github.io/forecastverification/},
+  note        = {Read in full on 2026-11-04, from the copy linked on the JWGFVR page. Section 2
+                 stratifies the verification by rain threshold (1, 2, 5, 10, 20, 50 mm/d);
+                 Section 4 rates BIAS, the frequency bias, highly recommended; Section 5(c),
+                 "Display of verification results", asks for a "plot of scores for multiple
+                 models/seasons/lead times as a function of rain threshold". The thresholds are
+                 fixed amounts, not percentiles}
+}
+
+@techreport{magnusson2014,
+  author      = {Magnusson, Linus and Haiden, Thomas and Richardson, David},
+  title       = {Verification of extreme weather events: Discrete predictands},
+  institution = {European Centre for Medium-Range Weather Forecasts},
+  type        = {ECMWF Technical Memorandum},
+  number      = {731},
+  year        = {2014},
+  note        = {Read in full on 2026-11-04. Section 2 defines the frequency bias of an event and
+                 SEDI, and says, citing Ferro and Stephenson (2011), that forecasts must be
+                 calibrated to a frequency bias of 1 before SEDI compares systems. Section 5,
+                 Figure 8, draws the frequency bias of exceeding the 98th percentile of each
+                 system's own climate over 2002 to 2013: one fixed percentile, chosen in a
+                 research memorandum, not a declared standard}
 }
 
 @article{zhang2005,

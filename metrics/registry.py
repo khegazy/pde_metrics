@@ -31,7 +31,9 @@ declared ``reduction`` gives back the number, which the contract test verifies a
 literature's own values, which the pipeline stores on every result row and the analysis
 evaluates coordinate by coordinate beside the panel; or a set of points with named coordinates
 (``kind="points"``), such as a persistence diagram or the positions of detected shocks, which the
-pipeline stores on the frames chosen for the per-cell maps.
+pipeline stores on the frames chosen for the per-cell maps. A metric may carry several
+companions when its field computes or draws several objects behind the number; each has a name,
+and the one named after the metric is the one its number is computed from.
 """
 
 from __future__ import annotations
@@ -60,6 +62,11 @@ ARITY_POSITIONAL: dict[str, int] = {"pairwise": 2, "single": 1, "ensemble": 2}
 Cost = Literal["cheap", "moderate", "expensive"]
 Measures = Literal["error", "calibration"]
 CompanionKind = Literal["field", "curve", "points"]
+#: The axis scales a companion's figure may declare (:func:`companion`, ``scales``).
+Scale = Literal["linear", "log", "symlog"]
+SCALES: tuple[str, ...] = ("linear", "log", "symlog")
+#: How a curve companion is drawn: ``"line"``, or ``"bars"`` for counts over fixed bins.
+CurveStyle = Literal["line", "bars"]
 
 #: How a pointwise map reduces to the metric's scalar value. ``C`` is the channel count of
 #: the *input* field. A map reduced by ``mean``, ``sum`` or ``sqrt_mean`` is summed over
@@ -73,11 +80,26 @@ REDUCTIONS: dict[str, Callable[[np.ndarray, int], float]] = {
 }
 
 
+def companion_label(metric: str, name: str) -> str:
+    """How a companion is spelled wherever it is stored or shown: in ``companions.csv``'s
+    ``metric`` column, in ``error_maps.npz`` keys, in figures and on the card.
+
+    The metric's own companion, named after the metric, is spelled as the metric, so a bundle
+    with one companion reads exactly as before several were allowed; any other is
+    ``metric.name``. A metric's name is a Python identifier, so the dot cannot be part of it and
+    ``label.partition(".")`` gives the metric back.
+    """
+    return metric if name == metric else f"{metric}.{name}"
+
+
 @dataclass(frozen=True)
 class Companion:
     """The object behind a metric's number, declared with :func:`companion`."""
 
     fn: Callable[..., Any]
+    name: str
+    """A short identifier, unique within the metric: the metric's own name for the companion its
+    number is computed from (the default), another identifier for any further one."""
     kind: CompanionKind
     """``"field"``: a per-cell map, ``(*spatial)``, stored on chosen frames. ``"curve"``: a pair
     ``(coordinates, values)``, stored on every row. ``"points"``: an ``(N, D)`` array, one row
@@ -91,11 +113,41 @@ class Companion:
     (the member mean on an ensemble dataset, whose ladder degrades the prediction). Inferred from
     the signature."""
     takes_ctx: bool
+    analysed: tuple[Any, ...] | None = None
+    """For a curve, the coordinates the analysis reads. None reads every coordinate. When set,
+    ``companions.csv`` holds those the curve returns, and the whole dense curve is stored on the
+    frames ``report.error_map`` names for the figures. A curve whose coordinates the grid sets,
+    such as wavenumber shells, may stop short of the larger ones on a coarse grid
+    (:meth:`unmatched_analysed`)."""
+    scales: tuple[Scale, Scale] | None = None
+    """For a curve or a point set, the ``(x, y)`` axis scales its field draws it on, each one of
+    :data:`SCALES`. None keeps the renderers' default: a curve's coordinate on a base-2 log axis
+    when every coordinate is positive and they span more than a factor of ten, all else linear."""
+    style: CurveStyle = "line"
+    """For a curve, ``"bars"`` when its field draws it as a histogram over fixed bins (a rank
+    histogram's counts): a renderer style, not a storage kind."""
+
+    def unmatched_analysed(self, coordinates: Sequence[Any]) -> list[Any]:
+        """The analysed coordinates a curve of ``coordinates`` should hold and does not.
+
+        Each analysed coordinate must be among the curve's, or lie beyond its largest: a
+        coarser grid has fewer shells, so the octave 128 is absent from a 64-cell grid's curve
+        and is not an error there. One missing inside the curve's range is a coordinate spelled
+        differently from the curve's, which would silently drop it from the analysis.
+        """
+        present = np.asarray(coordinates).tolist()
+        last = max(present) if present else None
+        return [x for x in self.analysed or () if x not in present
+                and not (isinstance(x, (int, float)) and last is not None and x > last)]
 
     def describe(self) -> dict[str, Any]:
         # Plain lists, as JSON reads them back: a point set's coordinates are (name, units) pairs.
         coordinate = [list(c) if isinstance(c, tuple) else c for c in self.coordinate or []]
-        return {"kind": self.kind, "coordinate": coordinate or None, "one_field": self.one_field}
+        return {"name": self.name, "kind": self.kind, "coordinate": coordinate or None,
+                "one_field": self.one_field,
+                "analysed": None if self.analysed is None else list(self.analysed),
+                "scales": None if self.scales is None else list(self.scales),
+                "style": self.style}
 
 
 @dataclass(frozen=True)
@@ -117,7 +169,8 @@ class MetricSpec(Accepts):
     module: str
     takes_ctx: bool
     reduction: str
-    companion: Companion | None = None
+    companions: tuple[Companion, ...] = ()
+    """In declaration order; empty for a metric with nothing behind its number."""
     target: float | None = None
     """The value a perfectly calibrated prediction attains, if it is not zero.
 
@@ -143,6 +196,14 @@ class MetricSpec(Accepts):
         """Apply this metric's declared reduction to a pointwise map."""
         return REDUCTIONS[self.reduction](map_, n_channels)
 
+    @property
+    def cached_companion(self) -> Companion | None:
+        """The companion the pipeline computes before the metric and hands to it under
+        :data:`fmeval.context.COMPANION_KEY`: the metric's own, named after it, when that is a
+        curve or a point set. Any other companion is computed for storage only."""
+        return next((c for c in self.companions
+                     if c.name == self.name and c.kind != "field"), None)
+
     def describe(self) -> dict[str, Any]:
         """What the decorator declares, as plain data: the catalog entry and run provenance."""
         return {
@@ -150,7 +211,7 @@ class MetricSpec(Accepts):
             "units": self.units, "cost": self.cost, "differentiable": self.differentiable,
             "symmetric": self.symmetric, "higher_is_better": self.higher_is_better,
             "target": self.target, "measures": self.measures, "reduction": self.reduction,
-            "companion": None if self.companion is None else self.companion.describe(),
+            "companions": [c.describe() for c in self.companions],
             "requires_periodic": self.requires_periodic,
         }
 
@@ -283,29 +344,42 @@ def metric(
     return _decorate
 
 
-def companion(*, of: str, kind: CompanionKind = "field",
+def companion(*, of: str, name: str | None = None, kind: CompanionKind = "field",
               coordinate: tuple[str, str] | tuple[tuple[str, str], ...] | None = None,
+              analysed: Sequence[Any] | None = None,
+              scales: Sequence[Scale] | None = None, style: CurveStyle = "line",
               ) -> Callable[[Callable], Callable]:
-    """Attach the object behind a metric's number to an already-registered metric.
+    """Attach an object behind a metric's number to an already-registered metric.
 
-    One companion per metric. A second number from the literature is a sibling bundle that
-    imports the function, as ``rmse`` imports ``mse``.
+    A metric may carry several companions, when its field computes or draws several objects
+    behind the one number (a longitudinal and a transverse curve, a cost density and a set of
+    points). Each has a ``name``. The one named after the metric, the default, is the one the
+    number is computed from: a curve or point set of that name is the one handed to the metric.
+    A second *number* from the literature is still a sibling bundle that imports the function, as
+    ``rmse`` imports ``mse``.
 
     * ``kind="field"``: a per-cell density taking the metric's arguments and returning
-      ``(*spatial)``, the channel axis summed away. Reducing it with the metric's declared
-      ``reduction`` must reproduce the metric's number; the contract test enforces that. Stored
-      on the frames ``report.error_map`` names.
+      ``(*spatial)``, the channel axis summed away. Reducing the metric's own map with the
+      metric's declared ``reduction`` must reproduce the metric's number; the contract test
+      enforces that. Stored on the frames ``report.error_map`` names. A further, named field
+      companion of a pairwise metric may instead take one field, a property of that field such
+      as the pressure itself; it is then stored on the clean level too, where it is the
+      reference's, and on a one-dimensional grid ``companion_points`` draws it as the line-out
+      under the metric's point sets.
     * ``kind="curve"``: returns ``(coordinates, values)``, two 1-D arrays of one length with fixed
       coordinates and the literature's own values, untransformed. It takes either the metric's
       arguments, and is then itself a comparison, or one field where the metric takes two, and is
-      then a property of one field. The pipeline calls it before the metric on every row, stores
-      the curve, and hands it to the metric in ``ctx.cache[COMPANION_KEY]``
-      (:data:`fmeval.context.COMPANION_KEY`), so a metric that reads it there computes the curve
-      once per row.
+      then a property of one field. The pipeline calls it on every row and stores the curve in
+      ``companions.csv``; the metric's own curve is called before the metric and handed to it in
+      ``ctx.cache[COMPANION_KEY]`` (:data:`fmeval.context.COMPANION_KEY`), so a metric that reads
+      it there computes the curve once per row. With ``analysed``, only those coordinates go to
+      ``companions.csv`` and the analysis, and the whole curve is stored as an ``(n, 2)`` array
+      of (coordinate, value) on the frames ``report.error_map`` names, as a point set is, for the
+      figures.
     * ``kind="points"``: returns an ``(N, D)`` array, one row per point and one column per
       declared coordinate; ``N`` may differ between calls and may be zero. It takes the metric's
-      arguments or, for a pairwise metric, one field. Like a curve it is called before the metric
-      on every row and handed over in ``ctx.cache[COMPANION_KEY]``; like a field map it is
+      arguments or, for a pairwise metric, one field. The metric's own point set is called before
+      the metric on every row and handed over in ``ctx.cache[COMPANION_KEY]``; every point set is
       stored only on the frames, ladder entries and fields ``report.error_map`` names, and on the
       clean level of those frames. There a one-field companion gives the set of the undamaged
       prediction, the reference's on a deterministic dataset and the member mean's on an ensemble
@@ -315,15 +389,31 @@ def companion(*, of: str, kind: CompanionKind = "field",
     Args:
         of: Name of the metric. Must already be registered, so the companion is defined *after*
             its metric in the same module.
+        name: A short identifier, unique within the metric, used in storage keys, figure titles
+            and card headings (:func:`companion_label`). Defaults to the metric's name, which
+            marks the companion the number is computed from.
         kind: ``"field"``, ``"curve"`` or ``"points"``.
         coordinate: ``(name, units)`` of a curve's coordinate, e.g. ``("separation", "cells")``;
             for a point set, one ``(name, units)`` per column, at least two, e.g.
             ``(("birth", "field"), ("death", "field"))``. Required for a curve and a point set,
             refused for a field map.
+        analysed: For a curve only, the coordinates the analysis reads, each exactly as the
+            curve returns it; the curve's coordinates must include every one that is not beyond
+            its largest (:meth:`Companion.unmatched_analysed`), which the pipeline checks on
+            every row. None, the default, reads every coordinate.
+        scales: For a curve or a point set, the ``(x, y)`` axis scales of its figure as its
+            field draws it, each ``"linear"``, ``"log"`` or ``"symlog"`` (for a quantity that
+            changes sign, such as an energy flux). None, the default, keeps the renderers'
+            default.
+        style: For a curve, ``"bars"`` to draw it as a histogram over fixed bins; ``"line"``,
+            the default, otherwise.
 
     Raises:
-        ValueError: If the metric is unknown or already has a companion, or the kind and the
-            coordinate disagree.
+        ValueError: If the metric is unknown or already has a companion of that name, the name
+            is not an identifier, the kind and the coordinate disagree, ``analysed`` is given
+            for something other than a curve, is empty or repeats a coordinate, ``scales`` is
+            given for a field map or is not two of :data:`SCALES`, or ``style`` is neither
+            ``"line"`` nor, for a curve, ``"bars"``.
         TypeError: If the positional-argument count fits neither form.
     """
 
@@ -334,8 +424,11 @@ def companion(*, of: str, kind: CompanionKind = "field",
                 "after the metric it belongs to"
             )
         spec = REGISTRY[of]
-        if spec.companion is not None:
-            raise ValueError(f"metric {of!r} already has a companion")
+        key = of if name is None else name
+        if not key.isidentifier():
+            raise ValueError(f"companion(of={of!r}): name {key!r} is not an identifier")
+        if any(c.name == key for c in spec.companions):
+            raise ValueError(f"metric {of!r} already has a companion named {key!r}")
         if kind not in ("field", "curve", "points"):
             raise ValueError(f"companion(of={of!r}): unknown kind {kind!r}")
         if (kind == "field") != (coordinate is None):
@@ -349,17 +442,38 @@ def companion(*, of: str, kind: CompanionKind = "field",
                 f"companion(of={of!r}): a point set names each of its columns as (name, units), "
                 f"at least two of them; got coordinate={coordinate!r}"
             )
+        if analysed is not None and (kind != "curve" or len(analysed) == 0
+                                     or len(set(analysed)) != len(analysed)):
+            raise ValueError(
+                f"companion(of={of!r}): analysed names the distinct coordinates of a curve the "
+                f"analysis reads, at least one; got kind={kind!r}, analysed={analysed!r}"
+            )
+        if scales is not None and (kind == "field" or len(scales) != 2
+                                   or not set(scales) <= set(SCALES)):
+            raise ValueError(
+                f"companion(of={of!r}): scales names the (x, y) axes of a curve or a point set, "
+                f"each one of {SCALES}; got kind={kind!r}, scales={scales!r}"
+            )
+        if style not in ("line", "bars") or (style == "bars" and kind != "curve"):
+            raise ValueError(
+                f"companion(of={of!r}): style is 'line', or 'bars' for a curve; got "
+                f"kind={kind!r}, style={style!r}"
+            )
         n_pos, expected = positional_count(fn), ARITY_POSITIONAL[spec.arity]
-        allowed = ({expected, 1} if kind != "field" and spec.arity == "pairwise"
+        # The metric's own field map takes the metric's arguments: it reduces to the number.
+        allowed = ({expected, 1} if spec.arity == "pairwise" and (kind != "field" or key != of)
                    else {expected})
         if n_pos not in allowed:
             raise TypeError(
                 f"companion(of={of!r}): takes {n_pos} positional argument(s); a {kind} "
                 f"companion of a {spec.arity} metric takes {sorted(allowed)}"
             )
-        REGISTRY[of] = dataclasses.replace(spec, companion=Companion(
-            fn=fn, kind=kind, coordinate=None if coordinate is None else tuple(coordinate),
-            one_field=n_pos < expected, takes_ctx="ctx" in inspect.signature(fn).parameters))
+        REGISTRY[of] = dataclasses.replace(spec, companions=(*spec.companions, Companion(
+            fn=fn, name=key, kind=kind,
+            coordinate=None if coordinate is None else tuple(coordinate),
+            one_field=n_pos < expected, takes_ctx="ctx" in inspect.signature(fn).parameters,
+            analysed=None if analysed is None else tuple(analysed),
+            scales=None if scales is None else tuple(scales), style=style)))
         return fn
 
     return _decorate
@@ -392,7 +506,7 @@ def _main() -> None:
             ",".join(s.fields),
             s.units,
             s.cost,
-            s.companion.kind if s.companion else "-",
+            ",".join(c.kind for c in s.companions) or "-",
             "yes" if s.differentiable else "-",
         )
         for s in sorted(REGISTRY.values(), key=lambda s: s.name)

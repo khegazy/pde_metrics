@@ -34,6 +34,7 @@ from fmeval.io import (
     RunFolder,
     dump_yaml,
     read_config,
+    read_maps,
     read_results,
     read_run_meta,
     read_yaml,
@@ -104,7 +105,7 @@ def build_context(
     recorded = ((config.get("report") or {}).get("thresholds")
                 or read_yaml(REPORT_DEFAULTS).get("thresholds", {}))
     thresholds = {**recorded, **(thresholds or {})}
-    maps = _read_maps(folder.maps_path)
+    maps = read_maps(folder)
     spectrum_path = folder.data / "calibration_spectrum.csv"
     spectrum = pd.read_csv(spectrum_path) if spectrum_path.exists() else pd.DataFrame()
 
@@ -233,8 +234,14 @@ def write_document(folder: RunFolder, ctx: ReportContext,
         preamble(f"Metric report: {metric}", f"dataset: {dataset}")
     )
 
+    # A folder gathered from a dataset family holds several datasets, and every section but the
+    # overview and section 12 would pool them (`check_preconditions`); each member's own folder
+    # reports those.
+    pooled = ctx.df["dataset"].nunique() > 1
     written: list[str] = []
     for section in SECTIONS:
+        if pooled and section.key not in ("overview", "complexity"):
+            continue
         items = [i for i in by_section.get(section.number, []) if i.status == "ok"]
         prose = _section_prose(section.key, ctx)
         if not items and not prose:
@@ -543,8 +550,3 @@ def _fmt(value: object, digits: int = 2) -> str:
     return f"{v:.{digits}f}" if np.isfinite(v) else "--"
 
 
-def _read_maps(path: Path) -> dict[str, np.ndarray]:
-    if not path.exists():
-        return {}
-    with np.load(path) as archive:
-        return {k: archive[k] for k in archive.files}

@@ -13,7 +13,15 @@ import numpy as np
 import pytest
 from scipy.ndimage import gaussian_filter
 
-from .metric import tail_exceedance, tail_exceedance_curve
+from tests.conftest import make_ctx
+
+from .metric import PERCENTILES, tail_exceedance, tail_exceedance_curve, tail_exceedance_percentile
+
+
+def score(reference: np.ndarray, candidate: np.ndarray, field: str = "vorticity") -> float:
+    """The metric with a fresh context for ``reference`` read as ``field``, as the pipeline
+    hands it: the context's cache holds one reference's thresholds."""
+    return tail_exceedance(reference, candidate, ctx=make_ctx(reference, field=field))
 
 #: The card's reference: a sawtooth down the rows, constant along each row (tail_index's example).
 SAWTOOTH = np.array([[[0.0, 0.0, 0.0, 0.0],
@@ -40,8 +48,8 @@ def test_worked_example_matches_the_card():
     in the other two, so 2 of its steps reach 3: 2/4 = 0.5. The tripled candidate has steps 9 and
     3, all sixteen at least 3: 16/4 = 4.
     """
-    assert tail_exceedance(SAWTOOTH, CUT) == 0.5
-    assert tail_exceedance(SAWTOOTH, 3.0 * SAWTOOTH) == 4.0
+    assert score(SAWTOOTH, CUT) == 0.5
+    assert score(SAWTOOTH, 3.0 * SAWTOOTH) == 4.0
 
 
 def test_ties_at_the_threshold_are_all_events():
@@ -55,14 +63,14 @@ def test_ties_at_the_threshold_are_all_events():
                              [1.0, 1.0, 1.0, 1.0],
                              [0.0, 0.0, 0.0, 0.0],
                              [1.0, 1.0, 1.0, 1.0]]])
-    assert tail_exceedance(alternating, SAWTOOTH) == 1.0
+    assert score(alternating, SAWTOOTH) == 1.0
 
 
 def test_a_constant_candidate_scores_zero_and_a_constant_reference_nan():
     """A constant candidate has no step at all, so no event: 0/4 = 0. A constant reference has a
     threshold of 0 on every axis, so no event is defined and the value is NaN."""
-    assert tail_exceedance(SAWTOOTH, np.full_like(SAWTOOTH, 2.0)) == 0.0
-    assert np.isnan(tail_exceedance(np.full_like(SAWTOOTH, 2.0), SAWTOOTH))
+    assert score(SAWTOOTH, np.full_like(SAWTOOTH, 2.0)) == 0.0
+    assert np.isnan(score(np.full_like(SAWTOOTH, 2.0), SAWTOOTH))
 
 
 def test_a_non_finite_field_is_refused():
@@ -72,9 +80,9 @@ def test_a_non_finite_field_is_refused():
         y = x.copy()
         y[0, 3, 3] = bad
         with pytest.raises(ValueError, match="finite"):
-            tail_exceedance(x, y)
+            score(x, y)
         with pytest.raises(ValueError, match="finite"):
-            tail_exceedance(y, x)
+            score(y, x)
 
 
 def test_an_independent_twin_scores_one_at_the_smallest_order():
@@ -97,7 +105,8 @@ def test_an_independent_twin_scores_one_at_the_smallest_order():
     values = []
     for seed in range(400):
         rng = np.random.default_rng(seed)
-        thetas, curve = tail_exceedance_curve(walk(rng), walk(rng))
+        reference = walk(rng)
+        thetas, curve = tail_exceedance_curve(reference, walk(rng), ctx=make_ctx(reference))
         values.append(curve[list(thetas).index(0.1)])
     assert abs(np.mean(values) - 1.0) < 0.2
 
@@ -114,7 +123,7 @@ def test_blur_can_raise_the_value_before_it_lowers_it():
     """
     x = 0.01 * np.random.default_rng(0).standard_normal((1, 16))
     x[0, 0] += 8.0
-    values = [tail_exceedance(x, x if s == 0 else gaussian_filter(x, (0, s), mode="wrap"))
+    values = [score(x, x if s == 0 else gaussian_filter(x, (0, s), mode="wrap"))
               for s in (0, 0.5, 1, 2, 4, 8)]
     assert values == [1.0, 1.0, 2.0, 3.0, 3.5, 0.0], values
 
@@ -124,6 +133,50 @@ def test_scaling_both_fields_and_moving_the_candidate_change_nothing():
     shift of the candidate moves its steps without changing their sizes."""
     rng = np.random.default_rng(5)
     reference, candidate = rng.standard_normal((2, 2, 16, 8))
-    value = tail_exceedance(reference, candidate)
-    assert tail_exceedance(7.0 * reference, 7.0 * candidate) == value
-    assert tail_exceedance(reference, np.roll(candidate, (3, 2), axis=(1, 2))) == value
+    value = score(reference, candidate)
+    assert score(7.0 * reference, 7.0 * candidate) == value
+    assert score(reference, np.roll(candidate, (3, 2), axis=(1, 2))) == value
+
+
+def test_the_percentile_curve_by_hand():
+    """A reference whose 100 one-cell steps have sizes 1, 1, 2, 2, ..., 50, 50, against itself
+    doubled and halved.
+
+    The 1-D field 0, 1, 0, 2, 0, 3, ..., 0, 50 steps up by j and back down by j for j = 1 to 50
+    (the last step wraps from 50 to 0). n = 100, so the p-th percentile is the k-th largest step
+    with k = ceil(100 - p): at p = 90, k = 10 and X_(10) = 46, with 10 reference steps at least 46;
+    at p = 95, k = 5 and X_(5) = 48, with 6 steps at least 48 (a tie at 48); at p = 99 and above,
+    k = 1 and X_(1) = 50, with 2 steps. Doubled, the steps are 2j, twice each: 2j >= 46 for j >= 23
+    gives 56 steps, 56 / 10 = 5.6; 2j >= 48 gives 54, 54 / 6 = 9; 2j >= 50 gives 52, 52 / 2 = 26.
+    Halved, no step reaches 46, so 0 everywhere.
+    """
+    reference = np.zeros((1, 100))
+    reference[0, 1::2] = np.arange(1, 51)
+    percentiles, doubled = tail_exceedance_percentile(reference, 2.0 * reference,
+                                                      ctx=make_ctx(reference))
+    assert np.array_equal(percentiles, PERCENTILES)
+    at = {p: v for p, v in zip(percentiles.tolist(), doubled.tolist(), strict=True)}
+    assert (at[90.0], at[95.0], at[99.0], at[99.5], at[99.99]) == (5.6, 9.0, 26.0, 26.0, 26.0)
+    _, halved = tail_exceedance_percentile(reference, 0.5 * reference, ctx=make_ctx(reference))
+    assert np.all(halved == 0.0)
+
+
+def test_the_percentile_grid_holds_the_analysed_levels_exactly():
+    """28 thresholds from 90 to 99.99, increasing, with 90, 95 and 99 exactly among them."""
+    assert len(PERCENTILES) == 28
+    assert np.all(np.diff(PERCENTILES) > 0)
+    assert PERCENTILES[0] == 90.0 and PERCENTILES[-1] == 99.99
+    assert {90.0, 95.0, 99.0} <= set(PERCENTILES.tolist())
+
+
+def test_velocity_reads_its_longitudinal_increments():
+    """On velocity the counts are of u along x and v along y only (``increment_samples``): a
+    reference whose components vary only across their own direction has no threshold to count
+    against, so NaN; the same channels read as scalars give a number."""
+    rng = np.random.default_rng(0)
+    u = np.broadcast_to(rng.standard_normal(16)[None, :], (16, 16))
+    v = np.broadcast_to(rng.standard_normal(16)[:, None], (16, 16))
+    transverse = np.stack([u, v])
+    candidate = transverse + 0.1 * rng.standard_normal(transverse.shape)
+    assert np.isnan(score(transverse, candidate, field="velocity"))
+    assert np.isfinite(score(transverse, candidate, field="density"))

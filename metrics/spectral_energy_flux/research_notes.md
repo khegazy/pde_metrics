@@ -45,6 +45,16 @@ the cited equations there. The equation environments were counted to confirm the
 | Falkovich & Kritsuk 2017, Physical Review Fluids 2(9), 092603(R), DOI 10.1103/PhysRevFluids.2.092603 | Abstract (from search results) | none | In steady forced 2D compressible turbulence at finite Mach number, a box-size pair of long-lived vortices linked by shocks forms. Energy goes to large scales through the vortices and returns to small-scale dissipation through acoustic waves, a flux loop. A candidate benchmark for a compressible energy-transfer metric once data at higher Mach number exist. | The EXP proposal (Open questions) |
 | Germano, Piomelli, Moin & Cabot 1991, Physics of Fluids A 3(7), 1760-1765, DOI 10.1063/1.857955; Meneveau & Katz 2000, Annual Review of Fluid Mechanics 32, 1-32, DOI 10.1146/annurev.fluid.32.1.1 | Not opened | none | The idea page's Germano-identity check (its Eq. 2) tests a learned subgrid closure's stresses at two filter widths. It does not apply to this metric, because no prediction in the repository carries a subgrid stress and the built metric compares the resolved flux of two fields. Both references stay on the narrowed idea page; neither is cited by the bundle. | Narrowed idea page |
 
+**Added for the field's standard (2026-11-04, task `metrics-spectral`).** A research sub-agent
+read in the arXiv TeX sources, with figures rendered and viewed: Alexakis & Biferale Eq. 13 (the
+transfer $T(k)$; Eq. 16 is the low-pass filter, Eq. 18 the flux) and Figs. 20 and 31, "lin-log"
+plots of $\Pi_E(k)/\epsilon_{in}$ with a zero line; Aluie 2013 has one figure, a sketch, and no
+flux curve; Aluie, Li & Li 2012, Fig. 3, the mean subgrid-scale flux against $K = 1/\ell$, log x,
+linear and unnormalised y. From the published PDF of Boffetta & Ecke 2012 (axes from extracted
+label text only): Fig. 11b–c, $\Pi_E/\epsilon_I$ and $\Pi_Z/\eta_I$, linear y against log k,
+and the inset of Fig. 5c. These are on the card under "How its field reports it". No source read
+reduces two flux curves to one number.
+
 ## Method choices
 
 - **Velocity alone, constant density**

@@ -1,7 +1,7 @@
 ---
 type: EXP
 kind: benchmark problem
-related: ["wasserstein", "docs/ideas/optimal_transport/sliced_wasserstein.md", "docs/ideas/optimal_transport/sinkhorn.md"]
+related: ["wasserstein", "h_minus_one", "docs/ideas/optimal_transport/sliced_wasserstein.md", "docs/ideas/optimal_transport/sinkhorn.md"]
 seen_in: "Saumier, Agueh & Khouider 2015, IMA J. Appl. Math. 80(1), 135-157; Delon, Salomon & Sobolevski 2010, SIAM J. Appl. Math. 70(7), 2239-2258"
 doi: "10.1093/imamat/hxt032"
 found_by: "wasserstein, 2026-10-31"
@@ -35,7 +35,11 @@ Monge-Ampere solve matched it to a relative 2.6e-5 to 4.9e-5.
 
 `wasserstein`; a future sliced Wasserstein distance (issue 048 asks for validation "against
 the exact Wasserstein distance on small cases"); a future Sinkhorn divergence (issue 067),
-whose entropic bias against the exact value this would measure.
+whose entropic bias against the exact value this would measure. Also `h_minus_one`, whose
+card compares it with the quadratic Wasserstein distance through Theorem 1 of Peyre (2018);
+pairs with an exact W2 let that comparison be checked on fields with a known answer rather
+than against the iterative `wasserstein` solve (added by update_metric_eval_principles,
+2026-11-03).
 
 ## Why it is helpful
 

@@ -354,3 +354,30 @@ interpolation and asymmetry measurements) were not rerun.
   ratio from the two fingerprints, the main scientific result; and read the card's Definition
   against Saumier et al. Sect. 3-4 to confirm the step and the Eq. 14 renormalisation are as
   described.
+
+## Evaluation by the field's standard (2026-11-04)
+
+Task `metrics-physics-norms` of `update_metric_eval_principles` added the card's "How its field
+reports it". A research sub-agent re-read the sources from their arXiv LaTeX, compiled with
+texlive 2024 for the numbering; Engquist & Froese (2014) compiled once the journal class was
+replaced by the article class, which leaves the numbering unchanged. What it found:
+
+- **Engquist & Froese 2014, Fig. 1** is the misfit against shift: $L_2^2$ and $W_2^2$ (of the
+  positive and negative parts) between a wavelet and its shifted copy, against the shift $s$.
+  The 2014 text says only that the figure shows "the advantage of using the Wasserstein distance
+  in minimisation processes"; "convex" is the 2016 follow-up's word (Engquist, Froese & Yang
+  2016, Fig. 1 and Theorem 1). Fig. 2(d) is an arrow plot of the displacement of a registration,
+  Fig. 3 the misfit over a layered model's parameters, Fig. 4 the shift test with noise.
+- **Saumier et al. 2015, Sect. 5.1, Fig. 1** validate on a manufactured solution and plot the
+  error against Newton iterations for grids of 16^2 to 256^2; the observed order is in the text.
+  No figure of theirs draws the transport map.
+- **Peyré 2018** has no figure, table or numerical experiment.
+- **Peyré & Cuturi 2019, Fig. 2.12** draws arrows of a closed-form map, as an illustration.
+
+From these, the card names `damage_beside_controls` as the standard figure and does not store
+the transport map as a second companion: in the sources read the map is an illustration, never
+the figure a distance is evaluated by, and on kinet density the displacements are far below a
+cell. That conclusion rests on six papers, not on a survey. The same task found that the
+harshest `multiplicative_noise` level makes density negative in some cells, so that level scores
+NaN here (`issues/139`), and recorded `not_run: synthetic_ensemble`: its "density" is a signed
+pattern, NaN on all 168 rows of the run `comparison_1793796364`.

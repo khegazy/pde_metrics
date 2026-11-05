@@ -102,6 +102,18 @@ to be said, with the reason, rather than left to be inferred from silence. An em
 statement and an absent one look identical to a reader; only one of them is a claim.
 """
 
+FIELD_STANDARD = "How its field reports it"
+"""H3 subsection a metric card's ``## Definition`` must contain: how the metric's own field
+computes and reports it.
+
+It names the field or fields the metric comes from and, for each, with citations: the object
+computed and its normalisation, the figure drawn and its axes, the statistics reported beside
+it, and the experiment the field evaluates it on, with a link to the proposal when this
+repository does not have that experiment (``AGENTS.md`` §1, "How every metric is evaluated").
+It sits in ``## Definition`` because it holds for any dataset; the field's standard figure from
+the recorded run is generated into ``## Performance``.
+"""
+
 GENERATED_ONLY_SECTIONS = frozenset({"Performance"})
 """Sections that are nothing but a generated include.
 
@@ -146,6 +158,27 @@ CROSS_CUTTING_SUBSECTIONS = frozenset({"Compared with the other metrics",
 Every other subsection of ``## Results`` reports named degradations and must link to the
 bundles that define them. These report what holds over all the degradations at once: how
 this metric correlates with the baseline controls, or its curve read coordinate by coordinate.
+"""
+
+PREAMBLE_BLOCKS = ("run", "experiments")
+"""The generated blocks ``## Results`` may hold before its first subsection, each at most once.
+
+``run`` says which run produced the numbers below it. ``experiments`` is the "Across the
+experiments" table: one row per evidence dataset, saying whether the card cites a run on it and,
+if not, why (``fmeval.cards.catalog.experiments``). Both describe everything beneath them rather
+than one test, so they sit above the subsections and carry no reading of their own.
+"""
+
+EXPERIMENT_BLOCK = "results_on_"
+"""Prefix of the generated block holding a further run's numbers: ``results_on_<dataset>``.
+
+A card cites one primary run, whose numbers fill ``## Performance`` and the subsections per
+test, and at most one further run per other evidence dataset. Each further run gets its own
+``###`` subsection, inserted by ``cards evidence`` and headed ``On `<dataset>```. Its block
+opens with the dataset's ``evidence_datasets`` label, so a reader never mistakes an analytic
+check or a calibrated null for turbulence, and links the degradations the run applied, so the
+subsection is checked like any other: links, one block, a reading below it. The contract adds
+one rule: the heading must name the dataset its block reports.
 """
 
 NO_MATH_SECTIONS = frozenset({"Intuition", DEGRADATION_RESULTS})
@@ -321,6 +354,19 @@ def write_block(card_md: Path, block: str, body: str, *, command: str) -> None:
     card_md.write_text(text.replace(current, f"{opener}\n\n{body.strip()}\n\n{closer}", 1))
 
 
+def insert_block(text: str, name: str, at: int, *, heading: str = "") -> str:
+    """``text`` with an empty generated block ``name`` inserted at character ``at``, a line start.
+
+    For the blocks whose presence depends on the run rather than the template: the table of
+    experiments and a subsection per further run. ``heading`` opens a subsection above the
+    block. Its marker names a placeholder command until :func:`write_block` fills the block.
+    """
+    opener = GENERATED_OPEN.format(name=name, command="python -m fmeval.cards")
+    chunk = (f"{heading}\n\n" if heading else "") + \
+        f"{opener}\n\n{GENERATED_CLOSE.format(name=name)}\n\n"
+    return text[:at] + chunk + text[at:]
+
+
 def strip_generated(text: str) -> str:
     """The card with its generated blocks removed, for hashing the prose alone.
 
@@ -390,17 +436,17 @@ def _check_result_section(section: str, body: str, name: str) -> list[Problem]:
     preamble, rest = parts[0], parts[1:]
     subsections = list(zip(rest[::2], rest[1::2]))
 
-    # One include is allowed before the first subsection: the run summary, which says
-    # which dataset, resolution and frames produced everything below it. Stated once
-    # here rather than repeated in every subsection of every card.
-    if len(_GENERATED_OPEN_RE.findall(preamble)) > 1:
+    # Before the first subsection only the run summary, which says which dataset, resolution
+    # and frames produced everything below it, and the table of experiments the card does and
+    # does not cite (PREAMBLE_BLOCKS). Stated once here rather than in every subsection.
+    opening = _GENERATED_OPEN_RE.findall(preamble)
+    if any(b not in PREAMBLE_BLOCKS for b in opening) or len(opening) != len(set(opening)):
         problems.append(
             Problem(
                 section,
-                f"'## {section}' has more than one generated block before its first "
-                "subsection. "
-                "Only the run summary belongs there; every other set of numbers belongs "
-                "under the heading naming the test that produced it.",
+                f"'## {section}' holds {', '.join(opening)} before its first subsection. "
+                f"Only {' and '.join(PREAMBLE_BLOCKS)} belong there, once each; every other set of "
+                "numbers belongs under the heading naming the test that produced it.",
                 f"move the rest under '### <test>' headings, then run  {regenerate}",
             )
         )
@@ -441,7 +487,18 @@ def _check_result_section(section: str, body: str, name: str) -> list[Problem]:
                 )
             )
             continue
-        whole = next(iter(block.values()))
+        (block_name, whole), = block.items()
+        dataset = block_name.removeprefix(EXPERIMENT_BLOCK)
+        if block_name.startswith(EXPERIMENT_BLOCK) and dataset not in heading:
+            problems.append(
+                Problem(
+                    section,
+                    f"'### {heading}' holds the numbers of a run on {dataset} but does not "
+                    "name it. A reader must know which experiment a set of numbers comes "
+                    "from before reading them.",
+                    f"head the subsection '### On `{dataset}`'",
+                )
+            )
         before, after = sub.split(whole, 1)
         # Links above the numbers are navigation, not explanation: they say which
         # degradations this subsection reports before the reader meets their results.
@@ -557,6 +614,18 @@ def check_prose(text: str, *, kind: str, name: str) -> list[Problem]:
                     "no neighbourhood is ever consulted",
                 )
             )
+
+    if kind == "metric" and f"### {FIELD_STANDARD}" not in sections.get("Definition", ""):
+        problems.append(
+            Problem(
+                "Definition",
+                f"no '### {FIELD_STANDARD}' subsection. A reader from the metric's own field "
+                "must find the metric evaluated the way that field evaluates it.",
+                f"add '### {FIELD_STANDARD}' to ## Definition: the field(s), and for each the "
+                "object, normalisation, figure, reported statistics and experiment, cited "
+                "(AGENTS.md section 1, 'How every metric is evaluated')",
+            )
+        )
 
     present = [s for s in sections if s in required]
     missing = [s for s in required if s not in sections]

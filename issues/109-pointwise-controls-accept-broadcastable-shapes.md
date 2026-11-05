@@ -6,9 +6,11 @@
 
 ## Context
 
-`mae`, `mse`, `rmse` and `nrmse` subtract the two fields without comparing their shapes, so a
+`mae`, `mse` and `rmse` subtract the two fields without comparing their shapes, so a
 one-channel field against a two-channel one, or `(X, 1)` against `(X, Y)`, returns a plausible
-number. `tests/test_metric_contract.py::test_rejects_mismatched_shapes` cannot catch it: its
+number. `vrmse`, `nrmse` and `rmse_channel_mean` take their error from `mse`'s `channel_mse`, and
+`max_error_channel_mean` from `max_error`'s `absolute_error`, both of which refuse any shape
+mismatch (2026-11-04). `tests/test_metric_contract.py::test_rejects_mismatched_shapes` cannot catch it: its
 mismatch, 16 x 8 against 16 x 10, does not broadcast. `max_error` (pull request 25) now refuses
 any shape mismatch, after its adversarial review (2026-10-30) found the same gap there.
 
@@ -19,6 +21,8 @@ Fields of ones `(1, 8, 8)` against zeros `(2, 8, 8)`:
 ```
 mae 1.0    mse 1.0    rmse 1.0    nrmse nan
 ```
+
+(`nrmse` there is the bundle since renamed `vrmse`, which now raises.)
 
 A field missing its channel axis is a second shape the contract does not test. Called with a
 32-cell field without its channel axis (finding 020 of the agent that built `shock_mask_overlap`,

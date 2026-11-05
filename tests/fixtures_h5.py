@@ -178,3 +178,47 @@ def write_well(path: Path, shape: tuple[int, int] = SHAPE,
             g.attrs["associated_dims"] = [dim]
             g.create_dataset("mask", data=np.zeros(shape[i], dtype=np.int8))
     return path
+
+
+def write_forecast(root: Path, run: str, start: int, shape: tuple[int, int] = SHAPE, *,
+                   steps: tuple[int, ...] = (2, 4, 6), step_time: float = 0.25,
+                   target_lag: float = 0.0) -> Path:
+    """Write ``root/run/forecast_t0-<start>.h5`` in the layout of the real forecast files.
+
+    One group per field, ``rho``, ``u``, ``vorticity`` and ``stability_scale``, each holding
+    ``pred_<step>`` and ``target_<step>`` as ``(C, X, Y)``, plus ``t`` and ``t_index`` holding the
+    physical time and the absolute solver step of each; no root attributes.
+
+    Reproduces: the target's clock lagging the prediction's by ``target_lag`` while ``t_index``
+    agrees, and a stored prediction vorticity on a different spacing from the target's, written
+    here as twice the target's so that scoring the stored field instead of a recomputed one shows.
+    The target's velocity at the first step is u=1, v=2, so a channel swap or a transpose fails.
+    """
+    path = root / run / f"forecast_t0-{start}.h5"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with h5py.File(path, "w") as f:
+        groups = {name: f.create_group(name)
+                  for name in ("rho", "u", "vorticity", "stability_scale", "t", "t_index")}
+        for i, step in enumerate(steps):
+            target = {"rho": 1.0 + 1e-3 * conftest.synthetic_field(shape, 1, seed=100 + start + i),
+                      "u": 0.04 * conftest.synthetic_field(shape, 2, seed=200 + start + i),
+                      "vorticity": 0.01 * conftest.synthetic_field(shape, 1, seed=300 + start + i)}
+            if i == 0:
+                target["u"] = np.stack([np.full(shape, 1.0), np.full(shape, 2.0)])
+            # The prediction drifts away from the target as the lead grows.
+            pred = {name: value + 1e-3 * (i + 1) * conftest.synthetic_field(
+                        shape, value.shape[0], seed=400 + start + i, noise=0.5)
+                    for name, value in target.items()}
+            pred["vorticity"] = 2.0 * target["vorticity"]
+            for name in ("rho", "u", "vorticity"):
+                groups[name].create_dataset(f"target_{step}", data=target[name])
+                groups[name].create_dataset(f"pred_{step}", data=pred[name])
+            for side in ("target", "pred"):
+                groups["stability_scale"].create_dataset(f"{side}_{step}",
+                                                         data=np.ones((1, *shape)))
+                groups["t_index"].create_dataset(f"{side}_{step}",
+                                                 data=np.array([start + step], dtype=np.int64))
+            clock = (start + step) * step_time
+            groups["t"].create_dataset(f"pred_{step}", data=np.array([clock]))
+            groups["t"].create_dataset(f"target_{step}", data=np.array([clock - target_lag]))
+    return path

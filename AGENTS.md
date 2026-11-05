@@ -78,6 +78,48 @@ in `judgements/`: the question, the choice, the evidence and sources, what it ch
 to reverse it. Routine choices are never recorded there; a log of every choice would not be
 read. `judgements/README.md` is the index.
 
+### How every metric is evaluated
+
+These are Kareem's decisions (2026-11-03) and the most important rules in this file. A user
+from a metric's own field must never open its page and find it useless because the repository
+did not evaluate it the way that field does.
+
+- **The field's standard comes first.** Evaluate each metric the way its own community
+  evaluates it: the same object, normalisation, summary, figure and experiment, each cited to
+  a primary source. Only after that, ask how its output compares with other metrics. The
+  harness adapts to the metric, never the metric to the harness: never move a threshold, a
+  summary or a normalisation so that the harness stops misbehaving; fix the harness.
+- **Several standards: build them all.** When fields compute or report a metric differently
+  (RMSE reduced per channel in machine-learning benchmarks and pooled as a vector norm in
+  numerical analysis; nRMSE in PDEBench and VRMSE in The Well), each standard is its own
+  bundle importing the shared function, so no existing number moves.
+- **Run every metric on every experiment where it makes sense.** A metric is run on every
+  experiment, degradation and benchmark the repository has, to show how it behaves across the
+  board, unless that experiment does not make sense for it. Whether it makes sense is the
+  building agent's call. A metric is skipped where it cannot be defined (a periodic-only metric
+  on Sod's walls, an ensemble metric on single-realisation data, a shock metric on a dataset
+  without pressure) or where the result would carry no information. Every skip is stated on
+  the card in one line with its reason. The experiments that exist today are the degradation
+  ladder on `kinet_re5e4` (`configs/degradation/default.yaml`), the miscalibration ladder on
+  `synthetic_ensemble`, `sod_shock_tube` as an analytic check, the real forecasts of
+  `forecast_re5e4`, scored against their targets at each prediction step
+  (`docs/datasets/reynolds_ladder_2d.md`, "Forecast pairs"), and the Reynolds ladder
+  (`dataset_family=reynolds_ladder_2d` with `-m`: `kinet_re5e4` and `kinet_re1e6` on one
+  128^2 grid, compared in report section 12; issue 011 holds its unreadable members).
+  Fixtures (`advecting_blobs`, `taylor_green_2d`) are not
+  evidence (`docs/decisions.md`). A card cites one run per experiment:
+  `python -m fmeval.cards evidence <name> --results <primary run> --results <run> ...` puts
+  the primary run, the field-standard experiment where it exists here, in `## Performance` and
+  the subsections per test, and each further run in a subsection headed with its dataset. The
+  generated *Across the experiments* table states every skip. Reasons that follow from the
+  decorator and the dataset are derived; a reason only a person can give goes in `card.yaml`
+  under `not_run` (`docs/recipes/add-a-metric.md`, step 6).
+- **Write down the experiments that are missing.** When the experiment a metric's field relies
+  on, its primary problem set, does not exist here, write one `proposals/EXP-<metric>-<slug>.md`
+  per experiment in the format of the existing proposals, add its row to
+  `proposals/README.md`, and name it on the card. Reuse an existing proposal with "see also"
+  rather than writing a second one. Kareem reads these to decide which experiments to add.
+
 ### One source of truth, least new code
 
 Every rule below exists because a second copy of something drifted from the first while every
@@ -222,31 +264,34 @@ order — the first two are yours, the rest an agent can complete from the contr
 
 1. **`metric.py`** — one `@metric`-decorated function returning one float per (field,
    frame, severity level): the number the literature reports. Anything with more structure
-   behind that number, a per-cell map or a curve, is its companion (§3.3). The decorator's
+   behind that number, a per-cell map or a curve, is a companion (§3.3). The decorator's
    fields are read by the harness and appear in the catalog; nothing in `card.yaml` repeats
    them.
 2. **`test_metric.py`** — at least one test whose expected value you worked out by hand, on
    a small field. It is also the source of the worked example in the card, so the prose
    cannot drift from the code.
 3. **`card.yaml`** — the typed record. Every field is documented in `fmeval/cards/schema.py`.
-4. **`card.md`** — the prose, six sections in a fixed order. See §3.1.
+4. **`card.md`** — the prose, seven sections in a fixed order. See §3.1.
 5. **`python -m fmeval.cards evidence <name> --results results/<run>`** — writes the
-   measured half from a recorded run. Never write those numbers yourself.
+   measured half from a recorded run, one `--results` per experiment, the primary run first.
+   Never write those numbers yourself.
 6. **`research_notes.md` and `code_notes.md`** — what you read, tried, measured and left
    open, under the fixed headings in `docs/working-with-the-repo.md`. Before you start,
    read these two files in every bundle related to yours.
 
 Reusing another bundle's function is expected rather than discouraged: `rmse` imports
-`mse`, `nrmse` imports `rmse`. The decorator returns the function unwrapped and the import
+`mse`, and `nrmse`, `vrmse` and `rmse_channel_mean` import `mse`'s per-channel
+`channel_mse`. The decorator returns the function unwrapped and the import
 system registers each bundle once, so the shared maths cannot drift apart.
 
 ### 3.1 What goes in `card.md`
 
-Six sections, fixed order, all required: `## Definition`, `## Performance`, `## Intuition`,
+Seven sections, fixed order, all required: `## Definition`, `## Performance`, `## Intuition`,
 `## Reading the output`, `## Limitations`, `## Results`, `## References`.
 
-- **`## Definition`** — numbered equations, the discretisation, and a required
-  `### Boundary handling` subsection. `None.` plus a clause is a fine answer for a
+- **`## Definition`** — numbered equations, the discretisation, a required
+  `### Boundary handling` subsection, and a required `### How its field reports it`
+  subsection (§1, "How every metric is evaluated"; the template says what goes in it). `None.` plus a clause is a fine answer for a
   pointwise metric. Write maths as `$ ... $` inline and `$$ ... $$` with `\tag{1}` for
   display, and nothing else: `\begin{equation}`, `\label` and `\eqref` typeset on the
   site and show as raw source on GitHub, so the checker refuses them.
@@ -260,9 +305,18 @@ Six sections, fixed order, all required: `## Definition`, `## Performance`, `## 
 - **`## Performance` and `## Results`** — generated. Leave the marked blocks alone; write
   only the explanation below each Results block, saying what that test found about this
   metric. Link each subsection to the degradations it reports rather than describing them.
-  Performance opens with two figures drawn by `cards evidence` from the same run as its
-  table (`fmeval/cards/metric_figures.py`); they are committed SVGs with their numbers in
-  a JSON beside them, and nothing in them is ever drawn or edited by hand.
+  Performance opens with the figure the metric's own field draws, then the harness's two,
+  all drawn by `cards evidence` from the same run as its table
+  (`fmeval/cards/metric_figures.py`); they are committed SVGs with their numbers in a JSON
+  beside them, and nothing in them is ever drawn or edited by hand. Which figure is the
+  field's follows from what the metric declares (`standard_figure`): its curve or point-set
+  companion; else, for a single-field quantity, its value against time; else, for a
+  pairwise metric, its error against lead time from a `forecast_re5e4` run the card cites
+  (the one figure drawn from a further run; its caption names the run) or its damage against
+  the applied shift beside the pointwise controls. Declare the companion's axes and style
+  (§3.3) so the figure is drawn as the field draws it. A forecast run's own subsection shows
+  the metric at every prediction step of every forecast, nothing pooled, beside its lead-time
+  figure (`judgements/015`).
 
 There are no word counts. Say what the section needs to say and stop.
 
@@ -349,11 +403,13 @@ judges is the honesty of an ensemble's dispersion rather than its distance from 
 an ensemble collapsed onto the exact reference is *maximally* overconfident, so the generic
 contract test that expects a perfect prediction to score zero does not apply to it.
 
-A single-field metric will be reported as `no dynamic range`, and **that is correct, not a bug you
-should try to fix**. The normalised damage scale is anchored between the reference and a
-*translated* copy of it, which has identical statistics — so a single-field quantity takes the same
-value at both anchors and the span is zero. If you find yourself "fixing" that, stop: you would
-be removing a true statement. On a smoothing axis such a quantity falls rather than rises, and it
+A single-field metric has a damage scale: the anchor is the field's own spatial mean
+(`judgements/001`), which removes every fluctuation, so a quantity such as enstrophy falls to zero
+there and its damage reads the fraction of its clean value it has lost. A metric undefined on a
+constant field, such as the increment flatness (zero over zero), is reported as `no dynamic
+range`, and **that is correct, not a bug you should try to fix** (`issues/037`). If you find
+yourself "fixing" it, stop: you would be removing a true statement. On a smoothing axis a
+single-field quantity falls rather than rises, and it
 reads `rho = 1` with `direction = -1`: the trend is measured on the departure from clean in one
 direction measured per degradation, so falling steadily and rising steadily both follow the
 degradation, and which way the value went is a separate column.
@@ -384,9 +440,18 @@ physical time, the reference fluctuation RMS, and a seeded generator. Omit it an
 nothing extra — which is why `mae(reference, candidate)` needs no boilerplate. Never hardcode
 an axis index: use `ctx.axis("x")`, because which axis is x depends on the dimension count.
 
-**Companions: the object behind the number.** One per metric, declared after the metric with
-`@companion(of=...)`. A second number from the literature is a sibling bundle that imports the
-function, the `rmse` pattern.
+**Companions: the objects behind the number.** Declared after the metric with
+`@companion(of=...)`. A metric may carry several when that is how its field computes or draws
+it (Kareem's decision, 2026-11-03): a longitudinal and a transverse curve, a cost density and a
+set of points. Each has a `name=`, a short identifier unique within the metric. The default
+name is the metric's own, and marks the companion the number is computed from: that one, if it
+is a curve or a point set, is the one handed to the metric (below). Every other companion is
+computed for storage and figures only, outside the row's timing. A companion is spelled
+`metric` when it carries the metric's name and `metric.name` otherwise
+(`metrics.registry.companion_label`), in `companions.csv`, in `error_maps.npz` keys, in figure
+titles and in the card's headings, so a bundle with one companion reads exactly as it did. A
+second *number* from the literature is still a sibling bundle that imports the function, the
+`rmse` pattern.
 
 - **`kind="field"`**, a per-cell map, if the metric is a reduction of a per-cell quantity (a
   density for a mean or a sum, the error itself for a maximum). It is what makes the
@@ -413,20 +478,57 @@ function, the `rmse` pattern.
   a curve stored there by the metric is read back for the next variant. The analysis reads each
   coordinate as a metric of its own (`metric[coordinate]`) in tables beside the panel.
 
+  A curve with many coordinates (every wavenumber shell, every separation) names the few the
+  analysis reads with `analysed=(...)`, each exactly as the curve returns it. Only those go to
+  `companions.csv`, the per-coordinate tables and the dominance fraction; the whole curve is
+  handed to the metric as before, and stored as an `(n, 2)` array of (coordinate, value) in
+  `error_maps.npz` on the frames `report.error_map` names, plus their clean level, where the
+  `companion_curves` figure draws it. The analysis costs 2.3 to 3.0 s per (coordinate, field),
+  measured on the four curve bundles of the pinned run (2026-11-03), and dominance asks every
+  coordinate to have moved, so over more coordinates it can only fall; the analysed
+  coordinates are the handful the field tabulates. Without `analysed` every coordinate
+  is analysed and nothing is stored densely. A curve whose coordinates the grid sets, such as
+  wavenumber shells, may lack the larger analysed ones on a coarse grid, and is analysed at
+  those it has; one missing inside its range stops the run (`Companion.unmatched_analysed`).
+
   ```python
   @companion(of="structure_function_2", kind="curve", coordinate=("separation", "cells"))
   def structure_function_2_curve(x, *, ctx):
       """(separations, S_2(l)) of one field: the curve the literature plots."""
+      ...
+
+  # A second curve of the same metric, and a dense one analysed at named coordinates.
+  @companion(of="structure_function_2", name="transverse", kind="curve",
+             coordinate=("separation", "cells"), analysed=(1, 2, 4, 8, 16, 32))
+  def structure_function_2_transverse(x, *, ctx):
+      """(every separation, S_2^T(l)): stored as structure_function_2.transverse."""
       ...
   ```
 
 - **`kind="points"`**, if the number compares two sets of points: a persistence diagram, the
   positions of detected shocks. It returns an `(N, D)` array, one row per point and one column
   per coordinate named in `coordinate=(("birth", "field"), ("death", "field"), ...)`, at least
-  two. Like a curve it is called before the metric on every row and handed over under
-  `COMPANION_KEY`; like a field map it is stored in `error_maps.npz` only on the frames
-  `report.error_map` names, plus their clean level, and drawn by the `companion_points` figure.
-  `metrics/persistence_distance` is the worked example.
+  two. Like a curve, the metric's own point set is called before the metric on every row and
+  handed over under `COMPANION_KEY`; like a field map every point set is stored in
+  `error_maps.npz` only on the frames `report.error_map` names, plus their clean level, and
+  drawn by the `companion_points` figure. `metrics/persistence_distance` is the worked example.
+  A one-field set is drawn over the reference's; `birth` and `death` coordinates get the
+  diagonal.
+
+**How the field draws it.** A curve or a point set declares the axes its field plots it on
+with `scales=(x, y)`, each `"linear"`, `"log"` or `"symlog"` (the last for a quantity that
+changes sign, such as an energy flux); undeclared, the figure keeps its default. A curve over
+fixed bins, such as a rank histogram's counts, declares `style="bars"`. Both are recorded in
+the catalog. For a one-dimensional shock set, declare the positions as a one-field point set
+of `(("x", "cells"), ("<field>", "<units>"))` and the field itself as a named one-field field
+companion (`@companion(of=..., name="profile")` taking one field): it is stored on the clean
+level too, and `companion_points` draws the points on each variant's line-out over the
+reference's. Only a *named* field map may take one field; the metric's own reduces to its
+number and takes the metric's arguments.
+
+The contract tests run on every companion of every metric; the map-reduces-to-metric identity
+and the same-number-from-the-cache check apply to the metric's own companion, the one its
+number is computed from.
 
 **Work shared across the ladder** goes in `ctx.cache`, which lives for one (frame, field,
 metric): compute a quantity of the reference once per frame with a membership test,

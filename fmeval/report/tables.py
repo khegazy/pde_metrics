@@ -298,17 +298,18 @@ def cost_table(ctx, df, opts) -> TableResult:
 
 
 @table(
-    section=7, order=20, scope="global", min_metrics=2,
+    section=7, order=20, scope="per_field", min_metrics=2,
     title="Cross-metric correlation",
     requires_columns=("value",),
 )
 def redundancy_table(ctx, df, opts) -> TableResult:
-    """Rank correlation between metrics across the ladder, for pruning the panel.
+    """Rank correlation between metrics across the ladder of one field, for pruning the panel.
 
     The statistic is :func:`fmeval.analysis.cross_metric_correlation`; the note lists the pairs at
     or above the configured redundancy threshold.
     """
-    rho = an.cross_metric_correlation(df)
+    field = str(df["field"].iloc[0])
+    rho = an.cross_metric_correlation(df, field=field)
     ctx.require(not rho.empty, "needs at least two metrics with common ladder severity levels")
     limit = float(ctx.thresholds.get("redundancy", np.nan))
     frame = rho.reset_index()
@@ -320,7 +321,8 @@ def redundancy_table(ctx, df, opts) -> TableResult:
     ]
     return TableResult(
         frame=frame,
-        caption="Spearman correlation between metrics across the ladder.",
+        keys={"field": field},
+        caption=f"Spearman correlation between the metrics run on {field}, across the ladder.",
         formats={"metric": "code"},
         note=(f"Pairs at or above {limit:g}: {', '.join(pairs)}." if pairs
               else f"No pair reaches {limit:g}." if np.isfinite(limit)

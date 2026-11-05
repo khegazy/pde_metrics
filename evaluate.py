@@ -1,7 +1,7 @@
 """Evaluate metrics against a degradation ladder and write a run folder per metric.
 
     python evaluate.py metrics=[mse] dataset=kinet_re5e4_dev
-    python evaluate.py 'metrics=[mae,mse,nrmse]' dataset=kinet_re5e4 \\
+    python evaluate.py 'metrics=[mae,mse,vrmse]' dataset=kinet_re5e4 \\
         dataset.time.reduction=100
     python evaluate.py metrics=[mse] degradation=quick
     python evaluate.py metrics=[mse] analysis_grid.resolution=128
@@ -29,10 +29,11 @@ from fmeval import CONFIGS
 from fmeval import io as fio
 from fmeval.config import Config, build_job
 from fmeval.data.base import READERS, Trajectory
+from fmeval.data.forecast import ForecastPairs
 from fmeval.data.locate import trajectory_provenance
 from fmeval.data.readers import open_trajectory
-from fmeval.derived import RecomputingTrajectory
-from fmeval.ladder import build_ladder, ladder_axes
+from fmeval.derived import RECIPES, RecomputingTrajectory
+from fmeval.ladder import FORECAST_LEVEL, build_ladder, ladder_axes
 from fmeval.pipeline import DatasetInfo, parse_map_key, run
 from metrics import registry as metric_registry
 
@@ -41,7 +42,13 @@ log = logging.getLogger(__name__)
 
 def select_fields(job: Config, trajectory: Trajectory,
                   specs: list[metric_registry.MetricSpec]) -> list[str]:
-    """Fields to read: the config list if given, else what the metrics actually accept."""
+    """Fields to read: the config list if given, else what the metrics actually accept.
+
+    When the dataset recomputes its derived fields, a derived field's inputs
+    (``fmeval.derived.RECIPES``) are read too, so the field is recomputed on the analysis grid
+    rather than the solver's stored operator being scored; a metric that does not accept an
+    input still produces no rows for it.
+    """
     requested = job.fields or job.dataset.fields
     available = list(trajectory.fields)
     missing = [f for f in requested or () if f not in available]
@@ -57,6 +64,9 @@ def select_fields(job: Config, trajectory: Trajectory,
             f"no field in {candidates} is accepted by any of "
             f"{[s.name for s in specs]}"
         )
+    if job.dataset.recompute_derived:
+        wanted += [i for i in dict.fromkeys(i for f in wanted for i in RECIPES.get(f, ()))
+                   if i in available and i not in wanted]
     return wanted
 
 
@@ -72,26 +82,42 @@ def dataset_info(job: Config) -> DatasetInfo:
 
 
 @hydra.main(version_base=None, config_path=str(CONFIGS), config_name="config")
-def main(cfg: DictConfig) -> None:
+def main(cfg: DictConfig) -> Path:
+    """Run one evaluation and return the folder holding every metric's rows.
+
+    That is the comparison folder when several metrics ran and the one metric's folder
+    otherwise; a dataset-family multirun gathers these (``fmeval.io.FamilyComparison``).
+    """
     logging.basicConfig(
         level=logging.INFO, format="%(levelname)s %(name)s: %(message)s",
         stream=sys.stdout, force=True,
     )
     started = time.perf_counter()
-    stamp = int(time.time())     # stamps every folder this invocation writes
     # Every value is read from `job`, the config built into its schema (fmeval/config.py), so a
     # missing, misspelt or refused key stops the run here, before any data is read. `cfg` is
     # kept only to record the composed config.
     job = build_job(cfg)
+    stamp = fio.claim_stamp(job.paths.results)  # stamps every folder this invocation writes
 
     specs = [metric_registry.get(name) for name in job.metrics]
     severity_levels = build_ladder(job.degradation)
-    axes = sorted(ladder_axes(severity_levels))
-    log.info("ladder: %d severity levels over %d axes", len(severity_levels), len(axes))
+    anchor = job.analysis.anchor
+    trajectory = open_trajectory(job.dataset, job.paths)
+    prediction = trajectory.predictions() if isinstance(trajectory, ForecastPairs) else None
+    if prediction is not None:
+        # The predictor's own errors replace the ladder. The anchor entry stays, so the damage
+        # D keeps its meaning: the forecast's error as a fraction of the anchor's.
+        dropped = [r.label for r in severity_levels if not (r.is_reference or r.label == anchor)]
+        severity_levels = [r for r in severity_levels if r.is_reference or r.label == anchor]
+        log.info("dataset %s pairs every frame with a prediction, which is scored in place of "
+                 "the ladder; %d ladder severity levels not run, the anchor %r kept",
+                 job.dataset.name, len(dropped), anchor)
+    recorded = severity_levels + ([FORECAST_LEVEL] if prediction is not None else [])
+    axes = sorted(ladder_axes(recorded))
+    log.info("ladder: %d severity levels over %d axes", len(recorded), len(axes))
     # The analysis reads both back from run_meta.json: which entry defines D = 1, and which
     # entries are probes rather than monotone axes (declared ordinal=False by their operator).
-    anchor = job.analysis.anchor
-    probes = sorted({r.label for r in severity_levels if not r.ordinal})
+    probes = sorted({r.label for r in recorded if not r.ordinal})
     if anchor not in {r.label for r in severity_levels}:
         log.warning("analysis.anchor=%r is not an entry of this ladder; the analysis will fall "
                     "back to the largest translation, or without one to the harshest level "
@@ -100,7 +126,6 @@ def main(cfg: DictConfig) -> None:
         log.warning("analysis.anchor=%r is an ordinal axis: D = 1 would be the median over all "
                     "its levels. Anchor on an entry whose operator is ordinal=False.", anchor)
 
-    trajectory = open_trajectory(job.dataset, job.paths)
     # Every reader option the run used, defaults included. The recorded config states only what
     # a file or an override changed, and a reader's defaults belong to its code, which can move.
     reader = inspect.signature(READERS[job.dataset.format]).bind_partial(**job.dataset.reader)
@@ -109,7 +134,7 @@ def main(cfg: DictConfig) -> None:
         fields = select_fields(job, trajectory, specs)
         selection = job.dataset.time
         trajectory_frames = len(trajectory)
-        n_frames = len(selection.resolve(trajectory_frames))
+        n_frames = len(selection.part(selection.resolve(trajectory_frames)))
         log.info(
             "dataset %s: %d of %d frames (reduction %d), fields %s",
             job.dataset.name, n_frames, trajectory_frames, selection.reduction, fields,
@@ -117,6 +142,8 @@ def main(cfg: DictConfig) -> None:
 
         if job.dataset.recompute_derived:
             trajectory = RecomputingTrajectory(trajectory)
+            if prediction is not None:
+                prediction = RecomputingTrajectory(prediction)
 
         result = run(
             trajectory,
@@ -129,12 +156,15 @@ def main(cfg: DictConfig) -> None:
             analysis_resolution=job.analysis_grid.resolution,
             remap_method=job.analysis_grid.method,
             maps=job.report.error_map,
+            prediction=prediction,
         )
         # Before the `finally`: the request counters live on the HTTP file object, which
         # close() releases.
         data_source = trajectory_provenance(trajectory)
     finally:
         trajectory.close()
+        if prediction is not None:
+            prediction.close()
 
     elapsed = time.perf_counter() - started
     log.info(
@@ -158,8 +188,9 @@ def main(cfg: DictConfig) -> None:
         fio.write_results(folder, rows)
         if not companions.empty:
             fio.write_results(folder, companions, name=fio.COMPANIONS)
-        fio.write_table(folder, calibration_table, "calibration")
-        fio.write_table(folder, spectrum_table, "calibration_spectrum")
+        if result.calibration.fields:       # none on a forecast, which runs no ladder
+            fio.write_table(folder, calibration_table, "calibration")
+            fio.write_table(folder, spectrum_table, "calibration_spectrum")
         digest = fio.write_config(folder, cfg, overrides)
         fio.write_maps(folder, maps)
         fio.copy_documentation(folder)
@@ -179,7 +210,7 @@ def main(cfg: DictConfig) -> None:
             fields=fields,
             analysis_grid=result.analysis_grid,
             ladder_axes=axes,
-            n_severity_levels=len(severity_levels),
+            n_severity_levels=len(recorded),
             anchor_label=anchor,
             probe_labels=probes,
             seed=job.seed,
@@ -201,10 +232,16 @@ def main(cfg: DictConfig) -> None:
             f"({', '.join(spec.name for spec in specs)}), so no run folder was written; "
             "the log above says why"
         )
+    def labels(name: str) -> set[str]:
+        """The metric's own label and every companion's (``name.<companion>``), so a metric's
+        folder keeps its named companions' rows and maps as the comparison folder does."""
+        spec = metric_registry.get(name)
+        return {name} | {metric_registry.companion_label(name, c.name) for c in spec.companions}
+
     written = [
         write_folder(name, result.rows[result.rows["metric"] == name],
-                     {k: v for k, v in result.maps.items() if parse_map_key(k)[0] == name},
-                     (result.companions[result.companions["metric"] == name]
+                     {k: v for k, v in result.maps.items() if parse_map_key(k)[0] in labels(name)},
+                     (result.companions[result.companions["metric"].isin(labels(name))]
                       if not result.companions.empty else result.companions),
                      metric=name, timings=timings)
         for name in ran
@@ -218,6 +255,7 @@ def main(cfg: DictConfig) -> None:
 
     for path in written:
         log.info("wrote %s", path)
+    return written[-1]
 
 
 def _overrides() -> list[str]:

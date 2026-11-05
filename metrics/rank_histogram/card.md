@@ -30,21 +30,26 @@ ensemble.
 
 **Ties are broken at random.** Where several members equal the reference exactly, Equation
 (1) is ambiguous, and resolving it by counting only members strictly below would place every
-tied draw in the lowest bin and manufacture a spike that reads as bias. The rank is instead
-drawn uniformly from the range the tie spans [@hamill2001], using the seeded generator the
-pipeline supplies, so a run remains reproducible. This matters for a collapsed ensemble and
-for any coarsely quantised field.
+tied draw in the lowest bin and manufacture a spike that reads as bias. Hamill notes that ties
+need a special rule and refers to earlier work for it (Section 2) [@hamill2001]; the rule here,
+this bundle's, draws the rank uniformly from the range the tie spans, which keeps an
+exchangeable but discretised forecast flat, because the reference is then equally likely to
+sit anywhere in the tied run. The draw uses the seeded generator the pipeline supplies, so a
+run remains reproducible. This matters for a collapsed ensemble and for any coarsely quantised
+field.
 
 The histogram is formed **per frame**, not pooled across frames. Pooling would average away
 a calibration failure that changes sign along the trajectory, and it is the same rule the
 rank correlations in this suite follow for the same reason.
 
-A chi-square goodness-of-fit statistic would be the other natural summary, and is used in
-this bundle's tests where the draws really are independent. It is not what is reported: its
-scale depends on the bin count and the sample size, so it cannot be compared across ensemble
-sizes or grids, and interpreting it as a test would need an independence assumption these
-spatially correlated fields do not satisfy. Equation (2) is descriptive, bounded, and reads
-the same way at any ensemble size.
+The histogram itself, the fractions $f_0 \dots f_M$ against the rank, is the metric's curve
+companion, stored on every row and handed to the metric, so the number is computed from exactly
+the histogram that is stored and drawn. The chi-square goodness-of-fit statistic, the other
+summary the field reports, is the sibling bundle
+[rank_histogram_chi2](../../metrics/rank_histogram_chi2/card.md), computed from the same histogram. It
+grows with the number of draws, and its reading as a test needs independent draws, which the
+cells of a spatially correlated field are not; Equation (2) is descriptive, bounded, and does
+not grow with the number of cells.
 
 ### Boundary handling
 
@@ -52,9 +57,54 @@ None in space: the rank at a cell uses only that cell's values across the ensemb
 "boundary" that does need a rule is at the ends of the rank ordering, and ties are handled
 as described above.
 
+### How its field reports it
+
+The field is ensemble forecast verification in meteorology, where the rank histogram is also
+called the Talagrand diagram.
+
+- **The object and the figure.** The histogram itself: bars of the relative frequency of each
+  rank against the rank, from 1 to $M + 1$ (Hamill, Figure 1, "P(rank)" against "Rank") or the
+  count of verifications in each bin (Anderson, Figure 8) [@hamill2001; @anderson1996]. Hamill's
+  and Anderson's figures carry no line at the flat value; Delle Monache and colleagues draw one
+  ("the perfect Talagrand diagram shape", Figure 4 of the preprint read) [@dellemonache2006].
+  Here the histogram is the metric's curve companion, as fractions against the rank $0 \dots M$
+  (the number of members below the reference), and is drawn from the stored curves on this
+  card.
+- **The summaries reported beside it.** The reliability index of Delle Monache and colleagues,
+  Equation (2) here, which is their Equation (1) without its factor of 100: they report it in
+  percent (Section 3.1 of the preprint read). They also give a form divided by
+  $\sqrt{M/M_{\min}}$, their Equation (2), because the index "tends to increase with increasing
+  ensemble size", with no derivation shown; the bundle registers the undivided index, whose
+  value has a fixed meaning for a given histogram [@dellemonache2006]. The chi-square statistic
+  and its test of uniformity (Anderson, Section 2c; Hamill, Section 4) [@anderson1996;
+  @hamill2001] are the sibling bundle [rank_histogram_chi2](../../metrics/rank_histogram_chi2/card.md),
+  which also records why Jolliffe and Primo's decomposition of it is not built.
+- **How the field reads it.** Hamill's warnings are part of the standard reading: "a uniform
+  rank histogram is a necessary but not sufficient criterion for determining that the ensemble
+  is reliable" (Section 3a), a U shape can come from conditional biases rather than too little
+  spread (Figure 4), correct variances with wrong covariances show only in histograms of
+  combinations of grid points such as differences (Section 3b, Figure 5), and observation error
+  makes a calibrated ensemble look U-shaped (Section 3c) [@hamill2001].
+- **The experiment.** Histograms over many forecasts at many grid points, by lead time
+  (Anderson), and synthetic ensembles of known miscalibration, including flat histograms from
+  unreliable ensembles (Hamill, Section 3, Figures 2 to 4). Here only the calibrated null of
+  `synthetic_ensemble` and its miscalibration ladder exist; real ensembles wait on
+  [issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md).
+  The missing experiments are
+  [EXP-spread_skill-heteroscedastic-synthetic-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-heteroscedastic-synthetic-ensemble.md)
+  (Hamill's flat-but-unreliable mixture),
+  [EXP-crps-gneiting-forecaster-suite](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-crps-gneiting-forecaster-suite.md)
+  (calibrated forecasters of different sharpness, whose histograms are all flat) and
+  [EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md)
+  (forecasts against lead time).
+
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence rank_histogram --results results/rank_histogram_1787800137`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence rank_histogram --results results/comparison_1793812401`, do not edit -->
+
+![the curve behind the number against its coordinate, as its field draws it, at every strength of each degradation, the clean curve in black](_generated/companion_curves__field-density.svg)
+
+*As this metric's own field draws it.* The curve behind rank_histogram on density: the median over frames at every strength of every degradation, the clean curve in black, the anchor dashed and the impostor dotted. Each bin's bars are the strengths, mildest first, then the clean level. Values are the literature's own, untransformed.
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -82,8 +132,8 @@ Median damage over frames against severity level for rank_histogram, one row per
 
 | test family | field | consistency, in the strength's units | snapshots per independent block |
 |---|---|---|---|
-| Ensemble dispersion | density | 0.00528 to 0.0197 | 1 |
-| Cell-value distortion | density | 0.00321 | 1 |
+| Ensemble dispersion | density | 0.00513 to 0.0188 | 1 |
+| Cell-value distortion | density | 0.00324 | 1 |
 
 One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
 
@@ -93,7 +143,7 @@ These tables report what was measured and grade none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| density | 0.634 | `spread_deflate` | `bias` | — | — | 1 |
+| density | 0.634 | `spread_deflate` | `bias` | — | — | 28 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
@@ -144,8 +194,8 @@ error metric: lower is better and the ordering statistics apply directly.
 What counts as small depends on the sample, and this is the number people get wrong. Even a
 perfectly calibrated ensemble produces a non-zero index, because a finite histogram is never
 exactly flat; the floor scales roughly as the square root of the bin count over the number
-of draws. On the synthetic ensemble here, with a few thousand cells and eight members, that
-floor is around 0.1. Compare a measured value against that floor rather than against zero,
+of draws. On the synthetic ensemble here, with 4096 cells and sixteen members, that floor
+is the clean value in Results. Compare a measured value against that floor rather than against zero,
 and the cheapest way to establish the floor is to read this metric at the clean severity
 level of the same run.
 
@@ -154,6 +204,12 @@ and comparable across fields of wildly different magnitude. Comparison across en
 is meaningful in the sense that the bound is nearly the same, but the sampling floor is not,
 so a small index on a four-member ensemble is weaker evidence than the same index on fifty.
 Comparison across resolutions changes the number of draws and therefore the floor.
+
+The curve companion is the histogram: one value per rank $0 \dots M$, the fraction of the
+frame's draws at which exactly that many members fell below the reference, summing to one. A
+flat histogram sits at $1/(M+1)$ in every bin; the analysis reads every rank as its own
+coordinate, so its tables say which ranks a degradation moved, the two ends for a U, the middle
+for a dome, one end for a bias.
 
 ## Limitations
 
@@ -176,11 +232,11 @@ suggest, and the value is noisier frame to frame than the raw count of cells imp
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence rank_histogram --results results/rank_histogram_1787800137`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence rank_histogram --results results/comparison_1793812401`, do not edit -->
 
-Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `c49b363765d7` (working tree dirty). Run `rank_histogram_1787800137`.
+Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793812401`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/rank_histogram_1787800137`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793812401`.
 
 <!-- END GENERATED run -->
 
@@ -199,12 +255,28 @@ tables for that reason, and so are the trap tests. When an ensemble of real runs
 ([issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md)), this card should be
 regenerated against it and this section will say something different.
 
+<!-- GENERATED experiments: written by `python -m fmeval.cards catalog`, do not edit -->
+
+**Across the experiments.**
+
+| experiment | what a run on it is evidence of | on this card |
+|---|---|---|
+| `kinet_re5e4` | developed flow | not applicable: needs an ensemble, and this dataset has one realisation per frame |
+| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not applicable: needs an ensemble, and this dataset has one realisation per frame |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | measured, run `comparison_1793812401`: the main results |
+| `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs an ensemble, and this dataset has one realisation per frame |
+| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not applicable: needs an ensemble, and this dataset has one realisation per frame |
+
+One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.
+
+<!-- END GENERATED experiments -->
+
 ### Ensemble dispersion
 
 [spread_inflate](../../degradations/spread_inflate/card.md) ·
 [spread_deflate](../../degradations/spread_deflate/card.md)
 
-<!-- GENERATED results_ensemble: written by `python -m fmeval.cards evidence rank_histogram --results results/rank_histogram_1787800137`, do not edit -->
+<!-- GENERATED results_ensemble: written by `python -m fmeval.cards evidence rank_histogram --results results/comparison_1793812401`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -213,20 +285,111 @@ regenerated against it and this section will say something different.
 
 <!-- END GENERATED results_ensemble -->
 
-The clean ensemble reads 0.049, which is the sampling floor rather than zero: 16 members
+The clean ensemble reads 0.0451, which is the sampling floor rather than zero: 16 members
 over a 64x64 grid give 17 bins and a finite histogram is never exactly flat. Every measured
-departure below should be read against 0.049, not against zero.
+departure below should be read against 0.0451, not against zero.
 
-Both directions rise well clear of it — to 1.239 at the harshest deflation and 1.009 at the
-harshest inflation, a factor of 20 or more — with a rank correlation of 1 on each. The
+Both directions rise well clear of it, with a rank correlation of 1 on each: at the harshest
+strengths the index has risen by 26.6 times its clean value under deflation and 21.4 times
+under inflation (the reactivity table); deflation is detected at the mildest strength and
+inflation at the second. The
 index cannot say which direction it saw, and that is the limitation stated above made
-concrete: 1.0 could be either fault, and only `spread_skill`'s side of one distinguishes
-them.
+concrete: a value near one could be either fault, and only `spread_skill`'s side of one
+distinguishes them.
 
-Deflation registers more strongly than inflation at comparable severity, which follows from
-the shapes: an over-narrow ensemble pushes the truth outside the members entirely, piling
-draws into the two end bins, while an over-wide one merely concentrates them toward the
-middle and leaves every bin occupied.
+The histogram itself, the curve companion drawn in the Performance section, is the field's
+own figure (Hamill, Figure 1) [@hamill2001], and on it the two faults take the shapes the
+Limitations section names. Under deflation both end bins grow, ranks 0 and 16 rising by 5.14 and 5.34 times
+their clean values at the harshest strength, and every interior bin shrinks: the U of an
+over-narrow ensemble, with up to 0.382 of a frame's draws in rank 0 alone. Under inflation
+the end bins empty, ranks 0 and 16 falling to none at the harshest strength, and the middle
+fills, rank 8 rising by 2.35 times its clean value: the dome of an over-wide ensemble. The
+`bias` axis gives the slope of a biased one, rank 0 rising by 11.3 times its clean value and
+rank 16 emptying. On the clean ensemble every rank holds between 0.0565 and 0.0609 of the
+draws, about the flat value of 1/17 (numbers from the companion statistics in the card's
+fingerprint).
+
+Deflation registers more strongly than inflation at the harshest strengths here, which follows
+from the shapes: an over-narrow ensemble pushes the truth outside the members entirely, piling
+draws into the two end bins, while an over-wide one merely concentrates them toward the middle
+and leaves the interior bins occupied (this card's reasoning). The same shapes say why the
+curve's ordering is less tidy under inflation: as the dome narrows, the bins at its flanks,
+ranks 5 and 11, first fill and then empty again, so their rank correlations with the strength
+are 0.4 and 0.1. For the same reason the curves of neighbouring inflation strengths do not
+nest: for at least one pair of neighbouring strengths, no frame has the harsher one at least
+as far from clean as the milder one at every rank (the companion's dominance, 0 for inflation
+against 0.417 for deflation in the fingerprint).
+
+On the damage scale the anchor, each member replaced by its own spatial mean, scores 1.75: a
+collapsed ensemble ranks the truth below or above every member at almost every cell, putting
+about half of the draws in each end bin. Against it the harshest deflation reaches a damage of
+0.718, the harshest inflation 0.577 and the harshest offset 0.870 (the largest in any frame).
+The `bias` axis is read under Cell-value distortion below.
+
+The profile row above ranks the degradations by damage per unit of field change, but the two
+dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
+round-off; its "charges most for", "charges least for" and selectivity are therefore not
+meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/blob/main/issues/111-damage-per-change-divides-by-round-off-on-ensemble-axes.md)).
+
+### Cell-value distortion
+
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence rank_histogram --results results/comparison_1793812401`, do not edit -->
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `bias` | density | 4 | 1 | 1 | 1 |
+
+<!-- END GENERATED results_pointwise -->
+
+Only the offset ran here: the synthetic ensemble's ladder
+(`configs/degradation/ensemble_miscalibration.yaml`) carries `bias` as its one axis that moves
+the ensemble mean, and no `gain`. The index is not invariant to an offset of the members
+alone, because Equation (1) counts members below the truth, and moving every member the same
+way moves the truth's rank toward one end. It rises in every frame and at every strength, with
+a rank correlation of 1 and no overlap between neighbouring strengths, from the clean 0.0451
+to a largest single value of 1.53; the change from clean at the harshest offset is 32.5 times
+the clean value, the largest of the three axes, and the damage 0.870. It is first detected at
+level 2, and its elasticity over the mildest offsets is 1.07. The shape behind it is the
+slope drawn in the dispersion section above: rank 0 rising by 11.3 times its clean value and
+rank 16 emptying.
+
+### Compared with the other metrics
+
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence rank_histogram --results results/comparison_1793812401`, do not edit -->
+
+| compared with | density |
+|---|---|
+| `rank_histogram_chi2` | 0.967 |
+| `crps` | 0.94 |
+| `energy_score` | 0.94 |
+| `spread_skill` | 0.918 |
+| `variogram_score` | 0.616 |
+| `max_error` | 0.579 |
+| `ensemble_mean_rmse` | 0.323 |
+| `h1_relative` | 0.323 |
+| `mae` | 0.323 |
+| `mse` | 0.323 |
+| `nrmse` | 0.323 |
+| `rmse` | 0.323 |
+| `vrmse` | 0.267 |
+| `crps_skill_score` | -0.94 |
+
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+
+<!-- END GENERATED results_summary -->
+
+The synthetic ensemble has one field, density, and the comparison runs over its three axes,
+`bias` and the two dispersion axes, and the anchor. `rank_histogram_chi2`, the test statistic
+on the same histogram, orders the degradations most like this index (0.967), then `crps` and
+`energy_score` (0.94 each) and `spread_skill` (0.918); `crps_skill_score` reads −0.94, the
+same agreement as `crps` with the sign of a higher-is-better score. `variogram_score` (0.616)
+and `max_error` (0.579) agree less, and the errors of the ensemble mean least: `mse`, `rmse`,
+`mae`, `nrmse`, `h1_relative` and `ensemble_mean_rmse` at 0.323 each and `vrmse` at 0.267. In
+the run's `results.csv` those errors give all eight dispersion strengths the same value, to
+round-off, because neither dispersion axis moves the member mean they receive, so they share
+only this index's ordering of the offsets and the anchor.
 
 ## References
 

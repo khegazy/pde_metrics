@@ -1,60 +1,66 @@
 ---
 type: MTR
-kind: variant of persistence_distance
-related: ["metrics/persistence_distance", "metrics/max_error", "metrics/mse"]
-seen_in: "Skraba & Turner 2020, arXiv:2006.16824, Definition 2.5 and Theorem 4.6"
-doi: "10.48550/arXiv.2006.16824"
-found_by: "persistence_distance, 2026-10-31"
+kind: variant of persistence_wasserstein
+related: ["metrics/persistence_wasserstein", "metrics/persistence_distance", "metrics/mse"]
+seen_in: "Cohen-Steiner, Edelsbrunner, Harer & Mileyko 2010, Found. Comput. Math. 10, 127-139, Sects. 3-4; giotto-tda 0.4.0, gtda.diagrams.PairwiseDistance"
+doi: "10.1007/s10208-010-9060-6"
+found_by: "persistence_distance, 2026-10-31; narrowed by metrics-topology-shocks, 2026-11-04"
 ---
 
-# MTR: p-Wasserstein distance between persistence diagrams
+# MTR: 2-Wasserstein distance between persistence diagrams
+
+The 1-Wasserstein distance with the L-infinity ground norm, GUDHI's default, is built as
+`persistence_wasserstein` (2026-11-04). What remains of this proposal is the exponent p = 2.
 
 ## What it measures
 
-The total cost of turning one field's persistence diagram into the other's, every feature
-counted, rather than the single worst mismatch the bottleneck distance reports. A prediction
-that gets every vortex's strength slightly wrong, or that adds many weak spurious features,
-scores worse than one that gets one feature wrong by the same largest amount; the bottleneck
-distance cannot tell them apart.
+The same matching of every feature of one field's persistence diagram to the other's as
+`persistence_wasserstein`, with each matched cost squared before summing, so a few large
+mismatches weigh more against many small ones than at p = 1 and less than in the bottleneck
+distance of `persistence_distance`.
 
 ## Definition
 
 Per homology dimension k, with matchings M between the diagrams (points free to match the
-diagonal) and the l_p ground norm (Skraba & Turner 2020, Definition 2.5):
+diagonal) and the L-infinity ground norm (Cohen-Steiner et al. 2010, Sect. 3, "Wasserstein
+distance", which sums the p-th powers over all dimensions):
 
-    W_p(D_k(f), D_k(g)) = inf_M ( sum_{(x,y) in M} ||x - y||_p^p )^(1/p)
+    W_2(D_k(f), D_k(g)) = inf_M ( sum_{(x,y) in M} ||x - y||_inf^2 )^(1/2)
 
-and the total over dimensions is ( sum_k W_p(D_k(f), D_k(g))^p )^(1/p), whose p -> inf limit is
-the bottleneck distance `persistence_distance` registers (their Eq. 1). Their Theorem 4.6
-(cellular Wasserstein stability) bounds W_p(Dgm(f), Dgm(g)) by ||f - g||_p, the p-norm over all
-cells of a finite CW complex; Theorem 5.1 carries it to images with a constant depending only on
-the dimension. `gudhi.wasserstein.wasserstein_distance` computes it (its `order` is p, its
-`internal_p` the ground norm), with `pot` already a core dependency.
+and the total over dimensions ( sum_k W_2(D_k(f), D_k(g))^2 )^(1/2) (Skraba & Turner 2020,
+arXiv:2006.16824v7, Definition 2.5). giotto-tda's `PairwiseDistance(metric="wasserstein")`
+defaults to this exponent and combines the dimensions by a 2-norm, the same total. In code it is
+`persistence_wasserstein` with `ORDER = 2.0`: the shared `diagram_distances` and its `wasserstein`
+already take the exponent from that constant.
 
 ## Relation to existing work
 
-A variant of `persistence_distance`, which is its p = inf case. Its stability bound is the
-cell-sum p-norm, so W_1 relates to `mae` and W_2 to `mse` scaled by the cell count, the way the
-bottleneck relates to `max_error`. Not in the catalog or `docs/ideas/`.
+The p = 2 member of the family whose p = 1 member is `persistence_wasserstein` and whose limit
+p -> inf is `persistence_distance`. Cohen-Steiner et al. (2010), Sect. 4, suggest W_2 for
+clustering gene-expression time series; Skraba & Turner's Theorem 4.6 bounds W_2 with the L2
+ground norm by the L2 norm of the difference over the cells of the complex, the analogue for
+`mse` of the bound that ties `persistence_distance` to `max_error`.
 
 ## How it could be tested
 
-On the same ladder as `persistence_distance`: `additive_noise` should separate it most from the
-bottleneck, since noise adds many short-lived points each costing a little. Measured by me on a
-synthetic 64 x 64 field (the building agent's script `try_gudhi.py`, kept in its private log archive): W_1 on H1 rose from 0.40 to 152 between
-noise amplitudes 0.001 and 0.5 (380 times) while the H1 bottleneck rose from 0.0039 to 0.96 (250
-times). Cost: about 0.6 s per H0/H1 pair at 64 x 64 with 1100 points against 0.07 s for the
-bottleneck, so at 256 x 256 it needs measuring before a full run.
+On the same ladder as `persistence_wasserstein`, beside it. Cost, measured on one 256 x 256
+vorticity frame of `kinet_re5e4` with Hera at a relative error of 1e-4 (the agent's scratch
+script, 2026-11-04, not kept): 5 to 13 s for H0 and 17 to 68 s for H1 on blurred and noisy candidates,
+four to five times the p = 1 cost, so a full run of the ladder at 256 needs a smaller grid or fewer frames.
 
 ## Why it is helpful
 
-Its gradient, where it exists, moves every matched point rather than the one pair the bottleneck
-depends on, which makes it the better candidate for a training loss (my reasoning, not a
-source's), and its stability theorem is in the cell-sum norms the repository's pointwise
-controls use.
+It is the other software default of the field (giotto-tda), so a reader from the
+machine-learning side of topological data analysis expects it; and it sits between the
+sum of `persistence_wasserstein` and the maximum of `persistence_distance` in how much a single
+large mismatch dominates.
 
 ## References
 
+- Cohen-Steiner, D., Edelsbrunner, H., Harer, J. & Mileyko, Y. (2010). Lipschitz functions have
+  Lp-stable persistence. *Found. Comput. Math.* 10(2), 127-139. Sects. 3-4 (authors' copy read).
+  <https://doi.org/10.1007/s10208-010-9060-6>
 - Skraba, P. & Turner, K. (2020). Wasserstein stability for persistence diagrams.
-  arXiv:2006.16824. Definition 2.5, Eq. 1, Theorems 4.6 and 5.1.
+  arXiv:2006.16824v7. Definition 2.5, Remark 2.6, Theorem 4.6.
   <https://doi.org/10.48550/arXiv.2006.16824>
+- giotto-tda 0.4.0, `gtda/diagrams/distance.py`, `PairwiseDistance` (documentation read).

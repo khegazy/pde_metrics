@@ -1,0 +1,27 @@
+# The Re = 1e6 run of the doubly periodic Reynolds ladder: 1024^2 cells, 40000 solver steps,
+# 11.4 TB. The same initial condition, Mach number and end time (2.2553) as kinet_re5e4; at a
+# fixed Mach number the solver step scales with the cell size, so it stores four frames per
+# frame of the 256^2 run. `frame_stride: 4` reads every fourth, so frame i here is the same
+# physical time as frame i of kinet_re5e4 and the evidence window (`dataset.time.start=2000`)
+# selects the same 161 times on both. See docs/datasets/reynolds_ladder_2d.md.
+#
+# Compare it with kinet_re5e4 only on a common analysis grid (`dataset_family=reynolds_ladder_2d`
+# pins 128): at native resolution every per-cell quantity is measured on a grid four times finer.
+defaults:
+  - _reynolds_ladder_2d
+  - _self_
+
+name: kinet_re1e6
+format: kinet_raw
+trajectory: D2Q9_shape-1024-1024_T-40000_H-85db0e
+path: ${paths.data}/kinet/doubly_periodic/weakly_compressible_isoT_fluids/sys_Re-1e6_Ma-1en1/${.trajectory}.h5
+
+reader:
+  frame_stride: 4
+
+complexity:
+  rank: 5         # after the Re = 6.25e4 to 1e5 runs (ranks 1 to 4), which do not read (issues/011)
+  params: {reynolds: 1.0e6, resolution: 1024}
+  label: "Re = 10^{6}"
+
+notes: "Re=1e6, Ma=0.1, D2Q9 entropic BGK, 1024^2 read every 4th stored frame, dimensionless units."

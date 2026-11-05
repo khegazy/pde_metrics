@@ -16,7 +16,8 @@ The rule this follows: a metric is built only if an existing experiment changes,
 
 - *Positivity and finite values.* No degradation is built to produce a negative density or pressure or a non-finite value. Noise amplitudes are fractions of the fluctuation rms; on `kinet_re5e4`, whose density stays within a few percent of its mean ([002](002-shocklet-dataset.md) measures 0.9612 to 1.0065 at t = 5000), none goes negative. On `sod_shock_tube` large noise could, but only incidentally.
 - *Divergence error.* A constraint of incompressible flow; `kinet_re5e4` is weakly compressible, so a nonzero divergence is not a violation.
-- *Conservation drift.* Needs a rollout ([010](010-forecast-pair-reader.md)).
+- *Conservation drift.* Needs a rollout changed in a known way. The real forecasts of
+  `forecast_re5e4` are read now, but nothing in them is changed under control.
 - *Realizability.* The page notes that a covariance computed from the prediction's own fluctuations satisfies it automatically.
 - *Species bounds.* No reacting data.
 

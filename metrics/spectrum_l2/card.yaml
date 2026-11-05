@@ -36,5 +36,8 @@ math:
   scale_dependent: false
   resolution_dependent: true   # the number of shells is set by the analysis grid
   complexity: "O(N log N)"     # one FFT per channel, then a bincount
-references: [pope2000, boffetta2012]
+references: [pope2000, boffetta2012, alexakis2018, kochkov2021, stachenfeld2022, lienen2024, rasp2024, ohana2024]
+not_run:
+  synthetic_ensemble: every axis there leaves the member mean's spectrum unchanged (dispersion scales members about their mean; a uniform bias leaves every fluctuation unchanged)
+
 review: null

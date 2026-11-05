@@ -59,9 +59,56 @@ None. Equation (2) uses only norms of whole-field differences; no stencil, trans
 neighbourhood is involved, so the domain edge is never consulted and periodicity is
 irrelevant.
 
+### How its field reports it
+
+The field is the verification of multivariate probabilistic forecasts, in meteorology and
+energy forecasting.
+
+- **The object and its normalisation.** The mean energy score over many cases, each a small
+  vector: Gneiting and colleagues introduce the ensemble form for surface wind vectors, so
+  $d = 2$ at each of 565 stations, scored per station and averaged (their Section 4.2,
+  Equations (6) and (7), and Section 5, in the technical-report version read)
+  [@gneitingstanberry2008]. They write that "when the dimension of the forecast vector is large,
+  attention typically focuses on low-dimensional functionals" (Section 1), and that if the
+  components "are incommensurable, or incomparable in magnitude, a standardization may be
+  advisable or necessary" (Section 4.2) [@gneitingstanberry2008]. Scheuerer and Hamill score
+  vectors of $d = 5$ and 15 in simulation and $d = 5$ wind-farm sites in their application,
+  each lead time separately (Sections 3 and 4) [@scheuererhamill2015]; Pinson and Tastu study
+  $d = 2$ and bound the score's sensitivity up to $d = 300$ (Sections 2.4 and 3)
+  [@pinsontastu2013]. **This bundle departs from that practice in dimension:** it scores the
+  raw field flattened into one vector of every channel of every cell, $d = 4096$ values on the
+  64 by 64 synthetic ensemble, with no standardisation. Standardisation is not needed for one
+  variable in one unit (this card's reasoning: the components are commensurable), but no source
+  read evaluates the energy score on a field of thousands of components; Pacchiardi and
+  colleagues train with it on a 32 by 64 grid, summed over patches (their Section 3.2.2)
+  [@pacchiardi2024], which is the variant written up in
+  [MTR-energy_score-patched-energy-score](https://github.com/khegazy/pde_metrics/blob/main/proposals/MTR-energy_score-patched-energy-score.md).
+- **The statistics reported beside it.** Mean scores, or skill relative to a reference
+  forecast, in tables per lead time (Scheuerer and Hamill, Table 1) [@scheuererhamill2015]; and
+  the multivariate calibration checks, the multivariate and minimum-spanning-tree rank
+  histograms (Gneiting and colleagues, Sections 2.1 and 2.2) [@gneitingstanberry2008], which are
+  not built here. Scheuerer and Hamill "strongly recommend that several different scores be
+  always considered" (Section 5) [@scheuererhamill2015], here the [variogram_score](../../metrics/variogram_score/card.md)
+  and the per-cell [crps](../../metrics/crps/card.md).
+- **The experiment, and what this repository cannot show.** The field tests the score on
+  simulated Gaussian vectors whose mean, variance and correlation are mis-specified one at a
+  time (Pinson and Tastu, Section 2.4, Figures 2 and 3; Scheuerer and Hamill, Sections 3a to
+  3c, Figures 1 to 3) [@pinsontastu2013; @scheuererhamill2015]. The correlation case is the one
+  that matters for a whole-field score, and its finding is that the energy score "can hardly
+  discriminate multivariate forecasts that differ only with respect to their correlations"
+  (Scheuerer and Hamill, Section 3b, Figure 2) [@scheuererhamill2015]. The synthetic ensemble
+  here draws independent noise at every cell for the reference and every member, so its
+  ensembles never differ in correlation: on it this score moves with the spread factor as the
+  mean CRPS does, and nothing in its evidence can show what the energy score adds over `crps`.
+  That experiment is
+  [EXP-energy_score-correlated-synthetic-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-energy_score-correlated-synthetic-ensemble.md);
+  real ensembles wait on [issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md).
+
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence energy_score --results results/energy_score_1793356825`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence energy_score --results results/comparison_1793812401`, do not edit -->
+
+No field-standard figure: an ensemble score with no curve or point set behind it; its field draws it against lead time, which the synthetic ensemble, one spread at every frame, cannot show.
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -82,15 +129,15 @@ Median damage over frames against severity level for energy_score, one row per f
 
 | test family | field | change from clean at the harshest strength | elasticity | first strength detected |
 |---|---|---|---|---|
-| Ensemble dispersion | density | 0.284 to 0.655 | 1.78 | level 3 |
+| Ensemble dispersion | density | 0.284 to 0.655 | 1.78 | level 4 |
 | Cell-value distortion | density | 2.08 | 1.87 | level 3 |
 
 **Consistency: how much does it vary from snapshot to snapshot?**
 
 | test family | field | consistency, in the strength's units | snapshots per independent block |
 |---|---|---|---|
-| Ensemble dispersion | density | 0.00139 to 0.0142 | 1 |
-| Cell-value distortion | density | 0.00119 | 1 |
+| Ensemble dispersion | density | 0.0015 to 0.0128 | 1 |
+| Cell-value distortion | density | 0.00125 | 1 |
 
 One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
 
@@ -100,7 +147,7 @@ These tables report what was measured and grade none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| density | 0.575 | `spread_deflate` | `bias` | — | — | 1 |
+| density | 0.575 | `spread_deflate` | `bias` | — | — | 384 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
@@ -188,20 +235,36 @@ half changed.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence energy_score --results results/energy_score_1793356825`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence energy_score --results results/comparison_1793812401`, do not edit -->
 
-Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `394c34c7d4f7`. Run `energy_score_1793356825`.
+Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793812401`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/energy_score_1793356825`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793812401`.
 
 <!-- END GENERATED run -->
+
+<!-- GENERATED experiments: written by `python -m fmeval.cards catalog`, do not edit -->
+
+**Across the experiments.**
+
+| experiment | what a run on it is evidence of | on this card |
+|---|---|---|
+| `kinet_re5e4` | developed flow | not applicable: needs an ensemble, and this dataset has one realisation per frame |
+| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not applicable: needs an ensemble, and this dataset has one realisation per frame |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | measured, run `comparison_1793812401`: the main results |
+| `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs an ensemble, and this dataset has one realisation per frame |
+| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not applicable: needs an ensemble, and this dataset has one realisation per frame |
+
+One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.
+
+<!-- END GENERATED experiments -->
 
 ### Ensemble dispersion
 
 [spread_inflate](../../degradations/spread_inflate/card.md) ·
 [spread_deflate](../../degradations/spread_deflate/card.md)
 
-<!-- GENERATED results_ensemble: written by `python -m fmeval.cards evidence energy_score --results results/energy_score_1793356825`, do not edit -->
+<!-- GENERATED results_ensemble: written by `python -m fmeval.cards evidence energy_score --results results/comparison_1793812401`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -222,6 +285,12 @@ fair kernel score a little above the calibrated width at sixteen members (a deri
 this card's, recorded with the bundle's PR; the `crps` card's ladder has the same
 construction).
 
+On the damage scale both dispersion axes are small. Damage 1 is the anchor, each member
+replaced by its own spatial mean, which scores 40.1 against the clean 6.85. Against it the
+harshest inflation reaches a damage of 0.138 and the harshest deflation 0.0590 (the largest in
+any frame), so the score first moves a tenth of the way to the anchor at the harshest
+inflation (level 4) and never does on the deflation axis.
+
 The profile row above ranks the degradations by damage per unit of field change, but the two
 dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
 round-off; its "charges most for", "charges least for" and selectivity are therefore not
@@ -237,7 +306,7 @@ because the synthetic ensemble has no spatial correlation for it to see.
 
 [bias](../../degradations/bias/card.md)
 
-<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence energy_score --results results/energy_score_1793356825`, do not edit -->
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence energy_score --results results/comparison_1793812401`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -245,11 +314,55 @@ because the synthetic ensemble has no spatial correlation for it to see.
 
 <!-- END GENERATED results_pointwise -->
 
-A uniform offset raises the score in every frame, by 2.08 times the clean value at the
-harshest offset, with an elasticity of 1.87 over the mildest offsets: close to quadratic,
-because the offset adds to every member's distance from the reference in quadrature with the
-members' own scatter, and the root of a sum of squares grows with the square of the smaller
-term while that term is small.
+Only the offset ran here: the synthetic ensemble's ladder
+(`configs/degradation/ensemble_miscalibration.yaml`) carries `bias` as its one axis that moves
+the ensemble mean, and no `gain`. A uniform offset raises the score in every frame, by 2.08
+times the clean value at the harshest offset, reaching a damage of 0.431, first detected at
+level 3, with an elasticity of 1.87 over the mildest offsets. The energy score is in the units
+of the field and charges every member's distance from the truth, so it is not invariant to an
+offset. The response is close to quadratic because the offset adds to every member's distance
+from the reference in quadrature with the members' own scatter, and the root of a sum of
+squares grows with the square of the smaller term while that term is small (this card's
+reasoning).
+
+### Compared with the other metrics
+
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence energy_score --results results/comparison_1793812401`, do not edit -->
+
+| compared with | density |
+|---|---|
+| `crps` | 1 |
+| `rank_histogram` | 0.94 |
+| `rank_histogram_chi2` | 0.929 |
+| `spread_skill` | 0.753 |
+| `max_error` | 0.653 |
+| `ensemble_mean_rmse` | 0.542 |
+| `h1_relative` | 0.542 |
+| `mae` | 0.542 |
+| `mse` | 0.542 |
+| `nrmse` | 0.542 |
+| `rmse` | 0.542 |
+| `variogram_score` | 0.482 |
+| `vrmse` | 0.46 |
+| `crps_skill_score` | -1 |
+
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
+
+<!-- END GENERATED results_summary -->
+
+The synthetic ensemble has one field, density, and the comparison runs over its three axes,
+`bias` and the two dispersion axes, and the anchor. `crps` orders the degradations exactly as
+the energy score does (1), and `crps_skill_score` exactly in reverse (−1), which is the same
+order, because the skill score is higher where the CRPS is lower; the dispersion paragraph
+above says why the energy score and the CRPS coincide on this dataset. The rank-histogram
+summaries follow closely, `rank_histogram` at 0.94 and `rank_histogram_chi2` at 0.929, then
+`spread_skill` at 0.753. The metrics that order them least like the energy score are `vrmse`
+(0.46), `variogram_score` (0.482) and the errors of the ensemble mean, `mse`, `rmse`, `mae`,
+`nrmse`, `h1_relative` and `ensemble_mean_rmse` (0.542 each), with `max_error` at 0.653. In the
+run's `results.csv` the mean-based errors give all eight dispersion strengths the same value,
+to round-off, because neither dispersion axis moves the member mean they receive, and
+`variogram_score` does not move under the offset (its card); each therefore shares only part of
+the energy score's ordering.
 
 ## References
 

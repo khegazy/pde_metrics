@@ -161,9 +161,9 @@ The sources specific to `variogram_score` (Allen, Ginsbourger & Ziegel 2023 and 
   Definition 1) states that the only fair scores for one-member ensembles are trivial. Measured
   for energy_score, whose one-cell case is crps, on $N(0, I)$ in four dimensions: the mean is
   $2.6634 \pm 0.0068$ at $M = 1$, against 1.3338 at $M = 2$ and 1.3272 at $M = 8$. The crps card
-  was not edited, being another bundle. The orchestrator wrote this up as
-  [issues/112](../../issues/112-crps-card-overclaims-comparison-at-one-member.md) and reproduced
-  it.
+  was not edited, being another bundle. The orchestrator reproduced it (crps at 16 x 16 cells:
+  1.1376 at one member against 0.5722 at two), and the crps card now states that ensemble sizes
+  compare from two members and what one member scores.
 
 ## Review round
 
@@ -185,7 +185,7 @@ energy_score.
   $2\Gamma(5/2) = 2.6587$ within error. **Fixed** in commit b88d490 on #27: the card and docstring
   say "from two members", state the factor of two and the loss of propriety, and cite Ferro. The
   test was renamed and a one-member test added. No number changed. The same overclaim on the crps
-  card became issue 112 (Corrections, above).
+  card was corrected on that card later (Corrections, above).
 - **The CRPS comparison** (documentation). The card said that when the energy score
   moves and the mean CRPS does not, the change is in how the members vary together. That is
   false: the two weigh the same per-cell errors differently, a Euclidean norm across cells
@@ -232,7 +232,7 @@ and 16 skipped, and the card checker gave 0 errors for both bundles.
   (App. C.1.4, E.4.2). The proposal is
   [MTR-energy_score-patched-energy-score](../../proposals/MTR-energy_score-patched-energy-score.md).
 - **The profile row on ensemble axes**: [issues/111](../../issues/111-damage-per-change-divides-by-round-off-on-ensemble-axes.md).
-- **The crps card at one member**: [issues/112](../../issues/112-crps-card-overclaims-comparison-at-one-member.md).
+- **The crps card at one member**: corrected on the crps card (Reading the output).
 - **The multivariate rank histogram** (Gneiting et al. 2008, not opened) is a whole-field
   calibration check the narrowed idea page could take up. It was not routed beyond the
   archive, because the routing rule puts only sources read in full text onto a page.

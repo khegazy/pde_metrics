@@ -88,3 +88,93 @@
              positions. Read only through a web search summary of its abstract (the
              UCAR repository record), not opened}
 }
+
+@article{gilleland2009,
+  author  = {Gilleland, Eric and Ahijevych, David and Brown, Barbara G. and Casati, Barbara and
+             Ebert, Elizabeth E.},
+  title   = {Intercomparison of Spatial Forecast Verification Methods},
+  journal = {Weather and Forecasting},
+  volume  = {24},
+  number  = {5},
+  pages   = {1416--1430},
+  year    = {2009},
+  doi     = {10.1175/2009WAF2222269.1},
+  note    = {Abstract only, read through the Crossref record; the AMS pages refused the fetch.
+             The newer spatial methods grouped as filtering (neighbourhood and scale separation)
+             and displacement (features-based and field deformation)}
+}
+
+@article{ahijevych2009,
+  author  = {Ahijevych, David and Gilleland, Eric and Brown, Barbara G. and Ebert, Elizabeth E.},
+  title   = {Application of Spatial Verification Methods to Idealized and {NWP}-Gridded
+             Precipitation Forecasts},
+  journal = {Weather and Forecasting},
+  volume  = {24},
+  number  = {6},
+  pages   = {1485--1497},
+  year    = {2009},
+  doi     = {10.1175/2009WAF2222298.1},
+  note    = {Abstract only, read through the Crossref record: the four categories
+             (neighbourhood, scale separation, features-based, field deformation) applied to
+             "artificial geometric and perturbed forecasts with prescribed errors" and to real
+             4-km forecasts. The case definitions (its Tables 1 and 4) are cited from
+             proposals/EXP-shock_mask_overlap-geometric-and-perturbed-cases.md, whose author read
+             the full text}
+}
+
+@article{gilleland2011,
+  author  = {Gilleland, Eric},
+  title   = {Spatial Forecast Verification: Baddeley's Delta Metric Applied to the {ICP} Test
+             Cases},
+  journal = {Weather and Forecasting},
+  volume  = {26},
+  number  = {3},
+  pages   = {409--415},
+  year    = {2011},
+  doi     = {10.1175/WAF-D-10-05061.1},
+  note    = {Abstract only, read through the Crossref record ("A mathematical displacement
+             metric, Baddeley's Delta, is examined for verifying gridded forecasts against
+             gridded observations"); the full text was refused by the AMS and the UCAR
+             repositories}
+}
+
+@article{roberts2008,
+  author  = {Roberts, Nigel M. and Lean, Humphrey W.},
+  title   = {Scale-Selective Verification of Rainfall Accumulations from High-Resolution
+             Forecasts of Convective Events},
+  journal = {Monthly Weather Review},
+  volume  = {136},
+  number  = {1},
+  pages   = {78--97},
+  year    = {2008},
+  doi     = {10.1175/2007MWR2123.1},
+  note    = {Abstract only, read through the Crossref record: verification by "fractional
+             coverage over different sized areas", skill as a function of spatial scale. The
+             fractions skill score's form is cited from
+             proposals/MTR-shock_mask_overlap-fractions-skill-score.md}
+}
+
+@misc{metricsreloadedcode,
+  author       = {{Metrics Reloaded consortium}},
+  title        = {{MetricsReloaded}: metrics/pairwise\_measures.py},
+  howpublished = {GitHub repository Project-MONAI/MetricsReloaded, branch main},
+  url          = {https://github.com/Project-MONAI/MetricsReloaded/blob/main/MetricsReloaded/metrics/pairwise_measures.py},
+  note         = {Read (raw source, 2026-11-04): measured_distance returns NaN for every distance
+                  when the prediction or the reference is empty, warning "need to set to worse case
+                  in aggregation"; measured_hausdorff_distance_perc is the maximum of the two
+                  directed np.percentile values, default 95; measured_masd is 0.5 * (mean of one
+                  directed set of border distances + mean of the other); dsc returns NaN when both
+                  are empty, warning that it "can be set to 1 when aggregating". Borders come from
+                  MorphologyOps.border_map, not read}
+}
+
+@misc{medpy,
+  author       = {Maier, Oskar},
+  title        = {{MedPy}: medpy/metric/binary.py},
+  howpublished = {GitHub repository loli/medpy, branch master},
+  url          = {https://github.com/loli/medpy/blob/master/medpy/metric/binary.py},
+  note         = {Read (raw source, 2026-11-04): hd is the maximum of the two directed maxima;
+                  hd95 is numpy.percentile of the two directions' distances pooled, at 95; assd
+                  pools both directions; surface distances are taken between borders extracted by
+                  one binary erosion; an empty mask raises RuntimeError}
+}

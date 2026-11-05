@@ -37,6 +37,9 @@ from .calibration import Calibration
 from .context import FieldContext, derive_rng, fluctuation_energy, fluctuation_rms
 from .data.base import Frame
 
+#: The ``variant_label`` of the clean level, in result rows and ``error_maps.npz`` keys.
+REFERENCE_VARIANT = "reference"
+
 
 @dataclass(frozen=True)
 class SeverityLevel:
@@ -72,7 +75,7 @@ class SeverityLevel:
     @property
     def variant_label(self) -> str:
         """Stable identifier for this severity level, used in filenames and result rows."""
-        return "reference" if self.is_reference else f"{self.label}_l{self.level}"
+        return REFERENCE_VARIANT if self.is_reference else f"{self.label}_l{self.level}"
 
     @property
     def is_reference(self) -> bool:
@@ -88,6 +91,22 @@ REFERENCE_LEVEL = SeverityLevel(
     calibration=None,
     severity_name="n/a",
     ordinal=True,
+)
+
+#: The candidate a real forecast supplies in place of a damaged field: the prediction paired
+#: with each target frame (``fmeval.data.forecast``). Not ordinal, so the analysis reads it as
+#: a probe and withholds every ordering statistic: a forecast has one prediction per frame, and
+#: its lead time is not a strength chosen in advance (``docs/decisions.md``, "There is still
+#: no expectation per degradation").
+FORECAST_LEVEL = SeverityLevel(
+    label="forecast",
+    op="forecast",
+    family="forecast",
+    level=1,
+    severity=float("nan"),
+    calibration=None,
+    severity_name="n/a",
+    ordinal=False,
 )
 
 
@@ -384,6 +403,31 @@ def apply_severity_level(
             applied.fields[name] = result
             effect = _energy_effect(source, result)
         applied.energy_removed[name], applied.energy_changed[name] = effect
+    return applied
+
+
+def apply_prediction(frame: Frame, predicted: Frame,
+                     fields: Sequence[str]) -> SeverityLevelApplication:
+    """The prediction paired with ``frame`` as its candidate, with what it measurably changed.
+
+    The counterpart of :func:`apply_severity_level` for :data:`FORECAST_LEVEL`: nothing is applied,
+    the predictor already did it, and the energy bookkeeping is measured on the prediction against
+    the target exactly as on a damaged field, so ``energy_changed`` is the prediction's
+    normalised mean squared error. ``unchanged`` stays empty: a prediction equal to its target
+    is a perfect forecast, a result, not a severity that did nothing.
+
+    Raises:
+        ValueError: If the two frames are not on one grid.
+    """
+    if predicted.grid != frame.grid:
+        raise ValueError(f"the prediction is on {predicted.grid.shape} and its target on "
+                         f"{frame.grid.shape}; a pair must share its grid")
+    applied = SeverityLevelApplication(fields={}, resolved={}, unchanged=set(), energy_removed={},
+                                       energy_changed={})
+    for name in fields:
+        applied.fields[name] = predicted.fields[name]
+        applied.energy_removed[name], applied.energy_changed[name] = _energy_effect(
+            frame.fields[name], predicted.fields[name])
     return applied
 
 

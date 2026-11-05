@@ -12,6 +12,9 @@ defaults:
   - dataset: kinet_re5e4_dev
   - degradation: default
   - report: default
+  # None by default. `dataset_family=<name>` with `-m` runs every member of a family and
+  # gathers them into one folder (configs/dataset_family/).
+  - dataset_family: null
   - _self_
 
 paths:
@@ -31,7 +34,7 @@ paths:
   data_url: https://portal.nersc.gov/project/m4790/Data
 
 # Metric names resolved against the registry. `python -m metrics` lists them.
-metrics: [mae, mse, nrmse]
+metrics: [mae, mse, vrmse]
 
 # `fields` (default: every field the dataset lists that a selected metric accepts) and
 # `analysis_grid` (default: the native resolution, block_mean) are documented on their schema

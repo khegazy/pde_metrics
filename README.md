@@ -78,7 +78,7 @@ to test is the one thing you will override most often**, so start here:
 python evaluate.py metrics=[mse] dataset=kinet_re5e4_dev
 
 # Several metrics in one run: each gets its own folder, plus a comparison folder
-python evaluate.py 'metrics=[mae,mse,nrmse]' dataset=kinet_re5e4_dev
+python evaluate.py 'metrics=[mae,mse,vrmse]' dataset=kinet_re5e4_dev
 ```
 
 Quote the argument (`'metrics=[mae,mse]'`) whenever the list has commas, or the shell will
@@ -100,12 +100,13 @@ one option from each **config group**, and every value can be overridden from th
 ```
 configs/
 ├── config.yaml            top level: metrics, seed, paths, analysis anchor
-├── dataset/               kinet_re5e4_dev · kinet_re5e4 · well_re5e4 · synthetic_ensemble
-│                          · sod_shock_tube · taylor_green_2d (computed from exact solutions)
-│                          (_re5e4_simulation.yaml: shared by the first three, not a choice)
+├── dataset/               kinet_re5e4_dev · kinet_re5e4 · well_re5e4 · kinet_re1e6
+│                          · synthetic_ensemble · sod_shock_tube · taylor_green_2d
+│                          (_re5e4_simulation.yaml: shared by the first three;
+│                          _reynolds_ladder_2d.yaml: shared by all four; not choices)
 ├── degradation/           default · quick · ensemble_miscalibration
 ├── report/                default · none
-└── dataset_family/        reynolds_ladder_2d   (not yet consumed; see issues/011)
+└── dataset_family/        reynolds_ladder_2d   (a sweep over a family's members, with -m)
 ```
 
 There are two different ways to change something, and the distinction matters:
@@ -170,7 +171,7 @@ python evaluate.py metrics=[mse] dataset=kinet_re5e4_dev \
 
 # A real run: three metrics on the developed flow, every 400th frame,
 # vorticity only, on a 128^2 analysis grid.
-python evaluate.py 'metrics=[mae,mse,nrmse]' dataset=kinet_re5e4 \
+python evaluate.py 'metrics=[mae,mse,vrmse]' dataset=kinet_re5e4 \
     dataset.time.start=2000 dataset.time.reduction=400 \
     'fields=[vorticity]' analysis_grid.resolution=128
 
@@ -191,8 +192,16 @@ Hydra's multirun (`-m`) sweeps a group, running once per option:
 python evaluate.py -m metrics=[mse] dataset=kinet_re5e4_dev,well_re5e4
 ```
 
-Each run writes its own folder. `fmeval.io.load_runs("mse_*")` concatenates them into one
-frame when you want to compare across datasets.
+Each run writes its own folder. `fmeval.io.load_runs(Path("results").glob("mse_*"))`
+concatenates them into one frame when you want to compare across datasets.
+
+A family of datasets that differ in one physical parameter is run as one sweep, which also
+gathers its members into one folder for report section 12:
+
+```bash
+python evaluate.py -m dataset_family=reynolds_ladder_2d 'metrics=[mse]' dataset.time.start=2000
+python make_report.py results/reynolds_ladder_2d_<time>
+```
 
 ### Sizing a run
 

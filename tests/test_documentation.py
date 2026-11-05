@@ -280,12 +280,18 @@ PINNED_PHRASES = {
         "docs/recipes/", "Delete an issue once it is fully resolved",
         # A built metric left in the plan reads as work still to do.
         "docs/ideas/README.md",
+        # Kareem's decisions on how every metric is evaluated (2026-11-03): the field's
+        # standard first, every standard built, every experiment where it makes sense.
+        "How every metric is evaluated", "Several standards: build them all",
+        "on every experiment where it makes sense", "Write down the experiments that are missing",
     ),
     # Every agent profile, and the issues index itself, says that `issues/` holds only open
     # items: an issue left in place after it is fully resolved reads as work still to do.
-    "CLAUDE.md": ("Delete an issue once it is fully resolved",),
-    ".github/copilot-instructions.md": ("Delete an issue once it is fully resolved",),
-    ".cursor/rules/repository.mdc": ("Delete an issue once it is fully resolved",),
+    "CLAUDE.md": ("Delete an issue once it is fully resolved", "How every metric is evaluated"),
+    ".github/copilot-instructions.md": ("Delete an issue once it is fully resolved",
+                                        "on every experiment where it makes sense"),
+    ".cursor/rules/repository.mdc": ("Delete an issue once it is fully resolved",
+                                     "on every experiment where it makes sense"),
     "issues/README.md": ("Delete an issue once it is fully resolved", "there is no resolved list"),
     # docs/decisions.md stops an agent from "fixing" a deliberate absence. Each entry
     # corresponds to an enforced decision; if one is removed here it will be rediscovered
@@ -319,6 +325,7 @@ PINNED_PHRASES = {
         "report it rather than writing around it",
         "Reuse before you write",
         "Prove that a refactor changes no number",
+        "on every experiment where it makes sense",
     ),
     "docs/recipes/add-a-metric.md": (
         "python -m fmeval.cards new <name>",
@@ -330,6 +337,8 @@ PINNED_PHRASES = {
         "equation number",
         "worked example",
         "docs/ideas/README.md",
+        "on every experiment where it makes sense",
+        "Find the standard", "How its field reports it",
     ),
     "docs/recipes/add-a-degradation.md": (
         "--kind degradation",

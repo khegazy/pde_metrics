@@ -33,5 +33,11 @@ math:
                                # grid averages them, so structure below a cell is lost first
   complexity: "O(N log N)"     # a few Newton steps, each a fixed number of FFTs
 references: [saumier2015, peyrecuturi2019, peyre2018, delon2010, engquist2014, yang2018,
-             engquistyang2022]
+             engquistyang2022, engquist2016]
+
+not_run:
+  synthetic_ensemble: >-
+    its density is a signed two-scale pattern plus noise, with cells below zero, where the
+    distance is undefined: every value there is NaN (measured on all 168 rows)
+
 review: null

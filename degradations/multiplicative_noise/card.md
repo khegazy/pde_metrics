@@ -55,9 +55,11 @@ relative by construction -- 0.1 means each cell is multiplied by roughly one plu
 a tenth. No per-field calibration is needed, because a ratio is already dimensionless and
 already comparable between fields.
 
-This operator is not in the default set of degradations. It overlaps with additive noise
-on the degradations that matter most for the current metric set, and the set of
-degradations is kept short so that every degradation in a run earns its cost.
+The default set configures 0.0001, 0.001, 0.01, 0.1 and 0.5. The two smallest exist for
+density: its mean is about 1 and its fluctuation a few thousandths of that, so the noise is
+set by the mean, and at 0.01 it is already several times the fluctuation. On velocity and
+vorticity, whose means are near zero, the change relative to the fluctuation variance is about
+the square of the strength, and the two smallest levels barely change the field.
 
 ## Limitations
 

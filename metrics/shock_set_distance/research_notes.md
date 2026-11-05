@@ -80,7 +80,7 @@ Equation numbers for Schaal and Springel are those of the arXiv HTML copy (1407.
 - **Issue 068 was stale.** Its only blocker was "the detector merged", so #22 deleted it, as the rule requires once an issue is resolved. The overlap idea's row lost the issue link, its page said the detector was built, and [proposals/EXP-sod_evidence-sod-time-offset.md](../../proposals/EXP-sod_evidence-sod-time-offset.md) was changed to name the idea page instead of the issue. The overlap idea page has since been built and deleted (`metrics/shock_mask_overlap`).
 - **The idea pages this bundle came from were deleted in #22.** These were `docs/ideas/shock_geometry/shock_set_distance.md` and `shock_detector.md`, with their rows, their "What to build next" entry and their bullets on the theme page. Every link to them was re-pointed to the card, in the pages on evaluation design, shock mask overlap, shock-turbulence interaction, variable-density mixing, the curvature README, the Helmholtz split, entropy production and the mollification split.
 - **Two style slips in `docs/ideas/shock_geometry/`**, found by the review, were fixed in 0fdab79. One was an unwrapped long line in the overlap page; the other was a theme README sentence that said "built" twice.
-- The later review of `shock_mask_overlap` found further errors on this bundle's card. They are recorded in [../shock_mask_overlap/research_notes.md](../shock_mask_overlap/research_notes.md) and in [issue 121](../../issues/121-shock-set-distance-card-half-cell-and-high-pass-readings.md).
+- The later review of `shock_mask_overlap` found further errors on this bundle's card. They are recorded in [../shock_mask_overlap/research_notes.md](../shock_mask_overlap/research_notes.md) and were routed to an issue; this card has since been corrected and the issue deleted.
 
 ## Review round
 
@@ -142,3 +142,18 @@ The reviewer raised 14 critiques against commit 2469846 on #22 and audited the b
   2. Check that the detector never wraps, and that `requires_periodic=False` is correct.
   3. Check that every number in the Results readings is in `_generated/fingerprint.json` or in the tables.
 - **Untested setting.** Only the one-dimensional Sod tube with one shock per field is evidenced. Many shocklets in two or three dimensions are untested (card, Limitations).
+
+## Round of 2026-11-04 (task `metrics-topology-shocks`)
+
+- The card gained `### How its field reports it` for its three fields: shock detection (Schaal &
+  Springel 2015, Sect. 3 validation, read in the arXiv HTML), medical segmentation (Metrics
+  Reloaded's code and medpy's code read; the paper's empty-set rule is general, with no both-empty
+  rule) and spatial forecast verification (Gilleland et al. 2009, Ahijevych et al. 2009,
+  Gilleland 2011 and Roberts & Lean 2008, abstracts only through Crossref; the AMS pages refused
+  automated fetches).
+- Four siblings were built: `shock_set_hausdorff`, `shock_set_hausdorff95`, `shock_set_masd`,
+  `shock_set_baddeley_delta`; the MTR was narrowed to the average distance and medpy's pooled HD95.
+  The MASD formula, open in this file's earlier record, is now read from the Metrics Reloaded code.
+- The fractions skill score, critical success index and equitable threat score were not built:
+  degenerate on one one-dimensional shock (critique finding 2, reasoning). A Sedov-Taylor blast
+  wave was added to `proposals/EXP-shock_set_distance-2d-shock-dataset.md`.

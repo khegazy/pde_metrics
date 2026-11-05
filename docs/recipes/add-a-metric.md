@@ -6,6 +6,16 @@ example, a machine-readable record, a written description aimed at three differe
 of reader, and — once an evaluation run exists — the metric's measured behaviour. Follow
 the steps in order; several of the later ones consume the output of earlier ones.
 
+## 0. Find the standard
+
+Before writing any code, find how the metric's own field computes and reports it, from the
+primary sources: the object, the normalisation, the summary number if the field has one, the
+figure and its axes, the statistics reported beside it, and the experiment the field evaluates
+it on. Where fields disagree, build every standard, each as its own bundle importing the shared
+function. Record what you found in the card's `### How its field reports it` (step 5), and
+write up as a proposal under `proposals/` any experiment the field relies on that this
+repository lacks (`AGENTS.md` §1, "How every metric is evaluated").
+
 ## 1. Scaffold
 
 ```bash
@@ -53,6 +63,21 @@ looping over all three; your metric sees two arrays and returns a number.
     `@companion(of="<name>", kind="points", coordinate=(("<name>", "<units>"), ...))` returning an
     `(N, D)` array, one column per named coordinate. It is handed to the metric like a curve and
     stored, like a map, only on the frames `report.error_map` names.
+  - If the curve has many coordinates (every wavenumber shell, every separation), add
+    `analysed=(...)` naming the few the analysis reads, each exactly as the curve returns it.
+    The metric still receives the whole curve; only those coordinates go to `companions.csv`
+    and the per-coordinate tables, and the whole curve is stored for the figure on the frames
+    `report.error_map` names. On a grid too coarse to hold the larger ones, those beyond the
+    curve's last coordinate are simply absent (`metrics/spectrum_l2`'s octave shells).
+  - If the field computes or draws more than one object behind the number (a longitudinal and a
+    transverse curve, a cost density and its points), declare each with its own `name="<id>"`.
+    The companion without a name, which carries the metric's own, is the one the number is
+    computed from and the only one handed to the metric; the others are stored and drawn as
+    `<metric>.<id>`. `AGENTS.md` §3.3 has the example.
+  - Declare the axes the field draws the curve or point set on, `scales=(x, y)` with each
+    `"linear"`, `"log"` or `"symlog"` (for a value that changes sign), and `style="bars"` for a
+    curve over fixed bins such as a rank histogram. The card's first figure is drawn from the
+    companion with them (`AGENTS.md` §3.1 and §3.3).
   - If the number is a summary of the curve that no source fixes, it is a convention: say so in
     the docstring and on the card, and write an issue.
 
@@ -89,8 +114,9 @@ References.
 
 - **`## Definition`** — numbered display equations, the discretisation, and a required
   `### Boundary handling` subsection; `None.` plus one clause is the right answer for a
-  metric that works one cell at a time. Say what the equation does not already say, and
-  nothing that it does. Write
+  metric that works one cell at a time. Then a required `### How its field reports it`
+  subsection holding what step 0 found, cited; the template says what goes in it. Say what
+  the equation does not already say, and nothing that it does. Write
   maths as `$...$` inline and `$$...$$` with `\tag{1}` for display, and nothing else —
   `\begin{equation}`, `\label` and `\eqref` render on the site but show as raw source on
   GitHub, and the checker refuses them.
@@ -115,19 +141,43 @@ References.
 ## 6. Measurements
 
 ```bash
-python -m fmeval.cards evidence <name> --results results/<run>
+python -m fmeval.cards evidence <name> --results results/<primary run> \
+    --results results/<run on another experiment> ...
 ```
 
-Point that command at the reference evaluation run; `configs/cards/default.yaml` lists
-which datasets qualify, and the command refuses smoke-test data. A metric that needs a shock
-or pressure, which `kinet_re5e4` lacks, takes its run on `sod_shock_tube` with the reader's
-own frames (`python evaluate.py metrics=[<name>] dataset=sod_shock_tube`), and its run
-summary then calls the numbers an analytic check; a metric declaring `requires_periodic` is
-never run there. The command fills in
-`## Performance`, the run summary, the per-test tables and `_generated/fingerprint.json`.
-Only after that should you write the Results readings. Any number you type into a sentence
-must be one the fingerprint file supports, and pointing at the generated table beats
-restating its values.
+Run the metric on every experiment where it makes sense, not only one: the degradation
+ladder on `kinet_re5e4`, the miscalibration ladder on `synthetic_ensemble`, and
+`sod_shock_tube` with the reader's own frames
+(`python evaluate.py metrics=[<name>] dataset=sod_shock_tube`), whose run summary calls the
+numbers an analytic check. Then give the card one `--results` per experiment, the metric's
+field-standard experiment first where the repository has it: that run fills `## Performance`
+and the subsections per test, and each further run gets a subsection of `## Results` headed
+*On `<dataset>`*, inserted for you, whose generated block opens with the dataset's label.
+Write the reading below that block as for any other subsection. A card cites one run per
+dataset, and the fingerprint records them in order, so a later
+`python -m fmeval.cards evidence <name>` with no `--results` regenerates from the same runs.
+
+Skip an experiment only where the metric cannot be defined on it or the result would carry no
+information (`AGENTS.md` §1, "How every metric is evaluated"). The generated *Across the
+experiments* table at the top of `## Results` states every skip. The reasons that follow from
+the decorator and the dataset (a metric declaring `requires_periodic` on Sod's walls, an
+ensemble metric on one realisation per frame, a field the dataset lacks) are written for you;
+never restate them. A reason only you can give goes in `card.yaml`, one line per dataset:
+
+```yaml
+not_run:
+  <dataset>: <one line saying why a run there would carry no information>  # e.g. forecast_re5e4
+```
+
+Where the experiment the metric's own field relies on does not exist here, write it up as a
+proposal under `proposals/`, name the metric in its `related:` front matter so the site's
+coverage page lists it, and name it on the card.
+
+`configs/cards/default.yaml` lists which datasets qualify, and the command refuses
+smoke-test data. The command fills in `## Performance`, the run summary, the table of
+experiments, the per-test tables and `_generated/fingerprint.json`. Only after that should you
+write the Results readings. Any number you type into a sentence must be one the fingerprint
+file supports, and pointing at the generated table beats restating its values.
 
 ## 7. Finish
 

@@ -13,7 +13,13 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from . import analytic, kinet_raw, synthetic_ensemble, well  # noqa: F401  (register the formats)
+from . import (  # noqa: F401  (register the formats)
+    analytic,
+    forecast,
+    kinet_raw,
+    synthetic_ensemble,
+    well,
+)
 from .base import READERS, Trajectory
 from .locate import resolve_dataset_path
 

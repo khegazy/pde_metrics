@@ -226,13 +226,42 @@ def test_cross_metric_correlation_finds_duplicates():
     a = make_frame(metric="a", axes={"x": [1.0, 2.0, 3.0, 4.0]})
     b = make_frame(metric="b", axes={"x": [2.0, 4.0, 6.0, 8.0]})   # perfectly redundant
     c = make_frame(metric="c", axes={"x": [4.0, 3.0, 2.0, 1.0]})   # anti-correlated
-    rho = an.cross_metric_correlation(pd.concat([a, b, c], ignore_index=True))
+    rho = an.cross_metric_correlation(pd.concat([a, b, c], ignore_index=True), field="f")
     assert rho.loc["a", "b"] == pytest.approx(1.0)
     assert rho.loc["a", "c"] == pytest.approx(-1.0)
 
 
 def test_cross_metric_correlation_needs_two_metrics():
-    assert an.cross_metric_correlation(make_frame()).empty
+    assert an.cross_metric_correlation(make_frame(), field="f").empty
+
+
+def test_cross_metric_correlation_reads_one_field_at_a_time():
+    """Two metrics that agree on each field must correlate at +1 on each, whatever the other field
+    does. Pooled, the median over both fields' rows of a level is the mean of the two here, and
+    the second field's opposite trend, ten times larger, decides the order alone."""
+    rise, fall = [1.0, 2.0, 3.0, 4.0], [40.0, 30.0, 20.0, 10.0]
+    df = pd.concat([make_frame(metric=m, field=f, axes={"x": values})
+                    for m in ("a", "b") for f, values in (("one", rise), ("two", fall))],
+                   ignore_index=True)
+    df = pd.concat([df, make_frame(metric="c", field="two", axes={"x": fall})],
+                   ignore_index=True)
+    one = an.cross_metric_correlation(df, field="one")
+    two = an.cross_metric_correlation(df, field="two")
+    assert one.loc["a", "b"] == pytest.approx(1.0) and two.loc["a", "b"] == pytest.approx(1.0)
+    assert "c" not in one.index, "a metric that does not run on the field does not enter it"
+    assert two.loc["a", "c"] == pytest.approx(1.0)
+
+
+def test_cross_metric_correlation_reads_a_target_metric_by_its_distance():
+    """A target-valued metric moved away from its target on both sides of one ladder is ordered
+    by its distance, as every other statistic orders it: here it agrees with an error metric on
+    both axes, which its raw value (falling on one, rising on the other) cannot."""
+    err = make_frame(metric="err", axes={"up": [1.0, 2.0, 3.0], "down": [1.5, 2.5, 3.5]})
+    ratio = make_frame(metric="ratio", reference=1.0,
+                       axes={"up": [1.2, 1.5, 2.0], "down": [0.7, 0.6, 0.3]})
+    ratio["target_value"] = 1.0
+    rho = an.cross_metric_correlation(pd.concat([err, ratio], ignore_index=True), field="f")
+    assert rho.loc["err", "ratio"] == pytest.approx(1.0)
 
 
 # --- pooled vs per-frame correlation ---------------------------------------------------------
@@ -457,13 +486,6 @@ def test_bound_is_relative_to_the_largest_response_when_the_anchor_is_degenerate
     assert _axis(axes, "gaussian_blur")["blindness_q"] == pytest.approx(1.0)
 
 
-def test_bound_is_withheld_for_a_target_valued_metric():
-    """Damage is on the raw ratio for a two-sided metric, so a bound on it would not be oriented."""
-    df = make_frame(axes={"a": [1.2, 1.5, 2.0, 3.0], "mean_field": [3.0, 3.0]}, n_frames=20,
-                    reference=1.0)
-    df["target_value"] = 1.0
-    row = _axis(an.analyse(df, n_bootstrap=100).axes)
-    assert np.isnan(row["damage_max_ucb"]) and np.isnan(row["blindness_q"])
 
 
 def test_blindness_q_grows_with_the_number_of_rows_it_is_adjusted_over():
@@ -640,7 +662,7 @@ def test_concordance_penalises_shape_disagreement_where_spearman_does_not():
     x = [1.0, 2.0, 3.0, 4.0]
     df = _two_metrics({"s": x, "mean_field": [10.0, 10.0]},
                       {"s": list(np.sqrt(x)), "mean_field": [np.sqrt(10.0)] * 2})
-    rho = an.cross_metric_correlation(df)
+    rho = an.cross_metric_correlation(df, field="f")
     rc = an.concordance_matrix(_scored(df)[0])
     assert rho.loc["a", "b"] == pytest.approx(1.0)
     assert rc.loc["a", "b"] < 0.99
@@ -831,11 +853,6 @@ def test_onset_is_never_below_the_mildest_strength_tested():
     assert row["severity_10"] == 2.0
 
 
-def test_damage_profile_is_withheld_for_a_target_valued_metric():
-    df = _profile_frame({"a": 1.0, "b": 10.0})
-    df["target_value"] = 1.0
-    card = an.analyse(df, n_bootstrap=0).card.iloc[0]
-    assert np.isnan(card["selectivity"]) and pd.isna(card["most_sensitive_axis"])
 
 
 def test_a_falling_response_has_an_elasticity():

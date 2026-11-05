@@ -32,17 +32,49 @@
 # `sod_shock_tube` is admitted on the same footing: an analytic check. It is the exact
 # solution of Sod's shock tube, with a shock, a contact and a rarefaction at known places,
 # and pressure. Evidence from it says the metric locates and scores a known shock correctly,
-# and nothing about turbulence. It is cited only by metrics that need a shock or pressure,
-# because kinet_re5e4 has neither; a metric declaring `requires_periodic` is never run on it,
+# and nothing about turbulence. Every metric that can run on it does (AGENTS.md §1, "How
+# every metric is evaluated"); a metric declaring `requires_periodic` is never run on it,
 # since its ends are walls. Runs on it use the reader's own frames, not `evidence_window`.
+#
+# `forecast_re5e4` holds real predictions of the kinet_re5e4 flow paired with their targets
+# (docs/datasets/reynolds_ladder_2d.md, "Forecast pairs"). Evidence from it says how the metric
+# reads real prediction errors along the prediction step, which is how machine-learning
+# benchmarks report a metric; it is not a degradation ladder, so it carries no ordering
+# statistics. Who produced the predictions is not recorded, and the label says so. Runs on it use
+# all of its frames, not `evidence_window`, with `analysis_grid.resolution=64` when they pool its
+# three runs.
+# `kinet_re1e6` is the same flow at twenty times the Reynolds number, the second member of
+# the Reynolds ladder (configs/dataset_family/reynolds_ladder_2d.yaml). Its frames are read on
+# kinet_re5e4's clock, so `evidence_window` selects the same physical times on both.
 evidence_datasets:
   kinet_re5e4: developed flow
+  kinet_re1e6: >-
+    developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same
+    initial condition
   synthetic_ensemble: >-
     a calibrated null: evidence that the estimator computes what it claims to compute,
     and nothing about turbulence
   sod_shock_tube: >-
     an analytic check: evidence that the metric locates and scores a known shock
     correctly, and nothing about turbulence
+  forecast_re5e4: >-
+    real predictions scored against their targets at each prediction step; who produced
+    the predictions, a trained model or a coarser solver, is not recorded
+
+# What each evidence dataset offers a metric, so every metric card's "Across the experiments"
+# table and the site's coverage page can say why a metric is not run on a dataset without
+# opening the data (`fmeval.cards.catalog.experiments`). `periodic`: every axis wraps, so a
+# metric declaring `requires_periodic` can run. `ensemble`: every frame carries members, so an
+# ensemble metric can run, and a pairwise or single-field metric scores the member mean
+# (`fmeval.ladder`). Both are properties of the dataset's reader; tests/test_cards.py checks
+# them against it. The fields a dataset provides are read from configs/dataset/<name>.yaml.
+# Every dataset of `evidence_datasets` needs an entry.
+evidence_dataset_properties:
+  kinet_re5e4: {periodic: true, ensemble: false}
+  kinet_re1e6: {periodic: true, ensemble: false}
+  synthetic_ensemble: {periodic: true, ensemble: true}
+  sod_shock_tube: {periodic: false, ensemble: false}      # walls at both ends
+  forecast_re5e4: {periodic: true, ensemble: false}
 
 # The window within kinet_re5e4 that counts as developed flow: the convention a run cited
 # as evidence follows (`dataset.time.start`, `dataset.time.reduction`). Nothing reads it to

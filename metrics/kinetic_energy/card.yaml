@@ -26,5 +26,5 @@ math:
   scale_dependent: true        # scaling the field by c scales the value by c squared
   resolution_dependent: true   # energy sits at large scales, so it survives coarsening better
   complexity: "O(N)"
-references: []
+references: [boffetta2012, list2022, frezat2022]
 review: null

@@ -1,7 +1,8 @@
 """Run folders: creation, provenance, and reloading.
 
-One folder per metric under test, named ``<metric>_<time>`` where ``<time>`` is
-``int(time.time())``. The **same** timestamp is used for every metric in one invocation,
+One folder per metric under test, named ``<metric>_<time>`` where ``<time>`` is the stamp
+the invocation claimed with :func:`claim_stamp`, ``int(time.time())`` unless another invocation
+already holds that second. The **same** stamp is used for every metric in one invocation,
 so a multi-metric run produces sibling folders that sort together and are obviously one
 experiment.
 
@@ -23,7 +24,8 @@ import platform
 import shutil
 import subprocess
 import sys
-from collections.abc import Mapping
+import time
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -32,6 +34,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import yaml
+from hydra.core.utils import JobReturn, JobStatus
+from hydra.experimental.callback import Callback
 from omegaconf import DictConfig, ListConfig, OmegaConf
 
 from degradations import registry as deg_registry
@@ -88,6 +92,27 @@ class RunFolder:
         for path in (self.data, self.plots, self.tables, self.sections, self.figure_data):
             path.mkdir(parents=True, exist_ok=True)
         return self
+
+
+def claim_stamp(results_root: Path | str) -> int:
+    """A run stamp no other invocation holds: ``int(time.time())``, or the next free second.
+
+    Folders are written when a run ends, under the stamp taken when it started, so two
+    invocations started in the same second would write the same ``<name>_<stamp>`` folder and
+    the later would silently overwrite the earlier. A stamp is claimed by creating the
+    directory ``<results_root>/.stamps/<stamp>``, which ``mkdir`` does atomically, so the claim
+    holds across processes; a taken stamp moves on to the next second.
+    """
+    claims = Path(results_root) / ".stamps"
+    claims.mkdir(parents=True, exist_ok=True)
+    stamp = int(time.time())
+    while True:
+        try:
+            (claims / str(stamp)).mkdir()
+        except FileExistsError:
+            stamp += 1
+        else:
+            return stamp
 
 
 def make_run_folder(results_root: Path | str, name: str, stamp: int) -> RunFolder:
@@ -225,6 +250,22 @@ def read_run_meta(folder: RunFolder | Path) -> dict[str, Any]:
     return json.loads(path.read_text()) if path.exists() else {}
 
 
+def read_maps(folder: RunFolder | Path,
+              keep: Callable[[str], bool] | None = None) -> dict[str, np.ndarray]:
+    """A run's stored maps, point sets and dense curves, by ``error_maps.npz`` key; empty if
+    none were stored.
+
+    ``keep`` selects keys before any array is read: the archive decompresses a member only
+    when it is accessed, so a card that needs one metric's maps does not read every metric's
+    (94 MB on the pinned kinet run).
+    """
+    path = _folder(folder).maps_path
+    if not path.exists():
+        return {}
+    with np.load(path) as archive:
+        return {k: archive[k] for k in archive.files if keep is None or keep(k)}
+
+
 def read_config(folder: RunFolder | Path) -> dict[str, Any]:
     """A run's resolved configuration, or an empty mapping if the folder has none."""
     return read_yaml(_folder(folder).config_path)
@@ -240,29 +281,205 @@ def dump_yaml(data: Any) -> str:
     return yaml.safe_dump(data, sort_keys=True, default_flow_style=False)
 
 
-def load_runs(pattern: str, root: Path | str = "results") -> pd.DataFrame:
+def load_runs(folders: Iterable[Path | str], name: str = "results") -> pd.DataFrame:
     """Concatenate the results of several run folders, tagged by folder name.
 
-    How a multirun sweep becomes one cross-dataset or cross-metric table.
+    How a multirun sweep becomes one cross-dataset or cross-metric table, e.g.
+    ``load_runs(sorted(Path("results").glob("mse_*")))``.
 
     Args:
-        pattern: Glob relative to ``root``, e.g. ``"mse_*"`` or ``"*_1786224531"``.
-        root: Results directory.
+        folders: Run folders; one without a ``data/`` directory or without the file is
+            skipped with a warning.
+        name: ``"results"``, or :data:`COMPANIONS` for the curve-companion rows.
+
+    Raises:
+        FileNotFoundError: If no folder held the file.
     """
     frames = []
-    for folder in sorted(Path(root).glob(pattern)):
-        if not (folder / "data").is_dir():
-            continue
-        try:
-            df = read_results(folder)
-        except FileNotFoundError:
-            log.warning("no results in %s; skipping", folder)
+    folders = [Path(f) for f in folders]
+    for folder in sorted(folders):
+        df = read_results(folder, name, missing_ok=True) if (folder / "data").is_dir() else None
+        if df is None:
+            log.warning("no %s in %s; skipping", name, folder)
             continue
         df["run_dir"] = folder.name
         frames.append(df)
     if not frames:
-        raise FileNotFoundError(f"no run folders matching {pattern!r} under {root}")
+        raise FileNotFoundError(f"no {name} in any of {[str(f) for f in folders]}")
     return pd.concat(frames, ignore_index=True)
+
+
+#: Provenance that must be the same in every member of a combined folder: the report reads it
+#: once for all of them, and a damage means the same thing in two members only if the ladder,
+#: the anchor and the analysis grid agree.
+SHARED_META: tuple[str, ...] = ("metric", "fields", "analysis_grid", "ladder_axes",
+                                "n_severity_levels", "anchor_label", "probe_labels", "seed",
+                                "boundary")
+
+
+#: Provenance a run records for itself alone; a combined folder does not copy it from a member.
+_OWN_META: tuple[str, ...] = ("git", "host", "python", "platform", "packages", "registries",
+                              "run_id", "config_hash", "metric", "n_rows", "command", "timings",
+                              "comparison", "members")
+
+
+def combine_runs(folders: Sequence[Path | str], stamp: int, *,
+                 across: str = "dataset") -> RunFolder:
+    """Write one folder holding the rows of several runs that differ only in ``across``.
+
+    ``across="dataset"``: one run per dataset of a family, for section 12. The combined folder
+    is ``<family>_<stamp>`` beside the first; it holds every member's rows and companion rows,
+    their calibration tables with a ``dataset`` column, and a ``run_meta.json`` whose
+    ``members`` maps each dataset to its own folder's provenance. Error maps are not carried:
+    their keys do not name the dataset. A member's own folder remains its full report.
+
+    ``across="shards"``: the parts of one evaluation spread over several processes, each run on
+    the same dataset, selection, ladder, grid and commit with its own set of metrics, its own
+    part of the frames (``dataset.time.shard`` of ``shards``), or both. The combined folder is
+    ``comparison_<stamp>`` beside the first and is the folder one process would have written:
+    every row, companion row and stored map, the calibration once (it is measured over the whole
+    selection, so it is checked equal), and the first member's provenance, including its git
+    state, with ``metric`` naming every metric and ``n_frames`` every frame.
+
+    Raises:
+        ValueError: On fewer than two members; members whose configurations differ in anything
+            but the dataset (for datasets) or the metric list and frame shard (for shards), or
+            whose provenance differs in a :data:`SHARED_META` key (for shards, also in git state
+            or calibration): their damages would not be on one scale. For datasets, a member
+            holding several datasets or one the others hold too, or members of different
+            families; for shards, two members holding the same metric on the same frame, or
+            metrics covering different frames (a shard is missing).
+    """
+    if across not in ("dataset", "shards"):
+        raise ValueError(f"across must be 'dataset' or 'shards', got {across!r}")
+    members = [_folder(f) for f in folders]
+    if len(members) < 2:
+        raise ValueError(f"a comparison needs at least two runs, got {len(members)}")
+    configs = [read_config(m) for m in members]
+    metas = [read_run_meta(m) for m in members]
+    # Shards may score different fields (a density-only metric reads density alone), so for them
+    # the fields and the metric list are unions, and the calibration is checked field by field.
+    shared = [k for k in SHARED_META if not (across == "shards" and k in ("metric", "fields"))]
+    if across == "shards":
+        shared.append("git")
+    free = {"dataset"} if across == "dataset" else {"metrics"}
+
+    def settled(config: dict) -> dict:
+        """The configuration without the frame shard: shards may differ in how they split the
+        frames, and the merge checks instead that every metric covers the same frames."""
+        if across == "dataset":
+            return config
+        time = {k: v for k, v in config.get("dataset", {}).get("time", {}).items()
+                if k not in ("shard", "shards")}
+        return {**config, "dataset": {**config.get("dataset", {}), "time": time}}
+
+    for member, config, meta in zip(members[1:], configs[1:], metas[1:], strict=True):
+        differ = sorted(k for k in {*configs[0], *config} - free
+                        if settled(config).get(k) != settled(configs[0]).get(k))
+        differ += [f"run_meta.{k}" for k in shared if meta.get(k) != metas[0].get(k)]
+        if differ:
+            raise ValueError(
+                f"{member.root.name} differs from {members[0].root.name} in {differ}; the "
+                f"members of one comparison may differ only in {across}"
+            )
+    rows = load_runs(m.root for m in members)
+    if across == "dataset":
+        datasets = rows.groupby("run_dir", observed=True)["dataset"].unique()
+        if any(len(d) != 1 for d in datasets) or len({d[0] for d in datasets}) != len(members):
+            raise ValueError(f"each member must hold one dataset of its own: {datasets.to_dict()}")
+        families = rows["dataset_family"].dropna().unique()
+        if len(families) != 1 or not families[0]:
+            raise ValueError(f"the members must belong to one dataset family, got {list(families)}")
+        name = str(families[0])
+    else:
+        pairs = rows.drop_duplicates(["run_dir", "metric", "frame_index"])
+        repeated = pairs[pairs.duplicated(["metric", "frame_index"], keep=False)]
+        if not repeated.empty:
+            raise ValueError("two members hold the same metric on the same frame: "
+                             f"{sorted(set(zip(repeated['metric'], repeated['frame_index'])))[:5]}")
+        covered = pairs.groupby("metric", observed=True)["frame_index"].apply(frozenset)
+        if covered.nunique() != 1:
+            raise ValueError("the metrics do not cover the same frames, so a shard is missing: "
+                             f"{ {m: len(f) for m, f in covered.items()} }")
+        name = "comparison"
+
+    folder = make_run_folder(members[0].root.parent, name, stamp)
+    write_results(folder, rows.drop(columns="run_dir"))
+    if any((m.data / f"{COMPANIONS}.csv").exists() or (m.data / f"{COMPANIONS}.csv.gz").exists()
+           for m in members):
+        write_results(folder, load_runs((m.root for m in members), COMPANIONS)
+                      .drop(columns="run_dir"), name=COMPANIONS)
+    for table in ("calibration", "calibration_spectrum"):
+        frames = [pd.read_csv(m.data / f"{table}.csv") for m in members
+                  if (m.data / f"{table}.csv").exists()]
+        if not frames:
+            continue
+        if across == "dataset":
+            write_table(folder, pd.concat(
+                [f.assign(dataset=meta["dataset"]) for f, meta in zip(frames, metas, strict=True)],
+                ignore_index=True), table)
+        else:
+            union: dict[str, pd.DataFrame] = {}
+            for frame in frames:
+                for field, part in frame.groupby("field", sort=False):
+                    part = part.reset_index(drop=True)
+                    if field in union and not part.equals(union[field]):
+                        raise ValueError(f"the shards' {table} tables differ on {field}; they did "
+                                         "not run one ladder")
+                    union.setdefault(field, part)
+            write_table(folder, pd.concat(union.values(), ignore_index=True), table)
+    if across == "dataset":
+        digest = write_config(folder, {**configs[0], "dataset": {
+            meta["dataset"]: config["dataset"]
+            for config, meta in zip(configs, metas, strict=True)}})
+        meta_extra = {**{k: metas[0][k] for k in SHARED_META if k in metas[0]},
+                      "n_frames": sum(int(meta.get("n_frames", 0)) for meta in metas),
+                      "dataset": ", ".join(meta["dataset"] for meta in metas),
+                      "dataset_family": name,
+                      "members": {meta["dataset"]: {"run": m.root.name, **meta}
+                                  for m, meta in zip(members, metas, strict=True)}}
+    else:
+        ran = list(dict.fromkeys(x for config in configs for x in config["metrics"]))
+        digest = write_config(folder, {**settled(configs[0]), "metrics": ran})
+        maps = {k: v for m in members for k, v in read_maps(m).items()}
+        write_maps(folder, maps)
+        meta_extra = {**{k: v for k, v in metas[0].items() if k not in _OWN_META},
+                      "git": metas[0].get("git"), "registries": metas[0].get("registries"),
+                      "metric": ", ".join(ran),
+                      "fields": list(dict.fromkeys(f for m in metas for f in m.get("fields", []))),
+                      "n_frames": int(rows["frame_index"].nunique()), "n_rows": len(rows),
+                      "members": {m.root.name: meta.get("metric")
+                                  for m, meta in zip(members, metas, strict=True)}}
+    copy_documentation(folder)
+    write_run_meta(folder, run_id=stamp, config_hash=digest, comparison=True, **meta_extra)
+    return folder
+
+
+class FamilyComparison(Callback):
+    """Gather the jobs of a family multirun into one folder (:func:`combine_runs`).
+
+    Named in ``hydra.callbacks`` by a ``configs/dataset_family/`` option. Each job returns the
+    folder holding all of its metrics' rows (``evaluate.main``); the callback collects them as
+    the jobs end and combines them once the sweep is over. A job that failed contributes
+    nothing, and the comparison is then not written, since it would silently lack a member.
+    """
+
+    def __init__(self) -> None:
+        self.folders: list[Path] = []
+        self.failed = 0
+
+    def on_job_end(self, config: DictConfig, job_return: JobReturn, **kwargs: Any) -> None:
+        if job_return.status == JobStatus.COMPLETED:
+            self.folders.append(Path(job_return.return_value))
+        else:
+            self.failed += 1
+
+    def on_multirun_end(self, config: DictConfig, **kwargs: Any) -> None:
+        if self.failed:
+            log.error("%d member job(s) failed; no comparison folder written", self.failed)
+            return
+        folder = combine_runs(self.folders, claim_stamp(self.folders[0].parent))
+        log.info("wrote %s", folder.root)
 
 
 # --- provenance helpers ---------------------------------------------------------------

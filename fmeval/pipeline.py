@@ -12,6 +12,10 @@ Order of operations within a frame:
 4. Apply every ladder severity level.
 5. Evaluate every metric against every variant.
 
+On a dataset of real forecasts the trajectory holds the targets and a second one, ``prediction``,
+the prediction paired with each frame; the prediction is remapped as its target is and joins the
+variants as :data:`fmeval.ladder.FORECAST_LEVEL`, in place of a damaged field.
+
 Remapping *before* degrading is deliberate. It keeps severity units meaningful: a one-cell
 translation means one analysis-grid cell whatever the analysis resolution, rather than
 silently becoming half a cell when the grid is halved. It also means derived fields are
@@ -22,7 +26,7 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from dataclasses import field as dc_field
 from typing import Any
@@ -30,12 +34,18 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from metrics.registry import MetricSpec
+from metrics.registry import MetricSpec, companion_label
 
 from .calibration import Calibration, calibrate
 from .context import COMPANION_KEY, FieldContext, derive_rng, fluctuation_rms
 from .data.base import Frame, TimeSelection, Trajectory
-from .ladder import SeverityLevel, SeverityLevelApplication, apply_severity_level
+from .ladder import (
+    FORECAST_LEVEL,
+    SeverityLevel,
+    SeverityLevelApplication,
+    apply_prediction,
+    apply_severity_level,
+)
 from .remap import DEFAULT_METHOD, RemapMethod, coarsen_factor, remap_frame
 
 log = logging.getLogger(__name__)
@@ -54,6 +64,8 @@ RESULT_DTYPES: dict[str, str] = {
     # position in the trajectory
     "frame_index": "int32",
     "time": "float64",
+    "lead_step": "Int32",            # a forecast's prediction step: solver steps since its start;
+    "lead_time": "float64",          # and the physical time since its start. Null off a forecast
     # what was measured, on what
     "field": "category",
     "analysis_grid": "int32",
@@ -123,7 +135,8 @@ class MapRequest:
 
     Storing a map for every frame and variant would be gigabytes, so only the named
     combinations are retained -- enough for the figure, not for the whole run. A point-set
-    companion is kept on the same combinations and on the clean level of the named frames, the
+    companion, a curve companion's dense curve when it declares ``analysed``, and a field map of
+    one field, is kept on the same combinations and on the clean level of the named frames, the
     set of the undamaged prediction: the reference on a deterministic dataset, the member mean on
     an ensemble one. The defaults here keep nothing, for callers that do not ask.
     """
@@ -143,13 +156,15 @@ class PipelineResult:
 
     rows: pd.DataFrame
     maps: dict[str, np.ndarray] = dc_field(default_factory=dict)
-    """``"<metric>:<field>__<variant>__t<frame>"`` -> a per-cell map ``(*spatial)`` or a point set
-    ``(N, D)``, for ``error_maps.npz``. The run's registry snapshot says which, by the metric's
-    companion kind."""
+    """``"<companion>:<field>__<variant>__t<frame>"`` -> a per-cell map ``(*spatial)``, a point set
+    ``(N, D)`` or a dense curve ``(n, 2)`` of (coordinate, value), for ``error_maps.npz``;
+    ``<companion>`` is :func:`metrics.registry.companion_label`. The run's registry snapshot says
+    which, by the companion's kind and ``analysed``."""
     companions: pd.DataFrame = dc_field(default_factory=pd.DataFrame)
-    """One row per curve coordinate of every result row whose metric has a curve companion: the
-    result row's columns, its ``value`` replaced by the curve's, plus ``coordinate``. Empty when no
-    metric has one. Written to ``companions.csv``."""
+    """One row per analysed curve coordinate of every result row whose metric has a curve
+    companion: the result row's columns, its ``metric`` replaced by the companion's label and its
+    ``value`` by the curve's, plus ``coordinate``. Empty when no metric has one. Written to
+    ``companions.csv``."""
     n_frames: int = 0
     analysis_grid: int = 0
     """Extent of the analysis grid along its first axis, as written to every row."""
@@ -165,18 +180,19 @@ def _emit(
     frame: Frame,
     severity_level: SeverityLevel,
     applied: SeverityLevelApplication,
-    run_columns: dict[str, Any],
+    frame_columns: dict[str, Any],
     value: Any,
     wall: float,
     n_members: int | None = None,
 ) -> dict[str, Any]:
     """The result row of one metric evaluation: one number per (frame, field, metric, variant).
 
-    ``run_columns`` are the columns every row of the run shares; column order is fixed later by
+    ``frame_columns`` are the columns every row of the frame shares: the run's, and those the
+    reader states per frame (``Trajectory.frame_columns``). Column order is fixed later by
     :data:`RESULT_DTYPES`, not here.
     """
     return {
-        **run_columns,
+        **frame_columns,
         "frame_index": frame.index,
         "time": frame.time,
         "field": field,
@@ -234,6 +250,7 @@ def run(
     remap_method: RemapMethod = DEFAULT_METHOD,
     maps: MapRequest | None = None,
     calibration_frames: int = 5,
+    prediction: Trajectory | None = None,
 ) -> PipelineResult:
     """Evaluate every metric against every severity level, over the selected frames.
 
@@ -250,15 +267,40 @@ def run(
         maps: Which pointwise maps to retain.
         calibration_frames: How many frames to average the per-field spectral calibration
             over. Measured once and held fixed for the whole run; see :mod:`fmeval.calibration`.
+        prediction: The prediction paired with every frame of ``trajectory``, on the same frame
+            axis, for a dataset of real forecasts (:mod:`fmeval.data.forecast`). Each frame's
+            prediction is scored against it as one more variant, :data:`FORECAST_LEVEL`.
 
     Returns:
         A :class:`PipelineResult` whose ``rows`` follow :data:`RESULT_DTYPES` exactly.
+
+    Raises:
+        ValueError: If the selection is empty, the selected frames land on more than one
+            analysis grid, or ``prediction`` does not share the trajectory's frame axis.
     """
     selection = selection or TimeSelection()
     maps = maps or MapRequest()
     indices = selection.resolve(len(trajectory))
     if len(indices) == 0:
         raise ValueError("time selection is empty; check dataset.time.start / stop")
+    if prediction is not None and not np.array_equal(prediction.times, trajectory.times):
+        raise ValueError("the prediction and its targets do not share one frame axis")
+
+    def to_analysis(frame: Frame) -> Frame:
+        """``frame`` on the analysis grid, coarsened by its own factor: a reader may hold runs
+        at several resolutions (``Trajectory.grid_at``)."""
+        return remap_frame(frame, coarsen_factor(frame.grid, analysis_resolution),
+                           method=remap_method)
+
+    # One analysis grid per run: every statistic pools frames, and a number computed on 64^2
+    # cells pooled with one computed on 256^2 would be neither.
+    shapes = sorted({grid.coarsened(coarsen_factor(grid, analysis_resolution)).shape
+                     for grid in {trajectory.grid_at(int(i)) for i in indices}})
+    if len(shapes) > 1:
+        raise ValueError(
+            f"the selected frames lie on grids that remap to {shapes} cells, not to one grid. "
+            f"Set analysis_grid.resolution to compare them on a common grid (at most "
+            f"{shapes[0][0]}), or select frames of one resolution.")
 
     if not trajectory.grid.is_periodic:
         # A metric built on a Fourier transform or a wrap-around difference would read the
@@ -277,8 +319,7 @@ def run(
                         "were produced for them", ", ".join(periodic_only), dataset.name,
                         trajectory.grid.boundary)
 
-    factor = coarsen_factor(trajectory.grid, analysis_resolution)
-    grid_size = trajectory.grid.shape[0] // factor
+    grid_size = shapes[0][0]
     keep_frames = _map_frames(maps, indices)
 
     expensive = [m.name for m in metrics if m.cost == "expensive"]
@@ -288,21 +329,24 @@ def run(
             len(indices), expensive,
         )
 
-    calibration = _measure_calibration(
-        trajectory, fields, indices, factor, remap_method, calibration_frames
-    )
+    # A forecast replaces the ladder, so no operator needs a calibration; one measured over its
+    # frames would pool runs at several native resolutions and calibrate nothing.
+    calibration = (Calibration() if prediction is not None else
+                   _measure_calibration(trajectory, fields, indices, to_analysis,
+                                        calibration_frames))
 
     # A per_unit_time level is a rate times the time since the trajectory's first frame.
     time_origin = float(trajectory.times[0])
-    probe = remap_frame(trajectory.frame(int(indices[0]), fields), factor,
-                        method=remap_method)
+    probe = to_analysis(trajectory.frame(int(indices[0]), fields))
     severity_levels = _runnable_levels(
         severity_levels, probe, fields, seed=seed, calibration=calibration,
         analysis_grid=grid_size, times=trajectory.times[indices], time_origin=time_origin,
     )
 
+    # This process's part of the selection; the calibration above used all of it.
+    indices = selection.part(indices)
     run_columns = {**dataset.row(), "analysis_grid": grid_size, "remap_op": remap_method,
-                   "seed": seed}
+                   "seed": seed, "lead_step": None, "lead_time": np.nan}
     rows: list[dict[str, Any]] = []
     curve_rows: list[dict[str, Any]] = []
     stored_maps: dict[str, np.ndarray] = {}
@@ -312,10 +356,11 @@ def run(
     for index in indices:
         t_read = time.perf_counter()
         frame = trajectory.frame(int(index), fields)
+        predicted = None if prediction is None else prediction.frame(int(index), fields)
         t_io += time.perf_counter() - t_read
 
         t0 = time.perf_counter()
-        frame = remap_frame(frame, factor, method=remap_method)
+        frame = to_analysis(frame)
         available = [f for f in fields if f in frame.fields]
         ref_rms = {name: fluctuation_rms(frame.fields[name]) for name in available}
         variants = {
@@ -328,7 +373,11 @@ def run(
             )
             for severity_level in severity_levels
         }
+        if predicted is not None:
+            variants[FORECAST_LEVEL.variant_label] = (
+                FORECAST_LEVEL, apply_prediction(frame, to_analysis(predicted), available))
         t_deg += time.perf_counter() - t0
+        frame_columns = {**run_columns, **trajectory.frame_columns(int(index))}
 
         for spec in metrics:
             if spec.arity == "ensemble" and not frame.has_members:
@@ -348,13 +397,15 @@ def run(
                     rng=derive_rng(seed, "metric", frame.index, field),
                 )
                 kwargs = {"ctx": ctx} if spec.takes_ctx else {}
-                companion = spec.companion
-                # The companion draws from its own generator, so adding one to a metric that
+                handed = spec.cached_companion
+                labels = {c.name: companion_label(spec.name, c.name) for c in spec.companions}
+                # Each companion draws from its own generator, so adding one to a metric that
                 # draws random numbers cannot move the metric's number. The cache is shared.
-                companion_kwargs = ({"ctx": replace(ctx, rng=derive_rng(
-                    seed, f"companion/{spec.name}", frame.index, field))}
-                    if companion is not None and companion.takes_ctx else {})
-                kind = None if companion is None else companion.kind
+                companion_kwargs = {c.name: {"ctx": replace(ctx, rng=derive_rng(
+                    seed, f"companion/{labels[c.name]}", frame.index, field))}
+                    if c.takes_ctx else {} for c in spec.companions}
+                stored_here = (frame.index in keep_frames
+                               and (not maps.fields or field in maps.fields))
 
                 for label, (severity_level, applied) in variants.items():
                     candidate = applied.fields[field]
@@ -368,37 +419,51 @@ def run(
                     else:
                         args = (candidate,)
                     t1 = time.perf_counter()
-                    if kind in ("curve", "points"):
+                    if handed is not None:
                         # First, so the metric reads the companion rather than computing it
                         # again; both calls are timed, so the row's cost is the whole evaluation.
-                        ctx.cache[COMPANION_KEY] = companion.fn(
-                            *((candidate,) if companion.one_field else args), **companion_kwargs)
+                        # Any other companion is not part of the number and is not timed.
+                        ctx.cache[COMPANION_KEY] = handed.fn(
+                            *((candidate,) if handed.one_field else args),
+                            **companion_kwargs[handed.name])
                     value = spec.fn(*args, **kwargs)
                     wall = time.perf_counter() - t1
                     t_metric += wall
-                    row = _emit(spec, field, frame, severity_level, applied, run_columns,
+                    row = _emit(spec, field, frame, severity_level, applied, frame_columns,
                                 value, wall, n_members=n_members)
                     rows.append(row)
-                    if kind == "curve":
-                        curve_rows += [{**row, "coordinate": c, "value": float(v),
-                                        "_row": len(rows) - 1}
-                                       for c, v in zip(*ctx.cache[COMPANION_KEY], strict=True)]
 
-                    # A point set is kept on the clean level too, the undamaged prediction's
-                    # (the reference's on a deterministic dataset, the member mean's on an
-                    # ensemble one), the set the degraded ones are drawn beside.
-                    if (
-                        kind in ("field", "points")
-                        and frame.index in keep_frames
-                        and (not maps.axes or severity_level.label in maps.axes
-                             or (kind == "points" and severity_level.is_reference))
-                        and (not maps.fields or field in maps.fields)
-                    ):
-                        m = (ctx.cache[COMPANION_KEY] if kind == "points"
-                             else companion.fn(*args, **companion_kwargs))
-                        stored_maps[map_key(spec.name, field, label, frame.index)] = (
-                            np.asarray(m, dtype=np.float64)
-                        )
+                    for c in spec.companions:
+                        # A point set, a dense curve or a one-field map is kept on the clean
+                        # level too, the undamaged prediction's (the reference's on a
+                        # deterministic dataset, the member mean's on an ensemble one), the one
+                        # the degraded ones are drawn beside; a two-field map is zero there. A
+                        # curve goes to companions.csv on every row.
+                        dense = c.kind == "curve" and c.analysed is not None
+                        keep = (stored_here and (c.kind != "curve" or dense)
+                                and (not maps.axes or severity_level.label in maps.axes
+                                     or ((c.kind != "field" or c.one_field)
+                                         and severity_level.is_reference)))
+                        if c.kind != "curve" and not keep:
+                            continue
+                        result = (ctx.cache[COMPANION_KEY] if c is handed
+                                  else c.fn(*((candidate,) if c.one_field else args),
+                                            **companion_kwargs[c.name]))
+                        if c.kind == "curve":
+                            coordinates, values = result
+                            if dense and c.unmatched_analysed(coordinates):
+                                raise ValueError(
+                                    f"{labels[c.name]}: the curve's coordinates do not include "
+                                    f"the analysed {c.unmatched_analysed(coordinates)} inside "
+                                    f"its range; curve {np.asarray(coordinates).tolist()}")
+                            curve_rows += [{**row, "metric": labels[c.name], "coordinate": x,
+                                            "value": float(v), "_row": len(rows) - 1}
+                                           for x, v in zip(coordinates, values, strict=True)
+                                           if not dense or x in c.analysed]
+                        if keep:
+                            stored_maps[map_key(labels[c.name], field, label, frame.index)] = (
+                                np.column_stack(result) if dense else np.asarray(result)
+                            ).astype(np.float64)
 
     if skipped_ensemble:
         log.info(
@@ -616,8 +681,7 @@ def _measure_calibration(
     trajectory: Trajectory,
     fields: Sequence[str],
     indices: np.ndarray,
-    factor: int,
-    remap_method: str,
+    to_analysis: Callable[[Frame], Frame],
     n_sample: int,
 ) -> Calibration:
     """Measure each field's spectral properties on the analysis grid, once.
@@ -631,8 +695,7 @@ def _measure_calibration(
 
     frames_by_field: dict[str, list[np.ndarray]] = {f: [] for f in fields}
     for index in chosen:
-        frame = remap_frame(trajectory.frame(int(index), fields), factor,
-                            method=remap_method)
+        frame = to_analysis(trajectory.frame(int(index), fields))
         for name, array in frame.fields.items():
             frames_by_field[name].append(array)
 

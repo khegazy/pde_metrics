@@ -16,9 +16,18 @@ numbers after being sent to someone else.
 
 ## How the measurement works
 
-We have one trusted simulation and no model predictions to test against, so what we
-compare against is manufactured. The reference field is damaged in controlled steps, and
-each candidate metric is asked to score the damaged versions against the original.
+We have one trusted simulation, so what we compare against is mostly manufactured. The
+reference field is damaged in controlled steps, and each candidate metric is asked to score the
+damaged versions against the original.
+
+**Real forecasts.** One dataset, `forecast_re5e4`, holds real predictions of the same flow
+paired with their targets, at ten prediction steps from two starting times, in runs at three
+resolutions. On it the prediction takes the place of the damaged copy: each prediction is scored
+against its target, row by row, and the only ladder entry run is the anchor, so that D below
+keeps its meaning. Who produced the predictions, a trained model or a coarser solver, is not
+recorded. The ordering statistics of Group A are not computed on a forecast; it is reported at
+every prediction step instead (see "A real prediction scored against its target" below), and the
+figure that shows it is `response_along_time`.
 
 Four terms are used everywhere below.
 
@@ -62,7 +71,8 @@ along the trajectory and against a median over frames the drift would read as da
 the reference's spatial variance, so D is the error as a fraction of the fluctuation energy.
 Dividing by the clean value instead would not work, because mean squared error is exactly
 zero there. Why the anchor is the mean rather than a translated copy of the reference is
-recorded in `judgements/001`.
+recorded in `judgements/001`. A metric with a target value reads D on its distance from the
+target instead, zero at the target (see "Metrics with a target value").
 
 **The analysis grid.** Both fields are placed on one common grid before anything is
 measured, by averaging over blocks of cells. Fields that are computed from other fields —
@@ -167,7 +177,9 @@ currently a configured constant, not measured from the data.
 ### `monotone_fraction` — how often the ordering was perfect, with no ties
 
 **What it is.** The fraction of frames on which the severity levels are ordered *strictly* correctly,
-with no ties or inversions anywhere in the sequence.
+with no ties or inversions anywhere in the sequence. The one tie that counts as in order is a
+metric with a target value sitting at the furthest point from its target at two neighbouring
+strengths (see "Metrics with a target value"): it cannot move further.
 
 **Range.** 0 to 1. 1.0 means every frame was perfect.
 
@@ -287,7 +299,10 @@ response-curve data of each card.
 when it moves below, measured: the sign of the median, over frames, of the departure from clean at
 the harshest strength at which that median is more than round-off. It orients every ordering statistic of that degradation and carries
 no judgement: enstrophy falls under blur and rises under noise, and both are recorded as they are.
-For a metric with a target value it is +1, because its distance from the target is what is ordered.
+For a metric with a target value it is likewise the way its reported value moved, and it orients
+nothing: that metric's statistics read its distance from the target, which no sign changes. A blur
+that lowers an extreme-increment frequency ratio from 1 toward 0 reads −1 there, and noise that
+raises it reads +1, though both take it further from its target.
 
 **Caveats.** Measured from the data being described, one sign per degradation. A quantity that moves
 at mild strengths and is back on its clean value at the harshest ones (a translation-invariant
@@ -408,7 +423,7 @@ estimated block length (`blindness_block_length`) is shown beside this number fo
 `selectivity` compares across degradations. Both are medians at the same strength, so one extreme
 frame cannot dominate it. It is a size because a single-field quantity's damage is negative where
 the degradation raises the quantity (noise raises enstrophy), and a rise is as much a response as a
-fall. Empty for a metric with no damage scale and for a metric with a target value.
+fall. Empty for a metric with no damage scale.
 
 **Where it appears.** `axis_response__field-*.csv`.
 
@@ -461,8 +476,9 @@ damage falls wholly on one side of the margin, and with 200 resamples the fracti
 in steps of 0.005. `damage_max_ucb` carries the graded information. Not a
 verdict: being unresponsive to a harmless displacement is the property a position-tolerant metric
 is built for. The resampling runs along one trajectory, so the bound
-reflects variation along it, not between independent realisations. Both are empty for a metric
-with a target value, whose damage is on the raw ratio and is not oriented.
+reflects variation along it, not between independent realisations. For a metric with a target value
+the damage is its distance from the target, so a degradation that leaves it on the target, as a
+translation leaves an extreme-increment frequency ratio at exactly 1, is listed here.
 
 **Where they appear.** `axis_response__field-*.csv`; `blind_axes` in the summary.
 
@@ -560,6 +576,49 @@ responses are read against its largest ladder response instead.
 
 **Where they appear.** `deception_table.csv`; `results.csv` under `degradation = mean_field`.
 
+### `value`, `value_on_target`, `damage` at each `lead_time` — a real prediction scored against its target
+
+**What it is.** On a dataset of real forecasts, every frame pairs a target with the prediction
+made for it, and the prediction is scored as the candidate under `degradation = forecast`
+(family `forecast`, level 1). It is reported at every prediction step of every forecast, nothing
+pooled (`fmeval.analysis.forecast_by_lead`): one row per field, forecast (`trajectory`, its run's
+native grid `param_resolution`, and `start`, the physical time it started) and prediction step
+(`lead_step`, `lead_time`), carrying the metric's `value` on the prediction, its
+`value_on_target` (the metric on the target alone: zero for a two-field error, the truth a
+single-field quantity's prediction is read against), and its `damage`. That is how the
+forecasting benchmarks report a rollout: PDEBench draws the RMSE against the unrolled time step
+(Takamoto et al. 2022, Sect. 4.3, Fig. 5a and 5c) and WeatherBench 2 against lead time (Rasp et
+al. 2024, Fig. 4), both as read for the card of `rmse`.
+
+**Its damage is scaled by its own frame.** A forecast row's damage is its departure from the
+target over the anchor's departure in the same frame, `(v - clean_f) / (anchor_f - clean_f)`,
+not over the span the frames of a ladder share: the anchor moves with the target along a
+forecast (on run `mse_1793794935`, mean squared error's anchor on density, the target's
+variance, ranges from 2.2e-7 to 4.9e-5 over the ten steps of each forecast from t = 0). With the
+default anchor and mean squared error that is the prediction's error over the target's variance,
+the per-step normalisation of The Well's VRMSE and PDEBench's nRMSE (`judgements/015`, `010`). A
+frame whose own span is round-off gets no damage.
+
+**Why the ordering statistics are withheld.** A forecast has one prediction per frame, so there
+is no set of strengths within a frame to put in order. Its prediction step is an ordered axis,
+and errors usually grow along it, but that growth is a property of the predictor, not a strength
+chosen in advance, and this repository encodes no expected response (`docs/decisions.md`, "There
+is still no expectation per degradation"). The forecast is therefore read as a probe: `rho` and
+every other ordering statistic is empty on its rows. Nor is it summarised by one median: its
+error grows along the prediction step by orders of magnitude, so `probe_summary` reports the
+anchor of a forecast run and not the forecast.
+
+**Caveats.** One model's predictions from two starting times, not the many initialisations a
+verification year or a test set averages over. A row of a metric page's table is a lead time
+shown to four significant figures, so forecasts whose lead times agree to that precision share a
+row; on `forecast_re5e4` the runs' lead times at one step differ by at most 4.9e-16 relative
+(run `mse_1793794935`).
+
+**Where they appear.** `results.csv` under `degradation = forecast`; the subsection *On
+`forecast_re5e4`* of a metric page that cites a forecast run, as tables and the lead-time figure,
+and its `fingerprint.json` under `other_runs[...].forecast`; the `response_along_time` figures
+with `along-lead` in their name.
+
 ### `uncorrelated_value`, `uncorrelated_damage`, `uncorrelated_nearest_level` — the right statistics in the wrong place
 
 **What it is.** The value the metric gives the reference moved by a large random offset, drawn
@@ -628,26 +687,33 @@ not comparable between runs with different metric sets.
 
 ### The redundancy matrix — which metrics are duplicates of each other
 
-**What it is.** Rank correlation between every pair of metrics, over every degradation. Two
-metrics that correlate near 1 are near-duplicates and one of them is a wasted panel slot.
+**What it is.** Rank correlation between every pair of metrics run on one physical field, over
+every degradation. Two metrics that correlate near 1 are near-duplicates and one of them is a
+wasted panel slot.
 
-**How it is computed.** One observation per (degradation, severity level), using the median over frames — which
-is the level at which the panel decision is actually made. The **reference severity level is excluded**:
-every pairwise error metric is exactly zero there, so keeping it would add a point all metrics
-share by construction and pull every correlation toward +1.
+**How it is computed.** Separately for each field. One observation per (degradation, severity level),
+using the median over frames — which is the level at which the panel decision is actually made. The
+**reference severity level is excluded**: every pairwise error metric is exactly zero there, so
+keeping it would add a point all metrics share by construction and pull every correlation toward
++1. A metric with a target value enters by its distance from the target. Fields are never pooled:
+density, velocity and vorticity have different units and different metrics, and a median over all
+three fields' rows mostly reads whichever sits in the middle — on the earlier run
+`comparison_1793657627` it correlated `wasserstein`, which runs on density only, with
+`kinetic_energy`, which runs on velocity only. A metric's card shows one column per field it runs
+on, with a dash where the other metric does not run on that field.
 
 **Range.** -1 to 1. The configured reference for "redundant" is 0.95.
 
 **Caveats, and an important one.** High rank correlation means the metrics *order* the
 degradations the same way. It does **not** mean they weight them the same. Measured on our
 data, MAE and MSE correlate at 0.98 to 0.997 over every degradation, yet MAE assigns 38 (vorticity) to 192
-(velocity) times the damage MSE does at an eighth of a cell of displacement (pinned run
+(velocity) times the damage MSE does at an eighth of a cell of displacement (earlier run
 `comparison_1793657627`), because one is linear and the other quadratic
 in the displacement. For selecting between models by ranking they are duplicates; as training
 losses they are not. Read this matrix alongside the displacement figure, never alone.
 
-**Where it appears.** `redundancy_table.csv`, in the comparison folder only, since it needs at
-least two metrics.
+**Where it appears.** `redundancy_table__field-*.csv`, one per field, in the comparison folder only,
+since it needs at least two metrics; "Compared with the other metrics" on each card.
 
 ### The concordance matrix, damage by level, and the participation ratio — agreement in magnitude
 
@@ -690,16 +756,29 @@ directions.
 
 Some metrics report one number that stands for a curve: a distance at every separation, an
 energy at every wavenumber. Such a metric declares the curve as its **companion**, and the run
-stores it beside the result rows.
+stores it beside the result rows. A metric may declare several companions, when its field
+computes or draws several objects behind the number; each has a name, and is written as the
+metric's name for the companion the number is computed from and as `metric.name` for any other.
 
 ### `companions.csv` and `coordinate` — the curve, one row per coordinate
 
-**What it is.** One row per coordinate of the curve for every result row of that metric. It has
-the same columns as `results.csv`, `value` holding the curve's value there, plus `coordinate`,
-the separation, wavenumber or threshold. The values are the literature's own, untransformed.
-The coordinate's name and units are in `run_meta.json`, under the metric's registry entry. A curve
-that is a property of one field, such as a structure function, is stored for the damaged field
-at every strength, and on the clean level it is the reference's own curve.
+**What it is.** One row per analysed coordinate of the curve for every result row of that
+metric. It has the same columns as `results.csv`, `value` holding the curve's value there and
+`metric` the companion's name as written above, plus `coordinate`, the separation, wavenumber or
+threshold. The values are the literature's own, untransformed. The coordinate's name and units,
+and the analysed coordinates if the curve names them, are in `run_meta.json`, under the
+metric's registry entry (`companions`). A curve that is a property of one field, such as a
+structure function, is stored for the damaged field at every strength, and on the clean level
+it is the reference's own curve.
+
+A curve with many coordinates, such as one value per wavenumber shell, may name a few
+coordinates for the analysis. Only those are written here; the whole curve is a **dense curve**,
+stored in `data/error_maps.npz` as an array of two columns, coordinate and value, on the frames,
+ladder entries and fields that `report.error_map` names and on the clean level of those frames,
+under the key `metric:field__variant__tframe` of the per-cell maps. The `companion_curves` figure
+draws the dense curve where one is stored. Analysing every coordinate costs 2.3 to 3.0 s per
+coordinate and field, and the dominance fraction below can only fall as coordinates are added,
+which is why only a few are analysed.
 
 **How it is evaluated.** Each coordinate is read as a metric of its own, named
 `metric[coordinate]`, and receives every per-degradation statistic above (trend, change from
@@ -715,8 +794,9 @@ correlations therefore localises the evidence and does not multiply it. Where th
 crosses zero along its coordinate, the change from clean is large by construction near the
 crossing, and the raw curve is the reading there.
 
-**Where it appears.** `data/companions.csv`; the `companion_curves` figure; the companion table
-of a metric's page.
+**Where it appears.** `data/companions.csv`, and dense curves in `data/error_maps.npz`; the
+`companion_curves` figure, one per curve; the companion table of a metric's page, headed by
+each curve's name when the metric has several.
 
 ### Point sets in `error_maps.npz` — the points behind the number
 
@@ -731,7 +811,10 @@ ladder entries and fields that `report.error_map` names, and on the clean level 
 For a companion of one field, the clean level's set is that of the undamaged prediction: the
 reference's own on a deterministic dataset, the member mean's on an ensemble one. It shares
 `data/error_maps.npz` and its key,
-`metric:field__variant__tframe`, with the per-cell maps.
+`metric:field__variant__tframe`, with the per-cell maps, `metric` being the companion's name as
+written above. A per-cell map of one field, which a metric may store beside its points (the
+pressure its shock positions are drawn on, for instance), is kept on the clean level of those
+frames too, where it is the reference's; a map comparing two fields is zero there and is not.
 
 **Where it appears.** `data/error_maps.npz`; the `companion_points` figure.
 
@@ -742,7 +825,10 @@ strength's curve has moved at least as far from clean as the milder one's at *ev
 each coordinate in its own measured direction. `dominance_min` is the fraction of frames in
 which that held, for the weakest pair of neighbouring strengths (after the forecast dominance of
 Ehm, Gneiting, Jordan and Krüger 2016, *J. R. Stat. Soc. B* 78(3):505–562). `n_coordinates` is how many coordinates it was read over: a coordinate whose
-departure is round-off has no direction and is left out.
+departure is round-off has no direction and is left out. The curve of a metric with a target
+value is read, like the metric, by each coordinate's distance from the target (see "Metrics with
+a target value"): a harsher strength dominates when every coordinate is at least as far from the
+target.
 
 **How to read it.** Near 1, every number built from the curve that grows with each
 coordinate's departure orders those strengths the same way: a root-mean-square, a largest
@@ -779,7 +865,9 @@ its working range before any normalisation.
 
 `value_anchor` is the median value on the anchor entry, and `span` is
 `value_anchor - value_clean`: the metric's full working range, and the denominator of the
-damage score.
+damage score. For a metric with a target value `span` is instead the anchor's median distance
+from the target, between 0 and 1 (see "Metrics with a target value"), while `value_clean` and
+`value_anchor` stay in the metric's own units.
 
 ### `anchor_source`
 
@@ -859,8 +947,7 @@ field change is itself mean squared error on a fixed scale, mean squared error c
 every degradation and reads 0 here; every other metric's profile is what it charges relative to
 that reference.
 
-**Caveats.** It depends on which degradations were run. Empty for a metric with no damage scale and
-for a metric with a target value, whose damage is not oriented.
+**Caveats.** It depends on which degradations were run. Empty for a metric with no damage scale.
 
 ### `most_sensitive_axis`, `least_sensitive_axis` — the two ends of that profile
 
@@ -944,7 +1031,8 @@ The calibration itself is measured once per (field, analysis grid) from frames s
 evenly across the selection, and then held fixed. Re-measuring per frame would make the
 strengths drift as the flow evolves, so two frames would no longer be running the same
 experiment and the per-frame rank correlation — the primary acceptance statistic — would
-be comparing different ladders. It is recorded in `data/calibration.csv`.
+be comparing different ladders. It is recorded in `data/calibration.csv`. A run of real
+forecasts runs no ladder operator, so it measures no calibration and writes neither table.
 
 ### `energy_removed`, `energy_changed` — what the degradation measurably did, not what was asked for
 
@@ -1042,10 +1130,21 @@ every row so a number is never separated from the grid it was computed on.
 
 Which dataset, and where it sits in an ordered family of increasing physical complexity.
 Present on every row as the groundwork for comparing metrics across datasets; not yet consumed.
+On a dataset of real forecasts, `trajectory` names the forecast file each row came from,
+`<run>/forecast_t0-<start>`, and `param_resolution` the native grid of that run.
 
 ### `frame_index`, `time`
 
-The index into the source trajectory, and the corresponding physical time.
+The index into the source trajectory, and the corresponding physical time. On a dataset of real
+forecasts the index runs over every prediction step of every forecast file, and the time is the
+prediction's clock.
+
+### `lead_step`, `lead_time` — how far ahead a forecast predicted
+
+On a dataset of real forecasts, the prediction step of the row: the number of solver steps from
+the forecast's start, as the file names it, and the physical time that covers. A run on a
+coarser grid takes fewer, longer steps to reach the same lead, so `lead_time` is the one
+comparable across runs. Empty on every row that is not a forecast's.
 
 ### `metric`, `arity`, `field`
 
@@ -1084,12 +1183,39 @@ both are failures.
 
 The suite adapts rather than the metric. The reported value stays the raw ratio, as the
 forecast-verification literature reports it, so a reader who sees 0.4 knows immediately
-that the ensemble is too narrow. The **ordering** statistics are computed on the distance
-from the target, |log(value / target)|, which is zero when calibrated and rises in either
-direction. The log makes the scale symmetric, since half the calibrated spread and twice it
-are equally wrong. A value of zero — an ensemble collapsed onto its mean, claiming
-certainty it has not earned — is the furthest point from calibration there is, and is
-ranked as such rather than dropped.
+that the ensemble is too narrow. Everything else is read on the **distance from the target**,
+
+    q = |value - target| / (value + target) = tanh(|ln(value / target)| / 2),
+
+which is zero when calibrated and rises in either direction. It is a fixed increasing function
+of the log ratio |ln(value / target)|, the symmetric measure of relative change (Törnqvist,
+Vartia and Vartia 1985, *The American Statistician* 39(1), 43–46), so it puts every value in the
+same order and every rank statistic is the one the log ratio would give. Like the log ratio it is
+symmetric: half the calibrated spread and twice it are equally wrong (q = 1/3 for both). Unlike
+it, it is bounded, at 1: a value of zero — an ensemble collapsed onto its mean, claiming
+certainty it has not earned, or a smoothed field with no extreme increments left — is the
+furthest point from calibration there is, and the log ratio puts it infinitely far away, where
+two such values cannot be compared, nothing can be divided by it, and an anchor at zero would
+make every finite miscalibration read as no damage at all. An infinite value also reads 1, and a
+negative one, which a ratio does not take, is ranked with them rather than dropped.
+
+What is read on q:
+
+- **The ordering statistics** (`rho`, `monotone_fraction`, `separability_auc_min`, the
+  sensitivity and saturation levels). Two neighbouring strengths both at q = 1 count as in
+  order in `monotone_fraction`, since the value cannot get further from the target; they are
+  still a tie to the rank correlation, which then reads below 1, because the metric cannot tell
+  those strengths apart.
+- **The damage**, D = q(value) / q(anchor): zero at the target rather than at the clean value,
+  never negative, and rising toward the anchor on both sides of the target. With the anchor on
+  one side — the mean-field anchor collapses an ensemble's spread, and removes every extreme
+  increment — a departure to the other side still reads positive damage. The clean value's own
+  distance from the target, an ensemble's sampling miscalibration, is its damage.
+- **The response columns, the blindness bound and the selectivity profile**, through that
+  damage; a degradation that leaves the value on its target is listed in `blind_axes`.
+- **The redundancy matrix**, so that it is compared with other metrics in the same way.
+
+`direction` still records which way the reported value moved.
 
 Without this the axis would arrive flagged on three criteria at once, and the flags would
 be describing the analysis rather than the metric.
@@ -1251,27 +1377,30 @@ translates the ensemble rather than perturbing it, and would leave the spread un
 
 ## The figures
 
+**The field's own figure comes first on a metric card.** A metric's page opens with the figure its own field draws, from the run the page cites, before the figures below that every metric shares. Which renderer draws it follows from what the metric declares (`fmeval/cards/metric_figures.py`, `standard_figure`): a curve or a point set behind the number is drawn by `companion_curves` or `companion_points`, once per field; a single-field quantity by `response_along_time`, its value against time; a two-field metric whose page cites a run of real forecasts by `response_along_time` on that run, its error against lead time, while the rest of Performance stays on the main run; any other two-field metric by `damage_beside_controls`, its misfit against an applied shift beside the pointwise errors. An ensemble score with none of these has no such figure yet, and its page says why: its field draws it against lead time, and the synthetic ensemble has one spread at every frame. Each is a committed SVG with its numbers in a JSON beside it, like every card figure.
+
 | figure | section | what it shows, and how to read it |
 |---|---|---|
-| `sensitivity_profile` | 2 | Four measured statistics for one metric on aligned rows, one row per degradation grouped by family and one marker per field (circle, square, triangle, diamond in sorted field order): the rank correlation `rho` with its resampling interval; the separation of neighbouring strengths as `cliffs_delta_min`, with the Vargha–Delaney anchors 0.12, 0.28, 0.42 as faint ticks for scale and not as grades; `damage_per_change` on a log axis; and `damage_max_ucb` beside the fixed blindness margin. A hollow marker is a field and degradation listed in `blind_axes`, so the response is provably small — a measurement drawn, not a grade. A missing marker is a statistic the analysis withheld. The first figure on every metric card, and the headline figure of the report |
+| `sensitivity_profile` | 2 | Four measured statistics for one metric on aligned rows, one row per degradation grouped by family and one marker per field (circle, square, triangle, diamond in sorted field order): the rank correlation `rho` with its resampling interval; the separation of neighbouring strengths as `cliffs_delta_min`, with the Vargha–Delaney anchors 0.12, 0.28, 0.42 as faint ticks for scale and not as grades; `damage_per_change` on a log axis; and `damage_max_ucb` beside the fixed blindness margin. A hollow marker is a field and degradation listed in `blind_axes`, so the response is provably small — a measurement drawn, not a grade. A missing marker is a statistic the analysis withheld. The first of the harness's figures on every metric card, after the field's own, and the headline figure of the report |
 | `response_curves` | 3 | Median damage over frames against severity level for one metric, one panel per family of degradation (rows) and field (columns), every panel on one shared 0-to-1 scale so onset, slope and saturation are read by position. The solid grey line is damage 1, the field's own mean; the dotted black line is the damage assigned to the fake prediction with the right spectrum; the hollow black ring is `sensitivity_level`, the first level at which the metric has moved a tenth of the way to the anchor; hollow grey markers are strengths flagged `severity_degenerate`; three or fewer usable levels are drawn as markers only; points above the clip are triangles. A field with no damage scale shows the raw value on a grey panel. The numbers behind it are `per_level_response`: per level, the median and quartiles of damage and of the raw value (`damage_median`, `damage_q25`, `damage_q75`, `value_median`, `value_q25`, `value_q75`), the applied and nominal strength, `n_frames` and the median `energy_changed` |
 | `energy_spectrum` | 3 | Cumulative fluctuation energy against wavenumber, per field, with the applied spectral cutoffs drawn on. This sets the resolution of every filter's sequence of strengths: a spectral severity is a fraction of energy to remove and is converted to a cutoff using exactly this curve, so where the curve rises sharply neighbouring severity levels land on the same set of modes and become the same experiment. The density curve is almost a step — 3×10⁻⁵ of its fluctuation energy at or below |k| = 1 and 69% at |k| = √2 — which is why a sharp filter has only a couple of usable severity levels there; vorticity rises gradually, 50% by |k| = 3.2 and 99% by 51, and its cutoffs spread over more than a factor of ten. Dashed lines are cutoffs in use, dotted lines severity levels excluded for repeating a milder severity level or for doing nothing. It says nothing about phase — two fields with identical curves can look entirely different, which is the premise of the trap test above |
 | `ladder_curves` | 3 | Value against severity level for every degradation, with an interquartile band over frames. The curve the correlation summarises. Flat means blind to that failure mode |
-| `companion_curves` | 3 | For a metric with a curve companion: the curve against its coordinate, one panel per degradation, the median over frames at every strength (darker for harsher), the clean curve in black, the anchor dashed and the impostor dotted. The values are the literature's own. A second figure reads each coordinate as a metric of its own: its rank correlation with strength and its change from clean at the harshest strength, one line per degradation |
-| `companion_points` | 3 | For a metric with a point-set companion: the stored sets, one panel per stored variant, frames in time order with each frame's clean level first and at most twelve panels (the caption says when more were stored), on axes shared by every panel so a collapsed set cannot look like the clean one. The first two named coordinates are the axes and a third, if any, the colour. A triangle on a panel's edge is a point with an infinite coordinate, such as a persistence class that never dies |
-| `response_along_time` | 3 | The metric against the frame's physical time, one line per strength, for each degradation whose applied strength changes along the trajectory (`per_unit_time`); the clean field in black. Shows an error growing in time. Not drawn for a run with no such degradation |
+| `companion_curves` | 3 | For each curve companion of a metric: the curve against its coordinate, one panel per degradation, the median over frames at every strength (darker for harsher), the clean curve in black, the anchor dashed and the impostor dotted. A dense curve is drawn at every coordinate on the frames and ladder entries `report.error_map` stored, without a marker on each coordinate. The values are the literature's own. The axes are those the companion declares (`scales`): linear, log or symlog each, where a symlog axis is linear within six decades of the largest magnitude drawn and carries its zero line, for a curve that changes sign such as an energy flux; undeclared, a positive coordinate spanning more than a factor of ten is on a base-2 log axis and the value linear. A companion declaring `style="bars"`, counts over fixed bins such as a rank histogram's, is drawn as grouped bars in each bin, the strengths mildest first and then the clean level, with the anchor and impostor as steps. A second figure reads each analysed coordinate as a metric of its own: its rank correlation with strength and its change from clean at the harshest strength, one line per degradation |
+| `companion_points` | 3 | For each point-set companion of a metric: the stored sets, one panel per stored variant, frames in time order, at most twelve panels (four on a metric card; the caption says when more were stored), on axes shared by every panel so a collapsed set cannot look like the clean one. The first two named coordinates are the axes, on the scales the companion declares (linear by default), and a third, if any, the colour. A set of one field is compared with the reference's, so the clean level's set of the same frame is drawn under every panel as grey rings rather than in a panel of its own; a set computed from both fields has its clean level as each frame's first panel. Coordinates named `birth` and `death` are a persistence diagram and get the diagonal, the line of zero persistence. On a one-dimensional grid, a field map of one field the metric also stores (the pressure, say) is drawn under the points as each variant's line-out against the cell index, the clean level's in grey, so detected shock positions show on the profile. A set of more than 1000 points is drawn as an image inside the figure. A triangle on a panel's edge is a point with an infinite coordinate, such as a persistence class that never dies. The numbers beside it mark each row `points` or `line-out` in `drawn` |
+| `response_along_time` | 3 | The metric against the frame's physical time, one line per strength, for each degradation whose applied strength changes along the trajectory (`per_unit_time`); the clean field in black. Shows an error growing in time. For a single-field quantity also for the ladder entries `report.error_map.axes` names (every entry when it names none): the clean field's line is the quantity's own history, as an energy or enstrophy decay curve is drawn, and a degraded line is the operator applied to each frame on its own, not a rollout. A two-field error under a strength that is the same in every frame is not drawn along time, since it would show only the flow changing. On a dataset of real forecasts, a second figure (`along-lead` in its name): the metric against `lead_time`, one panel per starting time, one line per run, darker the finer the run's grid, with a single-field quantity's value on the target dashed. Machine-learning benchmarks score a rollout step by step: PDEBench computes its errors at every time step (Takamoto et al. 2022, Sect. 3.3, and its code, as read in `metrics/max_error/research_notes.md`). Not drawn for a run with none of these |
 | `monotonicity_heatmap` | 4 | `rho` for every metric against every degradation. Down a column: is this metric monotone? Across a row: what does it detect? Hatched cells fall below the reference value |
 | `severity_level_separation` | 5 | The spread of each severity level across frames, as violins. Where neighbouring violins overlap, the metric cannot rank models one severity level apart |
 | `field_gallery` | 6 | The per-cell contribution to the metric, on **shared colour limits**. Autoscaling each panel would make a heavily smoothed field look identical to the reference. A displaced feature shows as two lobes — one where it should be and is not, one where it is and should not be |
 | `response_sparklines` | 6 | Every metric (rows) against every degradation (columns), each cell a tiny curve of median damage against severity level on one shared 0–1 scale, starting from the undamaged reference. The whole ladder in one view: onset, slope, saturation and a flat, blind response are all read by position. The red dot is the first level at which the metric has moved a tenth of the way to the anchor; the small number is the elasticity; degradations with three or fewer usable levels are drawn as dots; grey cells are metrics with no damage scale on that field. Below each column is the range of the severity actually applied |
 | `response_portrait` | 7 | Every metric against every degradation with each cell split into one wedge per field (key beside the grid), coloured by `cliffs_delta_min`. The one figure that holds all three fields at once: read a row for what a metric can tell apart, a column for which metrics see a degradation, a wedge for how that changes with the field. Grey wedges have no defined value, including fields a metric does not apply to. The colour-bar ticks at 0.12, 0.28 and 0.42 are the Vargha–Delaney small, medium and large anchors, for scale and not as grades. Like `rho`, it is read on the departure from clean in the measured direction, so a quantity that falls under smoothing reads positive when it falls steadily |
-| `concordance_matrix` | 7 | Two matrices side by side: the rank correlation between metrics over the ladder (the redundancy statistic), and Lin's concordance of their damage, which also penalises departure from the identity line. A pair high on the left and lower on the right orders the degradations alike but charges different amounts: mean absolute error and mean squared error are the standing example. Grey cells are undefined, which on the right means a metric with no damage scale. Comparison folder only |
+| `concordance_matrix` | 7 | One figure per field, two matrices side by side: the rank correlation between metrics over the ladder (the redundancy statistic), and Lin's concordance of their damage, which also penalises departure from the identity line. A pair high on the left and lower on the right orders the degradations alike but charges different amounts: mean absolute error and mean squared error are the standing example. Grey cells are undefined, which on the right means a metric with no damage scale. Comparison folder only |
 | `redundancy_dendrogram` | 7 | Average-linkage clustering of the metrics that have a damage scale, on one minus the absolute concordance of their damage. Metrics that join near zero assign nearly the same damage everywhere. Drawn in one colour because it shows structure, not groups to adopt. Needs three metrics with a damage scale |
 | `selectivity_profile` | 7 | Each metric's response across every degradation, as grouped bars. Needs two or more metrics |
 | `deception_panel` | 8 | Damage assigned to the Gaussian field (star) against the ordinary severity levels (open circles), one row per metric, so every metric in the run is compared on each field. A star near zero means the metric sees only second-order statistics. Rows marked "no damage scale" are metrics whose clean and anchor values coincide |
-| `damage_beside_controls` | 9 | One metric's median damage against the applied strength, log-log, beside the pointwise controls `mae`, `mse`, `rmse` and `nrmse` (thin, grey, distinct line styles), one column per displacement degradation and one row per field, the grey line at damage 1. Drawn from `damage_by_level`, the same numbers as the per-strength table beneath it on the card. Parallel lines charge in the same proportion at every strength; a steeper line charges relatively more for the larger shifts, which is what decides whether two metrics are interchangeable as training losses. Needs a second metric in the run; a field on which the metric has no damage scale says so |
+| `damage_beside_controls` | 9 | One metric's median damage against the applied strength, log-log, beside the pointwise controls `mae`, `mse`, `rmse` and `vrmse` (thin, grey, distinct line styles), one column per displacement degradation and one row per field, the grey line at damage 1. Drawn from `damage_by_level`, the same numbers as the per-strength table beneath it on the card. Parallel lines charge in the same proportion at every strength; a steeper line charges relatively more for the larger shifts, which is what decides whether two metrics are interchangeable as training losses. Needs a second metric in the run; a field on which the metric has no damage scale says so |
 | `displacement_response` | 9 | Damage against displacement distance, log x. Shape and amplitude are exactly correct at every point on this curve; only position changes. The project's central figure. The companion panel plots the same points against `energy_changed`, which is normalised MSE, so every curve there reads as that metric relative to MSE, drawn dashed black as the reference in both panels. Metrics with no damage scale are left out |
 | `cost_frontier` | 10 | Worst-degradation correlation against cost. Upper left is useful; upper right is right-but-unaffordable, so a diagnostic rather than a loss |
+| `complexity_response` | 12 | For one metric, three statistics of each dataset of one family against the dataset's `complexity_rank`, one line per field: `rho_median`, `gaussian_impostor_damage` and `sensitivity_level_median`. Each is computed on each dataset by itself, against that dataset's own anchor, so the points can be compared across datasets; raw values cannot and are never drawn. Only in a folder gathered from a family sweep (`dataset_family=<name>` with `-m`), where it is the only figure: every other figure would pool rows whose raw values mean something different on each dataset, and each member's own folder draws them |
 
 The tables follow the same sections. Besides the summary and the per-degradation tracking table
 (`axis_detail`), `axis_response` gives the response columns of Group A, continued — the strength
@@ -1283,6 +1412,35 @@ column, including those the typeset table leaves out.
 
 Every figure has a CSV of exactly the numbers plotted, in `data/figure_data/`. No number
 appears in the report without a machine-readable source in the same folder.
+
+## Across the experiments: which runs a metric's card cites
+
+A run is on one dataset, and every metric is run on every dataset where it makes sense, so a
+card cites one run per experiment. The datasets a card may cite are `evidence_datasets` in
+`configs/cards/default.yaml`, each with the kind of claim a run on it supports.
+
+- **The primary run** fills `## Performance` and the subsections of `## Results` per test. It is
+  the metric's field-standard experiment where this repository has one.
+- **Each further run** has its own subsection of `## Results`, headed *On `<dataset>`*. It opens
+  with the dataset's label in bold, so numbers from an analytic check or a calibrated null are
+  never read as numbers about turbulence, then the run's provenance, a link to each degradation
+  the run applied, and the per-family and trap-test tables of that run. The figures and the
+  comparisons with other metrics come from the primary run only.
+- **The "Across the experiments" table** sits at the top of `## Results`: one row per evidence
+  dataset, and in each row one of three states. *Measured* names the run the card cites.
+  *Not applicable* gives the reason. A reason the code can know is derived from what the
+  metric declares and what the dataset offers (`evidence_dataset_properties` in the same file,
+  and the dataset's own `fields`): a metric declaring `requires_periodic` on a dataset that is
+  not periodic, an ensemble metric on one realisation per frame, a metric of fields the dataset
+  does not provide, such as pressure on `kinet_re5e4`. A reason only a person can give, that
+  the result would carry no information, is the card's `not_run` entry in `card.yaml`.
+  *Not yet run* means the metric can run there and no run is cited yet. A pairwise or
+  single-field metric on an ensemble dataset scores the member mean, and the row says so.
+
+`docs/catalog.json` carries the same records: `evidence` is the primary run, `other_evidence`
+one record per further run, and `experiments` the table's rows (`dataset`, `claim`, `state`,
+`run`, `primary`, `reason`, `note`). The site's coverage page puts every metric's row in one
+table, with the proposals in `proposals/` whose front matter names the metric.
 
 ---
 

@@ -16,8 +16,13 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 
 | File | Title | Status |
 |---|---|---|
+| [EXP-crps-gneiting-forecaster-suite.md](EXP-crps-gneiting-forecaster-suite.md) | The ideal, climatological, unfocused and Hamill forecasters as an ensemble ladder | proposed |
 | [EXP-energy_distance-tail-only-degradation.md](EXP-energy_distance-tail-only-degradation.md) | A degradation that damages only the tails of the increment distribution | see also EXP-tail_index-pareto-spike-injection.md |
 | [EXP-energy_score-correlated-synthetic-ensemble.md](EXP-energy_score-correlated-synthetic-ensemble.md) | A synthetic ensemble with a known spatial correlation, and a ladder that miscorrelates it | proposed |
+| [EXP-enstrophy-budget-closure-from-consecutive-states.md](EXP-enstrophy-budget-closure-from-consecutive-states.md) | Energy and enstrophy budgets closed on densely sampled consecutive states | proposed |
+| [EXP-increment_flatness-isotropic-3d-turbulence-cutouts.md](EXP-increment_flatness-isotropic-3d-turbulence-cutouts.md) | Cutouts of forced isotropic three-dimensional turbulence with an inertial range | proposed |
+| [EXP-max_error-grid-convergence-with-a-known-solution.md](EXP-max_error-grid-convergence-with-a-known-solution.md) | An order-of-accuracy test against a known solution on systematically refined grids | proposed |
+| [EXP-nrmse-rollouts-over-many-initial-conditions.md](EXP-nrmse-rollouts-over-many-initial-conditions.md) | Model rollouts against the solver over many initial conditions | proposed |
 | [EXP-orchestrator-20261023-anisotropic-blur.md](EXP-orchestrator-20261023-anisotropic-blur.md) | A directional (anisotropic) blur | proposed |
 | [EXP-orchestrator-20261023-constraint-violation.md](EXP-orchestrator-20261023-constraint-violation.md) | Controlled violations of admissibility conditions | proposed |
 | [EXP-orchestrator-20261023-dilatational-scaling.md](EXP-orchestrator-20261023-dilatational-scaling.md) | Scaling the dilatational part of the velocity | proposed |
@@ -25,10 +30,14 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 | [EXP-orchestrator-20261023-temporal-ladder.md](EXP-orchestrator-20261023-temporal-ladder.md) | A degradation ladder for trajectories | proposed |
 | [EXP-persistence_distance-spurious-feature-injection.md](EXP-persistence_distance-spurious-feature-injection.md) | Injecting isolated spurious features of known depth | proposed |
 | [EXP-persistence_distance-topological-simplification.md](EXP-persistence_distance-topological-simplification.md) | Persistence-sensitive simplification as a degradation | proposed |
+| [EXP-shock_mask_overlap-geometric-and-perturbed-cases.md](EXP-shock_mask_overlap-geometric-and-perturbed-cases.md) | Two-dimensional shock sets with known displacement, size and orientation errors | proposed |
 | [EXP-shock_set_distance-2d-shock-dataset.md](EXP-shock_set_distance-2d-shock-dataset.md) | A two-dimensional shock dataset for the shock-set distance | proposed |
 | [EXP-sod_evidence-sod-time-offset.md](EXP-sod_evidence-sod-time-offset.md) | The exact Sod solution at a shifted time, as a physically consistent wave-position error | proposed |
 | [EXP-spectral_energy_flux-forced-2d-compressible-flux-loop.md](EXP-spectral_energy_flux-forced-2d-compressible-flux-loop.md) | Forced two-dimensional compressible turbulence at Mach 0.3 to 0.5 | proposed |
 | [EXP-spectral_energy_flux-graded-phase-randomisation.md](EXP-spectral_energy_flux-graded-phase-randomisation.md) | Graded phase randomisation, an ordinal axis between the reference and the impostor | proposed |
+| [EXP-spread_skill-heteroscedastic-synthetic-ensemble.md](EXP-spread_skill-heteroscedastic-synthetic-ensemble.md) | A synthetic ensemble whose true spread varies from case to case | proposed |
+| [EXP-spread_skill-perturbed-initial-condition-ensemble.md](EXP-spread_skill-perturbed-initial-condition-ensemble.md) | A perfect-model ensemble of the solver from perturbed initial conditions, over lead times | proposed |
+| [EXP-tail_exceedance-base-period-climatology.md](EXP-tail_exceedance-base-period-climatology.md) | Exceedance thresholds from a separate base period of a long stationary reference | proposed |
 | [EXP-tail_index-pareto-spike-injection.md](EXP-tail_index-pareto-spike-injection.md) | Inject sparse spikes with power-law amplitudes of a known exponent | see also EXP-energy_distance-tail-only-degradation.md |
 | [EXP-wasserstein-background-ratio-sweep.md](EXP-wasserstein-background-ratio-sweep.md) | Translate a positive feature over backgrounds of increasing size | proposed |
 | [EXP-wasserstein-known-answer-transport.md](EXP-wasserstein-known-answer-transport.md) | Known-answer transport problems on the torus | proposed |
@@ -38,15 +47,14 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 | [MTR-energy_score-patched-energy-score.md](MTR-energy_score-patched-energy-score.md) | Patched energy score, local in space and cheap on large grids | proposed |
 | [MTR-energy_score-transformed-difference-scores.md](MTR-energy_score-transformed-difference-scores.md) | Proper scores of the vector of weighted pairwise differences | proposed |
 | [MTR-max_error-high-quantile-error.md](MTR-max_error-high-quantile-error.md) | A high quantile of the pointwise absolute error | proposed |
-| [MTR-max_error-mean-of-channel-maxima.md](MTR-max_error-mean-of-channel-maxima.md) | Maximum error averaged over channels (PDEBench's reduction) | proposed |
 | [MTR-max_error-vector-magnitude.md](MTR-max_error-vector-magnitude.md) | Maximum of the error vector's length | proposed |
 | [MTR-persistence_distance-betti-curve-distance.md](MTR-persistence_distance-betti-curve-distance.md) | Distance between Betti curves | proposed |
 | [MTR-persistence_distance-signed-vortex-census.md](MTR-persistence_distance-signed-vortex-census.md) | Signed vortex census from zero-dimensional persistence | proposed |
-| [MTR-persistence_distance-wasserstein-diagram-distance.md](MTR-persistence_distance-wasserstein-diagram-distance.md) | p-Wasserstein distance between persistence diagrams | proposed |
+| [MTR-persistence_distance-wasserstein-diagram-distance.md](MTR-persistence_distance-wasserstein-diagram-distance.md) | 2-Wasserstein distance between persistence diagrams | proposed |
 | [MTR-shock_mask_overlap-fractions-skill-score.md](MTR-shock_mask_overlap-fractions-skill-score.md) | Fractions skill score of shock masks over neighbourhood width | proposed |
 | [MTR-shock_set_distance-full-shock-zone-detector.md](MTR-shock_set_distance-full-shock-zone-detector.md) | The full Schaal-Springel shock finder, with a compression gate and a single-layer surface | proposed |
 | [MTR-shock_set_distance-object-matched-shock-distance.md](MTR-shock_set_distance-object-matched-shock-distance.md) | Object-matched shock distance, after MODE | proposed |
-| [MTR-shock_set_distance-other-surface-distance-summaries.md](MTR-shock_set_distance-other-surface-distance-summaries.md) | Hausdorff, quantile-Hausdorff, AVD and MASD summaries of the same shock-set distances | proposed |
+| [MTR-shock_set_distance-other-surface-distance-summaries.md](MTR-shock_set_distance-other-surface-distance-summaries.md) | The average distance (AVD) summary of the same shock-set distances | proposed |
 | [MTR-shock_set_distance-shock-thickness-and-overshoot.md](MTR-shock_set_distance-shock-thickness-and-overshoot.md) | Shock thickness and overshoot at the detected shocks | proposed |
 | [MTR-spectral_energy_flux-enstrophy-flux.md](MTR-spectral_energy_flux-enstrophy-flux.md) | Spectral enstrophy flux of two-dimensional flow | proposed |
 | [MTR-spectral_energy_flux-flux-sign-agreement.md](MTR-spectral_energy_flux-flux-sign-agreement.md) | Direction-of-transfer disagreement, a dimension-neutral backscatter fraction | proposed |

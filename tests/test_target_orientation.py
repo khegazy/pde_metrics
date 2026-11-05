@@ -22,8 +22,21 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fmeval.analysis import add_damage, normalisation, summarise_axes
-from tests.conftest import make_frame
+from fmeval.analysis import (
+    FDR_LEVEL,
+    FURTHEST_FROM_TARGET,
+    GROUP_KEYS,
+    _oriented,
+    add_damage,
+    dominance,
+    normalisation,
+    report_card,
+    summarise_axes,
+)
+from fmeval.ladder import build_ladder
+from fmeval.pipeline import DatasetInfo, run
+from metrics import registry as metric_registry
+from tests.conftest import SyntheticTrajectory, make_frame
 
 
 def _frame(values: list[float], *, metric: str = "spread_skill",
@@ -113,9 +126,133 @@ def test_a_value_at_or_below_zero_does_not_break_the_ranking():
 
 
 def test_response_statistics_run_on_the_distance_from_the_target():
-    """Onset and resolution are read on |log(value / target)|, the scale the ordering runs on."""
+    """Onset and resolution are read on the distance from the target, the scale the ordering
+    runs on."""
     df = _frame([1.0, 1.2, 1.5, 2.0, 3.0])
     row = summarise_axes(add_damage(df, normalisation(df)), norm=normalisation(df),
                          n_bootstrap=0).iloc[0]
     assert row["elasticity"] > 0, "the distance from calibration rises along the ladder"
     assert row["response_shape"] != "" and np.isfinite(row["severity_resolution"])
+
+
+# --- reading a target metric: direction, damage, blindness and zeros --------------------------
+
+
+def test_direction_records_which_way_the_raw_value_moved():
+    """The ordering reads the distance from the target on both sides alike, so `direction` is free
+    to say which way the reported value went: a ratio that falls reads -1, one that rises +1,
+    and both are equally well ordered."""
+    falls = _row(_frame([1.0, 0.8, 0.55, 0.35, 0.2]))
+    rises = _row(_frame([1.0, 1.4, 2.0, 3.1, 4.5]))
+    assert (falls["direction"], rises["direction"]) == (-1, 1)
+    assert falls["rho"] == pytest.approx(1.0) and rises["rho"] == pytest.approx(1.0)
+
+
+def test_distance_from_the_target_is_symmetric_bounded_and_ordered_as_the_log_ratio():
+    """q(v) = |v - t| / (v + t) = tanh(|ln(v / t)| / 2): half and twice the target are equally
+    far, zero and infinity are furthest, and the order is that of |ln(v / t)|."""
+    v = pd.Series([0.5, 2.0, 0.0, np.inf, 1.0, 0.1, 3.0, np.nan])
+    q = _oriented(v, 1, 1.0).to_numpy()
+    assert q[0] == pytest.approx(q[1]) == pytest.approx(1 / 3)
+    assert q[2] == q[3] == FURTHEST_FROM_TARGET and q[4] == 0.0 and np.isnan(q[7])
+    finite = v.iloc[[0, 4, 5, 6]].to_numpy()
+    assert np.array_equal(np.argsort(q[[0, 4, 5, 6]]), np.argsort(np.abs(np.log(finite))))
+    assert np.allclose(q[[0, 4, 5, 6]], np.tanh(np.abs(np.log(finite)) / 2))
+
+
+def test_damage_is_zero_at_the_target_and_positive_on_both_sides_of_it():
+    """The anchor sits on the collapsed side (an ensemble replaced by its mean has no spread), and
+    inflation must still read positive damage, equal to the deflation that is as far off."""
+    df = make_frame(metric="spread_skill", reference=1.0, n_frames=6,
+                    axes={"spread_inflate": [2.0, 4.0], "spread_deflate": [0.5, 0.25],
+                          "mean_field": [0.0]})
+    df["target_value"] = 1.0
+    norm = normalisation(df)
+    assert norm.iloc[0]["span"] == pytest.approx(FURTHEST_FROM_TARGET)
+    damage = add_damage(df, norm).groupby(["degradation", "level"])["damage"].median()
+    assert damage[("identity", 0)] == 0.0
+    assert damage[("mean_field", 1)] == pytest.approx(1.0)
+    for level in (1, 2):
+        assert damage[("spread_inflate", level)] > 0
+        assert damage[("spread_inflate", level)] == pytest.approx(
+            damage[("spread_deflate", level)])
+    assert damage[("spread_inflate", 2)] > damage[("spread_inflate", 1)]
+
+
+def test_an_axis_on_which_the_value_stays_on_the_target_is_listed_blind():
+    """A translation leaves an extreme-increment frequency ratio at exactly 1, its target, so its
+    damage is provably zero; the blur that removes the extremes is not."""
+    df = make_frame(metric="tail_exceedance", reference=1.0, n_frames=20,
+                    axes={"translate_x": [1.0, 1.0, 1.0], "gaussian_blur": [0.6, 0.3, 0.1],
+                          "mean_field": [0.0]})
+    df["target_value"] = 1.0
+    norm = normalisation(df)
+    axes = summarise_axes(add_damage(df, norm), norm=norm, n_bootstrap=50)
+    by_axis = axes.set_index("degradation")
+    assert by_axis.loc["translate_x", "damage_max_ucb"] == pytest.approx(0.0)
+    assert by_axis.loc["translate_x", "blindness_q"] < FDR_LEVEL
+    assert by_axis.loc["gaussian_blur", "blindness_q"] == pytest.approx(1.0)
+    card = report_card(axes, pd.DataFrame(columns=GROUP_KEYS), norm)
+    assert card.iloc[0]["blind_axes"] == "translate_x"
+
+
+def test_a_frame_that_reaches_zero_and_stays_there_is_ordered():
+    """(0.3, 0, 0, 0): a blur removes every extreme increment by the second strength. Zero is the
+    furthest point from the target, so the frame has a rank correlation (not NaN) and is in
+    order; the tie at the furthest point is not a step backwards."""
+    row = _row(_frame([1.0, 0.3, 0.0, 0.0, 0.0]))
+    assert np.isfinite(row["rho"]) and row["rho"] > 0
+    assert row["monotone_fraction"] == pytest.approx(1.0)
+
+
+def test_a_tie_short_of_the_furthest_point_is_still_out_of_order():
+    """Only the furthest point excuses a tie: a ratio stuck at 0.5 over two strengths is not
+    ordered."""
+    row = _row(_frame([1.0, 0.8, 0.5, 0.5, 0.2]))
+    assert row["monotone_fraction"] == pytest.approx(0.0)
+
+
+def test_a_target_that_is_not_positive_is_refused():
+    """The distance from the target is a ratio, so a zero or negative target has no scale."""
+    df = _frame([1.0, 0.8, 0.5, 0.3, 0.2])
+    df["target_value"] = 0.0
+    with pytest.raises(ValueError, match="positive target"):
+        normalisation(df)
+
+
+def test_every_curve_companion_of_a_target_metric_carries_the_target(temporary_metric):
+    """A curve of a target-valued metric is on the metric's scale, so its rows carry the target
+    the analysis reads it by: the metric's own curve and a named one alike."""
+
+    def ratio(reference, candidate):
+        """Variance ratio, 1 on identical fields."""
+        return float(np.var(candidate) / np.var(reference))
+
+    temporary_metric(name="_ratio", arity="pairwise", fields=("*",), units="dimensionless",
+                     symmetric=False, target=1.0)(ratio)
+    metric_registry.companion(of="_ratio", kind="curve", coordinate=("power", "index"))(
+        lambda reference, candidate: (np.array([1, 2]), np.array(
+            [ratio(reference, candidate), ratio(reference, candidate) ** 2])))
+    metric_registry.companion(of="_ratio", name="other", kind="curve",
+                              coordinate=("power", "index"))(
+        lambda reference, candidate: (np.array([3]), np.array([ratio(reference, candidate)])))
+    result = run(SyntheticTrajectory(), [metric_registry.get("_ratio")],
+                 build_ladder({"gaussian_blur": {"severities": [1.0]}}), fields=["density"],
+                 dataset=DatasetInfo(name="synthetic"), seed=0)
+    curves = result.companions
+    assert set(curves["metric"].astype(str)) == {"_ratio", "_ratio.other"}
+    assert (curves["target_value"] == 1.0).all()
+
+
+def test_dominance_reads_a_target_curve_by_its_distance_from_the_target():
+    """Hand-computed. One coordinate, clean 1, levels 1.07, 1.41, 0. The raw value's direction
+    is set by the harshest level (down to 0), so the raw reading orients 1.07 and 1.41 as -0.07
+    and -0.41 and calls the second strength better than the first in every frame (dominance 0).
+    By distance from the target, |v - 1| / (v + 1) = 0.034, 0.171 and 1: each strength is further
+    from right than the one before (dominance 1). The same rows without a target keep the raw
+    reading."""
+    rows = make_frame(metric="m", field="density", n_frames=6, reference=1.0,
+                      axes={"gaussian_blur": [1.07, 1.41, 0.0]}).assign(coordinate=1)
+    assert dominance(rows)["dominance_min"].iloc[0] == 0.0
+    rows["target_value"] = 1.0
+    assert dominance(rows)["dominance_min"].iloc[0] == 1.0

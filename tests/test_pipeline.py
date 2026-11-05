@@ -7,11 +7,13 @@ groupby on that frame, so its columns and dtypes are frozen deliberately.
 from __future__ import annotations
 
 import json
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
 import pytest
 
+from evaluate import select_fields
 from fmeval import io as fio
 from fmeval.data.base import GridSpec, TimeSelection
 from fmeval.data.kinet_raw import KinetRawTrajectory
@@ -222,6 +224,14 @@ def test_maps_are_disabled_by_default(traj):
 # --- run folders ------------------------------------------------------------------------
 
 
+def test_two_invocations_in_one_second_claim_different_stamps(tmp_path, monkeypatch):
+    """Folders are written under the stamp claimed at the start; two runs started in the same
+    second must not share it, or the later run's folders overwrite the earlier run's."""
+    monkeypatch.setattr(fio.time, "time", lambda: 1234567890.5)
+    first, second = fio.claim_stamp(tmp_path), fio.claim_stamp(tmp_path)
+    assert (first, second) == (1234567890, 1234567891), (first, second)
+
+
 def test_run_folder_round_trip(tmp_path, traj):
     result = evaluate(traj, maps=MapRequest(enabled=True, frames=[-1]))
     folder = fio.make_run_folder(tmp_path, "mse", 1234567890)
@@ -271,14 +281,129 @@ def test_load_runs_concatenates_and_tags(tmp_path, traj):
     for name in ("mse", "mae"):
         folder = fio.make_run_folder(tmp_path, name, 42)
         fio.write_results(folder, rows[rows["metric"] == name])
-    combined = fio.load_runs("*_42", root=tmp_path)
+    combined = fio.load_runs(tmp_path.glob("*_42"))
     assert set(combined["run_dir"]) == {"mse_42", "mae_42"}
     assert len(combined) == len(rows)
 
 
 def test_load_runs_without_matches_raises(tmp_path):
-    with pytest.raises(FileNotFoundError, match="no run folders"):
-        fio.load_runs("nothing_*", root=tmp_path)
+    with pytest.raises(FileNotFoundError, match="no results"):
+        fio.load_runs(tmp_path.glob("nothing_*"))
+
+
+def _member(tmp_path, rows, dataset: str, stamp: int, **config):
+    """A run folder as evaluate.py writes it, for one dataset of family ``fam``."""
+    folder = fio.make_run_folder(tmp_path, "comparison", stamp)
+    fio.write_results(folder, rows.assign(dataset=dataset, dataset_family="fam"))
+    for table in ("calibration", "calibration_spectrum"):
+        fio.write_table(folder, pd.DataFrame({"field": ["density"], "x": [stamp]}), table)
+    fio.write_config(folder, {"seed": 1, "dataset": {"name": dataset}, **config})
+    fio.write_run_meta(folder, dataset=dataset, analysis_grid=8, anchor_label="mean_field")
+    return folder.root
+
+
+def test_combine_runs_gathers_one_family_into_one_folder(tmp_path, traj):
+    rows = evaluate(traj).rows
+    members = [_member(tmp_path, rows, "a", 1), _member(tmp_path, rows, "b", 2)]
+    folder = fio.combine_runs(members, 3)
+    assert folder.root.name == "fam_3"
+    combined = fio.read_results(folder)
+    assert list(combined.columns) == list(rows.columns)
+    assert combined.groupby("dataset").size().to_dict() == {"a": len(rows), "b": len(rows)}
+    meta = fio.read_run_meta(folder)
+    assert meta["anchor_label"] == "mean_field" and meta["dataset_family"] == "fam"
+    assert {k: v["run"] for k, v in meta["members"].items()} == {
+        "a": "comparison_1", "b": "comparison_2"}
+    assert fio.read_config(folder)["dataset"] == {"a": {"name": "a"}, "b": {"name": "b"}}
+    assert sorted(pd.read_csv(folder.data / "calibration.csv")["dataset"]) == ["a", "b"]
+
+
+def test_combine_runs_refuses_members_on_different_scales(tmp_path, traj):
+    """Two members whose settings differ beyond the dataset would put two damage scales side
+    by side; one dataset run twice is not a comparison at all."""
+    rows = evaluate(traj).rows
+    a = _member(tmp_path, rows, "a", 1)
+    with pytest.raises(ValueError, match=r"\['analysis'\]"):
+        fio.combine_runs([a, _member(tmp_path, rows, "b", 2, analysis={"anchor": "x"})], 9)
+    with pytest.raises(ValueError, match="one dataset of its own"):
+        fio.combine_runs([a, _member(tmp_path, rows, "a", 3)], 9)
+    with pytest.raises(ValueError, match="at least two"):
+        fio.combine_runs([a], 9)
+
+
+def _shard(tmp_path, rows, metrics: list[str], stamp: int, calibration: int = 0,
+           fields: tuple[str, ...] = ("density",)):
+    """A run folder as evaluate.py writes it for some of the metrics of one evaluation."""
+    folder = fio.make_run_folder(tmp_path, "comparison", stamp)
+    fio.write_results(folder, rows[rows["metric"].isin(metrics)])
+    fio.write_maps(folder, {f"{m}__map": np.full(2, stamp, dtype=float) for m in metrics})
+    for table in ("calibration", "calibration_spectrum"):
+        fio.write_table(folder, pd.DataFrame({"field": list(fields),
+                                              "x": [calibration] * len(fields)}), table)
+    fio.write_config(folder, {"seed": 1, "dataset": {"name": "a"}, "metrics": metrics})
+    fio.write_run_meta(folder, dataset="a", analysis_grid=8, anchor_label="mean_field",
+                       metric=", ".join(metrics))
+    return folder.root
+
+
+def test_combine_runs_merges_the_shards_of_one_evaluation(tmp_path, traj):
+    """An evaluation split by metrics over several processes merges into the comparison folder
+    one process would have written: every row and map, the calibration once."""
+    rows = evaluate(traj).rows
+    names = sorted(rows["metric"].unique())
+    assert len(names) >= 2, names
+    shards = [_shard(tmp_path, rows, names[:1], 1), _shard(tmp_path, rows, names[1:], 2)]
+    folder = fio.combine_runs(shards, 3, across="shards")
+    assert folder.root.name == "comparison_3"
+    assert len(fio.read_results(folder)) == len(rows)
+    assert sorted(fio.read_maps(folder)) == sorted(f"{m}__map" for m in names)
+    assert fio.read_config(folder)["metrics"] == names
+    meta = fio.read_run_meta(folder)
+    assert meta["metric"] == ", ".join(names) and meta["comparison"] is True
+    assert meta["git"] == fio.read_run_meta(shards[0])["git"]
+    assert len(pd.read_csv(folder.data / "calibration.csv")) == 1
+
+
+def test_frame_shards_together_are_the_whole_run(traj):
+    """A frame shard evaluates every shards-th frame of the selection under the calibration of
+    the whole selection, so the shards' rows together are the unsharded run's, value for value."""
+    whole = evaluate(traj).rows
+    parts = [evaluate(traj, selection=TimeSelection(start=1, shard=k, shards=2)).rows
+             for k in range(2)]
+    frames = [set(p["frame_index"]) for p in parts]
+    assert not frames[0] & frames[1] and frames[0] | frames[1] == set(whole["frame_index"])
+    key = ["metric", "field", "degradation", "level", "frame_index"]
+    merged = pd.concat(parts).sort_values(key).reset_index(drop=True)
+    expected = whole.sort_values(key).reset_index(drop=True)
+    pd.testing.assert_series_equal(merged["value"], expected["value"])
+    pd.testing.assert_series_equal(merged["severity"], expected["severity"])
+
+
+def test_shards_scoring_different_fields_merge_with_one_calibration_per_field(tmp_path, traj):
+    """A density-only metric's shard calibrates density alone; the merge keeps each field's
+    calibration once."""
+    rows = evaluate(traj).rows
+    names = sorted(rows["metric"].unique())
+    shards = [_shard(tmp_path, rows, names[:1], 1),
+              _shard(tmp_path, rows, names[1:], 2, fields=("density", "velocity"))]
+    folder = fio.combine_runs(shards, 3, across="shards")
+    assert sorted(pd.read_csv(folder.data / "calibration.csv")["field"]) == ["density", "velocity"]
+
+
+def test_combine_runs_refuses_shards_that_overlap_or_ran_different_ladders(tmp_path, traj):
+    rows = evaluate(traj).rows
+    names = sorted(rows["metric"].unique())
+    a = _shard(tmp_path, rows, names, 1)
+    with pytest.raises(ValueError, match="same metric on the same frame"):
+        fio.combine_runs([a, _shard(tmp_path, rows, names[:1], 2)], 9, across="shards")
+    with pytest.raises(ValueError, match="a shard is missing"):
+        fio.combine_runs([_shard(tmp_path, rows, names[:1], 5),
+                          _shard(tmp_path, rows[rows["frame_index"] != rows["frame_index"].max()],
+                                 names[1:], 6)], 9, across="shards")
+    with pytest.raises(ValueError, match="calibration tables differ"):
+        fio.combine_runs([_shard(tmp_path, rows, names[:1], 3),
+                          _shard(tmp_path, rows, names[1:], 4, calibration=1)], 9,
+                         across="shards")
 
 
 def test_a_map_key_round_trips_even_when_the_label_contains_a_double_underscore():
@@ -355,3 +480,15 @@ def test_a_derived_field_is_the_same_whether_or_not_its_inputs_are_requested(tmp
         np.testing.assert_array_equal(alone, with_inputs)
     finally:
         trajectory.close()
+
+
+def test_a_derived_field_is_read_with_its_inputs():
+    """A run whose metrics accept only vorticity still reads velocity when the dataset recomputes
+    derived fields, so vorticity is the spectral curl on the analysis grid, not the solver's
+    stored stencil (issues/099); without recomputation nothing is added."""
+    trajectory = SimpleNamespace(fields=("density", "velocity", "vorticity"))
+    specs = [metric_registry.get("enstrophy")]
+    for recompute, expected in ((True, ["vorticity", "velocity"]), (False, ["vorticity"])):
+        job = SimpleNamespace(fields=None, dataset=SimpleNamespace(
+            name="d", fields=["density", "velocity", "vorticity"], recompute_derived=recompute))
+        assert select_fields(job, trajectory, specs) == expected, recompute

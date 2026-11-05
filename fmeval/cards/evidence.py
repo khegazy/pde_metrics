@@ -13,7 +13,7 @@ report of the same run cannot disagree.
 from __future__ import annotations
 
 import dataclasses
-import json
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -21,16 +21,24 @@ from typing import Any
 
 import pandas as pd
 
+from fmeval import REPO
 from fmeval import analysis as an
 from fmeval.config import load_cards_config
 from fmeval.io import COMPANIONS, read_config, read_results, read_run_meta
 from fmeval.report.registry import PLOTS
 from fmeval.report.vocabulary import FAMILY_INFO, family_label, label
 
-from . import loader
-from .loader import write_strict_json
-from .metric_figures import FIGURE_BLOCKS, METRIC_FIGURES, CardFigure, metric_figures
-from .prose import has_block, write_block
+from . import catalog, loader
+from .loader import json_records, write_strict_json
+from .metric_figures import (
+    FIGURE_BLOCKS,
+    METRIC_FIGURES,
+    SLOT_TITLES,
+    STANDARD,
+    CardFigure,
+    metric_figures,
+)
+from .prose import EXPERIMENT_BLOCK, generated_blocks, has_block, insert_block, write_block
 
 #: Which generated block each degradation family's results go into. Derived from
 #: :data:`fmeval.report.vocabulary.FAMILY_INFO` rather than written out again, so a family
@@ -38,6 +46,17 @@ from .prose import has_block, write_block
 FAMILY_BLOCKS = {family: f"results_{family}" for family in FAMILY_INFO}
 
 NOT_MEASURED = "No measurements for this test in the recorded run."
+
+#: Where ``cards evidence`` finds the runs a card's fingerprint records when it is given none:
+#: ``evaluate.py``'s default ``paths.results`` (``configs/config.yaml``). A run kept elsewhere,
+#: on scratch, is linked in here, so every cited run is found under its own name.
+RESULTS = REPO / "results"
+
+#: The command that rewrites a card's "Across the experiments" table, as its marker names it.
+#: ``cards evidence`` writes the table too, with the same words, so neither rewrites the other.
+EXPERIMENTS_COMMAND = "python -m fmeval.cards catalog"
+
+_SUBSECTION = re.compile(r"^### ", re.MULTILINE)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -108,14 +127,29 @@ def _fmt(value: Any, digits: int = 3) -> str:
     return str(value)
 
 
-def run_block(run: Run) -> str:
-    """The provenance every number below it inherits, and the kind of claim it supports.
+def dataset_of(run: Run) -> str:
+    """The one dataset a run is on."""
+    return str(run.rows["dataset"].iloc[0])
+
+
+def _command(metric: str, runs: Sequence[Run]) -> str:
+    """The command that regenerates a card from ``runs``, its primary run first.
+
+    A run folder inside the repository is named relative to it, as the recipes type it, so the
+    command written into the card is the same on every checkout.
+    """
+    shown = [r.folder.relative_to(REPO) if r.folder.is_absolute() and r.folder.is_relative_to(REPO)
+             else r.folder for r in runs]
+    return f"python -m fmeval.cards evidence {metric} " + " ".join(f"--results {p}" for p in shown)
+
+
+def _provenance(run: Run) -> str:
+    """Which dataset, frames, grid, seed and commit a run used, and the kind of claim it supports.
 
     What the frames are is read from ``evidence_datasets``, so a card on a calibrated null or
     an analytic check says so in the same sentence that names the dataset.
     """
-    meta, rows = run.meta, run.rows
-    dataset = str(rows["dataset"].iloc[0])
+    meta, rows, dataset = run.meta, run.rows, dataset_of(run)
     frames = sorted(rows["frame_index"].unique())
     git = meta.get("git", {})
     sha = str(git.get("sha") or "not recorded")[:12]
@@ -124,36 +158,164 @@ def run_block(run: Run) -> str:
         f"Measured on `{dataset}`, frames {frames[0]} to {frames[-1]} "
         f"({len(frames)} frames of {load_cards_config().evidence_datasets[dataset]}), on the "
         f"{meta.get('analysis_grid') or 'native'} analysis grid, seed "
-        f"{meta.get('seed', '—')}, at commit `{sha}`{dirty}. Run `{run.folder.name}`.\n\n"
-        f"Every number in this section comes from that one run. Regenerate with "
-        f"`python -m fmeval.cards evidence <name> --results {run.folder}`."
+        f"{meta.get('seed', '—')}, at commit `{sha}`{dirty}. Run `{run.folder.name}`."
     )
 
 
+def run_block(run: Run, *others: Run) -> str:
+    """The provenance every number below it inherits, and the kind of claim it supports.
+
+    ``others`` are the card's further runs, each reported in its own subsection that names it.
+    """
+    scope = ("that one run" if not others else "that run, except in the subsections headed "
+             "with another experiment and in a figure whose caption names another run, each of "
+             "which names its own run")
+    return (f"{_provenance(run)}\n\nEvery number in this section comes from {scope}. Regenerate "
+            f"with `{_command('<name>', (run, *others))}`.")
+
+
+def experiment_block(run: Run, metric: str, figures: Sequence[CardFigure] = (),
+                     reasons: Mapping[str, str] | None = None) -> str:
+    """A further run's numbers, in the subsection headed with its dataset.
+
+    It opens with the dataset's ``evidence_datasets`` label, so a reader knows what kind of
+    claim the numbers support before reading them, then the run's provenance and a link to each
+    degradation the run applied. A run of real forecasts then shows what the forecasting
+    benchmarks report, the metric at every prediction step of every forecast with its lead-time
+    figure (:func:`lead_block`); a ladder run shows the per-family and trap-test tables of
+    ``## Results``. The other figures and the cross-metric tables come from the primary run.
+    """
+    label = load_cards_config().evidence_datasets[dataset_of(run)]
+    applied = (run.rows.loc[run.rows["metric"].astype(str) == metric,
+                            ["degradation", "degradation_op"]]
+               .drop_duplicates().sort_values("degradation").itertuples(index=False))
+    # The undegraded reference is not a degradation a reader needs sending to.
+    links = [f"[{name}](../../degradations/{op}/card.md)" for name, op in applied
+             if name != "identity"
+             and (loader.bundle_root("degradation") / str(op) / "card.yaml").is_file()]
+    lines = [f"**{label[0].upper()}{label[1:]}.**", "", _provenance(run), ""]
+    if links:
+        lines += [" ·\n".join(links), ""]
+    lead = an.forecast_by_lead(run.scored, metric=metric, anchor_label=run.anchor_label)
+    if not lead.empty:
+        lines += [*figure_lines(figures, reasons, EXPERIMENT_BLOCK, source=run.folder.name),
+                  lead_block(run, metric, lead), ""]
+    for family in FAMILY_BLOCKS:
+        table = family_block(run, metric, family)
+        if table != NOT_MEASURED:
+            lines += [f"**{family_label(family)}.**", "", table, ""]
+    canaries = canaries_block(run, metric)
+    if canaries != NOT_MEASURED and lead.empty:
+        lines += ["**Trap tests.**", "", canaries]
+    return "\n".join(lines)
+
+
+def lead_block(run: Run, metric: str, lead: pd.DataFrame) -> str:
+    """A real forecast's metric at every prediction step, unpooled, as the forecasting
+    benchmarks report it: one table per field and quantity, one row per lead time and one
+    column per forecast.
+
+    ``lead`` is :func:`fmeval.analysis.forecast_by_lead` of the run. A column is one forecast,
+    named by its run's native grid and its starting time; a row is a lead time, shown to four
+    significant figures, so forecasts whose lead times agree to that precision share a row. A
+    single-field quantity also gets its value on the target, the truth its prediction is read
+    against.
+    """
+    forecasts = (lead.drop_duplicates("trajectory")
+                 .sort_values(["start", "param_resolution"], kind="stable"))
+    names = {row.trajectory: f"{int(row.param_resolution)}², start {_fmt(float(row.start))}"
+             for row in forecasts.itertuples()}
+    if len(set(names.values())) < len(names):
+        raise ValueError(f"two forecasts of {dataset_of(run)} share a grid and a starting "
+                         f"time, so their columns could not be told apart: {names}")
+    single = run.rows.loc[run.rows["metric"].astype(str) == metric, "arity"].eq("single").all()
+    quantities = [("value", "on the prediction"),
+                  *([("value_on_target", "on the target")] if single else []),
+                  ("damage", "damage")]
+    rows = lead.assign(time=lead["lead_time"].map(lambda t: _fmt(float(t), 4)))
+    lines = []
+    for field, sub in rows.groupby("field", sort=True):
+        order = sub.groupby("time")["lead_time"].min().sort_values().index
+        for column, title in quantities:
+            wide = sub.pivot(index="time", columns="trajectory", values=column).reindex(
+                index=order, columns=list(names))
+            lines += [f"**{field}, {metric} {title}, at each lead time.**", "",
+                      *_header("lead time", *names.values())]
+            lines += [f"| {time} | " + " | ".join(_fmt(float(v)) for v in values) + " |"
+                      for time, values in wide.iterrows()]
+            lines.append("")
+    key = "; ".join(f"`{name}` is `{trajectory}`" for trajectory, name in names.items())
+    lines.append(
+        "Every prediction of every forecast, nothing pooled: a cell is one prediction step of "
+        "one forecast, a row the lead time (the physical time since the forecast started) and a "
+        "column the forecast, named by its run's native grid and its starting time (" + key
+        + "). **Damage** is the prediction's departure from the target as a fraction of the "
+        "anchor's in the same frame, by default the target's own spatial mean, so each step is "
+        "scaled by its own target. A dash means no value there.")
+    return "\n".join(lines)
+
+
+def experiments_block(bundle: loader.Bundle) -> str:
+    """The "Across the experiments" table: whether the card cites a run on each evidence
+    dataset, and if not, why (:func:`fmeval.cards.catalog.experiments`)."""
+    lines = ["**Across the experiments.**", "",
+             *_header("experiment", "what a run on it is evidence of", "on this card")]
+    for row in catalog.experiments(bundle):
+        if row["state"] == "measured":
+            cell = (f"measured, run `{row['run']}`: "
+                    + ("the main results" if row["primary"]
+                       else f"under *On `{row['dataset']}`*"))
+        elif row["state"] == "not applicable":
+            cell = f"not applicable: {row['reason']}"
+        else:
+            cell = "not yet run"
+        if row["note"]:
+            cell += f"; on this dataset the metric {row['note']} of the ensemble"
+        lines.append(f"| `{row['dataset']}` | {row['claim']} | {cell} |")
+    lines += [
+        "",
+        "One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names "
+        "the run the card cites: the main results are `## Performance` and the subsections "
+        "below, and every other run has its own subsection headed with its dataset. *Not "
+        "applicable* gives the reason: one that follows from what the metric declares and what "
+        "the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) "
+        "because the result would carry no information. *Not yet run* means the metric can run "
+        "there and the card cites no run on it yet.",
+    ]
+    return "\n".join(lines)
+
+
 def figure_lines(figures: Sequence[CardFigure] | None, reasons: Mapping[str, str] | None,
-                 block: str = "performance") -> list[str]:
+                 block: str = "performance", source: str | None = None) -> list[str]:
     """The image and caption for each figure of one block, or one sentence saying why it is absent.
 
     Images sit inside the generated block, never outside it: the card checker strips
     generated blocks before counting hand-written words, and an image outside one would be
     read as prose (`fmeval.cards.prose`). The alt text is the figure's question and the
     caption its reading, both from the renderer, so a reader of the repository on GitHub and
-    a reader of the site see the same figure with the same words.
+    a reader of the site see the same figure with the same words. ``source`` keeps only the
+    figures drawn from that further run, for its subsection; a figure in another block that was
+    drawn from a further run names it.
     """
     if not (figures or reasons):
         return []      # drawn without figures, e.g. from a test: no figure lines at all
     reasons = reasons or {}
     lines: list[str] = []
-    by_name = {f.name: f for f in figures or ()}
-    for name in METRIC_FIGURES:
-        if FIGURE_BLOCKS[name] != block:
+    for slot in METRIC_FIGURES:
+        if FIGURE_BLOCKS[slot] != block:
             continue
-        figure = by_name.get(name)
-        if figure is None:
-            title = PLOTS[name].title.lower()
-            lines += [f"No {title} figure: {reasons.get(name, 'not drawn')}.", ""]
+        drawn = [f for f in figures or ()
+                 if f.slot == slot and (source is None or f.source == source)]
+        if not drawn:
+            title = SLOT_TITLES.get(slot) or PLOTS[slot].title.lower()
+            lines += [f"No {title} figure: {reasons.get(slot, 'not drawn')}.", ""]
             continue
-        lines += [f"![{figure.alt}](_generated/{figure.path.name})", "", figure.caption, ""]
+        for figure in drawn:
+            lead = ("*As this metric's own field draws it"
+                    + (f", from run `{figure.source}`" if figure.source and source is None
+                       else "") + ".* " if slot == STANDARD else "")
+            lines += [f"![{figure.alt}](_generated/{figure.path.name})", "",
+                      lead + figure.caption, ""]
     return lines
 
 
@@ -201,7 +363,11 @@ def performance_block(run: Run, metric: str, figures: Sequence[CardFigure] = (),
                      f"{_span(sub.get('elasticity', absent))} | "
                      f"level {_fmt(sub['sensitivity_level'].min())} |")
     probes = run.probes[run.probes["metric"] == metric]
-    for _, row in probes.iterrows():
+    # A ladder without the impostor (the ensemble ladder, which carries only the anchor) has no
+    # trap-test line: absent must look absent, not like a trap test that could not be scored.
+    impostor = (probes["gaussian_impostor_value"].notna()
+                if "gaussian_impostor_value" in probes.columns else probes["metric"].isna())
+    for _, row in probes[impostor].iterrows():
         lines.append(
             f"| trap test: fake prediction, right spectrum | {row['field']} | — | — | "
             f"damage {_fmt(_cell(row, 'gaussian_impostor_damage'))} |"
@@ -249,14 +415,43 @@ def performance_block(run: Run, metric: str, figures: Sequence[CardFigure] = (),
     return "\n".join(lines)
 
 
+def _companion_rows(frame: pd.DataFrame, metric: str) -> pd.DataFrame:
+    """The rows of ``frame`` that belong to ``metric``'s curve companions, whose ``metric`` column
+    holds each companion's label (:func:`metrics.registry.companion_label`)."""
+    if frame.empty:
+        return frame
+    return frame[frame["metric"].astype(str).str.split(".", n=1).str[0] == metric]
+
+
 def companion_block(run: Run, metric: str) -> str:
-    """The metric's curve read coordinate by coordinate, beside the panel, never inside it."""
-    stats = run.companion_axes
-    stats = stats[(stats["metric"].astype(str) == metric) & ~stats["is_probe"]] \
-        if not stats.empty else stats
+    """The metric's curves read coordinate by coordinate, beside the panel, never inside it: one
+    set of tables per curve companion, headed by its label when the metric has several."""
+    stats = _companion_rows(run.companion_axes, metric)
+    stats = stats[~stats["is_probe"]] if not stats.empty else stats
     if stats.empty:
         return NOT_MEASURED
-    dominance = run.dominance[run.dominance["metric"].astype(str) == metric]
+    curves = sorted(stats["metric"].astype(str).unique())
+    lines = []
+    for curve in curves:
+        if len(curves) > 1:
+            lines += [f"**Curve `{curve}`.**", ""]
+        lines += _companion_tables(stats[stats["metric"].astype(str) == curve],
+                                   run.dominance[run.dominance["metric"].astype(str) == curve])
+    lines.append(
+        "Each coordinate of the curve read as a metric of its own, with the same statistics as "
+        "the tables above and no resampling interval. Neighbouring coordinates are strongly "
+        "correlated, so a row localises the evidence and does not multiply it. **Dominance** "
+        "is the fraction of frames in which, for the weakest pair of neighbouring strengths, the "
+        "harsher strength's curve has moved at least as far as the milder one's at every "
+        "coordinate, each in its own direction: near 1, any summary that grows with every "
+        "coordinate's departure orders those strengths the same way, so the choice of summary "
+        "cannot change the trend. None of these numbers enters the tables above."
+    )
+    return "\n".join(lines)
+
+
+def _companion_tables(stats: pd.DataFrame, dominance: pd.DataFrame) -> list[str]:
+    """The per-field tables of one curve companion's per-coordinate statistics."""
     coordinates = sorted(stats["coordinate"].unique())
     heads = [an.coordinate_label(c) for c in coordinates]
     lines = []
@@ -284,17 +479,7 @@ def companion_block(run: Run, metric: str) -> str:
                     cells.append(_fmt(float(hit["dominance_min"].iloc[0])) if len(hit) else "—")
                 lines.append(f"| `{degradation}` | " + " | ".join(cells) + " |")
             lines.append("")
-    lines.append(
-        "Each coordinate of the curve read as a metric of its own, with the same statistics as "
-        "the tables above and no resampling interval. Neighbouring coordinates are strongly "
-        "correlated, so a row localises the evidence and does not multiply it. **Dominance** "
-        "is the fraction of frames in which, for the weakest pair of neighbouring strengths, the "
-        "harsher strength's curve has moved at least as far as the milder one's at every "
-        "coordinate, each in its own direction: near 1, any summary that grows with every "
-        "coordinate's departure orders those strengths the same way, so the choice of summary "
-        "cannot change the trend. None of these numbers enters the tables above."
-    )
-    return "\n".join(lines)
+    return lines
 
 
 def _profile_lines(run: Run, metric: str, axes: pd.DataFrame) -> list[str]:
@@ -435,22 +620,37 @@ def canaries_block(run: Run, metric: str) -> str:
 def summary_block(run: Run, metric: str) -> str:
     """What holds across every degradation: how this metric relates to the others.
 
-    ``cross_metric_correlation`` returns a square matrix indexed by metric, so the row
-    for this metric is read and the self-correlation dropped.
+    ``cross_metric_correlation`` returns one square matrix per physical field, indexed by
+    metric, so this metric's row is read from each field it runs on, the self-correlation
+    dropped, and the fields set side by side as columns. Rows are sorted by the median over
+    those columns, highest first.
     """
-    matrix = an.cross_metric_correlation(run.rows)
-    if matrix.empty or metric not in matrix.columns:
+    fields = sorted(str(f) for f in run.rows.loc[run.rows["metric"] == metric, "field"].unique())
+    columns = {}
+    for field in fields:
+        matrix = an.cross_metric_correlation(run.rows, field=field)
+        if metric in matrix.columns:
+            columns[field] = matrix.loc[metric].drop(labels=[metric], errors="ignore")
+    if not columns:
         return NOT_MEASURED
 
-    row = matrix.loc[metric].drop(labels=[metric], errors="ignore").sort_values(ascending=False)
-    lines = _header("compared with", "rank correlation over every degradation")
-    for other, value in row.items():
-        lines.append(f"| `{other}` | {_fmt(float(value))} |")
+    table = pd.DataFrame(columns)
+    table = table.loc[table.median(axis=1).sort_values(ascending=False, kind="stable").index]
+    lines = _header("compared with", *columns)
+    for other, row in table.iterrows():
+        lines.append(f"| `{other}` | "
+                     + " | ".join(_fmt(float(v)) for v in row) + " |")
+    target = ("target_value" in run.rows.columns
+              and run.rows.loc[run.rows["metric"].isin([metric, *table.index]),
+                               "target_value"].notna().any())
     lines += [
         "",
-        "Computed on the median value at each combination of degradation and strength, "
-        "over every degradation and physical field in the run, with the undegraded "
-        "reference excluded. Two metrics correlating near 1 put the degradations in the "
+        "Rank correlation over every degradation, computed separately for each physical field "
+        "on the median value at each combination of degradation and strength, with the "
+        "undegraded reference excluded. A dash marks a metric that does not run on that field. "
+        + ("A metric with a target value enters by its distance from the target. " if target
+           else "")
+        + "Two metrics correlating near 1 put the degradations in the "
         "same order, but the two may still weight those degradations very differently. "
         "A correlation near 1 therefore means the two metrics are redundant for ranking "
         "models, not that the two are interchangeable as training losses.",
@@ -458,12 +658,39 @@ def summary_block(run: Run, metric: str) -> str:
     return "\n".join(lines)
 
 
-def generate(metric: str, run: Run) -> Path:
+def _results_span(text: str) -> tuple[int, int]:
+    """Where ``## Results`` starts and ends in a card, as character offsets of line starts."""
+    start = text.index("\n## Results\n") + 1
+    end = text.find("\n## ", start)
+    return start, (len(text) if end < 0 else end + 1)
+
+
+def write_experiments(bundle: loader.Bundle) -> None:
+    """Write a metric card's "Across the experiments" table, inserting its block above the first
+    subsection of ``## Results`` if the card has none yet.
+
+    Needs no run: it reads the fingerprint, the card and the cards config, so
+    ``cards catalog`` rewrites it on every card whenever any of those changes.
+    """
+    text = bundle.card_md.read_text()
+    if not has_block(text, "experiments"):
+        start, end = _results_span(text)
+        first = _SUBSECTION.search(text, start, end)
+        text = insert_block(text, "experiments", first.start() if first else end)
+        bundle.card_md.write_text(text)
+    write_block(bundle.card_md, "experiments", experiments_block(bundle),
+                command=EXPERIMENTS_COMMAND)
+
+
+def generate(metric: str, run: Run, *others: Run) -> Path:
     """Write every generated block of one metric's card, and its fingerprint.
 
     Args:
         metric: The metric bundle to fill in.
-        run: The run to take every number from.
+        run: The primary run, whose numbers fill ``## Performance`` and the subsections per
+            test: the metric's field-standard experiment where the repository has it.
+        others: One further run per other evidence dataset, each written into a subsection
+            headed with its dataset, inserted before ``## References`` if the card lacks it.
 
     Returns:
         The path to the written fingerprint.
@@ -472,19 +699,51 @@ def generate(metric: str, run: Run) -> Path:
         KeyError: If the bundle does not exist, or its card lacks a block the generator
             writes -- which means the card and the generator disagree about what is
             generated.
+        ValueError: If two runs are on one dataset, a further run lacks the metric or holds
+            neither a degradation ladder nor a real forecast of it, or the card has a subsection
+            for a run on a dataset not among ``others``, whose numbers would otherwise stay on
+            the card from a run no longer cited.
     """
     # Looked up through the module, so a test that substitutes `loader.find_bundle` with a
     # throwaway copy keeps the generator away from the tracked bundle.
     bundle = loader.find_bundle(metric)
     if bundle is None:
         raise KeyError(f"no metric bundle named {metric!r}")
+    datasets = [dataset_of(r) for r in (run, *others)]
+    if len(set(datasets)) < len(datasets):
+        raise ValueError(f"a card cites one run per experiment; these runs are on {datasets}")
+    lacking = [r.folder.name for r in others if metric not in set(r.rows["metric"].astype(str))]
+    if lacking:
+        raise ValueError(f"{lacking} hold no rows of {metric}")
+    # A further run is reported by its ladder tables or, for real forecasts, step by step.
+    unreported = [r.folder.name for r in others
+                  if r.axes[(r.axes["metric"] == metric) & ~r.axes["is_probe"]].empty
+                  and an.forecast_by_lead(r.scored, metric=metric,
+                                          anchor_label=r.anchor_label).empty]
+    if unreported:
+        raise ValueError(f"{unreported} hold neither a degradation ladder nor a real forecast "
+                         f"of {metric}, and a card reports a further run by one of the two")
+    text = bundle.card_md.read_text()
+    stale = sorted({name.removeprefix(EXPERIMENT_BLOCK) for name in generated_blocks(text)
+                    if name.startswith(EXPERIMENT_BLOCK)} - set(datasets[1:]))
+    if stale:
+        raise ValueError(
+            f"{bundle.card_md} reports runs on {stale} that this command does not cite. Give "
+            "their runs with --results as well, or delete those subsections and their readings.")
+    for dataset in datasets[1:]:
+        if not has_block(text, EXPERIMENT_BLOCK + dataset):
+            text = insert_block(text, EXPERIMENT_BLOCK + dataset, _results_span(text)[1],
+                                heading=f"### On `{dataset}`")
+    bundle.card_md.write_text(text)
 
-    command = f"python -m fmeval.cards evidence {metric} --results {run.folder}"
+    command = _command(metric, (run, *others))
     # Figures first, so a figure that cannot be drawn is reported inside the block that
     # would have shown it rather than discovered as a missing file.
-    figures, reasons = metric_figures(run, metric, bundle.generated)
+    figures, reasons = metric_figures(run, metric, bundle.generated, others)
     blocks = {
-        "run": run_block(run),
+        **{EXPERIMENT_BLOCK + dataset_of(r): experiment_block(r, metric, figures, reasons)
+           for r in others},
+        "run": run_block(run, *others),
         "performance": performance_block(run, metric, figures, reasons),
         "results_canaries": canaries_block(run, metric),
         "results_summary": summary_block(run, metric),
@@ -499,26 +758,34 @@ def generate(metric: str, run: Run) -> Path:
         if has_block(text, name):
             write_block(bundle.card_md, name, body, command=command)
 
-    axes = run.axes[run.axes["metric"] == metric]
-    probes = run.probes[run.probes["metric"] == metric]
-    curve = (run.companion_axes[run.companion_axes["metric"].astype(str) == metric]
-             if not run.companion_axes.empty else run.companion_axes)
-    dominance = (run.dominance[run.dominance["metric"].astype(str) == metric]
-                 if not run.dominance.empty else run.dominance)
+    curve = _companion_rows(run.companion_axes, metric)
+    dominance = _companion_rows(run.dominance, metric)
     fingerprint = {
         "metric": metric,
-        "dataset": str(run.rows["dataset"].iloc[0]),
+        **_record(run, metric),
+        **({"companion": json_records(curve), "dominance": json_records(dominance)}
+           if not curve.empty else {}),
+        # Further runs, in the order given; `catalog.recorded_runs` reads them back.
+        **({"other_runs": [_record(r, metric) for r in others]} if others else {}),
+    }
+    write_strict_json(bundle.fingerprint, fingerprint)
+    write_experiments(bundle)
+    return bundle.fingerprint
+
+
+def _record(run: Run, metric: str) -> dict[str, Any]:
+    """One run's entry in a fingerprint: its provenance and this metric's statistics, and on a
+    run of real forecasts every prediction, the numbers of its lead-time tables."""
+    lead = an.forecast_by_lead(run.scored, metric=metric, anchor_label=run.anchor_label)
+    return {
+        **({"forecast": json_records(lead)} if not lead.empty else {}),
+        "dataset": dataset_of(run),
         "run": run.folder.name,
         "frames": sorted(int(f) for f in run.rows["frame_index"].unique()),
         "seed": run.meta.get("seed"),
         "analysis_grid": run.meta.get("analysis_grid"),
         "git": run.meta.get("git", {}),
-        "axes": json.loads(axes.to_json(orient="records")),
-        "probes": json.loads(probes.to_json(orient="records")),
-        "profile": json.loads(run.card[run.card["metric"] == metric].to_json(orient="records")),
-        **({"companion": json.loads(curve.to_json(orient="records")),
-            "dominance": json.loads(dominance.to_json(orient="records"))}
-           if not curve.empty else {}),
+        "axes": json_records(run.axes[run.axes["metric"] == metric]),
+        "probes": json_records(run.probes[run.probes["metric"] == metric]),
+        "profile": json_records(run.card[run.card["metric"] == metric]),
     }
-    write_strict_json(bundle.fingerprint, fingerprint)
-    return bundle.fingerprint

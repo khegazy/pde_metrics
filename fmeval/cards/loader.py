@@ -249,6 +249,17 @@ def sanitize_json(value: Any) -> Any:
     return value
 
 
+def json_records(frame: Any) -> list[dict[str, Any]]:
+    """A DataFrame's rows as JSON-ready dicts with exact floats; missing values become None.
+
+    ``DataFrame.to_json`` rounds to ten decimal places, not significant figures, so a value
+    below 5e-11 would be written as 0.0; a forecast's error spans 1e-15 to 1e-4 and a damage can
+    be 1e-12. Boxing to Python objects keeps every float exact and turns numpy integers and
+    booleans into the Python types ``json`` accepts.
+    """
+    return frame.astype(object).where(frame.notna(), None).to_dict(orient="records")
+
+
 def write_strict_json(path: Path, value: Any) -> None:
     """Write ``value`` as strict, sorted, indented JSON with a trailing newline.
 

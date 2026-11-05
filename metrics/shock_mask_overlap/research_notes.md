@@ -113,8 +113,12 @@ card, where they are still open.
   misses plus false alarms. It has the form of the Jaccard index of the forecast and observed
   event sets (the builder's identification from the definitions, not read in a primary source),
   so it is not a new metric here. Recorded so that a later agent does not propose it.
-- **Metrics Reloaded's worst-value rule for the both-empty case** (0) was rejected for the reason
-  given under Method choices.
+- **Metrics Reloaded's general worst-value rule applied to the both-empty case** (0) was
+  rejected for the reason given under Method choices. The paper states that rule for undefined
+  values in general and no rule for both sets empty; its code returns NaN for Dice with both
+  empty and warns that it "can be set to 1 when aggregating" (`dsc` in
+  `MetricsReloaded/metrics/pairwise_measures.py`, read on 2026-11-04 by the
+  `metrics-topology-shocks` task).
 
 ## Evidence runs
 
@@ -166,15 +170,13 @@ The card currently cites `results/shock_mask_overlap_1793494245`.
   of {1382, 1383} against {1383} is $(1 + 0 + 0)/3 = 1/3$; three flagged cells would give $1/5$.
   The cause is the Fourier ringing described under Evidence runs. Found by the builder, reproduced
   independently by the reviewer through the pipeline's path. Routed to
-  [issue 121](../../issues/121-shock-set-distance-card-half-cell-and-high-pass-readings.md); the
-  card still carries the old sentence.
+  an issue; the `shock_set_distance` card has since been corrected and the issue deleted.
 - **`shock_set_distance`'s card, the high-pass reading.** It reads its spectral-filter results
   as "shock kept" or "shock lost". The high-pass filters keep the jump (0.20 of 0.203) but raise
   the pre-shock plateau to 0.24-0.51, so the ratio across the intact shock falls to 1.84, 1.80 or
   1.40 against the threshold 1.805; a uniform offset of 0.2 does the same (ratio 1.68, Dice 0).
   Any future bias degradation on Sod should be checked against this mechanism. Routed to
-  [issue 121](../../issues/121-shock-set-distance-card-half-cell-and-high-pass-readings.md), still
-  open.
+  an issue; the `shock_set_distance` card has since been corrected and the issue deleted.
 - **Issue 104's prediction.** [Issue 104](../../issues/104-equivalence-test-misreads-a-flag-valued-anchor.md)
   predicted that a shock-mask overlap would, like `shock_set_distance`, be listed blind to
   `translate_x` because its no-feature value is a worst-case flag. Measured on the evidence run,
@@ -275,10 +277,11 @@ quotation; and the fractions-skill-score algebra.
 
 ## Open questions and follow-ups
 
-- **The both-empty convention**, 1 against Metrics Reloaded's 0, has no evidence row on Sod:
+- **The both-empty convention**, 1 against the 0 that Metrics Reloaded's general worst-value
+  rule would give, has no evidence row on Sod:
   [issue 120](../../issues/120-shock-mask-overlap-both-empty-convention.md), open.
 - **The two readings on `shock_set_distance`'s card** (half-cell count, high-pass mechanism):
-  [issue 121](../../issues/121-shock-set-distance-card-half-cell-and-high-pass-readings.md), open.
+  routed to an issue; the card has since been corrected and the issue deleted.
 - **Whether `scale_dependent` means a positive constant or any constant**:
   [issue 122](../../issues/122-scale-dependent-does-not-say-which-constants.md), open.
 - **A metric cannot declare that it needs an absolute, positive field** (the Taylor-Green gauge

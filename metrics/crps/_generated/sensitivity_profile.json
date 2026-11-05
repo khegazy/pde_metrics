@@ -9,8 +9,8 @@
         "blind": false,
         "blindness_q": 1.0,
         "cliffs_delta_min": 1.0,
-        "damage_max_ucb": 0.9894206534,
-        "damage_per_change": 2.5942723199,
+        "damage_max_ucb": 0.5111997881027113,
+        "damage_per_change": 1.3403717171780676,
         "degradation": "bias",
         "degradation_family": "pointwise",
         "field": "density",
@@ -24,8 +24,8 @@
         "blind": false,
         "blindness_q": 1.0,
         "cliffs_delta_min": 1.0,
-        "damage_max_ucb": 0.1108406222,
-        "damage_per_change": 7.931712919e+30,
+        "damage_max_ucb": 0.057267555879509865,
+        "damage_per_change": 4.0980445977196464e+30,
         "degradation": "spread_deflate",
         "degradation_family": "ensemble",
         "field": "density",
@@ -39,8 +39,8 @@
         "blind": false,
         "blindness_q": 1.0,
         "cliffs_delta_min": 1.0,
-        "damage_max_ucb": 0.2595804828,
-        "damage_per_change": 1.117629383e+30,
+        "damage_max_ucb": 0.13411635115793738,
+        "damage_per_change": 5.774408507085006e+29,
         "degradation": "spread_inflate",
         "degradation_family": "ensemble",
         "field": "density",
@@ -52,5 +52,5 @@
       }
     ]
   },
-  "run": "crps_1787800137"
+  "run": "comparison_1793812401"
 }

@@ -8,7 +8,7 @@ the same directory as the code it describes.
 The sections run in a fixed order, from what the metric *is* to what the metric *did on
 our data*. The break between those two halves matters: the first four sections hold for
 any dataset, so a reader adopting a metric for their own work can stop at Limitations.
-The last two report findings from one specific recorded run on our data.
+The last two report findings from recorded runs on our data.
 
 ## Definition
 
@@ -18,6 +18,13 @@ metric that never looks beyond a single grid cell has no edge to treat. It is wo
 reading, because the choices available at the edge (wrapping around to the opposite side,
 mirroring, padding with zeros) give different numbers from the same formula, and two
 implementations of one published equation can disagree on nothing else.
+
+Definition ends with *How its field reports it*: how the research community the metric comes
+from computes it, normalises it, draws it and tests it, each with a citation, and which of
+those experiments this repository has. Where two communities report the metric differently,
+each form is its own metric, and this subsection names the sibling. Read it before any
+comparison with other metrics; [Choosing a metric](choosing-a-metric.md) groups the metrics by
+the community they come from.
 
 ## Intuition
 
@@ -44,14 +51,38 @@ that you can recognise the situation in your own results.
 
 ## Performance and Results
 
-The measured half of the page. Every number in both sections comes from one recorded
-evaluation run, named at the top of Results along with the dataset, the grid and the
-number of snapshots it covered.
+The measured half of the page. Every number in Performance, and in Results outside the
+subsections headed with another experiment, comes from one recorded evaluation run, named at
+the top of Results along with the dataset, the grid and the number of snapshots it covered.
 
-**Performance** opens with two figures and then gives the table they summarise, so that
-the shape of the metric's behaviour is seen before any number is read.
+**Performance** opens with the figure the metric's own field draws, then two figures that
+every metric page shares, and then the table they summarise, so that the shape of the
+metric's behaviour is seen before any number is read.
 
-The first figure, the *sensitivity profile*, has one row per way of damaging the field,
+The field's own figure is the one a reader from that field would look for first, drawn from
+the recorded run and marked *As this metric's own field draws it*. Which figure that is
+follows from what the metric is:
+
+- **A curve behind the number**, such as an energy spectrum, a structure function or a rank
+  histogram: the curve against its coordinate, one panel per way of damaging the field, the
+  undamaged field's curve in black and each strength in the damage's colour, darker for
+  harsher. There is one such figure for each physical field.
+- **A set of points behind the number**, such as a persistence diagram or the positions of
+  detected shocks: each damaged field's points over the reference's, which are grey rings. A
+  persistence diagram carries its diagonal, where a feature is born and dies at once; on a
+  one-dimensional grid the points sit on the field's line-out, the reference's in grey.
+- **A property of one field**, such as the energy or the enstrophy: its value against time,
+  the undamaged field's history in black. A damaged line is the damage applied to each
+  snapshot on its own; it is not a simulation run forward from a damaged start, so it shows
+  what the damage does at each time, not how an error would grow.
+- **A comparison of two fields** with none of the above: when the page cites a run of real
+  forecasts, its error against lead time from that run, as the forecasting benchmarks draw it,
+  and the caption names that run; everything else in Performance still comes from the main
+  run. Otherwise its damage against the applied shift beside the pointwise baselines, the
+  figure that also heads *Damage beside the other metrics* below.
+- **An ensemble score** with none of the above has no such figure yet, and the page says why.
+
+The next figure, the *sensitivity profile*, has one row per way of damaging the field,
 grouped by family, and four panels that share those rows. Each marker is one physical
 field (circle, square, triangle). From left to right the panels show: whether the metric
 put the strengths in the right order (the rank correlation, with a short line for its
@@ -64,7 +95,7 @@ field and degradation on which the metric's response lies provably below that ma
 A missing marker is a statistic the analysis withheld, which happens on an axis the
 metric cannot see at all.
 
-The second figure, the *response curves*, shows median damage against severity level,
+The figure after it, the *response curves*, shows median damage against severity level,
 with one row per family of degradation and one column per field, every panel on the same
 0-to-1 scale. The solid grey line is damage 1, the field's own mean. The dotted black line is
 the damage the metric assigned to the fake prediction with the right spectrum. The hollow
@@ -77,7 +108,30 @@ Below the figures sits the table, one row per test family and physical field, so
 metrics can be compared at a glance. To compare every metric on the same figures, see
 [Sensitivity at a glance](sensitivity.md).
 
-**Results** breaks that summary down one test at a time. Each subsection links to the
+**Results** opens with a table headed *Across the experiments*. Every metric is run on every
+experiment where it makes sense, and the table has one row per experiment: the developed flow,
+the same flow at a higher Reynolds number, the synthetic ensemble, the shock tube and the real
+forecasts. Each row says what a run on that
+experiment is evidence of, and whether the page reports one. Where it does not, the row says
+why. The metric cannot be computed there, because the experiment lacks a periodic domain, an
+ensemble or the field the metric needs. Or a person judged the result would carry no
+information. Or nobody has run it yet. The main results come from one run, named just above the
+table. A run on another experiment has its own subsection at the end of Results, headed with
+the experiment's name. Its first line says what kind of evidence it is: an analytic check, for
+instance, says nothing about turbulence. The [coverage page](coverage.md) puts these tables for
+every metric on one page.
+
+The subsection on the real forecasts reads differently, because a forecast is not damaged by a
+chosen amount. It shows the metric against lead time, the physical time since a forecast
+started: one panel per starting time and one line per run, darker for a finer grid. Beneath the
+figure, one table per field gives the metric at every prediction step of every forecast, one row
+per lead time and one column per forecast, named by its run's grid and its starting time;
+nothing is averaged over steps, starts or runs. A second table gives the same predictions as
+damage, each step against its own target's spatial mean, so a growing or shrinking target does
+not read as a growing or shrinking error. A property of one field, such as the enstrophy, also
+gets a table of its value on the target, the truth the prediction is read against.
+
+The rest of **Results** breaks the summary down one test at a time. Each subsection links to the
 way of damaging the field that it reports, shows the numbers for that damage, and then
 says in a few sentences what those numbers mean for this metric. The last subsection,
 *Damage beside the other metrics*, opens with a third figure: this metric's damage against
@@ -128,3 +182,13 @@ the physical field, so the figures can be read in greyscale. Reference lines mar
 conventions of the analysis, never a judgement: damage 1 is what the field's own mean
 scores, and the blindness margin is where a response counts as provably small. Nothing
 on a figure is coloured good or bad.
+
+The field's own figure keeps that field's axes. A spectrum or a structure function may be
+drawn on logarithmic axes, and a quantity that changes sign, such as an energy flux, on a
+*symmetric logarithmic* axis: logarithmic on both sides of zero and linear in a thin band
+around it, six decades below the largest value drawn, with the zero line marked. The
+caption names the axes whenever they are not plain linear ones. A histogram over fixed
+bins, such as a rank histogram, is drawn as bars. A set of several thousand points is drawn
+as an image inside the figure so the page stays light; its numbers are still in the JSON
+beside it. A metric page shows at most four panels of point sets, and the evaluation report
+shows up to twelve.

@@ -49,17 +49,16 @@ every contrast, every structure and the entire spectrum above the zero mode.
 ## Severity scale
 
 The severity is the offset as a fraction of the reference field's fluctuation RMS,
-which is what makes it comparable between fields. On density, whose fluctuations are four
-orders of magnitude below its mean, an offset stated in raw units would be meaningless;
+which is what makes it comparable between fields. On density, whose fluctuation RMS is two to
+three orders of magnitude below its mean (2.1e-3 to 6.7e-3 of 1.0, `AGENTS.md` §4), an offset stated in raw units would be meaningless;
 stated as a fraction of the fluctuation it means the same thing there as on vorticity.
 
-This degradation is not in the default set of degradations at all -- it is registered and
-available but not configured, because in the current panel every metric responds to it
-identically and it separates none of them.
+The default set configures it at 0.01, 0.05, 0.2 and 0.5, the strengths of `gain`, so mean
+squared error charges the two the same at every level and a metric that tracks the absolute
+level is told apart from one that tracks only the fluctuation. The ensemble miscalibration
+ladder uses it too, at its own strengths.
 
 ## Limitations
-
-Not in the default set of degradations, so it will not appear in a run unless added.
 
 The operator is a fair imitation of a mean drift and nothing else. Real conservation
 failures are rarely uniform: a leaking quantity usually leaks from somewhere, producing a

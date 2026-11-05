@@ -12,7 +12,7 @@ Eq. (1) on the page differences two cell averages one time step apart. Its own p
 
 ## Why it is not built
 
-The rule this follows: a metric is built only if an existing experiment changes, in a controlled and known way, the property it is built to detect; a degradation that moves it only incidentally does not count. The current experiments are the 24 degradations (`python -m degradations`) applied to single snapshots of `kinet_re5e4`, `synthetic_ensemble` and `sod_shock_tube`. The ladder damages single snapshots, so no experiment supplies a damaged pair of consecutive states. `kinet_re5e4` is evaluated every 50th stored frame, and the forecast files of [010](010-forecast-pair-reader.md) are 500 solver steps apart. The numerical flux must also be declared.
+The rule this follows: a metric is built only if an existing experiment changes, in a controlled and known way, the property it is built to detect; a degradation that moves it only incidentally does not count. The current experiments are the 24 degradations (`python -m degradations`) applied to single snapshots of `kinet_re5e4`, `synthetic_ensemble` and `sod_shock_tube`. The ladder damages single snapshots, so no experiment supplies a damaged pair of consecutive states. `kinet_re5e4` is evaluated every 50th stored frame, and the prediction steps of `forecast_re5e4` are 125 to 500 solver steps apart, depending on the run. The numerical flux must also be declared.
 
 ## What would unblock it
 

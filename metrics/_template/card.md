@@ -47,6 +47,19 @@ Fourier transform, a spectral derivative, `np.roll` — set `requires_periodic=T
 `metric.py` and say here that the metric is therefore not run on a dataset with a
 non-periodic axis.
 
+### How its field reports it
+
+TODO(fill) Required. How the metric's own field computes and reports it, so that a reader
+from that field finds the metric evaluated the way they would evaluate it. Name the field,
+or every field if they differ, and for each, with a citation and an equation, section or
+figure number: the object computed (a scalar, a curve, a histogram, a diagram, a time
+series) and its normalisation; the figure the field draws and its axes; the statistics it
+reports beside the number (an interval, a decomposition, a goodness of fit); and the
+experiment it evaluates the metric on. Say which of those experiments this repository has,
+and link the proposal under `proposals/` for each one it lacks. Where a field's form differs
+from this bundle's, name the sibling bundle that implements it. Nothing here depends on a
+run; the field's standard figure from the recorded run is generated into Performance.
+
 ## Performance
 
 <!-- GENERATED performance: written by `python -m fmeval.cards evidence <name>`, do not edit -->
@@ -98,8 +111,9 @@ TODO(fill) Answer four questions, in order. What is the range, and
 what are the units? Is lower better, higher better, or is there a target value? What
 counts as a good value, and what does that depend on? And which comparisons are
 meaningful — across models, across resolutions, across datasets — and which of those are
-invalid for this metric in particular? If the metric has a companion, name it and its columns:
-the per-cell map, or the curve, its coordinate and what one value of it means.
+invalid for this metric in particular? If the metric has companions, name each and its columns:
+the per-cell map, or the curve, its coordinate and what one value of it means; for a curve
+with `analysed` coordinates, which ones the tables read and why those.
 
 ## Limitations
 
@@ -115,6 +129,18 @@ person sees when they look at the two fields.
 Not generated yet. Run `python -m fmeval.cards evidence <name>`.
 
 <!-- END GENERATED run -->
+
+<!-- GENERATED experiments: written by `python -m fmeval.cards catalog`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence <name>`.
+
+<!-- END GENERATED experiments -->
+
+The table above has one row per experiment and states every one this card cites no run on,
+with the reason. Give one `--results` per experiment to `cards evidence`; each run after the
+first gets its own subsection at the end of this section, headed `### On <dataset>`, with
+your reading below its numbers. A reason only you can give for not running an experiment
+goes in `card.yaml` under `not_run`.
 
 One subsection per kind of test: the degradations it reports, then their generated
 numbers, then what those numbers show about this metric. Keep the evidence beside the
@@ -243,9 +269,9 @@ Not generated yet. Run `python -m fmeval.cards evidence <name>`.
 
 <!-- END GENERATED results_companion -->
 
-TODO(fill) Only for a metric with a curve companion; delete this subsection otherwise. Which
-coordinates each degradation moves, whether the trend holds coordinate by coordinate, and what
-the dominance says about the registered number standing for the curve.
+TODO(fill) Only for a metric with a curve companion; delete this subsection otherwise. For each
+curve, which coordinates each degradation moves, whether the trend holds coordinate by
+coordinate, and what the dominance says about the registered number standing for the curve.
 
 ## References
 

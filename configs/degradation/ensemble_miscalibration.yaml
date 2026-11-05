@@ -34,3 +34,12 @@ ladder:
   # carries one axis that moves the ensemble MEAN beside the two that do not: it is what
   # distinguishes a metric that is blind to dispersion from one that is blind to everything.
   bias: {enabled: true, severities: [0.05, 0.15, 0.3, 0.6]}
+
+  # --- the anchor -----------------------------------------------------------------
+  # Damage 1, as on every other ladder (`analysis.anchor` in config.yaml, judgements/001):
+  # each member replaced by its own spatial mean, a deterministic forecast of the field's
+  # mean with no spread. Without it the analysis falls back to the worst level of some axis,
+  # a scale set by how far this config pushed that axis. A metric with a target value reads
+  # its damage on its distance from the target, so the anchor sitting on the collapsed side
+  # of the spread-to-skill ratio still makes inflation read positive damage.
+  mean_field: {enabled: true, severities: [0]}

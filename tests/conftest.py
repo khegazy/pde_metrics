@@ -122,6 +122,14 @@ SQUARE_HALF_AMPLITUDE = np.array([[[0.0, 0.0, 0.0, 0.0],
                                    [0.0, 0.5, 0.5, 0.0],
                                    [0.0, 0.0, 0.0, 0.0]]])
 
+# The shock-set metrics' worked example, used by their tests and quoted in their cards: a
+# pressure step of ratio 10 on sixteen cells, whose jump flags cells 7 and 8; the same step two
+# cells further right (cells 9 and 10); and the step in place with a one-cell spike of 10 in the
+# high state, which flags its two neighbours, cells 0 and 2, as spurious shocks.
+SHOCK_STEP = np.array([[1.0] * 8 + [0.1] * 8])
+SHOCK_STEP_MOVED = np.array([[1.0] * 10 + [0.1] * 6])
+SHOCK_STEP_SPIKE = np.array([[1.0, 10.0] + [1.0] * 6 + [0.1] * 8])
+
 # --- grids, contexts and ensembles ----------------------------------------------------
 
 
@@ -359,6 +367,21 @@ def alternating_field(shape: tuple[int, int] = (4, 4)) -> np.ndarray:
     """Zero and one on alternate rows, ``(1, *shape)``: a jump at every step along x."""
     out = np.zeros((1, *shape))
     out[0, 1::2, :] = 1.0
+    return out
+
+
+def oriented_velocity_field() -> np.ndarray:
+    """A 16x8 velocity field ``(2, 16, 8)`` whose longitudinal and transverse increments differ.
+
+    ``u_x`` is a lone step along x (zero on the first row, one on the rest) and ``u_y`` a square
+    wave of period 8 along x (four rows of zero, four of one, twice); neither varies along y. So
+    the longitudinal increments (``u_x`` along x, ``u_y`` along y) are the lone step and nothing,
+    and the transverse ones (``u_x`` along y, ``u_y`` along x) are nothing and the square wave.
+    The increment metrics derive their longitudinal and transverse values on it by hand.
+    """
+    out = np.zeros((2, 16, 8))
+    out[0, 1:, :] = 1.0
+    out[1, 4:8, :] = out[1, 12:16, :] = 1.0
     return out
 
 

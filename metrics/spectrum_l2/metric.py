@@ -21,6 +21,10 @@ because a translation leaves the amplitude spectrum unchanged.
 
 The two-point correlation is the Fourier transform of this, so the two carry the
 same information and running both is not two independent checks.
+
+The spectrum E(k) itself, at every shell, is the metric's curve companion, drawn on log-log
+axes over the reference's as the turbulence literature draws it; the analysis reads it at the
+octave shells (:data:`OCTAVES`).
 """
 
 from __future__ import annotations
@@ -28,9 +32,17 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from fmeval.context import FieldContext, fluctuation
+from fmeval.context import COMPANION_KEY, FieldContext, fluctuation
 from fmeval.wavenumbers import wavenumber_magnitude
-from metrics.registry import metric
+from metrics.registry import companion, metric
+
+#: ``ctx.cache`` key of the reference's spectrum, computed once per frame.
+REFERENCE_SPECTRUM = "spectrum_l2/reference_spectrum"
+
+#: The octave shells the analysis reads the spectrum and the flux at, each as a metric of its own:
+#: a handful, because each costs 2.3 to 3.0 s per field in the analysis (AGENTS.md section 3.3).
+#: Those beyond a coarse grid's last shell are absent there (``Companion.unmatched_analysed``).
+OCTAVES = (1, 2, 4, 8, 16, 32, 64, 128)
 
 
 def radial_shells(shape: tuple[int, ...]) -> NDArray[np.int64]:
@@ -116,20 +128,22 @@ def spectrum_l2(
     *,
     ctx: FieldContext,
 ) -> float:
-    """Relative L2 distance between two radial energy spectra.
+    """Relative L2 distance between two radial energy spectra, over every shell from k = 1.
 
-    The radial energy spectrum is standard; see Pope (2000), "Turbulent Flows", Cambridge
-    University Press, DOI 10.1017/CBO9780511840531, Chapter 6, for the definition and for
-    what it does and does not determine about a field. The metrics tracker's energy-spectrum
-    entry records the reason it is a baseline rather than a candidate: the spectrum and the
-    two-point correlation are Fourier transforms of one another and both discard all phase, so
-    matching a spectrum is a weak constraint.
+    The radial energy spectrum is standard (Pope 2000, "Turbulent Flows", Cambridge University
+    Press, DOI 10.1017/CBO9780511840531, Chapter 6; Boffetta & Ecke 2012, Eq. (3)); the
+    spectrum and the two-point correlation are Fourier transforms of one another and both
+    discard all phase, so matching a spectrum is a weak constraint. The relative L2 over shells
+    on linear values is this repository's summary, not a source's, and is dominated by the few
+    most energetic shells (``issues/136``). The spectra are those of :func:`energy_spectrum`,
+    the metric's companion: the candidate's arrives in ``ctx.cache[COMPANION_KEY]`` and the
+    reference's is computed once per frame.
 
     Args:
         reference: The trusted field, shape ``(C, *spatial)`` on the analysis grid. Sets
             the normalising scale.
         candidate: The field being scored, same shape and grid.
-        ctx: Supplies the analysis grid.
+        ctx: Supplies the analysis grid and the cache.
 
     Returns:
         Dimensionless. Zero when the two spectra coincide, 1 when the candidate has no
@@ -142,9 +156,44 @@ def spectrum_l2(
             f"spectrum_l2 needs matching shapes, got {reference.shape} and "
             f"{candidate.shape}"
         )
-    e_ref = radial_energy_spectrum(reference, ctx)
-    e_cand = radial_energy_spectrum(candidate, ctx)
+    _, e_cand = (ctx.cache[COMPANION_KEY] if COMPANION_KEY in ctx.cache
+                 else energy_spectrum(candidate, ctx=ctx))
+    if REFERENCE_SPECTRUM not in ctx.cache:
+        ctx.cache[REFERENCE_SPECTRUM] = energy_spectrum(reference, ctx=ctx)[1]
+    e_ref = ctx.cache[REFERENCE_SPECTRUM]
     denom = float(np.sqrt((e_ref**2).sum()))
     if denom == 0.0:
         return float("nan")
     return float(np.sqrt(((e_ref - e_cand) ** 2).sum()) / denom)
+
+
+# Drawn as its field draws it: E(k) on log-log axes with the reference's overlaid (Boffetta &
+# Ecke 2012, Annu. Rev. Fluid Mech. 44, Fig. 11a; Kochkov et al. 2021, PNAS 118, Fig. 2c).
+@companion(of="spectrum_l2", kind="curve", coordinate=("wavenumber", "cycles per domain"),
+           analysed=OCTAVES, scales=("log", "log"))
+def energy_spectrum(x: NDArray[np.floating], *,
+                    ctx: FieldContext) -> tuple[NDArray[np.int64], NDArray[np.floating]]:
+    """(k, E(k)) of one field at every shell k = 1, 2, ... up to the grid's corner mode.
+
+    ``E(k) = 1/2 sum_c sum_{rint|m| = k} |f_hat_m|^2`` with ``f_hat`` the transform divided by the
+    number of cells ``M``, so that ``sum_k E(k) = <|f'|^2> / 2``, half the mean square of the
+    fluctuation: for velocity the kinetic energy per unit mass, ``E = <u^2>/2 = int E(k) dk``
+    of Boffetta & Ecke (2012), Annu. Rev. Fluid Mech. 44, Eq. (3), p. 430; for vorticity the
+    enstrophy, ``int k^2 E(k) dk`` there. It is :func:`radial_energy_spectrum` divided by
+    ``2 M^2``, a constant that cancels in the metric's ratio. Shell 0 is left out: the mean is
+    removed, so it holds round-off only and cannot be drawn on a logarithmic axis.
+
+    The shells beyond ``N/2`` lie in the corners of the grid, only partly inside it, so the
+    curve falls there because the shells are incomplete, not because the field has less
+    energy at those scales. They are kept because the metric sums every shell.
+
+    Args:
+        x: Array of shape ``(C, *spatial)`` on the analysis grid.
+        ctx: Supplies the analysis grid, which sets the shells.
+
+    Returns:
+        The shells 1 to the largest ``rint(|k|)`` of the grid, in cycles across the domain, and
+        ``E`` at each, in the field's units squared.
+    """
+    spectrum = radial_energy_spectrum(x, ctx) / (2.0 * x[0].size ** 2)
+    return np.arange(1, spectrum.size), spectrum[1:]

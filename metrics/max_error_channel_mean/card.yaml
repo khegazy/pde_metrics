@@ -1,0 +1,32 @@
+schema_version: 1
+
+name: max_error_channel_mean
+kind: metric
+category: pointwise
+
+summary: >-
+  Largest absolute error of each channel over the grid, averaged over channels: the max error
+  that PDEBench tabulates, equal to max_error on a one-channel field.
+
+status: candidate
+owners: [khegazy]
+
+output:
+  description: >-
+    Mean over channels of each channel's largest absolute field difference over the grid cells,
+    in the field's own units.
+  bounds:
+    lower: 0.0
+    upper: null
+
+math:
+  triangle_inequality: true    # a sum of per-channel L-infinity distances is a distance
+  scale_dependent: true        # scaling both fields by c scales the value by c
+  resolution_dependent: true   # a maximum over cells, so a finer grid offers more cells to it
+  complexity: "O(N)"
+references: [takamoto2022, ohana2024, roy2005]
+
+not_run:
+  sod_shock_tube: every field of the one-dimensional tube has one channel, where this metric is max_error exactly
+  synthetic_ensemble: the dataset holds density alone, one channel, where this metric is max_error exactly
+review: null
