@@ -121,7 +121,6 @@ Designed, hooks in place, not built.
 |---|---|---|
 | [020](020-import-name-collision.md) | `metrics` is a very generic top-level import name | low |
 | [142](142-run-stamps-are-claimed-per-results-root.md) | Run stamps are claimed per results root, so runs started in one second under different roots share a folder name that cards cannot tell apart | low |
-| [143](143-committed-figures-exceed-the-size-budget.md) | The committed generated files exceed the 40 MB budget and the 50 MB line for Git LFS after the final evidence pass; needs Kareem's decision | high |
 | [144](144-persistence-wasserstein-too-slow-on-turbulence-runs.md) | `persistence_wasserstein` is too slow to run on the turbulence evidence datasets, so its card cites only the forecast run | medium |
 | [145](145-cross-metric-correlation-ranks-round-off.md) | The cross-metric correlation ranks medians that differ only by round-off, so ensemble cards report correlations between metrics of one unchanged mean | medium |
 | [146](146-forecast-runs-store-no-prediction-companions.md) | A forecast run stores no prediction's point set, and a card whose only run is the forecasts has no forecast table | medium |

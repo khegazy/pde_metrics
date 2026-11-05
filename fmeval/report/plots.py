@@ -135,7 +135,8 @@ _VECTOR_POINTS = 1000
 #: Most coordinates a dense curve is drawn at. A curve stored at every order or shell (the
 #: classical Hill plot holds k = 1 to n/10, 6553 orders on 256^2) is drawn at this many, spaced
 #: evenly on the axis it is drawn on, plus its analysed coordinates: more is invisible at figure
-#: size and made one figure's JSON 10.8 MB against a 40 MB budget for every committed figure.
+#: size and made one figure's JSON 10.8 MB, a large share of the size budget for every
+#: committed figure (``tests/test_cards.py``).
 _DENSE_DRAWN = 256
 
 

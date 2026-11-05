@@ -205,10 +205,12 @@ by its own test. Where the two disagree, the recipe wins.
   `docs/recipes/refresh-the-evidence.md`.
 - The committed generated files total 13.6 MB (measured 2026-10-01: 7.2 MB of example
   panels, 6.3 MB under `metrics/`, of which 5.8 MB are the card figures and their numbers).
-  A test caps the total at 40 MB and names the largest files when it trips; the cap was 25 MB
-  until 2026-11-02, when `main` reached 24.3 MB with roughly 0.3 to 1 MB added per metric. If the
-  repository grows past roughly 50 MB, the fallback is Git LFS — raise the question, do not
-  delete panels or figures.
+  A test caps the total at 120 MB and names the largest files when it trips. Kareem raised it from
+  40 MB on 2026-11-04, when running every metric on every experiment brought the files to
+  79.3 MB (17.3 MB compressed in Git); it was 25 MB until 2026-11-02. GitHub blocks single files
+  over 100 MiB and recommends repositories under 1 GB, and Git keeps every committed version, so
+  the cost of a higher cap is history growth with each regeneration. If the files grow past the
+  cap, raise Git LFS or another raise with Kareem — do not delete panels or figures.
 - Your local copy of the repository may sit in a directory named `fluid_metrics`. The
   repository is `pde_metrics`; the directory name is historical and means nothing.
 

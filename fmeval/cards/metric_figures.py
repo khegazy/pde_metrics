@@ -86,7 +86,7 @@ SLOT_TITLES: dict[str, str] = {STANDARD: "field-standard", LEAD: "lead-time"}
 
 #: Renderer options a card overrides. A card shows at most four point-set panels: twelve
 #: persistence diagrams of vorticity, about 7000 points each on the pinned kinet run, wrote
-#: 10.6 MB of numbers beside one figure, against the 40 MB budget for every committed
+#: 10.6 MB of numbers beside one figure, a large share of the size budget for every committed
 #: generated file (``tests/test_cards.py``). The report keeps every panel.
 CARD_OPTIONS: dict[str, dict] = {"companion_points": {"max_panels": 4}}
 
