@@ -294,7 +294,8 @@ reports a stability bound, Equation (3).
   the card, from the two cards' fingerprints).
 
 The diagram figures of Performance draw only the target's diagram, at the last stored frame; they
-hold no prediction's diagram. On density that diagram holds a handful of points and on vorticity
+hold no prediction's diagram, because a forecast run keeps no prediction's point set
+([issue 146](https://github.com/khegazy/pde_metrics/blob/main/issues/146-forecast-runs-store-no-prediction-companions.md)). On density that diagram holds a handful of points and on vorticity
 thousands. By our reading that difference in feature count is why the sum of Equation (2) exceeds
 the bottleneck distance by more on vorticity: there are many more features to add up.
 
