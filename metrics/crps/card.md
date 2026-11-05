@@ -321,15 +321,7 @@ replaced by its own spatial mean, a forecast with no spread and no structure, wh
 0.0594 (the largest in any frame), so the score first moves a tenth of the way to the anchor
 at the harshest inflation (level 4) and never does on the deflation axis. On an ensemble
 whose centre is right, the CRPS charges far less for a wrong spread than for losing the
-field's structure.
-
-The `bias` axis, in the Performance tables, is the contrast: it moves the ensemble mean, and
-the score rises by 2.53 times its clean value at the harshest offset, reaches a damage of
-0.516, and is first detected at level 3. Its elasticity of 1.91 over the mildest offsets is
-close to quadratic: a small offset adds to each cell's error in quadrature with the members'
-own scatter, so the score grows with its square until the offset dominates (this card's
-reasoning). This card has no subsection of its own for that axis; the numbers are those of
-the Performance tables and the card's fingerprint.
+field's structure. The `bias` axis, under Cell-value distortion below, is the contrast.
 
 The profile row above ranks the degradations by damage per unit of field change, but the two
 dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
@@ -338,7 +330,6 @@ meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/b
 
 ### Cell-value distortion
 
-[gain](../../degradations/gain/card.md) ·
 [bias](../../degradations/bias/card.md)
 
 <!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence crps --results results/comparison_1793812401`, do not edit -->
@@ -348,6 +339,19 @@ meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/b
 | `bias` | density | 4 | 1 | 1 | 1 |
 
 <!-- END GENERATED results_pointwise -->
+
+Only the offset ran here: the synthetic ensemble's ladder
+(`configs/degradation/ensemble_miscalibration.yaml`) carries `bias` as its one axis that moves
+the ensemble mean, and no `gain`. Adding the same offset to every member raises the score in
+every frame and at every strength, with a rank correlation of 1 and no overlap between
+neighbouring strengths. At the harshest offset the score has risen by 2.53 times its clean
+value and reaches a damage of 0.516, against at most 0.136 on either dispersion axis; it is
+first detected at level 3. The CRPS is in the units of the field and charges any distance
+between the members and the truth, so it is not invariant to an offset, and this is the
+response its definition implies. Its elasticity of 1.91 over the mildest offsets is close to
+quadratic: a small offset adds to each cell's error in quadrature with the members' own
+scatter, so the score grows with its square until the offset dominates (this card's
+reasoning).
 
 ### Compared with the other metrics
 
@@ -373,6 +377,19 @@ meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/b
 Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
+
+The synthetic ensemble has one field, density, and the comparison runs over its three axes,
+`bias` and the two dispersion axes, and the anchor. `energy_score` orders the degradations exactly as the CRPS
+does (1), and `crps_skill_score` exactly in reverse (−1), which is the same order, because the
+skill score is higher where the CRPS is lower. The rank-histogram summaries follow closely,
+`rank_histogram` at 0.94 and `rank_histogram_chi2` at 0.929, then `spread_skill` at 0.753.
+The metrics that order them least like the CRPS are `vrmse` (0.46), `variogram_score` (0.482)
+and the errors of the ensemble mean, `mse`, `rmse`, `mae`, `nrmse`, `h1_relative` and
+`ensemble_mean_rmse` (0.542 each), with `max_error` at 0.653. The run's `results.csv` shows why
+the agreement stops there: the mean-based errors receive the member mean, which neither
+dispersion axis moves, so they give all eight dispersion strengths the same value, to
+round-off, and share only the CRPS's ordering of the offsets and the anchor, while `variogram_score` does not move under the offset at
+all (its card) and shares only the dispersion axes and the anchor.
 
 ## References
 

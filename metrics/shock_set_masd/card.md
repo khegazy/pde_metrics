@@ -367,6 +367,20 @@ amplitude below a weaker one.
 
 <!-- END GENERATED results_pointwise -->
 
+Neither operator moves the shock, and the metric reads them by whether the detector's verdict
+changes. In every frame the three milder strengths of each score exactly the clean value, 0,
+because the detector flags the same cells as on the reference; at the harshest strength of
+each it flags none, and the empty-set convention charges the diagonal, 1, the anchor's value
+(the run's `results.csv`). The damage is therefore 1, the first strength detected is level 4,
+and the rank correlation of 0.775 in every frame is what three tied strengths followed by one
+step give. The distance is invariant to a gain or an offset until the verdict flips and then
+moves by its whole range, so its value says nothing about how large the amplitude or level
+error is. Why each harshest strength flips the verdict, an offset lowering the pressure ratio
+across the shock below the threshold and a gain pushing the gas ahead of the shock to a
+negative pressure, is worked out on
+[shock_set_distance](../../metrics/shock_set_distance/card.md)'s card, whose detector and
+values on this axis are the same.
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

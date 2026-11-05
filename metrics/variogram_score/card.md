@@ -366,6 +366,21 @@ Rank correlation over every degradation, computed separately for each physical f
 
 <!-- END GENERATED results_summary -->
 
+The synthetic ensemble has one field, density, and the comparison runs over its three axes,
+`bias` and the two dispersion axes, and the anchor. `spread_skill` orders the degradations most
+like the variogram score (0.816), then `rank_histogram` (0.616); `crps` and `energy_score`
+(0.482 each) and `rank_histogram_chi2` (0.462) agree only moderately, and `crps_skill_score`
+reads −0.482, the same agreement as `crps` with the sign of a higher-is-better score. The errors
+of the ensemble mean order them least like it: `max_error` near zero (−0.0745), `mse`, `rmse`,
+`mae`, `nrmse`, `h1_relative` and `ensemble_mean_rmse` at −0.21 each, and `vrmse` at −0.259.
+The two blindnesses are complementary on this ladder: the variogram score does not move under
+the offset (Cell-value distortion, above), while the mean-based errors give all eight
+dispersion strengths the same value, to round-off (the run's `results.csv`), because neither
+dispersion axis moves the member mean they receive. The same file shows where `spread_skill`
+agrees: both give their three largest values to the anchor and the two harshest inflations,
+above every deflation, whereas `crps` gives its three largest to the anchor and the two
+harshest offsets.
+
 ## References
 
 \bibliography

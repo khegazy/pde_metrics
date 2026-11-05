@@ -277,12 +277,8 @@ spatial mean, has a skill of −0.422: an ensemble collapsed onto one number per
 worse than climatology, which at least spreads its prediction over the field's values. Against
 it the harshest inflation reaches a damage of 0.137 and the harshest deflation 0.0592 (the
 largest in any frame); the skill first moves a tenth of the way to the anchor at the harshest
-inflation (level 4) and never does on the deflation axis.
-
-The `bias` axis, in the Performance tables, moves the ensemble mean, and the skill falls by
-0.793 of its clean value at the harshest offset, to a lowest single value of 0.154; it reaches
-a damage of 0.513 and is first detected at level 3. This card has no subsection of its own for
-that axis; the numbers are those of the Performance tables and the card's fingerprint.
+inflation (level 4) and never does on the deflation axis. The `bias` axis is read under
+Cell-value distortion below.
 
 The profile row above ranks the degradations by damage per unit of field change, but the two
 dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
@@ -291,7 +287,6 @@ meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/b
 
 ### Cell-value distortion
 
-[gain](../../degradations/gain/card.md) ·
 [bias](../../degradations/bias/card.md)
 
 <!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence crps_skill_score --results results/comparison_1793812401`, do not edit -->
@@ -301,6 +296,18 @@ meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/b
 | `bias` | density | 4 | 1 | 1 | 1 |
 
 <!-- END GENERATED results_pointwise -->
+
+Only the offset ran here: the synthetic ensemble's ladder
+(`configs/degradation/ensemble_miscalibration.yaml`) carries `bias` as its one axis that moves
+the ensemble mean, and no `gain`. Adding the same offset to every member lowers the skill in
+every frame and at every strength, with a rank correlation of 1 and no overlap between
+neighbouring strengths. At the harshest offset the skill has fallen by 0.793 of its clean
+value, to a lowest single value of 0.154; it reaches a damage of 0.513 and is first detected at
+level 3. The skill score is not invariant to an offset because the CRPS in its numerator is
+not, and the climatology it divides by is fixed within a frame, so inside a frame the skill
+moves as a decreasing linear function of the CRPS, and its elasticity over the mildest offsets,
+1.91, agrees with the CRPS's for that reason (a consequence of Equation (2), not a separate
+measurement).
 
 ### Compared with the other metrics
 
@@ -326,6 +333,18 @@ meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/b
 Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
+
+The synthetic ensemble has one field, density, and the comparison runs over its three axes,
+`bias` and the two dispersion axes, and the anchor. Every correlation is negative because the
+skill score is higher where the other metrics, all of them lower-is-better here, are lower; a
+correlation of −1 is the same order. `crps` and `energy_score` order the degradations exactly
+as the skill score does (−1), then `rank_histogram` (−0.94), `rank_histogram_chi2` (−0.929)
+and `spread_skill` (−0.753). The metrics that order them least like it are `vrmse` (−0.46),
+`variogram_score` (−0.482) and the errors of the ensemble mean, `mse`, `rmse`, `mae`, `nrmse`,
+`h1_relative` and `ensemble_mean_rmse` (−0.542 each), with `max_error` at −0.653. These are the
+`crps` card's correlations with the sign reversed, since within a frame the skill is a
+decreasing linear function of the CRPS; the reason the mean-based errors and `variogram_score`
+agree less is given there.
 
 ## References
 
