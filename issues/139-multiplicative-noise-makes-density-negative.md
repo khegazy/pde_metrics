@@ -21,7 +21,13 @@ Measured on the smoke run `comparison_1793796393` (`kinet_re5e4_dev`, all 100 fr
 not evidence): `wasserstein` is NaN on exactly the 100 rows of `multiplicative_noise` level 5
 (`s = 0.5`) and on no other row, with no convergence warning, so the NaN is the input-domain one.
 Every other metric scores that level as a number, so on that level `wasserstein` drops out of
-every cross-metric statistic, and its own trend on the axis is read on four levels.
+every cross-metric statistic. Its own trend on the axis is not read on the four other levels:
+on the final evidence pass (`comparison_1793829127`, kinet_re5e4) the `wasserstein` card's
+fingerprint has `n_levels` 5 for `multiplicative_noise`, every ordering statistic null and
+`damage_max` 0.639, and the card shows the axis as a dash, the mark it also uses for a metric that
+does not respond (found by the `readings-physics-norms` agent from `_per_frame_rho`; not re-run).
+Either the analysis drops a NaN row per frame and reads the remaining levels, or this text and
+the card say the axis is unread.
 
 ## What would settle it
 
