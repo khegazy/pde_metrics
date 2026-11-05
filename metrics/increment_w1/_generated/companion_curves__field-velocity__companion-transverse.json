@@ -1,0 +1,557 @@
+{
+  "caption": "The curve behind increment_w1.transverse on velocity: the median over frames at every strength of every degradation, the clean curve in black, the anchor dashed and the impostor dotted. Values are the literature's own, untransformed.",
+  "dataset": "kinet_re5e4",
+  "figure": "companion_curves",
+  "metric": "increment_w1",
+  "panels": {
+    "all": [
+      {
+        "coordinate": 1.0,
+        "degradation": "additive_noise",
+        "level": 1,
+        "value_median": 4.437521773645649e-06
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "additive_noise",
+        "level": 2,
+        "value_median": 0.0001443619933147
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "additive_noise",
+        "level": 3,
+        "value_median": 0.0035956703276814
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "additive_noise",
+        "level": 4,
+        "value_median": 0.0213163193306802
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "band_attenuate",
+        "level": 1,
+        "value_median": 3.469198487846372e-05
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "band_attenuate",
+        "level": 2,
+        "value_median": 8.2815834096557e-05
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "band_attenuate",
+        "level": 3,
+        "value_median": 0.0001158471989705
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "band_attenuate",
+        "level": 4,
+        "value_median": 0.0001252629334832
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "bias",
+        "level": 1,
+        "value_median": 1.1028385516863241e-19
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "bias",
+        "level": 2,
+        "value_median": 1.938522580936397e-19
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "bias",
+        "level": 3,
+        "value_median": 6.454795342602154e-19
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "bias",
+        "level": 4,
+        "value_median": 1.5755180914302572e-18
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "box_blur",
+        "level": 1,
+        "value_median": 0.0001592720496525
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "box_blur",
+        "level": 2,
+        "value_median": 0.0002572402925974
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "box_blur",
+        "level": 3,
+        "value_median": 0.0003040439415562
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "box_blur",
+        "level": 4,
+        "value_median": 0.0003862893264486
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen",
+        "level": 1,
+        "value_median": 0.0005476034070268
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen",
+        "level": 2,
+        "value_median": 0.0009305716944101
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen",
+        "level": 3,
+        "value_median": 0.0011856112321546
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen",
+        "level": 4,
+        "value_median": 0.0013589593923785
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen_bandlimited",
+        "level": 1,
+        "value_median": 3.8896796508408e-06
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen_bandlimited",
+        "level": 2,
+        "value_median": 4.153949468407644e-05
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen_bandlimited",
+        "level": 3,
+        "value_median": 0.000107689578058
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "coarsen_bandlimited",
+        "level": 4,
+        "value_median": 0.0001707572548667
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "disk_blur",
+        "level": 1,
+        "value_median": 0.0002324728373613
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "disk_blur",
+        "level": 2,
+        "value_median": 0.0003031971438259
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "disk_blur",
+        "level": 3,
+        "value_median": 0.0004050423333421
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "epanechnikov_blur",
+        "level": 1,
+        "value_median": 0.0002081136575772
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "epanechnikov_blur",
+        "level": 2,
+        "value_median": 0.0002839418098645
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "epanechnikov_blur",
+        "level": 3,
+        "value_median": 0.0003630158701525
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gain",
+        "level": 1,
+        "value_median": 1.0255854764597196e-05
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gain",
+        "level": 2,
+        "value_median": 5.127927382298599e-05
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gain",
+        "level": 3,
+        "value_median": 0.0002051170952919
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gain",
+        "level": 4,
+        "value_median": 0.0005127927382298
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0001704983238461
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0002736605098992
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0003606590119971
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0005743292455203
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0003291617102634
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_butterworth",
+        "level": 1,
+        "value_median": 0.0002720725909753
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_butterworth",
+        "level": 2,
+        "value_median": 0.0002720725909753
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_butterworth",
+        "level": 3,
+        "value_median": 0.0004467862737567
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_butterworth",
+        "level": 4,
+        "value_median": 0.0005763771087834
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_ideal",
+        "level": 1,
+        "value_median": 1.0323269871275197e-17
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_ideal",
+        "level": 2,
+        "value_median": 1.0323269871275197e-17
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_ideal",
+        "level": 3,
+        "value_median": 0.0003329966007938
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "highpass_ideal",
+        "level": 4,
+        "value_median": 0.0005196470638718
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_butterworth",
+        "level": 1,
+        "value_median": 0.0002406886085622
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_butterworth",
+        "level": 2,
+        "value_median": 0.0004031931830928
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_butterworth",
+        "level": 3,
+        "value_median": 0.0006300263343602
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_butterworth",
+        "level": 4,
+        "value_median": 0.0006300263343602
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_ideal",
+        "level": 1,
+        "value_median": 0.0002410388248304
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_ideal",
+        "level": 2,
+        "value_median": 0.0003404355573076
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_ideal",
+        "level": 3,
+        "value_median": 0.0003404355573076
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "lowpass_ideal",
+        "level": 4,
+        "value_median": 0.0003404355573076
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "mean_field",
+        "level": 1,
+        "value_median": 0.0010255854764597
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "median_blur",
+        "level": 1,
+        "value_median": 0.0001148545435768
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "median_blur",
+        "level": 2,
+        "value_median": 0.0001871905124145
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "median_blur",
+        "level": 3,
+        "value_median": 0.00023786325645
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "multiplicative_noise",
+        "level": 1,
+        "value_median": 5.092615792398372e-07
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "multiplicative_noise",
+        "level": 2,
+        "value_median": 2.6113991327253727e-06
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "multiplicative_noise",
+        "level": 3,
+        "value_median": 0.0001069370701569
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "multiplicative_noise",
+        "level": 4,
+        "value_median": 0.0031067622342126
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "multiplicative_noise",
+        "level": 5,
+        "value_median": 0.018485723741098
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "subsample",
+        "level": 1,
+        "value_median": 0.0005563074383332
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "subsample",
+        "level": 2,
+        "value_median": 0.0009536550904137
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "subsample",
+        "level": 3,
+        "value_median": 0.0012133075437995
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "subsample",
+        "level": 4,
+        "value_median": 0.0013939734972581
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_subpixel",
+        "level": 1,
+        "value_median": 1.3521459525700671e-06
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_subpixel",
+        "level": 2,
+        "value_median": 1.8512474578364508e-06
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_subpixel",
+        "level": 3,
+        "value_median": 2.1084776381768133e-06
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_subpixel",
+        "level": 4,
+        "value_median": 1.0430837686980449e-17
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_subpixel",
+        "level": 5,
+        "value_median": 1.039658946278982e-17
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_subpixel",
+        "level": 6,
+        "value_median": 1.038270239277476e-17
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_y",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_y",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_y",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_y",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "translate_y",
+        "level": 5,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "uncorrelated",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "uncorrelated",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "uncorrelated",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "uncorrelated",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "uncorrelated",
+        "level": 5,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 1.0,
+        "degradation": "uncorrelated",
+        "level": 6,
+        "value_median": 0.0
+      }
+    ]
+  },
+  "run": "comparison_1793829127"
+}

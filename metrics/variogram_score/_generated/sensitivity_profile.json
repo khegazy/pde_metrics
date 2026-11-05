@@ -24,8 +24,8 @@
         "blind": true,
         "blindness_q": 0.0,
         "cliffs_delta_min": 1.0,
-        "damage_max_ucb": 0.0077950151,
-        "damage_per_change": 5.549530244e+29,
+        "damage_max_ucb": 0.007795015110001042,
+        "damage_per_change": 5.549530244233277e+29,
         "degradation": "spread_deflate",
         "degradation_family": "ensemble",
         "field": "density",
@@ -39,8 +39,8 @@
         "blind": false,
         "blindness_q": 1.0,
         "cliffs_delta_min": 1.0,
-        "damage_max_ucb": 0.0618769088,
-        "damage_per_change": 2.677670205e+29,
+        "damage_max_ucb": 0.06187690879894456,
+        "damage_per_change": 2.6776702048338702e+29,
         "degradation": "spread_inflate",
         "degradation_family": "ensemble",
         "field": "density",
@@ -52,5 +52,5 @@
       }
     ]
   },
-  "run": "variogram_score_1793780354"
+  "run": "comparison_1793812401"
 }

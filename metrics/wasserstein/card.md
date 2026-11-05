@@ -188,7 +188,11 @@ a signed pattern (`card.yaml`).
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-density__along-lead.svg)
+
+*As this metric's own field draws it, from run `comparison_1793811840`.* wasserstein on density against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Each point is one prediction step of one forecast.
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -202,20 +206,22 @@ Median damage over frames against severity level for wasserstein, one row per fa
 
 | test family | field | degradations | rank correlation | fraction of frames in order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| Displacement | density | 2 | 1 | 1 | 0.959 to 0.96 |
-| Resolution loss | density | 2 | 1 | 1 | 0.865 to 1 |
-| Smoothing | density | 3 | 1 | 1 | 0.963 to 0.974 |
-| Spectral filtering | density | 4 | 1 | 1 | 0.548 to 0.968 |
-| Noise | density | 1 | 1 | 1 | 1 |
+| Displacement | density | 3 | 1 | 1 | 0.943 to 0.96 |
+| Cell-value distortion | density | 2 | 1 | 1 | 0.93 to 0.97 |
+| Resolution loss | density | 3 | 1 | 1 | 0.865 to 1 |
+| Smoothing | density | 5 | 1 | 1 | 0.963 to 0.974 |
+| Spectral filtering | density | 5 | 1 | 1 | 0.548 to 0.968 |
+| Noise | density | 2 | 1 | 1 | 1 |
 
 **Reactivity: how far does it move?**
 
 | test family | field | change from clean at the harshest strength | elasticity | first strength detected |
 |---|---|---|---|---|
 | Displacement | density | — | 0.999 to 1 | level 3 |
-| Resolution loss | density | — | 2.03 to 2.14 | level — |
+| Cell-value distortion | density | — | 1 | level 3 |
+| Resolution loss | density | — | 1.4 to 2.14 | level 3 |
 | Smoothing | density | — | 1.81 to 1.92 | level 3 |
-| Spectral filtering | density | — | 1.12 to 6.71 | level 1 |
+| Spectral filtering | density | — | 1 to 6.71 | level 1 |
 | Noise | density | — | 0.997 | level — |
 | trap test: fake prediction, right spectrum | density | — | — | damage 1.33 |
 
@@ -223,11 +229,12 @@ Median damage over frames against severity level for wasserstein, one row per fa
 
 | test family | field | consistency, in the strength's units | snapshots per independent block |
 |---|---|---|---|
-| Displacement | density | 0.053 to 0.315 | 18 |
-| Resolution loss | density | 0.582 to 1.72 | 19 to 21 |
-| Smoothing | density | 0.00546 to 0.0138 | 19 to 20 |
-| Spectral filtering | density | 0.0137 to 0.0325 | 1 to 20 |
-| Noise | density | 0.00991 | 1 |
+| Displacement | density | 0.0531 to 0.316 | 1 to 16 |
+| Cell-value distortion | density | 0.0137 to 0.0299 | 1 to 19 |
+| Resolution loss | density | 0.388 to 1.72 | 1 to 20 |
+| Smoothing | density | 0.00552 to 0.0139 | 17 to 19 |
+| Spectral filtering | density | 0.0137 to 0.133 | 1 to 21 |
+| Noise | density | 0.00993 | 1 to 19 |
 
 One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. It does not exist for this metric, whose undegraded value is exactly zero; the damage below is its relative reading. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
 
@@ -237,7 +244,7 @@ These tables report what was measured and grade none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift, against severity (distance) | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| density | 0.38 | `translate_subpixel` | `additive_noise` | `additive_noise` `coarsen` `coarsen_bandlimited` | 1 | 712 |
+| density | 0.592 | `band_attenuate` | `bias` | `additive_noise` `band_attenuate` `bias` `coarsen` `coarsen_bandlimited` | 1 | 1.09e+03 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
@@ -340,11 +347,11 @@ negative, because neither is then a pile of mass.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `fdbd5d7872d6` (working tree dirty). Run `comparison_1793657627`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793829127`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793657627`.
+Every number in this section comes from that run, except in the subsections headed with another experiment and in a figure whose caption names another run, each of which names its own run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`.
 
 <!-- END GENERATED run -->
 
@@ -354,11 +361,11 @@ Every number in this section comes from that one run. Regenerate with `python -m
 
 | experiment | what a run on it is evidence of | on this card |
 |---|---|---|
-| `kinet_re5e4` | developed flow | measured, run `comparison_1793657627`: the main results |
-| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
+| `kinet_re5e4` | developed flow | measured, run `comparison_1793829127`: the main results |
+| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | measured, run `comparison_1793829231`: under *On `kinet_re1e6`* |
 | `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: its density is a signed two-scale pattern plus noise, with cells below zero, where the distance is undefined: every value there is NaN (measured on all 168 rows) |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
-| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
+| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | measured, run `comparison_1793811840`: under *On `forecast_re5e4`* |
 
 One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.
 
@@ -370,11 +377,13 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 [box_blur](../../degradations/box_blur/card.md) ·
 [median_blur](../../degradations/median_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `box_blur` | density | 4 | 1 | 1 | 0.963 |
+| `disk_blur` | density | 3 | 1 | 1 | 0.972 |
+| `epanechnikov_blur` | density | 3 | 1 | 1 | 0.972 |
 | `gaussian_blur` | density | 4 | 1 | 1 | 0.974 |
 | `median_blur` | density | 3 | 1 | 1 | 0.971 |
 
@@ -389,10 +398,11 @@ Every blur moves mass from the density's peaks into its troughs, and the distanc
 [highpass_ideal](../../degradations/highpass_ideal/card.md) ·
 [highpass_butterworth](../../degradations/highpass_butterworth/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
+| `band_attenuate` | density | 4 | 1 | 1 | 0.676 |
 | `highpass_butterworth` | density | 4 | 1 | 1 | 0.576 |
 | `highpass_ideal` | density | 3 | 1 | 1 | 0.548 |
 | `lowpass_butterworth` | density | 4 | 1 | 1 | 0.848 |
@@ -406,12 +416,13 @@ All four filters follow the fraction of energy removed on every frame. The high-
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `translate_subpixel` | density | 6 | 1 | 1 | 0.96 |
 | `translate_x` | density | 5 | 1 | 1 | 0.959 |
+| `translate_y` | density | 5 | 1 | 1 | 0.943 |
 
 <!-- END GENERATED results_geometric -->
 
@@ -422,12 +433,13 @@ Both axes follow the shift on every frame, as pre-registered, and the elasticity
 [coarsen](../../degradations/coarsen/card.md) ·
 [coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `coarsen` | density | 4 | 1 | 1 | 1 |
 | `coarsen_bandlimited` | density | 4 | 1 | 1 | 0.865 |
+| `subsample` | density | 4 | 1 | 1 | 0.962 |
 
 <!-- END GENERATED results_resolution -->
 
@@ -437,11 +449,12 @@ Both coarsenings follow the factor on every frame, but their response is small: 
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `additive_noise` | density | 4 | 1 | 1 | 1 |
+| `multiplicative_noise` | density | 5 | — | — | — |
 
 <!-- END GENERATED results_stochastic -->
 
@@ -452,7 +465,7 @@ Ordered perfectly, with no overlap between neighbouring amplitudes, and with an 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
 |---|---|---|---|---|
@@ -466,25 +479,29 @@ The fake prediction with the right spectrum scores a damage of 1.33, more than t
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 | compared with | density |
 |---|---|
-| `h_minus_one` | 1 |
-| `mse` | 0.949 |
-| `rmse` | 0.949 |
-| `nrmse` | 0.948 |
-| `mae` | 0.934 |
-| `max_error` | 0.913 |
-| `h1_seminorm` | 0.55 |
-| `persistence_distance` | 0.2 |
-| `spectrum_l2` | 0.139 |
-| `increment_w1_by_separation` | 0.118 |
-| `tail_exceedance` | 0.075 |
-| `energy_distance` | 0.0106 |
-| `increment_w1` | 0.0069 |
-| `tail_index` | -0.139 |
-| `increment_flatness` | -0.18 |
+| `h_minus_one` | 0.996 |
+| `max_error` | 0.899 |
+| `max_error_channel_mean` | 0.899 |
+| `vrmse` | 0.887 |
+| `mse` | 0.886 |
+| `nrmse` | 0.886 |
+| `rmse` | 0.886 |
+| `rmse_channel_mean` | 0.886 |
+| `mae` | 0.852 |
+| `h1_relative` | 0.696 |
+| `h1_seminorm` | 0.584 |
+| `persistence_distance` | 0.242 |
+| `spectrum_l2` | 0.239 |
+| `increment_w1_by_separation` | 0.216 |
+| `tail_exceedance` | 0.19 |
+| `increment_w1` | 0.121 |
+| `energy_distance` | 0.115 |
+| `tail_index` | -0.0811 |
+| `increment_flatness` | -0.111 |
 
 Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
@@ -494,11 +511,11 @@ Rank correlation over every degradation, computed separately for each physical f
 
 ### Damage beside the other metrics
 
-<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 ![damage against applied strength for this metric beside the pointwise controls, log-log, one panel per displacement degradation and field](_generated/damage_beside_controls.svg)
 
-Median damage over frames against the applied strength, log-log, for wasserstein (bold, in colour) and the pointwise controls mae, mse, rmse, nrmse (thin, grey), one column per displacement degradation and one row per field. The grey line is damage 1, the anchor (by default the field's own mean). Parallel lines charge in the same proportion at every strength; a steeper line charges relatively more for the larger shifts, which is what decides whether two metrics are interchangeable as training losses. These are the same numbers as the table beneath.
+Median damage over frames against the applied strength, log-log, for wasserstein (bold, in colour) and the pointwise controls mae, mse, rmse, vrmse (thin, grey), one column per displacement degradation and one row per field. The grey line is damage 1, the anchor (by default the field's own mean). Parallel lines charge in the same proportion at every strength; a steeper line charges relatively more for the larger shifts, which is what decides whether two metrics are interchangeable as training losses. These are the same numbers as the table beneath.
 
 **Displacement, density, `translate_subpixel`** (strength: distance).
 
@@ -508,7 +525,7 @@ Median damage over frames against the applied strength, log-log, for wasserstein
 | `mae` | 0.00383 | 0.00767 | 0.0153 | 0.0306 | 0.061 | 0.121 |
 | `mse` | 2.17e-05 | 8.68e-05 | 0.000347 | 0.00138 | 0.00551 | 0.0219 |
 | `rmse` | 0.00466 | 0.00931 | 0.0186 | 0.0372 | 0.0743 | 0.148 |
-| `nrmse` | 0.00463 | 0.00926 | 0.0185 | 0.037 | 0.0738 | 0.147 |
+| `vrmse` | 0.00463 | 0.00926 | 0.0185 | 0.037 | 0.0738 | 0.147 |
 
 **Displacement, density, `translate_x`** (strength: distance).
 
@@ -518,7 +535,17 @@ Median damage over frames against the applied strength, log-log, for wasserstein
 | `mae` | 0.0306 | 0.061 | 0.121 | 0.24 | 0.469 |
 | `mse` | 0.00138 | 0.00551 | 0.0219 | 0.0849 | 0.307 |
 | `rmse` | 0.0372 | 0.0743 | 0.148 | 0.291 | 0.555 |
-| `nrmse` | 0.037 | 0.0738 | 0.147 | 0.29 | 0.55 |
+| `vrmse` | 0.037 | 0.0738 | 0.147 | 0.29 | 0.55 |
+
+**Displacement, density, `translate_y`** (strength: distance).
+
+| metric | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| `wasserstein` | 0.028 | 0.0559 | 0.112 | 0.222 | 0.438 |
+| `mae` | 0.031 | 0.0616 | 0.122 | 0.244 | 0.476 |
+| `mse` | 0.00142 | 0.00565 | 0.0224 | 0.0869 | 0.316 |
+| `rmse` | 0.0377 | 0.0752 | 0.15 | 0.295 | 0.562 |
+| `vrmse` | 0.0376 | 0.075 | 0.149 | 0.294 | 0.56 |
 
 **Displacement, velocity, `translate_subpixel`** (strength: distance).
 
@@ -528,7 +555,7 @@ Median damage over frames against the applied strength, log-log, for wasserstein
 | `mae` | 0.00279 | 0.00559 | 0.0112 | 0.0223 | 0.0441 | 0.0859 |
 | `mse` | 1.45e-05 | 5.81e-05 | 0.000232 | 0.000924 | 0.0036 | 0.0136 |
 | `rmse` | 0.00381 | 0.00762 | 0.0152 | 0.0304 | 0.06 | 0.117 |
-| `nrmse` | 0.00382 | 0.00763 | 0.0153 | 0.0304 | 0.06 | 0.117 |
+| `vrmse` | 0.00365 | 0.00729 | 0.0146 | 0.029 | 0.0574 | 0.111 |
 
 **Displacement, velocity, `translate_x`** (strength: distance).
 
@@ -538,7 +565,17 @@ Median damage over frames against the applied strength, log-log, for wasserstein
 | `mae` | 0.0223 | 0.0441 | 0.0859 | 0.163 | 0.31 |
 | `mse` | 0.000924 | 0.0036 | 0.0136 | 0.0489 | 0.165 |
 | `rmse` | 0.0304 | 0.06 | 0.117 | 0.221 | 0.406 |
-| `nrmse` | 0.0304 | 0.06 | 0.117 | 0.221 | 0.406 |
+| `vrmse` | 0.029 | 0.0574 | 0.111 | 0.209 | 0.383 |
+
+**Displacement, velocity, `translate_y`** (strength: distance).
+
+| metric | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| `wasserstein` | — | — | — | — | — |
+| `mae` | 0.0223 | 0.0442 | 0.0856 | 0.16 | 0.295 |
+| `mse` | 0.000935 | 0.00366 | 0.0138 | 0.0473 | 0.158 |
+| `rmse` | 0.0306 | 0.0605 | 0.117 | 0.218 | 0.397 |
+| `vrmse` | 0.0303 | 0.0599 | 0.115 | 0.212 | 0.384 |
 
 **Displacement, vorticity, `translate_subpixel`** (strength: distance).
 
@@ -548,7 +585,7 @@ Median damage over frames against the applied strength, log-log, for wasserstein
 | `mae` | 0.0428 | 0.0854 | 0.169 | 0.328 | 0.582 | 0.86 |
 | `mse` | 0.00112 | 0.00448 | 0.0176 | 0.066 | 0.21 | 0.44 |
 | `rmse` | 0.0335 | 0.0669 | 0.133 | 0.257 | 0.458 | 0.663 |
-| `nrmse` | 0.0328 | 0.0654 | 0.13 | 0.253 | 0.456 | 0.67 |
+| `vrmse` | 0.0329 | 0.0656 | 0.13 | 0.253 | 0.455 | 0.671 |
 
 **Displacement, vorticity, `translate_x`** (strength: distance).
 
@@ -558,13 +595,163 @@ Median damage over frames against the applied strength, log-log, for wasserstein
 | `mae` | 0.328 | 0.582 | 0.86 | 1.1 | 1.31 |
 | `mse` | 0.066 | 0.21 | 0.44 | 0.679 | 1.1 |
 | `rmse` | 0.257 | 0.458 | 0.663 | 0.824 | 1.05 |
-| `nrmse` | 0.253 | 0.456 | 0.67 | 0.832 | 1.05 |
+| `vrmse` | 0.253 | 0.455 | 0.671 | 0.832 | 1.05 |
+
+**Displacement, vorticity, `translate_y`** (strength: distance).
+
+| metric | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| `wasserstein` | — | — | — | — | — |
+| `mae` | 0.333 | 0.603 | 0.93 | 1.25 | 1.43 |
+| `mse` | 0.0858 | 0.283 | 0.628 | 0.849 | 1.17 |
+| `rmse` | 0.293 | 0.532 | 0.793 | 0.922 | 1.08 |
+| `vrmse` | 0.268 | 0.495 | 0.793 | 0.927 | 1.08 |
 
 Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 the anchor (by default the field's own mean); a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
 
 <!-- END GENERATED results_damage_by_level -->
 
 Only one metric was in the run, so there is nothing to place beside it here; see the comparison with `h_minus_one` above.
+
+### On `forecast_re5e4`
+
+<!-- GENERATED results_on_forecast_re5e4: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+
+**Real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded.**
+
+Measured on `forecast_re5e4`, frames 0 to 59 (60 frames of real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded), on the 64 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793811840`.
+
+[mean_field](../../degradations/mean_field/card.md)
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-density__along-lead.svg)
+
+wasserstein on density against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Each point is one prediction step of one forecast.
+
+**density, wasserstein on the prediction, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.00042 | 0.000141 | 8.7e-07 | 0.00422 | 0.00133 | 4.95e-06 |
+| 0.2255 | 0.0014 | 0.000518 | 3.05e-06 | 0.00511 | 0.00184 | 8.17e-06 |
+| 0.3383 | 0.00523 | 0.00217 | 1.39e-05 | 0.00805 | 0.00298 | 1.4e-05 |
+| 0.4511 | 0.0149 | 0.00689 | 5.19e-05 | 0.0095 | 0.00366 | 1.72e-05 |
+| 0.5638 | 0.036 | 0.0184 | 0.000197 | 0.0107 | 0.00431 | 2.19e-05 |
+| 0.6766 | 0.0432 | 0.0154 | 0.000608 | 0.013 | 0.0049 | 2.39e-05 |
+| 0.7893 | 0.0341 | 0.00962 | 0.00127 | 0.0151 | 0.00633 | 3.55e-05 |
+| 0.9021 | 0.027 | 0.012 | 0.00206 | 0.0154 | 0.00603 | 2.91e-05 |
+| 1.015 | 0.0272 | 0.0142 | 0.00325 | 0.0179 | 0.00732 | 4.3e-05 |
+| 1.128 | 0.0274 | 0.0135 | 0.00525 | 0.0183 | 0.00794 | 4.26e-05 |
+
+**density, wasserstein damage, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.0229 | 0.00774 | 4.78e-05 | 0.0228 | 0.0072 | 2.68e-05 |
+| 0.2255 | 0.107 | 0.039 | 0.000228 | 0.0298 | 0.0107 | 4.75e-05 |
+| 0.3383 | 0.2 | 0.0835 | 0.000537 | 0.046 | 0.0171 | 7.99e-05 |
+| 0.4511 | 0.259 | 0.119 | 0.000895 | 0.0527 | 0.0203 | 9.52e-05 |
+| 0.5638 | 0.432 | 0.22 | 0.00236 | 0.0644 | 0.0259 | 0.000131 |
+| 0.6766 | 0.32 | 0.114 | 0.0045 | 0.0712 | 0.0269 | 0.000132 |
+| 0.7893 | 0.23 | 0.065 | 0.00856 | 0.0883 | 0.0369 | 0.000207 |
+| 0.9021 | 0.164 | 0.0732 | 0.0125 | 0.0878 | 0.0345 | 0.000166 |
+| 1.015 | 0.151 | 0.0789 | 0.0181 | 0.0983 | 0.0402 | 0.000236 |
+| 1.128 | 0.163 | 0.08 | 0.0312 | 0.109 | 0.0472 | 0.000253 |
+
+Every prediction of every forecast, nothing pooled: a cell is one prediction step of one forecast, a row the lead time (the physical time since the forecast started) and a column the forecast, named by its run's native grid and its starting time (`64², start 0` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-0`; `128², start 0` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-0`; `256², start 0` is `F-906861_64/forecast_t0-0`; `64², start 1.13` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250`; `128², start 1.13` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-2500`; `256², start 1.13` is `F-906861_64/forecast_t0-5000`). **Damage** is the prediction's departure from the target as a fraction of the anchor's in the same frame, by default the target's own spatial mean, so each step is scaled by its own target. A dash means no value there.
+
+<!-- END GENERATED results_on_forecast_re5e4 -->
+
+### On `kinet_re1e6`
+
+<!-- GENERATED results_on_kinet_re1e6: written by `python -m fmeval.cards evidence wasserstein --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+
+**Developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition.**
+
+Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition), on the 128 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793829231`.
+
+[additive_noise](../../degradations/additive_noise/card.md) ·
+[band_attenuate](../../degradations/band_attenuate/card.md) ·
+[bias](../../degradations/bias/card.md) ·
+[box_blur](../../degradations/box_blur/card.md) ·
+[coarsen](../../degradations/coarsen/card.md) ·
+[coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md) ·
+[disk_blur](../../degradations/disk_blur/card.md) ·
+[epanechnikov_blur](../../degradations/epanechnikov_blur/card.md) ·
+[gain](../../degradations/gain/card.md) ·
+[gaussian_blur](../../degradations/gaussian_blur/card.md) ·
+[gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
+[highpass_butterworth](../../degradations/highpass_butterworth/card.md) ·
+[highpass_ideal](../../degradations/highpass_ideal/card.md) ·
+[lowpass_butterworth](../../degradations/lowpass_butterworth/card.md) ·
+[lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
+[mean_field](../../degradations/mean_field/card.md) ·
+[median_blur](../../degradations/median_blur/card.md) ·
+[multiplicative_noise](../../degradations/multiplicative_noise/card.md) ·
+[subsample](../../degradations/subsample/card.md) ·
+[translate_subpixel](../../degradations/translate_subpixel/card.md) ·
+[translate_x](../../degradations/translate/card.md) ·
+[translate_y](../../degradations/translate/card.md) ·
+[uncorrelated](../../degradations/random_large_translation/card.md)
+
+**Smoothing.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `box_blur` | density | 4 | 1 | 1 | 0.965 |
+| `disk_blur` | density | 3 | 1 | 1 | 0.971 |
+| `epanechnikov_blur` | density | 3 | 1 | 1 | 0.973 |
+| `gaussian_blur` | density | 4 | 1 | 1 | 0.974 |
+| `median_blur` | density | 3 | 1 | 1 | 0.975 |
+
+**Spectral filtering.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `band_attenuate` | density | 4 | 1 | 1 | 0.688 |
+| `highpass_butterworth` | density | 4 | 1 | 1 | 0.577 |
+| `highpass_ideal` | density | 3 | 1 | 1 | 0.55 |
+| `lowpass_butterworth` | density | 4 | 1 | 1 | 0.849 |
+| `lowpass_ideal` | density | 3 | 1 | 1 | 0.976 |
+
+**Displacement.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `translate_subpixel` | density | 6 | 1 | 1 | 0.961 |
+| `translate_x` | density | 5 | 1 | 1 | 0.953 |
+| `translate_y` | density | 5 | 1 | 1 | 0.94 |
+
+**Resolution loss.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `coarsen` | density | 4 | 1 | 1 | 0.997 |
+| `coarsen_bandlimited` | density | 4 | 1 | 1 | 1 |
+| `subsample` | density | 4 | 1 | 1 | 0.967 |
+
+**Noise.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `additive_noise` | density | 4 | 1 | 1 | 1 |
+| `multiplicative_noise` | density | 5 | — | — | — |
+
+**Cell-value distortion.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `bias` | density | 4 | 1 | 1 | 0.931 |
+| `gain` | density | 4 | 1 | 1 | 0.97 |
+
+**Trap tests.**
+
+| field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
+|---|---|---|---|---|
+| density | 1.35 | `lowpass_ideal=1.41077` | 1.11 | 0.696 |
+
+The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
+
+<!-- END GENERATED results_on_kinet_re1e6 -->
 
 ## References
 

@@ -903,6 +903,12 @@ def test_the_catalog_supports_the_query_it_exists_for():
         # tail_index is one sort and logarithms per channel and axis, piecewise smooth as
         # increment_w1's sort is.
         "tail_index",
+        # The other fields' standards built beside them: PDEBench's nrmse and The Well's vrmse
+        # (ratios of norms, smooth away from a zero denominator), PDEBench's per-channel means
+        # of rmse and max_error, neuraloperator's relative H1 norm, and the CRPS skill score,
+        # which is affine in crps.
+        "nrmse", "vrmse", "rmse_channel_mean", "max_error_channel_mean", "h1_relative",
+        "crps_skill_score",
     }
 
 
@@ -1548,8 +1554,8 @@ def test_a_reason_only_a_person_can_give_is_the_cards_not_run(monkeypatch):
                             lambda bundle: dataclasses.replace(real(bundle), not_run=not_run))
 
     reason = "the member mean of this ensemble says nothing new here"
-    with_not_run(synthetic_ensemble=reason)     # one mse does not cite
-    row = {r["dataset"]: r for r in catalog.experiments(loader.find_bundle("mse"))}[
+    with_not_run(synthetic_ensemble=reason)     # one h1_seminorm does not cite
+    row = {r["dataset"]: r for r in catalog.experiments(loader.find_bundle("h1_seminorm"))}[
         "synthetic_ensemble"]
     assert (row["state"], row["reason"]) == ("not applicable", reason)
     with_not_run(kinet_re5e4=reason)            # mse cites a run there

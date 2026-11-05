@@ -104,7 +104,11 @@ periodic grid is missed. The metric takes no Fourier transform, does not declare
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/shock_mask_overlap_1793494245`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/comparison_1793812304`, do not edit -->
+
+![the point sets behind the number, each degraded set over the reference's, as its field draws them](_generated/companion_points__field-pressure.svg)
+
+*As this metric's own field draws it.* The point set behind shock_mask_overlap on pressure, one panel per stored variant, on shared axes. Grey rings are the clean level's set of the same frame, the reference's, drawn under every panel. The lines are the field's line-out on this one-dimensional grid against the cell index, the clean level's in grey. Triangles on a panel's edge are points with an infinite coordinate. Only the first 4 of the 5 stored sets are drawn, in time order; every set is in data/error_maps.npz.
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -119,20 +123,22 @@ Median damage over frames against severity level for shock_mask_overlap, one row
 | test family | field | degradations | rank correlation | fraction of frames in order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | Displacement | pressure | 2 | 0.707 to 0.971 | 0 | 0.5 |
-| Resolution loss | pressure | 2 | 0.775 | 0 | 0.5 |
-| Smoothing | pressure | 2 | — | — | — |
-| Spectral filtering | pressure | 4 | 1 | 0.1 | 0.55 |
-| Noise | pressure | 1 | 0.949 | 0 | 0.5 |
+| Cell-value distortion | pressure | 2 | 0.775 | 0 | 0.5 |
+| Resolution loss | pressure | 3 | 0.775 | 0 | 0.5 |
+| Smoothing | pressure | 4 | — | — | — |
+| Spectral filtering | pressure | 5 | 1 | 0.1 | 0.55 |
+| Noise | pressure | 2 | 0.707 to 0.949 | 0 | 0.5 |
 
 **Reactivity: how far does it move?**
 
 | test family | field | change from clean at the harshest strength | elasticity | first strength detected |
 |---|---|---|---|---|
 | Displacement | pressure | -1 | 0.5 | level 1 |
+| Cell-value distortion | pressure | -1 | — | level 4 |
 | Resolution loss | pressure | -1 | 1.16 | level 1 |
 | Smoothing | pressure | -1 | — | level — |
-| Spectral filtering | pressure | -1 | — | level — |
-| Noise | pressure | -0.996 | — | level 3 |
+| Spectral filtering | pressure | -1 to 0 | — | level — |
+| Noise | pressure | -0.998 to -0.996 | — | level 3 |
 | trap test: fake prediction, right spectrum | pressure | — | — | damage 1 |
 
 **Consistency: how much does it vary from snapshot to snapshot?**
@@ -140,10 +146,11 @@ Median damage over frames against severity level for shock_mask_overlap, one row
 | test family | field | consistency, in the strength's units | snapshots per independent block |
 |---|---|---|---|
 | Displacement | pressure | 0 | 1 |
+| Cell-value distortion | pressure | 0 | 1 |
 | Resolution loss | pressure | 0.408 to 9.12 | 1 |
 | Smoothing | pressure | — | 1 |
 | Spectral filtering | pressure | 1.64 | 1 |
-| Noise | pressure | 0.113 | 1 |
+| Noise | pressure | 0.113 to 0.123 | 1 |
 
 One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
 
@@ -153,7 +160,7 @@ These tables report what was measured and grade none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift, against severity (distance) | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| pressure | 0.719 | `coarsen_bandlimited` | `highpass_butterworth` | — | — | 1 |
+| pressure | 0.801 | `coarsen_bandlimited` | `band_attenuate` | `band_attenuate` | — | 96.9 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
@@ -257,11 +264,11 @@ and every smooth part of the field.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/shock_mask_overlap_1793494245`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/comparison_1793812304`, do not edit -->
 
-Measured on `sod_shock_tube`, frames 0 to 9 (10 frames of an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence), on the 2048 analysis grid, seed 20260807, at commit `b63f93ace534`. Run `shock_mask_overlap_1793494245`.
+Measured on `sod_shock_tube`, frames 0 to 9 (10 frames of an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence), on the 2048 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793812304`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/shock_mask_overlap_1793494245`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793812304`.
 
 <!-- END GENERATED run -->
 
@@ -274,7 +281,7 @@ Every number in this section comes from that one run. Regenerate with `python -m
 | `kinet_re5e4` | developed flow | not applicable: needs pressure, which this dataset does not provide |
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not applicable: needs pressure, which this dataset does not provide |
 | `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: needs pressure, which this dataset does not provide |
-| `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | measured, run `shock_mask_overlap_1793494245`: the main results |
+| `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | measured, run `comparison_1793812304`: the main results |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not applicable: needs pressure, which this dataset does not provide |
 
 One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.
@@ -286,11 +293,13 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 [gaussian_blur](../../degradations/gaussian_blur/card.md) ·
 [box_blur](../../degradations/box_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/shock_mask_overlap_1793494245`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/comparison_1793812304`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `box_blur` | pressure | 4 | — | — | — |
+| `disk_blur` | pressure | 3 | — | — | — |
+| `epanechnikov_blur` | pressure | 3 | — | — | — |
 | `gaussian_blur` | pressure | 4 | — | — | — |
 
 <!-- END GENERATED results_smoothing -->
@@ -308,10 +317,11 @@ scored 1 there.
 [lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
 [highpass_ideal](../../degradations/highpass_ideal/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/shock_mask_overlap_1793494245`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/comparison_1793812304`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
+| `band_attenuate` | pressure | 4 | — | — | — |
 | `highpass_butterworth` | pressure | 2 | 1 | 0.1 | 0.55 |
 | `highpass_ideal` | pressure | 1 | — | — | — |
 | `lowpass_butterworth` | pressure | 2 | — | — | — |
@@ -336,7 +346,7 @@ shock: the limitation "An offset in the pressure erases a shock in the right pla
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/shock_mask_overlap_1793494245`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/comparison_1793812304`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
@@ -368,12 +378,13 @@ axis as provably small.
 
 [coarsen](../../degradations/coarsen/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/shock_mask_overlap_1793494245`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/comparison_1793812304`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `coarsen` | pressure | 4 | 0.775 | 0 | 0.5 |
 | `coarsen_bandlimited` | pressure | 4 | 0.775 | 0 | 0.5 |
+| `subsample` | pressure | 4 | 0.775 | 0 | 0.5 |
 
 <!-- END GENERATED results_resolution -->
 
@@ -393,11 +404,12 @@ reference than the staircase does.
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/shock_mask_overlap_1793494245`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/comparison_1793812304`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `additive_noise` | pressure | 4 | 0.949 | 0 | 0.5 |
+| `multiplicative_noise` | pressure | 5 | 0.707 | 0 | 0.5 |
 
 <!-- END GENERATED results_stochastic -->
 
@@ -415,11 +427,11 @@ whether the true shock was found.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/shock_mask_overlap_1793494245`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence shock_mask_overlap --results results/comparison_1793812304`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
 |---|---|---|---|---|
-| pressure | 1 | `box_blur=171.772` | 1 | 0 |
+| pressure | 1 | `bias=0.5` | 1 | 0 |
 
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 

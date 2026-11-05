@@ -9,8 +9,8 @@
         "blind": false,
         "blindness_q": 1.0,
         "cliffs_delta_min": 1.0,
-        "damage_max_ucb": 0.5386293776,
-        "damage_per_change": 1.4125062643,
+        "damage_max_ucb": 0.5386293775702309,
+        "damage_per_change": 1.4125062643292041,
         "degradation": "bias",
         "degradation_family": "pointwise",
         "field": "density",
@@ -52,5 +52,5 @@
       }
     ]
   },
-  "run": "ensemble_mean_rmse_1793780354"
+  "run": "comparison_1793812401"
 }

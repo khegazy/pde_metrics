@@ -132,6 +132,12 @@ _MAX_PANELS = 12
 #: Largest point set drawn as vector markers; a larger one is rasterised inside the figure.
 _VECTOR_POINTS = 1000
 
+#: Most coordinates a dense curve is drawn at. A curve stored at every order or shell (the
+#: classical Hill plot holds k = 1 to n/10, 6553 orders on 256^2) is drawn at this many, spaced
+#: evenly on the axis it is drawn on, plus its analysed coordinates: more is invisible at figure
+#: size and made one figure's JSON 10.8 MB against a 40 MB budget for every committed figure.
+_DENSE_DRAWN = 256
+
 
 def companion_records(ctx, metric: str) -> list[dict]:
     """A metric's companions (name, kind, coordinate, analysed, scales, style) as the run's own
@@ -256,6 +262,14 @@ def _companion_curve_items(ctx, label: str, field: str, meta: dict, rows: pd.Dat
     medians = (rows.groupby(["degradation", "level", "coordinate"], observed=True)["value"]
                .median().rename("value_median").reset_index())
     numeric = pd.api.types.is_numeric_dtype(medians["coordinate"])
+    coordinates = np.unique(medians["coordinate"].to_numpy(float)) if numeric else []
+    if dense and len(coordinates) > _DENSE_DRAWN:
+        log_x = (entry.get("scales") or ("linear",))[0] == "log" and coordinates[0] > 0
+        spaced = (np.geomspace if log_x else np.linspace)(coordinates[0], coordinates[-1],
+                                                          _DENSE_DRAWN)
+        nearest = coordinates[np.abs(coordinates[:, None] - spaced[None, :]).argmin(axis=0)]
+        keep = np.union1d(nearest, np.asarray(entry.get("analysed") or [], dtype=float))
+        medians = medians[medians["coordinate"].isin(keep)]
     clean = medians[medians["level"] == 0].sort_values("coordinate")
     names = [a for a in ctx.ordinal_axes if a in set(medians["degradation"].astype(str))]
     ctx.require(bool(names), "no ordinal ladder axes")

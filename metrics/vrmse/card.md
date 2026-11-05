@@ -91,9 +91,113 @@ on one grid.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence vrmse`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence vrmse --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence vrmse`.
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-density__along-lead.svg)
+
+*As this metric's own field draws it, from run `comparison_1793811840`.* vrmse on density against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Each point is one prediction step of one forecast.
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-velocity__along-lead.svg)
+
+*As this metric's own field draws it, from run `comparison_1793811840`.* vrmse on velocity against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Each point is one prediction step of one forecast.
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-vorticity__along-lead.svg)
+
+*As this metric's own field draws it, from run `comparison_1793811840`.* vrmse on vorticity against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Each point is one prediction step of one forecast.
+
+![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
+
+Four measured statistics for vrmse, one row per degradation grouped by family and one marker per field. From left: the rank correlation between the metric and the applied strength within a frame, with the line showing the resampling interval; the separation of neighbouring strengths as Cliff's delta, where 0 means the metric cannot tell one strength from the next and the faint ticks at 0.12, 0.28 and 0.42 are Vargha and Delaney's small, medium and large anchors, for scale and not as grades; the damage charged per unit of field change at the harshest strength; and the upper confidence bound on the largest damage, beside the fixed margin of 0.05. A hollow marker is a field and degradation on which that bound lies below the margin, so the response is provably small. A missing marker is a statistic the analysis withheld, as the rank correlation is on an axis the metric is invariant to.
+
+![median damage against severity level, one panel per degradation family and field, on one shared scale](_generated/response_curves.svg)
+
+Median damage over frames against severity level for vrmse, one row per family of degradation and one column per field, on one shared scale. The solid grey line is damage 1, the anchor (by default the field's own mean); the dotted black line is the damage assigned to the fake prediction with the right spectrum, where the run included it. The hollow black ring marks the first level at which the metric has moved a tenth of the way to the anchor. Hollow grey markers are strengths excluded for repeating a milder one or for doing nothing. Degradations with three or fewer usable levels are drawn as markers only; points beyond 2 either side are drawn as triangles at the edge. Damage is negative where a degradation moves the metric away from the anchor, as noise raises a single-field quantity the field's mean sets to zero.
+
+**Trend: does the response follow the degradation?**
+
+| test family | field | degradations | rank correlation | fraction of frames in order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| Displacement | density | 3 | 1 | 1 | 1 |
+| Displacement | velocity | 3 | 1 | 1 | 0.97 to 1 |
+| Displacement | vorticity | 3 | 1 | 1 | 0.752 to 0.885 |
+| Cell-value distortion | density | 2 | 1 | 1 | 1 |
+| Cell-value distortion | velocity | 2 | 1 | 1 | 1 |
+| Cell-value distortion | vorticity | 2 | 1 | 1 | 1 |
+| Resolution loss | density | 3 | 1 | 0.714 to 1 | 0.652 to 1 |
+| Resolution loss | velocity | 3 | 1 | 1 | 0.902 to 1 |
+| Resolution loss | vorticity | 3 | 1 | 1 | 0.785 to 0.884 |
+| Smoothing | density | 5 | 1 | 1 | 0.999 to 1 |
+| Smoothing | velocity | 5 | 1 | 1 | 0.934 to 1 |
+| Smoothing | vorticity | 5 | 1 | 1 | 0.755 to 0.911 |
+| Spectral filtering | density | 5 | 1 | 1 | 0.659 to 0.998 |
+| Spectral filtering | velocity | 5 | 1 | 1 | 0.7 to 1 |
+| Spectral filtering | vorticity | 5 | 1 | 1 | 0.766 to 0.954 |
+| Noise | density | 2 | 1 | 1 | 1 |
+| Noise | velocity | 2 | 1 | 1 | 1 |
+| Noise | vorticity | 2 | 1 | 1 | 1 |
+
+**Reactivity: how far does it move?**
+
+| test family | field | change from clean at the harshest strength | elasticity | first strength detected |
+|---|---|---|---|---|
+| Displacement | density | — | 0.994 to 1 | level 3 |
+| Displacement | velocity | — | 0.963 to 0.999 | level 3 |
+| Displacement | vorticity | — | 0.704 to 0.994 | level 1 |
+| Cell-value distortion | density | — | 1 | level 3 |
+| Cell-value distortion | velocity | — | 1 | level 3 |
+| Cell-value distortion | vorticity | — | 1 | level 3 |
+| Resolution loss | density | — | 0.948 to 1.27 | level 3 |
+| Resolution loss | velocity | — | 1.04 to 2.19 | level 3 |
+| Resolution loss | vorticity | — | 0.721 to 1.36 | level 1 |
+| Smoothing | density | — | 1.54 to 1.86 | level 2 |
+| Smoothing | velocity | — | 1.08 to 1.14 | level 2 |
+| Smoothing | vorticity | — | 0.822 to 1.15 | level 1 |
+| Spectral filtering | density | — | 0.639 to 7.31 | level 1 |
+| Spectral filtering | velocity | — | 0.647 to 1 | level 1 |
+| Spectral filtering | vorticity | — | 0.467 to 1 | level 1 |
+| Noise | density | — | 1 | level 2 |
+| Noise | velocity | — | 1 | level 3 |
+| Noise | vorticity | — | 1 | level 3 |
+| trap test: fake prediction, right spectrum | density | — | — | damage 1.39 |
+| trap test: fake prediction, right spectrum | velocity | — | — | damage 1.33 |
+| trap test: fake prediction, right spectrum | vorticity | — | — | damage 1.42 |
+
+**Consistency: how much does it vary from snapshot to snapshot?**
+
+| test family | field | consistency, in the strength's units | snapshots per independent block |
+|---|---|---|---|
+| Displacement | density | 0.074 to 0.498 | 15 to 18 |
+| Displacement | velocity | 0.0727 to 0.773 | 21 |
+| Displacement | vorticity | 0.134 to 0.927 | 21 to 22 |
+| Cell-value distortion | density | 0.0265 | 20 |
+| Cell-value distortion | velocity | 0.00667 to 0.0371 | 19 to 21 |
+| Cell-value distortion | vorticity | 0.00868 | 21 |
+| Resolution loss | density | 0.616 to 1.41 | 17 to 20 |
+| Resolution loss | velocity | 0.785 to 1.49 | 21 to 22 |
+| Resolution loss | vorticity | 0.838 to 1.06 | 22 |
+| Smoothing | density | 0.00777 to 0.017 | 14 |
+| Smoothing | velocity | 0.0073 to 0.0264 | 21 to 22 |
+| Smoothing | vorticity | 0.0115 to 0.0264 | 21 to 22 |
+| Spectral filtering | density | 0.025 to 0.0976 | 15 to 20 |
+| Spectral filtering | velocity | 0.00751 to 0.0942 | 1 to 22 |
+| Spectral filtering | vorticity | 0.0321 to 0.0671 | 20 to 22 |
+| Noise | density | 0.00022 to 0.0159 | 1 to 20 |
+| Noise | velocity | 0.00219 to 0.0222 | 19 to 21 |
+| Noise | vorticity | 0.00297 to 0.00519 | 21 |
+
+One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. It does not exist for this metric, whose undegraded value is exactly zero; the damage below is its relative reading. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
+
+These tables report what was measured and grade none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
+
+**Profile.**
+
+| field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift, against severity (distance) | compute cost (x cheapest in this run) |
+|---|---|---|---|---|---|---|
+| density | 0.904 | `band_attenuate` | `multiplicative_noise` | `band_attenuate` | 1 | 3.12 |
+| velocity | 0.639 | `band_attenuate` | `highpass_ideal` | `band_attenuate` | 0.999 | 5.22 |
+| vorticity | 0.102 | `median_blur` | `translate_y` | — | 0.994 | 2.92 |
+
+One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
 <!-- END GENERATED performance -->
 
@@ -155,9 +259,11 @@ displacement.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence vrmse`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence vrmse --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence vrmse`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793829127`.
+
+Every number in this section comes from that run, except in the subsections headed with another experiment and in a figure whose caption names another run, each of which names its own run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`.
 
 <!-- END GENERATED run -->
 
@@ -170,11 +276,11 @@ do, and what their strength numbers mean, is documented on their own pages.
 
 | experiment | what a run on it is evidence of | on this card |
 |---|---|---|
-| `kinet_re5e4` | developed flow | not yet run |
-| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
-| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not yet run; on this dataset the metric scores the member mean of the ensemble |
-| `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not yet run |
-| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
+| `kinet_re5e4` | developed flow | measured, run `comparison_1793829127`: the main results |
+| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | measured, run `comparison_1793829231`: under *On `kinet_re1e6`* |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | measured, run `comparison_1793812401`: under *On `synthetic_ensemble`*; on this dataset the metric scores the member mean of the ensemble |
+| `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | measured, run `comparison_1793812304`: under *On `sod_shock_tube`* |
+| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | measured, run `comparison_1793811840`: under *On `forecast_re5e4`* |
 
 One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.
 
@@ -186,9 +292,25 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 [box_blur](../../degradations/box_blur/card.md) ·
 [median_blur](../../degradations/median_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence vrmse`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence vrmse --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence vrmse`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `box_blur` | density | 4 | 1 | 1 | 0.999 |
+| `box_blur` | velocity | 4 | 1 | 1 | 0.934 |
+| `box_blur` | vorticity | 4 | 1 | 1 | 0.755 |
+| `disk_blur` | density | 3 | 1 | 1 | 1 |
+| `disk_blur` | velocity | 3 | 1 | 1 | 0.992 |
+| `disk_blur` | vorticity | 3 | 1 | 1 | 0.84 |
+| `epanechnikov_blur` | density | 3 | 1 | 1 | 1 |
+| `epanechnikov_blur` | velocity | 3 | 1 | 1 | 0.976 |
+| `epanechnikov_blur` | vorticity | 3 | 1 | 1 | 0.885 |
+| `gaussian_blur` | density | 4 | 1 | 1 | 1 |
+| `gaussian_blur` | velocity | 4 | 1 | 1 | 1 |
+| `gaussian_blur` | vorticity | 4 | 1 | 1 | 0.856 |
+| `median_blur` | density | 3 | 1 | 1 | 1 |
+| `median_blur` | velocity | 3 | 1 | 1 | 0.953 |
+| `median_blur` | vorticity | 3 | 1 | 1 | 0.911 |
 
 <!-- END GENERATED results_smoothing -->
 
@@ -199,9 +321,25 @@ Not generated yet. Run `python -m fmeval.cards evidence vrmse`.
 [highpass_ideal](../../degradations/highpass_ideal/card.md) ·
 [highpass_butterworth](../../degradations/highpass_butterworth/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence vrmse`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence vrmse --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence vrmse`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `band_attenuate` | density | 4 | 1 | 1 | 0.659 |
+| `band_attenuate` | velocity | 4 | 1 | 1 | 0.7 |
+| `band_attenuate` | vorticity | 4 | 1 | 1 | 0.766 |
+| `highpass_butterworth` | density | 4 | 1 | 1 | 0.985 |
+| `highpass_butterworth` | velocity | 3 | 1 | 1 | 0.992 |
+| `highpass_butterworth` | vorticity | 4 | 1 | 1 | 0.936 |
+| `highpass_ideal` | density | 3 | 1 | 1 | 0.994 |
+| `highpass_ideal` | velocity | 2 | 1 | 1 | 1 |
+| `highpass_ideal` | vorticity | 4 | 1 | 1 | 0.954 |
+| `lowpass_butterworth` | density | 4 | 1 | 1 | 0.954 |
+| `lowpass_butterworth` | velocity | 3 | 1 | 1 | 1 |
+| `lowpass_butterworth` | vorticity | 4 | 1 | 1 | 0.791 |
+| `lowpass_ideal` | density | 3 | 1 | 1 | 0.998 |
+| `lowpass_ideal` | velocity | 2 | 1 | 1 | 0.92 |
+| `lowpass_ideal` | vorticity | 4 | 1 | 1 | 0.813 |
 
 <!-- END GENERATED results_spectral -->
 
@@ -210,9 +348,19 @@ Not generated yet. Run `python -m fmeval.cards evidence vrmse`.
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence vrmse`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence vrmse --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence vrmse`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `translate_subpixel` | density | 6 | 1 | 1 | 1 |
+| `translate_subpixel` | velocity | 6 | 1 | 1 | 1 |
+| `translate_subpixel` | vorticity | 6 | 1 | 1 | 0.885 |
+| `translate_x` | density | 5 | 1 | 1 | 1 |
+| `translate_x` | velocity | 5 | 1 | 1 | 1 |
+| `translate_x` | vorticity | 5 | 1 | 1 | 0.809 |
+| `translate_y` | density | 5 | 1 | 1 | 1 |
+| `translate_y` | velocity | 5 | 1 | 1 | 0.97 |
+| `translate_y` | vorticity | 5 | 1 | 1 | 0.752 |
 
 <!-- END GENERATED results_geometric -->
 
@@ -221,9 +369,19 @@ Not generated yet. Run `python -m fmeval.cards evidence vrmse`.
 [coarsen](../../degradations/coarsen/card.md) ·
 [coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence vrmse`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence vrmse --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence vrmse`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `coarsen` | density | 4 | 1 | 1 | 1 |
+| `coarsen` | velocity | 4 | 1 | 1 | 1 |
+| `coarsen` | vorticity | 4 | 1 | 1 | 0.884 |
+| `coarsen_bandlimited` | density | 4 | 1 | 0.714 | 0.652 |
+| `coarsen_bandlimited` | velocity | 4 | 1 | 1 | 0.902 |
+| `coarsen_bandlimited` | vorticity | 4 | 1 | 1 | 0.785 |
+| `subsample` | density | 4 | 1 | 1 | 1 |
+| `subsample` | velocity | 4 | 1 | 1 | 1 |
+| `subsample` | vorticity | 4 | 1 | 1 | 0.873 |
 
 <!-- END GENERATED results_resolution -->
 
@@ -231,9 +389,16 @@ Not generated yet. Run `python -m fmeval.cards evidence vrmse`.
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence vrmse`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence vrmse --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence vrmse`.
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `additive_noise` | density | 4 | 1 | 1 | 1 |
+| `additive_noise` | velocity | 4 | 1 | 1 | 1 |
+| `additive_noise` | vorticity | 4 | 1 | 1 | 1 |
+| `multiplicative_noise` | density | 5 | 1 | 1 | 1 |
+| `multiplicative_noise` | velocity | 5 | 1 | 1 | 1 |
+| `multiplicative_noise` | vorticity | 5 | 1 | 1 | 1 |
 
 <!-- END GENERATED results_stochastic -->
 
@@ -242,27 +407,557 @@ Not generated yet. Run `python -m fmeval.cards evidence vrmse`.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence vrmse`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence vrmse --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence vrmse`.
+| field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
+|---|---|---|---|---|
+| density | 1.39 | `multiplicative_noise=0.01` | 1.28 | 0.999 |
+| velocity | 1.33 | `highpass_ideal=4.02293` | 1.71 | 1 |
+| vorticity | 1.42 | `translate_y=16` | 1.5 | 0.992 |
+
+The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_canaries -->
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence vrmse`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence vrmse --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence vrmse`.
+| compared with | density | velocity | vorticity |
+|---|---|---|---|
+| `nrmse` | 1 | 1 | 1 |
+| `rmse_channel_mean` | 1 | 1 | 0.999 |
+| `mse` | 1 | 0.999 | 0.999 |
+| `rmse` | 1 | 0.999 | 0.999 |
+| `mae` | 0.988 | 0.995 | 0.974 |
+| `max_error` | 0.956 | 0.93 | 0.947 |
+| `max_error_channel_mean` | 0.956 | 0.935 | 0.947 |
+| `wasserstein` | 0.887 | — | — |
+| `h_minus_one` | 0.862 | 0.847 | 0.901 |
+| `h1_relative` | 0.812 | 0.725 | 0.753 |
+| `h1_seminorm` | 0.702 | 0.605 | 0.697 |
+| `spectral_energy_flux` | — | 0.414 | — |
+| `persistence_distance` | 0.376 | — | 0.184 |
+| `increment_w1_by_separation` | 0.337 | 0.263 | 0.112 |
+| `spectrum_l2` | 0.26 | 0.374 | 0.171 |
+| `energy_distance` | 0.251 | 0.174 | -0.016 |
+| `increment_w1` | 0.26 | 0.159 | 0.00999 |
+| `tail_exceedance` | 0.22 | 0.138 | -0.0613 |
+| `palinstrophy` | — | — | -0.0813 |
+| `increment_flatness` | -0.208 | -0.104 | 0.106 |
+| `tail_index` | 0.0209 | -0.168 | -0.111 |
+| `enstrophy` | — | — | -0.243 |
+| `kinetic_energy` | — | -0.261 | — |
+
+Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
 
 ### Damage beside the other metrics
 
-<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence vrmse`, do not edit -->
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence vrmse --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence vrmse`.
+![damage against applied strength for this metric beside the pointwise controls, log-log, one panel per displacement degradation and field](_generated/damage_beside_controls.svg)
+
+Median damage over frames against the applied strength, log-log, for vrmse (bold, in colour) and the pointwise controls mae, mse, rmse (thin, grey), one column per displacement degradation and one row per field. The grey line is damage 1, the anchor (by default the field's own mean). Parallel lines charge in the same proportion at every strength; a steeper line charges relatively more for the larger shifts, which is what decides whether two metrics are interchangeable as training losses. These are the same numbers as the table beneath.
+
+**Displacement, density, `translate_subpixel`** (strength: distance).
+
+| metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
+|---|---|---|---|---|---|---|
+| `vrmse` | 0.00463 | 0.00926 | 0.0185 | 0.037 | 0.0738 | 0.147 |
+| `mae` | 0.00383 | 0.00767 | 0.0153 | 0.0306 | 0.061 | 0.121 |
+| `mse` | 2.17e-05 | 8.68e-05 | 0.000347 | 0.00138 | 0.00551 | 0.0219 |
+| `rmse` | 0.00466 | 0.00931 | 0.0186 | 0.0372 | 0.0743 | 0.148 |
+
+**Displacement, density, `translate_x`** (strength: distance).
+
+| metric | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| `vrmse` | 0.037 | 0.0738 | 0.147 | 0.29 | 0.55 |
+| `mae` | 0.0306 | 0.061 | 0.121 | 0.24 | 0.469 |
+| `mse` | 0.00138 | 0.00551 | 0.0219 | 0.0849 | 0.307 |
+| `rmse` | 0.0372 | 0.0743 | 0.148 | 0.291 | 0.555 |
+
+**Displacement, density, `translate_y`** (strength: distance).
+
+| metric | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| `vrmse` | 0.0376 | 0.075 | 0.149 | 0.294 | 0.56 |
+| `mae` | 0.031 | 0.0616 | 0.122 | 0.244 | 0.476 |
+| `mse` | 0.00142 | 0.00565 | 0.0224 | 0.0869 | 0.316 |
+| `rmse` | 0.0377 | 0.0752 | 0.15 | 0.295 | 0.562 |
+
+**Displacement, velocity, `translate_subpixel`** (strength: distance).
+
+| metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
+|---|---|---|---|---|---|---|
+| `vrmse` | 0.00365 | 0.00729 | 0.0146 | 0.029 | 0.0574 | 0.111 |
+| `mae` | 0.00279 | 0.00559 | 0.0112 | 0.0223 | 0.0441 | 0.0859 |
+| `mse` | 1.45e-05 | 5.81e-05 | 0.000232 | 0.000924 | 0.0036 | 0.0136 |
+| `rmse` | 0.00381 | 0.00762 | 0.0152 | 0.0304 | 0.06 | 0.117 |
+
+**Displacement, velocity, `translate_x`** (strength: distance).
+
+| metric | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| `vrmse` | 0.029 | 0.0574 | 0.111 | 0.209 | 0.383 |
+| `mae` | 0.0223 | 0.0441 | 0.0859 | 0.163 | 0.31 |
+| `mse` | 0.000924 | 0.0036 | 0.0136 | 0.0489 | 0.165 |
+| `rmse` | 0.0304 | 0.06 | 0.117 | 0.221 | 0.406 |
+
+**Displacement, velocity, `translate_y`** (strength: distance).
+
+| metric | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| `vrmse` | 0.0303 | 0.0599 | 0.115 | 0.212 | 0.384 |
+| `mae` | 0.0223 | 0.0442 | 0.0856 | 0.16 | 0.295 |
+| `mse` | 0.000935 | 0.00366 | 0.0138 | 0.0473 | 0.158 |
+| `rmse` | 0.0306 | 0.0605 | 0.117 | 0.218 | 0.397 |
+
+**Displacement, vorticity, `translate_subpixel`** (strength: distance).
+
+| metric | 0.125 | 0.25 | 0.5 | 1 | 2 | 4 |
+|---|---|---|---|---|---|---|
+| `vrmse` | 0.0329 | 0.0656 | 0.13 | 0.253 | 0.455 | 0.671 |
+| `mae` | 0.0428 | 0.0854 | 0.169 | 0.328 | 0.582 | 0.86 |
+| `mse` | 0.00112 | 0.00448 | 0.0176 | 0.066 | 0.21 | 0.44 |
+| `rmse` | 0.0335 | 0.0669 | 0.133 | 0.257 | 0.458 | 0.663 |
+
+**Displacement, vorticity, `translate_x`** (strength: distance).
+
+| metric | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| `vrmse` | 0.253 | 0.455 | 0.671 | 0.832 | 1.05 |
+| `mae` | 0.328 | 0.582 | 0.86 | 1.1 | 1.31 |
+| `mse` | 0.066 | 0.21 | 0.44 | 0.679 | 1.1 |
+| `rmse` | 0.257 | 0.458 | 0.663 | 0.824 | 1.05 |
+
+**Displacement, vorticity, `translate_y`** (strength: distance).
+
+| metric | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| `vrmse` | 0.268 | 0.495 | 0.793 | 0.927 | 1.08 |
+| `mae` | 0.333 | 0.603 | 0.93 | 1.25 | 1.43 |
+| `mse` | 0.0858 | 0.283 | 0.628 | 0.849 | 1.17 |
+| `rmse` | 0.293 | 0.532 | 0.793 | 0.922 | 1.08 |
+
+Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 the anchor (by default the field's own mean); a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
 
 <!-- END GENERATED results_damage_by_level -->
+
+### On `sod_shock_tube`
+
+<!-- GENERATED results_on_sod_shock_tube: written by `python -m fmeval.cards evidence vrmse --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+
+**An analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence.**
+
+Measured on `sod_shock_tube`, frames 0 to 9 (10 frames of an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence), on the 2048 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793812304`.
+
+[additive_noise](../../degradations/additive_noise/card.md) ·
+[band_attenuate](../../degradations/band_attenuate/card.md) ·
+[bias](../../degradations/bias/card.md) ·
+[box_blur](../../degradations/box_blur/card.md) ·
+[coarsen](../../degradations/coarsen/card.md) ·
+[coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md) ·
+[disk_blur](../../degradations/disk_blur/card.md) ·
+[epanechnikov_blur](../../degradations/epanechnikov_blur/card.md) ·
+[gain](../../degradations/gain/card.md) ·
+[gaussian_blur](../../degradations/gaussian_blur/card.md) ·
+[gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
+[highpass_butterworth](../../degradations/highpass_butterworth/card.md) ·
+[highpass_ideal](../../degradations/highpass_ideal/card.md) ·
+[lowpass_butterworth](../../degradations/lowpass_butterworth/card.md) ·
+[lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
+[mean_field](../../degradations/mean_field/card.md) ·
+[median_blur](../../degradations/median_blur/card.md) ·
+[multiplicative_noise](../../degradations/multiplicative_noise/card.md) ·
+[subsample](../../degradations/subsample/card.md) ·
+[translate_subpixel](../../degradations/translate_subpixel/card.md) ·
+[translate_x](../../degradations/translate/card.md) ·
+[uncorrelated](../../degradations/random_large_translation/card.md)
+
+**Smoothing.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `box_blur` | density | 4 | 1 | 1 | 1 |
+| `box_blur` | pressure | 4 | 1 | 1 | 1 |
+| `box_blur` | velocity | 4 | 1 | 1 | 1 |
+| `disk_blur` | density | 3 | 1 | 1 | 1 |
+| `disk_blur` | pressure | 3 | 1 | 1 | 1 |
+| `disk_blur` | velocity | 3 | 1 | 1 | 1 |
+| `epanechnikov_blur` | density | 3 | 1 | 1 | 1 |
+| `epanechnikov_blur` | pressure | 3 | 1 | 1 | 1 |
+| `epanechnikov_blur` | velocity | 3 | 1 | 1 | 1 |
+| `gaussian_blur` | density | 4 | 1 | 1 | 1 |
+| `gaussian_blur` | pressure | 4 | 1 | 1 | 1 |
+| `gaussian_blur` | velocity | 4 | 1 | 1 | 1 |
+
+**Spectral filtering.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `band_attenuate` | density | 4 | 1 | 1 | 1 |
+| `band_attenuate` | pressure | 4 | 1 | 1 | 1 |
+| `band_attenuate` | velocity | 4 | 1 | 1 | 1 |
+| `highpass_butterworth` | density | 2 | 1 | 1 | 1 |
+| `highpass_butterworth` | pressure | 2 | 1 | 1 | 1 |
+| `highpass_butterworth` | velocity | 4 | 1 | 1 | 1 |
+| `highpass_ideal` | density | 1 | — | — | — |
+| `highpass_ideal` | pressure | 1 | — | — | — |
+| `highpass_ideal` | velocity | 4 | 1 | 1 | 1 |
+| `lowpass_butterworth` | density | 1 | — | — | — |
+| `lowpass_butterworth` | pressure | 2 | 1 | 1 | 1 |
+| `lowpass_butterworth` | velocity | 4 | 1 | 1 | 1 |
+| `lowpass_ideal` | density | 1 | — | — | — |
+| `lowpass_ideal` | pressure | 2 | 1 | 1 | 1 |
+| `lowpass_ideal` | velocity | 4 | 1 | 1 | 0.91 |
+
+**Displacement.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `translate_subpixel` | density | 6 | 1 | 1 | 1 |
+| `translate_subpixel` | pressure | 6 | 1 | 1 | 1 |
+| `translate_subpixel` | velocity | 6 | 1 | 1 | 1 |
+| `translate_x` | density | 5 | 1 | 1 | 1 |
+| `translate_x` | pressure | 5 | 1 | 1 | 1 |
+| `translate_x` | velocity | 5 | 1 | 1 | 1 |
+
+**Resolution loss.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `coarsen` | density | 4 | 1 | 1 | 0.91 |
+| `coarsen` | pressure | 4 | 1 | 1 | 0.82 |
+| `coarsen` | velocity | 4 | 1 | 1 | 0.93 |
+| `coarsen_bandlimited` | density | 4 | 1 | 1 | 1 |
+| `coarsen_bandlimited` | pressure | 4 | 1 | 1 | 1 |
+| `coarsen_bandlimited` | velocity | 4 | 1 | 1 | 1 |
+| `subsample` | density | 4 | 1 | 1 | 0.79 |
+| `subsample` | pressure | 4 | 1 | 1 | 0.79 |
+| `subsample` | velocity | 4 | 1 | 1 | 0.59 |
+
+**Noise.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `additive_noise` | density | 4 | 1 | 1 | 1 |
+| `additive_noise` | pressure | 4 | 1 | 1 | 1 |
+| `additive_noise` | velocity | 4 | 1 | 1 | 1 |
+| `multiplicative_noise` | density | 5 | 1 | 1 | 1 |
+| `multiplicative_noise` | pressure | 5 | 1 | 1 | 1 |
+| `multiplicative_noise` | velocity | 5 | 1 | 1 | 1 |
+
+**Cell-value distortion.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `bias` | density | 4 | 1 | 1 | 1 |
+| `bias` | pressure | 4 | 1 | 1 | 1 |
+| `bias` | velocity | 4 | 1 | 1 | 1 |
+| `gain` | density | 4 | 1 | 1 | 1 |
+| `gain` | pressure | 4 | 1 | 1 | 1 |
+| `gain` | velocity | 4 | 1 | 1 | 1 |
+
+**Trap tests.**
+
+| field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
+|---|---|---|---|---|
+| density | 1.43 | `highpass_ideal=2.77538` | 1.86 | 1 |
+| pressure | 1.31 | `highpass_butterworth=3.73482` | 1.87 | 1 |
+| velocity | 1.49 | `highpass_ideal=17.1163` | 1.53 | 1 |
+
+The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
+
+<!-- END GENERATED results_on_sod_shock_tube -->
+
+### On `synthetic_ensemble`
+
+<!-- GENERATED results_on_synthetic_ensemble: written by `python -m fmeval.cards evidence vrmse --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+
+**A calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence.**
+
+Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793812401`.
+
+[bias](../../degradations/bias/card.md) ·
+[mean_field](../../degradations/mean_field/card.md) ·
+[spread_deflate](../../degradations/spread_deflate/card.md) ·
+[spread_inflate](../../degradations/spread_inflate/card.md)
+
+**Cell-value distortion.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `bias` | density | 4 | 1 | 1 | 1 |
+
+**Ensemble dispersion.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `spread_deflate` | density | 4 | — | — | — |
+| `spread_inflate` | density | 4 | — | — | — |
+
+**Trap tests.**
+
+| field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
+|---|---|---|---|---|
+| density | — | — | — | 1 |
+
+The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
+
+<!-- END GENERATED results_on_synthetic_ensemble -->
+
+### On `forecast_re5e4`
+
+<!-- GENERATED results_on_forecast_re5e4: written by `python -m fmeval.cards evidence vrmse --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+
+**Real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded.**
+
+Measured on `forecast_re5e4`, frames 0 to 59 (60 frames of real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded), on the 64 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793811840`.
+
+[mean_field](../../degradations/mean_field/card.md)
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-density__along-lead.svg)
+
+vrmse on density against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Each point is one prediction step of one forecast.
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-velocity__along-lead.svg)
+
+vrmse on velocity against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Each point is one prediction step of one forecast.
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-vorticity__along-lead.svg)
+
+vrmse on vorticity against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Each point is one prediction step of one forecast.
+
+**density, vrmse on the prediction, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.031 | 0.00942 | 5.57e-05 | 0.0408 | 0.0104 | 3.98e-05 |
+| 0.2255 | 0.108 | 0.0458 | 0.000201 | 0.045 | 0.0156 | 7e-05 |
+| 0.3383 | 0.215 | 0.0999 | 0.000578 | 0.0717 | 0.0258 | 0.000117 |
+| 0.4511 | 0.323 | 0.163 | 0.00142 | 0.0777 | 0.0313 | 0.000147 |
+| 0.5638 | 0.582 | 0.342 | 0.00855 | 0.103 | 0.0407 | 0.000218 |
+| 0.6766 | 0.465 | 0.209 | 0.0211 | 0.102 | 0.0408 | 0.000315 |
+| 0.7893 | 0.342 | 0.135 | 0.032 | 0.133 | 0.0579 | 0.000405 |
+| 0.9021 | 0.263 | 0.132 | 0.0367 | 0.132 | 0.0533 | 0.000347 |
+| 1.015 | 0.247 | 0.132 | 0.0409 | 0.144 | 0.0619 | 0.000434 |
+| 1.128 | 0.259 | 0.132 | 0.0498 | 0.168 | 0.0755 | 0.000498 |
+
+**density, vrmse damage, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.0345 | 0.0105 | 6.21e-05 | 0.0408 | 0.0104 | 3.99e-05 |
+| 0.2255 | 0.13 | 0.0552 | 0.000241 | 0.0451 | 0.0157 | 7.01e-05 |
+| 0.3383 | 0.227 | 0.105 | 0.000611 | 0.0717 | 0.0258 | 0.000117 |
+| 0.4511 | 0.327 | 0.165 | 0.00144 | 0.0778 | 0.0314 | 0.000147 |
+| 0.5638 | 0.584 | 0.343 | 0.00858 | 0.103 | 0.0407 | 0.000218 |
+| 0.6766 | 0.466 | 0.209 | 0.0212 | 0.103 | 0.0409 | 0.000316 |
+| 0.7893 | 0.342 | 0.136 | 0.032 | 0.133 | 0.058 | 0.000405 |
+| 0.9021 | 0.264 | 0.132 | 0.0368 | 0.133 | 0.0533 | 0.000348 |
+| 1.015 | 0.247 | 0.132 | 0.0409 | 0.144 | 0.0619 | 0.000435 |
+| 1.128 | 0.259 | 0.132 | 0.0499 | 0.169 | 0.0756 | 0.000499 |
+
+**velocity, vrmse on the prediction, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.042 | 0.0151 | 6e-05 | 0.0297 | 0.0109 | 4.94e-05 |
+| 0.2255 | 0.0887 | 0.0378 | 0.000178 | 0.0432 | 0.0182 | 0.000102 |
+| 0.3383 | 0.144 | 0.066 | 0.000397 | 0.0534 | 0.0235 | 0.00015 |
+| 0.4511 | 0.227 | 0.114 | 0.00108 | 0.0521 | 0.0255 | 0.000196 |
+| 0.5638 | 0.324 | 0.188 | 0.00727 | 0.0603 | 0.0304 | 0.000281 |
+| 0.6766 | 0.276 | 0.147 | 0.0248 | 0.0647 | 0.0391 | 0.000443 |
+| 0.7893 | 0.189 | 0.12 | 0.0441 | 0.0754 | 0.0473 | 0.000526 |
+| 0.9021 | 0.157 | 0.112 | 0.0641 | 0.0697 | 0.043 | 0.000566 |
+| 1.015 | 0.147 | 0.112 | 0.0852 | 0.0752 | 0.044 | 0.000616 |
+| 1.128 | 0.145 | 0.104 | 0.099 | 0.0806 | 0.0455 | 0.000678 |
+
+**velocity, vrmse damage, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.0422 | 0.0152 | 6.03e-05 | 0.0297 | 0.0109 | 4.95e-05 |
+| 0.2255 | 0.089 | 0.0379 | 0.000178 | 0.0432 | 0.0182 | 0.000102 |
+| 0.3383 | 0.144 | 0.0661 | 0.000398 | 0.0534 | 0.0235 | 0.00015 |
+| 0.4511 | 0.227 | 0.114 | 0.00108 | 0.0521 | 0.0255 | 0.000196 |
+| 0.5638 | 0.324 | 0.188 | 0.00727 | 0.0603 | 0.0304 | 0.000281 |
+| 0.6766 | 0.276 | 0.147 | 0.0248 | 0.0647 | 0.0391 | 0.000443 |
+| 0.7893 | 0.189 | 0.12 | 0.0441 | 0.0754 | 0.0473 | 0.000526 |
+| 0.9021 | 0.157 | 0.112 | 0.0641 | 0.0697 | 0.043 | 0.000566 |
+| 1.015 | 0.147 | 0.112 | 0.0852 | 0.0752 | 0.0441 | 0.000616 |
+| 1.128 | 0.145 | 0.104 | 0.0991 | 0.0806 | 0.0455 | 0.000678 |
+
+**vorticity, vrmse on the prediction, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.312 | 0.117 | 0.000513 | 0.325 | 0.134 | 0.000641 |
+| 0.2255 | 0.376 | 0.178 | 0.001 | 0.352 | 0.183 | 0.0012 |
+| 0.3383 | 0.429 | 0.224 | 0.00158 | 0.372 | 0.218 | 0.00168 |
+| 0.4511 | 0.498 | 0.287 | 0.00443 | 0.359 | 0.235 | 0.00221 |
+| 0.5638 | 0.632 | 0.431 | 0.0549 | 0.353 | 0.238 | 0.00258 |
+| 0.6766 | 0.672 | 0.507 | 0.155 | 0.362 | 0.257 | 0.00325 |
+| 0.7893 | 0.647 | 0.539 | 0.274 | 0.367 | 0.265 | 0.00347 |
+| 0.9021 | 0.641 | 0.569 | 0.364 | 0.355 | 0.252 | 0.00365 |
+| 1.015 | 0.628 | 0.58 | 0.433 | 0.352 | 0.243 | 0.00394 |
+| 1.128 | 0.616 | 0.557 | 0.459 | 0.353 | 0.248 | 0.0045 |
+
+**vorticity, vrmse damage, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.313 | 0.117 | 0.000515 | 0.328 | 0.135 | 0.000647 |
+| 0.2255 | 0.378 | 0.179 | 0.00101 | 0.356 | 0.185 | 0.00121 |
+| 0.3383 | 0.432 | 0.225 | 0.00158 | 0.376 | 0.22 | 0.00169 |
+| 0.4511 | 0.5 | 0.288 | 0.00445 | 0.362 | 0.237 | 0.00223 |
+| 0.5638 | 0.636 | 0.434 | 0.0553 | 0.357 | 0.241 | 0.0026 |
+| 0.6766 | 0.676 | 0.511 | 0.156 | 0.366 | 0.26 | 0.00328 |
+| 0.7893 | 0.651 | 0.542 | 0.276 | 0.371 | 0.268 | 0.00351 |
+| 0.9021 | 0.646 | 0.574 | 0.367 | 0.359 | 0.255 | 0.00369 |
+| 1.015 | 0.633 | 0.585 | 0.436 | 0.356 | 0.246 | 0.00399 |
+| 1.128 | 0.621 | 0.562 | 0.463 | 0.358 | 0.251 | 0.00455 |
+
+Every prediction of every forecast, nothing pooled: a cell is one prediction step of one forecast, a row the lead time (the physical time since the forecast started) and a column the forecast, named by its run's native grid and its starting time (`64², start 0` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-0`; `128², start 0` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-0`; `256², start 0` is `F-906861_64/forecast_t0-0`; `64², start 1.13` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250`; `128², start 1.13` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-2500`; `256², start 1.13` is `F-906861_64/forecast_t0-5000`). **Damage** is the prediction's departure from the target as a fraction of the anchor's in the same frame, by default the target's own spatial mean, so each step is scaled by its own target. A dash means no value there.
+
+<!-- END GENERATED results_on_forecast_re5e4 -->
+
+### On `kinet_re1e6`
+
+<!-- GENERATED results_on_kinet_re1e6: written by `python -m fmeval.cards evidence vrmse --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793812401 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+
+**Developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition.**
+
+Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition), on the 128 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793829231`.
+
+[additive_noise](../../degradations/additive_noise/card.md) ·
+[band_attenuate](../../degradations/band_attenuate/card.md) ·
+[bias](../../degradations/bias/card.md) ·
+[box_blur](../../degradations/box_blur/card.md) ·
+[coarsen](../../degradations/coarsen/card.md) ·
+[coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md) ·
+[disk_blur](../../degradations/disk_blur/card.md) ·
+[epanechnikov_blur](../../degradations/epanechnikov_blur/card.md) ·
+[gain](../../degradations/gain/card.md) ·
+[gaussian_blur](../../degradations/gaussian_blur/card.md) ·
+[gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
+[highpass_butterworth](../../degradations/highpass_butterworth/card.md) ·
+[highpass_ideal](../../degradations/highpass_ideal/card.md) ·
+[lowpass_butterworth](../../degradations/lowpass_butterworth/card.md) ·
+[lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
+[mean_field](../../degradations/mean_field/card.md) ·
+[median_blur](../../degradations/median_blur/card.md) ·
+[multiplicative_noise](../../degradations/multiplicative_noise/card.md) ·
+[subsample](../../degradations/subsample/card.md) ·
+[translate_subpixel](../../degradations/translate_subpixel/card.md) ·
+[translate_x](../../degradations/translate/card.md) ·
+[translate_y](../../degradations/translate/card.md) ·
+[uncorrelated](../../degradations/random_large_translation/card.md)
+
+**Smoothing.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `box_blur` | density | 4 | 1 | 1 | 0.999 |
+| `box_blur` | velocity | 4 | 1 | 1 | 0.93 |
+| `box_blur` | vorticity | 2 | 1 | 1 | 0.961 |
+| `disk_blur` | density | 3 | 1 | 1 | 1 |
+| `disk_blur` | velocity | 3 | 1 | 1 | 0.991 |
+| `disk_blur` | vorticity | 2 | 1 | 1 | 0.918 |
+| `epanechnikov_blur` | density | 3 | 1 | 1 | 1 |
+| `epanechnikov_blur` | velocity | 3 | 1 | 1 | 0.971 |
+| `epanechnikov_blur` | vorticity | 2 | 1 | 1 | 0.945 |
+| `gaussian_blur` | density | 4 | 1 | 1 | 1 |
+| `gaussian_blur` | velocity | 4 | 1 | 1 | 1 |
+| `gaussian_blur` | vorticity | 4 | 1 | 1 | 0.987 |
+| `median_blur` | density | 3 | 1 | 1 | 1 |
+| `median_blur` | velocity | 3 | 1 | 1 | 0.969 |
+| `median_blur` | vorticity | 1 | — | — | — |
+
+**Spectral filtering.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `band_attenuate` | density | 4 | 1 | 1 | 0.677 |
+| `band_attenuate` | velocity | 4 | 1 | 1 | 0.762 |
+| `band_attenuate` | vorticity | 4 | 1 | 1 | 0.893 |
+| `highpass_butterworth` | density | 4 | 1 | 1 | 0.986 |
+| `highpass_butterworth` | velocity | 3 | 1 | 1 | 0.993 |
+| `highpass_butterworth` | vorticity | 4 | 1 | 1 | 0.86 |
+| `highpass_ideal` | density | 3 | 1 | 1 | 0.991 |
+| `highpass_ideal` | velocity | 2 | 1 | 1 | 1 |
+| `highpass_ideal` | vorticity | 4 | 1 | 1 | 0.851 |
+| `lowpass_butterworth` | density | 4 | 1 | 1 | 0.946 |
+| `lowpass_butterworth` | velocity | 3 | 1 | 1 | 0.912 |
+| `lowpass_butterworth` | vorticity | 4 | 1 | 1 | 0.862 |
+| `lowpass_ideal` | density | 3 | 1 | 1 | 0.999 |
+| `lowpass_ideal` | velocity | 3 | 1 | 1 | 0.637 |
+| `lowpass_ideal` | vorticity | 4 | 1 | 1 | 0.874 |
+
+**Displacement.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `translate_subpixel` | density | 6 | 1 | 1 | 1 |
+| `translate_subpixel` | velocity | 6 | 1 | 1 | 1 |
+| `translate_subpixel` | vorticity | 6 | 1 | 1 | 0.813 |
+| `translate_x` | density | 5 | 1 | 1 | 1 |
+| `translate_x` | velocity | 5 | 1 | 1 | 1 |
+| `translate_x` | vorticity | 5 | 1 | 1 | 0.813 |
+| `translate_y` | density | 5 | 1 | 1 | 1 |
+| `translate_y` | velocity | 5 | 1 | 1 | 0.971 |
+| `translate_y` | vorticity | 5 | 1 | 1 | 0.768 |
+
+**Resolution loss.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `coarsen` | density | 4 | 1 | 1 | 1 |
+| `coarsen` | velocity | 4 | 1 | 1 | 1 |
+| `coarsen` | vorticity | 4 | 1 | 1 | 0.963 |
+| `coarsen_bandlimited` | density | 4 | 1 | 1 | 1 |
+| `coarsen_bandlimited` | velocity | 4 | 1 | 1 | 0.963 |
+| `coarsen_bandlimited` | vorticity | 4 | 1 | 1 | 0.851 |
+| `subsample` | density | 4 | 1 | 1 | 1 |
+| `subsample` | velocity | 4 | 1 | 1 | 1 |
+| `subsample` | vorticity | 4 | 1 | 1 | 0.948 |
+
+**Noise.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `additive_noise` | density | 4 | 1 | 1 | 1 |
+| `additive_noise` | velocity | 4 | 1 | 1 | 1 |
+| `additive_noise` | vorticity | 4 | 1 | 1 | 1 |
+| `multiplicative_noise` | density | 5 | 1 | 1 | 1 |
+| `multiplicative_noise` | velocity | 5 | 1 | 1 | 1 |
+| `multiplicative_noise` | vorticity | 5 | 1 | 1 | 1 |
+
+**Cell-value distortion.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `bias` | density | 4 | 1 | 1 | 1 |
+| `bias` | velocity | 4 | 1 | 1 | 1 |
+| `bias` | vorticity | 4 | 1 | 1 | 1 |
+| `gain` | density | 4 | 1 | 1 | 1 |
+| `gain` | velocity | 4 | 1 | 1 | 1 |
+| `gain` | vorticity | 4 | 1 | 1 | 1 |
+
+**Trap tests.**
+
+| field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
+|---|---|---|---|---|
+| density | 1.41 | `multiplicative_noise=0.01` | 1.29 | 0.999 |
+| velocity | 1.29 | `highpass_ideal=4.08281` | 1.71 | 1 |
+| vorticity | 1.4 | `subsample=16` | 1.49 | 0.906 |
+
+The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
+
+<!-- END GENERATED results_on_kinet_re1e6 -->
 
 ## References
 

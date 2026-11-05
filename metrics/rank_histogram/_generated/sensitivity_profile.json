@@ -9,8 +9,8 @@
         "blind": false,
         "blindness_q": 1.0,
         "cliffs_delta_min": 1.0,
-        "damage_max_ucb": 0.8657811778,
-        "damage_per_change": 2.2518098497,
+        "damage_max_ucb": 0.8657811777562944,
+        "damage_per_change": 2.251809849711212,
         "degradation": "bias",
         "degradation_family": "pointwise",
         "field": "density",
@@ -24,8 +24,8 @@
         "blind": false,
         "blindness_q": 1.0,
         "cliffs_delta_min": 1.0,
-        "damage_max_ucb": 0.6957336808,
-        "damage_per_change": 4.991974666e+31,
+        "damage_max_ucb": 0.6957336808036653,
+        "damage_per_change": 4.991974665571453e+31,
         "degradation": "spread_deflate",
         "degradation_family": "ensemble",
         "field": "density",
@@ -39,8 +39,8 @@
         "blind": false,
         "blindness_q": 1.0,
         "cliffs_delta_min": 1.0,
-        "damage_max_ucb": 0.5688958009,
-        "damage_per_change": 2.471383728e+30,
+        "damage_max_ucb": 0.5688958009331261,
+        "damage_per_change": 2.47138372834363e+30,
         "degradation": "spread_inflate",
         "degradation_family": "ensemble",
         "field": "density",
@@ -52,5 +52,5 @@
       }
     ]
   },
-  "run": "rank_histogram_1793780354"
+  "run": "comparison_1793812401"
 }

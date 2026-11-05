@@ -100,7 +100,11 @@ called the Talagrand diagram.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence rank_histogram --results results/rank_histogram_1793780354`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence rank_histogram --results results/comparison_1793812401`, do not edit -->
+
+![the curve behind the number against its coordinate, as its field draws it, at every strength of each degradation, the clean curve in black](_generated/companion_curves__field-density.svg)
+
+*As this metric's own field draws it.* The curve behind rank_histogram on density: the median over frames at every strength of every degradation, the clean curve in black, the anchor dashed and the impostor dotted. Each bin's bars are the strengths, mildest first, then the clean level. Values are the literature's own, untransformed.
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -139,7 +143,7 @@ These tables report what was measured and grade none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| density | 0.634 | `spread_deflate` | `bias` | — | — | 1 |
+| density | 0.634 | `spread_deflate` | `bias` | — | — | 28 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
@@ -228,11 +232,11 @@ suggest, and the value is noisier frame to frame than the raw count of cells imp
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence rank_histogram --results results/rank_histogram_1793780354`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence rank_histogram --results results/comparison_1793812401`, do not edit -->
 
-Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `4afe76c2a0bb`. Run `rank_histogram_1793780354`.
+Measured on `synthetic_ensemble`, frames 0 to 11 (12 frames of a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence), on the 64 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793812401`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/rank_histogram_1793780354`.
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793812401`.
 
 <!-- END GENERATED run -->
 
@@ -259,7 +263,7 @@ regenerated against it and this section will say something different.
 |---|---|---|
 | `kinet_re5e4` | developed flow | not applicable: needs an ensemble, and this dataset has one realisation per frame |
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not applicable: needs an ensemble, and this dataset has one realisation per frame |
-| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | measured, run `rank_histogram_1793780354`: the main results |
+| `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | measured, run `comparison_1793812401`: the main results |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs an ensemble, and this dataset has one realisation per frame |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not applicable: needs an ensemble, and this dataset has one realisation per frame |
 
@@ -272,7 +276,7 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 [spread_inflate](../../degradations/spread_inflate/card.md) ·
 [spread_deflate](../../degradations/spread_deflate/card.md)
 
-<!-- GENERATED results_ensemble: written by `python -m fmeval.cards evidence rank_histogram --results results/rank_histogram_1793780354`, do not edit -->
+<!-- GENERATED results_ensemble: written by `python -m fmeval.cards evidence rank_histogram --results results/comparison_1793812401`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|

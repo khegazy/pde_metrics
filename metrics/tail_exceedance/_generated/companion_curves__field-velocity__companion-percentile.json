@@ -1,0 +1,1859 @@
+{
+  "caption": "The dense curve behind tail_exceedance.percentile on velocity, at every coordinate the curve returns, on the frames and ladder entries report.error_map stored: the median over those frames at every stored strength, the clean curve in black, the anchor dashed and the impostor dotted where stored. Axes as the field draws them: linear x, symlog y; a symlog axis is linear within 6 decades of its largest magnitude and carries its zero line. Values are the literature's own, untransformed.",
+  "dataset": "kinet_re5e4",
+  "figure": "companion_curves",
+  "metric": "tail_exceedance",
+  "panels": {
+    "all": [
+      {
+        "coordinate": 90.0,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.7921116875190723
+      },
+      {
+        "coordinate": 91.0,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.7474995761993558
+      },
+      {
+        "coordinate": 92.0,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.7224871256913981
+      },
+      {
+        "coordinate": 93.0,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.7251525719267655
+      },
+      {
+        "coordinate": 94.0,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.7485380116959064
+      },
+      {
+        "coordinate": 95.0,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.778150747635032
+      },
+      {
+        "coordinate": 96.0,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.7951945080091534
+      },
+      {
+        "coordinate": 97.0,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.7941026944585663
+      },
+      {
+        "coordinate": 98.0,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.6128909229595728
+      },
+      {
+        "coordinate": 99.0,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.019817073170731708
+      },
+      {
+        "coordinate": 99.1,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.2,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.3,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.4,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.5,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.6,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.7,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.8,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.9,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.91,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.92,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.93,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.94,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.95,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.96,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.97,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.98,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.99,
+        "degradation": "gaussian_blur",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 90.0,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.3938053097345133
+      },
+      {
+        "coordinate": 91.0,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.31369723681979994
+      },
+      {
+        "coordinate": 92.0,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.22592027465191683
+      },
+      {
+        "coordinate": 93.0,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.16336094158674805
+      },
+      {
+        "coordinate": 94.0,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.11683193490973812
+      },
+      {
+        "coordinate": 95.0,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.04424778761061947
+      },
+      {
+        "coordinate": 96.0,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 97.0,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 98.0,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.0,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.1,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.2,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.3,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.4,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.5,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.6,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.7,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.8,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.9,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.91,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.92,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.93,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.94,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.95,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.96,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.97,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.98,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.99,
+        "degradation": "gaussian_blur",
+        "level": 2,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 90.0,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 91.0,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 92.0,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 93.0,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 94.0,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 95.0,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 96.0,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 97.0,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 98.0,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.0,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.1,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.2,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.3,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.4,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.5,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.6,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.7,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.8,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.9,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.91,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.92,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.93,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.94,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.95,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.96,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.97,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.98,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.99,
+        "degradation": "gaussian_blur",
+        "level": 3,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 90.0,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 91.0,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 92.0,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 93.0,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 94.0,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 95.0,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 96.0,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 97.0,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 98.0,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.0,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.1,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.2,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.3,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.4,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.5,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.6,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.7,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.8,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.9,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.91,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.92,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.93,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.94,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.95,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.96,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.97,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.98,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.99,
+        "degradation": "gaussian_blur",
+        "level": 4,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 90.0,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 1.2657155935306683
+      },
+      {
+        "coordinate": 91.0,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 1.1474826241735887
+      },
+      {
+        "coordinate": 92.0,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 1.0191684150295632
+      },
+      {
+        "coordinate": 93.0,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.916848299912816
+      },
+      {
+        "coordinate": 94.0,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.8396898042206967
+      },
+      {
+        "coordinate": 95.0,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.7398535245651511
+      },
+      {
+        "coordinate": 96.0,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.5808543096872616
+      },
+      {
+        "coordinate": 97.0,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.3922216573462125
+      },
+      {
+        "coordinate": 98.0,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.11517925247902365
+      },
+      {
+        "coordinate": 99.0,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0038109756097560975
+      },
+      {
+        "coordinate": 99.1,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.001694915254237288
+      },
+      {
+        "coordinate": 99.2,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.3,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.4,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.5,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.6,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.7,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.8,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.9,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.91,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.92,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.93,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.94,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.95,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.96,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.97,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.98,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 99.99,
+        "degradation": "gaussian_impostor",
+        "level": 1,
+        "value_median": 0.0
+      },
+      {
+        "coordinate": 90.0,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 91.0,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 92.0,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 93.0,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 94.0,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 95.0,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 96.0,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 97.0,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 98.0,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.0,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.1,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.2,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.3,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.4,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.5,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.6,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.7,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.8,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.9,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.91,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.92,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.93,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.94,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.95,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.96,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.97,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.98,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.99,
+        "degradation": "identity",
+        "level": 0,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 90.0,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 91.0,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 92.0,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 93.0,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 94.0,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 95.0,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 96.0,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 97.0,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 98.0,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.0,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.1,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.2,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.3,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.4,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.5,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.6,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.7,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.8,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.9,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.91,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.92,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.93,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.94,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.95,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.96,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.97,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.98,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.99,
+        "degradation": "translate_x",
+        "level": 1,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 90.0,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 91.0,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 92.0,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 93.0,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 94.0,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 95.0,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 96.0,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 97.0,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 98.0,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.0,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.1,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.2,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.3,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.4,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.5,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.6,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.7,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.8,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.9,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.91,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.92,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.93,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.94,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.95,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.96,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.97,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.98,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.99,
+        "degradation": "translate_x",
+        "level": 2,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 90.0,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 91.0,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 92.0,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 93.0,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 94.0,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 95.0,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 96.0,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 97.0,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 98.0,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.0,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.1,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.2,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.3,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.4,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.5,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.6,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.7,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.8,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.9,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.91,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.92,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.93,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.94,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.95,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.96,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.97,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.98,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.99,
+        "degradation": "translate_x",
+        "level": 3,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 90.0,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 91.0,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 92.0,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 93.0,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 94.0,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 95.0,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 96.0,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 97.0,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 98.0,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.0,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.1,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.2,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.3,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.4,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.5,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.6,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.7,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.8,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.9,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.91,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.92,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.93,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.94,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.95,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.96,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.97,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.98,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.99,
+        "degradation": "translate_x",
+        "level": 4,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 90.0,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 91.0,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 92.0,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 93.0,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 94.0,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 95.0,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 96.0,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 97.0,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 98.0,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.0,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.1,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.2,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.3,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.4,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.5,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.6,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.7,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.8,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.9,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.91,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.92,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.93,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.94,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.95,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.96,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.97,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.98,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      },
+      {
+        "coordinate": 99.99,
+        "degradation": "translate_x",
+        "level": 5,
+        "value_median": 1.0
+      }
+    ]
+  },
+  "run": "comparison_1793829127"
+}

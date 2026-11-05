@@ -1,12 +1,12 @@
 {
-  "caption": "Median damage over frames against the applied strength, log-log, for wasserstein (bold, in colour) and the pointwise controls mae, mse, rmse, nrmse (thin, grey), one column per displacement degradation and one row per field. The grey line is damage 1, the anchor (by default the field's own mean). Parallel lines charge in the same proportion at every strength; a steeper line charges relatively more for the larger shifts, which is what decides whether two metrics are interchangeable as training losses. These are the same numbers as the table beneath.",
+  "caption": "Median damage over frames against the applied strength, log-log, for wasserstein (bold, in colour) and the pointwise controls mae, mse, rmse, vrmse (thin, grey), one column per displacement degradation and one row per field. The grey line is damage 1, the anchor (by default the field's own mean). Parallel lines charge in the same proportion at every strength; a steeper line charges relatively more for the larger shifts, which is what decides whether two metrics are interchangeable as training losses. These are the same numbers as the table beneath.",
   "dataset": "kinet_re5e4",
   "figure": "damage_beside_controls",
   "metric": "wasserstein",
   "panels": {
     "density": [
       {
-        "damage": 0.0034658625,
+        "damage": 0.003465862454374466,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": true,
@@ -15,7 +15,7 @@
         "severity": 0.125
       },
       {
-        "damage": 0.0069316965,
+        "damage": 0.006931696538574222,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": true,
@@ -24,7 +24,7 @@
         "severity": 0.25
       },
       {
-        "damage": 0.0138631662,
+        "damage": 0.01386316616002062,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": true,
@@ -33,7 +33,7 @@
         "severity": 0.5
       },
       {
-        "damage": 0.0277245185,
+        "damage": 0.02772451847556294,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": true,
@@ -42,7 +42,7 @@
         "severity": 1.0
       },
       {
-        "damage": 0.0554345682,
+        "damage": 0.05543456818038088,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": true,
@@ -51,7 +51,7 @@
         "severity": 2.0
       },
       {
-        "damage": 0.1107542686,
+        "damage": 0.11075426859784229,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": true,
@@ -60,7 +60,7 @@
         "severity": 4.0
       },
       {
-        "damage": 0.00383451,
+        "damage": 0.0038345099839193647,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -69,7 +69,7 @@
         "severity": 0.125
       },
       {
-        "damage": 0.0076675583,
+        "damage": 0.007667558320228226,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -78,7 +78,7 @@
         "severity": 0.25
       },
       {
-        "damage": 0.0153240494,
+        "damage": 0.015324049427507135,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -87,7 +87,7 @@
         "severity": 0.5
       },
       {
-        "damage": 0.0306121631,
+        "damage": 0.030612163105572965,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -96,7 +96,7 @@
         "severity": 1.0
       },
       {
-        "damage": 0.0610051213,
+        "damage": 0.06100512132209172,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -105,7 +105,7 @@
         "severity": 2.0
       },
       {
-        "damage": 0.1209350805,
+        "damage": 0.12093508046014996,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -114,7 +114,7 @@
         "severity": 4.0
       },
       {
-        "damage": 2.16965e-05,
+        "damage": 2.1696518660947978e-05,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -123,7 +123,7 @@
         "severity": 0.125
       },
       {
-        "damage": 8.67691e-05,
+        "damage": 8.676911775599763e-05,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -132,7 +132,7 @@
         "severity": 0.25
       },
       {
-        "damage": 0.0003468108,
+        "damage": 0.0003468108246359946,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -141,7 +141,7 @@
         "severity": 0.5
       },
       {
-        "damage": 0.0013845542,
+        "damage": 0.0013845542364899033,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -150,7 +150,7 @@
         "severity": 1.0
       },
       {
-        "damage": 0.005514058,
+        "damage": 0.00551405795718762,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -159,7 +159,7 @@
         "severity": 2.0
       },
       {
-        "damage": 0.0218748507,
+        "damage": 0.02187485067604032,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -168,7 +168,7 @@
         "severity": 4.0
       },
       {
-        "damage": 0.0046579522,
+        "damage": 0.004657952196078064,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -177,7 +177,7 @@
         "severity": 0.125
       },
       {
-        "damage": 0.0093149942,
+        "damage": 0.009314994243476458,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -186,7 +186,7 @@
         "severity": 0.25
       },
       {
-        "damage": 0.0186228576,
+        "damage": 0.018622857585120056,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -195,7 +195,7 @@
         "severity": 0.5
       },
       {
-        "damage": 0.0372095987,
+        "damage": 0.037209598714442585,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -204,7 +204,7 @@
         "severity": 1.0
       },
       {
-        "damage": 0.0742567031,
+        "damage": 0.07425670311283353,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -213,7 +213,7 @@
         "severity": 2.0
       },
       {
-        "damage": 0.1479014898,
+        "damage": 0.14790148976949774,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
@@ -222,61 +222,61 @@
         "severity": 4.0
       },
       {
-        "damage": 0.0046290687,
+        "damage": 0.004628998764027767,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
         "level": 1,
-        "metric": "nrmse",
+        "metric": "vrmse",
         "severity": 0.125
       },
       {
-        "damage": 0.0092571866,
+        "damage": 0.009257046770522272,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
         "level": 2,
-        "metric": "nrmse",
+        "metric": "vrmse",
         "severity": 0.25
       },
       {
-        "damage": 0.018506922,
+        "damage": 0.018506642368087297,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
         "level": 3,
-        "metric": "nrmse",
+        "metric": "vrmse",
         "severity": 0.5
       },
       {
-        "damage": 0.0369589263,
+        "damage": 0.036958367910569986,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
         "level": 4,
-        "metric": "nrmse",
+        "metric": "vrmse",
         "severity": 1.0
       },
       {
-        "damage": 0.0737562482,
+        "damage": 0.07375434587643041,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
         "level": 5,
-        "metric": "nrmse",
+        "metric": "vrmse",
         "severity": 2.0
       },
       {
-        "damage": 0.1468771686,
+        "damage": 0.14687851997153195,
         "degradation": "translate_subpixel",
         "field": "density",
         "is_this_metric": false,
         "level": 6,
-        "metric": "nrmse",
+        "metric": "vrmse",
         "severity": 4.0
       },
       {
-        "damage": 0.0277245185,
+        "damage": 0.02772451847556352,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": true,
@@ -285,7 +285,7 @@
         "severity": 1.0
       },
       {
-        "damage": 0.0554345682,
+        "damage": 0.05543456818038088,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": true,
@@ -294,7 +294,7 @@
         "severity": 2.0
       },
       {
-        "damage": 0.1107542686,
+        "damage": 0.11075426859784286,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": true,
@@ -303,7 +303,7 @@
         "severity": 4.0
       },
       {
-        "damage": 0.2206061434,
+        "damage": 0.22060614335251086,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": true,
@@ -312,7 +312,7 @@
         "severity": 8.0
       },
       {
-        "damage": 0.4344080193,
+        "damage": 0.43440801933871975,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": true,
@@ -321,7 +321,7 @@
         "severity": 16.0
       },
       {
-        "damage": 0.0306121631,
+        "damage": 0.030612163105572965,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
@@ -330,7 +330,7 @@
         "severity": 1.0
       },
       {
-        "damage": 0.0610051213,
+        "damage": 0.06100512132209172,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
@@ -339,7 +339,7 @@
         "severity": 2.0
       },
       {
-        "damage": 0.1209350805,
+        "damage": 0.12093508046014996,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
@@ -348,7 +348,7 @@
         "severity": 4.0
       },
       {
-        "damage": 0.2402358534,
+        "damage": 0.24023585343940687,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
@@ -357,7 +357,7 @@
         "severity": 8.0
       },
       {
-        "damage": 0.4688743493,
+        "damage": 0.46887434934601935,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
@@ -366,7 +366,7 @@
         "severity": 16.0
       },
       {
-        "damage": 0.0013845542,
+        "damage": 0.0013845542364899109,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
@@ -375,7 +375,7 @@
         "severity": 1.0
       },
       {
-        "damage": 0.005514058,
+        "damage": 0.005514057957187739,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
@@ -384,7 +384,7 @@
         "severity": 2.0
       },
       {
-        "damage": 0.0218748507,
+        "damage": 0.02187485067604041,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
@@ -393,7 +393,7 @@
         "severity": 4.0
       },
       {
-        "damage": 0.0848650332,
+        "damage": 0.08486503320291806,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
@@ -402,7 +402,7 @@
         "severity": 8.0
       },
       {
-        "damage": 0.3074853229,
+        "damage": 0.30748532285380453,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
@@ -411,7 +411,7 @@
         "severity": 16.0
       },
       {
-        "damage": 0.0372095987,
+        "damage": 0.037209598714442585,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
@@ -420,7 +420,7 @@
         "severity": 1.0
       },
       {
-        "damage": 0.0742567031,
+        "damage": 0.07425670311283353,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
@@ -429,7 +429,7 @@
         "severity": 2.0
       },
       {
-        "damage": 0.1479014898,
+        "damage": 0.14790148976949774,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
@@ -438,7 +438,7 @@
         "severity": 4.0
       },
       {
-        "damage": 0.2913160366,
+        "damage": 0.2913160366387624,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
@@ -447,7 +447,7 @@
         "severity": 8.0
       },
       {
-        "damage": 0.5545135912,
+        "damage": 0.5545135912255069,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
@@ -456,51 +456,276 @@
         "severity": 16.0
       },
       {
-        "damage": 0.0369589263,
+        "damage": 0.03695836791057019,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
         "level": 1,
-        "metric": "nrmse",
+        "metric": "vrmse",
         "severity": 1.0
       },
       {
-        "damage": 0.0737562482,
+        "damage": 0.07375434587643062,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
         "level": 2,
-        "metric": "nrmse",
+        "metric": "vrmse",
         "severity": 2.0
       },
       {
-        "damage": 0.1468771686,
+        "damage": 0.14687851997153215,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
         "level": 3,
-        "metric": "nrmse",
+        "metric": "vrmse",
         "severity": 4.0
       },
       {
-        "damage": 0.289777139,
+        "damage": 0.28977143818428214,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
         "level": 4,
-        "metric": "nrmse",
+        "metric": "vrmse",
         "severity": 8.0
       },
       {
-        "damage": 0.5504813559,
+        "damage": 0.5504685358933958,
         "degradation": "translate_x",
         "field": "density",
         "is_this_metric": false,
         "level": 5,
-        "metric": "nrmse",
+        "metric": "vrmse",
+        "severity": 16.0
+      },
+      {
+        "damage": 0.02795789330040337,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": true,
+        "level": 1,
+        "metric": "wasserstein",
+        "severity": 1.0
+      },
+      {
+        "damage": 0.05590173792255456,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": true,
+        "level": 2,
+        "metric": "wasserstein",
+        "severity": 2.0
+      },
+      {
+        "damage": 0.11169176024993556,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": true,
+        "level": 3,
+        "metric": "wasserstein",
+        "severity": 4.0
+      },
+      {
+        "damage": 0.2224047818869311,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": true,
+        "level": 4,
+        "metric": "wasserstein",
+        "severity": 8.0
+      },
+      {
+        "damage": 0.437753003763202,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": true,
+        "level": 5,
+        "metric": "wasserstein",
+        "severity": 16.0
+      },
+      {
+        "damage": 0.030969748997985547,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 1,
+        "metric": "mae",
+        "severity": 1.0
+      },
+      {
+        "damage": 0.06159820076679745,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 2,
+        "metric": "mae",
+        "severity": 2.0
+      },
+      {
+        "damage": 0.12248070742984686,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 3,
+        "metric": "mae",
+        "severity": 4.0
+      },
+      {
+        "damage": 0.24351778930663107,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 4,
+        "metric": "mae",
+        "severity": 8.0
+      },
+      {
+        "damage": 0.4763593243369548,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 5,
+        "metric": "mae",
+        "severity": 16.0
+      },
+      {
+        "damage": 0.0014182062316310928,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 1,
+        "metric": "mse",
+        "severity": 1.0
+      },
+      {
+        "damage": 0.005648045744501085,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 2,
+        "metric": "mse",
+        "severity": 2.0
+      },
+      {
+        "damage": 0.022368736582729958,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 3,
+        "metric": "mse",
+        "severity": 4.0
+      },
+      {
+        "damage": 0.08694776426992201,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 4,
+        "metric": "mse",
+        "severity": 8.0
+      },
+      {
+        "damage": 0.3156728916469307,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 5,
+        "metric": "mse",
+        "severity": 16.0
+      },
+      {
+        "damage": 0.037659079006664396,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 1,
+        "metric": "rmse",
+        "severity": 1.0
+      },
+      {
+        "damage": 0.07515348125336156,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 2,
+        "metric": "rmse",
+        "severity": 2.0
+      },
+      {
+        "damage": 0.14956181525619153,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 3,
+        "metric": "rmse",
+        "severity": 4.0
+      },
+      {
+        "damage": 0.29486906292441645,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 4,
+        "metric": "rmse",
+        "severity": 8.0
+      },
+      {
+        "damage": 0.5618477477457176,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 5,
+        "metric": "rmse",
+        "severity": 16.0
+      },
+      {
+        "damage": 0.03762771871685731,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 1,
+        "metric": "vrmse",
+        "severity": 1.0
+      },
+      {
+        "damage": 0.0750084604797103,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 2,
+        "metric": "vrmse",
+        "severity": 2.0
+      },
+      {
+        "damage": 0.1491712644341752,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 3,
+        "metric": "vrmse",
+        "severity": 4.0
+      },
+      {
+        "damage": 0.2941153388466716,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 4,
+        "metric": "vrmse",
+        "severity": 8.0
+      },
+      {
+        "damage": 0.5598400845287024,
+        "degradation": "translate_y",
+        "field": "density",
+        "is_this_metric": false,
+        "level": 5,
+        "metric": "vrmse",
         "severity": 16.0
       }
     ]
   },
-  "run": "comparison_1793657627"
+  "run": "comparison_1793829127"
 }

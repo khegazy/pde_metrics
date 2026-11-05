@@ -119,9 +119,38 @@ standard way to compare two functions.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence persistence_wasserstein`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence persistence_wasserstein --results results/comparison_1793811840`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`.
+![the point sets behind the number, each degraded set over the reference's, as its field draws them](_generated/companion_points__field-density.svg)
+
+*As this metric's own field draws it.* The point set behind persistence_wasserstein on density, one panel per stored variant, on shared axes. Grey rings are the clean level's set of the same frame, the reference's, drawn under every panel. The grey diagonal is birth equal to death: a point's height above it is how long its feature persists. Triangles on a panel's edge are points with an infinite coordinate.
+
+![the point sets behind the number, each degraded set over the reference's, as its field draws them](_generated/companion_points__field-vorticity.svg)
+
+*As this metric's own field draws it.* The point set behind persistence_wasserstein on vorticity, one panel per stored variant, on shared axes. Grey rings are the clean level's set of the same frame, the reference's, drawn under every panel. The grey diagonal is birth equal to death: a point's height above it is how long its feature persists. Triangles on a panel's edge are points with an infinite coordinate.
+
+No sensitivity profile figure: no ordinal axes for persistence_wasserstein.
+
+No response to each family of degradation figure: no ordinal ladder axes.
+
+**Trend: does the response follow the degradation?**
+
+| test family | field | degradations | rank correlation | fraction of frames in order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+
+**Reactivity: how far does it move?**
+
+| test family | field | change from clean at the harshest strength | elasticity | first strength detected |
+|---|---|---|---|---|
+
+**Consistency: how much does it vary from snapshot to snapshot?**
+
+| test family | field | consistency, in the strength's units | snapshots per independent block |
+|---|---|---|---|
+
+One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. It does not exist for this metric, whose undegraded value is exactly zero; the damage below is its relative reading. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
+
+These tables report what was measured and grade none of the measurements. What the numbers mean for this metric is written in the subsections below, beside the test that produced each number.
 
 <!-- END GENERATED performance -->
 
@@ -203,9 +232,11 @@ names; the `companion_points` figure draws it over the reference's.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence persistence_wasserstein`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence persistence_wasserstein --results results/comparison_1793811840`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`.
+Measured on `forecast_re5e4`, frames 0 to 59 (60 frames of real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded), on the 64 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793811840`.
+
+Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793811840`.
 
 <!-- END GENERATED run -->
 
@@ -222,7 +253,7 @@ do, and what their strength numbers mean, is documented on their own pages.
 | `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
 | `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: its dispersion axes leave the member mean, the field this metric reads, unchanged by construction, and its bias axis moves every point of the candidate's diagram by the offset, a response test_metric.py pins exactly |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: Sod's exact density never rises along the tube, so its diagram is one point, born at the minimum, and the distance only compares two minima |
-| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
+| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | measured, run `comparison_1793811840`: the main results |
 
 One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.
 
@@ -234,9 +265,9 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 [box_blur](../../degradations/box_blur/card.md) ·
 [median_blur](../../degradations/median_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence persistence_wasserstein`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence persistence_wasserstein --results results/comparison_1793811840`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`.
+No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_smoothing -->
 
@@ -247,9 +278,9 @@ Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`
 [highpass_ideal](../../degradations/highpass_ideal/card.md) ·
 [highpass_butterworth](../../degradations/highpass_butterworth/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence persistence_wasserstein`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence persistence_wasserstein --results results/comparison_1793811840`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`.
+No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_spectral -->
 
@@ -258,9 +289,9 @@ Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence persistence_wasserstein`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence persistence_wasserstein --results results/comparison_1793811840`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`.
+No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_geometric -->
 
@@ -269,9 +300,9 @@ Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`
 [coarsen](../../degradations/coarsen/card.md) ·
 [coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence persistence_wasserstein`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence persistence_wasserstein --results results/comparison_1793811840`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`.
+No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_resolution -->
 
@@ -279,9 +310,9 @@ Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence persistence_wasserstein`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence persistence_wasserstein --results results/comparison_1793811840`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`.
+No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_stochastic -->
 
@@ -290,17 +321,22 @@ Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence persistence_wasserstein`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence persistence_wasserstein --results results/comparison_1793811840`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`.
+| field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
+|---|---|---|---|---|
+| density | — | — | — | 0.0702 |
+| vorticity | — | — | — | 0.196 |
+
+The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_canaries -->
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence persistence_wasserstein`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence persistence_wasserstein --results results/comparison_1793811840`, do not edit -->
 
-Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`.
+No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_summary -->
 

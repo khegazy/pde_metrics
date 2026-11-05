@@ -153,7 +153,31 @@ hydrology and network data.
 
 ## Performance
 
-<!-- GENERATED performance: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED performance: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+
+![the curve behind the number against its coordinate, as its field draws it, at every strength of each degradation, the clean curve in black](_generated/companion_curves__field-density.svg)
+
+*As this metric's own field draws it.* The dense curve behind tail_index on density, at every coordinate the curve returns, on the frames and ladder entries report.error_map stored: the median over those frames at every stored strength, the clean curve in black, the anchor dashed and the impostor dotted where stored. Axes as the field draws them: linear x, linear y. Values are the literature's own, untransformed.
+
+![the curve behind the number against its coordinate, as its field draws it, at every strength of each degradation, the clean curve in black](_generated/companion_curves__field-density__companion-by_order.svg)
+
+*As this metric's own field draws it.* The dense curve behind tail_index.by_order on density, at every coordinate the curve returns, on the frames and ladder entries report.error_map stored: the median over those frames at every stored strength, the clean curve in black, the anchor dashed and the impostor dotted where stored. Axes as the field draws them: linear x, linear y. Values are the literature's own, untransformed.
+
+![the curve behind the number against its coordinate, as its field draws it, at every strength of each degradation, the clean curve in black](_generated/companion_curves__field-velocity.svg)
+
+*As this metric's own field draws it.* The dense curve behind tail_index on velocity, at every coordinate the curve returns, on the frames and ladder entries report.error_map stored: the median over those frames at every stored strength, the clean curve in black, the anchor dashed and the impostor dotted where stored. Axes as the field draws them: linear x, linear y. Values are the literature's own, untransformed.
+
+![the curve behind the number against its coordinate, as its field draws it, at every strength of each degradation, the clean curve in black](_generated/companion_curves__field-velocity__companion-by_order.svg)
+
+*As this metric's own field draws it.* The dense curve behind tail_index.by_order on velocity, at every coordinate the curve returns, on the frames and ladder entries report.error_map stored: the median over those frames at every stored strength, the clean curve in black, the anchor dashed and the impostor dotted where stored. Axes as the field draws them: linear x, linear y. Values are the literature's own, untransformed.
+
+![the curve behind the number against its coordinate, as its field draws it, at every strength of each degradation, the clean curve in black](_generated/companion_curves__field-vorticity.svg)
+
+*As this metric's own field draws it.* The dense curve behind tail_index on vorticity, at every coordinate the curve returns, on the frames and ladder entries report.error_map stored: the median over those frames at every stored strength, the clean curve in black, the anchor dashed and the impostor dotted where stored. Axes as the field draws them: linear x, linear y. Values are the literature's own, untransformed.
+
+![the curve behind the number against its coordinate, as its field draws it, at every strength of each degradation, the clean curve in black](_generated/companion_curves__field-vorticity__companion-by_order.svg)
+
+*As this metric's own field draws it.* The dense curve behind tail_index.by_order on vorticity, at every coordinate the curve returns, on the frames and ladder entries report.error_map stored: the median over those frames at every stored strength, the clean curve in black, the anchor dashed and the impostor dotted where stored. Axes as the field draws them: linear x, linear y. Values are the literature's own, untransformed.
 
 ![how the metric responded to each degradation, by field: rank correlation, separation of neighbouring strengths, damage per unit of field change, and the bound on its largest response](_generated/sensitivity_profile.svg)
 
@@ -167,41 +191,47 @@ Median damage over frames against severity level for tail_index, one row per fam
 
 | test family | field | degradations | rank correlation | fraction of frames in order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
-| Displacement | density | 2 | 0.0857 | 0.0124 | 0.479 |
-| Displacement | velocity | 2 | 0.0857 | 0 | 0.484 |
-| Displacement | vorticity | 2 | -0.203 | 0 | 0.469 |
-| Resolution loss | density | 2 | 1 | 0.634 to 1 | 0.729 to 0.997 |
-| Resolution loss | velocity | 2 | 0.2 to 0.8 | 0.0559 to 0.497 | 0.413 to 0.509 |
-| Resolution loss | vorticity | 2 | 0.4 to 1 | 0.273 to 0.689 | 0.481 to 0.737 |
-| Smoothing | density | 3 | 0.5 to 1 | 0.0683 to 1 | 0.145 to 0.835 |
-| Smoothing | velocity | 3 | 0.5 to 1 | 0.416 to 0.994 | 0.495 to 0.644 |
-| Smoothing | vorticity | 3 | 0.8 to 1 | 0.429 to 0.82 | 0.583 to 0.798 |
-| Spectral filtering | density | 4 | 1 | 0.646 to 1 | 0.502 to 0.964 |
-| Spectral filtering | velocity | 4 | 1 | 0.733 to 1 | 0.514 to 0.887 |
-| Spectral filtering | vorticity | 4 | 0.4 to 1 | 0.0559 to 0.634 | 0.424 to 0.627 |
-| Noise | density | 1 | 0.8 | 0.137 | 0.302 |
-| Noise | velocity | 1 | 0.8 | 0.217 | 0.431 |
-| Noise | vorticity | 1 | 0.8 | 0.217 | 0.467 |
+| Displacement | density | 3 | 0.0857 | 0.0124 | 0.479 |
+| Displacement | velocity | 3 | 0.0286 | 0 | 0.466 |
+| Displacement | vorticity | 3 | -0.203 | 0 | 0.469 |
+| Cell-value distortion | density | 2 | — | — | — |
+| Cell-value distortion | velocity | 2 | — | — | — |
+| Cell-value distortion | vorticity | 2 | — | — | — |
+| Resolution loss | density | 3 | 1 | 0.634 to 1 | 0.727 to 0.997 |
+| Resolution loss | velocity | 3 | 0.4 to 1 | 0.323 to 0.894 | 0.39 to 0.86 |
+| Resolution loss | vorticity | 3 | 0.4 to 1 | 0.273 to 0.689 | 0.481 to 0.737 |
+| Smoothing | density | 5 | 0.5 to 1 | 0.0683 to 1 | 0.145 to 0.892 |
+| Smoothing | velocity | 5 | 0.5 to 1 | 0.211 to 0.994 | 0.427 to 0.605 |
+| Smoothing | vorticity | 5 | 0.8 to 1 | 0.429 to 0.82 | 0.583 to 0.798 |
+| Spectral filtering | density | 5 | 1 | 0.646 to 1 | 0.502 to 0.964 |
+| Spectral filtering | velocity | 5 | 0.2 to 1 | 0.199 to 1 | 0.464 to 0.608 |
+| Spectral filtering | vorticity | 5 | 0.4 to 1 | 0.0559 to 0.634 | 0.424 to 0.627 |
+| Noise | density | 2 | 0.1 to 0.8 | 0 to 0.137 | 0.302 to 0.466 |
+| Noise | velocity | 2 | 0.4 to 0.9 | 0.161 to 0.329 | 0.478 to 0.513 |
+| Noise | vorticity | 2 | 0.8 to 0.9 | 0.217 to 0.236 | 0.467 to 0.499 |
 
 **Reactivity: how far does it move?**
 
 | test family | field | change from clean at the harshest strength | elasticity | first strength detected |
 |---|---|---|---|---|
 | Displacement | density | -3.28e-13 to 0 | — | level — |
-| Displacement | velocity | 0 | — | level — |
+| Displacement | velocity | 0 | 0.963 | level — |
 | Displacement | vorticity | 0 | -0.254 | level — |
+| Cell-value distortion | density | -6.31e-15 to 0 | — | level — |
+| Cell-value distortion | velocity | 0 | — | level — |
+| Cell-value distortion | vorticity | 0 | — | level — |
 | Resolution loss | density | -0.368 to 8.71 | 1.09 to 1.92 | level — |
-| Resolution loss | velocity | 0.0551 to 5.64 | 1.63 | level — |
+| Resolution loss | velocity | -0.283 to 3.82 | 1.12 to 1.19 | level — |
 | Resolution loss | vorticity | -0.444 to 4.86 | 0.137 to 2.06 | level — |
 | Smoothing | density | -0.914 to 0.198 | 0.577 to 0.835 | level — |
-| Smoothing | velocity | -0.882 to 0.603 | 1.59 to 2.41 | level — |
+| Smoothing | velocity | -0.868 to 0.187 | 0.481 to 1.64 | level — |
 | Smoothing | vorticity | -0.558 to 0.67 | 0.864 to 2.18 | level — |
 | Spectral filtering | density | -1 to 0.271 | 0.0777 to 3.28 | level — |
-| Spectral filtering | velocity | -1 to 0.415 | 0.11 to 2.96 | level — |
-| Spectral filtering | vorticity | -0.872 to 0.0629 | 0.686 to 0.871 | level — |
-| Noise | density | 0.347 | 1.06 | level — |
-| Noise | velocity | 0.73 | 1.02 | level — |
-| Noise | vorticity | -0.154 | — | level — |
+| Spectral filtering | velocity | -1 to 0.0463 | 0.0567 to 6.88 | level — |
+| Spectral filtering | vorticity | -0.872 to 0.433 | 0.686 to 1.42 | level — |
+| Noise | density | 0.329 to 0.347 | 0.0299 to 1.06 | level — |
+| Noise | velocity | 0.39 to 1.17 | 0.894 | level — |
+| Noise | vorticity | -0.154 to 1.03 | — | level — |
 | trap test: fake prediction, right spectrum | density | — | — | damage — |
 | trap test: fake prediction, right spectrum | velocity | — | — | damage — |
 | trap test: fake prediction, right spectrum | vorticity | — | — | damage — |
@@ -211,20 +241,23 @@ Median damage over frames against severity level for tail_index, one row per fam
 | test family | field | consistency, in the strength's units | snapshots per independent block |
 |---|---|---|---|
 | Displacement | density | 15 | 1 |
-| Displacement | velocity | 14.2 | 1 |
-| Displacement | vorticity | 19.9 | 1 |
-| Resolution loss | density | 0.817 to 3.81 | 12 to 17 |
-| Resolution loss | velocity | 0.923 to 10.4 | 12 to 19 |
-| Resolution loss | vorticity | 2.62 to 6.84 | 19 to 21 |
+| Displacement | velocity | 7.18 | 1 |
+| Displacement | vorticity | 15.4 | 1 |
+| Cell-value distortion | density | — | 1 |
+| Cell-value distortion | velocity | — | 1 |
+| Cell-value distortion | vorticity | — | 1 |
+| Resolution loss | density | 0.724 to 3.81 | 12 to 17 |
+| Resolution loss | velocity | 1.6 to 7.24 | 14 to 20 |
+| Resolution loss | vorticity | 2.62 to 9.17 | 19 to 22 |
 | Smoothing | density | 0.00457 to 0.0449 | 16 to 21 |
-| Smoothing | velocity | 0.0136 to 0.937 | 19 to 20 |
-| Smoothing | vorticity | 0.0569 to 0.193 | 8 to 21 |
-| Spectral filtering | density | 0.0251 to 0.122 | 12 to 21 |
-| Spectral filtering | velocity | 0.0172 to 0.368 | 8 to 18 |
-| Spectral filtering | vorticity | 0.0708 to 0.482 | 20 to 21 |
-| Noise | density | 0.0347 | 16 |
-| Noise | velocity | 0.0654 | 18 |
-| Noise | vorticity | 0.585 | 20 |
+| Smoothing | velocity | 0.0214 to 0.159 | 19 to 20 |
+| Smoothing | vorticity | 0.0577 to 0.193 | 8 to 21 |
+| Spectral filtering | density | 0.0251 to 0.209 | 12 to 21 |
+| Spectral filtering | velocity | 0.0276 to 3.94 | 8 to 21 |
+| Spectral filtering | vorticity | 0.0721 to 0.939 | 16 to 21 |
+| Noise | density | 0.0347 to 0.662 | 16 to 17 |
+| Noise | velocity | 0.0464 to 0.231 | 14 to 20 |
+| Noise | vorticity | 0.0725 to 0.564 | 6 to 20 |
 
 One row per family of degradation and physical field; a cell gives the range over the degradations in that family. **Trend.** The rank correlation is the Spearman correlation between the strength and how far the metric has moved from its value on the undegraded field of the same frame, in the one direction it moves under that degradation, computed inside a single frame. A value of 1 means every strength moved it further than the last in every frame, whichever way it moves; a response that scatters to both sides scores near 0. The fraction of frames in order counts the frames with no exception. The weakest gap is the smallest Mann-Whitney overlap between two neighbouring strengths across frames: 1 means they never overlap, 0.5 that they cannot be told apart. **Reactivity.** The change from clean is the median, at the harshest strength, of the departure from the undegraded value of the same frame over the size of that value: 0.3 means 30%. The elasticity is the percentage change of that departure per percentage change in strength over the mildest strengths. First strength detected is the mildest at which the metric has moved a tenth of the way to the anchor; **damage** reads that 0-to-1 scale as a number. A dash means the measurement is not defined there. A metric's reactivity scales with the power it is expressed in: mean squared error's elasticity is twice root-mean-square error's, though the two carry the same information, so compare magnitudes across metrics with that in mind. **Consistency** is how much the response varies from snapshot to snapshot relative to its size, in the strength's units; the snapshots of one trajectory are correlated, and the last column is how many consecutive snapshots one independent block spans.
 
@@ -234,9 +267,9 @@ These tables report what was measured and grade none of the measurements. What t
 
 | field | selectivity | charges most for | charges least for | response provably below 0.05 at 90% on | elasticity to a sub-pixel shift, against severity (distance) | compute cost (x cheapest in this run) |
 |---|---|---|---|---|---|---|
-| density | — | — | — | `coarsen_bandlimited` `highpass_butterworth` `highpass_ideal` `translate_subpixel` `translate_x` | — | 23.4 |
-| velocity | — | — | — | `coarsen_bandlimited` `translate_subpixel` `translate_x` | — | 45.2 |
-| vorticity | — | — | — | `translate_subpixel` `translate_x` | -0.254 | 22.9 |
+| density | — | — | — | `band_attenuate` `bias` `coarsen_bandlimited` `gain` `highpass_butterworth` `highpass_ideal` `multiplicative_noise` `translate_subpixel` `translate_x` `translate_y` | — | 31.8 |
+| velocity | — | — | — | `bias` `gain` `highpass_butterworth` `highpass_ideal` `translate_subpixel` `translate_x` `translate_y` | 0.963 | 31.7 |
+| vorticity | — | — | — | `bias` `gain` `translate_subpixel` `translate_x` `translate_y` | -0.254 | 30.3 |
 
 One row per physical field. **Selectivity** is how concentrated the metric's response is on a few degradations, measured per unit of field change: 0 means it charges every degradation the same, as mean squared error does by construction, and values toward 1 that one degradation carries most of it. **Charges most and least for** name the two ends of that profile. **Response provably below** lists degradations on which the upper confidence bound of the largest damage lies below the margin -- an equivalence test, so an entry says the response is provably small, not merely not significant; a dash means no degradation met the bound. **Elasticity** is the slope of log damage against log shift over the smallest shifts: 1 means damage grows in proportion to the shift, 2 with its square. **Compute cost** is wall-clock per evaluation over the cheapest metric and field in the same run.
 
@@ -353,11 +386,11 @@ field ahead of a less smoothed one.
 
 ## Results
 
-<!-- GENERATED run: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED run: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
-Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `fdbd5d7872d6` (working tree dirty). Run `comparison_1793657627`.
+Measured on `kinet_re5e4`, frames 2000 to 10000 (161 frames of developed flow), on the 256 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793829127`.
 
-Every number in this section comes from that one run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793657627`.
+Every number in this section comes from that run, except in the subsections headed with another experiment and in a figure whose caption names another run, each of which names its own run. Regenerate with `python -m fmeval.cards evidence <name> --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`.
 
 <!-- END GENERATED run -->
 
@@ -367,11 +400,11 @@ Every number in this section comes from that one run. Regenerate with `python -m
 
 | experiment | what a run on it is evidence of | on this card |
 |---|---|---|
-| `kinet_re5e4` | developed flow | measured, run `comparison_1793657627`: the main results |
-| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | not yet run |
+| `kinet_re5e4` | developed flow | measured, run `comparison_1793829127`: the main results |
+| `kinet_re1e6` | developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition | measured, run `comparison_1793829231`: under *On `kinet_re1e6`* |
 | `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | not applicable: every axis there leaves the member mean, the field this metric reads, unchanged (dispersion scales members about their mean; a bias cancels in an increment); measured 3.8e-14 relative |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
-| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | not yet run |
+| `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | measured, run `comparison_1793811840`: under *On `forecast_re5e4`* |
 
 One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.
 
@@ -382,18 +415,24 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 [gaussian_blur](../../degradations/gaussian_blur/card.md) ·
 [box_blur](../../degradations/box_blur/card.md)
 
-<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_smoothing: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `box_blur` | density | 4 | 1 | 1 | 0.831 |
-| `box_blur` | velocity | 4 | 1 | 0.882 | 0.593 |
+| `box_blur` | velocity | 4 | 1 | 0.932 | 0.539 |
 | `box_blur` | vorticity | 4 | 0.8 | 0.491 | 0.583 |
+| `disk_blur` | density | 3 | 1 | 1 | 0.842 |
+| `disk_blur` | velocity | 3 | 1 | 0.807 | 0.558 |
+| `disk_blur` | vorticity | 3 | 1 | 0.565 | 0.629 |
+| `epanechnikov_blur` | density | 3 | 1 | 1 | 0.892 |
+| `epanechnikov_blur` | velocity | 3 | 1 | 0.994 | 0.605 |
+| `epanechnikov_blur` | vorticity | 3 | 1 | 0.522 | 0.618 |
 | `gaussian_blur` | density | 4 | 1 | 1 | 0.835 |
-| `gaussian_blur` | velocity | 4 | 1 | 0.994 | 0.644 |
+| `gaussian_blur` | velocity | 4 | 1 | 0.714 | 0.535 |
 | `gaussian_blur` | vorticity | 4 | 0.8 | 0.429 | 0.652 |
 | `median_blur` | density | 3 | 0.5 | 0.0683 | 0.145 |
-| `median_blur` | velocity | 3 | 0.5 | 0.416 | 0.495 |
+| `median_blur` | velocity | 3 | 0.5 | 0.211 | 0.427 |
 | `median_blur` | vorticity | 3 | 1 | 0.82 | 0.798 |
 
 <!-- END GENERATED results_smoothing -->
@@ -411,21 +450,24 @@ the other way, up, and is followed weakly on density and velocity (rank correlat
 [lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
 [highpass_ideal](../../degradations/highpass_ideal/card.md)
 
-<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_spectral: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
+| `band_attenuate` | density | 4 | 1 | 0.814 | 0.577 |
+| `band_attenuate` | velocity | 4 | 0.2 | 0.199 | 0.464 |
+| `band_attenuate` | vorticity | 4 | 0.8 | 0.453 | 0.574 |
 | `highpass_butterworth` | density | 4 | 1 | 0.776 | 0.659 |
-| `highpass_butterworth` | velocity | 3 | 1 | 0.733 | 0.792 |
+| `highpass_butterworth` | velocity | 3 | 0.5 | 0.354 | 0.499 |
 | `highpass_butterworth` | vorticity | 4 | 0.4 | 0.087 | 0.437 |
 | `highpass_ideal` | density | 3 | 1 | 0.988 | 0.964 |
-| `highpass_ideal` | velocity | 2 | 1 | 0.913 | 0.887 |
+| `highpass_ideal` | velocity | 2 | 1 | 0.739 | 0.608 |
 | `highpass_ideal` | vorticity | 4 | 0.4 | 0.0559 | 0.424 |
 | `lowpass_butterworth` | density | 4 | 1 | 0.646 | 0.502 |
-| `lowpass_butterworth` | velocity | 3 | 1 | 0.969 | 0.514 |
+| `lowpass_butterworth` | velocity | 3 | 1 | 0.596 | 0.508 |
 | `lowpass_butterworth` | vorticity | 4 | 1 | 0.634 | 0.627 |
 | `lowpass_ideal` | density | 3 | 1 | 1 | 0.683 |
-| `lowpass_ideal` | velocity | 2 | 1 | 1 | 0.662 |
+| `lowpass_ideal` | velocity | 2 | 1 | 1 | 0.584 |
 | `lowpass_ideal` | vorticity | 4 | 1 | 0.559 | 0.573 |
 
 <!-- END GENERATED results_spectral -->
@@ -442,16 +484,19 @@ frames in order).
 [translate_x](../../degradations/translate/card.md) ·
 [translate_subpixel](../../degradations/translate_subpixel/card.md)
 
-<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_geometric: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `translate_subpixel` | density | 6 | 0.0857 | 0.0124 | 0.479 |
-| `translate_subpixel` | velocity | 6 | 0.0857 | 0 | 0.484 |
+| `translate_subpixel` | velocity | 6 | 0.0286 | 0 | 0.466 |
 | `translate_subpixel` | vorticity | 6 | -0.203 | 0 | 0.469 |
 | `translate_x` | density | 5 | — | — | — |
 | `translate_x` | velocity | 5 | — | — | — |
 | `translate_x` | vorticity | 5 | — | — | — |
+| `translate_y` | density | 5 | — | — | — |
+| `translate_y` | velocity | 5 | — | — | — |
+| `translate_y` | vorticity | 5 | — | — | — |
 
 <!-- END GENERATED results_geometric -->
 
@@ -467,16 +512,19 @@ above).
 [coarsen](../../degradations/coarsen/card.md) ·
 [coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md)
 
-<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_resolution: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `coarsen` | density | 4 | 1 | 1 | 0.997 |
-| `coarsen` | velocity | 4 | 0.8 | 0.497 | 0.509 |
+| `coarsen` | velocity | 4 | 1 | 0.528 | 0.579 |
 | `coarsen` | vorticity | 4 | 1 | 0.689 | 0.737 |
 | `coarsen_bandlimited` | density | 4 | 1 | 0.634 | 0.729 |
-| `coarsen_bandlimited` | velocity | 4 | 0.2 | 0.0559 | 0.413 |
+| `coarsen_bandlimited` | velocity | 4 | 0.4 | 0.323 | 0.39 |
 | `coarsen_bandlimited` | vorticity | 4 | 0.4 | 0.273 | 0.481 |
+| `subsample` | density | 4 | 1 | 0.708 | 0.727 |
+| `subsample` | velocity | 4 | 1 | 0.894 | 0.86 |
+| `subsample` | vorticity | 4 | 1 | 0.534 | 0.654 |
 
 <!-- END GENERATED results_resolution -->
 
@@ -492,13 +540,16 @@ barely on velocity and vorticity (0.2 and 0.4).
 
 [additive_noise](../../degradations/additive_noise/card.md)
 
-<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_stochastic: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 | degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
 |---|---|---|---|---|---|
 | `additive_noise` | density | 4 | 0.8 | 0.137 | 0.302 |
-| `additive_noise` | velocity | 4 | 0.8 | 0.217 | 0.431 |
+| `additive_noise` | velocity | 4 | 0.4 | 0.161 | 0.478 |
 | `additive_noise` | vorticity | 4 | 0.8 | 0.217 | 0.467 |
+| `multiplicative_noise` | density | 5 | 0.1 | 0 | 0.466 |
+| `multiplicative_noise` | velocity | 5 | 0.9 | 0.329 | 0.513 |
+| `multiplicative_noise` | vorticity | 5 | 0.9 | 0.236 | 0.499 |
 
 <!-- END GENERATED results_stochastic -->
 
@@ -528,7 +579,7 @@ clean in about half the frames, before the harsher two lower it.
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
 [uncorrelated](../../degradations/random_large_translation/card.md)
 
-<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_canaries: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 | field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
 |---|---|---|---|---|
@@ -553,29 +604,33 @@ intermittent field.
 
 ### Compared with the other metrics
 
-<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 | compared with | density | velocity | vorticity |
 |---|---|---|---|
-| `increment_flatness` | 0.65 | 0.678 | 0.0242 |
-| `palinstrophy` | — | — | 0.649 |
-| `enstrophy` | — | — | 0.502 |
-| `kinetic_energy` | — | 0.249 | — |
-| `h1_seminorm` | 0.215 | 0.119 | 0.149 |
-| `energy_distance` | 0.0375 | 0.0412 | -0.479 |
-| `increment_w1` | 0.022 | 0.0139 | -0.543 |
-| `mae` | 0.00576 | -0.0219 | -0.154 |
-| `nrmse` | -0.0634 | -0.0452 | -0.0602 |
-| `rmse` | -0.0631 | -0.0452 | -0.0627 |
-| `mse` | -0.0634 | -0.0452 | -0.0629 |
-| `increment_w1_by_separation` | -0.0727 | -0.0372 | -0.648 |
-| `max_error` | -0.204 | -0.121 | 0.0444 |
-| `h_minus_one` | -0.139 | -0.168 | 0.0222 |
-| `wasserstein` | -0.139 | — | — |
-| `spectral_energy_flux` | — | -0.162 | — |
-| `spectrum_l2` | -0.176 | -0.115 | -0.503 |
-| `tail_exceedance` | -0.358 | -0.273 | -0.714 |
-| `persistence_distance` | -0.324 | — | -0.559 |
+| `palinstrophy` | — | — | 0.609 |
+| `increment_flatness` | 0.583 | 0.517 | 0.17 |
+| `enstrophy` | — | — | 0.477 |
+| `kinetic_energy` | — | 0.306 | — |
+| `h1_seminorm` | 0.306 | 0.168 | 0.0947 |
+| `h1_relative` | 0.188 | 0.0627 | -0.0116 |
+| `increment_w1` | 0.159 | 0.013 | -0.303 |
+| `energy_distance` | 0.172 | 0.000524 | -0.294 |
+| `max_error` | -0.0767 | -0.142 | 0.00949 |
+| `max_error_channel_mean` | -0.0767 | -0.135 | 0.00949 |
+| `wasserstein` | -0.0811 | — | — |
+| `h_minus_one` | -0.0826 | -0.218 | -0.072 |
+| `nrmse` | 0.0218 | -0.168 | -0.107 |
+| `vrmse` | 0.0209 | -0.168 | -0.111 |
+| `mse` | 0.0216 | -0.16 | -0.112 |
+| `rmse` | 0.0219 | -0.16 | -0.112 |
+| `rmse_channel_mean` | 0.0219 | -0.167 | -0.112 |
+| `increment_w1_by_separation` | 0.0416 | -0.126 | -0.465 |
+| `spectral_energy_flux` | — | -0.152 | — |
+| `mae` | 0.0928 | -0.154 | -0.171 |
+| `spectrum_l2` | -0.126 | -0.209 | -0.352 |
+| `persistence_distance` | -0.237 | — | -0.312 |
+| `tail_exceedance` | -0.313 | -0.277 | -0.516 |
 
 Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
@@ -590,7 +645,7 @@ not.
 
 ### Damage beside the other metrics
 
-<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_damage_by_level: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
 
 No damage beside the pointwise controls figure: tail_index has no damage scale on any field for these degradations.
 
@@ -602,7 +657,7 @@ No damage beside the pointwise controls figure: tail_index has no damage scale o
 | `mae` | 0.00383 | 0.00767 | 0.0153 | 0.0306 | 0.061 | 0.121 |
 | `mse` | 2.17e-05 | 8.68e-05 | 0.000347 | 0.00138 | 0.00551 | 0.0219 |
 | `rmse` | 0.00466 | 0.00931 | 0.0186 | 0.0372 | 0.0743 | 0.148 |
-| `nrmse` | 0.00463 | 0.00926 | 0.0185 | 0.037 | 0.0738 | 0.147 |
+| `vrmse` | 0.00463 | 0.00926 | 0.0185 | 0.037 | 0.0738 | 0.147 |
 
 **Displacement, density, `translate_x`** (strength: distance).
 
@@ -612,7 +667,17 @@ No damage beside the pointwise controls figure: tail_index has no damage scale o
 | `mae` | 0.0306 | 0.061 | 0.121 | 0.24 | 0.469 |
 | `mse` | 0.00138 | 0.00551 | 0.0219 | 0.0849 | 0.307 |
 | `rmse` | 0.0372 | 0.0743 | 0.148 | 0.291 | 0.555 |
-| `nrmse` | 0.037 | 0.0738 | 0.147 | 0.29 | 0.55 |
+| `vrmse` | 0.037 | 0.0738 | 0.147 | 0.29 | 0.55 |
+
+**Displacement, density, `translate_y`** (strength: distance).
+
+| metric | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| `tail_index` | — | — | — | — | — |
+| `mae` | 0.031 | 0.0616 | 0.122 | 0.244 | 0.476 |
+| `mse` | 0.00142 | 0.00565 | 0.0224 | 0.0869 | 0.316 |
+| `rmse` | 0.0377 | 0.0752 | 0.15 | 0.295 | 0.562 |
+| `vrmse` | 0.0376 | 0.075 | 0.149 | 0.294 | 0.56 |
 
 **Displacement, velocity, `translate_subpixel`** (strength: distance).
 
@@ -622,7 +687,7 @@ No damage beside the pointwise controls figure: tail_index has no damage scale o
 | `mae` | 0.00279 | 0.00559 | 0.0112 | 0.0223 | 0.0441 | 0.0859 |
 | `mse` | 1.45e-05 | 5.81e-05 | 0.000232 | 0.000924 | 0.0036 | 0.0136 |
 | `rmse` | 0.00381 | 0.00762 | 0.0152 | 0.0304 | 0.06 | 0.117 |
-| `nrmse` | 0.00382 | 0.00763 | 0.0153 | 0.0304 | 0.06 | 0.117 |
+| `vrmse` | 0.00365 | 0.00729 | 0.0146 | 0.029 | 0.0574 | 0.111 |
 
 **Displacement, velocity, `translate_x`** (strength: distance).
 
@@ -632,7 +697,17 @@ No damage beside the pointwise controls figure: tail_index has no damage scale o
 | `mae` | 0.0223 | 0.0441 | 0.0859 | 0.163 | 0.31 |
 | `mse` | 0.000924 | 0.0036 | 0.0136 | 0.0489 | 0.165 |
 | `rmse` | 0.0304 | 0.06 | 0.117 | 0.221 | 0.406 |
-| `nrmse` | 0.0304 | 0.06 | 0.117 | 0.221 | 0.406 |
+| `vrmse` | 0.029 | 0.0574 | 0.111 | 0.209 | 0.383 |
+
+**Displacement, velocity, `translate_y`** (strength: distance).
+
+| metric | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| `tail_index` | — | — | — | — | — |
+| `mae` | 0.0223 | 0.0442 | 0.0856 | 0.16 | 0.295 |
+| `mse` | 0.000935 | 0.00366 | 0.0138 | 0.0473 | 0.158 |
+| `rmse` | 0.0306 | 0.0605 | 0.117 | 0.218 | 0.397 |
+| `vrmse` | 0.0303 | 0.0599 | 0.115 | 0.212 | 0.384 |
 
 **Displacement, vorticity, `translate_subpixel`** (strength: distance).
 
@@ -642,7 +717,7 @@ No damage beside the pointwise controls figure: tail_index has no damage scale o
 | `mae` | 0.0428 | 0.0854 | 0.169 | 0.328 | 0.582 | 0.86 |
 | `mse` | 0.00112 | 0.00448 | 0.0176 | 0.066 | 0.21 | 0.44 |
 | `rmse` | 0.0335 | 0.0669 | 0.133 | 0.257 | 0.458 | 0.663 |
-| `nrmse` | 0.0328 | 0.0654 | 0.13 | 0.253 | 0.456 | 0.67 |
+| `vrmse` | 0.0329 | 0.0656 | 0.13 | 0.253 | 0.455 | 0.671 |
 
 **Displacement, vorticity, `translate_x`** (strength: distance).
 
@@ -652,7 +727,17 @@ No damage beside the pointwise controls figure: tail_index has no damage scale o
 | `mae` | 0.328 | 0.582 | 0.86 | 1.1 | 1.31 |
 | `mse` | 0.066 | 0.21 | 0.44 | 0.679 | 1.1 |
 | `rmse` | 0.257 | 0.458 | 0.663 | 0.824 | 1.05 |
-| `nrmse` | 0.253 | 0.456 | 0.67 | 0.832 | 1.05 |
+| `vrmse` | 0.253 | 0.455 | 0.671 | 0.832 | 1.05 |
+
+**Displacement, vorticity, `translate_y`** (strength: distance).
+
+| metric | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| `tail_index` | — | — | — | — | — |
+| `mae` | 0.333 | 0.603 | 0.93 | 1.25 | 1.43 |
+| `mse` | 0.0858 | 0.283 | 0.628 | 0.849 | 1.17 |
+| `rmse` | 0.293 | 0.532 | 0.793 | 0.922 | 1.08 |
+| `vrmse` | 0.268 | 0.495 | 0.793 | 0.927 | 1.08 |
 
 Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 the anchor (by default the field's own mean); a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
 
@@ -663,109 +748,311 @@ There is no damage scale to place beside the others; see the trap tests above.
 
 ### The curve behind the number
 
-<!-- GENERATED results_companion: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793657627`, do not edit -->
+<!-- GENERATED results_companion: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+
+**Curve `tail_index`.**
 
 **density, rank correlation, at each coordinate.**
 
 | degradation | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | dominance |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `additive_noise` | 0.8 | 0.8 | 0.8 | 0.8 | 0.8 | 0.8 | 1 | 1 | 1 | 0.00621 |
+| `band_attenuate` | 0.4 | 0.4 | 0.8 | 1 | 1 | 1 | 1 | 0.8 | 0.4 | 0.0435 |
+| `bias` | — | — | — | — | — | — | — | — | — | — |
 | `box_blur` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.665 |
 | `coarsen` | 0.738 | 0.4 | 0.4 | 0.2 | 1 | 1 | 1 | — | — | — |
 | `coarsen_bandlimited` | 0.8 | 0.4 | 0.4 | 0.4 | 1 | 0.8 | 0.4 | 0.8 | 0.2 | 0.0124 |
+| `disk_blur` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.776 |
+| `epanechnikov_blur` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.944 |
+| `gain` | — | — | — | — | — | — | — | — | — | — |
 | `gaussian_blur` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.683 |
 | `highpass_butterworth` | 0.6 | 0.8 | 0.8 | 1 | 1 | 1 | 1 | 0.8 | -0.6 | 0 |
 | `highpass_ideal` | 0.5 | 1 | 1 | 1 | 1 | 1 | 1 | 0.5 | 1 | 0.0311 |
 | `lowpass_butterworth` | 0.8 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.0435 |
 | `lowpass_ideal` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.994 |
 | `median_blur` | 1 | 1 | 1 | 1 | 0.5 | 1 | 1 | 1 | 1 | 0.0311 |
+| `multiplicative_noise` | 0.3 | 0.5 | 0.4 | 0.5 | 0.1 | 0.5 | 0.6 | 0.6 | 0.6 | 0 |
+| `subsample` | 0.949 | 0.8 | -0.2 | 1 | 1 | 1 | 1 | — | — | — |
 | `translate_subpixel` | 0.0857 | -0.0286 | -0.0286 | 0.0286 | 0.0857 | -0.058 | -0.0286 | -0.0857 | 0.0857 | 0 |
 | `translate_x` | — | — | — | — | — | — | — | — | — | — |
+| `translate_y` | — | — | — | — | — | — | — | — | — | — |
 
 **density, change from clean at the harshest strength, at each coordinate.**
 
 | degradation | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 |
 |---|---|---|---|---|---|---|---|---|---|
 | `additive_noise` | 5.69 | 4.65 | 3.18 | 1.68 | 0.347 | -0.395 | -0.643 | -0.625 | -0.511 |
+| `band_attenuate` | -0.054 | -0.0788 | -0.129 | -0.175 | -0.189 | -0.119 | 0.0332 | 0.00342 | 0.000613 |
+| `bias` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 7.67e-16 | 0 |
 | `box_blur` | -0.931 | -0.916 | -0.873 | -0.828 | -0.843 | -0.834 | -0.76 | -0.49 | -0.203 |
 | `coarsen` | -1 | -1 | -0.359 | 1.1 | 8.71 | 2.69 | 1.65 | — | — |
 | `coarsen_bandlimited` | -0.637 | -0.449 | -0.308 | -0.205 | -0.368 | -0.395 | -0.204 | 0.0505 | -0.000206 |
+| `disk_blur` | -0.93 | -0.914 | -0.877 | -0.848 | -0.851 | -0.842 | -0.786 | -0.555 | -0.262 |
+| `epanechnikov_blur` | -0.927 | -0.9 | -0.85 | -0.793 | -0.813 | -0.807 | -0.743 | -0.474 | -0.182 |
+| `gain` | 0 | 1.17e-13 | 6.94e-14 | 1.75e-14 | -6.31e-15 | -2.61e-15 | 1.24e-14 | 6.77e-16 | -8.84e-15 |
 | `gaussian_blur` | -0.952 | -0.933 | -0.924 | -0.9 | -0.914 | -0.918 | -0.89 | -0.761 | -0.468 |
 | `highpass_butterworth` | 0.335 | 0.316 | 0.273 | 0.267 | 0.271 | 0.474 | 0.975 | 0.382 | 0.158 |
 | `highpass_ideal` | 0.325 | 0.296 | 0.249 | 0.238 | 0.262 | 0.454 | 0.762 | 0.0988 | -0.321 |
 | `lowpass_butterworth` | -0.974 | -0.971 | -0.965 | -0.959 | -0.955 | -0.951 | -0.932 | -0.844 | -0.606 |
 | `lowpass_ideal` | -1 | -1 | -1 | -1 | -1 | -1 | -0.998 | -0.985 | -0.881 |
 | `median_blur` | 2.61 | 1.95 | 1.48 | 0.807 | 0.198 | -0.189 | -0.328 | -0.217 | -0.0688 |
+| `multiplicative_noise` | 5.36 | 4.44 | 3.03 | 1.72 | 0.329 | -0.393 | -0.644 | -0.625 | -0.513 |
+| `subsample` | -1 | -1 | 0.156 | 6.56 | 5.16 | 2.73 | 1.4 | — | — |
 | `translate_subpixel` | 1.09e-12 | 8.95e-13 | -7.89e-13 | -1.77e-13 | -3.28e-13 | 2.68e-13 | 5.03e-15 | 1.5e-14 | -7.26e-15 |
 | `translate_x` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| `translate_y` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 **velocity, rank correlation, at each coordinate.**
 
 | degradation | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | dominance |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `additive_noise` | 0.8 | 0.8 | 0.8 | 0.8 | 0.8 | 0.8 | 1 | 1 | 1 | 0 |
-| `box_blur` | 0.8 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.435 |
-| `coarsen` | 0.738 | 0.8 | 0.4 | 1 | 0.8 | 1 | 1 | — | — | — |
-| `coarsen_bandlimited` | 0.8 | 0.8 | 0.8 | 0.8 | 0.2 | 0.6 | 0.4 | 0.4 | 1 | 0 |
-| `gaussian_blur` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.795 |
-| `highpass_butterworth` | 1 | 1 | 1 | 1 | 1 | 0.5 | 1 | 1 | 1 | 0.0621 |
-| `highpass_ideal` | 1 | 1 | 1 | 1 | 1 | -1 | 1 | 1 | 1 | 0.106 |
-| `lowpass_butterworth` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.5 | 0.193 |
+| `additive_noise` | 0.8 | 0.8 | 0.8 | 0.8 | 0.4 | 0.8 | 0.8 | 0.8 | 0.8 | 0.00621 |
+| `band_attenuate` | 0.2 | 0.2 | 0.2 | 0.4 | 0.2 | 0.2 | 1 | 0.4 | 1 | 0 |
+| `bias` | — | — | — | — | — | — | — | — | — | — |
+| `box_blur` | 0.8 | 0.8 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.248 |
+| `coarsen` | 0.738 | 0.8 | 0.4 | 0.8 | 1 | 1 | 1 | — | — | — |
+| `coarsen_bandlimited` | 0.8 | 0.8 | 0.8 | 0.8 | 0.4 | 0.4 | 0.4 | 0.2 | 1 | 0.00621 |
+| `disk_blur` | 0.5 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.217 |
+| `epanechnikov_blur` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.665 |
+| `gain` | — | — | — | — | — | — | — | — | — | — |
+| `gaussian_blur` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.261 |
+| `highpass_butterworth` | 0.5 | 0.5 | 0.5 | 0.5 | 0.5 | -0.5 | 0.5 | 1 | 1 | 0.0186 |
+| `highpass_ideal` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0.0683 |
+| `lowpass_butterworth` | 0.5 | 1 | 0.5 | 1 | 1 | 0.5 | 0.5 | 0.5 | 0.5 | 0.0186 |
 | `lowpass_ideal` | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-| `median_blur` | 1 | 1 | 1 | 1 | 0.5 | 0.5 | 1 | 1 | 1 | 0.0248 |
-| `translate_subpixel` | -0.0286 | -0.0857 | -0.143 | -0.0286 | 0.0857 | 0.0286 | -0.0857 | -0.0857 | 0.058 | 0 |
+| `median_blur` | 0.5 | 0.5 | 0.5 | 0.5 | 0.5 | -0.5 | 1 | 1 | 1 | 0.0311 |
+| `multiplicative_noise` | 0.9 | 0.9 | 0.9 | 0.9 | 0.9 | 0.8 | 0.8 | 0.9 | 0.9 | 0.0124 |
+| `subsample` | 0.738 | 0.4 | -0.2 | 0.8 | 1 | 1 | 1 | — | — | — |
+| `translate_subpixel` | -0.029 | -0.0286 | -0.143 | -0.0857 | 0.0286 | -0.0857 | 0.0857 | -0.0857 | 0.058 | 0 |
 | `translate_x` | — | — | — | — | — | — | — | — | — | — |
+| `translate_y` | — | — | — | — | — | — | — | — | — | — |
 
 **velocity, change from clean at the harshest strength, at each coordinate.**
 
 | degradation | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 |
 |---|---|---|---|---|---|---|---|---|---|
-| `additive_noise` | 7.77 | 4.56 | 2.69 | 1.44 | 0.73 | -0.16 | -0.57 | -0.52 | -0.409 |
-| `box_blur` | -0.892 | -0.888 | -0.869 | -0.839 | -0.801 | -0.795 | -0.831 | -0.641 | -0.413 |
-| `coarsen` | -1 | -1 | -0.299 | 8.21 | 5.64 | 2.36 | 1.06 | — | — |
-| `coarsen_bandlimited` | -0.528 | -0.456 | -0.405 | -0.29 | 0.0551 | 0.102 | 0.0628 | 0.0862 | -0.189 |
-| `gaussian_blur` | -0.953 | -0.94 | -0.918 | -0.897 | -0.882 | -0.886 | -0.878 | -0.744 | -0.658 |
-| `highpass_butterworth` | 0.32 | 0.403 | 0.447 | 0.504 | 0.415 | 0.0768 | -0.135 | 0.219 | 0.572 |
-| `highpass_ideal` | 0.31 | 0.417 | 0.456 | 0.454 | 0.382 | 0.0575 | -0.154 | 0.198 | 0.389 |
-| `lowpass_butterworth` | -0.985 | -0.981 | -0.976 | -0.968 | -0.962 | -0.957 | -0.952 | -0.894 | -0.695 |
-| `lowpass_ideal` | -1 | -1 | -1 | -1 | -1 | -0.999 | -0.997 | -0.981 | -0.853 |
-| `median_blur` | 2.75 | 1.68 | 1.05 | 0.671 | 0.603 | 0.171 | -0.045 | -0.0896 | -0.192 |
-| `translate_subpixel` | 2.87e-14 | 0 | 0 | -4.97e-15 | 0 | 0 | -4.18e-16 | 0 | 2.94e-16 |
+| `additive_noise` | 5.44 | 3.25 | 1.65 | 0.836 | 0.39 | -0.165 | -0.411 | -0.465 | -0.493 |
+| `band_attenuate` | 0.104 | -0.0906 | -0.2 | -0.217 | 0.0175 | 0.0968 | 0.172 | -0.0164 | -0.127 |
+| `bias` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| `box_blur` | -0.865 | -0.865 | -0.854 | -0.834 | -0.78 | -0.705 | -0.626 | -0.49 | -0.348 |
+| `coarsen` | -1 | -1 | -0.321 | 1.23 | 2.87 | 2.47 | 2.63 | — | — |
+| `coarsen_bandlimited` | -0.472 | -0.451 | -0.455 | -0.464 | -0.283 | -0.254 | 0.0327 | 0.117 | -0.246 |
+| `disk_blur` | -0.861 | -0.869 | -0.847 | -0.84 | -0.806 | -0.748 | -0.673 | -0.568 | -0.348 |
+| `epanechnikov_blur` | -0.906 | -0.901 | -0.878 | -0.869 | -0.828 | -0.771 | -0.68 | -0.56 | -0.369 |
+| `gain` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | -3.15e-15 | -1.69e-15 |
+| `gaussian_blur` | -0.932 | -0.925 | -0.898 | -0.883 | -0.868 | -0.86 | -0.793 | -0.668 | -0.581 |
+| `highpass_butterworth` | 0.11 | 0.155 | 0.166 | 0.106 | 0.0338 | -0.00156 | 0.0837 | 0.258 | 0.281 |
+| `highpass_ideal` | 0.201 | 0.205 | 0.169 | 0.136 | 0.0463 | 0.0179 | 0.0734 | 0.227 | 0.12 |
+| `lowpass_butterworth` | -0.973 | -0.969 | -0.958 | -0.951 | -0.94 | -0.926 | -0.892 | -0.79 | -0.6 |
+| `lowpass_ideal` | -1 | -1 | -1 | -1 | -1 | -0.999 | -0.996 | -0.979 | -0.874 |
+| `median_blur` | 2.98 | 1.53 | 0.97 | 0.261 | 0.187 | 0.0119 | -0.212 | -0.157 | -0.218 |
+| `multiplicative_noise` | 9.91 | 5.7 | 3.35 | 1.91 | 1.17 | 0.329 | -0.0802 | -0.232 | -0.294 |
+| `subsample` | -1 | -1 | 0.307 | 1.81 | 3.82 | 2.71 | 3.14 | — | — |
+| `translate_subpixel` | 5.9e-14 | 0 | 0 | -8.86e-15 | 0 | 0 | 0 | 2.21e-15 | -1.11e-15 |
 | `translate_x` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| `translate_y` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 **vorticity, rank correlation, at each coordinate.**
 
 | degradation | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | dominance |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `additive_noise` | 0.8 | 0.8 | 0.8 | 0.8 | 0.8 | 0.8 | 0.8 | 1 | 1 | 0.00621 |
+| `band_attenuate` | 0.6 | 0.8 | 0.8 | 0.8 | 0.8 | 0.8 | 0.8 | 0.8 | 1 | 0.0124 |
+| `bias` | — | — | — | — | — | — | — | — | — | — |
 | `box_blur` | 0.8 | 0.8 | 0.8 | 0.8 | 0.8 | 0.4 | 0.8 | 0.8 | 0.8 | 0.087 |
 | `coarsen` | 0.949 | 0.8 | 0.4 | 0.6 | 1 | 1 | 1 | — | — | — |
 | `coarsen_bandlimited` | 0.8 | 0.8 | 0.8 | 0.8 | 0.4 | 0.4 | 0.8 | 0.2 | 1 | 0.0311 |
+| `disk_blur` | 0.5 | 1 | 1 | 1 | 1 | 0.5 | 1 | 0.5 | 0.5 | 0.0373 |
+| `epanechnikov_blur` | 1 | 1 | 1 | 1 | 1 | 0.5 | 1 | 0.5 | 0.5 | 0.0435 |
+| `gain` | — | — | — | — | — | — | — | — | — | — |
 | `gaussian_blur` | 1 | 1 | 1 | 1 | 0.8 | 0.2 | 0.8 | 0.4 | 0.8 | 0.00621 |
 | `highpass_butterworth` | 0.8 | 0.8 | 0.6 | 0.4 | 0.4 | 0.4 | 0.4 | 0.4 | 1 | 0 |
 | `highpass_ideal` | 0.8 | 0.8 | 0.6 | 0.4 | 0.4 | -0.2 | 0.2 | 0.8 | 1 | 0.00621 |
 | `lowpass_butterworth` | 1 | 1 | 1 | 1 | 1 | 0.8 | 0.2 | 0.8 | 0.4 | 0 |
 | `lowpass_ideal` | 1 | 1 | 1 | 1 | 1 | 0.8 | 0.2 | 0.8 | 0.2 | 0 |
 | `median_blur` | 0.5 | 0.5 | 0.866 | 1 | 1 | 1 | 1 | 1 | 1 | 0.0994 |
+| `multiplicative_noise` | 0.9 | 0.9 | 0.9 | 0.9 | 0.9 | 0.7 | 0.9 | 0.6 | 0.7 | 0.00621 |
+| `subsample` | 0.949 | 0.8 | 0.4 | 0.8 | 1 | 1 | 1 | — | — | — |
 | `translate_subpixel` | -0.058 | -0.029 | 0.0304 | 0.0304 | -0.203 | -0.0857 | 0.0286 | 0.029 | 0.029 | 0 |
 | `translate_x` | — | — | — | — | — | — | — | — | — | — |
+| `translate_y` | — | — | — | — | — | — | — | — | — | — |
 
 **vorticity, change from clean at the harshest strength, at each coordinate.**
 
 | degradation | 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 |
 |---|---|---|---|---|---|---|---|---|---|
 | `additive_noise` | 2 | 1.41 | 0.769 | 0.189 | -0.154 | -0.22 | -0.301 | -0.492 | -0.656 |
+| `band_attenuate` | 0.865 | 0.679 | 0.514 | 0.234 | 0.433 | 0.385 | 0.202 | -0.225 | -0.481 |
+| `bias` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | `box_blur` | -0.77 | -0.737 | -0.645 | -0.594 | -0.425 | 0.325 | 1.01 | 0.307 | -0.13 |
 | `coarsen` | -1 | -1 | -0.452 | 0.805 | 4.86 | 2.81 | 4.21 | — | — |
 | `coarsen_bandlimited` | -0.78 | -0.684 | -0.555 | -0.549 | -0.444 | 0.00184 | 1.31 | 0.276 | -0.473 |
+| `disk_blur` | -0.771 | -0.73 | -0.664 | -0.644 | -0.443 | 0.254 | 1.4 | 0.154 | -0.0396 |
+| `epanechnikov_blur` | -0.826 | -0.794 | -0.722 | -0.658 | -0.39 | 0.542 | 1.2 | 0.0144 | -0.148 |
+| `gain` | 0 | 0 | 0 | 0 | 0 | -2.96e-15 | 3.67e-15 | -1.62e-15 | -4.3e-16 |
 | `gaussian_blur` | -0.892 | -0.857 | -0.809 | -0.75 | -0.558 | 0.105 | 1.49 | 0.518 | -0.346 |
 | `highpass_butterworth` | 0.76 | 0.636 | 0.453 | 0.168 | 0.0296 | 0.0202 | 0.107 | -0.065 | -0.173 |
 | `highpass_ideal` | 0.752 | 0.664 | 0.447 | 0.179 | 0.0629 | -0.00802 | 0.0318 | -0.129 | -0.332 |
 | `lowpass_butterworth` | -0.952 | -0.937 | -0.907 | -0.885 | -0.835 | -0.595 | -0.12 | 0.455 | -0.305 |
 | `lowpass_ideal` | -0.952 | -0.933 | -0.92 | -0.904 | -0.872 | -0.719 | -0.393 | 0.0245 | -0.364 |
 | `median_blur` | 0.305 | 0.387 | 0.479 | 0.447 | 0.67 | 0.694 | 0.607 | 0.387 | 0.556 |
+| `multiplicative_noise` | 4.14 | 3.01 | 2.2 | 1.24 | 1.03 | 1.71 | 0.918 | 0.491 | 0.255 |
+| `subsample` | -1 | -1 | -0.503 | 2.44 | 1.88 | 2.55 | 6.44 | — | — |
 | `translate_subpixel` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | `translate_x` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| `translate_y` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+**Curve `tail_index.by_order`.**
+
+**density, rank correlation, at each coordinate.**
+
+| degradation | 10 | dominance |
+|---|---|---|
+| `additive_noise` | 0.8 | 0.379 |
+| `band_attenuate` | 0.4 | 0.509 |
+| `bias` | — | — |
+| `box_blur` | 1 | 0.963 |
+| `coarsen` | 0.4 | 0.267 |
+| `coarsen_bandlimited` | 0.4 | 0.335 |
+| `disk_blur` | 1 | 0.963 |
+| `epanechnikov_blur` | 1 | 1 |
+| `gain` | — | — |
+| `gaussian_blur` | 1 | 0.957 |
+| `highpass_butterworth` | 0.8 | 0.478 |
+| `highpass_ideal` | 1 | 0.671 |
+| `lowpass_butterworth` | 1 | 0.54 |
+| `lowpass_ideal` | 1 | 1 |
+| `median_blur` | 1 | 0.739 |
+| `multiplicative_noise` | 0.5 | 0.429 |
+| `subsample` | 0.8 | 0.534 |
+| `translate_subpixel` | -0.0286 | 0.466 |
+| `translate_x` | — | — |
+| `translate_y` | — | — |
+
+**density, change from clean at the harshest strength, at each coordinate.**
+
+| degradation | 10 |
+|---|---|
+| `additive_noise` | 4.65 |
+| `band_attenuate` | -0.0788 |
+| `bias` | 0 |
+| `box_blur` | -0.916 |
+| `coarsen` | -1 |
+| `coarsen_bandlimited` | -0.449 |
+| `disk_blur` | -0.914 |
+| `epanechnikov_blur` | -0.9 |
+| `gain` | 1.17e-13 |
+| `gaussian_blur` | -0.933 |
+| `highpass_butterworth` | 0.316 |
+| `highpass_ideal` | 0.296 |
+| `lowpass_butterworth` | -0.971 |
+| `lowpass_ideal` | -1 |
+| `median_blur` | 1.95 |
+| `multiplicative_noise` | 4.44 |
+| `subsample` | -1 |
+| `translate_subpixel` | 8.95e-13 |
+| `translate_x` | 0 |
+| `translate_y` | 0 |
+
+**velocity, rank correlation, at each coordinate.**
+
+| degradation | 10 | dominance |
+|---|---|---|
+| `additive_noise` | 0.8 | 0.466 |
+| `band_attenuate` | 0.2 | 0.441 |
+| `bias` | — | — |
+| `box_blur` | 0.8 | 0.602 |
+| `coarsen` | 0.8 | 0.453 |
+| `coarsen_bandlimited` | 0.8 | 0.311 |
+| `disk_blur` | 1 | 0.646 |
+| `epanechnikov_blur` | 1 | 0.919 |
+| `gain` | — | — |
+| `gaussian_blur` | 1 | 0.814 |
+| `highpass_butterworth` | 0.5 | 0.596 |
+| `highpass_ideal` | 1 | 0.658 |
+| `lowpass_butterworth` | 1 | 0.571 |
+| `lowpass_ideal` | 1 | 1 |
+| `median_blur` | 0.5 | 0.516 |
+| `multiplicative_noise` | 0.9 | 0.484 |
+| `subsample` | 0.4 | 0.36 |
+| `translate_subpixel` | -0.0286 | 0.466 |
+| `translate_x` | — | — |
+| `translate_y` | — | — |
+
+**velocity, change from clean at the harshest strength, at each coordinate.**
+
+| degradation | 10 |
+|---|---|
+| `additive_noise` | 3.25 |
+| `band_attenuate` | -0.0906 |
+| `bias` | 0 |
+| `box_blur` | -0.865 |
+| `coarsen` | -1 |
+| `coarsen_bandlimited` | -0.451 |
+| `disk_blur` | -0.869 |
+| `epanechnikov_blur` | -0.901 |
+| `gain` | 0 |
+| `gaussian_blur` | -0.925 |
+| `highpass_butterworth` | 0.155 |
+| `highpass_ideal` | 0.205 |
+| `lowpass_butterworth` | -0.969 |
+| `lowpass_ideal` | -1 |
+| `median_blur` | 1.53 |
+| `multiplicative_noise` | 5.7 |
+| `subsample` | -1 |
+| `translate_subpixel` | 0 |
+| `translate_x` | 0 |
+| `translate_y` | 0 |
+
+**vorticity, rank correlation, at each coordinate.**
+
+| degradation | 10 | dominance |
+|---|---|---|
+| `additive_noise` | 0.8 | 0.578 |
+| `band_attenuate` | 0.8 | 0.578 |
+| `bias` | — | — |
+| `box_blur` | 0.8 | 0.596 |
+| `coarsen` | 0.8 | 0.491 |
+| `coarsen_bandlimited` | 0.8 | 0.497 |
+| `disk_blur` | 1 | 0.739 |
+| `epanechnikov_blur` | 1 | 0.888 |
+| `gain` | — | — |
+| `gaussian_blur` | 1 | 0.882 |
+| `highpass_butterworth` | 0.8 | 0.553 |
+| `highpass_ideal` | 0.8 | 0.565 |
+| `lowpass_butterworth` | 1 | 0.894 |
+| `lowpass_ideal` | 1 | 0.963 |
+| `median_blur` | 0.5 | 0.596 |
+| `multiplicative_noise` | 0.9 | 0.522 |
+| `subsample` | 0.8 | 0.366 |
+| `translate_subpixel` | -0.029 | 0.491 |
+| `translate_x` | — | — |
+| `translate_y` | — | — |
+
+**vorticity, change from clean at the harshest strength, at each coordinate.**
+
+| degradation | 10 |
+|---|---|
+| `additive_noise` | 1.41 |
+| `band_attenuate` | 0.679 |
+| `bias` | 0 |
+| `box_blur` | -0.737 |
+| `coarsen` | -1 |
+| `coarsen_bandlimited` | -0.684 |
+| `disk_blur` | -0.73 |
+| `epanechnikov_blur` | -0.794 |
+| `gain` | 0 |
+| `gaussian_blur` | -0.857 |
+| `highpass_butterworth` | 0.636 |
+| `highpass_ideal` | 0.664 |
+| `lowpass_butterworth` | -0.937 |
+| `lowpass_ideal` | -0.933 |
+| `median_blur` | 0.387 |
+| `multiplicative_noise` | 3.01 |
+| `subsample` | -1 |
+| `translate_subpixel` | 0 |
+| `translate_x` | 0 |
+| `translate_y` | 0 |
 
 Each coordinate of the curve read as a metric of its own, with the same statistics as the tables above and no resampling interval. Neighbouring coordinates are strongly correlated, so a row localises the evidence and does not multiply it. **Dominance** is the fraction of frames in which, for the weakest pair of neighbouring strengths, the harsher strength's curve has moved at least as far as the milder one's at every coordinate, each in its own direction: near 1, any summary that grows with every coordinate's departure orders those strengths the same way, so the choice of summary cannot change the trend. None of these numbers enters the tables above.
 
@@ -781,6 +1068,301 @@ Gaussian and box blurs and both low-pass filters lower the orders up to 0.5 and 
 of the orders 0.6 to 0.8. Dominance is near zero for most degradations
 on vorticity, so there the registered number alone does not stand for the curve.
 
+
+### On `forecast_re5e4`
+
+<!-- GENERATED results_on_forecast_re5e4: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+
+**Real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded.**
+
+Measured on `forecast_re5e4`, frames 0 to 59 (60 frames of real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded), on the 64 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793811840`.
+
+[mean_field](../../degradations/mean_field/card.md)
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-density__along-lead.svg)
+
+tail_index on density against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Dashed lighter lines are the target's own value. Each point is one prediction step of one forecast.
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-velocity__along-lead.svg)
+
+tail_index on velocity against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Dashed lighter lines are the target's own value. Each point is one prediction step of one forecast.
+
+![the metric against time: the clean field's own history in black and each strength of the operator applied at each time, or a real forecast's error against its lead time, one panel per start and one line per run](_generated/response_along_time__dataset-forecast_re5e4__field-vorticity__along-lead.svg)
+
+tail_index on vorticity against lead time, the physical time since the forecast started, one panel per start and one line per run, darker the finer the run's grid. Dashed lighter lines are the target's own value. Each point is one prediction step of one forecast.
+
+**density, tail_index on the prediction, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.0622 | 0.0478 | 0.0317 | 0.23 | 0.222 | 0.245 |
+| 0.2255 | 0.153 | 0.123 | 0.0577 | 0.204 | 0.201 | 0.211 |
+| 0.3383 | 0.117 | 0.107 | 0.0861 | 0.197 | 0.232 | 0.229 |
+| 0.4511 | 0.091 | 0.131 | 0.166 | 0.18 | 0.222 | 0.24 |
+| 0.5638 | 0.124 | 0.175 | 0.326 | 0.175 | 0.204 | 0.246 |
+| 0.6766 | 0.0892 | 0.15 | 0.239 | 0.151 | 0.202 | 0.216 |
+| 0.7893 | 0.105 | 0.117 | 0.248 | 0.146 | 0.176 | 0.247 |
+| 0.9021 | 0.0865 | 0.105 | 0.242 | 0.137 | 0.191 | 0.219 |
+| 1.015 | 0.0654 | 0.0952 | 0.264 | 0.129 | 0.179 | 0.236 |
+| 1.128 | 0.0732 | 0.0899 | 0.229 | 0.132 | 0.178 | 0.218 |
+
+**density, tail_index on the target, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.0246 | 0.0275 | 0.0317 | 0.245 | 0.245 | 0.245 |
+| 0.2255 | 0.0571 | 0.0575 | 0.0575 | 0.212 | 0.211 | 0.211 |
+| 0.3383 | 0.086 | 0.0857 | 0.0853 | 0.228 | 0.229 | 0.229 |
+| 0.4511 | 0.166 | 0.165 | 0.165 | 0.24 | 0.24 | 0.24 |
+| 0.5638 | 0.33 | 0.33 | 0.331 | 0.245 | 0.245 | 0.245 |
+| 0.6766 | 0.238 | 0.238 | 0.238 | 0.217 | 0.217 | 0.217 |
+| 0.7893 | 0.252 | 0.252 | 0.252 | 0.245 | 0.246 | 0.246 |
+| 0.9021 | 0.243 | 0.243 | 0.243 | 0.22 | 0.22 | 0.22 |
+| 1.015 | 0.264 | 0.263 | 0.263 | 0.236 | 0.236 | 0.235 |
+| 1.128 | 0.242 | 0.243 | 0.243 | 0.217 | 0.217 | 0.217 |
+
+**density, tail_index damage, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | — | — | — | — | — | — |
+| 0.2255 | — | — | — | — | — | — |
+| 0.3383 | — | — | — | — | — | — |
+| 0.4511 | — | — | — | — | — | — |
+| 0.5638 | — | — | — | — | — | — |
+| 0.6766 | — | — | — | — | — | — |
+| 0.7893 | — | — | — | — | — | — |
+| 0.9021 | — | — | — | — | — | — |
+| 1.015 | — | — | — | — | — | — |
+| 1.128 | — | — | — | — | — | — |
+
+**velocity, tail_index on the prediction, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.147 | 0.188 | 0.2 | 0.131 | 0.175 | 0.175 |
+| 0.2255 | 0.11 | 0.156 | 0.204 | 0.122 | 0.13 | 0.15 |
+| 0.3383 | 0.101 | 0.167 | 0.223 | 0.112 | 0.162 | 0.17 |
+| 0.4511 | 0.101 | 0.236 | 0.338 | 0.0974 | 0.17 | 0.249 |
+| 0.5638 | 0.102 | 0.0802 | 0.219 | 0.107 | 0.157 | 0.202 |
+| 0.6766 | 0.0789 | 0.134 | 0.134 | 0.098 | 0.124 | 0.164 |
+| 0.7893 | 0.0533 | 0.0921 | 0.153 | 0.0971 | 0.122 | 0.141 |
+| 0.9021 | 0.0674 | 0.0645 | 0.18 | 0.101 | 0.133 | 0.175 |
+| 1.015 | 0.0526 | 0.0739 | 0.221 | 0.117 | 0.118 | 0.198 |
+| 1.128 | 0.0537 | 0.111 | 0.185 | 0.106 | 0.124 | 0.18 |
+
+**velocity, tail_index on the target, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.2 | 0.2 | 0.2 | 0.177 | 0.176 | 0.175 |
+| 0.2255 | 0.204 | 0.205 | 0.205 | 0.15 | 0.151 | 0.15 |
+| 0.3383 | 0.223 | 0.224 | 0.225 | 0.174 | 0.171 | 0.17 |
+| 0.4511 | 0.337 | 0.337 | 0.337 | 0.245 | 0.247 | 0.248 |
+| 0.5638 | 0.226 | 0.225 | 0.225 | 0.201 | 0.202 | 0.203 |
+| 0.6766 | 0.139 | 0.139 | 0.14 | 0.163 | 0.164 | 0.164 |
+| 0.7893 | 0.142 | 0.142 | 0.143 | 0.141 | 0.142 | 0.142 |
+| 0.9021 | 0.102 | 0.101 | 0.101 | 0.175 | 0.175 | 0.175 |
+| 1.015 | 0.126 | 0.126 | 0.126 | 0.199 | 0.199 | 0.199 |
+| 1.128 | 0.184 | 0.185 | 0.186 | 0.185 | 0.185 | 0.184 |
+
+**velocity, tail_index damage, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | — | — | — | — | — | — |
+| 0.2255 | — | — | — | — | — | — |
+| 0.3383 | — | — | — | — | — | — |
+| 0.4511 | — | — | — | — | — | — |
+| 0.5638 | — | — | — | — | — | — |
+| 0.6766 | — | — | — | — | — | — |
+| 0.7893 | — | — | — | — | — | — |
+| 0.9021 | — | — | — | — | — | — |
+| 1.015 | — | — | — | — | — | — |
+| 1.128 | — | — | — | — | — | — |
+
+**vorticity, tail_index on the prediction, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.0442 | 0.045 | 0.0528 | 0.334 | 0.238 | 0.144 |
+| 0.2255 | 0.067 | 0.0412 | 0.0507 | 0.324 | 0.354 | 0.22 |
+| 0.3383 | 0.0602 | 0.0726 | 0.087 | 0.325 | 0.415 | 0.233 |
+| 0.4511 | 0.061 | 0.118 | 0.149 | 0.301 | 0.434 | 0.301 |
+| 0.5638 | 0.0834 | 0.228 | 0.275 | 0.261 | 0.361 | 0.295 |
+| 0.6766 | 0.0966 | 0.205 | 0.151 | 0.254 | 0.33 | 0.318 |
+| 0.7893 | 0.121 | 0.139 | 0.142 | 0.261 | 0.329 | 0.366 |
+| 0.9021 | 0.116 | 0.13 | 0.152 | 0.214 | 0.325 | 0.398 |
+| 1.015 | 0.113 | 0.0933 | 0.18 | 0.212 | 0.311 | 0.369 |
+| 1.128 | 0.0918 | 0.0806 | 0.179 | 0.205 | 0.281 | 0.395 |
+
+**vorticity, tail_index on the target, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | 0.0525 | 0.0527 | 0.0528 | 0.142 | 0.143 | 0.144 |
+| 0.2255 | 0.0506 | 0.0504 | 0.0503 | 0.222 | 0.22 | 0.22 |
+| 0.3383 | 0.0894 | 0.0888 | 0.0887 | 0.237 | 0.233 | 0.231 |
+| 0.4511 | 0.151 | 0.151 | 0.152 | 0.294 | 0.295 | 0.297 |
+| 0.5638 | 0.305 | 0.298 | 0.295 | 0.295 | 0.293 | 0.293 |
+| 0.6766 | 0.188 | 0.186 | 0.186 | 0.321 | 0.32 | 0.322 |
+| 0.7893 | 0.0879 | 0.0878 | 0.0873 | 0.363 | 0.362 | 0.363 |
+| 0.9021 | 0.0721 | 0.0713 | 0.0714 | 0.396 | 0.396 | 0.397 |
+| 1.015 | 0.0996 | 0.101 | 0.101 | 0.375 | 0.374 | 0.373 |
+| 1.128 | 0.0932 | 0.093 | 0.0931 | 0.396 | 0.396 | 0.395 |
+
+**vorticity, tail_index damage, at each lead time.**
+
+| lead time | 64², start 0 | 128², start 0 | 256², start 0 | 64², start 1.13 | 128², start 1.13 | 256², start 1.13 |
+|---|---|---|---|---|---|---|
+| 0.1128 | — | — | — | — | — | — |
+| 0.2255 | — | — | — | — | — | — |
+| 0.3383 | — | — | — | — | — | — |
+| 0.4511 | — | — | — | — | — | — |
+| 0.5638 | — | — | — | — | — | — |
+| 0.6766 | — | — | — | — | — | — |
+| 0.7893 | — | — | — | — | — | — |
+| 0.9021 | — | — | — | — | — | — |
+| 1.015 | — | — | — | — | — | — |
+| 1.128 | — | — | — | — | — | — |
+
+Every prediction of every forecast, nothing pooled: a cell is one prediction step of one forecast, a row the lead time (the physical time since the forecast started) and a column the forecast, named by its run's native grid and its starting time (`64², start 0` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-0`; `128², start 0` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-0`; `256², start 0` is `F-906861_64/forecast_t0-0`; `64², start 1.13` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250`; `128², start 1.13` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-2500`; `256², start 1.13` is `F-906861_64/forecast_t0-5000`). **Damage** is the prediction's departure from the target as a fraction of the anchor's in the same frame, by default the target's own spatial mean, so each step is scaled by its own target. A dash means no value there.
+
+<!-- END GENERATED results_on_forecast_re5e4 -->
+
+### On `kinet_re1e6`
+
+<!-- GENERATED results_on_kinet_re1e6: written by `python -m fmeval.cards evidence tail_index --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
+
+**Developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition.**
+
+Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at Re = 1e6, twenty times the Reynolds number of kinet_re5e4, from the same initial condition), on the 128 analysis grid, seed 20260807, at commit `adbdc88e4950`. Run `comparison_1793829231`.
+
+[additive_noise](../../degradations/additive_noise/card.md) ·
+[band_attenuate](../../degradations/band_attenuate/card.md) ·
+[bias](../../degradations/bias/card.md) ·
+[box_blur](../../degradations/box_blur/card.md) ·
+[coarsen](../../degradations/coarsen/card.md) ·
+[coarsen_bandlimited](../../degradations/coarsen_bandlimited/card.md) ·
+[disk_blur](../../degradations/disk_blur/card.md) ·
+[epanechnikov_blur](../../degradations/epanechnikov_blur/card.md) ·
+[gain](../../degradations/gain/card.md) ·
+[gaussian_blur](../../degradations/gaussian_blur/card.md) ·
+[gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
+[highpass_butterworth](../../degradations/highpass_butterworth/card.md) ·
+[highpass_ideal](../../degradations/highpass_ideal/card.md) ·
+[lowpass_butterworth](../../degradations/lowpass_butterworth/card.md) ·
+[lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
+[mean_field](../../degradations/mean_field/card.md) ·
+[median_blur](../../degradations/median_blur/card.md) ·
+[multiplicative_noise](../../degradations/multiplicative_noise/card.md) ·
+[subsample](../../degradations/subsample/card.md) ·
+[translate_subpixel](../../degradations/translate_subpixel/card.md) ·
+[translate_x](../../degradations/translate/card.md) ·
+[translate_y](../../degradations/translate/card.md) ·
+[uncorrelated](../../degradations/random_large_translation/card.md)
+
+**Smoothing.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `box_blur` | density | 4 | 1 | 1 | 0.823 |
+| `box_blur` | velocity | 4 | 1 | 0.925 | 0.567 |
+| `box_blur` | vorticity | 2 | -1 | 0.435 | 0.521 |
+| `disk_blur` | density | 3 | 1 | 1 | 0.795 |
+| `disk_blur` | velocity | 3 | 1 | 0.82 | 0.587 |
+| `disk_blur` | vorticity | 2 | 1 | 0.534 | 0.573 |
+| `epanechnikov_blur` | density | 3 | 1 | 1 | 0.902 |
+| `epanechnikov_blur` | velocity | 3 | 1 | 0.969 | 0.653 |
+| `epanechnikov_blur` | vorticity | 2 | 1 | 0.727 | 0.662 |
+| `gaussian_blur` | density | 4 | 1 | 1 | 0.804 |
+| `gaussian_blur` | velocity | 4 | 1 | 0.963 | 0.585 |
+| `gaussian_blur` | vorticity | 4 | 0.8 | 0.137 | 0.329 |
+| `median_blur` | density | 3 | 0.5 | 0.429 | 0.615 |
+| `median_blur` | velocity | 3 | -0.5 | 0.087 | 0.358 |
+| `median_blur` | vorticity | 1 | — | — | — |
+
+**Spectral filtering.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `band_attenuate` | density | 4 | 1 | 0.783 | 0.581 |
+| `band_attenuate` | velocity | 4 | -0.2 | 0.199 | 0.477 |
+| `band_attenuate` | vorticity | 4 | 1 | 0.547 | 0.557 |
+| `highpass_butterworth` | density | 4 | 1 | 0.839 | 0.694 |
+| `highpass_butterworth` | velocity | 3 | -0.5 | 0.342 | 0.517 |
+| `highpass_butterworth` | vorticity | 4 | 0.8 | 0.242 | 0.523 |
+| `highpass_ideal` | density | 3 | 1 | 0.963 | 0.89 |
+| `highpass_ideal` | velocity | 2 | -1 | 0.466 | 0.499 |
+| `highpass_ideal` | vorticity | 4 | 0.8 | 0.261 | 0.513 |
+| `lowpass_butterworth` | density | 4 | 1 | 0.522 | 0.498 |
+| `lowpass_butterworth` | velocity | 3 | 1 | 0.814 | 0.538 |
+| `lowpass_butterworth` | vorticity | 4 | 0.4 | 0.13 | 0.264 |
+| `lowpass_ideal` | density | 3 | 1 | 1 | 0.626 |
+| `lowpass_ideal` | velocity | 3 | 1 | 0.938 | 0.557 |
+| `lowpass_ideal` | vorticity | 4 | 0.4 | 0.087 | 0.216 |
+
+**Displacement.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `translate_subpixel` | density | 6 | 0.0286 | 0.0124 | 0.478 |
+| `translate_subpixel` | velocity | 6 | -0.029 | 0 | 0.472 |
+| `translate_subpixel` | vorticity | 6 | 0.406 | 0 | 0.422 |
+| `translate_x` | density | 5 | — | — | — |
+| `translate_x` | velocity | 5 | — | — | — |
+| `translate_x` | vorticity | 5 | — | — | — |
+| `translate_y` | density | 5 | — | — | — |
+| `translate_y` | velocity | 5 | — | — | — |
+| `translate_y` | vorticity | 5 | — | — | — |
+
+**Resolution loss.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `coarsen` | density | 4 | 1 | 0.988 | 0.913 |
+| `coarsen` | velocity | 4 | 1 | 0.534 | 0.684 |
+| `coarsen` | vorticity | 4 | 1 | 0.671 | 0.632 |
+| `coarsen_bandlimited` | density | 4 | 1 | 0.957 | 0.926 |
+| `coarsen_bandlimited` | velocity | 4 | 1 | 0.596 | 0.575 |
+| `coarsen_bandlimited` | vorticity | 4 | 0.8 | 0.199 | 0.243 |
+| `subsample` | density | 4 | 1 | 0.671 | 0.651 |
+| `subsample` | velocity | 4 | 0.4 | 0.124 | 0.181 |
+| `subsample` | vorticity | 4 | 1 | 0.894 | 0.827 |
+
+**Noise.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `additive_noise` | density | 4 | 0.4 | 0.0807 | 0.189 |
+| `additive_noise` | velocity | 4 | 0.6 | 0.149 | 0.298 |
+| `additive_noise` | vorticity | 4 | 0.4 | 0.18 | 0.48 |
+| `multiplicative_noise` | density | 5 | 0.7 | 0.155 | 0.499 |
+| `multiplicative_noise` | velocity | 5 | 0.8 | 0.186 | 0.525 |
+| `multiplicative_noise` | vorticity | 5 | 0.7 | 0.217 | 0.494 |
+
+**Cell-value distortion.**
+
+| degradation | field | strengths | rank correlation | fraction of frames in the right order | weakest gap between neighbouring strengths |
+|---|---|---|---|---|---|
+| `bias` | density | 4 | — | — | — |
+| `bias` | velocity | 4 | — | — | — |
+| `bias` | vorticity | 4 | — | — | — |
+| `gain` | density | 4 | — | — | — |
+| `gain` | velocity | 4 | — | — | — |
+| `gain` | vorticity | 4 | — | — | — |
+
+**Trap tests.**
+
+| field | damage assigned to the fake prediction | closest real degradation | damage of the reference moved far away | value on the anchor |
+|---|---|---|---|---|
+| density | — | — | — | — |
+| velocity | — | — | — | — |
+| vorticity | — | — | — | — |
+
+The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
+
+<!-- END GENERATED results_on_kinet_re1e6 -->
 
 ## References
 
