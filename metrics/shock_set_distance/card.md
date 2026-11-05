@@ -379,10 +379,12 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 <!-- END GENERATED results_smoothing -->
 
 Every calibrated blur smears Sod's shock beyond the detector's reach, so the candidate has no
-shock and every strength of both blurs scores the diagonal, 1, the empty-set convention. The
-values are equal across strengths, so no rank correlation is defined. This axis tests only
-whether the metric notices that the shock is gone, which it does at the mildest strength; it
-says nothing about distance.
+shock and every strength of the four blurs in the table scores the diagonal, 1, the empty-set
+convention, in every frame. The values are equal across strengths, so no rank correlation is
+defined. This axis tests only whether the metric notices that the shock is gone, which it does
+at the mildest strength; it says nothing about distance. The median blur is absent from the
+table: it left Sod's pressure unchanged at every strength (a median filter keeps a step), the run
+excluded it as doing nothing, and it scored 0 there.
 
 ### Spectral filtering
 
@@ -406,7 +408,12 @@ plateaus of the empty-set convention. A high-pass filter keeps the pressure jump
 the pre-shock pressure level, so the ratio across the intact shock falls below the detector's
 threshold and the shock goes unflagged; any operator that raises the pressure level without
 removing the jump does the same. Few of these strengths are distinct experiments on Sod's
-pressure (the run excludes the repeats). The rank correlation of −1 under `lowpass_ideal` is
+pressure (the run excludes the repeats). `band_attenuate` leaves the flagged cells where they
+were and scores 0 at every strength, which is why the Profile lists it as provably small and as
+the degradation charged least for. The rank correlation of 1 under `highpass_butterworth` comes
+from the first frame alone (fraction of frames in order 0.1): there its milder distinct strength
+leaves the shock flagged and scores 0 and the harsher scores the diagonal, while every other frame
+scores the diagonal at both. The rank correlation of −1 under `lowpass_ideal` is
 that switch running backwards in a single frame: only in the first frame does the harsher
 distinct strength leave a flagged cell, far from the true shock, and score an ordinary distance,
 0.280 in `_generated/fingerprint.json`, instead of the diagonal the milder strength scores; every
@@ -434,10 +441,18 @@ a cell in units of the tube's length. The sub-pixel shift is ranked at 0.986 in 
 its two smallest shifts leave the flagged cells where they were and score 0, a tie; a shift of
 half a cell places the step on a cell centre, which flags one cell where the reference flags two,
 and scores a third of a cell; from one cell on the flagged pair moves in whole-cell steps, up to 0.00171
-at the largest. The
+at the largest. The elasticity of 1.4 in the Reactivity table is that half-cell offset: the
+slope of $\log(s - \tfrac{1}{2})$ against $\log s$ over the shifts of 1, 2 and 4 cells is 1.40
+(my arithmetic from Equation (3)), where a value proportional to the shift would give 1. The
 damage column of the profile reads both axes as provably small, because damage here is a
 fraction of the domain's diagonal (Reading the output); that is a statement about the scale,
 not a failure to respond.
+
+The first figure under Performance draws this test the way the field reads a detected front, as
+a line-out: in the last frame, each panel is the pressure translated by 1, 2, 4 and 8 cells over
+the reference's in grey, and the two flagged cells on either side of the jump move with the
+step by exactly the shift, while the reference's pair stays put. The detector finds the same
+pair of cells in every translated copy, which is what makes the values above exact.
 
 ### Resolution loss
 
@@ -454,11 +469,15 @@ not a failure to respond.
 <!-- END GENERATED results_resolution -->
 
 Block averaging moves the shock to a block edge, by an amount set by where the block
-boundaries fall rather than by the factor alone, so the value rises with ties and the rank
-correlation is 0.775 on both. The staircase reconstruction keeps the jump sharp and usually
-detectable; the band-limited reconstruction smears it, so from its second strength most frames
-lose the shock and score the diagonal, which is why the profile names `coarsen_bandlimited` as
-the degradation the metric charges most for.
+boundaries fall rather than by the factor alone, so the value rises with ties: in every frame
+two neighbouring factors score the same, and no harsher factor scores below a milder one (this
+run's `results.csv`), which holds the rank correlation at 0.775 on all three. The staircase
+`coarsen` and `subsample` score alike at the three mildest factors. At factor 16 `subsample`
+keeps a flagged pair, up to 0.00464, while `coarsen` loses the shock in three of the ten frames
+and scores the diagonal there. The band-limited reconstruction smears the jump, so from its
+second factor most frames lose the shock and from its third every frame does, which is why the
+profile names `coarsen_bandlimited` as the degradation the metric charges most for per unit of
+field change.
 
 ### Noise
 
@@ -477,9 +496,11 @@ The two weakest noise amplitudes leave the detector's output unchanged and score
 strongest create false shocks wherever the noise's cell-to-cell pressure ratio passes the
 threshold, and the value rises to at most 0.235. Every frame ranks the four amplitudes the same
 way, and the worst frame's rank correlation is 0.949, the ties at the two weakest amplitudes
-being all that keeps it below 1. No value reaches the diagonal, so the candidate always keeps a
-shock set; the rise measures the false detections' distance from the true shock, not a
-displaced shock.
+being all that keeps it below 1. Multiplicative noise does the same one amplitude later: its
+three weakest amplitudes score 0 in every frame, the fourth flags false cells in two frames only,
+and the fifth in every frame, up to 0.375; the ties leave its rank correlation at 0.707. No value
+of either reaches the diagonal, so the candidate always keeps a shock set; the rise measures the
+false detections' distance from the true shock, not a displaced shock.
 
 ### Trap tests
 

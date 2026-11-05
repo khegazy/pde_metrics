@@ -239,6 +239,12 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_smoothing -->
 
+Every blur in the table smears Sod's shock beyond the detector's reach at every calibrated
+strength, so the candidate has no shock and every strength scores the diagonal, 1, in every
+frame. No rank correlation is defined. The test shows only that the metric flags a lost shock,
+at the mildest strength. The median blur left the pressure unchanged at every strength and the
+run excluded it as doing nothing.
+
 ### Spectral filtering
 
 [lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
@@ -258,6 +264,15 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_spectral -->
 
+The filters switch the detector between finding the shock and losing it, as described on
+`shock_set_distance`'s card, and this metric reads the same switch. `band_attenuate` leaves the
+shocked cells in place and scores 0 at every strength. The low-pass filters lose the shock and
+score 1, except in the first frame, where the harsher distinct strength of `lowpass_ideal` leaves
+a flagged cell far from the shock and scores 0.28 while the milder scores the diagonal; that one
+frame is the rank correlation of −1, every other frame tying. The rank correlation of 1 under
+`highpass_butterworth` likewise comes from the first frame alone. These filters test the
+empty-set convention, not the distance.
+
 ### Displacement
 
 [translate_x](../../degradations/translate/card.md) ·
@@ -271,6 +286,23 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 | `translate_x` | pressure | 5 | 1 | 1 | 1 |
 
 <!-- END GENERATED results_geometric -->
+
+This is the test the metric is built for. The whole-cell translation is ranked perfectly in every
+frame, and with the same number of flagged cells in both fields its values equal
+`shock_set_distance`'s, $s - \tfrac{1}{2}$ cells for a shift of $s$ cells (Definition): from
+0.000244 at one cell to 0.00757 at sixteen, in units of the tube's length. The elasticity of 1.4
+in the Reactivity table is that half-cell offset, as on `shock_set_distance`'s card. The
+sub-pixel shift ranks at 0.986 in every frame: its two smallest shifts leave the flagged cells in
+place and score 0, which is the only tie. A shift of half a cell flags one cell shared with the
+reference's pair; the reference's direction averages 0 and 1 cell and the candidate's is 0, so
+the value is a quarter of a cell, where the pooled average of `shock_set_distance` gives a third.
+That is the two directions' equal weighting at work on the smallest example the run holds. The
+largest shift scores 0.00171. The profile reads both translations as provably small only because
+damage is a fraction of the domain's diagonal.
+
+The first figure under Performance draws the test as a line-out of the last frame: the pressure
+translated by 1, 2, 4 and 8 cells over the reference's in grey, the two flagged cells moving with
+the step by the shift.
 
 ### Resolution loss
 
@@ -287,6 +319,15 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_resolution -->
 
+The reductions move the shock to a block edge, by an amount set by where the block boundaries
+fall, so in every frame two neighbouring factors score the same; no harsher factor scores below a
+milder one in this run's `results.csv`, and the ties hold the rank correlation at 0.775 on all
+three. `coarsen` and `subsample` agree at the three mildest factors; at factor 16 `subsample`
+keeps a flagged pair, up to 0.00464, while `coarsen` loses the shock in three of the ten frames
+and scores the diagonal. The band-limited reconstruction smears the jump, losing the shock in most
+frames from its second factor and in all from its third, which is why the Profile names
+`coarsen_bandlimited` as the degradation charged most for per unit of field change.
+
 ### Noise
 
 [additive_noise](../../degradations/additive_noise/card.md)
@@ -299,6 +340,18 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 | `multiplicative_noise` | pressure | 5 | 0.707 | 0 | 0.5 |
 
 <!-- END GENERATED results_stochastic -->
+
+Noise is where the equal weighting of the two directions shows. The two weakest additive
+amplitudes leave the detector's output unchanged and score 0; the two strongest flag many false
+shocks, and the value rises to 0.118 at most. In every frame where either noise flags false
+cells, the value is below `shock_set_distance`'s on the same pair (compared off the card in this
+run's `results.csv`): the candidate's many false cells carry only half the weight, however many
+there are, the limitation "Half the weight for any number of false shocks" measured. Under
+additive noise the median value never moves a tenth of the way to the anchor, so the first
+strength detected in the Reactivity table, level 5, is multiplicative noise's strongest
+amplitude, where the value reaches 0.188; its three weakest amplitudes score 0. Ties at the weak
+amplitudes are all that hold the rank correlations at 0.949 and 0.707; no frame scores a stronger
+amplitude below a weaker one.
 
 ### Trap tests
 
@@ -314,6 +367,12 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_canaries -->
+
+The fake prediction with the right spectrum scores damage 1 in the median frame: in most frames
+the detector finds no shock in it and the empty-set value is charged. In the frames where it does
+flag cells, the value falls as low as 0.0519, so the metric is not fooled in the median but can
+be in a single frame. The reference moved far away scores a damage of 0.537: on a tube with walls
+that copy is a mirrored window whose shock lies elsewhere, and the metric reports how far.
 
 ### Compared with the other metrics
 
@@ -336,6 +395,14 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
+
+On Sod's pressure the other shock-set distances order the degradations almost exactly as this
+metric does, `shock_set_distance` and `shock_set_baddeley_delta` most closely, the pointwise
+errors only moderately, and `shock_mask_overlap` strongly in reverse, which is agreement, since
+the overlap falls where a distance rises. My reading, not a measurement: on Sod most degradations
+either keep the shock in place or lose it, so any metric built on the same detector sorts them
+alike; the difference in weighting from `shock_set_distance` moves values (Noise) more than it
+moves the order.
 
 ## References
 
