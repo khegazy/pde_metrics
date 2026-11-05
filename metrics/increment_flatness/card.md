@@ -375,9 +375,10 @@ halves of the domain repeat each other's pairs with the sign reversed.
 
 The limitation that matters most for how this metric may be used is that its response to
 smoothing is **not monotone**, and this has been measured rather than feared. On the real
-trajectory, increasing blur moves the value up before it moves down on density, wanders on
-velocity (measured on the earlier value that pooled both orientations), and on vorticity falls by roughly 40 per cent and then more than doubles at the
-heaviest blur tested. So ranking two predictions by how close their flatness is to the
+trajectory, increasing blur moves the value up before it moves down on density and on
+vorticity falls by roughly 40 per cent and then more than doubles at the heaviest blur tested.
+On velocity the longitudinal value, the registered number, falls steadily while the
+transverse companion rises; their average, which the bundle once registered, wandered. So ranking two predictions by how close their flatness is to the
 reference's can put a more heavily smoothed field ahead of a less smoothed one. The numbers
 behind this, and what should be done about it, are in
 `issues/036-increment-flatness-is-not-monotone-under-smoothing.md`. Read this metric as a
@@ -436,14 +437,24 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_smoothing -->
 
-The **direction differs between fields**: smoothing drives the flatness down on density and
-velocity, where every blur is followed in every frame, and up on vorticity, where the trend is
-weaker: a rank correlation of 0.8 under the box and Gaussian blurs, with 43% and 30% of frames
-in order. Under the box blur, vorticity's flatness falls at every strength in 49 of 161 frames
-and rises at every strength in 34; the median moves up, which sets the direction. A metric whose
-direction depends on the field gives no single answer to which way is worse.
+The **direction differs between fields**. Smoothing drives the flatness down on density and on
+the longitudinal velocity, where every blur is followed with a rank correlation of 1 and in
+every frame except under `median_blur` on velocity (0.783 of frames). On vorticity it drives the
+flatness up, and the trend is weaker: a rank correlation of 0.8 under the box and Gaussian
+blurs, with 0.435 and 0.304 of frames in order. A metric whose direction depends on the field
+gives no single answer to which way is worse.
 
-This is the same phenomenon recorded in
+Read as its field reads it, through the curve $F(\ell)$ (the figures under Performance), the
+blurs act mostly at the small separations. At the harshest `gaussian_blur` the density curve
+falls by 0.819 of its clean value at one cell and by 0.551 at 128 cells, and the longitudinal
+velocity curve by 0.719 and 0.433: the rise toward small separations that the field reads as
+intermittency is flattened. The transverse velocity curve falls by 0.863 at one cell and
+rises by 0.0685 at 128 cells. On vorticity the curve rises at every separation up to 64 cells
+(by 1.09 at one cell and 1.78 at four) and falls at 128 (by 0.0854), so a blurred vorticity
+field reads as more intermittent at small separations than the reference, the opposite of
+the change on density and velocity.
+
+This is the phenomenon recorded in
 `issues/036-increment-flatness-is-not-monotone-under-smoothing.md`, seen through the ladder
 rather than through a blur sweep on one frame.
 
@@ -474,15 +485,21 @@ rather than through a blur sweep on one frame.
 
 <!-- END GENERATED results_spectral -->
 
-The weakest family for this metric. On density every filter is followed, but the low-passes
-drive the flatness down and the high-passes up. On velocity the rank correlation is 0.5 to 1 and
-on vorticity 0.2 to 0.8, with as few as none of the frames in order under the Butterworth
-low-pass. Different filters move the flatness in opposite directions on the same field, and
-the weakest gap between neighbouring strengths falls to 0.23 on vorticity.
+On density every filter is followed with a rank correlation of 1, but the low-passes and
+`band_attenuate` drive the flatness down and the high-passes up. On velocity the same
+directions hold, with a rank correlation of 0.2 under `band_attenuate` and 0.5 under the
+Butterworth low-pass. On vorticity the rank correlation is 0.2 to 1, the two low-passes move
+the flatness in opposite directions, and no frame is in order under the Butterworth low-pass,
+whose weakest gap between neighbouring strengths is 0.228.
 
-The mechanism is not mysterious: a low-pass and a high-pass filter reshape the increment
-distribution in opposite ways, and flatness is a shape statistic with no reason to respond to
-both alike. Nothing here should be read as this metric ranking spectral damage.
+Through the curve, the filters act at different separations. The harshest Butterworth low-pass
+lowers the density curve by 0.852 of its clean value at one cell and by 0.589 at 128 cells,
+the shape the blurs give. The harshest Butterworth high-pass raises it at every separation,
+most at the largest (by 1.6 at one cell and 2.99 at 128 cells), and on vorticity lowers it,
+mostly at 16 cells and beyond (by 0.528 at 16 cells against 0.038 at one cell). My reading,
+not a measurement: a low-pass and a high-pass reshape the increment distribution in opposite
+ways, and a shape statistic has no reason to respond to both alike, so the flatness does not
+order spectral damage by how much was removed.
 
 ### Displacement
 
@@ -509,8 +526,8 @@ Invariant, as it must be. An integer translation permutes the increments without
 the multiset, so `translate_x` gives an identical value at every strength and its correlation
 is withheld as round-off. `translate_subpixel` interpolates and so perturbs the field
 slightly at fractional distances and not at all at the whole-cell strengths, so the value moves
-off clean and comes back: correlations between -0.52 and -0.03, no frame in order, and weakest
-gaps of 0.35 to 0.41, below the chance value of 0.5.
+off clean and comes back: correlations of -0.516 on density and -0.058 on velocity and
+vorticity, no frame in order, and weakest gaps of 0.348 to 0.41, below the chance value of 0.5.
 
 For this metric the invariance is incidental rather than the point — it is a consequence of
 reading only the distribution of increments.
@@ -536,18 +553,22 @@ reading only the distribution of increments.
 
 <!-- END GENERATED results_resolution -->
 
-Under `coarsen` the flatness rises steeply and monotonically with the factor, from 15.2 to 177
-on density, 9.2 to 131 on velocity and 9.3 to 284 on vorticity at a factor of 16. That rise is
-the staircase, not the lost resolution. Inside each block every one-cell increment is exactly
-zero and at its edge there is a jump, so the increment distribution becomes a spike at zero
-with rare large values, which is precisely what flatness measures.
+Under `coarsen` and `subsample` the flatness rises steeply with the factor, in order in
+almost every frame: at a factor of 16 the change from clean is 10.5, 10.5 and 30.1 under
+`coarsen` and 11, 12.5 and 11.5 under `subsample` on density, velocity and vorticity, that
+is, the flatness is many times its clean value of 15.2, 7.38 and 9.34. Through the curve the
+rise is confined to the small separations: under `coarsen` at a factor of 16 the density curve
+rises by 10.5 at one cell and 0.528 at eight cells and falls by 0.115 to 0.218 from 16 cells
+on; velocity has the same shape, and vorticity rises up to 32 cells and falls beyond. That rise is the staircase both operators
+reconstruct with, not the lost resolution. Inside each block every one-cell increment is
+exactly zero and at its edge there is a jump, so the increment distribution becomes a spike at
+zero with rare large values, which is what flatness measures.
 
 `coarsen_bandlimited` keeps the same block means without adding edges, and under it the
-flatness barely moves on density and velocity (15.3, 15.3, 14.9, 13.0 and 9.2, 9.3, 9.8, 10.2
-at factors 2 to 16) and on vorticity falls and then rises (8.8, 6.5, 9.7, 14.3), with rank
-correlations of 0.8, 0.8 and 0.4 and at most 46% of frames in order. An earlier version of this card read the `coarsen` row as
-the one family this metric handles cleanly. It was a response to the operator's block edges;
-`issues/039` records the mechanism.
+flatness moves little and without a consistent order: a change from clean at the harshest
+factor of -0.156 on density, -0.043 on velocity and 0.573 on vorticity, rank correlations of
+0.8, 0.4 and 0.4, and at most 0.379 of frames in order. The ordered response to `coarsen` is
+therefore a response to the operator's block edges; `issues/039` records the mechanism.
 
 ### Noise
 
@@ -566,15 +587,21 @@ the one family this metric handles cleanly. It was a response to the operator's 
 
 <!-- END GENERATED results_stochastic -->
 
-A rank correlation of 1 on all three fields, with the flatness falling in 91% to 100% of
-frames at every strength. Additive Gaussian noise pushes the increment distribution toward a
-Gaussian one, so the flatness falls toward 3 from the much larger values the undegraded fields
-carry. Read against the clean value of the same frame, neighbouring strengths overlap across
-frames on density and velocity (weakest gaps 0.51) and less on vorticity (0.81): the size of the
-fall differs from frame to frame more than it differs between neighbouring strengths. This
-is the clearest confirmation in the run that the metric measures what it claims to: the one
-degradation that manipulates Gaussianity directly is the one it responds to most cleanly, and
-in the direction the definition predicts.
+Under `additive_noise` the rank correlation is 1 on all three fields and the flatness falls,
+by 0.803, 0.593 and 0.665 of its clean value at the harshest amplitude on density, velocity and
+vorticity. Every strength is in order in 0.981 of frames on density and every frame on
+vorticity, but in only 0.565 on velocity, and neighbouring strengths overlap across frames on
+density and velocity (weakest gaps 0.51 and 0.501) more than on vorticity (0.812): the size of
+the fall differs from frame to frame more than it differs between neighbouring strengths.
+Additive Gaussian noise pushes the increment distribution toward a Gaussian one, and the value
+falls toward the 3 that Equation (2) gives a Gaussian field. Through the curve the fall is
+concentrated at the small separations: on density the curve falls by 0.803 at one cell and
+0.116 at 128 cells, on vorticity by 0.665 and 0.256. That is the shape described under Reading
+the output as small-scale extremes lost with the large-scale structure kept.
+
+`multiplicative_noise` is followed less well: rank correlations of 0.7, 0.9 and 0.7, with at
+most 0.186 of frames in order, and on vorticity the flatness rises (a change from clean of
+3.32) where on the other two fields it falls.
 
 ### Trap tests
 
@@ -599,11 +626,24 @@ zero over zero and the span is undefined
 (`issues/037-increment-flatness-has-no-damage-scale.md`). The damage columns are therefore
 absent rather than zero.
 
-The reference moved far away scores 15.2, 9.23 and 9.34 on density, velocity and vorticity,
+The reference moved far away scores 15.2, 7.38 and 9.34 on density, velocity and vorticity,
 exactly the reference's own values: a translation permutes the increments without changing
-them, and this metric reads only their distribution. The fake prediction scores 2.86, 2.89
+them, and this metric reads only their distribution. The fake prediction scores 2.86, 2.96
 and 3.00, close to the Gaussian value of 3, because it has the reference's spectrum and
-Gaussian statistics.
+Gaussian statistics. Read against the reference's own value, that is a fall of 0.816, 0.603
+and 0.679 of the clean value, of the size the harshest blurs and low-passes produce on density
+and velocity.
+
+**The reference's own curve, against the field's.** The undegraded curve $F(\ell)$ of
+`kinet_re5e4` (median over frames, at 1, 2, 4, ... 128 cells) is the field's figure for this
+data. On density it falls steadily from 15.2 at one cell to 5.48 at 128 cells, and on the
+longitudinal velocity from 7.38 to 3.49: it rises toward small separations, as the field's
+does for intermittent turbulence, and on velocity it approaches the Gaussian 3 at half the
+domain. The transverse velocity curve is higher at small separations (11.5 at one cell, 12.7
+at eight) and falls below 3 at the largest (1.4 at 128 cells), below the value a Gaussian
+would give. The vorticity curve is not monotone: 9.34 at one cell, a minimum of 7.56 at four,
+and 12 at 16 cells. None of these can be laid over the published curves, whose separations are
+in units of the Kolmogorov and integral scales (Definition).
 
 ### Compared with the other metrics
 
@@ -639,25 +679,23 @@ Rank correlation over every degradation, computed separately for each physical f
 
 <!-- END GENERATED results_summary -->
 
-Read as a ranker, this metric works on exactly one family of the five. It orders noise
-cleanly, moves in opposite directions on different fields under smoothing, orders spectral filtering
-inconsistently and is invariant to displacement. Its clean ordering under `coarsen` turned
-out to be a response to that operator's block edges rather than to lost resolution: under
-`coarsen_bandlimited`, which discards the same information without adding edges, it is not
-ordered (see Resolution loss). `CLAUDE.md`'s acceptance rule is that a
-metric joins the panel only if it is monotone with high rank correlation, and on that rule
-this does not qualify; `issues/036` sets out what should be done about it.
+Across the ladder this metric orders the degradations differently from every other metric in
+the run. Its rank correlations with the pointwise controls and with `h_minus_one` are small on
+every field, so it carries information they do not. On density and velocity it correlates
+positively with `tail_index` and negatively with `tail_exceedance`, the two other metrics that
+read the tails of a distribution, and both are among its largest correlations. With the other
+increment
+metrics, `increment_w1`, `increment_w1_by_separation` and `energy_distance`, the correlation is
+moderate and changes sign between fields: negative on density and velocity, positive on
+vorticity. My reading of the sign change: the distances grow under every blur on every field,
+while the flatness falls under blur on density and velocity and rises on vorticity
+(Smoothing). The table gives the values.
 
-Read as a tripwire, the picture is different and more favourable. It correlates -0.225 to
--0.035 with the four pointwise baselines and -0.18 to 0.019 with `h_minus_one` across the three
-fields, so it is close to independent of all five and is carrying information none of them carry.
-Its correlations with `increment_w1` and `increment_w1_by_separation` are -0.23 to -0.30 on
-density and velocity and +0.31 to +0.39 on vorticity, as expected of three metrics that read
-increment distributions. The only other substantial
-relationships are 0.65 and 0.678 with `tail_index` on density and velocity and -0.445 with
-`palinstrophy` on vorticity. The case for keeping it is that a drift in this
-number means something specific that no other metric reports; the case against using it to choose between models is the sign
-change above.
+The families taken one at a time: this metric follows additive noise in order on every field,
+moves in opposite directions on different fields under smoothing and under spectral filtering,
+is invariant to displacement, and follows the staircase operators of Resolution loss but not
+`coarsen_bandlimited`. `issues/036` records the non-monotone response to smoothing and what
+could be done about it.
 
 ### Damage beside the other metrics
 
@@ -758,6 +796,11 @@ No damage beside the pointwise controls figure: increment_flatness has no damage
 Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 the anchor (by default the field's own mean); a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
 
 <!-- END GENERATED results_damage_by_level -->
+
+This metric's rows are dashes because it has no damage scale (Trap tests,
+`issues/037`), so the tables show only what the pointwise controls charge for each shift. What
+this metric does under the same shifts is under Displacement: nothing under the whole-cell
+shifts, and a small unordered residual under the sub-pixel one.
 
 ### On `forecast_re5e4`
 
@@ -920,6 +963,31 @@ Every prediction of every forecast, nothing pooled: a cell is one prediction ste
 
 <!-- END GENERATED results_on_forecast_re5e4 -->
 
+The field compares a model's flatness with the reference's, so the reading is each prediction
+beside its target, step by step. The damage tables are empty because this metric has no damage
+scale (`issues/037`).
+
+- **The 256² forecasts keep the target's flatness.** From start 1.13 the prediction differs
+  from its target only in the last figure shown, if at all, at every step on all three
+  fields. From start 0 it
+  stays within a few per cent on density (26 against 26.2 at lead time 0.5638), falls below
+  the target on velocity late in the forecast (5.91 against 6.55 at lead time 1.128), and on
+  vorticity rises above it from lead time 0.6766, to 9.15 against 6 at the last step.
+- **On density and velocity the coarser forecasts have lost intermittency**, and the coarser
+  the forecast's grid, the more. From start 0 the velocity flatness at the first step is 12.5
+  on the 64² forecast and 17.8 on the 128² forecast against a target of 21.1; at lead time
+  0.5638 the density flatness is 5.11 and 12.8 against 26.2. From start 1.13 the 64² forecast
+  is below its target at every step on both fields (velocity 4.89 against 7.83 at the last
+  step).
+- **On vorticity the direction depends on the start.** From start 0 the coarser forecasts are
+  below their target over the first half (7.76 and 14.9 against 25.9 at lead time 0.5638).
+  From start 1.13 they are above it at every step: 11.2 and 7.53 against
+  6.28 at the first step, 21.5 and 24.6 against 12.1 at the last.
+
+Over all 60 predictions the median departure from the target, as a fraction of the target's
+value, is -0.0976 on density, -0.171 on velocity and 0.0083 on vorticity. The curve over
+separations is not tabulated for this run.
+
 ### On `kinet_re1e6`
 
 <!-- GENERATED results_on_kinet_re1e6: written by `python -m fmeval.cards evidence increment_flatness --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
@@ -1053,6 +1121,28 @@ Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_on_kinet_re1e6 -->
+
+At twenty times the Reynolds number the run is on a 128² grid instead of 256², so one cell is
+twice the physical separation it is on `kinet_re5e4`, and the values differ for both reasons:
+the reference's one-cell flatness is 17.8, 8.07 and 8.93 on density, velocity and vorticity,
+against 15.2, 7.38 and 9.34. The fake prediction again scores close to 3 (2.83, 2.96 and 3.00).
+The pattern by family is the same as on `kinet_re5e4`: smoothing lowers the flatness on density
+and velocity and raises it on vorticity, additive noise lowers it in order on every field, and
+the integer shifts leave it unchanged. What differs:
+
+- **The vorticity blurs are better ordered**: a rank correlation of 1 under every blur with
+  more than one usable strength, against 0.8 under `box_blur` and `gaussian_blur` on
+  `kinet_re5e4`, although `box_blur`, `disk_blur` and `epanechnikov_blur` keep only two
+  strengths on vorticity here and `median_blur` one.
+- **`coarsen` on density and vorticity is no longer in order frame by frame**: rank
+  correlation 0.8, with 0.0186 and none of the frames in order and weakest gaps of 0.0448 and
+  0.165. On velocity it is still in order (0.901 of frames).
+- **`coarsen_bandlimited` on density is followed**, with a rank correlation of 1, 0.957 of
+  frames in order and a fall of 0.694 of the clean value, where on `kinet_re5e4` it barely moved.
+- **The Butterworth and ideal low-passes on vorticity both raise the flatness**, with no frame
+  in order under either; on `kinet_re5e4` the ideal low-pass lowered it.
+- **The sub-pixel shift is further from monotone**: rank correlations of -0.698, -0.58 and
+  -0.698 on density, velocity and vorticity, and weakest gaps down to 0.0435 on vorticity.
 
 ## References
 

@@ -355,9 +355,12 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_smoothing -->
 
-All three kernels are ordered perfectly on all three fields, with the weakest separation on
-vorticity. Smoothing narrows the increment distribution, which is a change of shape rather
-than of position, so it is the kind of damage this metric is built to see.
+Every blur is followed in every frame on all three fields, with a rank correlation of 1.
+Neighbouring strengths separate least on vorticity (weakest gaps 0.638 to 0.762, against 0.873
+to 0.978 on the other two fields). Smoothing narrows the one-cell increment distribution, a
+change of its shape rather than of where anything is, which is what this distance compares;
+how the change spreads over larger separations, the comparison the field draws, is on the card
+of [increment_w1_by_separation](../../metrics/increment_w1_by_separation/card.md).
 
 ### Spectral filtering
 
@@ -386,10 +389,13 @@ than of position, so it is the kind of damage this metric is built to see.
 
 <!-- END GENERATED results_spectral -->
 
-Ordered perfectly on all four filters and all three fields. Separability is weakest on
-vorticity and strongest on velocity, but nowhere near the chance floor — unlike
-`h_minus_one`, this metric does not lose resolution on the high-pass axis, because removing
-low modes changes the increment distribution as readily as removing high ones does.
+Every filter, low-pass, high-pass and band attenuation alike, is followed with a rank
+correlation of 1 on every field, in every frame except under `lowpass_ideal` on vorticity
+(0.925 of frames). The weakest gaps between neighbouring strengths range from 0.595 on
+vorticity to 0.993 on velocity, above the chance value of 0.5 everywhere. On density
+`band_attenuate` is listed among the degradations with a provably small
+response (its largest damage over every frame and strength is 0.0214), although its ordering
+is perfect.
 
 ### Displacement
 
@@ -416,15 +422,17 @@ This is the axis the metric is invariant to, and the table records that rather t
 response. `translate_x` is an integer shift, which permutes the increments without changing
 the multiset, so the value is identically zero at every strength and the rank correlation is
 withheld as round-off. `translate_subpixel` interpolates and therefore does change the field
-slightly; the small residual it produces is not ordered, giving a negative correlation and a
-separability of 0.
+slightly at the fractional distances and not at all at the whole-cell ones, so the small
+residual it produces rises and returns to zero: rank correlations of -0.714, -0.657 and -0.6,
+no frame in order and a weakest gap of 0.
 
 The invariance is exact and intended, and it does not reach the damage scale. The anchor is
 the field's own spatial mean, which has no increments at all, so this metric scores it at
-1.4e-4, 7.6e-4 and 3.1e-4 on density, velocity and vorticity, well away from the reference's
-zero. On that scale the sub-pixel residual is at most 0.006 in median damage. Every other
-family detects a strength by level 3 on every field; the one degradation outside this family
-that detects none is `coarsen_bandlimited` on density, which reaches a damage of 0.05.
+0.000137, 0.000495 and 0.000314 on density, velocity and vorticity, well away from the
+reference's zero. On that scale the sub-pixel residual reaches a largest damage, over every
+frame and strength, of 0.00307, 0.00421 and 0.01, and every displacement is listed among the
+degradations with a provably small response on every field. Every other family is detected,
+in the Reactivity table's sense, by level 3 at the latest on every field.
 
 ### Resolution loss
 
@@ -447,13 +455,15 @@ that detects none is `coarsen_bandlimited` on density, which reaches a damage of
 
 <!-- END GENERATED results_resolution -->
 
-Ordered perfectly on all three fields under both coarsenings, but the values differ by one to
-two orders of magnitude at small factors: at a factor of 2, 5.2e-5, 3.8e-4 and 1.3e-4 under
-`coarsen` against 7.2e-7, 3.3e-6 and 1.3e-5 under `coarsen_bandlimited`, on density, velocity
-and vorticity. The staircase turns most one-cell increments into exact zeros and the rest into
-jumps, which moves the increment distribution far more than the lost resolution does. By a
-factor of 16 the gap has closed on vorticity, 2.8e-4 against 2.4e-4, because the coarse grid
-genuinely cannot hold vorticity's structure at that size.
+All three operators are followed with a rank correlation of 1 on every field, in at least
+0.919 of frames. They differ in size. The staircase operators, `coarsen` and `subsample`,
+reach a largest damage over every frame and strength of 1.38 and 1.46 on density, 1.3 and 1.42
+on velocity and 1.11 and 1.12 on vorticity, past the anchor; `coarsen_bandlimited` reaches
+0.0681, 0.357 and 0.973. The staircase turns most one-cell increments into exact zeros and the
+rest into jumps, which moves the increment distribution far more than the lost resolution does
+(`issues/039`). The gap between the two reconstructions is widest on density, whose
+fluctuation sits in the largest scales, and nearly closed on vorticity; my reading is that the
+coarse grid cannot hold vorticity's structure under either reconstruction.
 
 ### Noise
 
@@ -472,10 +482,13 @@ genuinely cannot hold vorticity's structure at that size.
 
 <!-- END GENERATED results_stochastic -->
 
-Ordered perfectly with no overlap at all between neighbouring strengths on any field — the
-cleanest axis for this metric. Additive noise widens the increment distribution directly and
-by a controlled amount, which is the most direct thing that can be done to the quantity this
-metric measures.
+Both noises are followed in every frame on every field with no overlap between neighbouring
+strengths (weakest gap 1). Additive noise widens the increment distribution directly, and at
+the harshest amplitude it goes far past the anchor: a largest damage of 28.4, 44.7 and 5.35 on
+density, velocity and vorticity, and `additive_noise` is what the metric charges most for on
+velocity and vorticity (the profile table). `multiplicative_noise` reaches 4.15e3 on density.
+My reading: multiplicative noise scales with the local value, and density's mean is far larger
+than its fluctuation, which sets the anchor.
 
 ### Trap tests
 
@@ -494,12 +507,11 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 
 <!-- END GENERATED results_canaries -->
 
-The fake prediction scores damage 0.70 on density, 0.33 on velocity and 0.94 on vorticity, so
+The fake prediction scores damage 0.702 on density, 0.385 on velocity and 0.937 on vorticity, so
 the metric sees that the phase-scrambled field has different increment statistics from the
-reference. The velocity score is the weakest: it lies below the advisory impostor threshold of
-0.5, and the fake prediction costs no more there than `gaussian_blur` at strength 9.4. The
-reference moved far away scores exactly 0 on every field, for the reason given under
-Displacement.
+reference. The velocity score is the lowest: the fake prediction costs there what
+`gaussian_blur` costs at strength 9.44. The reference moved far away scores exactly 0 on every
+field, for the reason given under Displacement.
 
 ### Compared with the other metrics
 
@@ -535,19 +547,16 @@ Rank correlation over every degradation, computed separately for each physical f
 
 <!-- END GENERATED results_summary -->
 
-Every axis except displacement is ranked perfectly on every field. Displacement is ranked
-not at all, by construction.
-
-The number worth the most here is the cross-metric correlation: 0.188 to 0.189 on density,
-0.123 to 0.13 on velocity and -0.159 to -0.094 on vorticity against `vrmse` (`nrmse` in the run cited), `rmse`, `mse` and
-`mae`. This metric is close to uncorrelated with the
-entire pointwise family across the whole ladder, which is the strongest such result in the
-repository — `h_minus_one`, by contrast, correlates with them above 0.91 on every field. That is the
-property this metric was proposed for, and it is now measured rather than argued: a panel containing
-this metric and a pointwise control is measuring two nearly independent things. It correlates
--0.23 and -0.235 with `increment_flatness` on density and velocity and +0.394 on vorticity; that metric reads
-the same increment distribution through a single moment, so the two are related but far from
-redundant.
+Across the ladder this metric orders the degradations almost exactly as `energy_distance`
+does, which reads the same one-cell increments, and nearly as
+`increment_w1_by_separation` does, which contains it at one cell. It also agrees strongly with
+`tail_exceedance`, `persistence_distance`, `spectrum_l2` and, on velocity,
+`spectral_energy_flux`. With the pointwise controls (`mae`, `mse`, `rmse`, `vrmse`) its
+correlation is weak on density and velocity and close to zero on vorticity, so on this ladder
+a panel holding this metric and a pointwise control measures two nearly independent things.
+With `increment_flatness`, which reads the same increments through one moment, the correlation
+is moderate and changes sign between fields, negative on density and velocity and positive on
+vorticity, the sign change that metric shows under smoothing. The table gives the values.
 
 ### Damage beside the other metrics
 
@@ -650,6 +659,12 @@ Median damage over frames against the applied strength, log-log, for increment_w
 Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 the anchor (by default the field's own mean); a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
 
 <!-- END GENERATED results_damage_by_level -->
+
+Beside the pointwise controls, this metric charges nothing for the whole-cell shifts, whose
+damage is exactly zero at every distance, while every control's damage grows steadily with the
+distance. Under the sub-pixel shift its damage is small at the fractional distances and falls
+to round-off at the whole-cell ones, so its line does not rise with the shift at all, where
+the controls' lines rise with it.
 
 ### On `forecast_re5e4`
 
@@ -766,6 +781,24 @@ increment_w1 on vorticity against lead time, the physical time since the forecas
 Every prediction of every forecast, nothing pooled: a cell is one prediction step of one forecast, a row the lead time (the physical time since the forecast started) and a column the forecast, named by its run's native grid and its starting time (`64², start 0` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-0`; `128², start 0` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-0`; `256², start 0` is `F-906861_64/forecast_t0-0`; `64², start 1.13` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250`; `128², start 1.13` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-2500`; `256², start 1.13` is `F-906861_64/forecast_t0-5000`). **Damage** is the prediction's departure from the target as a fraction of the anchor's in the same frame, by default the target's own spatial mean, so each step is scaled by its own target. A dash means no value there.
 
 <!-- END GENERATED results_on_forecast_re5e4 -->
+
+Each prediction's one-cell increment distribution is compared with its target's, the
+comparison the field makes between a model and the reference at each separation (here at one
+cell only).
+
+- **The coarser the forecast's grid, the larger the distance**, at almost every step and on
+  every field: at the first step from start 0 the damage is 0.0565, 0.0121 and 0.000127 on
+  density, 0.133, 0.0514 and 0.000379 on velocity, and 0.379, 0.259 and 0.00148 on vorticity,
+  for the 64², 128² and 256² forecasts.
+- **The 64² forecast from start 0 peaks at lead time 0.5638 on density and velocity** (damage
+  0.465 and 0.408) and then eases (0.209 and 0.259 at the last step). On vorticity it rises,
+  with one small dip, to 0.683 at lead time 0.7893 and stays near it.
+- **From start 1.13 the 256² forecast stays close to its target**: damage at most 0.000837,
+  0.00247 and 0.00839 on density, velocity and vorticity over the ten steps. From start 0 it
+  grows over the forecast, to 0.0394, 0.166 and 0.112 at the last step.
+- **Vorticity is charged most.** The largest damage of each 64² and 128² forecast on
+  vorticity lies between 0.511 and 0.696, against at most 0.465 on density and 0.408 on
+  velocity.
 
 ### On `kinet_re1e6`
 
@@ -900,6 +933,21 @@ Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_on_kinet_re1e6 -->
+
+At twenty times the Reynolds number, on a 128² grid instead of 256², the metric again follows
+every blur, filter, coarsening, noise and gain that has more than one usable strength with a
+rank correlation of 1 on every field, and is again exactly blind to the whole-cell shifts and to `bias`. The grid differs between the
+two runs as well as the Reynolds number, and one cell is twice the physical separation here.
+What differs:
+
+- **The fake prediction is charged more on density and velocity and less on vorticity**:
+  damage 0.781, 0.458 and 0.823, against 0.702, 0.385 and 0.937 on `kinet_re5e4`. Velocity is
+  again the lowest.
+- **`coarsen_bandlimited` costs more on density**: a largest damage of 0.271, against 0.0681.
+- **The sub-pixel shift costs more on vorticity**, a largest damage of 0.128 against 0.01, and
+  vorticity no longer lists it among the degradations with a provably small response; it is
+  still unordered (rank correlation -0.543).
+- **Fewer usable blur strengths on vorticity**: `median_blur` has one, so no ordering.
 
 ## References
 
