@@ -456,6 +456,17 @@ one reaches 1.13, past the anchor.
 Noise is followed in every frame on every field, with neighbouring strengths separated on
 density and velocity and almost separated on vorticity (0.992).
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence increment_w1_by_separation`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence increment_w1_by_separation`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

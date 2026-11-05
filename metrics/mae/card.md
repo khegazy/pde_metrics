@@ -435,6 +435,17 @@ measured decomposition: that noise scales the whole density, whose mean is near 
 anchor measures only the fluctuation about that mean, two to three orders of magnitude smaller
 (`AGENTS.md` §4).
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence mae`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence mae`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

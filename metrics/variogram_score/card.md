@@ -341,6 +341,14 @@ from clean is 0 and the analysis lists `bias` among the degradations to which th
 provably below the margin. This is the blindness stated in the Definition, measured, and it is
 why this score is read beside `crps` or `energy_score`, which both rise on this axis.
 
+### Compared with the other metrics
+
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence variogram_score`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence variogram_score`.
+
+<!-- END GENERATED results_summary -->
+
 ## References
 
 \bibliography

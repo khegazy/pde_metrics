@@ -500,6 +500,17 @@ tenth of that before it registers. Multiplicative noise on density reaches a lar
 65.7, because it scales the whole density, mean included, while the anchor measures the largest
 excursion about that mean (our reading).
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence max_error`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence max_error`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

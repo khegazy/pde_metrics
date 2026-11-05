@@ -557,6 +557,17 @@ White noise adds energy to each shell in proportion to the number of modes in it
 it lands in the high shells, where the energy-squared weight described under Smoothing is
 smallest.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence spectrum_l2`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence spectrum_l2`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

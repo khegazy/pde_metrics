@@ -316,6 +316,17 @@ No measurements for this test in the recorded run.
 
 <!-- END GENERATED results_stochastic -->
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence persistence_wasserstein`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence persistence_wasserstein`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

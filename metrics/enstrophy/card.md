@@ -354,6 +354,17 @@ a tenth of the distance between the reference and the anchor at the harshest lev
 order). Multiplicative noise does so less cleanly: rank correlation 0.9, 0.317 of frames in
 order, neighbouring strengths overlapping (weakest gap 0.536).
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence enstrophy`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence enstrophy`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

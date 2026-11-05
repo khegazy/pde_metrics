@@ -261,6 +261,25 @@ Performance tables and the card's fingerprint. In this run every row equals the 
 the same frame, axis and strength exactly, because a pairwise metric already receives the
 member mean (Definition).
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence ensemble_mean_rmse`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence ensemble_mean_rmse`.
+
+<!-- END GENERATED results_pointwise -->
+
+### Compared with the other metrics
+
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence ensemble_mean_rmse`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence ensemble_mean_rmse`.
+
+<!-- END GENERATED results_summary -->
+
 ## References
 
 \bibliography

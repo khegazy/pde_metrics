@@ -441,6 +441,17 @@ reaches a largest damage of 5.64e3. Our reading, not a measured decomposition: t
 the whole density, whose mean is near 1, while the anchor measures only the fluctuation about
 that mean, two to three orders of magnitude smaller (`AGENTS.md` §4).
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence mse`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence mse`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

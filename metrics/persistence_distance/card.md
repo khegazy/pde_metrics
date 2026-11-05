@@ -505,6 +505,17 @@ reading, not a measured one: noise proportional to the field's value is large on
 values sit far from zero, against the small fluctuations that set the anchor, while vorticity's
 values centre on zero; the global extremes, which always count (Limitations), move with it.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence persistence_distance`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence persistence_distance`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

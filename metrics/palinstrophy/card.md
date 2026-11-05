@@ -397,6 +397,17 @@ $+11.1$ under `multiplicative_noise` (fingerprint), many times the rise of
 order on every frame with no overlap between neighbouring strengths (weakest gap 1);
 multiplicative noise keeps the order in 0.845 of frames (weakest gap 0.835).
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence palinstrophy`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence palinstrophy`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

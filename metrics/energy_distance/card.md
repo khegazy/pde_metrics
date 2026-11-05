@@ -540,6 +540,17 @@ reference: its increments are a point mass at zero, whose distance from the refe
 increment distribution is set by that distribution alone. Noise of growing amplitude widens the
 whole increment distribution without bound, so its distance is not capped by the anchor's.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence energy_distance`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence energy_distance`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -569,6 +580,14 @@ This card has no table comparing it with other metrics. The run it cites holds e
 and on the card of [increment_w1](../../metrics/increment_w1/card.md), which reads the same
 one-cell increments by a different distance, the two order the ladder almost identically on
 every field.
+
+### Compared with the other metrics
+
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence energy_distance`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence energy_distance`.
+
+<!-- END GENERATED results_summary -->
 
 ### On `forecast_re5e4`
 

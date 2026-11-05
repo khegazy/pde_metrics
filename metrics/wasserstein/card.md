@@ -463,6 +463,17 @@ All three operators follow the factor on every frame. The response of the two co
 
 `multiplicative_noise` has no ordering statistics, and the dashes do not mean the distance is blind to it. Its harshest level makes density negative in some cells of every frame, where the distance is undefined and the value is NaN (`issues/139`), and the run records no rank correlation, fraction in order or gap for the whole axis; that the NaN level is what removes them is my reading of `fmeval/analysis.py`. On the four milder levels the distance is defined, and its largest damage there is 0.639.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence wasserstein`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence wasserstein`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

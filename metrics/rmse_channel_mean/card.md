@@ -416,6 +416,17 @@ On velocity both noises are ordered in every frame with no overlap between neigh
 and the elasticity is 1: the value grows in proportion to the noise's amplitude. The largest
 damage is 0.506 under both `additive_noise` and `multiplicative_noise`.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence rmse_channel_mean`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence rmse_channel_mean`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

@@ -574,6 +574,17 @@ steady rise. On vorticity the two mildest strengths barely move the value and le
 clean in about half the frames, before the harsher two lower it.
 
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence tail_index`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence tail_index`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

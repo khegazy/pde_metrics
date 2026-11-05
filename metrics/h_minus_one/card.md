@@ -537,6 +537,17 @@ that noise scales with the density itself, whose mean is far larger than its flu
 reading of the operator). Also my reading: the noise is broadband, and most of its energy sits
 at the high wavenumbers this metric discounts most.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence h_minus_one`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence h_minus_one`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

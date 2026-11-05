@@ -321,6 +321,14 @@ because the offset adds to every member's distance from the reference in quadrat
 members' own scatter, and the root of a sum of squares grows with the square of the smaller
 term while that term is small.
 
+### Compared with the other metrics
+
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence energy_score`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence energy_score`.
+
+<!-- END GENERATED results_summary -->
+
 ## References
 
 \bibliography

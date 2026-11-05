@@ -469,6 +469,17 @@ responds to a mode of wavenumber $k$ as $\sin(kh)/h$ rather than as $k$, so it w
 grid-scale modes where uncorrelated noise puts most of its energy less than a spectral
 derivative does.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence h1_relative`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence h1_relative`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

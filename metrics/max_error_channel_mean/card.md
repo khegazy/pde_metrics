@@ -407,6 +407,17 @@ strengths. On velocity the largest damage is 1.1 under `additive_noise` and 1.93
 `multiplicative_noise`; noise reaches every cell of both components, so each component's
 maximum grows with it.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence max_error_channel_mean`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence max_error_channel_mean`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

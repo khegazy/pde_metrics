@@ -433,6 +433,17 @@ and this metric is in the field's units. Multiplicative noise on density reaches
 of 75.1, because it scales the whole density, mean of about 1 included, while the anchor measures
 only the fluctuation about that mean (our reading, as on `mse`'s card).
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence rmse`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence rmse`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

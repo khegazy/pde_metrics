@@ -353,6 +353,17 @@ amplitude, where the value reaches 0.188; its three weakest amplitudes score 0. 
 amplitudes are all that hold the rank correlations at 0.949 and 0.707; no frame scores a stronger
 amplitude below a weaker one.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence shock_set_masd`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence shock_set_masd`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

@@ -514,6 +514,17 @@ the field's mean and many times what `rmse` charges at the same strength. Under
 density itself, whose mean is far larger than its fluctuation (my reading of the operator).
 Uncorrelated cell-to-cell noise is almost pure gradient.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence h1_seminorm`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence h1_seminorm`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

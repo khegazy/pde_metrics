@@ -603,6 +603,17 @@ the output as small-scale extremes lost with the large-scale structure kept.
 most 0.186 of frames in order, and on vorticity the flatness rises (a change from clean of
 3.32) where on the other two fields it falls.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence increment_flatness`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence increment_flatness`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

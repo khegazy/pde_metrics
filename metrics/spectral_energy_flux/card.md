@@ -421,6 +421,17 @@ while the low octaves barely move. Noise puts energy at the grid scale, where th
 formed without dealiasing, so part of that flux is aliased rather than transferred
 (Limitations).
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence spectral_energy_flux`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -442,6 +453,14 @@ zero only on average over draws, unrelated to the reference's in size and direct
 prediction randomises each velocity component's phases separately, so it is also strongly
 divergent, and part of its flux passes through compressive modes the reference barely has. The
 reference moved far away scores 4.35e-15, because a translation leaves the flux unchanged.
+
+### Compared with the other metrics
+
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence spectral_energy_flux`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence spectral_energy_flux`.
+
+<!-- END GENERATED results_summary -->
 
 ### The curve behind the number
 

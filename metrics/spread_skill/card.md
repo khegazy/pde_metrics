@@ -319,6 +319,25 @@ ensemble mean away from the truth and so inflates the denominator. A low ratio t
 not by itself mean an overconfident ensemble; it means spread and error disagree, and this axis is the reminder
 that the error can be the thing that moved.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence spread_skill`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence spread_skill`.
+
+<!-- END GENERATED results_pointwise -->
+
+### Compared with the other metrics
+
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence spread_skill`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence spread_skill`.
+
+<!-- END GENERATED results_summary -->
+
 ## References
 
 \bibliography

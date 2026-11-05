@@ -575,6 +575,17 @@ the ceiling of $n/k$ that a prediction with every increment above the threshold 
 moves it, so 0.739 to 0.994 of frames are strictly in order: there a few counts scatter on either
 side of 1.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence tail_exceedance`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence tail_exceedance`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

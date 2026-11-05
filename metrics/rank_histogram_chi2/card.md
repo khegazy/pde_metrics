@@ -283,6 +283,25 @@ dispersion axes leave the ensemble mean, and so the measured field change, uncha
 round-off; its "charges most for", "charges least for" and selectivity are therefore not
 meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/blob/main/issues/111-damage-per-change-divides-by-round-off-on-ensemble-axes.md)).
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence rank_histogram_chi2`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence rank_histogram_chi2`.
+
+<!-- END GENERATED results_pointwise -->
+
+### Compared with the other metrics
+
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence rank_histogram_chi2`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence rank_histogram_chi2`.
+
+<!-- END GENERATED results_summary -->
+
 ## References
 
 \bibliography

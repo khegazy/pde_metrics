@@ -433,6 +433,17 @@ weakest amplitudes score 1 in every frame, the fourth marks false cells in two f
 the fifth collapses the value in every frame; the ties leave its rank correlation at 0.707. The
 fall measures how many cells the detector marks falsely, not whether the true shock was found.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence shock_mask_overlap`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence shock_mask_overlap`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -452,6 +463,14 @@ Both trap tests score 0, the anchor's value, and so a damage of 1: the fake pred
 the right spectrum and the reference moved far away share no shocked cell with the reference
 in any frame. The metric is not fooled by either; it scores them exactly like a prediction
 with no shock at all, which is also the limit of what it can say about them.
+
+### Compared with the other metrics
+
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence shock_mask_overlap`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence shock_mask_overlap`.
+
+<!-- END GENERATED results_summary -->
 
 ## References
 

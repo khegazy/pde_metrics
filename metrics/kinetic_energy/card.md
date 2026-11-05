@@ -351,6 +351,17 @@ correlation 0.9, with 0.466 of frames in order and neighbouring strengths overla
 gap 0.536), so at its milder strengths the added energy is not separated from one strength to
 the next.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence kinetic_energy`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence kinetic_energy`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

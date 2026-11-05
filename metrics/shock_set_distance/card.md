@@ -502,6 +502,17 @@ and the fifth in every frame, up to 0.375; the ties leave its rank correlation a
 of either reaches the diagonal, so the candidate always keeps a shock set; the rise measures the
 false detections' distance from the true shock, not a displaced shock.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence shock_set_distance`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence shock_set_distance`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
@@ -523,6 +534,14 @@ have flagged cells, where its pressure passes the threshold ratio between neighb
 value falls as low as 0.0782 in `_generated/fingerprint.json`, so the metric is not fooled in
 the median but can be in a single frame. The reference moved far away scores a damage of 0.539: on a tube with walls that copy is
 a mirrored window, whose shock lies elsewhere in the tube, and the metric reports how far.
+
+### Compared with the other metrics
+
+<!-- GENERATED results_summary: written by `python -m fmeval.cards evidence shock_set_distance`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence shock_set_distance`.
+
+<!-- END GENERATED results_summary -->
 
 ## References
 

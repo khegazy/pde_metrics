@@ -490,6 +490,17 @@ velocity and vorticity (the profile table). `multiplicative_noise` reaches 4.15e
 My reading: multiplicative noise scales with the local value, and density's mean is far larger
 than its fluctuation, which sets the anchor.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence increment_w1`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence increment_w1`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

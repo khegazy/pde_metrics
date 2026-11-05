@@ -371,6 +371,17 @@ the cells it is the nearest shock to, not by its distance alone. Ties at the wea
 all that hold the rank correlations at 0.949 and 0.707; no frame scores a stronger amplitude
 below a weaker one.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence shock_set_baddeley_delta`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence shock_set_baddeley_delta`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

@@ -439,6 +439,17 @@ Additive noise reaches a largest value of 1.19 on velocity, against 0.504 on vor
 reading is that it is sized to the velocity field as a whole, and the mean over components
 weights a component whose own size is small as heavily as the other.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence nrmse`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence nrmse`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·

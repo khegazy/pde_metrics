@@ -362,6 +362,17 @@ the discarded twentieth.
 Ties at the weak amplitudes are all that hold the rank correlations at 0.949 and 0.707; no frame
 scores a stronger amplitude below a weaker one.
 
+### Cell-value distortion
+
+[gain](../../degradations/gain/card.md) ·
+[bias](../../degradations/bias/card.md)
+
+<!-- GENERATED results_pointwise: written by `python -m fmeval.cards evidence shock_set_hausdorff95`, do not edit -->
+
+Not generated yet. Run `python -m fmeval.cards evidence shock_set_hausdorff95`.
+
+<!-- END GENERATED results_pointwise -->
+
 ### Trap tests
 
 [gaussian_impostor](../../degradations/gaussian_impostor/card.md) ·
