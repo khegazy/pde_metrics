@@ -66,8 +66,8 @@ tells an amplitude error from a level error.
 This is a control, not a discriminating test.
 
 Scaling the fluctuation rather than the raw field is a deliberate choice with a
-consequence: on the density field, whose mean is 1.0 and whose fluctuations are of order
-1e-4, scaling the raw field would be an enormous perturbation dominated entirely by the
+consequence: on the density field, whose mean is 1.0 and whose fluctuation RMS is 2.1e-3 to
+6.7e-3 over the evidence window of `kinet_re5e4` (`AGENTS.md` §4), scaling the raw field would be an enormous perturbation dominated entirely by the
 background. Equation (1) keeps the experiment about the structure, but it means the
 operator is not simply "multiply the field", and a reader expecting the latter will
 misread the severity.

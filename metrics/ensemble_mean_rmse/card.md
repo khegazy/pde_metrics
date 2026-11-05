@@ -310,6 +310,8 @@ anchor alike. `vrmse` (0.907) and `max_error` (0.67) are computed on the same me
 agree less. In the run's `results.csv`, `vrmse`'s eight dispersion values differ from one
 another only in their last digits, so round-off breaks the tie this metric keeps, and
 `max_error`'s median at the mildest offset lies below its value at the dispersion strengths.
+Ranking round-off is a defect of the correlation, not of either metric
+([issue 145](https://github.com/khegazy/pde_metrics/blob/main/issues/145-cross-metric-correlation-ranks-round-off.md)).
 The probabilistic scores order the degradations least like it, because they separate the eight
 dispersion strengths this metric ties: `crps` and `energy_score` at 0.542, `rank_histogram_chi2`
 at 0.392, `rank_histogram` at 0.323, `spread_skill` near zero (−0.0094) and `variogram_score`,

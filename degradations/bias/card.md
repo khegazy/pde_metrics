@@ -49,8 +49,8 @@ every contrast, every structure and the entire spectrum above the zero mode.
 ## Severity scale
 
 The severity is the offset as a fraction of the reference field's fluctuation RMS,
-which is what makes it comparable between fields. On density, whose fluctuations are four
-orders of magnitude below its mean, an offset stated in raw units would be meaningless;
+which is what makes it comparable between fields. On density, whose fluctuation RMS is two to
+three orders of magnitude below its mean (2.1e-3 to 6.7e-3 of 1.0, `AGENTS.md` §4), an offset stated in raw units would be meaningless;
 stated as a fraction of the fluctuation it means the same thing there as on vorticity.
 
 The default set configures it at 0.01, 0.05, 0.2 and 0.5, the strengths of `gain`, so mean

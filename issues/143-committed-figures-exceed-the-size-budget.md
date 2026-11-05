@@ -15,8 +15,8 @@ leading with its field's standard figure. The generated files grew accordingly.
 
 ## Evidence
 
-Measured after the regeneration of 2026-11-04 from the final-pass runs (before the
-`persistence_wasserstein` shards finished), with every committed generated file the size test
+Measured after the first regeneration of 2026-11-04 from the final-pass runs, before the dense
+curves were thinned, with every committed generated file the size test
 counts:
 
 | What | Size |

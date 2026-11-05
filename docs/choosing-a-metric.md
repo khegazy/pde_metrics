@@ -310,8 +310,11 @@ diagram itself, which is the first figure on both pages, and reports beside the 
 stability theorem bounding it by the change in the field.
 
 **Experiments.** The stability theorems concern perturbed fields, which are the noise and
-smoothing axes of the degradation ladder; both metrics also run on the forecasts and the
-Reynolds ladder. Missing: fields with a known population of features, and features added or
+smoothing axes of the degradation ladder. `persistence_distance` runs on that ladder, the
+forecasts and the Reynolds ladder. `persistence_wasserstein` runs only on the forecasts, on a 64
+by 64 grid: it is held back from both turbulence ladders because it is too slow there for now
+([issue 144](https://github.com/khegazy/pde_metrics/blob/main/issues/144-persistence-wasserstein-too-slow-on-turbulence-runs.md)).
+Missing: fields with a known population of features, and features added or
 removed by a known amount
 ([EXP-orchestrator-20261023-known-vortex-field](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-orchestrator-20261023-known-vortex-field.md),
 [EXP-persistence_distance-spurious-feature-injection](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-persistence_distance-spurious-feature-injection.md),
