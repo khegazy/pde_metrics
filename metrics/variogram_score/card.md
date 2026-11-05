@@ -306,8 +306,9 @@ widened member adds its excess scatter to every pairwise difference, while a nar
 lose at most the scatter it had (this card's reading, not a separate measurement).
 
 On the damage scale both axes are small. Damage 1 is the field's own mean, each member
-replaced by its spatial mean, which scores about 29 times the clean value; against it the
-harshest inflation reaches a damage of 0.063 and the harshest deflation 0.0078, so neither
+replaced by its spatial mean, which scores 5.88e5 against the clean 2.04e4, a median rise of
+27.9 times the clean value; against it the harshest inflation reaches a damage of 0.0629 and
+the harshest deflation 0.00785 (the largest in any frame), so neither
 axis reaches a tenth of the way to the anchor ("first strength detected" reads a dash), and
 deflation's response is listed as provably below the margin. The ordering is still perfect on
 both; the score is ordered by dispersion but charges little for it relative to losing all the

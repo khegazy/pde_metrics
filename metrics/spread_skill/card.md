@@ -289,27 +289,34 @@ The clean ensemble reads 0.990, within one percent of the exchangeable value of 
 which is the closed-form check on the estimator: the Fortin form and the sqrt((M+1)/M)
 correction together land on the analytic answer at 16 members.
 
-From there the axes separate cleanly in both directions — 0.198 at the harshest deflation
-and 3.962 at the harshest inflation — with a rank correlation of 1 and no overlap between
-neighbouring strengths on either. Note what that pair of numbers means for the ordering
+From there the axes separate cleanly in both directions, with a rank correlation of 1 and no
+overlap between neighbouring strengths on either. At the harshest strengths the ratio has
+fallen by 0.8 of its clean value under deflation and risen by three times its clean value
+under inflation (the reactivity table). These are exactly the factors the operators apply to
+the spread, a fifth and four times the calibrated width, because both leave the ensemble mean,
+and so the error in the denominator, unchanged. The smallest value in any frame is 0.197 and
+the largest 4.05. Note what that pair of directions means for the ordering
 statistics: the raw value moves *down* on one axis and *up* on the other, so both score 1
 only because the analysis ranks on distance from the declared target rather than on the
 value itself. A metric like this scored as an ordinary error would read −1 on one of its
-two axes and look broken.
+two axes and look broken. The ratio moves a tenth of the way to the anchor at the mildest
+strength of both axes (level 1).
 
-The damage is read on the same distance from the target. The anchor, each member replaced by
-its own spatial mean, collapses the spread and reads 0.0040, on the low side of one; the
-harshest inflation still reads a damage of 0.609 and the harshest deflation 0.676, both
-positive, because the damage measures how far from one the ratio is, not which side it is on.
+The damage is read on the same distance from the target (`judgements/008`). The anchor, each
+member replaced by its own spatial mean, collapses the spread and reads 0.00399, on the low
+side of one; the harshest inflation still reads a damage of 0.609 and the harshest deflation
+0.676 (the largest in any frame), both positive, because the damage measures how far from one
+the ratio is, not which side it is on.
 The profile row above ranks the degradations by damage per unit of field change, but the two
 dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
 round-off; its "charges most for", "charges least for" and selectivity are therefore not
 meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/blob/main/issues/111-damage-per-change-divides-by-round-off-on-ensemble-axes.md)).
 
-The bias axis is the useful contrast. It falls from 0.990 to 0.378 without any change in
-dispersion at all, because biasing the members moves the ensemble mean away from the truth
-and so inflates the denominator. A low ratio therefore does not by itself mean an
-overconfident ensemble; it means spread and error disagree, and this axis is the reminder
+The bias axis, in the Performance tables, is the useful contrast. The ratio falls by 0.62 of
+its clean value at the harshest offset, to a smallest single value of 0.374, with a damage of
+0.459, without any change in dispersion at all, because biasing the members moves the
+ensemble mean away from the truth and so inflates the denominator. A low ratio therefore does
+not by itself mean an overconfident ensemble; it means spread and error disagree, and this axis is the reminder
 that the error can be the thing that moved.
 
 ## References

@@ -246,8 +246,42 @@ repository it can run on; the experiments its field relies on are listed in the 
 
 <!-- END GENERATED results_ensemble -->
 
-The reading of this test is written once the evidence is generated from the final run of every
-metric on `synthetic_ensemble`; until then this card cites no measurement.
+The calibrated ensemble reads 12.4 (median over frames). This dataset's cells are independent
+and its ranks are drawn from 16 members, so under calibration the statistic follows a
+chi-square distribution with 16 degrees of freedom, whose mean is 16 and standard deviation
+√32 ≈ 5.7; the clean median lies inside that scatter, which is the check on the estimator that
+this calibrated null can give (this card's arithmetic, from Jolliffe and Primo's Equation (1)
+[@jolliffeprimo2008]).
+
+Both directions raise the statistic far above it, with a rank correlation of 1 on each: at the
+harshest strengths it has risen by 1.21e3 times its clean value under deflation and by 439
+times under inflation (the reactivity table), with the largest single values 1.58e4 and 5.61e3.
+Read as a test, every degraded strength is overwhelmingly significant (the smallest value on
+either dispersion axis in any frame, 205, is more than thirty standard deviations of the null
+above its mean), which is the
+Limitations section's point made concrete on 4096 draws per frame: the statistic separates
+these strengths through their size, not through a p-value. The deflation side grows faster,
+with an elasticity of 2.79 against inflation's 1.40 over the mildest strengths, and is
+detected one strength earlier (level 2 against level 4): an over-narrow ensemble moves draws
+into two end bins, a large departure from flat in few bins, while an over-wide one spreads its
+excess over the middle bins (this card's reasoning; the shapes are drawn on the
+`rank_histogram` card). The statistic, like the index it accompanies, does not say which of
+the two it saw.
+
+On the damage scale the anchor, each member replaced by its own spatial mean, reads 3.03e4.
+Against it the harshest deflation reaches a damage of 0.520 and the harshest inflation 0.184
+(the largest in any frame). The `bias` axis, in the Performance tables, goes beyond the
+anchor: its harshest offset reaches a damage of 1.23, with a largest single value of 3.72e4.
+That follows from Equation (1) (this card's arithmetic): with $n$ draws in $K$ bins, all of
+them in one bin gives $n(K - 1)$, while half in each of two bins, which is about what the
+anchor produces, gives $n(K/2 - 1)$, so the one-sided pile-up of a biased ensemble scores
+higher than the two-sided pile-up of a collapsed one. This card has no subsection of its own
+for that axis; its numbers are those of the Performance tables and the card's fingerprint.
+
+The profile row above ranks the degradations by damage per unit of field change, but the two
+dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
+round-off; its "charges most for", "charges least for" and selectivity are therefore not
+meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/blob/main/issues/111-damage-per-change-divides-by-round-off-on-ensemble-axes.md)).
 
 ## References
 

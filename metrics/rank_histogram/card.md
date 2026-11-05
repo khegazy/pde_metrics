@@ -289,16 +289,48 @@ The clean ensemble reads 0.0451, which is the sampling floor rather than zero: 1
 over a 64x64 grid give 17 bins and a finite histogram is never exactly flat. Every measured
 departure below should be read against 0.0451, not against zero.
 
-Both directions rise well clear of it — to 1.240 at the harshest deflation and 1.011 at the
-harshest inflation, a factor of 20 or more — with a rank correlation of 1 on each. The
+Both directions rise well clear of it, with a rank correlation of 1 on each: at the harshest
+strengths the index has risen by 26.6 times its clean value under deflation and 21.4 times
+under inflation (the reactivity table); deflation is detected at the mildest strength and
+inflation at the second. The
 index cannot say which direction it saw, and that is the limitation stated above made
-concrete: 1.0 could be either fault, and only `spread_skill`'s side of one distinguishes
-them.
+concrete: a value near one could be either fault, and only `spread_skill`'s side of one
+distinguishes them.
 
-Deflation registers more strongly than inflation at comparable severity, which follows from
-the shapes: an over-narrow ensemble pushes the truth outside the members entirely, piling
-draws into the two end bins, while an over-wide one merely concentrates them toward the
-middle and leaves every bin occupied.
+The histogram itself, the curve companion drawn in the Performance section, is the field's
+own figure (Hamill, Figure 1) [@hamill2001], and on it the two faults take the shapes the
+Limitations section names. Under deflation both end bins grow, ranks 0 and 16 rising by 5.14 and 5.34 times
+their clean values at the harshest strength, and every interior bin shrinks: the U of an
+over-narrow ensemble, with up to 0.382 of a frame's draws in rank 0 alone. Under inflation
+the end bins empty, ranks 0 and 16 falling to none at the harshest strength, and the middle
+fills, rank 8 rising by 2.35 times its clean value: the dome of an over-wide ensemble. The
+`bias` axis gives the slope of a biased one, rank 0 rising by 11.3 times its clean value and
+rank 16 emptying. On the clean ensemble every rank holds between 0.0565 and 0.0609 of the
+draws, about the flat value of 1/17 (numbers from the companion statistics in the card's
+fingerprint).
+
+Deflation registers more strongly than inflation at the harshest strengths here, which follows
+from the shapes: an over-narrow ensemble pushes the truth outside the members entirely, piling
+draws into the two end bins, while an over-wide one merely concentrates them toward the middle
+and leaves the interior bins occupied (this card's reasoning). The same shapes say why the
+curve's ordering is less tidy under inflation: as the dome narrows, the bins at its flanks,
+ranks 5 and 11, first fill and then empty again, so their rank correlations with the strength
+are 0.4 and 0.1. For the same reason the curves of neighbouring inflation strengths do not
+nest: for at least one pair of neighbouring strengths, no frame has the harsher one at least
+as far from clean as the milder one at every rank (the companion's dominance, 0 for inflation
+against 0.417 for deflation in the fingerprint).
+
+On the damage scale the anchor, each member replaced by its own spatial mean, scores 1.75: a
+collapsed ensemble ranks the truth below or above every member at almost every cell, putting
+about half of the draws in each end bin. Against it the harshest deflation reaches a damage of
+0.718, the harshest inflation 0.577 and the harshest offset 0.870 (the largest in any frame).
+The `bias` axis has no subsection of its own on this card; its numbers are those of the
+Performance tables and the card's fingerprint.
+
+The profile row above ranks the degradations by damage per unit of field change, but the two
+dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
+round-off; its "charges most for", "charges least for" and selectivity are therefore not
+meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/blob/main/issues/111-damage-per-change-divides-by-round-off-on-ensemble-axes.md)).
 
 ## References
 

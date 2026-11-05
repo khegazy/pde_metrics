@@ -285,6 +285,12 @@ fair kernel score a little above the calibrated width at sixteen members (a deri
 this card's, recorded with the bundle's PR; the `crps` card's ladder has the same
 construction).
 
+On the damage scale both dispersion axes are small. Damage 1 is the anchor, each member
+replaced by its own spatial mean, which scores 40.1 against the clean 6.85. Against it the
+harshest inflation reaches a damage of 0.138 and the harshest deflation 0.0590 (the largest in
+any frame), so the score first moves a tenth of the way to the anchor at the harshest
+inflation (level 4) and never does on the deflation axis.
+
 The profile row above ranks the degradations by damage per unit of field change, but the two
 dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
 round-off; its "charges most for", "charges least for" and selectivity are therefore not
@@ -309,7 +315,8 @@ because the synthetic ensemble has no spatial correlation for it to see.
 <!-- END GENERATED results_pointwise -->
 
 A uniform offset raises the score in every frame, by 2.08 times the clean value at the
-harshest offset, with an elasticity of 1.87 over the mildest offsets: close to quadratic,
+harshest offset, reaching a damage of 0.431, with an elasticity of 1.87 over the mildest
+offsets: close to quadratic,
 because the offset adds to every member's distance from the reference in quadrature with the
 members' own scatter, and the root of a sum of squares grows with the square of the smaller
 term while that term is small.

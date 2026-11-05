@@ -254,8 +254,40 @@ repository it can run on; the experiments its field relies on are listed in the 
 
 <!-- END GENERATED results_ensemble -->
 
-The reading of this test is written once the evidence is generated from the final run of every
-metric on `synthetic_ensemble`; until then this card cites no measurement.
+The calibrated ensemble has a skill of 0.761 (median over frames): it removes about three
+quarters of the climatological score. That number is set mainly by how much of the field's
+variation the deterministic pattern of this dataset explains, which the ensemble knows and
+climatology does not, and says little about the ensemble's spread (this card's reasoning; see
+Limitations).
+
+Both directions lower the skill, with a rank correlation of 1 and no overlap between
+neighbouring strengths on either axis. At the harshest strengths the skill has fallen by 0.206
+of its clean value for inflation, to four times the calibrated width, and by 0.0881 for
+deflation, to a fifth of it (the reactivity table). As on the `crps` card, the mildest
+inflation scores marginally better than the calibrated ensemble in most frames, which is why
+the inflation axis's largest value, 0.767, lies above the clean median: the ladder widens the
+members about their own sample mean, and the fair score's optimum then sits at a slightly
+inflated spread. Within one frame the climatology is fixed, because the ladder changes only
+the members, so the skill score is a decreasing linear function of the CRPS there, and the
+statistics computed inside a frame, the rank correlation and the fraction of frames in order,
+are those of `crps` (a consequence of Equation (2), not a separate measurement).
+
+On the damage scale the dispersion axes are small. The anchor, each member replaced by its own
+spatial mean, has a skill of −0.422: an ensemble collapsed onto one number per frame scores
+worse than climatology, which at least spreads its prediction over the field's values. Against
+it the harshest inflation reaches a damage of 0.137 and the harshest deflation 0.0592 (the
+largest in any frame); the skill first moves a tenth of the way to the anchor at the harshest
+inflation (level 4) and never does on the deflation axis.
+
+The `bias` axis, in the Performance tables, moves the ensemble mean, and the skill falls by
+0.793 of its clean value at the harshest offset, to a lowest single value of 0.154; it reaches
+a damage of 0.513 and is first detected at level 3. This card has no subsection of its own for
+that axis; the numbers are those of the Performance tables and the card's fingerprint.
+
+The profile row above ranks the degradations by damage per unit of field change, but the two
+dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
+round-off; its "charges most for", "charges least for" and selectivity are therefore not
+meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/blob/main/issues/111-damage-per-change-divides-by-round-off-on-ensemble-axes.md)).
 
 ## References
 

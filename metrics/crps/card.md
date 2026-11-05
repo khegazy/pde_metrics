@@ -274,7 +274,7 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 <!-- END GENERATED experiments -->
 
 CRPS scores an ensemble, so the synthetic ensemble is the one experiment in this repository it
-can run on; the other three hold one realisation per frame. The experiments its field relies
+can run on; every other experiment holds one realisation per frame. The experiments its field relies
 on, many forecast cases scored against what happened, and forecasters of known calibration and
 sharpness, do not exist here. The second is written up in
 [EXP-crps-gneiting-forecaster-suite](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-crps-gneiting-forecaster-suite.md),
@@ -295,21 +295,46 @@ and the first waits on an ensemble of independent realisations
 
 <!-- END GENERATED results_ensemble -->
 
-Both directions raise the score at their harsher strengths: widening the ensemble (to 0.141
-at the harshest inflation) or narrowing it (to 0.109 at the harshest deflation) both cost
-against the calibrated 0.085. The calibrated ensemble is not exactly the minimum on this
-ladder: the mildest inflation scores marginally below it. The ladder scales the members about
-their own sample mean, which is not the distribution the reference was drawn from, so the
-fair score's optimum sits at a slightly inflated spread; the `energy_score` card derives the
-same effect. The two sides are not symmetric. Inflation is the steeper of the two here,
-costing 0.056 against deflation's 0.024 at comparable severity, because an ensemble stretched
-to four times its honest width puts most of its members far from the truth while one
-collapsed toward its mean keeps them all near a centre that is itself close to correct.
+Both directions raise the score, with a rank correlation of 1 and no overlap between
+neighbouring strengths on either axis: narrowing the ensemble and widening it are both
+penalised, which is what propriety predicts. The calibrated ensemble scores 0.0854 (median over
+frames). At the harshest strengths the score has risen by 0.655 of that clean value for
+inflation, to four times the calibrated width, and by 0.282 for deflation, to a fifth of it
+(the reactivity table). The calibrated ensemble is not exactly the minimum on this ladder: the
+mildest inflation scores marginally below the clean value of its frame in most frames, which is
+why the inflation axis's smallest value in the run, 0.0832, lies below the clean median. The
+ladder scales the members about their own sample mean, which is not the distribution the
+reference was drawn from, so the fair score's optimum sits at a slightly inflated spread; the
+`energy_score` card derives the same effect. Inflation is the steeper side here, because an
+ensemble stretched to four times its honest width puts most of its members far from the truth
+while one collapsed toward its mean keeps them all near a centre that is itself close to
+correct (this card's reasoning, not a separate measurement).
 
 Read that asymmetry with the generator in mind rather than as a general property: the
 ensemble mean of this dataset is a good prediction, so there is little for deflation to
-expose. On a model whose centre is wrong, collapsing the spread removes the only thing
-covering that error, and the deflation side would be expected to bite harder.
+expose (this card's reasoning). No experiment here has an ensemble whose centre is wrong, on
+which collapsing the spread would remove the only thing covering that error.
+
+On the damage scale both dispersion axes are small. Damage 1 is the anchor, each member
+replaced by its own spatial mean, a forecast with no spread and no structure, which scores
+0.508. Against it the harshest inflation reaches a damage of 0.136 and the harshest deflation
+0.0594 (the largest in any frame), so the score first moves a tenth of the way to the anchor
+at the harshest inflation (level 4) and never does on the deflation axis. On an ensemble
+whose centre is right, the CRPS charges far less for a wrong spread than for losing the
+field's structure.
+
+The `bias` axis, in the Performance tables, is the contrast: it moves the ensemble mean, and
+the score rises by 2.53 times its clean value at the harshest offset, reaches a damage of
+0.516, and is first detected at level 3. Its elasticity of 1.91 over the mildest offsets is
+close to quadratic: a small offset adds to each cell's error in quadrature with the members'
+own scatter, so the score grows with its square until the offset dominates (this card's
+reasoning). This card has no subsection of its own for that axis; the numbers are those of
+the Performance tables and the card's fingerprint.
+
+The profile row above ranks the degradations by damage per unit of field change, but the two
+dispersion axes leave the ensemble mean, and so the measured field change, unchanged to
+round-off; its "charges most for", "charges least for" and selectivity are therefore not
+meaningful for this metric ([issue 111](https://github.com/khegazy/pde_metrics/blob/main/issues/111-damage-per-change-divides-by-round-off-on-ensemble-axes.md)).
 
 ## References
 

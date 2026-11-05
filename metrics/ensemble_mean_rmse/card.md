@@ -234,19 +234,32 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_ensemble -->
 
-The metric returns 0.1559 at every severity of both axes, to four decimals, against 0.1559
-at the clean severity level. That is the control working exactly as intended, and it is the
-sharpest statement in this bundle: an ensemble can go from honestly dispersed to four times
-too wide, or be collapsed to a fifth of its proper width, and this metric cannot tell.
+In every frame the metric returns the same value at every strength of both axes as on the
+clean ensemble of that frame: the change from clean is 0 and the largest damage is 0 on both
+(the reactivity table and the fingerprint), and both axes are listed as provably below the
+margin. The values range from 0.152 to 0.157 across frames, around a clean median of 0.156,
+and that spread is the frames differing from one another, not the degradation. That is the
+control working as intended, because both operators scale the members about their own mean
+and leave that mean unchanged: an ensemble can go from honestly dispersed to four times too
+wide, or be collapsed to a fifth of its proper width, and this metric cannot tell.
 
 The absence of a rank correlation on these two axes is therefore correct rather than
 missing. There is no ordering to detect, so the analysis withholds the statistic instead of
 reporting a correlation computed on round-off.
 
-Read beside `crps` on the same run, this is what the probabilistic panel buys: CRPS moves
-from 0.085 to 0.141 and 0.109 across the same two axes while this number does not move at
-all. A panel carrying only mean-based scores would have reported both of those ensembles as
-identical to the calibrated one.
+Read beside `crps` on the same run, this is what the probabilistic panel buys: the CRPS rises
+on both of these axes (its card) while this number does not move at all. A panel carrying
+only mean-based scores would have reported both of those ensembles as identical to the
+calibrated one.
+
+The `bias` axis, in the Performance tables, is the one that moves the ensemble mean, and the
+metric responds to it as root-mean-square error does: it rises by 1.63 times its clean value
+at the harshest offset, with an elasticity of 1.82 over the mildest offsets, and reaches a
+damage of 0.542 against the anchor, each member replaced by its own spatial mean, which scores
+0.629. This card has no subsection of its own for that axis; the numbers are those of the
+Performance tables and the card's fingerprint. In this run every row equals the `rmse` row of
+the same frame, axis and strength exactly, because a pairwise metric already receives the
+member mean (Definition).
 
 ## References
 
