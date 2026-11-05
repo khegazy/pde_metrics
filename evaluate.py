@@ -232,10 +232,16 @@ def main(cfg: DictConfig) -> Path:
             f"({', '.join(spec.name for spec in specs)}), so no run folder was written; "
             "the log above says why"
         )
+    def labels(name: str) -> set[str]:
+        """The metric's own label and every companion's (``name.<companion>``), so a metric's
+        folder keeps its named companions' rows and maps as the comparison folder does."""
+        spec = metric_registry.get(name)
+        return {name} | {metric_registry.companion_label(name, c.name) for c in spec.companions}
+
     written = [
         write_folder(name, result.rows[result.rows["metric"] == name],
-                     {k: v for k, v in result.maps.items() if parse_map_key(k)[0] == name},
-                     (result.companions[result.companions["metric"] == name]
+                     {k: v for k, v in result.maps.items() if parse_map_key(k)[0] in labels(name)},
+                     (result.companions[result.companions["metric"].isin(labels(name))]
                       if not result.companions.empty else result.companions),
                      metric=name, timings=timings)
         for name in ran

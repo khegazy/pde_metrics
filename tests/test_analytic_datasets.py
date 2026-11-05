@@ -34,9 +34,9 @@ from fmeval.data.base import READERS
 from fmeval.data.readers import open_trajectory
 from fmeval.derived import RecomputingTrajectory
 from fmeval.external.kinet_spectral import divergence, spectral_derivative
-from fmeval.io import read_run_meta
+from fmeval.io import read_maps, read_run_meta
 from fmeval.ladder import build_ladder
-from fmeval.pipeline import DatasetInfo, run
+from fmeval.pipeline import DatasetInfo, parse_map_key, run
 from metrics import registry as metric_registry
 from tests.conftest import GRID
 
@@ -228,6 +228,21 @@ def test_evaluate_writes_no_folder_for_a_metric_it_did_not_run(tmp_path):
     folders = [p for p in tmp_path.glob("*_*") if p.is_dir()]
     assert [p.name.split("_")[0] for p in folders] == ["mse"]
     assert read_run_meta(folders[0])["boundary"] == ["neumann"]
+
+
+def test_a_metric_run_alone_keeps_its_named_companions(tmp_path):
+    """A metric's own folder holds its named companions (``shock_set_distance.profile``) as the
+    comparison folder does; a run of that metric alone writes only its own folder."""
+    subprocess.run(
+        [sys.executable, str(REPO / "evaluate.py"), "dataset=sod_shock_tube",
+         "degradation=quick", "metrics=[shock_set_distance]", "+dataset.reader.grid=[64]",
+         "+dataset.reader.n_frames=3", f"paths.results={tmp_path}",
+         f"hydra.run.dir={tmp_path}/h"],
+        check=True, capture_output=True, cwd=tmp_path,
+    )
+    (folder,) = [p for p in tmp_path.glob("shock_set_distance_*") if p.is_dir()]
+    stored = {parse_map_key(k)[0] for k in read_maps(folder)}
+    assert "shock_set_distance.profile" in stored, stored
 
 
 def test_evaluate_fails_when_no_metric_produced_a_row(tmp_path):
