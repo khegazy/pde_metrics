@@ -33,7 +33,8 @@ degradation `exemplars.png` 7.3 MB, `response_curves.svg` 7.0 MB, `sensitivity_p
 
 The dense curves are now drawn at most at 256 evenly spaced coordinates plus the analysed ones
 (`fmeval/report/plots.py::_DENSE_DRAWN`). After the final regeneration of 2026-11-04 (20:01), with
-that thinning and no figure dropped, the test measures **76.8 MB**. The largest files are
+that thinning and no figure dropped, the test measured **76.8 MB**, and **79.3 MB** once the
+overview figures were redrawn from `comparison_1793846511` and the readings written. The largest files are
 `persistence_distance/companion_points__field-vorticity.json` (3.3 MB) and the shock cards' shared
 pressure line-outs (`companion_points__field-pressure.json`, 1.6 MB each). This is the evidence
 itself, past the 50 MB line.
