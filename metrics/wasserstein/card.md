@@ -410,7 +410,8 @@ Every blur moves mass from the density's peaks into its troughs, and the distanc
 
 <!-- END GENERATED results_spectral -->
 
-All four filters follow the fraction of energy removed on every frame. The high-pass pair separates neighbouring strengths least well (weakest gap 0.548 for `highpass_ideal`), because removing density's large-scale modes takes most of its fluctuation at once, and the harshest high-pass and low-pass strengths go slightly past the anchor (largest damage 1.08 for `lowpass_ideal`, `highpass_ideal` and `highpass_butterworth`).
+All five filters follow the fraction of energy removed on every frame. The high-pass pair separates neighbouring strengths least well (weakest gap 0.548 for `highpass_ideal`), because removing density's large-scale modes takes most of its fluctuation at once (my reading), and the harshest high-pass and low-pass strengths go slightly past the anchor (largest damage 1.08 for `lowpass_ideal`, `highpass_ideal` and `highpass_butterworth`). `band_attenuate` moves it very little (largest damage 0.000856) and is among the degradations whose response is provably below 0.05.
+
 ### Displacement
 
 [translate_x](../../degradations/translate/card.md) ·
@@ -443,7 +444,7 @@ Both axes follow the shift on every frame, as pre-registered, and the elasticity
 
 <!-- END GENERATED results_resolution -->
 
-Both coarsenings follow the factor on every frame, but their response is small: the profile table lists both, and noise, among the degradations whose damage is provably below 0.05. Block averaging redistributes mass only within a block, and density's fluctuation sits in the largest scales, so little mass moves far.
+All three operators follow the factor on every frame. The response of the two coarsenings is small: the profile table lists both among the degradations whose damage is provably below 0.05 (largest damage 0.0487 under `coarsen` and 0.0108 under `coarsen_bandlimited`). My reading: block averaging redistributes mass only within a block, and density's fluctuation sits in the largest scales, so little mass moves far. `subsample` costs more, with a largest damage of 0.308.
 
 ### Noise
 
@@ -458,7 +459,9 @@ Both coarsenings follow the factor on every frame, but their response is small: 
 
 <!-- END GENERATED results_stochastic -->
 
-Ordered perfectly, with no overlap between neighbouring amplitudes, and with an elasticity of 0.997, so the distance is proportional to the noise amplitude. The damage stays tiny (largest 0.0204): independent noise in each cell is evened out by moving mass over about a cell, which costs little next to the anchor. Noise is what this metric charges least for.
+`additive_noise` is ordered perfectly, with no overlap between neighbouring amplitudes, and with an elasticity of 0.997, so the distance is proportional to the noise amplitude. The damage stays tiny (largest 0.0204): independent noise in each cell is evened out by moving mass over about a cell, which costs little next to the anchor (my reading). Only `bias`, `band_attenuate` and `coarsen_bandlimited` move it less.
+
+`multiplicative_noise` has no ordering statistics, and the dashes do not mean the distance is blind to it. Its harshest level makes density negative in some cells of every frame, where the distance is undefined and the value is NaN (`issues/139`), and the run records no rank correlation, fraction in order or gap for the whole axis; that the NaN level is what removes them is my reading of `fmeval/analysis.py`. On the four milder levels the distance is defined, and its largest damage there is 0.639.
 
 ### Trap tests
 
@@ -507,7 +510,7 @@ Rank correlation over every degradation, computed separately for each physical f
 
 <!-- END GENERATED results_summary -->
 
-[h_minus_one](../../metrics/h_minus_one/card.md) correlates with this metric at 0.99998 on density, the highest in the table, and every axis's largest damage and elasticity, and both probes, agree with its own to within about one percent. That is what the first-order relation in the Definition predicts for a density this close to uniform; Equation (5) alone would allow a factor of two. On kinet density the two metrics carry the same information, and this one costs 0.064 s per evaluation where `h_minus_one` takes 0.0022 s, a ratio of 29 in this run; Limitations gives the same ratio measured in one process.
+[h_minus_one](../../metrics/h_minus_one/card.md) orders the ladder almost exactly as this metric does on density, the highest correlation in the table, followed by `max_error` and the pointwise errors. On every axis but two, the largest damage and the elasticity of the two metrics, and both trap-test damages, agree to within about one percent (the two fingerprints). The exceptions are `bias`, which this metric orders and `h_minus_one` does not see, and `multiplicative_noise`, whose harshest level this metric cannot score. That agreement is the first-order relation in the Definition at work on a density this close to uniform; Equation (5) alone would allow a factor of two. On kinet density the two metrics carry nearly the same information, and this one costs 0.267 s per evaluation in this run, 1.09e+03 times the cheapest metric (Profile), many times what `h_minus_one` costs in the same run (its card's Profile); Limitations gives the ratio measured in one process.
 
 ### Damage beside the other metrics
 
@@ -611,7 +614,7 @@ Median damage over frames at every strength, this metric in the first row and th
 
 <!-- END GENERATED results_damage_by_level -->
 
-Only one metric was in the run, so there is nothing to place beside it here; see the comparison with `h_minus_one` above.
+This is the figure the transport-misfit literature draws, the misfit against an applied shift (`### How its field reports it`). On density this metric charges slightly less than `mae` and `rmse` at every shift, and its line is close to parallel to theirs: its damage is proportional to the shift over the whole range, and so, on density over this range, are theirs. *Displacement* above says why a shift costs this metric so little on this density. Velocity and vorticity carry no value because the metric reads density only.
 
 ### On `forecast_re5e4`
 
@@ -660,6 +663,21 @@ wasserstein on density against lead time, the physical time since the forecast s
 Every prediction of every forecast, nothing pooled: a cell is one prediction step of one forecast, a row the lead time (the physical time since the forecast started) and a column the forecast, named by its run's native grid and its starting time (`64², start 0` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-0`; `128², start 0` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-0`; `256², start 0` is `F-906861_64/forecast_t0-0`; `64², start 1.13` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250`; `128², start 1.13` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-2500`; `256², start 1.13` is `F-906861_64/forecast_t0-5000`). **Damage** is the prediction's departure from the target as a fraction of the anchor's in the same frame, by default the target's own spatial mean, so each step is scaled by its own target. A dash means no value there.
 
 <!-- END GENERATED results_on_forecast_re5e4 -->
+
+On real forecasts the distance behaves as [h_minus_one](../../metrics/h_minus_one/card.md)
+does on the same forecasts, to two figures or better at every step, as the first-order relation
+in the Definition gives for a density this close to uniform.
+
+- **The coarser the forecast's grid, the larger the distance**, at almost every step: at the
+  first lead time, 0.1128, the damage from start 0 is 0.0229, 0.00774 and 4.78e-05 on the 64²,
+  128² and 256² forecasts.
+- **The 64² forecast from start 0 peaks** at lead time 0.5638 (damage 0.432, distance 0.036)
+  and then eases (0.163 at lead time 1.128).
+- **From start 1.13 the 256² forecast stays close to its target** (damage at most 0.000253);
+  from start 0 it grows at every step, to 0.0312 at lead time 1.128.
+
+The damage is scaled by the anchor of each step, the distance from the target to its own mean,
+whose median over the run is 0.168.
 
 ### On `kinet_re1e6`
 
@@ -752,6 +770,18 @@ Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_on_kinet_re1e6 -->
+
+At twenty times the Reynolds number, on a 128² grid instead of 256², every axis that has an
+ordering is in order on every frame, as on `kinet_re5e4`, including `bias` and `gain`
+(rank correlation 1). `multiplicative_noise` again has none, for the same reason (`issues/139`).
+The fake prediction again scores worse than the field's mean (damage 1.35) and the reference
+moved far away about as much as the mean (1.11).
+
+The anchor is 0.696 here against 0.172 on `kinet_re5e4`, so absolute values are not comparable
+between the two runs; damages are. On that scale the shifts cost more here: the largest damage
+is 0.893 under `translate_x` and 0.896 under `translate_y`, against 0.468 on `kinet_re5e4`, with
+the elasticity to a sub-pixel shift still 1. The grid differs between the two runs as well as
+the Reynolds number.
 
 ## References
 

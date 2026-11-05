@@ -212,9 +212,10 @@ diagnostic is evaluated on the reference and on every degraded variant alike, so
 read here is the drift away from the reference value rather than an error. On the damage scale
 the anchor is the field's own spatial mean, which has zero enstrophy, so damage is the
 enstrophy lost as a fraction of the median reference value over snapshots: positive when the value
-falls and negative when it rises. The reference's enstrophy varies by a factor of 2.2 over the
-run, so the fraction of each snapshot's own enstrophy lost, the change from clean in the tables,
-differs from the damage.
+falls and negative when it rises. The reference's enstrophy runs from 2.27e-6 to 4.95e-6 over
+the run (the range of the value under the translations, which leave it unchanged), so the
+fraction of each snapshot's own enstrophy lost, the *change from clean* in the tables and the
+relative error of the integral of `### How its field reports it`, differs from the damage.
 
 <!-- GENERATED experiments: written by `python -m fmeval.cards catalog`, do not edit -->
 
@@ -250,6 +251,13 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_smoothing -->
 
+Every blur lowers the enstrophy, and each stronger blur lowers it further on every frame (rank
+correlation 1, every frame in order). The relative error of the integral at the harshest
+strength runs from $-0.234$ under `median_blur` to $-0.465$ under `gaussian_blur`. Neighbouring
+strengths overlap across frames (weakest gaps 0.644 to 0.733) although they never swap within
+a frame: the reference's own enstrophy varies across the run by more than one strength moves
+it.
+
 ### Spectral filtering
 
 [lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
@@ -269,6 +277,13 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_spectral -->
 
+Every filter lowers the enstrophy in order of strength on every frame. The high-pass filters
+remove nearly all of it at their harshest strength (relative error $-0.971$ under
+`highpass_butterworth` and $-0.962$ under `highpass_ideal`, fingerprint), the low-pass filters
+about half ($-0.492$ and $-0.473$), and `band_attenuate` $-0.188$. As under smoothing, the
+neighbouring strengths overlap across frames (weakest gaps 0.534 to 0.685) because the
+reference's enstrophy varies across the run.
+
 ### Displacement
 
 [translate_x](../../degradations/translate/card.md) ·
@@ -285,9 +300,9 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 <!-- END GENERATED results_geometric -->
 
 A translation moves the field without changing any of its values, so a quantity built from
-those values alone cannot see it at all. Measured, it is flat: on every frame and at every
-shift the value matches the reference's to within 1e-12 of it, which is why the table has
-no rank correlation. A measurement showing otherwise would indicate the translation is not
+those values alone cannot see it at all. Measured, it is flat: the largest damage over every
+frame and shift is 1.02e-12 under `translate_subpixel` and 5.50e-16 under the whole-cell shifts
+(fingerprint), which is why the table has no rank correlation. A measurement showing otherwise would indicate the translation is not
 conserving what it should — which is one of the things a reference-free diagnostic is
 useful for.
 
@@ -306,12 +321,18 @@ useful for.
 
 <!-- END GENERATED results_resolution -->
 
-Both coarsenings take the value steadily below its clean value, so each follows its
-degradation with a rank correlation of 1; it falls because detail is removed. `coarsen` removes more at every factor: 4%, 14%, 26% and 40% of the
-enstrophy at factors 2 to 16, against 0.1%, 5%, 17% and 31% under `coarsen_bandlimited`. The
-two keep the same block means; the staircase additionally flattens each block, discarding the
-variance inside it that the band-limited reconstruction keeps wherever the coarse grid can
-represent it.
+Both coarsenings lower the enstrophy in order of strength on every frame. At the harshest
+strength `coarsen` removes more of it (relative error $-0.410$) than `coarsen_bandlimited`
+($-0.294$), both far more than they remove of the
+[kinetic energy](../../metrics/kinetic_energy/card.md). My reading, not a measurement: the two
+keep the same large scales, and the staircase of `coarsen` additionally flattens each block,
+discarding the variance inside it that the band-limited reconstruction keeps wherever the coarse
+grid can represent it.
+
+`subsample` does not order its strengths: rank correlation 0.2, with 0.143 of frames in order
+and a weakest gap of 0.422. Its median relative error at the harshest strength is small
+($-0.0545$), but its values scatter widely, up to 8.30e-6 against a reference that never exceeds
+4.95e-6 (fingerprint), so on single frames it can add enstrophy as well as remove it.
 
 ### Noise
 
@@ -325,6 +346,13 @@ represent it.
 | `multiplicative_noise` | vorticity | 5 | 0.9 | 0.317 | 0.536 |
 
 <!-- END GENERATED results_stochastic -->
+
+Noise raises the enstrophy: the relative error at the harshest strength is $+0.250$ under
+`additive_noise` and $+0.246$ under `multiplicative_noise` (fingerprint), and it first moves by
+a tenth of the distance between the reference and the anchor at the harshest level of each
+(levels 4 and 5). Additive noise raises it in order (rank correlation 1, 0.919 of frames in
+order). Multiplicative noise does so less cleanly: rank correlation 0.9, 0.317 of frames in
+order, neighbouring strengths overlapping (weakest gap 0.536).
 
 ### Trap tests
 
@@ -377,6 +405,13 @@ quantity follows from the definition rather than from the data.
 Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
+
+The enstrophy orders the degradations most like
+[palinstrophy](../../metrics/palinstrophy/card.md), the other single-field integral of the
+vorticity budget, and next like `tail_index`. Its correlations with the two $H^1$ errors are
+near zero, and with every other pairwise metric they are negative, most strongly with
+`spectrum_l2`. It enters by its raw value, which falls under smoothing and filtering while every
+error rises; that the sign follows from this is my reading of the definitions.
 
 ### Damage beside the other metrics
 
@@ -480,6 +515,10 @@ Median damage over frames at every strength, this metric in the first row and th
 
 <!-- END GENERATED results_damage_by_level -->
 
+The enstrophy has a damage scale on vorticity only. On every shift its row is zero or a
+round-off residue, far below the pointwise controls, which grow with the shift: it charges
+nothing for a displacement of any size.
+
 ### On `forecast_re5e4`
 
 <!-- GENERATED results_on_forecast_re5e4: written by `python -m fmeval.cards evidence enstrophy --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
@@ -542,6 +581,26 @@ enstrophy on vorticity against lead time, the physical time since the forecast s
 Every prediction of every forecast, nothing pooled: a cell is one prediction step of one forecast, a row the lead time (the physical time since the forecast started) and a column the forecast, named by its run's native grid and its starting time (`64², start 0` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-0`; `128², start 0` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-0`; `256², start 0` is `F-906861_64/forecast_t0-0`; `64², start 1.13` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250`; `128², start 1.13` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-2500`; `256², start 1.13` is `F-906861_64/forecast_t0-5000`). **Damage** is the prediction's departure from the target as a fraction of the anchor's in the same frame, by default the target's own spatial mean, so each step is scaled by its own target. A dash means no value there.
 
 <!-- END GENERATED results_on_forecast_re5e4 -->
+
+This is the field's own experiment and figure: each forecast's enstrophy against lead time, with
+its target's dashed. The target's own enstrophy decays over the window, from 4.83e-6 to 2.91e-6
+from start 0 and from 2.77e-6 to 2.16e-6 from start 1.13. The anchor has zero enstrophy, so the
+damage reads as the relative error of the integral with its sign reversed: the fraction of the
+target's enstrophy the prediction lacks.
+
+- **The coarser forecasts lack much of it from the first step.** At lead time 0.1128 the 64²
+  forecasts lack 0.297 (start 0) and 0.201 (start 1.13) of their targets' enstrophy and the
+  128² forecasts 0.123 and 0.0958; the 256² forecasts lack 0.000545 and 0.000507.
+- **From start 1.13 the shortfall grows at every step** on all three grids, to 0.311, 0.175 and
+  0.00176 at lead time 1.128.
+- **From start 0 it does not.** The 64² and 128² forecasts' shortfall peaks at lead time 0.5638
+  (0.487 and 0.289) and then eases slightly (0.448 and 0.278 at 1.128), while the target's
+  enstrophy falls fastest over the same steps. The 256² forecast crosses its target at the same
+  lead time and ends above it: damage $-0.0738$ at 1.128, a prediction with more enstrophy than
+  its target.
+
+Against [kinetic energy](../../metrics/kinetic_energy/card.md) on the same forecasts, the
+shortfall here is several times larger at every step of the 64² and 128² forecasts.
 
 ### On `kinet_re1e6`
 
@@ -634,6 +693,27 @@ Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_on_kinet_re1e6 -->
+
+At twenty times the Reynolds number, on a 128² grid instead of 256², the enstrophy responds as
+on `kinet_re5e4` to every blur and filter with more than one usable strength, to both
+coarsenings and to the cell-value distortions (rank correlation 1, every frame in order), and
+the trap tests again score it damage 0. The reference's median enstrophy is 2.29e-7. What
+differs:
+
+- **Fewer usable blur strengths on this grid.** `box_blur`, `disk_blur` and
+  `epanechnikov_blur` keep two strengths each and `median_blur` one, so `median_blur` has no rank
+  correlation; its single strength lowers the enstrophy by 0.216 of its value (fingerprint).
+- **The coarsenings remove more.** The relative error at the harshest strength is $-0.698$
+  under `coarsen` and $-0.637$ under `coarsen_bandlimited`, against $-0.410$ and $-0.294$ on
+  `kinet_re5e4`. The grid also differs between the two runs, so this does not separate the
+  Reynolds number from the resolution.
+- **`subsample` raises the enstrophy** instead of lowering it: relative error $+0.895$ at the
+  harshest strength, rank correlation 0.4, with 0.217 of frames in order.
+- **Noise orders less cleanly.** Additive noise keeps rank correlation 1 but only 0.677 of
+  frames in order; multiplicative noise falls to rank correlation 0.7 with 0.211 of frames in
+  order.
+- **`translate_subpixel` is no longer flat to round-off**: its damage reaches 0.000150 at most,
+  and the departure does not grow with the shift (rank correlation $-0.698$, no frame in order).
 
 ## References
 

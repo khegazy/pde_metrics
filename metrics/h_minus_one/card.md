@@ -393,11 +393,11 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 Every smoothing axis is ordered correctly in every frame, on all three fields. The
 separability column is where the three kernels differ: the metric never confuses two
-neighbouring Gaussian-blur strengths on velocity or vorticity, and its weakest separation
-anywhere in this family is on `box_blur` applied to vorticity. Blur is the degradation this
-metric is least gentle on, which follows from what it does — smoothing removes small-scale
-content outright rather than moving it, and dividing by the wavenumber does not excuse an
-error that is simply missing.
+neighbouring Gaussian-blur strengths on velocity or vorticity (weakest gap 1), and its weakest
+separation anywhere in this family is on `box_blur` applied to vorticity (0.844). My reading of
+the mechanism: smoothing removes small-scale content outright rather than moving it, so the
+error is the missing content itself, which dividing by the wavenumber discounts but does not
+excuse.
 
 ### Spectral filtering
 
@@ -426,11 +426,12 @@ error that is simply missing.
 
 <!-- END GENERATED results_spectral -->
 
-The ordering is perfect on all four filters, but the separability is the weakest recorded
-anywhere for this metric, and it splits cleanly by which side of the spectrum the filter
-cuts. The two low-pass filters separate their neighbouring strengths well. The two high-pass
-filters do not: on density and vorticity their weakest gaps sit close to the 0.5 floor at
-which two strengths are indistinguishable.
+The ordering is perfect on all five filters, but the separability is the weakest recorded
+anywhere for this metric, and it splits by which side of the spectrum the filter cuts. The two
+low-pass filters separate their neighbouring strengths well (weakest gaps 0.848 to 1). The two
+high-pass filters do not: on density and vorticity their weakest gaps, 0.529 to 0.575, sit
+close to the 0.5 floor at which two strengths are indistinguishable. `band_attenuate` lies
+between (0.675 to 0.694).
 
 That is mostly a fact about the axis rather than about the metric, and `AGENTS.md` records
 it independently: on this data the high-pass axis is squeezed between a cutoff that does
@@ -438,7 +439,9 @@ nothing and one that destroys almost everything, so the intermediate strengths a
 together for any metric. There is a second contribution that is specific to this metric,
 though, and it works in the same direction: a high-pass filter removes the low modes, which
 are exactly the ones this metric weights most heavily, so the damage saturates as soon as
-the cutoff clears the first few shells.
+the cutoff clears the first few shells. On vorticity both high-pass filters are detected at
+level 1, and their elasticity over the mildest strengths is 0.0432 and 0.0269: the damage
+barely grows after the first strength.
 
 ### Displacement
 
@@ -461,8 +464,9 @@ the cutoff clears the first few shells.
 
 <!-- END GENERATED results_geometric -->
 
-Both displacement axes are ordered perfectly on all three fields, with high separability
-throughout — the strongest showing of any family here apart from coarsening and noise.
+All three displacement axes are ordered perfectly on all three fields, with weakest gaps of
+0.93 to 1, and over the smallest shifts the damage grows in proportion to the shift
+(elasticity 0.969 to 1 in the fingerprint).
 
 The measurement that matters for this metric is not in the table above, because the table
 reports ordering rather than magnitude, and what distinguishes a displacement-tolerant
@@ -472,8 +476,9 @@ vorticity and almost absent on density and velocity. The mechanism is visible in
 calibration this run recorded — vorticity varies on a scale several times shorter than the
 other two fields, so the error a small shift produces sits at high wavenumber where dividing
 by the wavenumber bites, while on the smooth fields the same shift produces error at low
-wavenumber where it does not. The numbers behind that statement are in the generated table
-under *Damage beside the other metrics* below.
+wavenumber where it does not. The calibration is the `characteristic_scale` column of
+`data/calibration.csv` in the run folder; the numbers behind the statement are in the generated
+table under *Damage beside the other metrics* below.
 
 ### Resolution loss
 
@@ -496,14 +501,15 @@ under *Damage beside the other metrics* below.
 
 <!-- END GENERATED results_resolution -->
 
-Ordered perfectly on all three fields under both coarsenings, with a rank correlation of 1 in
-every frame. Under `coarsen` there is no overlap at all between neighbouring strengths; under
-`coarsen_bandlimited` the weakest separation is 0.864, on density. The two operators differ
-less here than under the pointwise metrics: at a factor of 16, `coarsen` costs 0.046, 0.022 and
-0.089 of the value on the field's mean on density, velocity and vorticity, and the band-limited
-version 0.008, 0.006 and 0.069. That is consistent with Equation (3): the staircase's extra
-error sits at its block edges, at high wavenumber, which is exactly what dividing by the
-wavenumber discounts.
+Ordered perfectly on all three fields under all three operators, with every frame in order.
+Under `coarsen` neighbouring strengths do not overlap (weakest gap 1 to three figures); under
+`coarsen_bandlimited` the weakest separation is 0.864, on density. In magnitude both
+coarsenings cost far less here than they cost [rmse](../../metrics/rmse/card.md) at the same
+factor: the largest damage over the frames under `coarsen` is 0.0483, 0.0303 and 0.157 on
+density, velocity and vorticity (fingerprint), and the response curves of the two cards show
+the same at every factor. That is consistent with Equation (3): the staircase's extra error
+sits at its block edges, at high wavenumber, which is exactly what dividing by the wavenumber
+discounts. `subsample` costs more: its largest damage is 0.307, 0.202 and 0.641.
 
 ### Noise
 
@@ -522,13 +528,14 @@ wavenumber discounts.
 
 <!-- END GENERATED results_stochastic -->
 
-Ordered perfectly with no overlap between neighbouring strengths on any field. Additive
-noise is broadband, so it puts energy into every mode including the low ones this metric
-weights most, and the response is correspondingly clean. This is worth stating explicitly
-because it rules out a reading the displacement results might otherwise invite: a metric
-that divides by the wavenumber is not thereby insensitive to small-scale corruption in
-general — it is insensitive to small-scale error that arises from *moving* structure that is
-otherwise correct.
+Ordered perfectly with no overlap between neighbouring strengths on any field: dividing by the
+wavenumber does not stop this metric from ranking small-scale corruption. In magnitude it
+charges noise very little. Under `additive_noise` the largest damage over the frames is 0.0204,
+0.0139 and 0.0296 on density, velocity and vorticity (fingerprint), far below what `rmse`
+charges at the same strength. Under `multiplicative_noise` on density it reaches 3.05, because
+that noise scales with the density itself, whose mean is far larger than its fluctuation (my
+reading of the operator). Also my reading: the noise is broadband, and most of its energy sits
+at the high wavenumbers this metric discounts most.
 
 ### Trap tests
 
@@ -552,7 +559,7 @@ damage of 1.33 to 1.44, *worse* than the field's own mean on every field, which 
 because the damage scale is anchored at the mean rather than bounded by it. On density it also
 charges the fake prediction more than the reference moved far away, 1.33 against 1.11.
 
-That is the expected outcome rather than a success to claim credit for, and `AGENTS.md`
+That follows from the definition rather than being a finding about this metric; `AGENTS.md`
 states the general form of it: the Gaussian impostor is built to have the reference's
 amplitude spectrum and scrambled phase, so it catches metrics that are functions of the
 amplitude spectrum alone. This metric is a norm of the pointwise difference, reweighted in
@@ -594,22 +601,19 @@ Rank correlation over every degradation, computed separately for each physical f
 
 <!-- END GENERATED results_summary -->
 
-The rank correlation is 1 on every one of the 36 ordered axes in this run (12 degradations on
-each of three fields; the two trap tests have no ordering) — every degradation,
-every field, every frame. As a ranker of damage this metric has no failure in the recorded
-evidence.
+Within each frame the rank correlation is 1, with every frame in order, on all 19 degradations
+that have an ordering on each of the three fields (`bias` leaves the value unchanged, and the
+two trap tests have no ordering): no degradation in this run puts a frame out of order.
 
-It correlates 0.917 to 0.962 with the four pointwise baselines on each field, and
-0.99998 with [wasserstein](../../metrics/wasserstein/card.md) on density, which on a density this close to uniform is
-this metric to first order (that card's Definition). The first range is
-high, and it is the number most likely to be misread. A correlation in that range means the
-two order the degradations almost identically and are therefore close to redundant for model
-selection; it says nothing about whether they agree on magnitude, and on the displacement
-axes they do not. `AGENTS.md` records the same trap in its sharpest form for MAE against MSE,
-which on this run correlate at 0.98 to 0.997 and, at an eighth of a cell of displacement, differ by a
-factor of 38 to 192 in damage. The case for adding this
-metric to a panel rests on the magnitudes, not on these correlations, and anyone reading the
-correlations alone would conclude the opposite.
+Across the degradations, it orders the ladder almost exactly like
+[wasserstein](../../metrics/wasserstein/card.md) on density, which on a density this close to
+uniform is this metric to first order (that card's Definition), and next like `max_error` and
+the pointwise family. Those correlations are high, and they are the numbers most likely to be
+misread. A high correlation means the two order the degradations almost identically and are
+therefore close to redundant for model selection; it says nothing about whether they agree on
+magnitude, and on the displacement axes on vorticity they do not (*Damage beside the other
+metrics*). `AGENTS.md` records the same trap in its sharpest form for MAE against MSE. The case
+for adding this metric to a panel rests on the magnitudes, not on these correlations.
 
 ### Damage beside the other metrics
 
@@ -712,6 +716,12 @@ Median damage over frames against the applied strength, log-log, for h_minus_one
 Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 the anchor (by default the field's own mean); a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
 
 <!-- END GENERATED results_damage_by_level -->
+
+On density and velocity this metric charges slightly less than `mae` and `rmse` at every shift,
+with lines parallel to theirs: there the displacement tolerance is small. On vorticity it
+charges about a tenth of what `rmse` does at a one-cell shift and keeps growing in proportion
+to the shift while the controls bend toward saturation. This is the field dependence the
+*Displacement* subsection describes.
 
 ### On `forecast_re5e4`
 
@@ -828,6 +838,22 @@ h_minus_one on vorticity against lead time, the physical time since the forecast
 Every prediction of every forecast, nothing pooled: a cell is one prediction step of one forecast, a row the lead time (the physical time since the forecast started) and a column the forecast, named by its run's native grid and its starting time (`64², start 0` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-0`; `128², start 0` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-0`; `256², start 0` is `F-906861_64/forecast_t0-0`; `64², start 1.13` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250`; `128², start 1.13` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-2500`; `256², start 1.13` is `F-906861_64/forecast_t0-5000`). **Damage** is the prediction's departure from the target as a fraction of the anchor's in the same frame, by default the target's own spatial mean, so each step is scaled by its own target. A dash means no value there.
 
 <!-- END GENERATED results_on_forecast_re5e4 -->
+
+The field this card follows compares $\dot H^{-1}$ with $W_2$ on positive densities and has no
+forecast experiment; the figure here is the error against lead time. What the forecasts show:
+
+- **The damage is small beside the field's mean** on every forecast of velocity and vorticity:
+  at most 0.0916 on velocity and 0.231 on vorticity, both on the 64² forecast from start 0. On
+  density the same forecast reaches 0.432 at lead time 0.5638.
+- **The coarser the forecast's grid, the larger the error**, at almost every step: at the first
+  lead time, 0.1128, the density damage from start 0 is 0.0229, 0.00774 and 4.78e-05 on the
+  64², 128² and 256² forecasts.
+- **From start 1.13 the 256² forecast stays close to its target** (damage at most 0.000252 on
+  density, 0.000141 on velocity, 0.000676 on vorticity). From start 0 it rises steadily from
+  lead time 0.5638, to 0.0313, 0.0288 and 0.0992 at 1.128.
+- **The 64² forecast from start 0 peaks** at lead time 0.5638 on density and 0.6766 on velocity
+  and vorticity, and then eases, as its [h1_seminorm](../../metrics/h1_seminorm/card.md) damage
+  does on density and velocity.
 
 ### On `kinet_re1e6`
 
@@ -962,6 +988,13 @@ Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_on_kinet_re1e6 -->
+
+At twenty times the Reynolds number, on a 128² grid instead of 256², the result is the same as
+on `kinet_re5e4`: every degradation with more than one usable strength is ordered with rank
+correlation 1 and every frame in order on all three fields. `median_blur` on vorticity has a
+single usable strength on this grid and so no ordering. The fake prediction again scores worse
+than the field's mean (damage 1.35, 1.31 and 1.37), and on density again more than the
+reference moved far away (1.11).
 
 ## References
 

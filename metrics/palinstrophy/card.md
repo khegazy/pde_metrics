@@ -210,9 +210,10 @@ all. Comparing a run at grid 128 with one at grid 256 measures the grids, not th
 On the damage scale the anchor is the field's own spatial mean, a constant with zero
 palinstrophy, so damage is the palinstrophy lost as a fraction of the median reference value over
 snapshots: positive when the value falls, 1 when none is left, and negative when the value rises.
-The reference's palinstrophy varies by a factor of 7 over the run, so the fraction of each
-snapshot's own palinstrophy lost, the change from clean in the tables, can differ from the damage
-by a fifth.
+On `kinet_re5e4` the reference's palinstrophy runs from 1.27e-7 to 8.93e-7 over the run (the
+range under the translations, which leave it unchanged), so the fraction of each snapshot's own
+palinstrophy lost, the change from clean in the tables, can differ from the damage, which
+exceeds 1 on the harshest blurs and filters.
 
 ## Limitations
 
@@ -230,9 +231,9 @@ genuinely better-resolved filaments.
 
 Finally, it inherits everything that is uncertain about the vorticity it is computed from.
 Vorticity here is a derived field, recomputed from velocity after any remap rather than
-averaged, and the calibration recorded with `comparison_1789632054` gives its characteristic
-scale a relative spread of 0.32 across the sampled frames, against 0.06 for density and 0.07
-for velocity. A palinstrophy drift of comparable size says as much about which frames were
+averaged, and the calibration recorded with `comparison_1793829127` (its
+`data/calibration.csv`, column `scale_spread`) gives its characteristic scale a relative spread
+of 0.32 across the sampled frames, against 0.06 for density and 0.07 for velocity. A palinstrophy drift of comparable size says as much about which frames were
 evaluated as about the prediction.
 
 ## Results
@@ -278,13 +279,16 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_smoothing -->
 
-Smoothing removes fine detail, so palinstrophy falls steadily as the strength rises and follows
-each blur with a rank correlation of 1. What this family
-measures is the size of that fall beside enstrophy's. At the mildest `gaussian_blur`
-palinstrophy has already lost 31% against enstrophy's 6%, and at the strongest 98% against
-47%; `box_blur` gives 42% against 9% at its mildest. Equation (3) guarantees the ordering for
-the Gaussian; the box and median kernels are outside its assumptions and show the same
-ordering on this data.
+Smoothing removes fine detail, so palinstrophy falls as the strength rises, in order on every
+frame (rank correlation 1 on all five). At the harshest strength the relative error of the
+integral is $-0.980$ under `gaussian_blur`, $-0.961$ under `disk_blur`, $-0.953$ under
+`box_blur`, $-0.945$ under `epanechnikov_blur` and $-0.734$ under `median_blur`: all but the
+median filter leave less than a tenth of it. What this family measures is the size of that
+fall beside [enstrophy](../../metrics/enstrophy/card.md)'s on the same run: under every blur,
+palinstrophy loses the larger fraction at the harshest strength. Equation (3) guarantees that
+ordering for the Gaussian; the box, disk, Epanechnikov and median kernels are outside its
+assumptions and show the same ordering on this data. The neighbouring strengths overlap across
+frames (weakest gaps 0.531 to 0.678) because the reference's own value varies across the run.
 
 ### Spectral filtering
 
@@ -303,11 +307,16 @@ ordering on this data.
 
 <!-- END GENERATED results_spectral -->
 
-The two sides of the spectrum separate the pair cleanly. A low-pass removes the modes this
-quantity is built on: the mildest `lowpass_butterworth` removes 66% of palinstrophy and 11% of
-enstrophy. A high-pass removes the modes it ignores: the mildest `highpass_ideal` removes 45%
-of enstrophy and 0.5% of palinstrophy. Read together, the two single-field quantities say
-which end of the spectrum a prediction has lost, which neither says alone.
+Every filter lowers palinstrophy in order of strength on every frame. The two sides of the
+spectrum act differently on it. A low-pass removes the modes it is built on: relative error
+$-0.990$ under `lowpass_butterworth` and $-0.989$ under `lowpass_ideal` at the harshest
+strength, and both move it by a tenth of the way to the anchor already at level 1. A high-pass
+removes the modes it weights least: $-0.617$ under `highpass_butterworth` and $-0.517$ under
+`highpass_ideal`, first detected only at level 3, with an elasticity above 5, so the mild
+strengths barely move it and the harsh ones do. [Enstrophy](../../metrics/enstrophy/card.md)
+on the same run shows the reverse, losing more under the high-pass than under the low-pass
+filters. Read together, the two single-field quantities say which end of the spectrum a
+prediction has lost, which neither says alone. `band_attenuate` lowers it by $-0.748$.
 
 ### Displacement
 
@@ -325,8 +334,9 @@ which end of the spectrum a prediction has lost, which neither says alone.
 <!-- END GENERATED results_geometric -->
 
 Invariant, as a single-field quantity must be: translation does not change how sharp the
-vorticity is, the values are equal to round-off at every strength, and every ordering
-statistic is withheld.
+vorticity is. The largest damage over every frame and shift is 2.72e-11 under
+`translate_subpixel` and at most 4.58e-16 under the whole-cell shifts (fingerprint), and every
+ordering statistic is withheld.
 
 ### Resolution loss
 
@@ -343,25 +353,29 @@ statistic is withheld.
 
 <!-- END GENERATED results_resolution -->
 
-This is the one family where the number misleads, and it does so in the direction Limitations
-warns about. Coarsening by a factor of 2 *raises* palinstrophy by 89% above the reference,
-and a factor of 4 still leaves it 39% high; only at factors 8 and 16 does it fall below, by 28%
-and 59%. The degradation expands each block back to the fine grid as a constant, so it adds
-a jump at every block edge, and a jump is exactly the steep gradient this quantity counts.
-Enstrophy falls throughout, by 4% to 40%. The rank correlation of 1 in the table says the value
-moves steadily one way across the four strengths, read as a departure from the clean value; the
-clean value is not one of the points, so the table does not show that the two mildest
-strengths raised palinstrophy above it. The response curve does, as damage of -0.77 and -0.20.
-For the same reason the first strength detected under `coarsen` is factor 8: detection counts
-movement in the direction the degradation takes the value overall, which here is down.
-`issues/039` records the same mechanism for `h1_seminorm`.
+This is the family where the number misleads, in the direction Limitations warns about.
+Under `coarsen` the relative error at the harshest strength is $-0.578$, and the table's rank
+correlation of 1 says the value moves steadily one way across the four strengths, read as a
+departure from the clean value. The clean value is not one of those points, so the table does
+not show that the two mildest strengths *raise* palinstrophy above the reference: the response
+curves show them with negative damage, and the largest value recorded under `coarsen`, 1.49e-6,
+is above the largest the reference reaches, 8.93e-7 (fingerprint). For the same reason the
+first strength detected under `coarsen` is level 3: detection counts movement in the direction
+the degradation takes the value overall, which here is down. My reading of the mechanism: the
+degradation expands each block back to the fine grid as a constant, so it adds a jump at every
+block edge, and a jump is exactly the steep gradient this quantity counts. `issues/039` records
+the same mechanism for `h1_seminorm`.
 
 `coarsen_bandlimited` keeps the same block means as `coarsen` without adding edges, and under
-it palinstrophy only falls: by 2%, 39%, 84% and 96% at factors 2 to 16, while enstrophy falls
-by 0.1% to 31%. The rise under `coarsen` was therefore the staircase and nothing else. It also
-falls by a larger fraction than enstrophy at every factor, the ordering Equation (3) guarantees
-for smooth radial filters, although this operator is not one of them: its band is square, and
-it boosts the modes nearest the cut.
+it palinstrophy falls in order on every frame, to a relative error of $-0.960$ at the harshest
+strength, a larger fraction than [enstrophy](../../metrics/enstrophy/card.md) loses under the
+same operator. That is the ordering Equation (3) guarantees for smooth radial filters, although
+this operator is not one of them: its band is square, and it boosts the modes nearest the cut.
+
+`subsample` *raises* palinstrophy: relative error $+0.373$ at the harshest strength, with the
+departure not growing in order with the strength (rank correlation $-0.8$, 0.0248 of frames in
+order, weakest gap 0.156). My reading, not a measurement: picking every few cells folds the
+unresolved scales onto the grid scale, where Equation (2) weights them most.
 
 ### Noise
 
@@ -377,11 +391,11 @@ it boosts the modes nearest the cut.
 <!-- END GENERATED results_stochastic -->
 
 Noise is broadband, so it adds energy at the highest wavenumbers, where Equation (2) weights
-it most. At the strongest noise palinstrophy is 12 times its reference value while enstrophy
-has risen by 25%. The ordering is correct in every frame, and read against the clean value of
-the same frame no two neighbouring strengths overlap (a weakest gap of 1), although the two
-mildest move the value by only 0.01% and 0.4%, small beside how much the value itself changes
-from one frame to the next.
+it most. At the harshest strength the relative error is $+10.8$ under `additive_noise` and
+$+11.1$ under `multiplicative_noise` (fingerprint), many times the rise of
+[enstrophy](../../metrics/enstrophy/card.md) under the same noise. Additive noise raises it in
+order on every frame with no overlap between neighbouring strengths (weakest gap 1);
+multiplicative noise keeps the order in 0.845 of frames (weakest gap 0.835).
 
 ### Trap tests
 
@@ -402,7 +416,9 @@ Both score exactly the reference's palinstrophy, damage 0 to round-off. The fake
 has the reference's amplitude spectrum, and Equation (2) is a function of that spectrum alone,
 so the two cannot differ; the moved copy is a translation of the reference. The trap therefore
 records this metric as fooled, which for a single-field quantity follows from the definition
-rather than from the data.
+rather than from the data. The closest real degradation is `bias=0.01` because a constant
+offset leaves every gradient, and so palinstrophy, unchanged: `bias` is one of the degradations
+this metric is blind to.
 
 ### Compared with the other metrics
 
@@ -435,14 +451,14 @@ Rank correlation over every degradation, computed separately for each physical f
 
 <!-- END GENERATED results_summary -->
 
-The closest ranking is `enstrophy`'s, at 0.758, followed by `tail_index`'s at 0.649. The first
-is expected of two moments of one spectrum, and it is
-also the measure of how much palinstrophy adds: the two disagree most on
-high-pass filtering and on coarsening, both described above. The negative correlations, -0.445 to
--0.763, with the metrics that compare distributions or increments (`energy_distance`,
-`persistence_distance`, `spectrum_l2`, the increment metrics and `tail_exceedance`) are orientation rather than disagreement, since this
-quantity falls under most damage while theirs rises; with the pointwise errors it is close to
-uncorrelated (0.014 to 0.054).
+The closest ordering is [enstrophy](../../metrics/enstrophy/card.md)'s, then `tail_index`'s. The
+first is two moments of one spectrum, and the distance from 1 is the measure of what
+palinstrophy adds: the two disagree most on high-pass filtering and on coarsening, both
+described above. The correlations with the metrics that compare distributions or increments
+(`energy_distance`, `persistence_distance`, `spectrum_l2`, the increment metrics and
+`tail_exceedance`) are negative; my reading is that this is orientation rather than
+disagreement, since this quantity falls under most damage while theirs rises. With the
+pointwise errors and the Sobolev norms it is close to uncorrelated.
 
 ### Damage beside the other metrics
 
@@ -546,6 +562,10 @@ Median damage over frames at every strength, this metric in the first row and th
 
 <!-- END GENERATED results_damage_by_level -->
 
+Palinstrophy has a damage scale on vorticity only. On every shift its row is zero or a
+round-off residue, far below the pointwise controls, which grow with the shift: it charges
+nothing for a displacement of any size.
+
 ### On `forecast_re5e4`
 
 <!-- GENERATED results_on_forecast_re5e4: written by `python -m fmeval.cards evidence palinstrophy --results results/comparison_1793829127 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
@@ -608,6 +628,23 @@ palinstrophy on vorticity against lead time, the physical time since the forecas
 Every prediction of every forecast, nothing pooled: a cell is one prediction step of one forecast, a row the lead time (the physical time since the forecast started) and a column the forecast, named by its run's native grid and its starting time (`64², start 0` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-0`; `128², start 0` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-0`; `256², start 0` is `F-906861_64/forecast_t0-0`; `64², start 1.13` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250`; `128², start 1.13` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-2500`; `256², start 1.13` is `F-906861_64/forecast_t0-5000`). **Damage** is the prediction's departure from the target as a fraction of the anchor's in the same frame, by default the target's own spatial mean, so each step is scaled by its own target. A dash means no value there.
 
 <!-- END GENERATED results_on_forecast_re5e4 -->
+
+On real forecasts, the field's own experiment, the figure draws each forecast's palinstrophy
+against lead time with its target's dashed. The anchor has zero palinstrophy, so the damage
+reads as the fraction of the target's palinstrophy the prediction lacks: the relative error of
+the integral with its sign reversed.
+
+- **The 64² and 128² forecasts lack most of it.** At the first lead time, 0.1128, the 64²
+  forecasts lack 0.674 (start 0) and 0.786 (start 1.13) of their targets' palinstrophy and the
+  128² forecasts 0.346 and 0.467; by lead time 1.128 these reach 0.917, 0.876, 0.75 and 0.74.
+  The 64² forecast from start 1.13 levels off near 0.87 from lead time 0.4511 on.
+- **The 256² forecasts are close to their targets**: within a damage of 0.015 from start 1.13,
+  where the shortfall grows at every step. From start 0 the 256² forecast goes above its target
+  between lead times 0.5638 and 0.9021 (damage $-0.0233$ to $-0.103$) and below it again after.
+- **The target's palinstrophy is not monotone from start 0**: it falls from 2.79e-7 to 2.38e-7,
+  rises to 2.55e-7 at lead times 0.6766 and 0.7893, and falls to 1.91e-7. The 256² forecast's
+  excursion above its target overlaps that window. From start 1.13 the target falls at every
+  step, from 1.71e-7 to 4.76e-8.
 
 ### On `kinet_re1e6`
 
@@ -700,6 +737,27 @@ Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_on_kinet_re1e6 -->
+
+At twenty times the Reynolds number, on a 128² grid instead of 256², the reference's median
+palinstrophy is 3.55e-9, and every blur and filter with more than one usable strength again
+lowers it in order on every frame. The trap tests again score it damage 0. What differs:
+
+- **Fewer usable blur strengths on this grid**: two for `box_blur`, `disk_blur` and
+  `epanechnikov_blur`, one for `median_blur`, which therefore has no rank correlation; that one
+  strength lowers it by 0.732 of its value (fingerprint).
+- **`coarsen` lowers it in order on every frame** (relative error $-0.959$ at the harshest
+  strength, weakest gap 0.595), and its largest value, 2.81e-9, stays below the reference's
+  largest, 4.81e-9 (fingerprint): no rise above the reference is recorded under `coarsen` here.
+  The grid differs between the two runs as well as the Reynolds number.
+- **`subsample` lowers it** instead of raising it (relative error $-0.466$, rank correlation 0.8,
+  0.168 of frames in order).
+- **Noise raises it far less**: $+1.57$ under `additive_noise` and $+1.59$ under
+  `multiplicative_noise`, against $+10.8$ and $+11.1$ on `kinet_re5e4`; multiplicative noise
+  keeps the order in only 0.398 of frames.
+- **The high-pass filters separate their strengths better** (weakest gaps 0.95 and 0.973,
+  against 0.824 and 0.85 on `kinet_re5e4`).
+- **`translate_subpixel` is no longer flat to round-off**: its damage reaches 0.000979 at most,
+  and the departure does not grow with the shift (rank correlation $-0.698$, no frame in order).
 
 ## References
 

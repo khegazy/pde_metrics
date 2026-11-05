@@ -208,9 +208,10 @@ Each subsection links to the degradations that subsection reports. What those de
 do, and what their strength numbers mean, is documented on their own pages. A single-field
 diagnostic is evaluated on the reference and on every degraded variant alike, so what is
 read here is the drift away from the reference value rather than an error. On the damage scale
-the anchor is the field's own spatial mean, whose kinetic energy is 2.5e-8 against the
-reference's 1.6e-3, so damage is the fraction of the reference's energy lost: positive when the
-value falls and negative when it rises.
+the anchor is the field's own spatial mean, whose kinetic energy is 2.54e-8 against the
+reference's median of 1.57e-3, so damage is the fraction of the reference's energy lost:
+positive when the value falls and negative when it rises. The *change from clean* in the tables
+is the relative error of the integral of `### How its field reports it`, with its sign.
 
 <!-- GENERATED experiments: written by `python -m fmeval.cards catalog`, do not edit -->
 
@@ -246,6 +247,13 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_smoothing -->
 
+Every blur lowers the energy, and every stronger blur lowers it further on every frame: rank
+correlation 1 with every frame in order on all five. Read as the field reads it, the relative
+error of the integral at the harshest strength runs from $-0.112$ under `median_blur` to
+$-0.636$ under `gaussian_blur` (the *change from clean* in the Performance tables), so the
+harshest Gaussian blur takes away about two thirds of the reference's energy. `median_blur` is
+the one blur whose neighbouring strengths overlap at all across frames (weakest gap 0.981).
+
 ### Spectral filtering
 
 [lowpass_ideal](../../degradations/lowpass_ideal/card.md) ·
@@ -265,6 +273,15 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_spectral -->
 
+Every filter lowers the energy in order of strength (rank correlation 1 on all five). How much
+depends on where the filter cuts, because velocity's energy sits at the largest scales: the two
+high-pass filters remove almost all of it at their harshest strength (relative error $-0.981$
+under `highpass_butterworth` and $-0.975$ under `highpass_ideal`, from the run's
+fingerprint), while `band_attenuate` changes it by $-0.00103$, small enough that it is listed
+among the degradations whose response is provably below 0.05, and its neighbouring strengths
+overlap across frames (weakest gap 0.537). The low-pass filters lie between: $-0.147$ for
+`lowpass_ideal` and $-0.787$ for `lowpass_butterworth`.
+
 ### Displacement
 
 [translate_x](../../degradations/translate/card.md) ·
@@ -281,11 +298,11 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 <!-- END GENERATED results_geometric -->
 
 A translation moves the field without changing any of its values, so a quantity built from
-those values alone cannot see it at all. Measured, it is flat: on every frame and at every
-shift the value matches the reference's to within 2e-10 of it, which is why the table has
-no rank correlation. A measurement showing otherwise would indicate the translation is not
-conserving what it should — which is one of the things a reference-free diagnostic is
-useful for.
+those values alone cannot see it at all. Measured, it is flat: the largest damage over every
+frame and shift is 1.65e-10 under `translate_subpixel` and 0 under the whole-cell shifts
+(fingerprint), which is why the table has no rank correlation. A measurement showing otherwise
+would indicate the translation is not conserving what it should — which is one of the things a
+reference-free diagnostic is useful for.
 
 ### Resolution loss
 
@@ -302,11 +319,15 @@ useful for.
 
 <!-- END GENERATED results_resolution -->
 
-Both coarsenings take the value steadily below its clean value, so each follows its
-degradation with a rank correlation of 1; it falls because detail is removed. The losses are small because velocity keeps its energy at large
-scales: 0.05%, 0.2%, 0.9% and 3.0% at factors 2 to 16 under `coarsen`, and 0.00%, 0.01%, 0.07%
-and 0.25% under `coarsen_bandlimited`. Most of what `coarsen` removes is the variance inside
-each block, which its staircase flattens.
+All three lower the energy, and all three by little: the relative error at the harshest
+strength is $-0.0298$ under `coarsen`, $-0.00169$ under `coarsen_bandlimited` and $-0.00132$
+under `subsample` (fingerprint), and all three are listed among the degradations whose response
+is provably below 0.05. `coarsen` lowers it in order on every frame. The other two do not:
+`coarsen_bandlimited` keeps the order in 0.907 of frames, and `subsample` in 0.193 of frames
+with a rank correlation of 0.4, so on this field and grid its strengths are not told apart by
+the energy. My reading, not a measurement: `coarsen` replaces each block by its average, which
+removes the variance inside each block, while the other two keep the large scales that hold
+the energy.
 
 ### Noise
 
@@ -320,6 +341,15 @@ each block, which its staircase flattens.
 | `multiplicative_noise` | velocity | 5 | 0.9 | 0.466 | 0.536 |
 
 <!-- END GENERATED results_stochastic -->
+
+Noise raises the energy, by the variance it adds: the relative error at the harshest strength is
+$+0.250$ under both (fingerprint). It first moves by a tenth of the distance between the
+reference and the anchor at level 4 of `additive_noise` and level 5 of `multiplicative_noise`,
+the harshest of each. Additive noise raises it in order of strength (rank
+correlation 1, 0.969 of frames in order). Multiplicative noise does so less cleanly: rank
+correlation 0.9, with 0.466 of frames in order and neighbouring strengths overlapping (weakest
+gap 0.536), so at its milder strengths the added energy is not separated from one strength to
+the next.
 
 ### Trap tests
 
@@ -371,6 +401,13 @@ quantity follows from the definition rather than from the data.
 Rank correlation over every degradation, computed separately for each physical field on the median value at each combination of degradation and strength, with the undegraded reference excluded. A dash marks a metric that does not run on that field. A metric with a target value enters by its distance from the target. Two metrics correlating near 1 put the degradations in the same order, but the two may still weight those degradations very differently. A correlation near 1 therefore means the two metrics are redundant for ranking models, not that the two are interchangeable as training losses.
 
 <!-- END GENERATED results_summary -->
+
+The energy orders the degradations unlike the pairwise errors: its correlations with them are
+negative and well short of 1 in size. It enters by its raw value, which falls under smoothing
+and filtering while every error rises, so it correlates negatively with every pairwise metric, most
+strongly with the spectral ones (`spectrum_l2`, `spectral_energy_flux`) and `tail_exceedance`,
+and positively, and weakly, only with the two other single-field statistics, `tail_index` and
+`increment_flatness`. The sign is my reading of the definitions, not a separate measurement.
 
 ### Damage beside the other metrics
 
@@ -474,6 +511,11 @@ Median damage over frames at every strength, this metric in the first row and th
 
 <!-- END GENERATED results_damage_by_level -->
 
+The energy has a damage scale on velocity only. On every shift its row is zero or a round-off
+residue far below the pointwise controls, which grow with the shift: a translation moves the
+field and leaves its energy where it was, so this metric charges nothing for a displacement of
+any size.
+
 ### On `sod_shock_tube`
 
 <!-- GENERATED results_on_sod_shock_tube: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
@@ -563,6 +605,28 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 
 <!-- END GENERATED results_on_sod_shock_tube -->
 
+On the one-dimensional velocity of the shock tube, every blur, every spectral filter and
+`coarsen` lower the energy in order of strength, and `bias` and `gain` raise it in order (rank
+correlation 1 on each). The reference's median energy is 0.141 and the anchor's 0.0548: the
+velocity here has a mean that is not small beside its variation, so the anchor sits well above
+zero, unlike on `kinet_re5e4`.
+
+Three results differ from the turbulence:
+
+- **Sub-cell shift.** `translate_subpixel` is not flat: its damage reaches 2.92e-07 at most, and
+  the departure does not grow with the shift (rank correlation $-0.88$, no frame in order).
+- **Resolution loss and noise.** `coarsen_bandlimited` (0.4) and `subsample` (0.3) barely order
+  their strengths, and both noises reach rank correlation 0.8 with 0.3 of the ten frames in
+  order.
+- **The trap.** The fake prediction does not score the reference's energy: its damage is $-0.22$,
+  as far from the reference as `additive_noise` at 0.5, on the side away from the anchor.
+
+My reading of the first and third, not a measurement: on a grid with walls the degradations act
+on the profile extended by its boundary rule to twice its length and are cropped back
+(`GridSpec.extend` in `fmeval/data/base.py`), so the cropped half of a shifted or phase-scrambled
+field need not carry the reference's energy, and Parseval's theorem no longer ties the fake
+prediction's energy to the reference's.
+
 ### On `forecast_re5e4`
 
 <!-- GENERATED results_on_forecast_re5e4: written by `python -m fmeval.cards evidence kinetic_energy --results results/comparison_1793829127 --results results/comparison_1793812304 --results results/comparison_1793811840 --results results/comparison_1793829231`, do not edit -->
@@ -625,6 +689,22 @@ kinetic_energy on velocity against lead time, the physical time since the foreca
 Every prediction of every forecast, nothing pooled: a cell is one prediction step of one forecast, a row the lead time (the physical time since the forecast started) and a column the forecast, named by its run's native grid and its starting time (`64², start 0` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-0`; `128², start 0` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-0`; `256², start 0` is `F-906861_64/forecast_t0-0`; `64², start 1.13` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250`; `128², start 1.13` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-2500`; `256², start 1.13` is `F-906861_64/forecast_t0-5000`). **Damage** is the prediction's departure from the target as a fraction of the anchor's in the same frame, by default the target's own spatial mean, so each step is scaled by its own target. A dash means no value there.
 
 <!-- END GENERATED results_on_forecast_re5e4 -->
+
+This is the field's own experiment and figure: each forecast's energy against lead time, with
+its target's dashed. Every forecast is below its target at every step (every damage is
+positive), and the shortfall grows with lead time. Because the anchor's energy is near zero, the damage reads as the field's relative error
+of the integral with the sign removed: the fraction of the target's energy the prediction has
+lost.
+
+- **The coarser the forecast's grid, the more energy it loses.** At the last lead time, 1.128,
+  the 64² forecasts have lost 0.0897 (start 0) and 0.0649 (start 1.13) of their targets'
+  energy, the 128² forecasts 0.0407 and 0.0264, and the 256² forecasts 0.000531 and 0.000137.
+- **The loss grows at every step** for the 64² and 128² forecasts from both starts and for the
+  256² forecast from start 1.13. The 256² forecast from start 0 is the exception: its damage falls
+  from 9.15e-05 to 6.3e-05 at lead time 0.5638, then rises to 0.000311 at the next step.
+- **The target itself decays slowly** over the same window, from 0.00158 to 0.00156 from start 0
+  and staying at 0.00156 from start 1.13, so most of the coarser predictions' decline is not
+  in their targets.
 
 ### On `kinet_re1e6`
 
@@ -717,6 +797,21 @@ Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_on_kinet_re1e6 -->
+
+At twenty times the Reynolds number, on a 128² grid instead of 256², the energy responds as on
+`kinet_re5e4` to the blurs, the spectral filters, the cell-value distortions and the trap
+(rank correlation 1 on every blur and filter, damage 0 for both trap tests). The reference's
+median energy is 0.00158. Four results differ:
+
+- **`coarsen`** lowers it by more: relative error $-0.0804$ at the harshest strength, against
+  $-0.0298$ on `kinet_re5e4`. The grid also differs between the two runs, so this does not
+  separate the Reynolds number from the resolution.
+- **`coarsen_bandlimited`** moves it both ways: the energy rises at the harshest strength
+  ($+0.00367$), and no frame is in order (rank correlation 0.2, weakest gap 0.0338).
+- **`subsample`** orders its strengths better than on `kinet_re5e4` (rank correlation 0.8 against
+  0.4) and lowers the energy by more ($-0.0691$).
+- **`translate_subpixel`** is no longer flat to round-off: its damage reaches 1.19e-06 at most,
+  and the departure does not grow with the shift (rank correlation $-0.698$, no frame in order).
 
 ## References
 

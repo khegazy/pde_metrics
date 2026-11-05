@@ -368,11 +368,15 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED results_smoothing -->
 
-Ordered correctly on every smoothing axis and field. Relative to its own value on the field's
-mean, this metric departs from clean sooner than `rmse` does: at the mildest `gaussian_blur`
-it has reached 0.10, 0.46 and 0.27 of that value on density, velocity and vorticity, against
-0.02, 0.04 and 0.07 for `rmse`. Blur removes exactly the rapidly varying part of the field
-that the gradient weights most.
+Ordered correctly on every smoothing axis and field, with every frame in order. Relative to its
+own value on the field's mean, this metric departs from clean sooner than
+[rmse](../../metrics/rmse/card.md) does on the same run: at the mildest `gaussian_blur` it has
+moved further toward the anchor on all three fields (the response curves here and on `rmse`'s
+card), and it is first detected at level 1 under every blur on every field. On velocity it
+then saturates: its elasticity over the mildest strengths is 0.262 to 0.305, against 0.636 to
+1.05 on density. Blur removes exactly the rapidly varying part of the field that the gradient
+weights most. Density's neighbouring strengths are well separated across frames (weakest gaps
+0.945 to 0.957); velocity's and vorticity's less so (0.56 to 0.707).
 
 ### Spectral filtering
 
@@ -401,12 +405,16 @@ that the gradient weights most.
 
 <!-- END GENERATED results_spectral -->
 
-The response splits by which end of the spectrum is removed. At the mildest `lowpass_ideal`
-the metric stands at 0.59 to 0.78 of its value on the field's mean against 0.23 to 0.25 for
-`rmse`. At the mildest `highpass_ideal` on vorticity, which removes 45% of the energy from
-the lowest shells, it reads 0.07 against 0.66 for `rmse`: error at large scales has shallow
-gradients and costs little here. This is the mirror image of `h_minus_one`, which is gentlest
-on exactly the errors this metric charges most.
+Ordered correctly on every filter and field. The response splits by which end of the spectrum
+is removed. Every low-pass filter is detected at level 1 on every field, and at the mildest
+`lowpass_ideal` the metric has moved further toward the anchor than `rmse` has on every field
+(the response curves here and on `rmse`'s card). A high-pass removes the large scales, whose
+error has shallow gradients: `highpass_ideal` is first detected only at level 3 on density and
+velocity and level 2 on vorticity, and at its mildest strength on vorticity this metric has
+moved far less toward the anchor than `rmse` has. This is the mirror image of
+[h_minus_one](../../metrics/h_minus_one/card.md), which is gentlest on exactly the errors this
+metric charges most. The milder high-pass strengths that repeat one another or do nothing are
+excluded, which leaves three and two usable strengths on velocity.
 
 ### Displacement
 
@@ -429,13 +437,17 @@ on exactly the errors this metric charges most.
 
 <!-- END GENERATED results_geometric -->
 
-The ordering is correct on five of the six rows, and the magnitude confirms Equation (3) on
-the real flow. A one-cell `translate_x` costs this metric 0.12, 0.26 and 0.78 of its value on
-the field's mean on density, velocity and vorticity, against 0.04, 0.03 and 0.26 for `rmse` and
-0.03, 0.02 and 0.03 for `h_minus_one`. On vorticity a two-cell shift already costs 1.28, more
-than the field's mean does, and a four-cell shift costs 1.38, level with the 1.41 of the
-reference moved far away, which is why the vorticity `translate_x` row reads 0.7: the metric
-has saturated, and the remaining strengths differ only by frame-to-frame scatter. This is the double penalty made worse, measured.
+The ordering is correct on seven of the nine rows, and the magnitude confirms Equation (3) on
+the real flow. A one-cell `translate_x` costs this metric a larger share of its value on the
+field's mean than it costs `rmse` and [h_minus_one](../../metrics/h_minus_one/card.md) on every
+field (the table under *Damage beside the other metrics* and the response curves of the three
+cards). Over the smallest shifts its damage grows in proportion to the shift: the elasticity to
+a sub-pixel shift is 0.984, 0.993 and 0.988 on density, velocity and vorticity (Profile). On
+vorticity it then saturates: from about a two-cell shift the median damage is above 1, more
+than the field's mean costs, and from four cells it sits level with the 1.41 of the reference
+moved far away (Trap tests), so the remaining strengths differ only by frame-to-frame scatter.
+That is why the vorticity `translate_x` and `translate_y` rows read 0.7, with 0.186 and 0.0559
+of frames in order. This is the double penalty made worse, measured.
 
 ### Resolution loss
 
@@ -458,24 +470,24 @@ has saturated, and the remaining strengths differ only by frame-to-frame scatter
 
 <!-- END GENERATED results_resolution -->
 
-Ordered correctly on density and velocity, but not on vorticity, where the rank correlation is
-0.2 and no single frame is in the right order. The median value rises from factor 2 to 4 and
-then falls at 8 and 16, while `mse` and `h_minus_one` rise throughout. The degradation expands
-each block back to the fine grid as a constant, and on a field that varies as quickly as
-vorticity the metric ends up measuring the jumps between blocks rather than the detail
-coarsening removed. A test on synthetic fields, recorded in `issues/039`, shows the peak
-moving to larger factors as the field gets smoother, which matches that account.
+`coarsen` and `subsample` are ordered correctly on density and velocity, but not on vorticity,
+where the rank correlation is 0.2 for both, with no frame in order under `coarsen` and 0.0559
+of frames under `subsample`. The response curves show the median damage on vorticity under
+`coarsen` rising from factor 2 to 4 and then falling, while `mse` and `h_minus_one` rise throughout on their own
+cards. The degradation expands each block back to the fine grid as a constant, and on a field
+that varies as quickly as vorticity the metric ends up measuring the jumps between blocks
+rather than the detail coarsening removed. A test on synthetic fields, recorded in
+`issues/039`, shows the peak moving to larger factors as the field gets smoother, which matches
+that account.
 
 `coarsen_bandlimited` settles it. It keeps the same block means without adding edges, and under
 it vorticity is in the right order in every frame, with a rank correlation of 1. The size of
-the staircase's contribution is plain at the mildest factor: coarsening by 2 costs 1.53, 1.46
-and 1.14 of the value on the field's mean on density, velocity and vorticity under `coarsen` —
-on every field, more than the mean does — against 0.073, 0.063 and 0.32 under the
-band-limited operator. Density is the exception under the band-limited operator, in the right
-order in only 32% of frames with a rank correlation of 0.8: its values at factors 2 and 4 are
-2.6e-5 and 2.7e-5, nearly equal and ordered differently from frame to frame. The pointwise
-metrics and `spectrum_l2` show the same density pattern, and its cause is not established
-(`issues/039`).
+the staircase's contribution is plain at the mildest factor: in the response curves,
+coarsening by 2 costs more than the field's mean on every field under `coarsen`, and a small
+fraction of that under the band-limited operator. Density is the exception under the
+band-limited operator, in the right order in only 0.317 of frames with a rank correlation of
+0.8 and a weakest gap of 0.483: its values at factors 2 and 4 are nearly equal and ordered
+differently from frame to frame. The cause is not established (`issues/039`).
 
 ### Noise
 
@@ -494,10 +506,13 @@ metrics and `spectrum_l2` show the same density pattern, and its cause is not es
 
 <!-- END GENERATED results_stochastic -->
 
-Ordered correctly with complete separation. Noise is where the weighting by wavenumber is
-most extreme: at the strongest level the metric reads 24 to 29 times its value on the field's
-mean on density and velocity, and 3.3 times on vorticity, where `rmse` reads 0.50. Uncorrelated
-cell-to-cell noise is almost pure gradient.
+Ordered correctly with complete separation (weakest gap 1) on every field. Noise is where the
+weighting by wavenumber is most extreme: under `additive_noise` the largest damage over the
+frames is 25.6 on density, 29.0 on velocity and 4.17 on vorticity (fingerprint), many times
+the field's mean and many times what `rmse` charges at the same strength. Under
+`multiplicative_noise` on density it reaches 3610, because the noise there scales with the
+density itself, whose mean is far larger than its fluctuation (my reading of the operator).
+Uncorrelated cell-to-cell noise is almost pure gradient.
 
 ### Trap tests
 
@@ -518,8 +533,8 @@ The fake prediction here has exactly the reference field's amplitude spectrum an
 
 The fake prediction scores farther from the truth than the field's own mean, with damage
 between 1.38 and 1.45 on all three fields, close to the 1.38 to 1.54 of the reference moved far
-away, so this metric rejects it firmly. That is expected of a phase-sensitive
-error metric and says nothing about the displacement problem.
+away, so this metric is not fooled by it. That follows from comparing the two fields cell by
+cell, and says nothing about the displacement problem.
 
 ### Compared with the other metrics
 
@@ -555,12 +570,12 @@ Rank correlation over every degradation, computed separately for each physical f
 
 <!-- END GENERATED results_summary -->
 
-This metric ranks the ladder most like the pointwise family: with `vrmse` (`nrmse` in the
-run cited), `mae`, `mse` and
-`rmse` it correlates at 0.758 to 0.763 on density, 0.657 to 0.663 on velocity and 0.592 to 0.605
-on vorticity, and less like `h_minus_one`, at 0.484 to 0.55. The two Sobolev orders agree on
-direction for most degradations and disagree on which ones are severe, which is the whole
-content of Equation (2).
+This metric orders the ladder most like its relative, inhomogeneous sibling
+[h1_relative](../../metrics/h1_relative/card.md), then like `max_error` and the pointwise
+family (`rmse`, `mse`, `nrmse`, `vrmse`, `mae`), and less like `h_minus_one`. The two Sobolev
+orders agree on direction for most degradations and disagree on which ones are severe, which
+is the whole content of Equation (2). On vorticity its ordering is close to unrelated to the
+distribution, increment and spectrum metrics.
 
 ### Damage beside the other metrics
 
@@ -663,6 +678,12 @@ Median damage over frames against the applied strength, log-log, for h1_seminorm
 Median damage over frames at every strength, this metric in the first row and the pointwise controls beneath it, all on the same 0-to-1 scale where 0 is the undegraded reference and 1 the anchor (by default the field's own mean); a dash means no damage scale on that field. The rank correlations under *Compared with the other metrics* say whether two metrics put the strengths in the same order; this table says how much each one charges for the same strength, which decides whether two metrics are interchangeable as training losses.
 
 <!-- END GENERATED results_damage_by_level -->
+
+On density and velocity this metric charges more than every pointwise control at every shift,
+and its line is roughly parallel to theirs over the smallest shifts. On vorticity it levels off
+from four cells while the controls keep rising, and at the largest `translate_y` `mae` passes
+it. This is Equation (3) seen on the real flow: a shift costs a larger share here than under a
+pointwise norm until the metric saturates.
 
 ### On `forecast_re5e4`
 
@@ -779,6 +800,24 @@ h1_seminorm on vorticity against lead time, the physical time since the forecast
 Every prediction of every forecast, nothing pooled: a cell is one prediction step of one forecast, a row the lead time (the physical time since the forecast started) and a column the forecast, named by its run's native grid and its starting time (`64², start 0` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-0`; `128², start 0` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-0`; `256², start 0` is `F-906861_64/forecast_t0-0`; `64², start 1.13` is `F-906861_64_Re_50k_from_256_to_64/forecast_t0-1250`; `128², start 1.13` is `F-906861_64_Re_50k_from_256_to128/forecast_t0-2500`; `256², start 1.13` is `F-906861_64/forecast_t0-5000`). **Damage** is the prediction's departure from the target as a fraction of the anchor's in the same frame, by default the target's own spatial mean, so each step is scaled by its own target. A dash means no value there.
 
 <!-- END GENERATED results_on_forecast_re5e4 -->
+
+Finite-element analysis reads this seminorm against mesh size on a problem with a known
+solution; these forecasts are not that experiment (`issues/126`), and the figure is the error
+against lead time instead. What they show:
+
+- **The coarser the forecast's grid, the larger the error**, at almost every step on every
+  field. At the first lead time, 0.1128, the density damage is 0.326, 0.0533 and 0.000188 on
+  the 64², 128² and 256² forecasts from start 0. On vorticity the 64² forecasts are already at
+  0.626 (start 0) and 0.816 (start 1.13) at that step.
+- **From start 1.13 the 256² forecast stays close to its target**: its damage is at most 0.00142
+  on density, 0.00462 on velocity and 0.0148 on vorticity over the ten steps.
+- **From start 0 it does not**: its damage is small for four steps and then rises quickly from
+  lead time 0.5638, reaching 0.136 on density, 0.464 on velocity and 0.732 on vorticity at
+  1.128. The coarser forecasts from start 0 rise over the same steps, and the 64² density error
+  peaks there (0.803) before easing to 0.54.
+- **A damage near 1 is an error as large as predicting the target's mean**, because each step
+  is scaled by its own target's mean; the 64² vorticity forecasts come close to that from start 0
+  (0.954 at lead time 1.128).
 
 ### On `kinet_re1e6`
 
@@ -913,6 +952,25 @@ Measured on `kinet_re1e6`, frames 2000 to 10000 (161 frames of developed flow at
 The fake prediction here has exactly the reference field's amplitude spectrum and completely scrambled structure. Damage 1 is what the anchor scores, by default the reference's own spatial mean, a prediction that knows the mean and nothing else. The damage column therefore says how close to useless this metric considers that fake prediction: a low number means the metric was fooled. The third column translates the same number into an ordinary degradation whose damage the fake prediction matches, which is easier to picture. The fourth is the reference moved by a large random offset, the right statistics in the wrong place; where a field's energy sits in its largest scales that copy stays partly correlated with the reference, so it is not the score of an unrelated field.
 
 <!-- END GENERATED results_on_kinet_re1e6 -->
+
+At twenty times the Reynolds number, on a 128² grid instead of 256², the metric is ordered as on
+`kinet_re5e4` on every blur, filter, noise and cell-value axis on density and velocity, and it
+again rejects the fake prediction (damage 1.39, 1.41 and 1.4, beside 1.39 to 1.52 for the
+reference moved far away). What differs is vorticity, and one density row:
+
+- **Displacement on vorticity is barely ordered**: `translate_x` and `translate_y` fall to rank
+  correlation 0.1, with 0.137 and no frames in order, and `translate_subpixel` to 0.943 with
+  0.292 of frames in order.
+- **`coarsen` and `subsample` on vorticity** stay out of order (rank correlation 0.4 and 0.8,
+  0.00621 and 0.0807 of frames in order); `coarsen_bandlimited` is again in order on every frame.
+- **`coarsen_bandlimited` on density** is in order on every frame here (weakest gap 0.964),
+  where on `kinet_re5e4` it was in order in 0.317 of frames.
+- **Fewer usable blur strengths on vorticity**: two for `box_blur`, `disk_blur` and
+  `epanechnikov_blur` and one for `median_blur`, which has no rank correlation.
+- **Noise costs less**: the largest damage under `additive_noise` is 12.4 on density, 13.3 on
+  velocity and 1.53 on vorticity (fingerprint), half or less of what it is on `kinet_re5e4`.
+
+The grid differs between the two runs as well as the Reynolds number.
 
 ## References
 
