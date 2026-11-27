@@ -24,6 +24,10 @@ Conventions
     squared error to mean variance is (N + 1)/N (with ddof = 0 it would be (N + 1)/(N - 1)).
   * Leads are solver steps since the start: 0 is the stored initial condition, then the saved
     steps 1, 10, 20, ... of each rollout.
+
+This archived copy differs from the script that ran only in where matplotlib is imported: the
+repository requires imports at the top of a file, so the two imports moved there from
+`cmd_ensemble`. Nothing computed changes.
 """
 
 from __future__ import annotations
@@ -36,6 +40,8 @@ from pathlib import Path
 import h5py
 import numpy as np
 import yaml
+import matplotlib
+import matplotlib.pyplot as plt
 
 REFERENCE = ("/global/cfs/cdirs/m4790/Data/kinet/doubly_periodic/weakly_compressible_isoT_fluids/"
              "sys_Re-5e4_Ma-1en1/D2Q9_shape-256-256_T-10000_H-dc804f.h5")
@@ -198,9 +204,7 @@ def shell_ratio(stack: np.ndarray, edges: list[float]) -> list[float]:
 
 def cmd_ensemble(a) -> None:
     """Spread, leave-one-out error-to-variance ratio, decorrelation by scale, amplitude check."""
-    import matplotlib
     matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
 
     root = Path(a.root)
     edges = [0, 4, 16, 64, 182]
