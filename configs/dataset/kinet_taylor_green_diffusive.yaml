@@ -1,0 +1,21 @@
+# kinet's Taylor-Green vortex at Re = 50 under diffusive scaling: Ma = 0.08 * 64 / N and the
+# solver step shrinking as h^2, so the Mach-number error falls with the grid error and the
+# solver converges at second order. One run per grid, chosen with dataset.trajectory
+# (N64, N128, N256, N512); 41 frames each, the initial condition and every 22 (64^2) to 1408
+# (512^2) solver steps. The fragment says how the order is read.
+defaults:
+  - _kinet_taylor_green
+  - _self_
+
+name: kinet_taylor_green_diffusive
+trajectory: N64
+path: ${paths.data}/kinet/taylor_green_vortex/weakly_compressible_isoT_fluids/sys_Re-50_diffusive/${.trajectory}.h5
+
+# t = 0.25, 0.5, 0.75, 1.0 t_d.
+time:
+  start: 10
+  reduction: 10
+
+complexity:
+  params: {scaling: diffusive}
+  label: "kinet Taylor-Green, diffusive scaling"

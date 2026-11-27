@@ -58,6 +58,7 @@ class KinetRawTrajectory(HDF5Trajectory):
         sim_index: int = 0,
         time_axis: TimeAxisMode = "auto",
         frame_stride: int = 1,
+        box: float | None = None,
     ) -> None:
         """Open a kinet raw HDF5 file, locally or over HTTP.
 
@@ -79,6 +80,20 @@ class KinetRawTrajectory(HDF5Trajectory):
                 frame ``i`` is the same physical time on every member and one
                 ``dataset.time`` selection serves the whole family. The stride must divide
                 the number of solver steps, so the last stored frame stays on the clock.
+            box: Read the run in units where kinet's reference length ``L_l`` (the box side, in
+                cells) is ``box`` and its reference velocity ``u_l`` is 1, instead of in cells
+                and solver steps; both are the file's ``normalization_plan.lattice``. A cell is
+                then ``h = box / L_l`` long and a step lasts ``u_l h``, so the spacing is
+                multiplied by ``h``, velocity divided by ``u_l``, vorticity by ``u_l h``,
+                pressure by ``u_l^2``, and the clock, which a converted file holds in
+                ``L_l / u_l`` (``time/time_convection``), multiplied by ``box``.
+                :attr:`viscosity` is then the run's kinematic viscosity in these units,
+                ``nu_l h / u_l``. None reads lattice units.
+
+        Raises:
+            ValueError: If the clock disagrees with ``discretization``, ``frame_stride`` does
+                not divide the steps, or ``box`` is given for a file whose clock is not
+                ``time_convection``.
         """
         self._open(path, chunk_cache_mb=chunk_cache_mb, nan_policy=nan_policy,
                    sim_index=sim_index)
@@ -87,6 +102,21 @@ class KinetRawTrajectory(HDF5Trajectory):
         length = tuple(float(v) for v in disc["spatial"]["length"])
         spacing = tuple(l / n for l, n in zip(length, shape))
         n_spatial = len(shape)
+        #: Field -> the factor its stored values are multiplied by; 1 for a field not named.
+        self._scale: dict[str, float] = {}
+        #: The run's kinematic viscosity in the units ``box`` sets; None in lattice units.
+        self.viscosity: float | None = None
+        if box is not None:
+            if self._file["time"].attrs.get("source") != "time_convection":
+                raise ValueError(f"{self.source}: box needs the clock in L_l / u_l, which a "
+                                 "file converted from time/time_convection holds; this one's "
+                                 f"is {self._file['time'].attrs.get('source')!r}")
+            lattice = json.loads(self._file.attrs["normalization_plan"])["lattice"]
+            cell, speed = float(box) / lattice["L_l"], lattice["u_l"]
+            spacing = tuple(s * cell for s in spacing)
+            self._scale = {"velocity": 1 / speed, "vorticity": 1 / (speed * cell),
+                           "pressure": 1 / speed**2}
+            self.viscosity = lattice["nu_l"] * cell / speed
         boundary_t = (
             tuple(str(b) for b in boundary) if boundary is not None
             else ("periodic",) * n_spatial
@@ -100,7 +130,7 @@ class KinetRawTrajectory(HDF5Trajectory):
         )
         self._times = read_time_axis(
             self._file["time"], remote=self.is_remote, mode=time_axis
-        )
+        ) * (1.0 if box is None else float(box))
         n_frames = len(self._times)
         # A cross-check of the frame count, not its source: `time.shape[0]` is the length of
         # the very axis being described, so it cannot be off by one. `temporal.grid` counts
@@ -156,5 +186,6 @@ class KinetRawTrajectory(HDF5Trajectory):
         out: dict[str, np.ndarray] = {}
         for name in fields:
             ds = self._file[FIELD_MAP[name]]
-            out[name] = np.asarray(ds[self._sim, :, int(t) * self._stride], dtype=np.float64)
+            out[name] = np.asarray(ds[self._sim, :, int(t) * self._stride],
+                                   dtype=np.float64) * self._scale.get(name, 1.0)
         return out

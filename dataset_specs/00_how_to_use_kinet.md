@@ -839,7 +839,14 @@ after downsampling, so the manifest's `full:` entry points at nothing. The seeds
 files use the pre-rename keys (`scheme:` for `physics:`, `experiment:` for `group:`,
 `/closure/analytic@simulate_closure.F`), so they do not compose on `main` as they stand; the
 `main` case `homogeneous_isotropic_turbulence/Re-50k_Ma-1en1` with the overrides of Section 3b is
-the same physics. The branch also carries `Re-*_Ma-1en1_linear_forced_2d.yaml`, a 2D linearly
+the same physics. *Corrected on 2026-11-27* (`docs/datasets/logs/kinet_runs/README.md`,
+"Current kinet: a statistically equivalent route"): it is not the same physics at the start.
+The archived runs started from equilibrium populations; the current case applies a
+non-equilibrium correction to them (`initialization_policy: analytic`) and refuses
+`initialization_policy=equilibrium` at run time, because it still registers its corrector (the
+second failure above). So the current kinet gives runs statistically equivalent to the archived
+ones only, not reproductions of them, even on the same kind of device with the same seed. The
+branch also carries `Re-*_Ma-1en1_linear_forced_2d.yaml`, a 2D linearly
 forced case with `rate_policy: k_feedback`, `target_u_rms: 0.0333`, `solenoidal: true` and an
 `application: edm` key that `main`'s config model does not have; whether it ran is not recorded
 in the ledgers read.
@@ -1086,6 +1093,35 @@ That last step is a conjecture: at 128² the GPU is probably limited by kernel l
 than arithmetic, so the rate per cell at 256² and above is likely higher, not lower. The PonD
 solver is slow on both devices without compilation; a 200² oblique Riemann run to `t = 0.2` was
 not attempted.
+
+**Measured on the GPU debug queue (2026-11-27)**, the nine runs of `BUILD_ORDER.md` steps 15
+and 16, one A100 per job, `torch.compile` on, entropic BGK, macroscopic observables only;
+records in `docs/datasets/logs/kinet_runs/kinet_re5e4_timing/` and `taylor_green_re50/`
+(`_results/timings.txt`):
+
+| Case, grid | Steps | Start-up before step 1 | First step (compilation) | ms per step | Cell-steps per second |
+|---|---|---|---|---|---|
+| shear layer, 256², cold compile cache | 5000 | 157 s | 74 s | 3.92 | 1.7e7 |
+| Taylor–Green, 64² | 704 to 880 | 159 to 166 s | 72 to 86 s | 2.5 to 2.6 | 1.6e6 |
+| Taylor–Green, 128² | 1408 to 3520 | 149 to 177 s | 53 to 64 s | 2.8 | 5.8e6 to 6.0e6 |
+| Taylor–Green, 256² | 2816 to 14080 | 64 to 185 s | 21 to 58 s | 2.9 to 3.2 | 2.1e7 to 2.3e7 |
+| Taylor–Green, 512² | 5632 to 56320 | 214 to 325 s | 32 to 76 s | 2.5 to 4.3 | 6.1e7 to 1.0e8 |
+
+So the time per step hardly grows with the grid up to 512², which fits the conjecture above that
+the GPU is limited by kernel launches rather than arithmetic (not profiled), and each run's
+fixed cost, a
+start-up of 1 to 5 minutes plus about a minute of compilation, dominates every run of a few
+thousand steps.
+
+**The walltime guard** (`io.async_drain.walltime_preempt: true`, `margin_s: 240`). kinet stops a
+run early, and exits with code 0, when the time left in the Slurm job is less than one step plus
+240 s; its first estimate of a step includes the compilation (as the job agent of 2026-11-27
+read kinet's drain logic; the source was not re-read here). Seen twice on 2026-11-27: the
+fixed-Mach 512² run in job 62100815 and the diffusive 256² run in job 62101127, each the last of
+several runs in a job, stopped with `stop_reason=shutdown` and `rc=0` and had to be rerun. A
+job script must therefore check that a run completed (the rollout's `kinet_rollout_status` is
+`complete`, which `fmeval.data.convert_kinet` also checks), not only its exit code, and leave
+the margin in the time it requests.
 
 **What is on scratch.** `$EX` holds about 0.58 GB in the folders `c1`, `c3` to `c10`, `misc`,
 `tput` and `_meta` (scripts, environment, and the before and after listings of the kinet

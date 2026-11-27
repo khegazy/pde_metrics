@@ -1,11 +1,14 @@
 # Taylor–Green vortex
 
-!!! note "Computed, not simulated"
-    This dataset is the exact solution of a textbook problem, computed on the fly whenever a
-    frame is read. It tests the evaluation harness against an answer known in advance. It is
-    not evidence about a simulated flow, so no metric's page cites `taylor_green_2d`.
+!!! note "Computed, and simulated against the computed answer"
+    `taylor_green_2d` is the exact solution of a textbook problem, computed on the fly whenever
+    a frame is read. It tests the evaluation harness against an answer known in advance. It is
+    not evidence about a simulated flow, so no metric's page cites it.
     `helmholtz_mixture_2d`, the vortex plus an exact acoustic mode, is registered as evidence,
-    as an analytic check.
+    as an analytic check. `kinet_taylor_green_diffusive` and `kinet_taylor_green_fixed_mach`
+    are lattice-Boltzmann runs of the vortex on four grids, each scored against the exact
+    solution on its own cells (section "kinet's runs against the exact solution"); both are
+    registered as evidence of a solver's observed order.
 
 ## The problem
 
@@ -37,7 +40,8 @@ beside it under `docs/datasets/_generated/`.
 |---|---|---|
 | `taylor_green_2d` | The exact solution below, viscosity $\nu = 0.01$, on $256^2$ cells, 10 frames from $t = 0$ to $t = 50$, when the velocity has fallen to $1/e$ of its initial size | Yes, computed |
 | `helmholtz_mixture_2d` | The same vortex plus its curl-free mirror image, an exact acoustic mode at sound speed 2 (section "An acoustic part"), on $64^2$ cells, 9 frames over half an acoustic period, $t = 0$ to $1.1$ | Yes, computed |
-| `kinet/taylor_green_vortex/` | A directory for lattice-Boltzmann runs (`Re-50k_Ma-1en1`, `weakly_compressible_isoT_fluids`). On 2026-10-20 it held no trajectory, only a decomposition file | No data yet |
+| `kinet_taylor_green_diffusive` | kinet's run of the vortex at $\mathrm{Re} = 50$ on $64^2$, $128^2$, $256^2$ and $512^2$ cells under diffusive scaling ($\mathrm{Ma} = 0.08 \cdot 64/N$), each scored against the exact solution on its own cells; chosen with `dataset.trajectory=N64` to `N512` | Yes, converted (436 MB) |
+| `kinet_taylor_green_fixed_mach` | The same four grids at a fixed $\mathrm{Ma} = 0.1$, where the error stops falling | Yes, converted (351 MB) |
 
 The viscosity, grid and window are reader options, for example `+dataset.reader.nu=0.05`.
 
@@ -62,6 +66,113 @@ Sect. 3.3, and `tests/test_analytic_datasets.py` asserts them through the pipeli
 thirteen metrics whose cards report an error per step, on two non-square grids, to $10^{-12}$
 relative. The translated vortex solves eq. (1) only with the uniform flow $\mathbf{U}$ added,
 so `drift` is meant for the candidate and the reader's own frames keep its default of zero.
+
+## kinet's runs against the exact solution
+
+The standard test of a numerical solver is its error against an exact solution on a sequence
+of refined grids, whose rate of fall is the solver's observed order of accuracy. kinet's
+lattice-Boltzmann solver (D2Q9, entropic BGK, weakly compressible and isothermal) ran the vortex
+of eq. (3) at $\mathrm{Re} = 50$ on $64^2$, $128^2$, $256^2$ and $512^2$ cells, each run to the
+same time $1.0029\,t_d$, where $t_d = 1/(2\nu)$ is the time in which the velocity falls by $1/e$.
+There are two sequences:
+
+- **Diffusive scaling** (`kinet_taylor_green_diffusive`): the Mach number falls with the cell
+  size, $\mathrm{Ma} = 0.08 \cdot 64/N$, so the solver step shrinks as $h^2$. Saved at 40 times.
+- **Fixed Mach number** (`kinet_taylor_green_fixed_mach`): $\mathrm{Ma} = 0.1$ on every grid, the
+  solver step shrinking as $h$. Saved at 32 times.
+
+A lattice-Boltzmann solver has two leading errors, one of order $h^2$ and one of order
+$\mathrm{Ma}^2$, and only diffusive scaling makes the second shrink with the first
+(`dataset_specs/02_grid_refinement_known_solution.md`, Sect. 4.0, which cites dos Santos and
+Siebert 2026 and Yu et al. 2023 for it). So the first sequence should converge at order 2 and
+the second should stop at a floor. Both do, as measured below.
+
+### How a run is compared
+
+The reader `taylor_green_kinet` (`fmeval/data/analytic.py`) takes one converted run, evaluates
+the exact solution of eq. (3) at the run's own cell centres and saved times, and offers the run
+as its candidate, so `evaluate.py` scores the run against it at every frame, as it scores any
+candidate (section "Candidates with a known error"). Every row carries the run's resolution in
+`param_resolution`. kinet places node $i$ at $(i + \tfrac12)\,2\pi/N$, the cell centre the
+reader samples: the two agree at the initial frame to $10^{-14}$, where half a cell's offset
+would leave an error of order $h$.
+
+kinet works in lattice units: a cell is 1 long, a solver step lasts 1, and the initial velocity
+amplitude is $u_l$. The reader expresses the run in the units of eq. (3), with the box $2\pi$ and
+$U_0 = 1$, from the run's own $u_l$, $\nu_l$ and box side $N$ (its `normalization_plan`):
+
+$$
+h = \frac{2\pi}{N}, \qquad \mathbf{u} = \frac{\mathbf{u}_l}{u_l}, \qquad
+\omega = \frac{\omega_l}{u_l h}, \qquad t = s\,u_l h = 2\pi\,t_c, \qquad
+\nu = \frac{\nu_l h}{u_l} = \frac{2\pi}{\mathrm{Re}}, \tag{9}
+$$
+
+where $s$ counts solver steps, $t_c = s\,u_l/N$ is kinet's clock `time_convection` (the time
+the converted file stores) and $\mathrm{Re} = u_l N/\nu_l$ is kinet's Reynolds number on the box
+side. The mapping is this repository's derivation. Without it the diffusive sequence would be
+compared in lattice units, where $u_l$ halves at each refinement and every velocity error
+would gain a factor $1/2$, adding one to the observed order.
+
+The observed order between two grids of $N_k$ and $N_{k+1} = 2N_k$ cells, with error norms $L_k$
+and $L_{k+1}$, is (Roy 2005, Eq. 8)
+
+$$
+p = \frac{\ln (L_k / L_{k+1})}{\ln 2}. \tag{10}
+$$
+
+Run a sequence and read its orders with
+
+```bash
+python evaluate.py -m dataset=kinet_taylor_green_diffusive \
+    dataset.trajectory=N64,N128,N256,N512 'metrics=[rmse,max_error]'
+```
+
+then `fmeval.analysis.observed_order(fmeval.io.load_runs(<the four folders>),
+anchor_label="mean_field")`.
+
+### What the runs show
+
+The root-mean-square velocity error, averaged over every saved time, divided by $U_0$, and its
+observed order. These are the job's numbers (`docs/datasets/logs/kinet_runs/taylor_green_re50/
+_results/`), which this reader reproduces frame by frame to $2\times10^{-11}$ relative:
+
+| Cells | Diffusive error | Order | Fixed-Mach error | Order |
+|---|---|---|---|---|
+| $64^2$ | $3.240\times10^{-4}$ | | $3.872\times10^{-4}$ | |
+| $128^2$ | $8.074\times10^{-5}$ | 2.00 | $4.109\times10^{-4}$ | $-0.09$ |
+| $256^2$ | $2.048\times10^{-5}$ | 1.98 | $4.294\times10^{-4}$ | $-0.06$ |
+| $512^2$ | $4.824\times10^{-6}$ | 2.09 | $4.274\times10^{-4}$ | 0.01 |
+
+Read per time by `observed_order` at the four evaluated times ($t = 0.25$, $0.5$, $0.75$ and
+$1.0\,t_d$), with `rmse` and `max_error`:
+
+- **Diffusive scaling.** Vorticity gives order 1.99 to 2.01 at every time and pair of grids.
+  Velocity scatters about 2, from 1.60 to 2.64, because part of its error is dilatational (its
+  divergence is not zero): 2% to 64% of the error's energy, by frame and grid, measured with
+  `fmeval.derived.helmholtz_split`. That part oscillates in time with a phase that differs
+  between grids. Vorticity, a curl, does not see it. That the dilatational part is an acoustic
+  wave is our reading, not measured.
+- **Fixed Mach number.** On the two finer pairs the order is $-0.14$ to $0.01$: the error does
+  not fall. On the coarsest pair it is $-1.09$ to $0.42$, negative late in the run, where the
+  error grows from $64^2$ to $128^2$.
+
+### What the evaluation sees on these runs
+
+- **The reference frames are scalar multiples of one another**, and each run's frames differ
+  from them by $10^{-4}$ of the amplitude. What these datasets measure is the error, whose
+  pattern changes in time (above), and its fall across the four grids, not the frames.
+- **The ladder is not run.** As for any candidate, only the clean entry and the damage anchor
+  `mean_field` are kept beside the run's rows.
+- **Fields.** Velocity and vorticity, the fields both sides hold. The run's density deviates
+  from 1 at order $\mathrm{Ma}^2$, which is part of its error, but the exact solution of the
+  incompressible equations has no density to compare it with. The run's pressure is a gauge,
+  which the conversion does not keep.
+- **Every metric runs on each run's own grid.** No analysis grid is set, because a remap would
+  add an error of its own order to the measured one (spec 02, Sect. 3).
+
+No dynamics figure is drawn for these datasets: their frames are the exact solution, which the
+figures of `taylor_green_2d` above already show, and the runs differ from it by less than a
+figure can show.
 
 ## An acoustic part
 
@@ -261,6 +372,9 @@ and the default ladder on 2026-10-20.
 - Chu, B.-T. and Kovásznay, L. S. G. (1958). Non-linear interactions in a viscous
   heat-conducting compressible gas. *Journal of Fluid Mechanics* 3(5), 494–514.
   <https://doi.org/10.1017/S0022112058000148> (abstract read)
+- Roy, C. J. (2005). Review of code and solution verification procedures for computational
+  simulation. *Journal of Computational Physics* 205(1), 131–156, Eq. 8 for the observed order.
+  <https://doi.org/10.1016/j.jcp.2004.10.036>
 - Taylor, G. I. and Green, A. E. (1937). Mechanism of the production of small eddies from
   large ones. *Proceedings of the Royal Society A* 158, 499–521.
   <https://doi.org/10.1098/rspa.1937.0036>

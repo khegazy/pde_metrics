@@ -108,6 +108,14 @@ measurements after the rerun confirm or replace it.
   measured on the rerun, as described in that section.
 - Nothing was run.
 
+**2026-11-27, dataset agent (where the run's configuration is kept).**
+
+- The configuration of the run `a92b16`, with the command that rebuilds it on the current kinet
+  and why that is not an exact reproduction, is in
+  `docs/datasets/logs/kinet_runs/supersonic_cylinder/` (README section "Supersonic cylinder"),
+  step 31 of `dataset_specs/BUILD_ORDER.md`. The rerun of step 28 is archived in
+  `supersonic_cylinder_rerun/` there; it is not converted or read yet.
+
 ### Open points
 
 - The run is not finished (step 28).

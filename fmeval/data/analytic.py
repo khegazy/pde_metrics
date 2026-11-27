@@ -7,7 +7,9 @@ Nothing is written to disk; a frame is recomputed whenever it is read, which is 
 cheap. Measured through ``Trajectory.frame``, validation included, on a NERSC login node:
 0.3 ms per frame for Sod on 2048 cells and 1.8 ms for Taylor-Green on 256^2, against about
 10 ms of I/O per kinet frame (``fmeval/pipeline.py``). Evaluating Taylor-Green's sines
-directly took 7.0 ms, which is why its spatial patterns are computed once.
+directly took 7.0 ms, which is why its spatial patterns are computed once. The one exception
+is ``taylor_green_kinet``, which takes its cells and clock from a kinet run of the vortex and
+opens that run as its candidate.
 
 A reader may also supply a **candidate**: the same closed form with some of its parameters
 changed (``candidate={"nu": 0.02}``), returned by :meth:`ClosedFormTrajectory.predictions` and
@@ -16,17 +18,19 @@ scored against the reader's own frames as a forecast is (``evaluate.py``,
 every step is known in advance.
 
 None is **evidence about a flow**. ``sod_shock_tube``, ``burgers``, ``sedov_taylor``, ``noh``,
-``random_field`` and the ``feature_population``, ``transport_pairs`` and ``helmholtz_mixture_2d``
-configurations are in ``evidence_datasets``, each under a label saying it is an analytic check
-or a known-statistics null and nothing about turbulence; ``taylor_green_2d`` and
-``advecting_blobs`` are fixtures for the harness only (``docs/decisions.md``). Their pages are
-``docs/datasets/``.
+``random_field``, ``advecting_blobs`` and the ``feature_population``, ``transport_pairs`` and
+``helmholtz_mixture_2d`` configurations are in ``evidence_datasets``, each under a label saying
+it is an analytic check or a known-statistics null and nothing about turbulence;
+``taylor_green_2d`` is a fixture for the harness only (``docs/decisions.md``). The
+``taylor_green_kinet`` configurations are evidence of a solver's observed order on a grid
+sequence. Their pages are ``docs/datasets/``.
 """
 
 from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any, ClassVar
 
 import numpy as np
@@ -40,6 +44,7 @@ from fmeval.external.kinet_spectral import physical_wavenumber_grid, spectral_de
 from fmeval.wavenumbers import wavenumber_magnitude
 
 from .base import GridSpec, Trajectory, register_reader
+from .kinet_raw import KinetRawTrajectory
 
 
 def band_transfer(shape: tuple[int, int], k_min: float, k_max: float, slopes: Sequence[float],
@@ -780,6 +785,8 @@ class TaylorGreen2D(ClosedFormTrajectory):
 
     FORMAT = "taylor_green_2d"
     FIELDS = ("velocity", "pressure", "vorticity")
+    #: The side of the periodic box, on both axes.
+    BOX: ClassVar[float] = 2 * np.pi
     #: The keys of each kind of entry of ``acoustic``.
     ACOUSTIC: ClassVar[dict[str, set[str]]] = {
         "plane": {"kind", "mode", "amplitude"}, "potential": {"kind", "mode", "amplitude"},
@@ -833,7 +840,7 @@ class TaylorGreen2D(ClosedFormTrajectory):
                     or wave["mode"] != np.round(wave["mode"]).tolist())):
                 raise ValueError(f"each acoustic entry must be one of {self.ACOUSTIC}, with a "
                                  f"mode of two integers not both zero; got {wave}")
-        super().__init__(grid=grid, length=(2 * np.pi, 2 * np.pi),
+        super().__init__(grid=grid, length=(self.BOX, self.BOX),
                          boundary=("periodic", "periodic"), n_frames=n_frames,
                          t_start=t_start, t_end=t_end, candidate=candidate,
                          params={"nu": float(nu), "drift": [float(d) for d in drift],
@@ -904,6 +911,62 @@ class TaylorGreen2D(ClosedFormTrajectory):
                                                                         * phi))
         fields["pressure"] = fields["pressure"] + c_squared * np.real(np.fft.ifft2(rho))[None]
         return fields
+
+
+@register_reader("taylor_green_kinet")
+class TaylorGreenKinet(TaylorGreen2D):
+    """The exact vortex on the cells and clock of a kinet run of it, the run its candidate.
+
+    kinet's ``taylor_green_vortex`` case starts from ``u = u_l sin(kx) cos(ky)``,
+    ``v = -u_l cos(kx) sin(ky)``, ``k = 2 pi / N``, with node ``i`` at ``i + 1/2`` cells: eq. (3)
+    of ``docs/datasets/taylor_green_vortex.md`` with ``U0 = u_l`` at ``x = (i + 1/2) 2 pi / N``
+    (checked by the job that ran it, ``docs/datasets/logs/kinet_runs/taylor_green_re50/
+    _scripts/compare_tg.py``). Read with ``KinetRawTrajectory(box=2 pi)``, the run is in this
+    reader's units, box ``2 pi`` and ``U0 = 1``: a cell is ``2 pi / N``, the velocity is divided
+    by ``u_l``, the time is ``2 pi`` times kinet's ``time_convection`` (steps ``u_l / N``), and
+    the viscosity is ``nu = 2 pi nu_l / (N u_l) = 2 pi / Re``, with ``Re = u_l N / nu_l`` kinet's
+    Reynolds number on the box side. This reader's frames are the exact solution at the run's
+    cell centres and times with that viscosity; :meth:`predictions` is the run, scored against
+    them as a candidate is, its rows labelled with ``param_resolution`` N, so a grid sequence of
+    runs gives the solver's observed order (``fmeval.analysis.observed_order``). Pressure is left
+    out: the converted run stores none (``fmeval.data.convert_kinet``).
+
+    A registered format rather than an option of :class:`TaylorGreen2D`, because a dataset of it
+    reads a file: ``reads_from_disk`` is a property of the format, which ``open_trajectory`` uses
+    to resolve ``path`` (locally or at ``paths.data_url``) and the tests to mark it ``data``.
+    """
+
+    reads_from_disk = True
+    FORMAT = "taylor_green_kinet"
+    FIELDS = ("velocity", "vorticity")
+
+    def __init__(self, path: str | Path) -> None:
+        """Read the run's grid, clock and viscosity, and evaluate the exact solution on them.
+
+        Args:
+            path: A kinet ``taylor_green_vortex`` run in the flat layout, converted by
+                ``fmeval.data.convert_kinet``, or its published URL.
+
+        Raises:
+            ValueError: If the run is not kinet's Taylor-Green vortex on a square grid, or
+                :class:`KinetRawTrajectory` refuses it.
+        """
+        with KinetRawTrajectory(path, box=self.BOX) as run:
+            group = run.meta["source_attrs"].get("group")
+            if group != "taylor_green_vortex" or len(set(run.grid.shape)) != 1:
+                raise ValueError(f"{path}: a kinet taylor_green_vortex run on a square grid is "
+                                 f"needed; this is {group!r} on {run.grid.shape}")
+            super().__init__(nu=run.viscosity, grid=run.grid.shape, n_frames=len(run),
+                             t_start=float(run.times[0]), t_end=float(run.times[-1]),
+                             candidate={})  # an empty candidate labels the rows as a candidate's
+            # The run's clock itself: the pipeline pairs two trajectories only on equal times.
+            self._times = run.times
+        self._path = path
+        self._meta["path"] = str(path)
+
+    def predictions(self) -> KinetRawTrajectory:
+        """The run, on this reader's cells and clock and in its units."""
+        return KinetRawTrajectory(self._path, box=self.BOX)
 
 
 @register_reader("advecting_blobs")

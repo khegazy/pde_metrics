@@ -203,3 +203,13 @@ person may override it.
   ..., 10000) of the reader's 10001 and an analysis grid of 256. No metric was run.
 - **Supersedes** the 161-frame window and the command-line grid of "What part is evaluated" and
   of the registration entry above.
+
+#### 2026-11-27: where the runs' configurations are kept (dataset agent)
+
+- The solver configuration of every shear-layer run these configurations read, with the command
+  that rebuilds each on the current kinet and what stands in the way of an exact reproduction,
+  is in `docs/datasets/logs/kinet_runs/` (`kinet_re5e4/`, `kinet_re5e4_dev/`,
+  `kinet_re5e4_512/`, `kinet_re1e6/`, `shear_layer_prev_256/`, and the README section "The
+  shear layer"), step 31 of `dataset_specs/BUILD_ORDER.md`. The refinement reruns of step 19
+  are archived in `shear_layer_refinement/` there and the timing run of step 15 in
+  `kinet_re5e4_timing/`; neither is read by a configuration yet.

@@ -110,7 +110,9 @@ did not evaluate it the way that field does.
   `evidence_datasets` with its claim label (Kareem, 2026-11-26): the decaying isotropic
   turbulence `kinet_hit_re12p5k`, `kinet_hit_re25k`, `kinet_hit_re50k`; the shear layer on
   512^2, `kinet_re5e4_512`; the solver's Sod runs `kinet_sod_gamma1p4` and `kinet_sod_gamma2`;
-  and the analytic checks `burgers`, `sedov_taylor`, `noh`, `feature_population`,
+  the solver's Taylor–Green grid sequences `kinet_taylor_green_diffusive` and
+  `kinet_taylor_green_fixed_mach`, scored against the exact solution and read by
+  `fmeval.analysis.observed_order`; and the analytic checks `burgers`, `sedov_taylor`, `noh`, `feature_population`,
   `transport_pairs`, `advecting_blobs`, `random_field` and `helmholtz_mixture_2d`. Each is run
   on its own configuration's evaluated part (its window, `analysis_resolution` and
   `exclude_degradations`), with the command-line settings listed beside `evidence_window` in

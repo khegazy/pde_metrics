@@ -183,7 +183,9 @@ change; never rewrite an old entry, add a new one that supersedes it. It holds:
    specification or issue that asked for it.
 2. **How it is treated**: the source (path, provenance, solver and its configuration, or the
    closed form and its citation), the reader and options, fields kept and dropped, grid,
-   boundary per axis, and any conversion.
+   boundary per axis, and any conversion. A kinet run's configuration, provenance and command
+   go in `docs/datasets/logs/kinet_runs/<dataset>/`, by the rule in that folder's README, and
+   the log points there.
 3. **What part is evaluated** (step 3): the windows, stride, trajectories and analysis grid
    kept, the number of independent samples they give, the measured cost per frame with a cheap
    and an expensive metric, the projected time of the full panel, the disk used, and why this

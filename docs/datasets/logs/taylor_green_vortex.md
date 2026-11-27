@@ -463,3 +463,161 @@ to the code as it is now; all are the agent's, 2026-11-27.
 - The answers of spec 10, Sect. 3.6 listed under "Not verified".
 - A broadband dilatational random field (spec 10, Sect. 5, a proposal for `random_field`) is
   not built.
+
+## `kinet_taylor_green_diffusive` and `kinet_taylor_green_fixed_mach`
+
+### What they are for
+
+The numerical analyst's figure for a solver (`dataset_specs/02_grid_refinement_known_solution.md`,
+Sect. 4.1, ideal (i); `BUILD_ORDER.md`, step 16): kinet's error against the exact Taylor–Green
+solution on four refined grids, with a known order. Every pairwise metric run on the grid
+sequence reports its own observed order (`fmeval.analysis.observed_order`), so a metric can be
+checked to read a converging solver error as order 2 (diffusive scaling) and a Mach-limited
+floor as order 0 (fixed Mach), which is how the solver-verification field evaluates an error
+norm (Roy 2005, Eqs. 7 and 8).
+
+### How they are treated
+
+- **Source.** Eight kinet runs made on 2026-11-27 by the job agent (step 16), on kinet branch
+  `perf/cleanup` at commit `d1cd353b8`, one A100 each, case `taylor_green_vortex/Re-50k_Ma-1en1`
+  with the Reynolds number lowered to 50 and the grid, steps, Mach number and save cadence set
+  per run. Each run's configuration, provenance, command and Slurm record are in
+  `docs/datasets/logs/kinet_runs/taylor_green_re50/<run>/`, and the job's own comparison with
+  the exact solution in `_results/` and `_scripts/compare_tg.py` there.
+
+  | Configuration, trajectory | Run | Identity key | Ma | Steps | Saved every |
+  |---|---|---|---|---|---|
+  | diffusive, `N64` | `tg_re50_diffusive_N64` | `8c6a71c7` | 0.08 | 880 | 22 |
+  | diffusive, `N128` | `tg_re50_diffusive_N128` | `74c3e687` | 0.04 | 3520 | 88 |
+  | diffusive, `N256` | `tg_re50_diffusive_N256` | `dec4c7e9` | 0.02 | 14080 | 352 |
+  | diffusive, `N512` | `tg_re50_diffusive_N512` | `71ba624f` | 0.01 | 56320 | 1408 |
+  | fixed Mach, `N64` | `tg_re50_fixedMa0p1_N64` | `b4252ea2` | 0.1 | 704 | 22 |
+  | fixed Mach, `N128` | `tg_re50_fixedMa0p1_N128` | `82fed4e5` | 0.1 | 1408 | 44 |
+  | fixed Mach, `N256` | `tg_re50_fixedMa0p1_N256` | `8b881515` | 0.1 | 2816 | 88 |
+  | fixed Mach, `N512` | `tg_re50_fixedMa0p1_N512` | `ef4dc9f7` | 0.1 | 5632 | 176 |
+
+- **Conversion.** `python -m fmeval.data.convert_kinet <rollout.h5> <destination>` with no change
+  to the converter, from `/pscratch/sd/k/khegazy/kinet_datasets/taylor_green_re50/
+  taylor_green_vortex/Re-50k_Ma-1en1/<key>/tiers/full/rollout.h5` to
+  `${paths.data}/kinet/taylor_green_vortex/weakly_compressible_isoT_fluids/sys_Re-50_diffusive/N<n>.h5`
+  and `.../sys_Re-50_Ma-1en1/N<n>.h5`. The converter dropped step 1 (off the cadence), kept the
+  initial condition as frame 0, took the clock from `time/time_convection`, and dropped the gauge
+  pressure (`pressure_convention: fluctuation_referenced`), the temperature and the stability
+  fields. 41 frames per diffusive run, 33 per fixed-Mach run; 436 MB and 351 MB, 787 MB in all.
+- **Reader.** `taylor_green_kinet` (`TaylorGreenKinet` in `fmeval/data/analytic.py`): the exact
+  solution of `TaylorGreen2D` at the run's cell centres and times, with the run, read by
+  `KinetRawTrajectory(box=2 pi)`, as its candidate. The unit mapping is eq. (9) of the page:
+  a cell $2\pi/N$, velocity over $u_l$, vorticity over $u_l h$, time $2\pi$ times
+  `time_convection`, $\nu = \nu_l h/u_l = 2\pi/50$. Fields velocity and vorticity, both axes
+  periodic, native resolution.
+
+### What part is evaluated
+
+- **Kept:** all four grids of each sequence, each at its native resolution, at four times,
+  $t = 0.25$, $0.5$, $0.75$ and $1.0\,t_d$: frames 10, 20, 30, 40 of a diffusive run
+  (`time: {start: 10, reduction: 10}`) and 8, 16, 24, 32 of a fixed-Mach run
+  (`{start: 8, reduction: 8}`). The clocks are bitwise equal across the four grids of each
+  sequence (checked), so `observed_order` matches the times exactly.
+- **How many frames carry information.** The reference frames are one pattern times
+  $e^{-2\nu t}$, one frame's worth. The run's error is what is measured. Its solenoidal part is
+  one decaying pattern too: vorticity's order is 2.00 within 0.02 at all 40 diffusive times. Its
+  dilatational part (2% to 64% of the velocity error's energy, by frame and grid, measured with
+  `helmholtz_split` at frames 5, 10, 20 and the last on 64^2 and 512^2) oscillates with a phase
+  that differs between grids, so velocity's per-time order scatters, 1.46 to 2.70 over the 40
+  diffusive times and 1.60 to 2.64 at the four kept. Four times cover the decay from
+  a quarter to one $t_d$ and show that scatter; more frames would repeat it.
+- **Frame 0 is left out**: it is kinet's initial condition, equal to the exact solution to
+  round-off (L2 error below 1e-14), so it carries no error to measure.
+- **Not set:** an analysis grid (a remap adds an error of its own order, spec 02, Sect. 3), an
+  exclusion (the ladder is replaced by the candidate, keeping the clean entry and `mean_field`),
+  a slow-metric setting (the persistence metrics are cheap on a single mode).
+- **Measured cost** (login node, 2026-11-27, the four kept frames): the 22 deterministic metrics
+  other than the two persistence ones, 1.0 s on 64^2 and 35.5 s of metric time (45 s wall) on
+  512^2; `persistence_distance` and `persistence_wasserstein` together 0.1 s on 64^2 and 25 s on
+  512^2. Projected, the whole deterministic panel on one sequence is under two minutes of metric
+  time and both sequences about five minutes wall, dominated by 512^2 (my arithmetic from the two
+  grids measured; 128^2 and 256^2 not timed with the full panel). `rmse` and `max_error` on all
+  four grids: 5.7 s wall per sequence.
+- **Disk:** 787 MB on CFS, all of it read.
+
+### Decisions and why
+
+1. **A registered reader `taylor_green_kinet`, not an option of `TaylorGreen2D`** (agent,
+   2026-11-27). The pairing reuses three existing mechanisms and adds about 30 lines: the
+   candidate mechanism of `ClosedFormTrajectory` (an empty `candidate` labels the rows with
+   `param_resolution`, `lead_step` and `lead_time` through the inherited `frame_columns`, and
+   `predictions()` returns the run, so `evaluate.py`, `pipeline.run(prediction=...)` and
+   `observed_order` work unchanged), `KinetRawTrajectory` for the run, and `TaylorGreen2D` for
+   the solution. It had to be its own format because `reads_from_disk` is a property of the
+   format: `open_trajectory` uses it to resolve `path` locally or at `paths.data_url`, and the
+   tests use it to mark a dataset `data`. As an option of `TaylorGreen2D`, a dataset reading
+   CFS would have called itself generated and been opened by the default test suite.
+   Alternatives: `ForecastPairs` files holding the exact solution as stored targets (refused:
+   an analytic dataset is not stored, `BUILD_ORDER.md` "The task", and the converter would
+   then have to compute the solution and rescale the run); a `predictions()` on
+   `KinetRawTrajectory` returning the exact solution (refused: the run would be the reference
+   and the exact solution the candidate, the wrong way round for every metric normalised by its
+   reference). To reverse: delete the class and the two configs.
+2. **The unit mapping lives in `KinetRawTrajectory(box=...)`** (agent). The reader of kinet's
+   files is the one place that knows kinet's units; `box` reads any converted run in units of a
+   chosen box side and $u_l = 1$ from the file's `normalization_plan`, and refuses a file whose
+   clock is not `time_convection`. Without it the diffusive sequence's velocity errors carry
+   $u_l \propto h$, which adds one to every observed order, and the vorticity's carry $u_l h$.
+   The default (None) leaves every existing kinet dataset's frames bitwise unchanged.
+3. **Two configurations and a fragment, not one** (agent). Each sequence is one candidate's grid
+   sequence, which `observed_order` needs, and the two support different claims (order 2 and
+   a floor), so each has its own `evidence_datasets` label. The grid is `dataset.trajectory`
+   (`N64` to `N512`).
+4. **The scalar-multiple rule does not keep them out** (agent, 2026-11-27). The reference
+   frames are scalar multiples of one another, as `taylor_green_2d`'s are, and each run's frames
+   nearly so (to 1e-4 of the amplitude). The rule exists because such frames are not independent
+   samples for the per-frame statistics of a degradation ladder (`docs/decisions.md`). These
+   datasets have no ladder and claim no per-frame statistics: their claim is the fall of an
+   error across four grids, measured per time, and the error's pattern does change in time (its
+   dilatational share moves from 2% to 64%). Both are registered with a label that says the
+   frames are one pattern scaled in time. To reverse: delete the two entries in
+   `configs/cards/default.yaml` and rerun `python -m fmeval.cards catalog`.
+5. **Rank 0** (agent): read from disk like every simulated dataset, not generated; the generated
+   readers' negative rank does not apply.
+6. **No dynamics figure** (agent): the frames are the exact solution, already drawn for
+   `taylor_green_2d`; no test requires one for these configurations.
+7. **Velocity and vorticity only** (agent): density is not scored, because the exact solution
+   of the incompressible equations has none; the run's density deviation of order Ma² is part of
+   its error that these datasets do not show.
+
+### Log entries
+
+#### 2026-11-27: converted, paired with the exact solution, registered (dataset agent)
+
+- Each run's configuration is archived in `docs/datasets/logs/kinet_runs/taylor_green_re50/`
+  (one folder per run with `RUN.txt`, `config.yaml`, `resolved_config.yaml`,
+  `run_provenance.yaml`, `manifest.yaml`; the job's error tables in `_results/`, its scripts in
+  `_scripts/`).
+- Converted the eight runs (above) in 12 s on the login node; each written file was read back by
+  the converter's own `KinetRawTrajectory` check, and compared with its source: equal velocity
+  and density at frames 0, 1, the middle and the last, and the clock equal to the source's
+  `time_convection` at every frame.
+- Added `box` to `KinetRawTrajectory`, `TaylorGreen2D.BOX`, `TaylorGreenKinet`
+  (`taylor_green_kinet`), `tests.fixtures_h5.write_kinet_taylor_green`, the configs
+  `_kinet_taylor_green`, `kinet_taylor_green_diffusive`, `kinet_taylor_green_fixed_mach`, the
+  page section "kinet's runs against the exact solution", and the registration.
+- Verified by tests in `tests/test_analytic_datasets.py`: a synthetic run written in lattice
+  units equals the exact solution to 4.4e-16 (the mapping); a synthetic sequence with an
+  $h^2$ amplitude error gives order 2 to 1e-9 through `observed_order`; three refusals; and,
+  marked `data`, the job's per-frame L2 errors reproduced to 1e-9 relative (measured 2e-11) with
+  its time-averaged orders 2.00, 1.98, 2.09 and -0.09, -0.06, 0.01, and the orders of the
+  evaluated parts through the pipeline (above).
+- Smoke runs: both sequences through `evaluate.py -m ... dataset.trajectory=N64,N128,N256,N512
+  'metrics=[rmse,max_error]'`, read by `observed_order` from the four comparison folders, with
+  the orders of "What the runs show" on the page; under
+  `/pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/kinet_taylor_green/`.
+- Not verified: kinet's initial populations (whether the case seeds the non-equilibrium part,
+  spec 02, Sect. 4.0, "Initialisation"); the measured order 2 is consistent with either. The
+  cause of the velocity error's dilatational part (an acoustic wave from the start is my
+  reading). No metric was run for a card.
+
+### Open points
+
+- The density deviation (order Ma²) is not scored; a reader field of $\rho = 1 + p/c_s^2$ would
+  be an equation of state in a reader, which the repository does not do.
+- The full panel was timed on 64^2 and 512^2 only.

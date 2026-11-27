@@ -98,11 +98,15 @@ Two rules follow from Eq. (5) and are repeated for every option below.
    remap error of its own order, which enters the measured p. Evaluate the exact solution at
    the solver's node positions and difference there (the catalog's D5 entry says the same).
    The repository's closed-form readers sample cell centres, (i + 1/2) h
-   (`fmeval/data/analytic.py`, `ClosedFormTrajectory`), while kinet's Taylor–Green
-   initializer places nodes at x_i = i · 2π/N (`experiments/taylor_green_vortex/initialize.py`,
-   `_build_coordinate_grid`, read in full), so the reader for this dataset needs a node-offset
-   option; evaluating the exact solution half a cell off the solver's nodes is a first-order
-   error that would cap the observed order at 1 (the author's reasoning).
+   (`fmeval/data/analytic.py`, `ClosedFormTrajectory`). *Corrected on 2026-11-27:* kinet's
+   Taylor–Green initializer places node i at (i + 1/2) · 2π/N, the same cell centres, not at
+   i · 2π/N as first written here (the job agent's reading of `_build_coordinate_grid` in its
+   comparison script, `docs/datasets/logs/kinet_runs/taylor_green_re50/_scripts/compare_tg.py`;
+   measured: the converted runs' initial frames equal the exact solution at the cell centres to
+   1e-14 on all eight grids, where half a cell's offset would leave an error of order h). So no
+   node-offset option is needed, and `taylor_green_kinet` has none. Evaluating the exact
+   solution half a cell off the solver's nodes would be a first-order error that caps the
+   observed order at 1 (the author's reasoning).
 2. **Read the order where it is steady.** Compute p per frame and per field from successive
    pairs of levels, and report the curve p(t); the asymptotic range is where p is steady
    across both the pairs (64, 128)→(128, 256) and (128, 256)→(256, 512) and across
@@ -121,6 +125,8 @@ setting `analysis_grid.resolution` to each level's own N.
   solution) or [0, 10]² (isentropic vortex). Both axes periodic, which every metric and
   degradation of the repository accepts.
 - **Grid sequence.** N = 64, 128, 256, 512 nodes per axis, ratio 2, nodes at x_i = i L/N.
+  (kinet's Taylor–Green runs place them at (i + 1/2) L/N, Sect. 3, rule 1; against an exact
+  solution on each grid's own nodes the placement only has to be known, not nested.)
 - **Scaling rule between levels (the trap that decides whether p can reach 2).** A
   lattice-Boltzmann solver has two small parameters, the lattice spacing and the Mach number,
   and its leading errors are O(h²) and O(Ma²). kinet fixes `mach` as a parameter and the

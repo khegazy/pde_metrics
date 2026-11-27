@@ -68,6 +68,13 @@
 #   each need a configuration of their own to carry a different label. Like synthetic_ensemble,
 #   it draws from its own `seed` reader option, not the run's: the reader does not need to know
 #   the seed used to generate the data (Kareem, 2026-11-27).
+# - `kinet_taylor_green_diffusive` and `kinet_taylor_green_fixed_mach` are kinet runs scored
+#   against the exact Taylor-Green solution on four grids. Their reference frames are scalar
+#   multiples of one another, as taylor_green_2d's are, but the rule that keeps taylor_green_2d
+#   out concerns the per-frame statistics of a degradation ladder, which these datasets do not
+#   have: their claim is the fall of a solver's error across the grids, whose pattern changes in
+#   time (docs/datasets/logs/taylor_green_vortex.md, decision 4 of their section). Their labels
+#   say the frames are one pattern scaled in time.
 evidence_datasets:
   kinet_re5e4: developed flow
   kinet_re1e6: >-
@@ -124,6 +131,16 @@ evidence_datasets:
     an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and
     dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern
     scaled in time), and nothing about turbulence
+  kinet_taylor_green_diffusive: >-
+    a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against
+    the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error
+    falls at order 2; its frames are one pattern scaled in time, and it says nothing about
+    turbulence
+  kinet_taylor_green_fixed_mach: >-
+    a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against
+    the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the
+    Mach-number error holds the error at a floor (order about 0); its frames are one pattern
+    scaled in time, and it says nothing about turbulence
 
 # What each evidence dataset offers a metric, so every metric card's "Across the experiments"
 # table and the site's coverage page can say why a metric is not run on a dataset without
@@ -153,6 +170,8 @@ evidence_dataset_properties:
   advecting_blobs: {periodic: true, ensemble: false}
   random_field: {periodic: true, ensemble: false}
   helmholtz_mixture_2d: {periodic: true, ensemble: false}
+  kinet_taylor_green_diffusive: {periodic: true, ensemble: false}
+  kinet_taylor_green_fixed_mach: {periodic: true, ensemble: false}
 
 # The window within kinet_re5e4 that counts as developed flow: the convention a run cited
 # as evidence follows (`dataset.time.start`, `dataset.time.reduction`). Nothing reads it to
@@ -172,6 +191,8 @@ evidence_dataset_properties:
 #   across="trajectory")`;
 # - helmholtz_mixture_2d: the two disabled `scale_dilatational` ladder entries switched on;
 # - feature_population: its single-feature candidates, one override each (its config lists them).
+# - kinet_taylor_green_*: the four grids, swept with `-m dataset.trajectory=N64,N128,N256,N512`,
+#   each at its native resolution, and read together by `fmeval.analysis.observed_order`.
 evidence_window:
   start: 2000       # the flow is developed well before this
   reduction: 50     # every 50th frame; ~160 frames, a run of about a minute

@@ -1,0 +1,37 @@
+# Shared by kinet's two-dimensional Taylor-Green vortex at Re = 50 (Re = u_l N / nu_l on the
+# box side), D2Q9 entropic BGK, weakly compressible, doubly periodic, run on 64^2, 128^2, 256^2
+# and 512^2 cells to the same time, 1.0029 t_d (t_d = Re / (4 pi) with the box 2 pi and U0 = 1),
+# saved at 40 or 32 evenly spaced times. Each run was converted from its grouped rollout by
+# `python -m fmeval.data.convert_kinet`; the runs' configurations and commands are under
+# docs/datasets/logs/kinet_runs/taylor_green_re50/.
+#
+# The reader `taylor_green_kinet` evaluates the exact solution at the run's own cell centres
+# and times and scores the run against it as a candidate (fmeval/data/analytic.py), in units
+# where the box is 2 pi and the initial velocity amplitude 1. So every row is the solver's error
+# on its own grid, labelled with param_resolution, and the four runs of one sequence give the
+# observed order:
+#   python evaluate.py -m dataset=kinet_taylor_green_diffusive \
+#       dataset.trajectory=N64,N128,N256,N512 'metrics=[rmse,max_error]'
+#   fmeval.analysis.observed_order(fmeval.io.load_runs(<four folders>), anchor_label="mean_field")
+#
+# WHAT PART IS EVALUATED (2026-11-27; reasons and measured costs in
+# docs/datasets/logs/taylor_green_vortex.md). The whole grid sequence, each run at its native
+# resolution (no analysis grid: the order needs every run scored on its own cells), at four
+# times, t = 0.25, 0.5, 0.75 and 1.0 t_d, which each config selects from its own frames. The
+# reference frames are one pattern scaled in time and the run differs from them by 1e-4 of the
+# amplitude, so one frame carries the reference; the error is what is measured, and four times
+# show whether its order holds as the vortex decays. Frame 0 is the shared initial condition,
+# where the error is round-off.
+format: taylor_green_kinet
+
+# The run stores no pressure (its weakly compressible gauge is not converted) and the exact
+# solution no density, so these are the fields both sides hold.
+fields: [velocity, vorticity]
+
+complexity:
+  family: taylor_green_vortex
+  rank: 0
+  params: {reynolds: 50}
+
+notes: "kinet's 2D Taylor-Green vortex at Re = 50 on a grid sequence, scored against the exact
+  solution on each run's cells and clock. See docs/datasets/taylor_green_vortex.md."

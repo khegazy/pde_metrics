@@ -647,6 +647,17 @@ checked: the frames are 150, 175, ..., 575 on all three options.
 - **Supersedes** the stride of section 3, the command-line grid of the registration entry above,
   and the two open points on pooling and on the grid, rewritten below.
 
+### 2026-11-27: where the runs' configurations are kept (dataset agent)
+
+- The configuration and provenance of every converted realisation, the launch scripts and
+  case files of the branch that made them, and the command that rebuilds each on the current
+  kinet are in `docs/datasets/logs/kinet_runs/` (`kinet_hit_re12p5k/`, `kinet_hit_re25k/`,
+  `kinet_hit_re50k/`, `kinet_hit_launch/`, and the README section "Decaying isotropic
+  turbulence"), step 31 of `dataset_specs/BUILD_ORDER.md`. On the current kinet a rerun is a
+  statistically equivalent realisation only, not a reproduction: the archived runs started from
+  equilibrium populations, which the current case refuses (`dataset_specs/00_how_to_use_kinet.md`,
+  Section 6c, corrected the same day).
+
 ## 6. Open points
 
 - The other 270 complete runs are not converted. Section 4 gives the two routes for doing so.

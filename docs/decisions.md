@@ -160,7 +160,11 @@ Two datasets stay out:
 
 - `taylor_green_2d`, a single Fourier mode, every frame a scalar multiple of the first, so its
   frames are not independent evidence. Any dataset whose frames are scalar multiples of one
-  another stays out for the same reason.
+  another stays out for the same reason, unless its claim rests on no per-frame statistic: the
+  kinet Taylor–Green grid sequences, `kinet_taylor_green_diffusive` and
+  `kinet_taylor_green_fixed_mach`, are admitted (an agent's call, 2026-11-27,
+  `docs/datasets/logs/taylor_green_vortex.md`), because they run no ladder and claim the fall
+  of a solver's error across four grids, an error whose pattern changes in time.
 - `well_radiative_layer_tcool0p32`: no test of an existing metric needs it (an agent's call
   under Kareem's delegation, `dataset_specs/BUILD_ORDER.md`, decision 16).
 

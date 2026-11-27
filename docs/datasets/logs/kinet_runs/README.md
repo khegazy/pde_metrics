@@ -511,6 +511,20 @@ are the archive's `256_simulation` folder was not checked.
   shift is 0.55, so the override restores 0.4; and the run never finished. Step 28 of
   `BUILD_ORDER.md` reruns it as a new run rather than a reproduction.
 
+## Runs made for the plan: `kinet_re5e4_timing/` and `taylor_green_re50/` (2026-11-27)
+
+The first jobs of `BUILD_ORDER.md` (steps 15 and 16) were archived by the job agent in one
+folder per run, named by run rather than identity key, each with a `RUN.txt` that holds the
+exact command, the environment script, the working directory, the kinet branch and commit
+(`perf/cleanup`, `d1cd353b8`), the GPU and torch version, the Slurm job and its `sacct` line,
+and the rollout's path, beside `config.yaml`, `resolved_config.yaml`, `run_provenance.yaml` and
+`manifest.yaml`. The job's launch and comparison scripts are in `taylor_green_re50/_scripts/`
+and its measured errors and timings in `_results/`. The identity keys and the conversion
+command of the eight Taylor–Green runs (`python -m fmeval.data.convert_kinet`, to
+`kinet/taylor_green_vortex/weakly_compressible_isoT_fluids/`) are in
+`docs/datasets/logs/taylor_green_vortex.md`. Not recorded: whether the kinet tree had
+uncommitted changes. `kinet_re5e4_timing/` is a timing run, not a dataset.
+
 ## Other kinet data on CFS that no dataset here reads
 
 Not copied, because no configuration of this repository reads them; listed so that nothing

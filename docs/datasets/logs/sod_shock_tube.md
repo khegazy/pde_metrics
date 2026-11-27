@@ -309,6 +309,14 @@ where it is marked as arithmetic.
   on another dataset and checks the log line, `run_meta.json` and the missing rows
   (`tests/test_configs.py`). No metric was run on these runs.
 
+#### 2026-11-27: where the runs' configurations are kept (dataset agent)
+
+- The configurations of the two kinet Sod runs, with the command that rebuilds each on the
+  current kinet and what stands in the way of an exact reproduction, are in
+  `docs/datasets/logs/kinet_runs/kinet_sod_gamma1p4/` and `kinet_sod_gamma2/` (README sections
+  of the same names), step 31 of `dataset_specs/BUILD_ORDER.md`. The nested-resolution runs of
+  step 17 are archived in `kinet_sod_refinement/` there; no configuration reads them yet.
+
 ### Open points
 
 - Scoring each run against the exact solution, frame by frame on the same nodes, is not

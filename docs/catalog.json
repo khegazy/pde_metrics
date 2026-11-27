@@ -1729,6 +1729,24 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -2058,6 +2076,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -3775,6 +3811,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": null,
@@ -5738,6 +5792,24 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -6070,6 +6142,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -6803,6 +6893,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": null,
@@ -9048,6 +9156,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": null,
@@ -12476,6 +12602,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -15796,6 +15940,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": null,
@@ -19180,6 +19342,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -22520,6 +22700,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": null,
@@ -25893,6 +26091,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -28249,6 +28465,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": null,
@@ -30958,6 +31192,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": null,
@@ -35713,6 +35965,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -40431,6 +40701,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -43740,6 +44028,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": null,
@@ -48491,6 +48797,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -52273,6 +52597,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -54078,6 +54420,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -55540,6 +55900,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -55892,6 +56270,24 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -56221,6 +56617,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -57917,6 +58331,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": null,
@@ -62656,6 +63088,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -64983,6 +65433,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -65700,6 +66168,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -66417,6 +66903,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -67134,6 +67638,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -67851,6 +68373,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -68568,6 +69108,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -69322,6 +69880,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": null,
@@ -71631,6 +72207,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -73595,6 +74189,24 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -75352,6 +75964,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": null,
@@ -78756,6 +79386,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -80735,6 +81383,24 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -82416,6 +83082,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": null,
@@ -86204,6 +86888,24 @@
         {
           "claim": "an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence",
           "dataset": "helmholtz_mixture_2d",
+          "note": null,
+          "primary": false,
+          "reason": "needs density, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells under diffusive scaling, where the error falls at order 2; its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_diffusive",
+          "note": null,
+          "primary": false,
+          "reason": "needs density, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
+          "dataset": "kinet_taylor_green_fixed_mach",
           "note": null,
           "primary": false,
           "reason": "needs density, which this dataset does not provide",

@@ -1,0 +1,21 @@
+# kinet's Taylor-Green vortex at Re = 50 at a fixed Mach number, 0.1, on every grid: the
+# solver step shrinks as h, the Mach-number error does not, and the error stops falling at a
+# floor it sets, so the observed order is about 0. One run per grid, chosen with
+# dataset.trajectory (N64, N128, N256, N512); 33 frames each, the initial condition and every
+# 22 (64^2) to 176 (512^2) solver steps. The fragment says how the order is read.
+defaults:
+  - _kinet_taylor_green
+  - _self_
+
+name: kinet_taylor_green_fixed_mach
+trajectory: N64
+path: ${paths.data}/kinet/taylor_green_vortex/weakly_compressible_isoT_fluids/sys_Re-50_Ma-1en1/${.trajectory}.h5
+
+# t = 0.25, 0.5, 0.75, 1.0 t_d.
+time:
+  start: 8
+  reduction: 8
+
+complexity:
+  params: {scaling: fixed_mach, mach: 0.1}
+  label: "kinet Taylor-Green, Ma = 0.1"

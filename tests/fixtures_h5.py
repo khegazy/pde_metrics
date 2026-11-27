@@ -125,6 +125,37 @@ def write_kinet_raw(path: Path, shape: tuple[int, ...] = SHAPE,
     return path
 
 
+def write_kinet_taylor_green(path: Path, cells: int, amplitude_error: float = 0.0) -> Path:
+    """A converted kinet ``taylor_green_vortex`` run in lattice units on ``cells``^2 cells.
+
+    The vortex of kinet's case after ``s`` solver steps, ``k = 2 pi / cells``, node ``i`` at
+    ``i + 1/2`` cells, ``D = (1 + amplitude_error) u_l exp(-2 nu_l k^2 s)`` (Taylor 1923):
+    ``u = D sin kx cos ky``, ``v = -D cos kx sin ky``, vorticity ``2 D k sin kx sin ky``.
+    ``Re = u_l cells / nu_l = 50`` with ``u_l = 0.64 / cells``, diffusive scaling as on the
+    real runs. The clock is ``time_convection``, ``s u_l / cells``, the same five times on every
+    grid, and ``normalization_plan`` holds ``L_l``, ``u_l``, ``nu_l``. Written from lattice
+    quantities alone, so a reader's mapping to the box ``2 pi`` is checked, not copied. Square,
+    as kinet's case is; ``sin x cos y`` is not symmetric in x and y, so a transpose still shows.
+    """
+    times = _time_axis(N_FRAMES)
+    write_kinet_raw(path, shape=(cells, cells), times=times)
+    speed, k = 0.64 / cells, 2 * np.pi / cells
+    viscosity = speed * cells / 50.0
+    x, y = np.meshgrid(k * (np.arange(cells) + 0.5), k * (np.arange(cells) + 0.5), indexing="ij")
+    with h5py.File(path, "r+") as f:
+        f.attrs["group"] = "taylor_green_vortex"
+        f.attrs["normalization_plan"] = json.dumps(
+            {"lattice": {"L_l": float(cells), "u_l": speed, "nu_l": viscosity}})
+        f["time"].attrs["source"] = "time_convection"
+        for t, clock in enumerate(times):
+            amplitude = (1 + amplitude_error) * speed * np.exp(
+                -2 * viscosity * k**2 * clock * cells / speed)
+            f["velocity"][0, :, t] = amplitude * np.stack([np.sin(x) * np.cos(y),
+                                                           -np.cos(x) * np.sin(y)])
+            f["vorticity"][0, 0, t] = 2 * amplitude * k * np.sin(x) * np.sin(y)
+    return path
+
+
 def write_kinet_grouped(path: Path, save_every: int = 3,
                         pressure_convention: str = "absolute") -> Path:
     """Write the frames of :func:`write_kinet_raw` in the grouped layout of the current kinet.

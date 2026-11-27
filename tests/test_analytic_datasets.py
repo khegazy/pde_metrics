@@ -50,6 +50,7 @@ import sys
 from collections.abc import Sequence
 from math import comb
 
+import h5py
 import numpy as np
 import pandas as pd
 import pytest
@@ -68,6 +69,7 @@ from fmeval.data.analytic import (
     SedovTaylor,
     SodShockTube,
     TaylorGreen2D,
+    TaylorGreenKinet,
     biot_savart,
     polar,
 )
@@ -84,6 +86,7 @@ from metrics.shock_set_distance.metric import shock_mask, surface_distances
 from metrics.vrmse.metric import EPSILON
 from tests.analytic_fields import circle_w2, gaussian_mean_square
 from tests.conftest import GRID
+from tests.fixtures_h5 import write_kinet_taylor_green
 
 #: Every dataset config whose reader computes its frames rather than reading a file.
 GENERATED = [name for name in sorted(p.stem for p in (CONFIGS / "dataset").glob("*.yaml"))
@@ -837,6 +840,132 @@ def test_taylor_green_grid_is_periodic_and_frames_decay_together():
     first, last = (tg.frame(i, ["velocity"])["velocity"] for i in (0, len(tg) - 1))
     ratio = np.exp(-2 * 0.01 * (tg.times[-1] - tg.times[0]))
     assert last == pytest.approx(ratio * first, rel=1e-12, abs=1e-15)
+
+
+# --- kinet's Taylor-Green vortex scored against the exact solution ----------------------------
+
+
+def _grid_sequence_rows(truths: Sequence[TaylorGreenKinet], selection=None) -> pd.DataFrame:
+    """``rmse`` and ``max_error`` of each run against its exact solution, through the pipeline's
+    prediction path with derived fields recomputed as ``evaluate.py`` does, every run's rows
+    together for ``observed_order``."""
+    return pd.concat([run(RecomputingTrajectory(truth), [metric_registry.get(n) for n in
+                                                         ("rmse", "max_error")],
+                          build_ladder({}), fields=["velocity", "vorticity"], selection=selection,
+                          dataset=DatasetInfo(name="kinet_taylor_green"),
+                          prediction=RecomputingTrajectory(truth.predictions())).rows
+                      for truth in truths], ignore_index=True)
+
+
+def test_a_kinet_taylor_green_run_is_read_on_the_exact_solutions_cells_clock_and_units(tmp_path):
+    """A run written in lattice units from lattice quantities alone
+    (``tests.fixtures_h5.write_kinet_taylor_green``) equals the exact solution on the box 2 pi at
+    U0 = 1 in every cell of every frame, so the mapping is right: a cell 2 pi / N, velocity over
+    u_l, vorticity over u_l times the cell, the clock 2 pi times ``time_convection``, and
+    nu = 2 pi / Re. The difference is round-off (measured at most 4.4e-16)."""
+    truth = TaylorGreenKinet(write_kinet_taylor_green(tmp_path / "N24.h5", 24))
+    candidate = truth.predictions()
+    assert candidate.grid == truth.grid and np.array_equal(candidate.times, truth.times)
+    assert truth.times == pytest.approx(2 * np.pi * 0.25 * np.arange(5), rel=1e-15)
+    assert truth.meta["nu"] == pytest.approx(2 * np.pi / 50, rel=1e-14)
+    assert truth.frame_columns(3) == {"param_resolution": 24, "lead_step": 3,
+                                      "lead_time": truth.times[3]}
+    for i in range(len(truth)):
+        for name in ("velocity", "vorticity"):
+            assert candidate.frame(i, [name])[name] == pytest.approx(
+                truth.frame(i, [name])[name], rel=0, abs=1e-14)
+
+
+def test_a_kinet_grid_sequence_gives_its_observed_order_through_the_pipeline(tmp_path):
+    """Runs whose amplitude is off by 0.1 (16 / N)^2 on 16, 32 and 64 cells: every error is that
+    factor times the exact field, whose sampled mean square is the same on every grid (the
+    discrete sums of cos 2kx vanish), so ``rmse`` falls exactly as h^2 and the observed order
+    (Roy 2005, Eq. 8) is 2 at every time, field and pair, read by ``observed_order`` from the
+    rows with ``param_resolution`` the reader puts on them."""
+    truths = [TaylorGreenKinet(write_kinet_taylor_green(tmp_path / f"N{n}.h5", n,
+                                                        0.1 * (16 / n) ** 2)) for n in (16, 32, 64)]
+    order = observed_order(_grid_sequence_rows(truths), anchor_label=MEAN_FIELD_LABEL)
+    rmse = order[order["metric"] == "rmse"]
+    assert len(rmse) == 2 * 5 * 2, "two fields, five times, two pairs of grids"
+    assert rmse["order"].to_numpy() == pytest.approx(2.0, abs=1e-9)
+
+
+def test_a_kinet_taylor_green_pairing_refuses_another_run(tmp_path):
+    """Another case, a clock other than ``time_convection`` (which the units need), and a
+    non-square grid are refused."""
+    for spoil, match in ((lambda f: f.attrs.__setitem__("group", "shear_layer"), "square grid"),
+                         (lambda f: f["time"].attrs.__setitem__("source", "time"),
+                          "time_convection")):
+        path = write_kinet_taylor_green(tmp_path / f"{match}.h5", 8)
+        with h5py.File(path, "r+") as f:
+            spoil(f)
+        with pytest.raises(ValueError, match=match):
+            TaylorGreenKinet(path)
+    path = write_kinet_taylor_green(tmp_path / "square.h5", 8)
+    with h5py.File(path, "r+") as f:
+        f.attrs["discretization"] = json.dumps(
+            {"spatial": {"grid": [8, 4], "length": [8.0, 4.0]}, "temporal": {"grid": 4}})
+    with pytest.raises(ValueError, match="square grid"):
+        TaylorGreenKinet(path)
+
+
+#: The job's comparison of the runs with the exact solution (``compare_tg.py`` beside it).
+KINET_TAYLOR_GREEN = REPO / "docs/datasets/logs/kinet_runs/taylor_green_re50/_results"
+
+
+@pytest.mark.data
+@pytest.mark.parametrize("dataset, results, orders", [
+    ("kinet_taylor_green_diffusive", "tg_errors_diffusive.json", (2.00, 1.98, 2.09)),
+    ("kinet_taylor_green_fixed_mach", "tg_errors_fixed_mach.json", (-0.09, -0.06, 0.01)),
+])
+def test_the_kinet_taylor_green_pairing_reproduces_the_jobs_error_table(dataset, results, orders):
+    """At every saved frame after the start, the job's L2 = sqrt(mean((du^2 + dv^2) / 2)) / U0
+    (Roy 2005, Eq. 7) equals the velocity ``rmse`` of the pairing on the converted run (measured
+    to 2e-11 relative; asserted 1e-9), and the orders of their RMS over time, the job's table
+    ``tg_time_rms_orders.txt``, follow to 0.005. Step 1, which the job also compared, is not
+    converted (``fmeval.data.convert_kinet``), so its first entry is skipped."""
+    expected = json.loads((KINET_TAYLOR_GREEN / results).read_text())["runs"]
+    rms = []
+    for label in ("N64", "N128", "N256", "N512"):
+        job = build_job(compose_config(f"dataset={dataset}", f"dataset.trajectory={label}",
+                                       "paths.data_url=null"))
+        truth = open_trajectory(job.dataset, job.paths)
+        candidate = truth.predictions()
+        errors = np.array([np.sqrt(np.mean((candidate.frame(i, ["velocity"])["velocity"]
+                                            - truth.frame(i, ["velocity"])["velocity"]) ** 2))
+                           for i in range(1, len(truth))])
+        assert errors == pytest.approx([f["L2"] for f in expected[label]["frames"][1:]],
+                                       rel=1e-9)
+        rms.append(np.sqrt(np.mean(errors**2)))
+    assert np.log2(np.array(rms[:-1]) / rms[1:]) == pytest.approx(orders, abs=0.005)
+
+
+@pytest.mark.data
+def test_the_kinet_taylor_green_sequences_have_order_two_and_zero_through_observed_order():
+    """Each dataset's evaluated part (its four times, every run at its native grid) through the
+    pipeline and ``observed_order``. Diffusive scaling: vorticity, which sees only the
+    solenoidal error, gives 2 at every time and pair (measured 1.99 to 2.01, asserted 0.02);
+    velocity scatters about 2 (measured 1.60 to 2.64) because a dilatational part of its error,
+    2% to 64% of the error energy by frame and grid, oscillates with a phase that differs between
+    grids. Fixed Mach: the Mach-number error sets a floor, so on the two finer pairs the order is
+    about 0 (measured -0.14 to 0.01, asserted 0.15); the coarsest pair is negative late in the
+    run (to -1.09) and is only asserted to be far below 2."""
+    orders = {}
+    for dataset in ("kinet_taylor_green_diffusive", "kinet_taylor_green_fixed_mach"):
+        jobs = [build_job(compose_config(f"dataset={dataset}", f"dataset.trajectory=N{n}",
+                                         "paths.data_url=null")) for n in (64, 128, 256, 512)]
+        truths = [open_trajectory(job.dataset, job.paths) for job in jobs]
+        orders[dataset] = observed_order(_grid_sequence_rows(truths, jobs[0].dataset.time),
+                                         anchor_label=MEAN_FIELD_LABEL)
+        assert len(orders[dataset]) == 2 * 2 * 4 * 3, "metrics, fields, times, pairs"
+    diffusive = orders["kinet_taylor_green_diffusive"]
+    vorticity = diffusive["field"] == "vorticity"
+    assert (diffusive.loc[vorticity, "order"] - 2).abs().max() <= 0.02
+    assert diffusive.loc[~vorticity, "order"].between(1.5, 2.7).all()
+    fixed = orders["kinet_taylor_green_fixed_mach"]
+    coarse = fixed["resolution_coarse"] == 64
+    assert fixed.loc[~coarse, "order"].abs().max() <= 0.15
+    assert (fixed.loc[coarse, "order"] < 0.5).all()
 
 
 # --- Taylor-Green with an acoustic part (dataset_specs/10, Sect. 3) ---------------------------
