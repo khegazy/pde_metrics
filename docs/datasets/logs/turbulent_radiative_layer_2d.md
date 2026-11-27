@@ -200,13 +200,24 @@ needs this dataset, so the choice was kept light.
   | `persistence_distance` (density only) | 128 | 3 | 22.9 s (19.7 s in the metric) | 7.6 s |
   | full non-ensemble panel | 64 | 2 | 12.4 s (10.0 s in metrics) | 6.2 s |
   | full non-ensemble panel | 128 | 2 | 53.4 s (48.0 s in metrics) | 26.7 s |
+  | full non-ensemble panel | 128 | 3 (frames 50, 55, 60) | 73.7 s (67.0 s in metrics) | 24.6 s |
+  | the 16 panel metrics that produce rows, one frame at a time | 128 | 1 each, frames 65 to 100 | 24.0 to 29.0 s, except frame 90 | 24 to 29 s |
+  | `persistence_wasserstein` alone, frame 90 | 128 | 1 | not finished in 60 s | over 60 s |
+  | `persistence_wasserstein` alone, frame 55 | 128 | 1 | 14.8 s (12.9 s in the metric) | 14.8 s |
+  | full non-ensemble panel, the 11 chosen frames | 128 | 11 | not finished in 1750 s (29 min) | |
 
   The full non-ensemble panel is the 31 metrics with pairwise or single arity. Thirteen of them
-  need a periodic domain and produce no rows here; the ensemble metrics do not apply. From these
-  costs, the full panel on the 11 chosen frames at the native grid comes to about
-  $11 \times 27 \approx 300$ s, or 5 minutes. Adding `mse` and the two persistence metrics
-  alone gives about 15 s per frame, so the remaining cheap metrics and their overheads make up
-  the other half of the measured 27 s.
+  need a periodic domain and produce no rows here; the ensemble metrics do not apply. From the
+  per-frame costs, the full panel on the 11 chosen frames at the native grid should take about
+  $11 \times 27 \approx 300$ s, or 5 minutes, plus about 25 s of writing. Adding `mse` and the
+  two persistence metrics alone gives about 15 s per frame, so the remaining cheap metrics and
+  their overheads make up the other half of the measured 27 s.
+- **But `persistence_wasserstein` stalls on frame 90.** The full panel on the 11 frames did not
+  finish in 29 minutes. Run one frame at a time, every frame took 24 to 29 s except frame 90,
+  which did not finish in 150 s. On frame 90, every other metric finishes in 1.6 to 8.7 s, and
+  `persistence_wasserstein` alone does not finish in 60 s. Which degradation causes it, and
+  whether it ever finishes, were not measured. This is a cost of that metric on this frame, not
+  of the dataset's selection, so the selection was not changed to avoid the frame.
 - **Disk.** Nothing is stored; the file is read in place. A frame of density, pressure and both
   velocity components in float32 is $128 \times 384 \times 4 \times 4$ bytes, 0.79 MB, so the 11
   frames read 8.7 MB of the 79 MB file.
@@ -248,7 +259,7 @@ needs this dataset, so the choice was kept light.
     origin.
   - The window was measured on one file only.
 
-#### 2026-11-26: what part is evaluated (agent)
+#### 2026-11-26 to 27: what part is evaluated (agent)
 
 - **Done.** Under the new step 3 of `docs/recipes/add-a-dataset.md`, chose frames 50 to 100,
   stride 5 (11 frames), one trajectory and the native grid. Added `time.reduction: 5` and the
@@ -258,8 +269,9 @@ needs this dataset, so the choice was kept light.
   `python evaluate.py 'metrics=[mse]' dataset=well_radiative_layer_tcool0p32` selects 11 of
   101 frames.
 - **Not verified.** The autocorrelation time was measured with `mse` only, on one file. The
-  full-panel total for the 11 frames is a projection from a 2-frame run (see the next entries
-  if it was measured).
+  full panel on the 11 frames never finished: it was stopped at 580 s and again at 1750 s,
+  because `persistence_wasserstein` stalls on frame 90 (above). The 5-minute figure is a
+  projection from the other ten frames, each run alone.
 
 #### 2026-11-26: stale test references fixed (coordinator)
 

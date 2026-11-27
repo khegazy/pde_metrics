@@ -171,7 +171,10 @@ here so they are decided centrally. None is fixed.
    Separately, `persistence_wasserstein` stalled twice inside gudhi's `hera` routine on the
    first frame of a 21-frame `advecting_blobs` run at 64², yet took 0.4 s per frame on a 1 to 2
    frame selection; the cause is not diagnosed (`docs/datasets/logs/advecting_blobs.md`, open
-   points). It bears on issue 144.
+   points). It also stalls on frame 90 of the radiative layer, alone on that frame for over 60 s
+   while every other frame's whole panel takes 24 to 29 s
+   (`docs/datasets/logs/turbulent_radiative_layer_2d.md`). Both bear on issue 144: the stall is
+   input-dependent, not only a matter of grid size.
 2. **A dataset config cannot set its analysis grid**, so a grid chosen for a dataset (128² for
    the isotropic data) is given on the command line and recorded only in comments.
 3. **A degradation cannot be excluded per dataset**, so the kinet Sod configs must be run with

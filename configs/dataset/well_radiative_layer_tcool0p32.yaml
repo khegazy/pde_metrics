@@ -29,8 +29,10 @@ reader:
 #   5 frames (Bartlett window 10 or 20), so 11 frames are about all the independent ones.
 # - Trajectories: the one on disk. The test split holds one per cooling time.
 # - Analysis grid: the native 128 x 384 (the schema's default). The full non-ensemble panel costs
-#   27 s per frame there, about 5 minutes for the 11 frames; coarsening to 64 cuts that to
-#   about 1.5 minutes but halves the resolution of the small cold clumps the layer is about.
+#   24 to 29 s per frame there, about 5 minutes for the 11 frames, except that
+#   persistence_wasserstein does not finish on frame 90 (over 60 s alone, and the 11-frame
+#   panel did not finish in 29 minutes); see the log. Coarsening to 64 cuts the per-frame cost
+#   to about 6 s but halves the resolution of the small cold clumps the layer is about.
 time:
   start: 50
   reduction: 5
