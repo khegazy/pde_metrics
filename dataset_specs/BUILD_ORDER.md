@@ -260,6 +260,8 @@ logged isotropic run of 10 000 steps at 256² took 95.6 s on one GPU.
 | 22 | Forced stationary 2D turbulence with drag: 1024², forcing shell at 31 ≤ \|n\| ≤ 33, 220 000 steps, after a pilot run to calibrate the drag | 04, Option B | 15; two kinet additions | `random_modes` forcing plus a drag (the `linear` law with a negative rate allowed, about ten lines) and a `minimum_mode` key (about five lines); both are refused today (verified), so both are added to kinet. Tested on the debug queue, then one regular job of about 8 hours. About 15 GB | spec written; the two additions to be built |
 | 23 | ~~Decaying compressible turbulence at Mach about 0.6, for shocklets~~ | 03, Sect. 4.4 | — | — | **skipped for now** (Kareem, 2026-11-26: shocklets will not work) |
 | 28 | Rerun the Mach 1.8 flow around a cylinder to completion (`flow_around_objects/compressible_fluids/Pr-71en2_vuy-1.4_Re-3e2`, 500 × 300, 1000 steps) with macroscopic observables only, then convert it | 03, Sect. 4.7; step 4 | 1, 15; an inlet boundary type and a cylinder mask for the reader | The run on disk stopped at step 155 of 1000 (`kinet_rollout_status: interrupted`), so step 4 could not convert it. It is the only two-dimensional solver shock on disk | spec written |
+| 31 | Keep every kinet run's configuration in this repository: the solver config, the kinet commit where recorded, and the command that reproduces it, for the runs on disk and for every new run | decision 13 | — | A tracked folder beside the dataset logs; no simulation | not started |
+| 32 | Fix the five framework limits: per-metric analysis grid or frame selection for slow metrics; a dataset-level analysis grid; a dataset-level degradation exclusion; pooling per-frame results across trajectories; reading a grid sequence and computing the observed order (issue 126). Close issue 044 with no change, and apply decision 17's cuts | "Framework limits the partition decisions ran into"; decisions 14, 15, 17 | — | Harness changes in `fmeval/`; each with tests; existing results must not move | not started |
 
 ### Phase 4: other solvers or public data
 
@@ -290,7 +292,7 @@ Taken by Kareem on 2026-11-26:
 
 1. **Data and readers:** use the existing readers; convert and move data to fit them (section
    "How data reaches the metrics").
-2. **Jobs:** may be submitted, to the debug queue, but not yet (section "How jobs are run").
+2. **Jobs:** may be submitted, to the debug queue (section "How jobs are run"); started on 2026-11-27, decision 12.
 3. **Scope:** analytic readers and solver simulations only; nothing trains or runs an ML model.
 
 4. **kinet runs** save only the macroscopic observables (section "How kinet runs are
@@ -305,6 +307,33 @@ Taken by Kareem on 2026-11-26:
    label (section "The task").
 10. **Agents:** up to four at a time, on the opus model at high effort. The order is mine.
 11. **Specification 11** (regime data) is written now, but last.
+
+Taken by Kareem on 2026-11-27:
+
+12. **Jobs may start**, on the debug queue first; step 15 is the first.
+13. **Every kinet run's configuration is kept in this repository**, for the runs already made
+    and for every new one, so each can be reproduced from scratch (step 31).
+14. **A reader does not need to know the run's seed** ("The reader does not need to know the
+    seed used to generate the data"). So issue 044 is closed with no change: a generated
+    dataset keeps its own `seed` reader option, and nothing waits on it.
+15. **The five framework limits may be fixed** (step 32).
+16. **The smaller calls are the agent's to make.** Made on 2026-11-27, each reversible:
+    - The synthetic ensemble keeps its default of 16 members, 12 frames and 64². A 32² default
+      would save about 7 minutes per panel and change every number on four cards; the cost is
+      `variogram_score` alone, which the per-metric grid of step 32 addresses at its source.
+    - `well_radiative_layer_tcool0p32` stays unregistered and no further work is done on The
+      Well: no test of an existing metric needs it.
+    - The Well reader change stays: about 18 lines, tested, and it leaves the existing
+      `well_re5e4` dataset's output unchanged.
+    - `advecting_blobs` is registered as an analytic check. It is the same reader as the
+      registered `feature_population` and `transport_pairs`, its blobs move at different
+      velocities so its frames are not scalar multiples, and the candidates built on it in
+      step 9 are evaluation experiments.
+17. **The evaluated parts of the two costliest datasets are cut**, after Kareem asked why the
+    evidence needs so long. `kinet_re5e4_512` goes from 161 frames to 21 (every 400th): its 161
+    frames hold only 7 to 12 independent samples, and it had matched `kinet_re5e4` frame for
+    frame for no statistical reason. The isotropic data goes from stride 25 to 50 (9 frames per
+    run): pooling across the 5 runs per Reynolds number (step 32) supplies the samples.
 
 Open (from spec 11, none blocking the first regime item):
 
