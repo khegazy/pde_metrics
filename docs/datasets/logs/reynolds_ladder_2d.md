@@ -213,3 +213,111 @@ person may override it.
   shear layer"), step 31 of `dataset_specs/BUILD_ORDER.md`. The refinement reruns of step 19
   are archived in `shear_layer_refinement/` there and the timing run of step 15 in
   `kinet_re5e4_timing/`; neither is read by a configuration yet.
+
+#### 2026-11-27: the node placement checked, the pair is not nested (dataset agent, batch 2)
+
+- **Supersedes** the open point "Node placement (spec 02, Sect. 5.1), unchecked" of section 5
+  and the label's "not yet shown to be a nested refinement".
+- **Measured.** Frame 0 velocity of `D2Q9_shape-256-256_T-10000_H-dc804f.h5` (`kinet_re5e4`) and
+  `D2Q9_shape-512-512_T-20000_H-56d32e.h5` (`kinet_re5e4_512`), against kinet's shear-layer
+  profile (`kinet/initialization/shear_layer.py`, $\lambda = 80$, $\epsilon = 0.05$, $U$ the
+  file's largest $|u_x|$) at two placements: nodes at $i/(N-1)$ match to $4.6 \times 10^{-15}$
+  (256) and $1.1 \times 10^{-14}$ (512) of $U$; cell centres $(i + \tfrac12)/N$ miss by 0.077
+  and 0.039 of $U$. The new refinement runs are the reverse (centres to $3.8 \times 10^{-15}$).
+  Block-averaged, the old $512^2$ initial velocity differs from the old $256^2$ by
+  $2.93 \times 10^{-4}$ rms, $7.3 \times 10^{-3}$ of the rms velocity (0.0398); the new pair by
+  $2.03 \times 10^{-5}$. Density is uniform to round-off in all four. So the job agent's
+  suspicion holds: the 7e-3 starting gap is the old placement.
+- **Consequence.** `kinet_re5e4_512` stays what its configuration says, the same flow on a finer
+  grid at the same times, but it is not a nested refinement of `kinet_re5e4`. Its label in
+  `configs/cards/default.yaml` now says so ("not a nested refinement of it, since both runs place
+  their nodes at i / (N - 1)"), and the page says so. The nested sequence is
+  `kinet_shear_layer_refinement` (next section).
+
+## `kinet_shear_layer_refinement` (three nested grids, the finest as reference, 2026-11-27)
+
+### What it is for
+
+The shear layer's discretisation error, measured as a coarser run's departure from a finer run of
+itself on nested cells (`dataset_specs/02_grid_refinement_known_solution.md`, Sect. 5.1;
+build-order step 19). At $256^2$ it is the error of the grid `kinet_re5e4` runs on; at $128^2$ a
+coarse solver as a candidate, a solver-made degradation beside the ladder's operators.
+
+### How it is treated
+
+- **Source.** Three kinet runs made on 2026-11-27 by the job agent (case
+  `doubly_periodic/shear_layer`, Re 5e4, on $N^2$, $N$ = 128, 256, 512; 1000, 2000, 4000 steps,
+  saved every 10, 20, 40 steps; kinet `perf/cleanup` at `d1cd353b8`, one A100). Records in
+  `docs/datasets/logs/kinet_runs/shear_layer_refinement/` and that README's section "Runs of the
+  second batch".
+- **Conversion.** `python -m fmeval.data.convert_kinet` from
+  `/pscratch/sd/k/khegazy/kinet_datasets/shear_layer_refinement/doubly_periodic/shear_layer/{046744f0,2686f5c9,2b86fad7}/tiers/full/rollout.h5`
+  to `/global/cfs/cdirs/m4790/Data/kinet/doubly_periodic/weakly_compressible_isoT_fluids/sys_Re-5e4_Ma-1en1_refinement/N128.h5`,
+  `N256.h5`, `N512.h5` (53.0, 211.9 and 847.3 MB, 0.6 to 1.5 s each). Step 1 dropped by the
+  converter; 101 frames each; density, velocity, vorticity (the gauge pressure is not carried,
+  issue 101). Every frame and the clock read back equal to the source; the three clocks are
+  bitwise equal.
+- **Reader.** `kinet_raw` on the $512^2$ run with two options: `box: 1.0` (the Taylor–Green
+  option: cell $1/N$, velocity over $u_l$, clock `time_convection`) and `candidate: N<n>.h5`, a
+  new option (about 20 lines with `predictions()` and `frame_columns()`) that opens the coarser
+  run in the same folder with the same options as the prediction and labels the rows with its
+  resolution, as a forecast's. The pipeline remaps the reference by block averages onto the
+  analysis grid, which the configuration sets to the candidate's ($128$ or $256$, from
+  `dataset.trajectory`). With `box` the two sides share their `GridSpec` exactly (spacing
+  $4/512 = 1/128$), which the pairing requires.
+- **Fields.** Density, velocity, vorticity; vorticity is recomputed from the remapped velocity
+  on the analysis grid (`recompute_derived`), on both sides.
+
+### What part is evaluated
+
+- **Kept:** frames 10 to 100, every 10th: $t = 0.045$ to $0.451$, 10 times, each candidate on its
+  own grid. Both candidates are run (`-m dataset.trajectory=256,128`).
+- **Why.** The frames are one deterministic error history, not samples; ten of them show the error
+  growing from the start of the roll-up, where the three-grid order is 2.3 to 2.5 (frame 10), to
+  the end, where it is 3.6 to 3.8 (the job's table). Frame 0 (the initial condition) is left out: its departure is a point value
+  against a cell average.
+- **Not set:** an exclusion (the ladder is replaced by the candidate, keeping the clean entry and
+  `mean_field`) or a slow metric (the persistence metrics take seconds here).
+- **Measured cost** (login node, 2026-11-27, `evaluate.py`, the 10 kept frames): the 29
+  deterministic metrics other than the two persistence ones, 12.3 s wall at 128 (4.0 s of metric
+  time) and 31.0 s at 256 (18.3 s); `persistence_distance` and `persistence_wasserstein`
+  together 6.9 s and 14.5 s wall. The whole panel on both candidates is about a minute. Disk
+  1.1 GB, all read (the $512^2$ reference 847 MB).
+
+### Decisions and why
+
+1. **A `candidate` option on `kinet_raw`, not forecast files and not a new reader** (agent).
+   `BUILD_ORDER.md` planned the converter's unbuilt `forecast` half for candidates, writing the
+   block-averaged reference beside each coarse run. The pipeline's conservative remap already
+   computes that block average on the analysis grid, so a pairing of two existing files does it
+   with no second copy of the data and no new conversion: `predictions()` was already the route
+   (`evaluate.py`, `ForecastPairs`, `ClosedFormTrajectory`). `ForecastPairs` itself needs both
+   sides in one file. To reverse: delete the option and the configuration.
+2. **The candidate is named by its cell count, `trajectory: "256"`**, so that one value sets both
+   the file name (`N` followed by the trajectory) and the analysis grid (an interpolation of the
+   trajectory); a name like `N256` would have needed the grid stated twice. A pair on the
+   wrong grid is refused by the pipeline ("a pair must share its grid").
+3. **The candidate file is resolved beside the reference**, so the published copy at
+   `paths.data_url` reads the same pair. To reverse: take a full path.
+4. **Registered as evidence** with a label that says the reference is the finest grid and the
+   grids are not in the asymptotic range (`configs/cards/default.yaml`).
+
+### Log entries
+
+**2026-11-27, dataset agent (batch 2, build-order step 19).**
+
+- Converted the three runs (above); checked every frame and the clocks.
+- Code: `candidate` on `KinetRawTrajectory`, `Trajectory._candidate_columns`; config
+  `kinet_shear_layer_refinement`; page section "The shear layer on three nested grids".
+- Verified: through the pipeline with derived fields recomputed, `rmse` equals the job's
+  $E_{128}$ and $E_{256}$ (`_scripts_batch2/shear_layer_refinement_differences.json`) at all 101
+  frames to $2 \times 10^{-14}$ relative (density as is, velocity times $\sqrt2\,u_l$, vorticity
+  times $u_l$), and at the kept frames in a `data` test; a synthetic test checks the pairing
+  against a block average computed in the test.
+- Smoke runs under `/pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/batch2_smoke`.
+
+### Open points
+
+- No dynamics figure.
+- The sequence is not an observed order; a three-grid order would need a reading of the
+  $128^2$ run against the $256^2$ one, which `observed_order` does not take.

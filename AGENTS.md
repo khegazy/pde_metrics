@@ -111,8 +111,9 @@ did not evaluate it the way that field does.
   turbulence `kinet_hit_re12p5k`, `kinet_hit_re25k`, `kinet_hit_re50k`; the shear layer on
   512^2, `kinet_re5e4_512`; the solver's Sod runs `kinet_sod_gamma1p4` and `kinet_sod_gamma2`;
   the solver's Taylor–Green grid sequences `kinet_taylor_green_diffusive` and
-  `kinet_taylor_green_fixed_mach`, scored against the exact solution and read by
-  `fmeval.analysis.observed_order`; and the analytic checks `burgers`, `sedov_taylor`, `noh`, `feature_population`,
+  `kinet_taylor_green_fixed_mach` and its Sod grid sequence `kinet_sod_refinement`, scored
+  against the exact solution and read by `fmeval.analysis.observed_order`; the shear layer's
+  coarser runs against its 512^2 run on nested cells, `kinet_shear_layer_refinement`; and the analytic checks `burgers`, `sedov_taylor`, `noh`, `feature_population`,
   `transport_pairs`, `advecting_blobs`, `random_field` and `helmholtz_mixture_2d`. Each is run
   on its own configuration's evaluated part (its window, `analysis_resolution` and
   `exclude_degradations`), with the command-line settings listed beside `evidence_window` in

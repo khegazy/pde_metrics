@@ -393,6 +393,14 @@ class Trajectory(ABC):
         row of a single trajectory takes them from its dataset config."""
         return {}
 
+    def _candidate_columns(self, t: int, resolution: int) -> dict[str, Any]:
+        """The :meth:`frame_columns` of a reader whose :meth:`predictions` is a candidate scored
+        against its frames: every row is labelled as a forecast's is (``ForecastPairs``), with the
+        candidate's resolution, and as the lead the frame's step and time since the first frame,
+        the start every candidate shares."""
+        return {"param_resolution": int(resolution), "lead_step": int(t),
+                "lead_time": float(self.times[t] - self.times[0])}
+
     def frame(self, t: int, fields: Sequence[str]) -> Frame:
         """Read and validate one frame.
 

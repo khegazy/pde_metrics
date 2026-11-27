@@ -165,6 +165,8 @@ Two datasets stay out:
   `kinet_taylor_green_fixed_mach`, are admitted (an agent's call, 2026-11-27,
   `docs/datasets/logs/taylor_green_vortex.md`), because they run no ladder and claim the fall
   of a solver's error across four grids, an error whose pattern changes in time.
+  `kinet_sod_refinement`, kinet's Sod tube on three grids against the exact solution, is a grid
+  sequence of the same kind; its frames are not scalar multiples of one another in any case.
 - `well_radiative_layer_tcool0p32`: no test of an existing metric needs it (an agent's call
   under Kareem's delegation, `dataset_specs/BUILD_ORDER.md`, decision 16).
 

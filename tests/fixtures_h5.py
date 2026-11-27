@@ -156,6 +156,28 @@ def write_kinet_taylor_green(path: Path, cells: int, amplitude_error: float = 0.
     return path
 
 
+def write_kinet_sod(path: Path, nodes: int, steps_per_frame: int = 1) -> Path:
+    """A converted kinet ``sod`` run in lattice units on ``nodes`` by 3 nodes that never moves.
+
+    Every frame is the initial condition: Sod's states as Toro (2009) Table 4.1 gives them,
+    ``(rho, p) = (1, 1)`` on the left and ``(0.125, 0.1)`` on the right, at rest, ``gamma`` 1.4,
+    with node ``i`` on the left where ``i + 1/2 < nodes / 2``, as kinet paints the tube, so for odd
+    ``nodes`` the jump is the face ``(nodes - 1) / 2``. Frame ``k`` is solver step
+    ``k steps_per_frame`` (``time_index``). A reader's exact solution is checked against Toro's
+    numbers and this file's cells, steps and jump, not against these frozen frames.
+    """
+    write_kinet_raw(path, shape=(nodes, 3))
+    left = (np.arange(nodes) + 0.5 < nodes / 2)[None, :, None]
+    frames = (N_FRAMES, nodes, 3)
+    with h5py.File(path, "r+") as f:
+        f.attrs["group"], f.attrs["gamma"] = "sod", 1.4
+        f["time_index"][:] = steps_per_frame * np.arange(N_FRAMES)
+        f["density"][0, 0] = np.broadcast_to(np.where(left, 1.0, 0.125), frames)
+        f["pressure"][0, 0] = np.broadcast_to(np.where(left, 1.0, 0.1), frames)
+        f["velocity"][0] = 0.0
+    return path
+
+
 def write_kinet_grouped(path: Path, save_every: int = 3,
                         pressure_convention: str = "absolute") -> Path:
     """Write the frames of :func:`write_kinet_raw` in the grouped layout of the current kinet.

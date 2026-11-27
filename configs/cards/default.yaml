@@ -75,6 +75,11 @@
 #   have: their claim is the fall of a solver's error across the grids, whose pattern changes in
 #   time (docs/datasets/logs/taylor_green_vortex.md, decision 4 of their section). Their labels
 #   say the frames are one pattern scaled in time.
+# - `kinet_sod_refinement` is a grid sequence like them: kinet's Sod runs on three grids, each
+#   scored against the exact solution on its own cells, read by `observed_order`.
+# - `kinet_shear_layer_refinement` scores a coarser kinet run of the shear layer against the
+#   512^2 run block-averaged onto its cells. Its label says the reference is the finest grid,
+#   not an exact solution, and that the three grids are not in the asymptotic range.
 evidence_datasets:
   kinet_re5e4: developed flow
   kinet_re1e6: >-
@@ -90,8 +95,8 @@ evidence_datasets:
     real predictions scored against their targets at each prediction step; who produced
     the predictions, a trained model or a coarser solver, is not recorded
   kinet_re5e4_512: >-
-    the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet
-    shown to be a nested refinement of it
+    the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested
+    refinement of it, since both runs place their nodes at i / (N - 1)
   kinet_hit_re12p5k: >-
     decaying two-dimensional isotropic turbulence at Re = 1.25e4, one realisation per run
   kinet_hit_re25k: >-
@@ -141,6 +146,14 @@ evidence_datasets:
     the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the
     Mach-number error holds the error at a floor (order about 0); its frames are one pattern
     scaled in time, and it says nothing about turbulence
+  kinet_sod_refinement: >-
+    a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against
+    the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at
+    order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence
+  kinet_shear_layer_refinement: >-
+    a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against
+    the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from
+    a finer grid of itself, not from an exact solution, on grids not in the asymptotic range
 
 # What each evidence dataset offers a metric, so every metric card's "Across the experiments"
 # table and the site's coverage page can say why a metric is not run on a dataset without
@@ -172,6 +185,8 @@ evidence_dataset_properties:
   helmholtz_mixture_2d: {periodic: true, ensemble: false}
   kinet_taylor_green_diffusive: {periodic: true, ensemble: false}
   kinet_taylor_green_fixed_mach: {periodic: true, ensemble: false}
+  kinet_sod_refinement: {periodic: false, ensemble: false}    # Neumann ends of the tube
+  kinet_shear_layer_refinement: {periodic: true, ensemble: false}
 
 # The window within kinet_re5e4 that counts as developed flow: the convention a run cited
 # as evidence follows (`dataset.time.start`, `dataset.time.reduction`). Nothing reads it to
@@ -193,6 +208,10 @@ evidence_dataset_properties:
 # - feature_population: its single-feature candidates, one override each (its config lists them).
 # - kinet_taylor_green_*: the four grids, swept with `-m dataset.trajectory=N64,N128,N256,N512`,
 #   each at its native resolution, and read together by `fmeval.analysis.observed_order`.
+# - kinet_sod_refinement: the three grids, `-m dataset.trajectory=N751,N1501,N3001`, read
+#   together by `fmeval.analysis.observed_order`.
+# - kinet_shear_layer_refinement: both candidates, `-m dataset.trajectory=256,128`, each on its
+#   own grid (the configuration sets the analysis grid from the trajectory).
 evidence_window:
   start: 2000       # the flow is developed well before this
   reduction: 50     # every 50th frame; ~160 frames, a run of about a minute

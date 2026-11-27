@@ -525,6 +525,36 @@ command of the eight Taylor–Green runs (`python -m fmeval.data.convert_kinet`,
 `docs/datasets/logs/taylor_green_vortex.md`. Not recorded: whether the kinet tree had
 uncommitted changes. `kinet_re5e4_timing/` is a timing run, not a dataset.
 
+## Runs of the second batch: `shear_layer_refinement/`, `kinet_sod_refinement/`, `supersonic_cylinder_rerun/` (2026-11-27)
+
+The job agent archived these as it did the first jobs: one folder per run, named by run, each with
+a `RUN.txt` (the exact command, the environment script, the working directory, the kinet branch
+and commit, `perf/cleanup` at `d1cd353b8`, the GPU, one A100, and torch 2.15.0, the Slurm job and
+its `sacct` line, the rollout's path) beside `config.yaml`, `resolved_config.yaml`,
+`run_provenance.yaml` and `manifest.yaml`. The launch script (`run_kinet_job.sh`), the run lists,
+the comparison scripts and their result tables are in `_scripts_batch2/`. Not recorded: whether
+the kinet tree had uncommitted changes. Each folder's rollout, its identity key, and the step after
+the simulation:
+
+| Folder | Job | Rollout under `/pscratch/sd/k/khegazy/kinet_datasets/` | Converted to, under `/global/cfs/cdirs/m4790/Data/kinet/` |
+|---|---|---|---|
+| `shear_layer_refinement/sl_re5e4_N128_t045` | 62102236 | `shear_layer_refinement/doubly_periodic/shear_layer/046744f0/tiers/full/rollout.h5` | `doubly_periodic/weakly_compressible_isoT_fluids/sys_Re-5e4_Ma-1en1_refinement/N128.h5` |
+| `shear_layer_refinement/sl_re5e4_N256_t045` | 62102236 | `.../shear_layer/2686f5c9/tiers/full/rollout.h5` | `.../sys_Re-5e4_Ma-1en1_refinement/N256.h5` |
+| `shear_layer_refinement/sl_re5e4_N512_t045` | 62102236 | `.../shear_layer/2b86fad7/tiers/full/rollout.h5` | `.../sys_Re-5e4_Ma-1en1_refinement/N512.h5` |
+| `kinet_sod_refinement/sod_g1p4_N751` | 62102238 | `sod_refinement/sod/transonic/aee3fbb1/tiers/full/rollout.h5` | `sod/compressible_fluids/Pr-71en2_vuy-1.4_refinement/N751.h5` |
+| `kinet_sod_refinement/sod_g1p4_N1501` | 62102238 | `.../transonic/dd337542/tiers/full/rollout.h5` | `.../Pr-71en2_vuy-1.4_refinement/N1501.h5` |
+| `kinet_sod_refinement/sod_g1p4_N3001` | 62102238 | `.../transonic/d1cac664/tiers/full/rollout.h5` | `.../Pr-71en2_vuy-1.4_refinement/N3001.h5` |
+| `supersonic_cylinder_rerun/cyl_m1p8_re300_T2000` | 62103249 | `supersonic_cylinder/flow_around_objects/cylinder/33f78849/tiers/full/rollout.h5` | `flow_around_objects/compressible_fluids/Pr-71en2_vuy-1.4_Re-3e2/D2Q9_shape-500-300_T-2000_H-33f78849.h5` |
+| `supersonic_cylinder_rerun/cyl_m1p8_re300_T1000` | 62102861 | `supersonic_cylinder/flow_around_objects/cylinder/0c3cc349/tiers/full/rollout.h5` | not converted: the 2000-step run supersedes it |
+| `supersonic_cylinder_rerun/cyl_m1p8_test200_shift0p4`, `..._shift0p55` | 62102239 | `supersonic_cylinder_test/shift0p4/...`, `.../shift0p55/...` | not converted: 200-step tests of the lattice shift |
+
+Every conversion is `python -m fmeval.data.convert_kinet <rollout> <destination>`, run on
+2026-11-27 from the repository's `.venv` on a login node; each converted file was read back with
+`KinetRawTrajectory` and found equal to its rollout at every frame and on its clock. The datasets
+that read them are `kinet_shear_layer_refinement` (`docs/datasets/logs/reynolds_ladder_2d.md`) and
+`kinet_sod_refinement` (`docs/datasets/logs/sod_shock_tube.md`); the cylinder run is converted but
+read by no configuration (`docs/datasets/logs/supersonic_cylinder.md`).
+
 ## Other kinet data on CFS that no dataset here reads
 
 Not copied, because no configuration of this repository reads them; listed so that nothing

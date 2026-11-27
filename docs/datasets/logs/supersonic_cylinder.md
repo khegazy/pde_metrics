@@ -116,10 +116,41 @@ measurements after the rerun confirm or replace it.
   step 31 of `dataset_specs/BUILD_ORDER.md`. The rerun of step 28 is archived in
   `supersonic_cylinder_rerun/` there; it is not converted or read yet.
 
+**2026-11-27, dataset agent (batch 2, build-order step 28): the rerun converted, not configured.**
+
+- **Converted.** The 2000-step rerun `cyl_m1p8_re300_T2000` (kinet `perf/cleanup` at `d1cd353b8`,
+  job 62103249; record in `docs/datasets/logs/kinet_runs/supersonic_cylinder_rerun/`) by
+  `python -m fmeval.data.convert_kinet /pscratch/sd/k/khegazy/kinet_datasets/supersonic_cylinder/flow_around_objects/cylinder/33f78849/tiers/full/rollout.h5 /global/cfs/cdirs/m4790/Data/kinet/flow_around_objects/compressible_fluids/Pr-71en2_vuy-1.4_Re-3e2/D2Q9_shape-500-300_T-2000_H-33f78849.h5`
+  (965 MB, 2.1 s): 201 frames (step 1 dropped, then every 10th step), density, velocity and the
+  absolute pressure (`pressure_convention: absolute`); the run stores no vorticity. Every frame
+  and the clock (`time_convection`, 0.0019 per step) read back equal to the source. The old
+  `a92b16` file is untouched.
+- **The inlet.** Measured in frames 120 and 200: every field uniform over the first 60 columns
+  to $1.7 \times 10^{-13}$ (density), and over 90 columns to $1.7 \times 10^{-9}$. A `neumann`
+  declaration extends the field by a mirror image, which here is the stream itself, so no inlet
+  type is needed in `BOUNDARIES`. This supersedes the "inlet boundary type" need of decision 2.
+- **The cylinder.** Inside it the run holds $\rho = 1$, $p = 0.2$, $|u| < 10^{-16}$ (the solid mask
+  `geometry/masks/solid` of the rollout, 1257 nodes, x 146 to 186, y 130 to 170; the converter
+  does not carry it). On the whole domain, `shock_mask` (the detector of `shock_set_distance`,
+  default threshold) flags 229, 234 and 227 nodes in frames 120, 160, 200; 178 of them within two
+  nodes of the body (90 inside), about 50 on the bow shock (x 107 to 145, y 125 to 175), one
+  behind the body, none on the outer faces.
+- **Stopped, as the brief says to when neither an existing selector nor an existing mask
+  leaves the body out with little code.** The harness has no spatial selector or mask
+  (`DatasetConfig` in `fmeval/config.py`; searched `fmeval/` for a crop, window or mask). The
+  options and what each costs are on the page ("What stands in the way"): a spatial window on
+  `kinet_raw` (about 10 lines; upstream of x = 146 it holds the detected shock and none of the
+  body), the whole domain (no code; the body dominates the shock-set metrics), or a pipeline
+  mask (largest). The choice is left to the coordinator.
+- **Evaluated part, if the window is built** (proposal, not decided): frames 120 to 200, the
+  settled flow; the stand-off is constant at 37 cells there (the job's
+  `_scripts_batch2/cylinder_settling_T2000.txt`), so a few frames, every 40th, would suffice.
+
 ### Open points
 
-- The run is not finished (step 28).
-- `BOUNDARIES` has no inlet type.
-- No cylinder mask exists. How the harness would exclude masked nodes from a metric was not
-  checked.
-- Spectral metrics on its non-square, non-periodic grid wait on issue 046.
+- No configuration: the choice among the three options of the 2026-11-27 entry (a spatial
+  window, the whole domain, a pipeline mask) is open.
+- The rerun's start-up transient and wake period were measured only through the stand-off and one
+  wake probe (`_scripts_batch2/cylinder_settling_T2000.txt`); the wake's period is not measured.
+- Spectral metrics on its non-square, non-periodic grid are not run (they need a periodic
+  domain); issue 046 concerns the wavenumber magnitude on non-square grids.

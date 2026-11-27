@@ -1,8 +1,9 @@
 # The Re = 5e4 shear layer of kinet_re5e4 run on 512^2 cells: 20000 solver steps, 20001 frames,
 # 1.43 TB, ending at the same time (2.2553). At a fixed Mach number the solver step halves with
-# the cell size, so `frame_stride: 2` puts frame i at the time of frame i of kinet_re5e4. Not
-# yet a nested refinement of it: the shear-layer initialiser may place nodes at i/(N-1), which
-# would stretch the two initial fields differently (dataset_specs/02, Sect. 5.1).
+# the cell size, so `frame_stride: 2` puts frame i at the time of frame i of kinet_re5e4. Not a
+# nested refinement of it: both runs were initialised with nodes at i/(N-1) (checked 2026-11-27,
+# docs/datasets/logs/reynolds_ladder_2d.md), so their block-averaged initial velocities differ by
+# 7e-3 of the rms velocity. The nested sequence is kinet_shear_layer_refinement.
 defaults:
   - _re5e4_simulation
   - _self_

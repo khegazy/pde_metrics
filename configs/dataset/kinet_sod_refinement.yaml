@@ -1,0 +1,47 @@
+# kinet's Sod shock tube at gamma = 1.4 on 751, 1501 and 3001 nodes by 5 across, one run per
+# grid, scored against the exact Riemann solution on each run's own cells and clock: a grid
+# sequence, the solver's error falling with the cell size (dataset_specs/02, Sect. 5.2). Same
+# states, scheme and stabiliser as kinet_sod_gamma1p4, the viscosity rescaled per level so it is
+# the same in the tube's units (2.5e-5, 5e-5, 1e-4 in lattice units), run to 250, 500 and 1000
+# steps and saved every 1, 2 and 4 steps: 251 frames each, frame k at t = k / 750 on every grid.
+# Converted by `python -m fmeval.data.convert_kinet`; the runs' configurations and commands are
+# under docs/datasets/logs/kinet_runs/kinet_sod_refinement/.
+#
+# The reader `sod_kinet` (fmeval/data/analytic.py) reads a run in units where its N - 1 cells
+# and N - 1 solver steps are one, which puts kinet's diaphragm, the face (N - 1) / 2, at 0.5 and
+# gives the three grids one clock, evaluates the exact solution of the run's own initial states
+# there, and scores the run against it as a candidate. The grid is chosen by
+# dataset.trajectory (N751, N1501, N3001), and the three runs give the observed order:
+#   python evaluate.py -m dataset=kinet_sod_refinement \
+#       dataset.trajectory=N751,N1501,N3001 'metrics=[mae,rmse,max_error,shock_set_distance]'
+#   fmeval.analysis.observed_order(fmeval.io.load_runs(<three folders>), anchor_label="mean_field")
+#
+# WHAT PART IS EVALUATED (2026-11-27; reasons and measured costs in
+# docs/datasets/logs/sod_shock_tube.md). Every grid at its native resolution (the order needs
+# each run scored on its own cells) at four times, frames 175, 200, 225 and 250, t = 0.233 to
+# 0.333: steps 700 to 1000 of the 3001-node run, the times spec 02 names. The error is the
+# measurement and it is deterministic, so four times show whether its order holds as the waves
+# separate. Before frame 100 the per-time orders scatter (L1: -0.5 to 1.09 over the three
+# fields; cause not diagnosed); from frame 100 on they are steady (density 0.65 to 0.69).
+# Measured on a login node: every deterministic metric (15 of them run on this non-periodic
+# grid), 4.7 to 4.8 s wall per grid; the two persistence metrics 2.7 to 3.2 s. Disk 211 MB.
+format: sod_kinet
+name: kinet_sod_refinement
+trajectory: N751
+path: ${paths.data}/kinet/sod/compressible_fluids/Pr-71en2_vuy-1.4_refinement/${.trajectory}.h5
+
+fields: [density, velocity, pressure]
+
+time:
+  start: 175
+  reduction: 25
+
+complexity:
+  family: sod_shock_tube
+  rank: 2
+  params: {dim: 2, gamma: 1.4, scored_against: exact}
+  label: "kinet Sod against the exact solution, three grids"
+
+notes: "kinet lattice-Boltzmann Sod shock tube, gamma = 1.4, on 751, 1501 and 3001 nodes by 5,
+  scored against the exact solution on each run's cells; units where N - 1 cells span 1. See
+  docs/datasets/sod_shock_tube.md."

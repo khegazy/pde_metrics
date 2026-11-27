@@ -1605,7 +1605,7 @@
           "state": "not applicable"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -1742,6 +1742,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -1957,7 +1975,7 @@
           "state": "not applicable"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -2094,6 +2112,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -3692,7 +3728,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -3829,6 +3865,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -5668,7 +5722,7 @@
           "state": "not applicable"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -5805,6 +5859,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -6023,7 +6095,7 @@
           "state": "not applicable"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -6160,6 +6232,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -6774,7 +6864,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -6911,6 +7001,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs vorticity, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -9037,7 +9145,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -9174,6 +9282,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -12478,7 +12604,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -12615,6 +12741,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -15821,7 +15965,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -15958,6 +16102,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -19218,7 +19380,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -19355,6 +19517,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -22581,7 +22761,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -22718,6 +22898,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -25967,7 +26165,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -26104,6 +26302,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -28346,7 +28562,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -28483,6 +28699,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -31073,7 +31307,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -31210,6 +31444,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -35841,7 +36093,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -35978,6 +36230,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -40577,7 +40847,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -40714,6 +40984,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -43909,7 +44197,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -44046,6 +44334,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -48673,7 +48979,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -48810,6 +49116,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -52473,7 +52797,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -52610,6 +52934,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic; needs vorticity, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -54296,7 +54638,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -54433,6 +54775,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -55776,7 +56136,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -55913,6 +56273,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -56146,7 +56524,7 @@
           "state": "not applicable"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -56283,6 +56661,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -56498,7 +56894,7 @@
           "state": "not applicable"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -56635,6 +57031,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -58212,7 +58626,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -58349,6 +58763,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -62964,7 +63396,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -63101,6 +63533,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -65309,7 +65759,7 @@
           "state": "not applicable"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -65446,6 +65896,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": "needs pressure, which this dataset does not provide",
@@ -66044,7 +66512,7 @@
           "state": "not applicable"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -66181,6 +66649,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": "needs pressure, which this dataset does not provide",
@@ -66779,7 +67265,7 @@
           "state": "not applicable"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -66916,6 +67402,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": "needs pressure, which this dataset does not provide",
@@ -67514,7 +68018,7 @@
           "state": "not applicable"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -67651,6 +68155,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": "needs pressure, which this dataset does not provide",
@@ -68249,7 +68771,7 @@
           "state": "not applicable"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -68386,6 +68908,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": "needs pressure, which this dataset does not provide",
@@ -68984,7 +69524,7 @@
           "state": "not applicable"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -69121,6 +69661,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": "needs pressure, which this dataset does not provide",
@@ -69761,7 +70319,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -69898,6 +70456,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -72083,7 +72659,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -72220,6 +72796,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -74065,7 +74659,7 @@
           "state": "not applicable"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -74202,6 +74796,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -75845,7 +76457,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -75982,6 +76594,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -79262,7 +79892,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -79399,6 +80029,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -81259,7 +81907,7 @@
           "state": "not applicable"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -81396,6 +82044,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -82963,7 +83629,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -83100,6 +83766,24 @@
         {
           "claim": "a grid sequence: a lattice-Boltzmann solver's Taylor-Green vortex at Re = 50 scored against the exact solution on its own 64^2 to 512^2 cells at a fixed Mach number of 0.1, where the Mach-number error holds the error at a floor (order about 0); its frames are one pattern scaled in time, and it says nothing about turbulence",
           "dataset": "kinet_taylor_green_fixed_mach",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
           "note": null,
           "primary": false,
           "reason": null,
@@ -86769,7 +87453,7 @@
           "state": "measured"
         },
         {
-          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it",
+          "claim": "the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not a nested refinement of it, since both runs place their nodes at i / (N - 1)",
           "dataset": "kinet_re5e4_512",
           "note": null,
           "primary": false,
@@ -86911,6 +87595,24 @@
           "reason": "needs density, which this dataset does not provide",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a grid sequence: a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4 scored against the exact solution on its own 751, 1501 and 3001 nodes, where the density error falls at order about 0.67 in L1 and 0.3 to 0.4 in L2; nothing about turbulence",
+          "dataset": "kinet_sod_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
+          "dataset": "kinet_shear_layer_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",

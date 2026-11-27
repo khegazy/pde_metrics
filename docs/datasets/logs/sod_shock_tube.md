@@ -317,6 +317,15 @@ where it is marked as arithmetic.
   of the same names), step 31 of `dataset_specs/BUILD_ORDER.md`. The nested-resolution runs of
   step 17 are archived in `kinet_sod_refinement/` there; no configuration reads them yet.
 
+#### 2026-11-27: the refinement sequence scored against the exact solution (dataset agent, batch 2)
+
+- The first two open points below are now built, as a configuration of its own,
+  `kinet_sod_refinement`, in the section of that name at the end of this log. These two
+  configurations are unchanged and stay the ladder's references (decision 1 of that section).
+- Measured: `d17baf`'s first right-state node is 1501, while the new 3001-node run's is 1500, and
+  at step 1000 the two differ by up to 0.09 in density even after a shift of one node, so the new
+  run is not a copy of `d17baf`.
+
 ### Open points
 
 - Scoring each run against the exact solution, frame by frame on the same nodes, is not
@@ -382,3 +391,119 @@ frame, 0.3 ms. Measured run: see the log entry below.
 
 - The proposal `proposals/EXP-sod_evidence-sod-time-offset.md` is now built as a reader option; it
   is left in place for the coordinator to delete or narrow.
+
+## `kinet_sod_refinement` (kinet's tube on three grids against the exact solution, 2026-11-27)
+
+### What it is for
+
+The solver's error against the exact Riemann solution on a grid sequence, with its observed order
+(`dataset_specs/02_grid_refinement_known_solution.md`, Sect. 5.2; build-order step 17). It is the
+shock case of the grid sequences: an error concentrated at discontinuities, whose order is below
+one, beside the smooth Taylor–Green sequences of order two.
+
+### How it is treated
+
+- **Source.** Three kinet runs made on 2026-11-27 by the job agent (case `sod/transonic` on
+  `[N, 5]`, `N` = 751, 1501, 3001; 250, 500, 1000 steps saved every 1, 2, 4 steps; dynamic
+  viscosity $2.5 \times 10^{-5}$, $5 \times 10^{-5}$, $10^{-4}$; kinet `perf/cleanup` at
+  `d1cd353b8`, one A100 per job). Configurations, provenance, commands and jobs:
+  `docs/datasets/logs/kinet_runs/kinet_sod_refinement/` and that README's section "Runs of the
+  second batch".
+- **Conversion.** `python -m fmeval.data.convert_kinet <rollout.h5> <dest>` from
+  `/pscratch/sd/k/khegazy/kinet_datasets/sod_refinement/sod/transonic/{aee3fbb1,dd337542,d1cac664}/tiers/full/rollout.h5`
+  to `/global/cfs/cdirs/m4790/Data/kinet/sod/compressible_fluids/Pr-71en2_vuy-1.4_refinement/N751.h5`,
+  `N1501.h5`, `N3001.h5` (30.3, 60.4 and 120.6 MB; under a second each). The converter dropped
+  step 1 of the two finer runs, which kinet saves whatever the cadence, so each file holds 251
+  evenly spaced frames. Each was read back with `KinetRawTrajectory` and found equal to its source
+  at every frame and on its clock (`time_convection`, step × 0.6831 / N). Fields: density,
+  velocity and the absolute pressure (`pressure_convention: absolute`).
+- **Reader.** A registered format, `sod_kinet` (`SodKinet` in `fmeval/data/analytic.py`, a
+  subclass of `SodShockTube`, about 50 lines), in the Taylor–Green pattern: the exact solution
+  on the run's cells and clock, the run from `predictions()`. It reads the run's states and
+  $\gamma$ from the file, checks that the initial density is one jump at the face $(N-1)/2$, and
+  reads the run with a new `kinet_raw` option `cell` (about 8 lines) set to $1/(N-1)$.
+- **Units.** With `cell = 1/(N-1)`, a cell and a solver step both last $1/(N-1)$: spacing and clock
+  rescale, velocity, density and pressure keep their lattice values, and the clock is the solver
+  step (`time_index`) over $N - 1$. The diaphragm is at 0.5, cell centres at
+  $(i + \tfrac12)/(N-1)$, frame $k$ at $t = k/750$ on every grid (bitwise equal clocks, checked),
+  and the coarse cells are unions of two fine ones. The physical viscosity is then the same on
+  every grid, $\nu_\text{lattice}/(N-1) = 3.3 \times 10^{-8}$.
+- **Grid and boundaries.** $N \times 5$, `neumann` along the tube (kinet's `neuman` faces), periodic
+  across it (no face named; every field uniform across it), as in `_kinet_sod.yaml`.
+
+### What part is evaluated
+
+- **Kept:** all three grids at native resolution (an order needs each run on its own cells), at
+  frames 175, 200, 225, 250 (`time: {start: 175, reduction: 25}`): $t = 0.233$ to $0.333$, steps
+  700 to 1000 of the 3001-node run, the times spec 02 names (its 850 is not a saved step of the
+  coarsest grid; 800 and 900 are).
+- **Why these.** The rows are a deterministic error, not samples, so a few times suffice to show
+  whether the order holds. Before frame 100 the per-time L1 orders scatter (density 0.09 to
+  0.74, velocity 0.43 to 1.09, pressure −0.5 to 0.84; cause not diagnosed); from frame 100 to 250
+  they are steady (density 0.65 to 0.69, pressure 0.76 to 0.83, velocity 0.69 to 0.94), and the
+  kept four lie in that stretch (measured with `mae` on every frame, 2026-11-27).
+- **No analysis grid, exclusion or slow metric.** A remap would add an error of its own; with a
+  candidate the ladder is replaced except the clean entry and `mean_field`; the persistence
+  metrics are cheap here.
+- **Measured cost** (login node, 2026-11-27, `evaluate.py` per grid on the kept four frames):
+  the 29 deterministic metrics other than the two persistence ones, of which 15 run on a
+  non-periodic domain, 4.7 to 4.8 s wall per grid (0.1 s of metric time);
+  `persistence_distance` and `persistence_wasserstein` 2.7 s (751) and 3.2 s (3001) wall. The
+  whole panel on the sequence is under half a minute. Disk 211 MB, all read.
+- **What the panel shows** (that run): `shock_set_distance` is 0 or half a cell
+  ($6.7 \times 10^{-4}$, $3.3 \times 10^{-4}$, $1.7 \times 10^{-4}$), so the solver's shock lies
+  within a cell of the exact one on every grid; `max_error` does not fall with the grid (density
+  0.082 to 0.089 on all three), the pointwise error at a smeared jump.
+
+### Decisions and why
+
+1. **Beside `kinet_sod_gamma1p4`, not replacing it** (agent). That configuration is a
+   reference for the ladder (the solver's field degraded), and this one a candidate against the
+   exact solution with no ladder: two experiments. `d17baf` is also a different run (its jump is
+   one face to the right and its later frames differ). To reverse: delete this configuration.
+2. **Units of $N - 1$ cells, through a `cell` option on `kinet_raw`** (agent). The job agent's
+   units (tube length $N$ cells) put the levels' frames at times differing by $10^{-3}$
+   (250/751 against 500/1501), and `observed_order` pairs grids only at equal times. In units of
+   $N - 1$ cells the same frames share one time exactly, the diaphragm is at the exact reader's
+   0.5, and the grids nest. The errors are the same numbers in either units (each is the run
+   against the exact solution at its own step); only the time label differs. `box`, the
+   Taylor–Green option, could not serve: it needs the run's reference length and speed, which a
+   Sod rollout does not record (`normalization_plan.lattice` is empty). Alternatives: match times
+   with a tolerance in `observed_order` (a change to the analysis's pairing rule for every
+   sequence), or relabel the run's private clock inside the reader (reaching into another
+   class's state). To reverse: delete `cell` and `SodKinet`.
+3. **The diaphragm is read from the stored initial density, not stated in the config**
+   (agent). It is exact, needs no second statement of a value the file holds, and refuses a run
+   painted otherwise.
+4. **`param_resolution` is $N$, so `observed_order` uses $r = N_f/N_c$ = 1.9987 and 1.9993**,
+   as the job's table does, while the cell ratio in these units is exactly 2. The order is then
+   0.1% larger than with $r = 2$ (my arithmetic, $\ln 2/\ln 1.9987$); not corrected, because a
+   row's resolution is its cell count everywhere else.
+5. **Registered as a grid sequence** (agent), as the Taylor–Green sequences are
+   (`docs/decisions.md`): its frames are not scalar multiples of one another, and its claim is
+   the error's fall across grids. Label in `configs/cards/default.yaml`.
+
+### Log entries
+
+**2026-11-27, dataset agent (batch 2, build-order step 17).**
+
+- Converted the three runs (above) and checked every frame against the source.
+- Code: `cell` and `candidate` options and `predictions()`/`frame_columns()` on
+  `KinetRawTrajectory`; `Trajectory._candidate_columns`, now shared by `ClosedFormTrajectory`;
+  `SodKinet`. Config `kinet_sod_refinement`; page section "The kinet grid sequence against the
+  exact solution".
+- Verified: the job's L1 and L2 per field at every saved frame of every level
+  (`_scripts_batch2/sod_refinement_errors.json`) reproduced by the reader to $2 \times 10^{-13}$,
+  and through the pipeline at the kept frames to 1e-9 (a `data` test); the orders through
+  `observed_order` at the kept frames: `mae` density 0.664 to 0.679, pressure 0.779 to 0.825,
+  velocity 0.717 to 0.931; `rmse` density 0.323 to 0.404, pressure 0.563 to 0.711, velocity 0.078
+  to 0.912; at step 1000 they equal the job's (`mae` density 0.676 and 0.668, `rmse` 0.383 and
+  0.323). A synthetic test checks the cells, clock, diaphragm and Toro's star state on frozen
+  41- and 81-node runs, and three refusals.
+- Smoke runs under `/pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/batch2_smoke`.
+- Not verified: the Banks, Aslam and Rider (2008) rate quoted on the page was recalled, not read.
+
+### Open points
+
+- The L2 order of velocity scatters (0.08 to 0.91 at the kept times); not diagnosed.
+- No dynamics figure.

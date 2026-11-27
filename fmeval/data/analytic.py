@@ -7,9 +7,9 @@ Nothing is written to disk; a frame is recomputed whenever it is read, which is 
 cheap. Measured through ``Trajectory.frame``, validation included, on a NERSC login node:
 0.3 ms per frame for Sod on 2048 cells and 1.8 ms for Taylor-Green on 256^2, against about
 10 ms of I/O per kinet frame (``fmeval/pipeline.py``). Evaluating Taylor-Green's sines
-directly took 7.0 ms, which is why its spatial patterns are computed once. The one exception
-is ``taylor_green_kinet``, which takes its cells and clock from a kinet run of the vortex and
-opens that run as its candidate.
+directly took 7.0 ms, which is why its spatial patterns are computed once. The two exceptions
+are ``taylor_green_kinet`` and ``sod_kinet``, which take their cells and clock from a kinet run of
+the problem and open that run as their candidate.
 
 A reader may also supply a **candidate**: the same closed form with some of its parameters
 changed (``candidate={"nu": 0.02}``), returned by :meth:`ClosedFormTrajectory.predictions` and
@@ -22,8 +22,8 @@ None is **evidence about a flow**. ``sod_shock_tube``, ``burgers``, ``sedov_tayl
 ``helmholtz_mixture_2d`` configurations are in ``evidence_datasets``, each under a label saying
 it is an analytic check or a known-statistics null and nothing about turbulence;
 ``taylor_green_2d`` is a fixture for the harness only (``docs/decisions.md``). The
-``taylor_green_kinet`` configurations are evidence of a solver's observed order on a grid
-sequence. Their pages are ``docs/datasets/``.
+``taylor_green_kinet`` and ``sod_kinet`` configurations are evidence of a solver's observed order
+on a grid sequence. Their pages are ``docs/datasets/``.
 """
 
 from __future__ import annotations
@@ -167,13 +167,8 @@ class ClosedFormTrajectory(Trajectory):
                           **{**self._params, **self._candidate})
 
     def frame_columns(self, t: int) -> dict[str, Any]:
-        """With a candidate, every row is labelled as a forecast's is (``ForecastPairs``): the
-        grid's resolution, and as the lead the frame's step and time since the first frame, the
-        start every candidate shares."""
-        if self._candidate is None:
-            return {}
-        return {"param_resolution": self._grid.shape[0], "lead_step": int(t),
-                "lead_time": float(self._times[t] - self._times[0])}
+        """With a candidate, every row is labelled as a forecast's, with this grid's resolution."""
+        return {} if self._candidate is None else self._candidate_columns(t, self._grid.shape[0])
 
     @property
     def fields(self) -> tuple[str, ...]:
@@ -340,6 +335,85 @@ class SodShockTube(ClosedFormTrajectory):
                              [p_l, p_l * (c / c_l) ** (2.0 * g / (g - 1.0)), self.star["pressure"]],
                              p_r)
         return {"density": density[None], "velocity": velocity[None], "pressure": pressure[None]}
+
+
+@register_reader("sod_kinet")
+class SodKinet(SodShockTube):
+    """The exact Sod solution on the cells and clock of a kinet run of it, the run its candidate.
+
+    kinet's ``sod`` cases fill a tube of ``N`` by a few transverse nodes, cell ``i`` centred at
+    ``i + 1/2`` cells, with the left state where ``i + 1/2 < N / 2``: for odd ``N`` the diaphragm
+    is the face ``x0 = (N - 1) / 2``, half a cell left of the tube's middle (read here from the
+    stored initial density and refused elsewhere). Both states are at rest and every field is
+    uniform across the tube, with no transverse velocity. Read with
+    ``KinetRawTrajectory(cell=1 / (N - 1))``, the run is in units where ``N - 1`` cells and
+    ``N - 1`` solver steps are one, so the diaphragm sits at :attr:`DIAPHRAGM` 0.5, the waves
+    keep their lattice speeds, and runs on ``N = 751, 1501, 3001`` nodes are nested grids of
+    exactly halved cells whose frames ``k`` share one time. The exact solution is a function of
+    ``(x - 0.5) / t = (i + 1/2 - x0) / s`` after ``s`` steps (Toro 2009, Sect. 4.2), so it is
+    evaluated at the run's cell centres and times with the run's own initial states and
+    ``gamma``, and :meth:`predictions` is the run, scored against it as a candidate is, its rows
+    labelled with ``param_resolution`` N. The tube reaches 1 + 1/(N - 1), so the wall check of
+    :class:`SodShockTube` (the first wave at 0 or 1) holds with room on the right.
+
+    Frame 0 is the run's initial condition, where the solution is the bare jump: ``(x - 0.5) / 0``
+    is infinite on every cell, since no cell centre is the face 0.5.
+    """
+
+    reads_from_disk = True
+    FORMAT = "sod_kinet"
+    #: The tube: kinet's ``neuman`` faces at both ends; across it, which kinet's ``sod`` cases
+    #: leave periodic, every field is uniform, so any extension is exact.
+    BOUNDARY: ClassVar[tuple[str, str]] = ("neumann", "periodic")
+
+    def __init__(self, path: str | Path) -> None:
+        """Read the run's states, diaphragm, cells and clock, and the exact solution on them.
+
+        Args:
+            path: A kinet ``sod`` run in the flat layout, converted by
+                ``fmeval.data.convert_kinet``, or its published URL.
+
+        Raises:
+            ValueError: If the run is not kinet's two-dimensional Sod tube, its initial density
+                is not one jump at the face ``(N - 1) / 2``, or :class:`SodShockTube` refuses
+                its states or its last time.
+        """
+        with KinetRawTrajectory(path, include_redundant=True) as lattice:
+            group, n = lattice.meta["source_attrs"].get("group"), lattice.grid.shape[0]
+            gamma = lattice.meta["source_attrs"].get("gamma")
+            start = lattice.frame(0, ["density", "pressure"]).fields
+        density, pressure = start["density"][0, :, 0], start["pressure"][0, :, 0]
+        right = np.flatnonzero(density != density[0])
+        if (group != "sod" or gamma is None or lattice.grid.n_spatial != 2 or n % 2 == 0
+                or not np.array_equal(right, np.arange((n - 1) // 2, n))):
+            raise ValueError(f"{path}: a kinet sod run on an odd number of nodes with one jump "
+                             f"at the face (N - 1) / 2 is needed; this is {group!r} on "
+                             f"{lattice.grid.shape} with the right state from node "
+                             f"{right[:1].tolist()}")
+        self._path, self._cell = path, 1.0 / (n - 1)
+        with self.predictions() as run:
+            # t_start is the first time after the jump, for the parent's checks; the frames are
+            # the run's own, frame 0 included, because the pipeline pairs equal clocks only.
+            super().__init__(gamma=gamma, left=(density[0], pressure[0]),
+                             right=(density[-1], pressure[-1]), grid=(n,), n_frames=len(run),
+                             t_start=float(run.times[1]), t_end=float(run.times[-1]),
+                             candidate={})  # an empty candidate labels the rows as a candidate's
+            self._grid, self._times = run.grid, run.times
+        self.centres = [np.broadcast_to(((np.arange(n) + 0.5) * self._cell)[:, None],
+                                        self._grid.shape)]
+        self._meta["path"] = str(path)
+
+    def solution(self, time: float) -> dict[str, np.ndarray]:
+        """The tube's solution on every transverse node, with a zero transverse velocity."""
+        with np.errstate(divide="ignore"):  # at t = 0, the jump (class docstring)
+            fields = super().solution(time)
+        fields["velocity"] = np.concatenate([fields["velocity"], 0 * fields["velocity"]])
+        return fields
+
+    def predictions(self) -> KinetRawTrajectory:
+        """The run, on this reader's cells and clock and in its units."""
+        return KinetRawTrajectory(self._path, include_redundant=True, boundary=self.BOUNDARY,
+                                  cell=self._cell)
 
 
 @register_reader("burgers")

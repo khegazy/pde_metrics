@@ -38,7 +38,8 @@ the numbers behind each are in the JSON beside it under `docs/datasets/_generate
 | `well_re5e4` | The same simulation in the PolymathicAI Well format, in float32 and without the distribution functions. A data-marked test reads it beside `kinet_re5e4` and requires identical values, so it is not drawn separately |
 | `forecast_re5e4` | Real predictions of this flow paired with their targets, at ten prediction steps from two starting times, in three runs at $256^2$, $128^2$ and $64^2$. Who produced the predictions is not recorded. Described under [Forecast pairs](#forecast-pairs) below |
 | `kinet_re1e6` | The same flow at $\mathrm{Re} = 10^6$, on $1024^2$ cells: 40001 frames, 11.4 TB. Read every fourth stored frame, so its frame $i$ is the same physical time as frame $i$ of `kinet_re5e4` (below) |
-| `kinet_re5e4_512` | The same run as `kinet_re5e4` on $512^2$ cells: 20001 frames, 1.43 TB. Read every second stored frame, so its frame $i$ is the same physical time as frame $i$ of `kinet_re5e4`. Its initial field may not be a nested refinement of the $256^2$ one (`dataset_specs/02_grid_refinement_known_solution.md`, Sect. 5.1). Evaluated on 21 frames, every 400th of frames 2000 to 10000, on the $256^2$ analysis grid its configuration states (`docs/datasets/logs/reynolds_ladder_2d.md`) |
+| `kinet_re5e4_512` | The same run as `kinet_re5e4` on $512^2$ cells: 20001 frames, 1.43 TB. Read every second stored frame, so its frame $i$ is the same physical time as frame $i$ of `kinet_re5e4`. It is not a nested refinement of the $256^2$ run: both were initialised with nodes at $i/(N-1)$, so their initial velocities differ by $7 \times 10^{-3}$ of the rms velocity after block-averaging ([below](#the-shear-layer-on-three-nested-grids)). Evaluated on 21 frames, every 400th of frames 2000 to 10000, on the $256^2$ analysis grid its configuration states (`docs/datasets/logs/reynolds_ladder_2d.md`) |
+| `kinet_shear_layer_refinement` | The same shear layer rerun on $128^2$, $256^2$ and $512^2$ cells to $t = 0.451$ with nested cells; the $128^2$ or $256^2$ run (`dataset.trajectory=128` or `256`) scored against the $512^2$ run block-averaged onto its cells, on 10 frames. Described [below](#the-shear-layer-on-three-nested-grids) |
 
 ![Vorticity at Re = 10^6 at five times](_generated/kinet_re1e6_vorticity.png)
 
@@ -95,6 +96,48 @@ These limits come from the data itself, recorded in `CLAUDE.md` from earlier run
 
 Every axis is periodic, so every metric and degradation runs on this dataset without boundary
 handling.
+
+## The shear layer on three nested grids
+
+`kinet_shear_layer_refinement` reads three kinet runs of this flow made on 2026-11-27
+(`dataset_specs/02_grid_refinement_known_solution.md`, Sect. 5.1): the case of `kinet_re5e4`
+($\mathrm{Re} = 5 \times 10^4$, Ma 0.1, $\lambda = 80$, $\epsilon = 0.05$) on $128^2$, $256^2$
+and $512^2$ cells for 1000, 2000 and 4000 steps, to $t = 0.451$, saved so that each has 101
+frames at the same times (the clocks are bitwise equal). The current kinet puts cell centres at
+$(i + \tfrac12)/N$, so a cell of a coarser grid is exactly the union of $2 \times 2$ or
+$4 \times 4$ cells of the finer.
+
+There is no exact solution, so the $512^2$ run is the reference. The candidate, the $128^2$ or
+the $256^2$ run, is scored against it on the candidate's own grid, where the pipeline's
+conservative remap averages the reference over each candidate cell: the `kinet_raw` reader option
+`candidate` opens the coarser run as the prediction, and the analysis grid is the candidate's.
+Both are read with `box: 1` (cell $1/N$, velocity in units of the lattice reference speed), so
+the remapped reference and the candidate are on one grid exactly.
+
+```bash
+python evaluate.py -m dataset=kinet_shear_layer_refinement dataset.trajectory=256,128 \
+    'metrics=[rmse,max_error,spectrum_l2]'
+```
+
+**What it measures, and what it does not.** At $256^2$ the departure from the $512^2$ run is the
+discretisation error of the grid `kinet_re5e4` itself runs on: $5 \times 10^{-4}$ to
+$2 \times 10^{-3}$ of the rms velocity over the run. At $128^2$ it is a coarse solver's error,
+six to thirteen times larger over the evaluated times. It is **not** an observed order of accuracy. The three-grid
+order of successive differences, $\log_2 \lVert u_{128} - B u_{256} \rVert / \lVert u_{256} - B
+u_{512}\rVert$ with $B$ the block average, is 2.00 at $t = 0$ (the initial condition sampled at
+cell centres) and rises to 3.7 by $t = 0.45$, so the grids are not in the asymptotic range where
+that ratio estimates the order (`dataset_specs/02_grid_refinement_known_solution.md`, Sect. 5.1). And with the finest run as the reference,
+`observed_order` on the two candidates gives $\log_2(E_{128}/E_{256})$, which for an error
+$C h^p$ is $\log_2(2^p + 1)$, not $p$ (the job's algebra,
+`docs/datasets/logs/kinet_runs/_scripts_batch2/compare_shear_layer_refinement.py`).
+
+**The older pair is not nested.** `kinet_re5e4` ($256^2$) and `kinet_re5e4_512` were initialised
+by an earlier kinet with nodes at $i/(N-1)$: their initial velocities match that placement to
+$10^{-14}$ of the stream speed and miss the cell-centre one by 8% and 4% at the sharpest
+point. Block-averaged, the $512^2$ initial field differs from the $256^2$ one by
+$2.9 \times 10^{-4}$ rms in velocity, $7 \times 10^{-3}$ of the rms velocity, fourteen times the
+$2.0 \times 10^{-5}$ of the new pair. So the old pair is two runs of slightly different initial
+conditions, not a refinement; the new runs are the refinement.
 
 ## Forecast pairs
 

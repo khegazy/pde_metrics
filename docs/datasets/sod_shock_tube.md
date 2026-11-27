@@ -36,13 +36,14 @@ state.
 | `sod_shock_tube` | The exact solution below, with Sod's data: $\gamma = 1.4$, left $(\rho, p) = (1, 1)$, right $(0.125, 0.1)$, on 2048 cells, 10 frames from $t = 0.1$ to $t = 0.2$ | Yes, computed |
 | `kinet_sod_gamma1p4` | kinet's lattice-Boltzmann simulation (`kinet/sod/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en4/`) on 3001 × 5 nodes, $\gamma = 1.4$, viscosity $10^{-4}$, Prandtl number 0.71, left $(\rho, p) = (1, 0.2)$, right $(0.125, 0.02)$, 1001 frames to $t = 200$ | Yes, simulated |
 | `kinet_sod_gamma2` | The same solver with $\gamma = 2$, viscosity 0.025, left $(\rho, p) = (0.5, 0.1)$, right $(2, 0.05)$; two runs of it, `c76b17` (default) and `15aa6b`, equal to $10^{-13}$ | Yes, simulated |
+| `kinet_sod_refinement` | The $\gamma = 1.4$ case rerun on 751, 1501 and 3001 × 5 nodes (`kinet/sod/compressible_fluids/Pr-71en2_vuy-1.4_refinement/`), each run scored against the exact solution on its own nodes: a grid sequence, the grid chosen by `dataset.trajectory` (`N751`, `N1501`, `N3001`) | Yes, simulated against computed |
 
 The exact solution can be evaluated for either simulation by overriding the reader's options,
 for example `+dataset.reader.gamma=2 '+dataset.reader.left=[0.5,0.1]' '+dataset.reader.right=[2,0.05]'`.
-It covers any pair of states at rest with the higher pressure on the left. Scoring a simulation
-against it, frame by frame on the same nodes, is not built yet
-(`dataset_specs/02_grid_refinement_known_solution.md`, Sect. 5.2); today each simulation is a
-reference for the degradation ladder, as every simulated dataset is.
+It covers any pair of states at rest with the higher pressure on the left. `kinet_sod_gamma1p4`
+and `kinet_sod_gamma2` are references for the degradation ladder, as every simulated dataset is;
+`kinet_sod_refinement` scores a simulation against the exact solution, frame by frame on the
+same nodes (below, "The kinet grid sequence against the exact solution").
 
 ### The exact solution at a shifted time
 
@@ -108,6 +109,55 @@ the shock moves, which is the double penalty.
   (`configs/cards/default.yaml`), labelled as a solver's shock rather than the exact one;
   `kinet_sod_gamma2`'s label also says its shock-set metrics score 0 because no shock is
   flagged.
+
+### The kinet grid sequence against the exact solution
+
+`kinet_sod_refinement` holds three kinet runs of the $\gamma = 1.4$ tube, on 751, 1501 and 3001
+nodes by 5, made for this purpose on 2026-11-27 (`dataset_specs/02_grid_refinement_known_solution.md`,
+Sect. 5.2). Each was run to 250, 500 and 1000 steps and saved every 1, 2 and 4 steps, so each has
+251 frames. The viscosity was set to $2.5 \times 10^{-5}$, $5 \times 10^{-5}$ and $10^{-4}$ in
+lattice units, which is one value in the tube's units below. The reader `sod_kinet` evaluates the
+exact solution on each run's own nodes and clock and scores the run against it as a candidate, so
+each row is that run's error.
+
+- **Units.** kinet fills node $i$ (centre $i + \tfrac12$ cells) with the left state where
+  $i + \tfrac12 < N/2$. For odd $N$ the diaphragm is the face $x_0 = (N-1)/2$, half a cell left of
+  the tube's middle. The reader reads the run in units where $N - 1$ cells and $N - 1$ solver
+  steps are one (the reader option `cell` of `kinet_raw`, $1/(N-1)$): the diaphragm is then at
+  0.5, velocities keep their lattice values, a cell of the coarser grid is exactly two of the
+  finer, and frame $k$ is $t = k/750$ on every grid. The exact solution depends on
+  $\xi = (x - 0.5)/t = (i + \tfrac12 - x_0)/s$ after $s$ steps (Toro 2009, Sect. 4.2), so these
+  units change no value; they make the three clocks one, which `observed_order` needs, since it
+  pairs grids at equal times. The reader takes the states and $\gamma$ from the run and refuses a
+  run whose initial jump is not on that face.
+- **Reproduced.** At every frame the reader's L1 and L2 errors equal those of the job that ran the
+  sequence (`docs/datasets/logs/kinet_runs/_scripts_batch2/compare_sod_exact.py`) to $2 \times
+  10^{-13}$: `mae` is $L_1 = \sum_i |e_i| / N$ and `rmse` is $L_2 = (\sum_i e_i^2 / N)^{1/2}$ on
+  density and pressure. On the two-channel velocity they are half and $1/\sqrt2$ of these, since
+  the transverse channel is zero on both sides.
+- **What it measures.** Through `fmeval.analysis.observed_order` at the four evaluated times
+  ($t = 0.233$ to $0.333$), density converges at order 0.66 to 0.68 in L1 and 0.32 to 0.40 in L2;
+  pressure at 0.78 to 0.83 and 0.56 to 0.71; velocity at 0.72 to 0.93 in L1, while its L2 order
+  scatters from 0.08 to 0.91. The orders are below 1 because the error is concentrated at the
+  smeared contact and shock. For a jump of height $\Delta$ smeared over a width $w$, the L1 error
+  is about $\Delta w$ and the L2 error about $\Delta\sqrt{w}$, so the L2 order is half the L1
+  order (my derivation; density, 0.67 and 0.32 to 0.40, follows it). The L1 order of 2/3 for a
+  contact is the rate reported for second-order schemes on linearly degenerate waves (Banks,
+  Aslam & Rider 2008, *J. Comput. Phys.* 227, 6985–7002; recalled, not checked against the
+  paper here).
+- **Beside `kinet_sod_gamma1p4`, not in place of it.** That configuration is the solver's field
+  as a reference for the ladder; this one is the solver against the exact solution, with no
+  ladder. They are also not the same run: the older run's first right-state node is 1501, not
+  1500, and at step 1000 it differs from the new 3001-node run by up to 0.09 in density even
+  after a shift of one node.
+- **Evaluated part.** Every grid at its native resolution, at frames 175, 200, 225 and 250
+  (steps 700 to 1000 of the 3001-node run, the times spec 02 names). Costs are in the dataset's
+  log.
+
+```bash
+python evaluate.py -m dataset=kinet_sod_refinement dataset.trajectory=N751,N1501,N3001 \
+    'metrics=[mae,rmse,max_error,shock_set_distance]'
+```
 
 ## Equations
 

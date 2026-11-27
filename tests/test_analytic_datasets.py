@@ -67,13 +67,14 @@ from fmeval.data.analytic import (
     Noh,
     RandomField,
     SedovTaylor,
+    SodKinet,
     SodShockTube,
     TaylorGreen2D,
     TaylorGreenKinet,
     biot_savart,
     polar,
 )
-from fmeval.data.base import READERS
+from fmeval.data.base import READERS, TimeSelection
 from fmeval.data.readers import open_trajectory
 from fmeval.derived import RecomputingTrajectory, helmholtz_split
 from fmeval.external.kinet_spectral import divergence, spectral_derivative, spectral_vorticity
@@ -86,7 +87,7 @@ from metrics.shock_set_distance.metric import shock_mask, surface_distances
 from metrics.vrmse.metric import EPSILON
 from tests.analytic_fields import circle_w2, gaussian_mean_square
 from tests.conftest import GRID
-from tests.fixtures_h5 import write_kinet_taylor_green
+from tests.fixtures_h5 import write_kinet_sod, write_kinet_taylor_green
 
 #: Every dataset config whose reader computes its frames rather than reading a file.
 GENERATED = [name for name in sorted(p.stem for p in (CONFIGS / "dataset").glob("*.yaml"))
@@ -966,6 +967,111 @@ def test_the_kinet_taylor_green_sequences_have_order_two_and_zero_through_observ
     coarse = fixed["resolution_coarse"] == 64
     assert fixed.loc[~coarse, "order"].abs().max() <= 0.15
     assert (fixed.loc[coarse, "order"] < 0.5).all()
+
+
+# --- kinet's Sod tube scored against the exact solution ----------------------------------------
+
+
+def test_a_kinet_sod_run_is_read_on_nested_cells_with_its_own_diaphragm_and_one_clock(tmp_path):
+    """Two frozen runs (``tests.fixtures_h5.write_kinet_sod``) on 41 and 81 nodes, saved every 1
+    and 2 steps: each is read on cells 1 / (N - 1) wide, on the clock step / (N - 1), which is one
+    clock for both, and its frame 0 is the exact solution's (the jump on kinet's face (N - 1) / 2,
+    a cell off would flip a node). After s = 8 steps on 81 nodes, every node whose similarity
+    variable (i + 1/2 - 40) / 8 lies inside a star region holds Toro's (2009) Table 4.3 state
+    (given to five digits), and the transverse velocity is zero. The two grids' rows pair at every
+    time in ``observed_order``."""
+    truths = [SodKinet(write_kinet_sod(tmp_path / f"N{n}.h5", n, n // 40)) for n in (41, 81)]
+    fields = ["density", "velocity", "pressure"]
+    for truth, n in zip(truths, (41, 81)):
+        run_ = truth.predictions()
+        assert run_.grid == truth.grid and np.array_equal(run_.times, truth.times)
+        assert truth.grid.spacing == pytest.approx((1 / (n - 1),) * 2, rel=1e-15)
+        assert truth.grid.boundary == ("neumann", "periodic")
+        start, stored = truth.frame(0, fields), run_.frame(0, fields)
+        assert all(np.array_equal(start[name], stored[name]) for name in fields)
+        assert truth.frame_columns(4) == {"param_resolution": n, "lead_step": 4,
+                                          "lead_time": truth.times[4]}
+    assert np.array_equal(truths[0].times, truths[1].times)
+    assert truths[0].times == pytest.approx(np.arange(5) / 40, rel=1e-15)
+
+    frame = truths[1].frame(4, fields)
+    xi = (np.arange(81) + 0.5 - 40) / 8
+    speeds, star = truths[1].speeds, {"pressure": 0.30313, "velocity": 0.92745}
+    behind_contact = (xi > speeds["tail"] + 0.05) & (xi < star["velocity"] - 0.05)
+    behind_shock = (xi > star["velocity"] + 0.05) & (xi < speeds["shock"] - 0.05)
+    assert behind_contact.sum() >= 5 and behind_shock.sum() >= 5
+    for region, density in ((behind_contact, 0.42632), (behind_shock, 0.26557)):
+        assert frame["density"][0][region] == pytest.approx(density, abs=5e-6)
+        for name in ("pressure", "velocity"):
+            assert frame[name][0][region] == pytest.approx(star[name], abs=5e-6)
+    assert not frame["velocity"][1].any()
+
+    rows = pd.concat([run(truth, [metric_registry.get("mae")], build_ladder({}), fields=fields,
+                          selection=TimeSelection(start=1), dataset=DatasetInfo(name="sod"),
+                          prediction=truth.predictions()).rows for truth in truths])
+    order = observed_order(rows, anchor_label=MEAN_FIELD_LABEL)
+    assert len(order) == 3 * 4 and order["order"].notna().all()
+
+
+def test_a_kinet_sod_pairing_refuses_another_run(tmp_path):
+    """Another case, an even number of nodes (no face at the middle) and a jump off the face
+    (N - 1) / 2 are refused."""
+    spoilers = {
+        "case": (41, lambda f: f.attrs.__setitem__("group", "shear_layer")),
+        "even": (40, lambda f: None),
+        "jump": (41, lambda f: f["density"].__setitem__((0, 0, 0, 19), 0.125)),
+    }
+    for name, (nodes, spoil) in spoilers.items():
+        path = write_kinet_sod(tmp_path / f"{name}.h5", nodes)
+        with h5py.File(path, "r+") as f:
+            spoil(f)
+        with pytest.raises(ValueError, match="one jump at the face"):
+            SodKinet(path)
+
+
+#: The job's comparison of the Sod runs with the exact solution (``compare_sod_exact.py``).
+KINET_SOD = REPO / "docs/datasets/logs/kinet_runs/_scripts_batch2/sod_refinement_errors.json"
+
+
+@pytest.mark.data
+def test_the_kinet_sod_refinement_reproduces_the_jobs_errors_and_orders():
+    """The evaluated part (frames 175 to 250, every 25th; steps 700 to 1000 of the 3001-node run)
+    of each grid through the pipeline: ``mae`` is the job's L1 = sum |e| / N and ``rmse`` its
+    L2 = sqrt(sum e^2 / N) on density and pressure, and half and 1 / sqrt(2) of them on the
+    two-channel velocity, whose transverse channel is zero on both sides (measured to 2e-13
+    relative; asserted 1e-9). Through ``observed_order`` (r = N_fine / N_coarse, as the job's
+    table): density converges at 0.66 to 0.68 in L1 and at 0.32 to 0.40 in L2, half the L1 order
+    as for an error made of smeared jumps; pressure at 0.78 to 0.83 and 0.56 to 0.71; velocity at
+    0.72 to 0.93 in L1 and anywhere from 0.08 to 0.91 in L2 (measured ranges, asserted with 0.02
+    of slack)."""
+    levels = json.loads(KINET_SOD.read_text())["levels"]
+    rows = []
+    for n in (751, 1501, 3001):
+        job = build_job(compose_config("dataset=kinet_sod_refinement",
+                                       f"dataset.trajectory=N{n}", "paths.data_url=null"))
+        truth = open_trajectory(job.dataset, job.paths)
+        level = run(truth, [metric_registry.get(m) for m in ("mae", "rmse")], build_ladder({}),
+                    fields=job.dataset.fields, selection=job.dataset.time,
+                    dataset=DatasetInfo(name="kinet_sod_refinement"),
+                    prediction=truth.predictions()).rows
+        candidate = level[level["lead_step"].notna() & level["degradation"].ne(MEAN_FIELD_LABEL)
+                          & (level["level"] > 0)]
+        assert sorted(candidate["frame_index"].unique()) == [175, 200, 225, 250]
+        for row in candidate.itertuples():
+            index = levels[str(n)]["steps"].index(row.frame_index * (n - 1) // 750)
+            norm, factor = {"mae": ("L1", 2.0), "rmse": ("L2", np.sqrt(2))}[row.metric]
+            expected = levels[str(n)][norm][row.field][index]
+            assert row.value * (factor if row.field == "velocity" else 1.0) == pytest.approx(
+                expected, rel=1e-9)
+        rows.append(level)
+    order = observed_order(pd.concat(rows, ignore_index=True), anchor_label=MEAN_FIELD_LABEL)
+    assert len(order) == 2 * 3 * 4 * 2, "metrics, fields, times, pairs"
+    measured = {("mae", "density"): (0.66, 0.68), ("rmse", "density"): (0.32, 0.40),
+                ("mae", "pressure"): (0.78, 0.83), ("rmse", "pressure"): (0.56, 0.71),
+                ("mae", "velocity"): (0.72, 0.93), ("rmse", "velocity"): (0.08, 0.91)}
+    for (metric, field), (low, high) in measured.items():
+        got = order.loc[(order["metric"] == metric) & (order["field"] == field), "order"]
+        assert got.between(low - 0.02, high + 0.02).all(), (metric, field, got.tolist())
 
 
 # --- Taylor-Green with an acoustic part (dataset_specs/10, Sect. 3) ---------------------------

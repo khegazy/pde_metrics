@@ -1,0 +1,58 @@
+# The Re = 5e4 shear layer of kinet_re5e4, rerun on 128^2, 256^2 and 512^2 cells to t = 0.451
+# (1000, 2000 and 4000 steps, saved every 10th, 20th and 40th: 101 frames each, frame k at the
+# same time on every grid) with cell centres at (i + 1/2) / N, so the three grids are nested as
+# cells (dataset_specs/02, Sect. 5.1). The 512^2 run is the reference and the coarser run the
+# candidate, scored against it block-averaged onto the candidate's cells: the repository's
+# conservative remap onto an analysis grid that is the candidate's own. Converted by
+# `python -m fmeval.data.convert_kinet`; the runs' configurations and commands are under
+# docs/datasets/logs/kinet_runs/shear_layer_refinement/.
+#
+# NOT AN OBSERVED ORDER. There is no exact solution, and the sequence is not in the asymptotic
+# range: the three-grid order of successive differences is 2.00 at t = 0 and rises to 3.7 by
+# t = 0.45 (the job's table, _scripts_batch2/shear_layer_refinement_differences.txt). What a row
+# measures is the coarser run's departure from the 512^2 run on its own cells: at 256^2, the
+# discretisation error of the flow kinet_re5e4 is a run of (5e-4 to 2e-3 of the rms velocity
+# here), and at 128^2 a coarse solver as a candidate. observed_order on the two runs' rows gives
+# log2(E_128 / E_256), which for an error C h^p is log2(2^p + 1), not p.
+#
+# The candidate is chosen by dataset.trajectory, 256 (default) or 128, which also sets the
+# analysis grid, the candidate's: `python evaluate.py -m dataset=kinet_shear_layer_refinement
+# dataset.trajectory=256,128`. Units: box 1 (cell 1/N, velocity over the lattice reference speed
+# u_l, the convective clock), the same on every grid, so the remapped reference and the
+# candidate share their grid exactly.
+#
+# WHAT PART IS EVALUATED (2026-11-27; reasons and measured costs in
+# docs/datasets/logs/reynolds_ladder_2d.md): every 10th frame from frame 10, t = 0.045 to 0.451,
+# 10 times, on the candidate's grid. The frames are times of one deterministic error history,
+# not independent samples; ten of them follow the error from the start of the roll-up (a
+# three-grid order of 2.3 to 2.5 at frame 10) to the end (3.6 to 3.8). Frame 0 is the initial
+# condition, whose departure is the difference between a point value and a cell average.
+# Measured on a login node: every deterministic metric but the two persistence ones, 12 s wall
+# (4.0 s of metric time) at 128 and 31 s (18.3 s) at 256; the two persistence metrics 7 s and
+# 15 s. Disk 1.1 GB, of which the 512^2 reference is 847 MB.
+defaults:
+  - _reynolds_ladder_2d
+  - _self_
+
+name: kinet_shear_layer_refinement
+format: kinet_raw
+trajectory: "256"
+path: ${paths.data}/kinet/doubly_periodic/weakly_compressible_isoT_fluids/sys_Re-5e4_Ma-1en1_refinement/N512.h5
+
+reader:
+  box: 1.0
+  candidate: N${..trajectory}.h5
+
+analysis_resolution: ${.trajectory}
+
+time:
+  start: 10
+  reduction: 10
+
+complexity:
+  rank: 0
+  params: {reynolds: 5.0e4, resolution: 512, scored_against: finest_grid}
+  label: "Re = 5\\times10^{4}, a coarser run against 512^2"
+
+notes: "Re=5e4, Ma=0.1, D2Q9 entropic BGK; a 128^2 or 256^2 run scored against the 512^2 run
+  block-averaged onto its cells, box 1. See docs/datasets/reynolds_ladder_2d.md."

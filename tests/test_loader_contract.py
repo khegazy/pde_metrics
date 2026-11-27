@@ -19,6 +19,7 @@ covers it.
 
 from __future__ import annotations
 
+import json
 import tracemalloc
 from pathlib import Path
 
@@ -26,11 +27,25 @@ import h5py
 import numpy as np
 import pytest
 
+from fmeval import REPO
+from fmeval.config import build_job, compose_config
 from fmeval.data.base import FIELDS, READERS, GridSpec, TimeSelection, Trajectory
 from fmeval.data.convert_kinet import convert_kinet_grouped
 from fmeval.data.kinet_raw import KinetRawTrajectory
+from fmeval.data.readers import open_trajectory
 from fmeval.data.well import WellTrajectory
-from tests.fixtures_h5 import N_FRAMES, SHAPE, write_kinet_grouped, write_kinet_raw, write_well
+from fmeval.derived import RecomputingTrajectory
+from fmeval.ladder import build_ladder
+from fmeval.pipeline import DatasetInfo, run
+from metrics import registry as metric_registry
+from tests.fixtures_h5 import (
+    N_FRAMES,
+    SHAPE,
+    write_kinet_grouped,
+    write_kinet_raw,
+    write_kinet_taylor_green,
+    write_well,
+)
 
 #: Every layout the contract holds: the writer of its synthetic file, the class that reads it,
 #: and the position of the time axis in a field read's h5py key -- ``(sim, C, T, ...)`` in the
@@ -258,6 +273,89 @@ def test_frame_stride_puts_a_finer_run_on_a_coarser_clock(kinet_file, tmp_path):
     for bad in (0, 3):
         with pytest.raises(ValueError, match="frame_stride"):
             KinetRawTrajectory(kinet_file, frame_stride=bad)
+
+
+def test_cell_reads_a_run_in_units_of_one_cell_and_one_step(kinet_file):
+    """``cell`` multiplies the spacing, and the solver step of every frame (``time_index``), by
+    ``cell`` and divides vorticity by it, while velocity, density and pressure keep their lattice
+    values; it is refused beside ``box`` or when not positive."""
+    with KinetRawTrajectory(kinet_file, include_redundant=True) as plain, \
+            KinetRawTrajectory(kinet_file, include_redundant=True, cell=0.5) as scaled:
+        assert scaled.grid.spacing == tuple(0.5 * s for s in plain.grid.spacing)
+        assert scaled.times.tolist() == (0.5 * np.arange(N_FRAMES)).tolist() != plain.times.tolist()
+        for name in ("density", "velocity", "pressure"):
+            assert np.array_equal(scaled.frame(2, [name])[name], plain.frame(2, [name])[name])
+        assert np.array_equal(scaled.frame(2, ["vorticity"])["vorticity"],
+                              plain.frame(2, ["vorticity"])["vorticity"] / 0.5)
+    for bad in ({"cell": 0.0}, {"cell": 0.5, "box": 1.0}):
+        with pytest.raises(ValueError, match="cell="):
+            KinetRawTrajectory(kinet_file, **bad)
+
+
+def test_a_candidate_run_is_scored_against_this_run_block_averaged_onto_its_grid(tmp_path):
+    """A 16^2 run and an 8^2 candidate of one vortex (``write_kinet_taylor_green``, the coarse one
+    1% too strong), read with ``box``: :meth:`predictions` opens the candidate beside the file with
+    the same options, the rows are labelled with its resolution, and through the pipeline on the
+    candidate's 8^2 grid its ``rmse`` is the rms of the candidate minus the run averaged over 2 x 2
+    blocks, computed here (to 1e-12). On the run's own grid the pair is refused, and without a
+    candidate there is none."""
+    write_kinet_taylor_green(tmp_path / "N16.h5", 16)
+    write_kinet_taylor_green(tmp_path / "N8.h5", 8, amplitude_error=0.01)
+    reference = KinetRawTrajectory(tmp_path / "N16.h5", box=2 * np.pi, candidate="N8.h5")
+    candidate = reference.predictions()
+    assert candidate.source == str(tmp_path / "N8.h5") and candidate.grid.shape == (8, 8)
+    assert reference.frame_columns(2) == {"param_resolution": 8, "lead_step": 2,
+                                          "lead_time": reference.times[2]}
+    with KinetRawTrajectory(tmp_path / "N16.h5") as alone:
+        assert alone.predictions() is None and alone.frame_columns(2) == {}
+
+    rows = run(reference, [metric_registry.get("rmse")], build_ladder({}), fields=["velocity"],
+               dataset=DatasetInfo(name="pair"), analysis_resolution=8, prediction=candidate).rows
+    scored = rows[rows["lead_step"].notna() & (rows["level"] > 0)].sort_values("frame_index")
+    expected = []
+    for t in range(N_FRAMES):
+        fine = reference.frame(t, ["velocity"])["velocity"]
+        block = fine.reshape(2, 8, 2, 8, 2).mean(axis=(2, 4))
+        expected.append(np.sqrt(np.mean((candidate.frame(t, ["velocity"])["velocity"] - block)**2)))
+    assert scored["value"].to_numpy() == pytest.approx(expected, rel=1e-12)
+    assert (scored["param_resolution"] == 8).all()
+    with pytest.raises(ValueError, match="share its grid"):
+        run(reference, [metric_registry.get("rmse")], build_ladder({}), fields=["velocity"],
+            dataset=DatasetInfo(name="pair"), prediction=candidate)
+
+
+#: The job's comparison of the shear-layer refinement runs (``compare_shear_layer_refinement.py``).
+SHEAR_LAYER = REPO / ("docs/datasets/logs/kinet_runs/_scripts_batch2/"
+                      "shear_layer_refinement_differences.json")
+
+
+@pytest.mark.data
+@pytest.mark.parametrize("cells", ["256", "128"])
+def test_the_shear_layer_refinement_reproduces_the_jobs_differences(cells):
+    """On the evaluated part (every 10th frame from 10) of ``kinet_shear_layer_refinement``, the
+    ``rmse`` of the candidate against the 512^2 run, through the pipeline with derived fields
+    recomputed as ``evaluate.py`` does, is the job's E_N = RMS over cells of the difference from
+    the block-averaged 512^2 run: on density as it is, on velocity times sqrt(2) u_l (the metric
+    averages the two channels; ``box`` divides by u_l) and on vorticity, the curl of the
+    block-averaged velocity on both sides, times u_l (measured to 2e-14 relative; asserted
+    1e-9)."""
+    job = build_job(compose_config("dataset=kinet_shear_layer_refinement",
+                                   f"dataset.trajectory={cells}", "paths.data_url=null"))
+    reference = open_trajectory(job.dataset, job.paths)
+    speed = reference.meta["source_attrs"]["normalization_plan"]["lattice"]["u_l"]
+    rows = run(RecomputingTrajectory(reference), [metric_registry.get("rmse")], build_ladder({}),
+               fields=job.dataset.fields, selection=job.dataset.time,
+               dataset=DatasetInfo(name=job.dataset.name),
+               analysis_resolution=job.analysis_grid.resolution,
+               prediction=RecomputingTrajectory(reference.predictions())).rows
+    scored = rows[rows["lead_step"].notna() & (rows["level"] > 0)]
+    expected = json.loads(SHEAR_LAYER.read_text())["fields"]
+    for field, factor in (("density", 1.0), ("velocity", np.sqrt(2) * speed),
+                          ("vorticity", speed)):
+        got = scored[scored["field"] == field].sort_values("frame_index")
+        assert got["frame_index"].tolist() == list(range(10, 101, 10))
+        want = np.array(expected[field][f"E_{cells}"])[got["frame_index"].to_numpy()]
+        assert got["value"].to_numpy() * factor == pytest.approx(want, rel=1e-9)
 
 
 def test_iter_frames_is_ascending(traj):

@@ -21,8 +21,10 @@ Three quirks of this format, each handled below:
 from __future__ import annotations
 
 import json
+import posixpath
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -59,6 +61,8 @@ class KinetRawTrajectory(HDF5Trajectory):
         time_axis: TimeAxisMode = "auto",
         frame_stride: int = 1,
         box: float | None = None,
+        cell: float | None = None,
+        candidate: str | None = None,
     ) -> None:
         """Open a kinet raw HDF5 file, locally or over HTTP.
 
@@ -89,12 +93,28 @@ class KinetRawTrajectory(HDF5Trajectory):
                 ``L_l / u_l`` (``time/time_convection``), multiplied by ``box``.
                 :attr:`viscosity` is then the run's kinematic viscosity in these units,
                 ``nu_l h / u_l``. None reads lattice units.
+            cell: Read the run in units where a cell is ``cell`` long and a solver step lasts
+                ``cell``, so velocity, density and pressure keep their lattice values: the
+                spacing is multiplied by ``cell``, vorticity divided by it, and the clock is the
+                solver step of each frame (the ``time_index`` a converted file holds) times
+                ``cell``. For runs that store no reference length and velocity, which ``box``
+                needs: kinet's Sod tubes of N nodes, whose diaphragm is the face (N - 1) / 2, are
+                nested and share one clock with ``cell = 1 / (N - 1)``. At most one of ``box``
+                and ``cell``.
+            candidate: The file name of another run of the same problem in this file's folder,
+                on its own grid: :meth:`predictions` opens it with every other option given here,
+                and the pipeline scores it against this run remapped onto the analysis grid,
+                which must be the candidate's (``dataset.analysis_resolution``). Its rows are
+                labelled as a forecast's, with the candidate's resolution.
 
         Raises:
             ValueError: If the clock disagrees with ``discretization``, ``frame_stride`` does
-                not divide the steps, or ``box`` is given for a file whose clock is not
-                ``time_convection``.
+                not divide the steps, ``box`` is given for a file whose clock is not
+                ``time_convection``, or ``box`` and ``cell`` are both given or ``cell`` is not
+                positive.
         """
+        if cell is not None and (box is not None or cell <= 0):
+            raise ValueError(f"cell={cell} must be positive and not given with box={box}")
         self._open(path, chunk_cache_mb=chunk_cache_mb, nan_policy=nan_policy,
                    sim_index=sim_index)
         disc = json.loads(self._file.attrs["discretization"])
@@ -112,11 +132,14 @@ class KinetRawTrajectory(HDF5Trajectory):
                                  "file converted from time/time_convection holds; this one's "
                                  f"is {self._file['time'].attrs.get('source')!r}")
             lattice = json.loads(self._file.attrs["normalization_plan"])["lattice"]
-            cell, speed = float(box) / lattice["L_l"], lattice["u_l"]
-            spacing = tuple(s * cell for s in spacing)
-            self._scale = {"velocity": 1 / speed, "vorticity": 1 / (speed * cell),
+            h, speed = float(box) / lattice["L_l"], lattice["u_l"]
+            self.viscosity = lattice["nu_l"] * h / speed
+        elif cell is not None:
+            h, speed = float(cell), 1.0
+        if box is not None or cell is not None:
+            spacing = tuple(s * h for s in spacing)
+            self._scale = {"velocity": 1 / speed, "vorticity": 1 / (speed * h),
                            "pressure": 1 / speed**2}
-            self.viscosity = lattice["nu_l"] * cell / speed
         boundary_t = (
             tuple(str(b) for b in boundary) if boundary is not None
             else ("periodic",) * n_spatial
@@ -129,8 +152,9 @@ class KinetRawTrajectory(HDF5Trajectory):
             origin=(0.0,) * n_spatial,
         )
         self._times = read_time_axis(
-            self._file["time"], remote=self.is_remote, mode=time_axis
-        ) * (1.0 if box is None else float(box))
+            self._file["time" if cell is None else "time_index"], remote=self.is_remote,
+            mode=time_axis,
+        ) * float(box or cell or 1.0)
         n_frames = len(self._times)
         # A cross-check of the frame count, not its source: `time.shape[0]` is the length of
         # the very axis being described, so it cannot be off by one. `temporal.grid` counts
@@ -174,6 +198,29 @@ class KinetRawTrajectory(HDF5Trajectory):
             )
         self._stride = frame_stride
         self._times = self._times[::frame_stride]
+        #: Every option but ``candidate``, which :meth:`predictions` opens the candidate with.
+        self._options = {"chunk_cache_mb": chunk_cache_mb, "nan_policy": nan_policy,
+                         "include_redundant": include_redundant, "boundary": boundary,
+                         "sim_index": sim_index, "time_axis": time_axis,
+                         "frame_stride": frame_stride, "box": box, "cell": cell}
+        #: The candidate run's location, beside this file (a path or a URL), or None.
+        self._candidate = (None if candidate is None
+                           else posixpath.join(posixpath.dirname(self.source), candidate))
+        if self._candidate is not None:
+            with self.predictions() as run:
+                self._candidate_resolution = run.grid.shape[0]
+
+    def predictions(self) -> KinetRawTrajectory | None:
+        """The candidate run, opened with this run's options, or None without one."""
+        if self._candidate is None:
+            return None
+        return KinetRawTrajectory(self._candidate, **self._options)
+
+    def frame_columns(self, t: int) -> dict[str, Any]:
+        """With a candidate, every row is labelled as a forecast's, with the candidate's
+        resolution."""
+        return ({} if self._candidate is None
+                else self._candidate_columns(t, self._candidate_resolution))
 
     def read_frame(self, t: int, fields: Sequence[str]) -> dict[str, np.ndarray]:
         """Read one frame.
