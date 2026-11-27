@@ -51,14 +51,16 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.tabbed: {alternate_style: true}
 
-# Contributor instructions are kept in the repository, where a colleague or an agent working
-# in a checkout will find them, and are deliberately not published. They are rules for people
+# Contributor instructions, and the dataset logs kept for the next agent who updates a
+# dataset, are kept in the repository, where a colleague or an agent working in a checkout
+# will find them, and are deliberately not published. They are rules for people
 # extending this repository -- never invent a number, never sign a card, here is what is
 # missing on purpose -- and a reader who came to the site to understand a metric is not their
 # audience. Their tests still pin them in place; only the publishing stops.
 exclude_docs: |
   decisions.md
   recipes/
+  datasets/logs/
 
 plugins:
   - search

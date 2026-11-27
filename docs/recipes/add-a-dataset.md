@@ -82,14 +82,33 @@ that does nothing at all, is flagged `severity_degenerate`. If a whole degradati
 collapses on the new data, its list of strengths needs a range suited to that dataset —
 and that is a finding worth recording rather than routing around.
 
-## 3. Decide the developed-flow window
+## 3. Decide what part of the dataset is evaluated
 
-A metric's page may only cite physically meaningful data. Decide from the physics where
-along the trajectory the flow has become properly developed — for the kinet run that was
-`start=2000` — and how densely to sample that window (`reduction`). Record both the
-decision and the reasoning as comments in the dataset's YAML file. This is a person's
-decision to make; if you are an agent, propose a window with your reasoning and stop
-there.
+Every metric runs on every dataset, so the part of a dataset that is evaluated sets the cost
+of the whole panel. Choose it to balance three things (Kareem, 2026-11-26):
+
+1. **Enough evaluations for a good measurement.** The rank statistics are computed per frame
+   and never pooled across frames, so their precision comes from independent frames. Frames
+   closer together than the integrated autocorrelation time add cost, not information: on
+   `kinet_re5e4` the 161 frames of the default window hold 7 to 12 independent samples, at an
+   autocorrelation time of 13 to 23 frames (`METRIC_EVALUATION_CRITIQUE.md`, finding 2).
+   Independent trajectories or seeds are independent samples outright.
+2. **The most distinguishing parts.** Keep the windows, trajectories and features where the
+   dataset does what it exists for, the developed flow, the shock while it is present, the
+   regime a test targets, and drop transients, near-duplicates and degenerate stretches. A
+   dataset that serves several purposes may keep a few named windows rather than everything.
+3. **Evaluation time and disk.** Measure the cost of one frame with a cheap metric and with
+   the most expensive one that runs on the dataset (for example `persistence_wasserstein`,
+   `variogram_score`, `wasserstein`), project the full panel, and keep stored data to what is
+   evaluated. An analytic reader stores nothing, but its grid and frame count still set the
+   time.
+
+Use the existing selectors rather than new ones: `dataset.time.start`, `stop`, `reduction`
+and `max_frames`; `frame_stride` on the reader; `analysis_grid.resolution`; and, for a dataset
+of many trajectories, the list of trajectories kept. A small dataset may be kept whole. Write
+the choice and the reasoning, with the measured costs, as comments in the dataset's YAML file
+and in its log (step 7). The agent that adds the dataset makes this decision and records it;
+a person may override it.
 
 ## 4. Register it as citable evidence
 
@@ -144,7 +163,34 @@ python -m fmeval.cards dynamics <name>
 which writes the figures, and the numbers behind them, to `docs/datasets/_generated/`. Commit
 both. Never draw or edit them by hand.
 
-## 7. Finish
+## 7. Keep the dataset's log
+
+Every dataset has a log beside its page, `docs/datasets/logs/<page>.md`, one per page and so
+one per physical problem, with a section per configuration. Its reader is the next agent who
+updates the dataset: it records why the dataset is in its current form, so that agent does
+not undo a deliberate choice or repeat a dead end. The log is not published on the site
+(`exclude_docs` in `mkdocs.yml`), but the documentation tests check it like any page.
+
+Write it in the same change that adds or alters the dataset, and append to it on every later
+change; never rewrite an old entry, add a new one that supersedes it. It holds:
+
+1. **What the dataset is for**: which tests, metrics or experiments need it, with the
+   specification or issue that asked for it.
+2. **How it is treated**: the source (path, provenance, solver and its configuration, or the
+   closed form and its citation), the reader and options, fields kept and dropped, grid,
+   boundary per axis, and any conversion.
+3. **What part is evaluated** (step 3): the windows, stride, trajectories and analysis grid
+   kept, the number of independent samples they give, the measured cost per frame with a cheap
+   and an expensive metric, the projected time of the full panel, the disk used, and why this
+   balance was chosen over keeping more or less.
+4. **Decisions and why**: every choice a later agent might question, with the alternatives
+   considered, the reason the one taken won, who made it (the user, or the agent), and how to
+   reverse it.
+5. **Log entries**, newest last, each dated: what was done (files, commands, data written),
+   how it was verified, and what was not verified.
+6. **Open points**: what is known to be missing or doubtful.
+
+## 8. Finish
 
 ```bash
 pytest                      # includes the reader contract and card checks
