@@ -20,6 +20,7 @@ covers it.
 from __future__ import annotations
 
 import json
+import re
 import tracemalloc
 from pathlib import Path
 
@@ -38,6 +39,7 @@ from fmeval.derived import RecomputingTrajectory
 from fmeval.ladder import build_ladder
 from fmeval.pipeline import DatasetInfo, run
 from metrics import registry as metric_registry
+from metrics.shock_set_distance.metric import shock_mask
 from tests.fixtures_h5 import (
     N_FRAMES,
     SHAPE,
@@ -324,6 +326,71 @@ def test_a_candidate_run_is_scored_against_this_run_block_averaged_onto_its_grid
             dataset=DatasetInfo(name="pair"), prediction=candidate)
 
 
+def test_window_keeps_a_block_of_cells_at_the_runs_coordinates(kinet_file):
+    """``window`` reads cells ``[start, stop)`` of each axis: the frame is the plain frame's block,
+    the grid's shape is the window's and its origin the window's first cell, the declared
+    boundary is the configuration's; a window outside the grid or empty is refused."""
+    window = [[2, 10], [1, 7]]
+    with KinetRawTrajectory(kinet_file) as plain, \
+            KinetRawTrajectory(kinet_file, window=window, cell=0.5,
+                               boundary=["neumann", "neumann"]) as cut:
+        assert cut.grid.shape == (8, 6) and cut.grid.boundary == ("neumann", "neumann")
+        assert cut.grid.origin == (2 * 0.5, 1 * 0.5) and cut.grid.spacing == (0.5, 0.5)
+        for name in ("density", "velocity"):
+            assert np.array_equal(cut.frame(3, [name])[name], plain.frame(3, [name])[name][
+                :, 2:10, 1:7])
+    for bad in ([[0, 17], [0, 8]], [[4, 4], [0, 8]], [[0, 16]], [[-1, 4], [0, 8]]):
+        with pytest.raises(ValueError, match="window="):
+            KinetRawTrajectory(kinet_file, window=bad)
+
+
+def test_members_assemble_an_ensemble_around_a_truth_from_one_folder(tmp_path):
+    """Four runs of one start, told apart by a density offset equal to their index: with
+    ``members`` the file opened is the truth, the other three are the members in name order and
+    the truth is not among them, and through the pipeline every row records the lead time (time
+    since frame 0) and no ``lead_step``; an ensemble metric reads all three members, a
+    deterministic one scores their mean. A member on another clock, a glob matching one other
+    file, and members beside a candidate are refused."""
+    for i in range(4):
+        write_kinet_raw(tmp_path / f"member_{i:02d}.h5")
+        with h5py.File(tmp_path / f"member_{i:02d}.h5", "r+") as f:
+            f["density"][...] += float(i)
+    truth = KinetRawTrajectory(tmp_path / "member_02.h5", members="member_*.h5")
+    assert truth.is_ensemble and not KinetRawTrajectory(tmp_path / "member_00.h5").is_ensemble
+    with KinetRawTrajectory(tmp_path / "member_00.h5") as zero:
+        frame, base = truth.frame(3, ["density"]), zero.frame(3, ["density"])["density"]
+    assert np.array_equal(frame["density"], base + 2.0)
+    assert np.array_equal(frame.members["density"], np.stack([base + i for i in (0.0, 1.0, 3.0)]))
+    # Recomputing the derived fields keeps the members, each from its own velocity.
+    zero = RecomputingTrajectory(KinetRawTrajectory(tmp_path / "member_00.h5"))
+    own = zero.frame(3, ["velocity", "vorticity"])["vorticity"]
+    zero.close()
+    stored = truth.frame(3, ["velocity", "vorticity"]).members["vorticity"]
+    recomputed = RecomputingTrajectory(truth).frame(3, ["velocity", "vorticity"]).members
+    assert np.array_equal(recomputed["vorticity"][0], own)
+    assert recomputed["vorticity"].shape == stored.shape
+    assert not np.array_equal(recomputed["vorticity"], stored)
+
+    rows = run(truth, [metric_registry.get("crps"), metric_registry.get("mse")], build_ladder({}),
+               fields=["density"], dataset=DatasetInfo(name="ensemble")).rows
+    assert rows["lead_time"].to_numpy() == pytest.approx(
+        truth.times[rows["frame_index"].to_numpy()] - truth.times[0], abs=0)
+    assert rows["lead_step"].isna().all()
+    assert (rows.loc[rows["metric"] == "crps", "n_members"] == 3).all()
+    clean = rows[(rows["metric"] == "mse") & (rows["level"] == 0)].set_index("frame_index")
+    assert clean.loc[3, "value"] == pytest.approx(np.mean((base + 2.0 - (base + 4.0 / 3.0))**2))
+    truth.close()
+
+    with pytest.raises(ValueError, match="matches 1 other"):
+        KinetRawTrajectory(tmp_path / "member_02.h5", members="member_0[23].h5")
+    with pytest.raises(ValueError, match="no candidate"):
+        KinetRawTrajectory(tmp_path / "member_02.h5", members="member_*.h5",
+                           candidate="member_00.h5")
+    write_kinet_raw(tmp_path / "member_04.h5", times=np.arange(N_FRAMES) * 0.5)
+    with pytest.raises(ValueError, match=r"grid, clock and fields: \[.*member_04"):
+        KinetRawTrajectory(tmp_path / "member_02.h5", members="member_*.h5")
+
+
 #: The job's comparison of the shear-layer refinement runs (``compare_shear_layer_refinement.py``).
 SHEAR_LAYER = REPO / ("docs/datasets/logs/kinet_runs/_scripts_batch2/"
                       "shear_layer_refinement_differences.json")
@@ -356,6 +423,76 @@ def test_the_shear_layer_refinement_reproduces_the_jobs_differences(cells):
         assert got["frame_index"].tolist() == list(range(10, 101, 10))
         want = np.array(expected[field][f"E_{cells}"])[got["frame_index"].to_numpy()]
         assert got["value"].to_numpy() * factor == pytest.approx(want, rel=1e-9)
+
+
+#: The ensemble job's table (``ensemble_checks.py ensemble``), over the 17 runs of each start.
+ENSEMBLE = REPO / "docs/datasets/logs/kinet_runs/shear_layer_ensemble/ensemble_results.txt"
+
+
+@pytest.mark.data
+def test_the_shear_layer_ensemble_reproduces_the_jobs_spread_and_single_truth_ratios():
+    """``kinet_shear_layer_ensemble``'s truth and 16 members are the job's 17 runs of a start, so
+    from the reader's frames: the velocity spread, sqrt of the mean member variance (ddof 1) over
+    cells and channels, relative to lead 0 at start 2000 is the job's at leads 1000 to 5000 (three
+    significant figures, as printed); over the 51 single truths of the three starts at lead 5000
+    the ratio of each one's squared error from the mean of the other 16 to their mean variance
+    spans the job's range; pooled over the 17 truths of a start it is 17/16, the identity that
+    makes the pooled check vacuous; and the fixed truth's own ratio there is 0.5807 at start 2000
+    (recorded in docs/datasets/logs/reynolds_ladder_2d.md)."""
+    text = ENSEMBLE.read_text()
+    printed = dict(re.findall(r"(\d+):([\d.e+-]+)\(", re.search(
+        r"start_02000 velocity +(.*)", text).group(1)))
+    low, high = map(float, re.search(r"velocity +lead +5000: .*\{([\d.]+)-([\d.]+)\}",
+                                     text).groups())
+    ratios, own = [], {}
+    for start in ("start_02000", "start_05000", "start_08000"):
+        job = build_job(compose_config("dataset=kinet_shear_layer_ensemble",
+                                       f"dataset.trajectory={start}", "paths.data_url=null"))
+        with open_trajectory(job.dataset, job.paths) as ensemble:
+            runs = {}
+            for frame in (0, 100, 200, 400, 500):
+                read = ensemble.frame(frame, ["velocity"])
+                runs[10 * frame] = np.concatenate([read["velocity"][None],
+                                                   read.members["velocity"]])
+        if start == "start_02000":
+            spread = {lead: np.sqrt(np.mean(np.var(x, 0, ddof=1)) * 2) for lead, x in runs.items()}
+            for lead in (1000, 2000, 4000, 5000):
+                assert spread[lead] / spread[0] == pytest.approx(float(printed[str(lead)]),
+                                                                 rel=6e-3)
+        x = runs[5000]
+        others = (x.sum(0)[None] - x) / (len(x) - 1)
+        variance = ((x**2).sum(0)[None] - x**2 - (len(x) - 1) * others**2) / (len(x) - 2)
+        error = np.mean((x - others)**2, axis=(1, 2, 3))
+        ratios += list(error / np.mean(variance, axis=(1, 2, 3)))
+        own[start] = ratios[-len(x)]
+        assert error.mean() / np.mean(variance) == pytest.approx(17 / 16, rel=1e-9)
+    assert (round(min(ratios), 3), round(max(ratios), 3)) == (low, high)
+    assert own["start_02000"] == pytest.approx(0.5807, abs=1e-4)
+
+
+#: The cylinder of the supersonic run: centre and radius in nodes
+#: (docs/datasets/supersonic_cylinder.md, from the rollout's solid mask).
+CYLINDER_CENTRE, CYLINDER_RADIUS = (166.5, 150.5), 20.0
+
+
+@pytest.mark.data
+def test_the_cylinder_window_holds_the_bow_shock_and_none_of_the_body():
+    """On the evaluated frames of ``kinet_supersonic_cylinder`` (the window x < 144, 6 <= y < 294
+    upstream of the body), the shock detector of ``shock_set_distance`` flags 40 to 60 cells, all on the bow
+    shock's normal part (x 105 to 112, symmetric about the centre line within two cells) and every
+    one at least 30 nodes from the cylinder's outline, so none on the body (on the whole domain
+    178 of about 230 flagged nodes lie within two nodes of it)."""
+    job = build_job(compose_config("dataset=kinet_supersonic_cylinder", "paths.data_url=null"))
+    with open_trajectory(job.dataset, job.paths) as cylinder:
+        assert cylinder.grid.shape == (144, 288) and cylinder.grid.origin == (0.0, 6.0)
+        for t in job.dataset.time.resolve(len(cylinder)):
+            flagged = shock_mask(cylinder.frame(int(t), ["pressure"])["pressure"][0])
+            x, y = np.nonzero(flagged)
+            y = y + 6  # the run's node index
+            assert 40 <= len(x) <= 60 and x.min() >= 105 and x.max() <= 112
+            assert abs((y.min() + y.max()) / 2 - CYLINDER_CENTRE[1]) <= 2
+            outline = np.hypot(x - CYLINDER_CENTRE[0], y - CYLINDER_CENTRE[1]) - CYLINDER_RADIUS
+            assert outline.min() >= 30
 
 
 def test_iter_frames_is_ascending(traj):

@@ -21,6 +21,12 @@ ensemble mean is (N+1)/N times the true variance, and matches the ensemble sprea
 factor that depends only on N. Repeating with each run in turn as the truth multiplies the
 cases at no extra cost.
 
+*Corrected 2026-11-27:* it does not. Pooled over every choice of truth, the error-to-variance
+ratio is (N + 1)/N identically, for any data, and the pooled rank histogram exactly flat
+(`dataset_specs/01_physical_ensemble.md`, Section 3, correction). The runs exist now
+(`kinet_shear_layer_ensemble`, one fixed truth per start, three starts); the figures this
+proposal asks for are not built.
+
 The field's standard analyses then apply as they are drawn for operational ensembles:
 spread and error of the ensemble mean against lead time, and the spread-error diagram, with
 cases binned by predicted spread (their Fig. 4, at lead times of 2, 5 and 10 days).

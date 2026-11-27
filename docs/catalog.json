@@ -1765,6 +1765,24 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -2130,6 +2148,24 @@
         {
           "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
           "dataset": "kinet_shear_layer_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -3888,6 +3924,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -5882,6 +5936,24 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -6250,6 +6322,24 @@
         {
           "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
           "dataset": "kinet_shear_layer_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -7024,6 +7114,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs vorticity, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -9305,6 +9413,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -12764,6 +12890,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -16125,6 +16269,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -19540,6 +19702,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -22921,6 +23101,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -26325,6 +26523,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -28717,6 +28933,24 @@
         {
           "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
           "dataset": "kinet_shear_layer_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
           "note": null,
           "primary": false,
           "reason": null,
@@ -31462,6 +31696,24 @@
         {
           "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
           "dataset": "kinet_shear_layer_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
           "note": null,
           "primary": false,
           "reason": null,
@@ -36253,6 +36505,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -41007,6 +41277,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -44352,6 +44640,24 @@
         {
           "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
           "dataset": "kinet_shear_layer_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
           "note": null,
           "primary": false,
           "reason": null,
@@ -49139,6 +49445,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -52957,6 +53281,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic; needs vorticity, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -54798,6 +55140,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -56296,6 +56656,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -56684,6 +57062,24 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -57049,6 +57445,24 @@
         {
           "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
           "dataset": "kinet_shear_layer_refinement",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -58781,6 +59195,24 @@
         {
           "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
           "dataset": "kinet_shear_layer_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
           "note": null,
           "primary": false,
           "reason": null,
@@ -63556,6 +63988,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -65919,6 +66369,24 @@
           "reason": "needs pressure, which this dataset does not provide",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -66672,6 +67140,24 @@
           "reason": "needs pressure, which this dataset does not provide",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -67425,6 +67911,24 @@
           "reason": "needs pressure, which this dataset does not provide",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -68178,6 +68682,24 @@
           "reason": "needs pressure, which this dataset does not provide",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -68931,6 +69453,24 @@
           "reason": "needs pressure, which this dataset does not provide",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -69684,6 +70224,24 @@
           "reason": "needs pressure, which this dataset does not provide",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -70479,6 +71037,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -72819,6 +73395,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -74819,6 +75413,24 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -76617,6 +77229,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -80052,6 +80682,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -82067,6 +82715,24 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -83784,6 +84450,24 @@
         {
           "claim": "a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from a finer grid of itself, not from an exact solution, on grids not in the asymptotic range",
           "dataset": "kinet_shear_layer_refinement",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
           "note": null,
           "primary": false,
           "reason": null,
@@ -87613,6 +88297,24 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear layer scored against a 17th, fixed as the truth, from each of three start states, along lead times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the 51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest lead), so a calibration score here is one case of that scatter, not a test of calibration",
+          "dataset": "kinet_shear_layer_ensemble",
+          "note": "scores the member mean",
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
+          "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs a periodic domain, and this dataset is not periodic",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",

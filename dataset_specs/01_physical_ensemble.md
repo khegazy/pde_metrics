@@ -102,6 +102,39 @@ mean perturbation is exactly zero (memo Sect. 4.2, around Eq. 23), must not be u
 the mirror of the run called truth would not be exchangeable with it (the author's
 reasoning).
 
+**Correction (2026-11-27, after the runs of build-order step 21): "each run is the truth in
+turn" tests nothing.** The first half of the paragraph above stands: no run may be unperturbed.
+The second half does not. Pooled over all M = N + 1 choices of truth, the ratio of the ensemble
+mean's squared error to the members' variance is (N + 1)/N identically, in every cell, for any
+data. With x̄ the mean of the M runs, S = Σ_i (x_i − x̄)², and m_{−j}, v_{−j} the mean and
+(ddof 1) variance of the M − 1 runs other than j:
+
+```
+x_j - m_{-j} = (M/(M-1)) (x_j - xbar)                     =>  sum_j e_j^2   = (M/(M-1))^2 S
+(M-2) v_{-j} = S - (M/(M-1)) (x_j - xbar)^2               =>  sum_j v_{-j}  = M S / (M-1)
+sum_j e_j^2 / sum_j v_{-j} = M/(M-1) = (N+1)/N
+```
+
+(the job agent's derivation, `docs/datasets/logs/kinet_runs/shear_layer_ensemble/ensemble_results.txt`;
+the second line is the leave-one-out sum of squares, re-derived here). The runs measured
+1.062500 = 17/16 at every lead, which is the identity, not a finding. The pooled rank histogram
+is fixed the same way: the rank of x_j among the other M − 1 runs is its rank among all M, so
+pooled over j every rank occurs once per cell and the histogram is exactly flat. Exchangeability
+makes the *expected* ratio for one fixed truth (N + 1)/N (Eq. 6); it does not make a pooled
+statistic a test of it.
+
+What this means for the dataset (`kinet_shear_layer_ensemble`): it takes **one fixed truth per
+start** (run `member_00`, a rule fixed before any score) and the other N = 16 runs as members.
+One truth's ratio scatters widely: over the 51 single truths of the three starts the velocity
+ratio spans 1.02 to 1.12 at short leads and 0.46 to 1.93 at lead 5000. With three starts the
+dataset holds three cases per lead, so it **cannot** certify the ensemble's calibration (Eq. 6
+or 7 averaged over cases) or draw a binned spread-error diagram, and a spread-to-skill ratio or
+rank histogram read on it means something only against that scatter. It **can** show how each
+metric reads a real spread that grows with lead time (16-fold from start 2000, 3- and 2-fold from
+5000 and 8000), with the small scales decorrelating long before the vortex pair, and how each
+responds to the ensemble ladder applied to physical members, which is a rank statistic within
+each frame and needs no known calibration.
+
 ## 4. Option A, the analytic ideal: a linear stochastic PDE in Fourier space
 
 No physical *flow* has ensemble statistics in closed form; chaotic error growth has none.
@@ -270,6 +303,20 @@ to 5 000: 180 frames per run. Fields: density and velocity only; vorticity is re
 **Known answer.** Section 3, at every lead and in every spread bin; plus the ensemble
 degradations (`spread_inflate`, `spread_deflate`, `bias`) on physical members.
 
+*Corrected 2026-11-27 (Section 3, correction).* Check 3 and the known answer above assumed every
+run is the truth in turn; pooled that way the relation holds as an algebraic identity and tests
+nothing. As run (build-order step 21; records in
+`docs/datasets/logs/kinet_runs/shear_layer_ensemble/`): 17 runs per start, perturbation as
+described above at rms 10⁻³ u_rms plus one run at 10⁻² u_rms (linear to about lead 500), route
+(i), saved every 10th step for all 5 000 steps (the cadence above was not used), density,
+velocity and vorticity kept. Measured: check 1, the velocity spread from start 2000 doubles
+every 455 steps and reaches 16 times its start by lead 4000 (3.0 and 2.0 times from 5000 and
+8000), no ensemble saturates; check 2, at start 2000 and lead 5000 the member variance over the
+mean energy is 0.37 at 64 < |k| ≤ 182 and 5.7e-5 at |k| ≤ 4, so the filaments decorrelate long
+before the vortex pair. The dataset `kinet_shear_layer_ensemble` uses one fixed truth per start;
+its three starts are three cases, read against the single-truth scatter of Section 3's
+correction.
+
 **Cost and size.** 51 runs of 5 000 steps at 256². Wall-clock: unknown; the on-disk
 `slurm_logs` folders of both kinet configurations are empty, so one run must be timed before
 the job is sized (catalog B1's blocker). Storage: 9 180 frames × 3 channels × 256² × 8 B =
@@ -412,7 +459,11 @@ Following `docs/recipes/add-a-dataset.md`:
   the reference and the other N as `members[name]` of shape `(N, C, x, y)`, exposes r as a
   configuration option so every run is the truth in turn, and sets `is_ensemble`. The lead
   time of each frame goes into the row as `lead_step` and `lead_time`, as the forecast
-  reader (`fmeval/data/forecast.py`) already does.
+  reader (`fmeval/data/forecast.py`) already does. *Corrected 2026-11-27:* as built, the
+  `kinet_raw` option `members` (a glob of the run files beside the truth) assembles the members,
+  the truth is one fixed run (Section 3, correction), and the rows carry `lead_time` only: the
+  analysis reads a `lead_step` as marking a candidate forecast's rows, which an ensemble's
+  ladder rows are not.
 - **Precision.** float64 as written by kinet and by the exact Ornstein–Uhlenbeck update;
   float32 copies are acceptable for the member stacks (the Well-format copy of `kinet_re5e4`
   is float32 and is checked identical to the raw run by a data-marked test).

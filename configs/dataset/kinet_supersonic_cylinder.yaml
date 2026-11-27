@@ -1,0 +1,67 @@
+# The bow shock of kinet's Mach 1.8 flow past a cylinder, in a window upstream of the body.
+# Compressible D2Q9 (two populations), entropic BGK, gamma = 1.4, Prandtl number 0.71, Re 300, on
+# 500 x 300 nodes; a cylinder of radius 20 nodes (solid nodes x 146 to 186, y 130 to 170); 2000
+# steps from a uniform stream (rho 1, T 0.2) saved every 10th: 201 frames, the clock kinet's
+# convective time (0.0019 per step). Converted by `python -m fmeval.data.convert_kinet` (density,
+# velocity, absolute pressure; the run stores no vorticity); the run's record is under
+# docs/datasets/logs/kinet_runs/supersonic_cylinder_rerun/.
+#
+# THE WINDOW. Only cells x 0 to 143 and y 6 to 293 are read (`reader.window`), the region
+# upstream of the body. On the whole domain the shock detector flags about 230 nodes per frame, 178
+# of them on the body's outline, where the solver holds the solid nodes at rest (docs/datasets/
+# logs/supersonic_cylinder.md); in the window it flags only the bow shock's normal part, 45 to 56
+# cells at x 107 to 111, y 125 to 175, at least 38 cells from the body. The wake is left out. The
+# window is 144 x 288 so that every level of the default ladder runs: its coarsening by 8 and 16
+# needs each axis of the mirror-extended grid (twice the window) divisible by 16; on the 146 x 300
+# window first tried, the four levels of factors 8 and 16 of coarsen, coarsen_bandlimited and
+# subsample were dropped.
+#
+# BOUNDARIES, all `neumann`, and all but the inlet are cuts. Low x: the inlet, uniform over its
+# first 60 columns to 2e-13, so the mirror extension is the stream itself. Both y faces: six cells
+# inside kinet's own Neumann faces, in flow equal to the inflow to 3e-5 (frames 120 to 200), so the
+# mirror is the flow there too. High x: the cut two columns ahead of the body, which is NOT a
+# boundary of the flow: for y 130 to 170 it lies two nodes from the body's front face, elsewhere
+# it crosses the shock layer. The mirror is the only declaration that leaves no jump there: on
+# that face a smoothing or shifting degradation reads the field reflected about column 143 instead
+# of the flow beyond it, so within a kernel width of the cut the degraded field is not what the
+# same degradation of the whole domain would give; `periodic` would join the shock layer (p up to
+# 0.93) to the inflow (p 0.2), a jump the degradations would smear into a false shock. The detector
+# itself pads by repeating the edge value, never wrapping. Every metric that needs a periodic
+# domain is not run (12 of the deterministic panel).
+#
+# WHAT PART IS EVALUATED (docs/datasets/logs/supersonic_cylinder.md): frames 120, 160, 200 (steps
+# 1200 to 2000), on the native 144 x 288 grid. The flow is settled from step 1200 (the centre-line
+# stand-off is 37 cells from then on), but not frozen: the shock creeps upstream by about one cell
+# over the 81 settled frames, and frame 120 differs from frame 200 by 9% of the pressure's spatial
+# standard deviation, 160 by 2.5%. So the settled frames hold one state with a slow drift: three
+# frames sample it, and more would be near copies.
+defaults:
+  - _self_
+
+name: kinet_supersonic_cylinder
+format: kinet_raw
+trajectory: D2Q9_shape-500-300_T-2000_H-33f78849
+path: ${paths.data}/kinet/flow_around_objects/compressible_fluids/Pr-71en2_vuy-1.4_Re-3e2/${.trajectory}.h5
+
+# pressure is the absolute p = rho T of the compressible physics, not the redundant
+# density * c_s^2 the reader drops by default.
+fields: [density, velocity, pressure]
+
+reader:
+  include_redundant: true
+  window: [[0, 144], [6, 294]]
+  boundary: [neumann, neumann]
+
+time:
+  start: 120
+  reduction: 40
+
+complexity:
+  family: supersonic_cylinder
+  rank: 0
+  params: {mach: 1.8, reynolds: 300, dim: 2, resolution: 288}
+  label: "kinet Mach 1.8 cylinder, bow shock upstream of the body"
+
+notes: "kinet lattice-Boltzmann Mach 1.8 flow past a cylinder, compressible D2Q9 entropic BGK,
+  gamma 1.4, Re 300; the window x < 144, 6 <= y < 294 upstream of the body, all faces Neumann
+  (three of them cuts). See docs/datasets/supersonic_cylinder.md."

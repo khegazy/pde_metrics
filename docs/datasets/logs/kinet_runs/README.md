@@ -555,6 +555,37 @@ that read them are `kinet_shear_layer_refinement` (`docs/datasets/logs/reynolds_
 `kinet_sod_refinement` (`docs/datasets/logs/sod_shock_tube.md`); the cylinder run is converted but
 read by no configuration (`docs/datasets/logs/supersonic_cylinder.md`).
 
+## The shear-layer ensemble: `shear_layer_ensemble/` (2026-11-27)
+
+The perturbed-initial-condition ensemble of build-order step 21, archived by the job agent in
+commit `88af352`: the driver (`ensemble_driver.py`, which continues every member of one start in
+one process from the populations `kinet_re5e4` stores, reordered from the old D2Q9 order), the
+launch script, the analysis script (`ensemble_checks.py`), one folder per job with its `RUN.txt`
+(command, kinet `perf/cleanup` at `d1cd353b8`, one A100, the `sacct` line, every run's seed,
+status and size) and composed configuration, `config_vs_dc804f.txt` (the composed configuration
+against the archived reference's, key by key), `validation.txt` (the zero-perturbation
+continuation reproduces the stored frames to 2e-10 at step 100; every perturbation's rms,
+divergence and band) and `ensemble_results.txt` (spread, single-truth ratios, decorrelation by
+scale, the amplitude check). Jobs 62103586, 62103587 and 62103588 made the 17 runs of starts
+2000, 5000 and 8000 (5000 steps, every 10th saved, density, velocity, pressure, vorticity and the
+two stability fields); job 62103496 the validation runs, under `_validation/`, not converted.
+
+| Runs under `/pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/` | Job | Converted to, under `/global/cfs/cdirs/m4790/Data/kinet/doubly_periodic/weakly_compressible_isoT_fluids/` |
+|---|---|---|
+| `start_02000/member_{00..16}_amp1e-03/rollout.h5` | 62103586 | `sys_Re-5e4_Ma-1en1_ensemble/start_02000/member_{00..16}_amp1e-03.h5` |
+| `start_02000/member_00_amp1e-02/rollout.h5` (the amplitude check) | 62103586 | not converted: not a member |
+| `start_05000/member_{00..16}_amp1e-03/rollout.h5` | 62103587 | `sys_Re-5e4_Ma-1en1_ensemble/start_05000/member_{00..16}_amp1e-03.h5` |
+| `start_08000/member_{00..16}_amp1e-03/rollout.h5` | 62103588 | `sys_Re-5e4_Ma-1en1_ensemble/start_08000/member_{00..16}_amp1e-03.h5` |
+
+Each conversion is `fmeval.data.convert_kinet.convert_kinet_grouped(<rollout>, <destination>)`,
+run on 2026-11-27 from the repository's `.venv` on a login node (51 files, 1.051 GB each, 53.6 GB,
+113 s): the initial condition as frame 0, step 1 dropped, then every 10th step to 5000 (501
+frames); density, velocity and vorticity (the gauge pressure is not carried). Each converted file
+was checked equal to its rollout at frames 0, 1, 250 and 500 in every field, on its step index and
+at both ends of its clock. The dataset that reads them is `kinet_shear_layer_ensemble`
+(`docs/datasets/logs/reynolds_ladder_2d.md`). The amplitude-check run and the validation runs stay
+on scratch only and will be purged with it; what they showed is in the archived tables.
+
 ## Other kinet data on CFS that no dataset here reads
 
 Not copied, because no configuration of this repository reads them; listed so that nothing

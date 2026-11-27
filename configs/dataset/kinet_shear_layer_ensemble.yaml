@@ -1,0 +1,59 @@
+# A physical ensemble of the Re = 5e4 shear layer of kinet_re5e4: from each of three start states,
+# the reference's stored solver steps 2000, 5000 and 8000, 17 runs of 5000 steps, every one from
+# an independent solenoidal velocity perturbation of rms 1e-3 u_rms on 1 <= |k| <= 16 (none
+# unperturbed), saved every 10th step: 501 frames per run, frame k at lead 10 k steps, the clock
+# (time_convection) zero at the start. Converted by `python -m fmeval.data.convert_kinet`; the
+# runs' driver, records and checks are under docs/datasets/logs/kinet_runs/shear_layer_ensemble/.
+#
+# ONE FIXED TRUTH PER START. The truth is member_00 (the lowest seed index, fixed before any score
+# was computed; the members are exchangeable, so the choice is a rule, never tuned) and the other
+# 16 are the ensemble (`reader.members`). Taking each run as the truth in turn and pooling would
+# make the ratio of the ensemble mean's squared error to the mean variance (N + 1)/N identically,
+# for any data (dataset_specs/01_physical_ensemble.md, Sect. 3, correction of 2026-11-27). One
+# truth's calibration scatters: over the 51 possible single truths the velocity ratio spans
+# 1.02-1.12 at short leads and 0.46-1.93 at lead 5000 (ensemble_results.txt), so a spread_skill
+# or a rank histogram of one start is one case of that scatter, and three starts are three cases.
+#
+# The start is chosen by dataset.trajectory (start_02000 default, start_05000, start_08000); the
+# three are pooled as trajectories: `python evaluate.py -m dataset=kinet_shear_layer_ensemble
+# dataset.trajectory=start_02000,start_05000,start_08000 ...`, then
+# `fmeval.io.combine_runs(<folders>, stamp, across="trajectory")`. The ensemble metrics take
+# `degradation=ensemble_miscalibration`; the deterministic metrics score the member mean on the
+# default ladder, which degrades every member.
+#
+# WHAT PART IS EVALUATED (2026-11-27; reasons and measured costs in
+# docs/datasets/logs/reynolds_ladder_2d.md): leads 500 to 5000 steps, every 500th (frames 50 to
+# 500, every 50th), 10 leads per start, 30 frames over the three starts, on the native 256^2 grid;
+# variogram_score on a 64^2 grid at leads 500 and 3000 only (every 5th frame): its cost grows with
+# the square of the cell count, 164 s a frame at 64^2 on the miscalibration ladder. Lead 0 is left
+# out: the perturbation does not touch density, so the density members are identical there and
+# every ensemble score is degenerate. The leads are
+# the axis the ensemble metrics' field reports along (spread and error against lead time): from
+# start 2000 the velocity spread doubles every 455 steps, so one lead per 500 steps is one per
+# doubling. The 501 stored frames are kept on CFS because scratch is purged and the runs are the
+# only copy.
+defaults:
+  - _reynolds_ladder_2d
+  - _self_
+
+name: kinet_shear_layer_ensemble
+format: kinet_raw
+trajectory: start_02000
+path: ${paths.data}/kinet/doubly_periodic/weakly_compressible_isoT_fluids/sys_Re-5e4_Ma-1en1_ensemble/${.trajectory}/member_00_amp1e-03.h5
+
+reader:
+  members: member_*_amp1e-03.h5
+
+time:
+  start: 50          # reduction 50, from _reynolds_ladder_2d: one lead per 500 steps
+
+slow_metrics:
+  variogram_score: {analysis_resolution: 64, every: 5}
+
+complexity:
+  rank: 0
+  params: {reynolds: 5.0e4, resolution: 256}
+  label: "Re = 5\\times10^{4}, 16 perturbed members and one truth"
+
+notes: "Re=5e4, Ma=0.1, D2Q9 entropic BGK, 256^2; 16 perturbed members against one perturbed
+  truth from one start state of kinet_re5e4. See docs/datasets/reynolds_ladder_2d.md."

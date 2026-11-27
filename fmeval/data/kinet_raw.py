@@ -63,6 +63,8 @@ class KinetRawTrajectory(HDF5Trajectory):
         box: float | None = None,
         cell: float | None = None,
         candidate: str | None = None,
+        window: Sequence[Sequence[int]] | None = None,
+        members: str | None = None,
     ) -> None:
         """Open a kinet raw HDF5 file, locally or over HTTP.
 
@@ -106,12 +108,25 @@ class KinetRawTrajectory(HDF5Trajectory):
                 and the pipeline scores it against this run remapped onto the analysis grid,
                 which must be the candidate's (``dataset.analysis_resolution``). Its rows are
                 labelled as a forecast's, with the candidate's resolution.
+            window: Keep only the cells ``[start, stop)`` of each axis, one pair per axis in
+                ``(x, y[, z])`` order. The grid is the window's, with its origin at the window's
+                first cell, so a position keeps the run's coordinate. A face where the window
+                cuts the run's domain is no boundary of the run: what is declared there is the
+                dataset's ``boundary`` choice, and its configuration says why.
+            members: A glob of the files of an ensemble's members in this file's folder, local
+                only. This file is then the truth and is never a member; every frame carries the
+                members' fields (``Frame.members``), each file opened with this run's options and
+                required to share its grid, clock and fields. Every row records its lead time,
+                the time since frame 0, the start the members share; not ``lead_step``, which the
+                analysis reads as marking a candidate forecast's rows.
 
         Raises:
             ValueError: If the clock disagrees with ``discretization``, ``frame_stride`` does
                 not divide the steps, ``box`` is given for a file whose clock is not
-                ``time_convection``, or ``box`` and ``cell`` are both given or ``cell`` is not
-                positive.
+                ``time_convection``, ``box`` and ``cell`` are both given or ``cell`` is not
+                positive, ``window`` is not a non-empty range of cells on each axis, or
+                ``members`` comes with ``candidate`` or a URL, matches fewer than two other
+                files, or one of them differs from this run in grid, clock or fields.
         """
         if cell is not None and (box is not None or cell <= 0):
             raise ValueError(f"cell={cell} must be positive and not given with box={box}")
@@ -122,6 +137,13 @@ class KinetRawTrajectory(HDF5Trajectory):
         length = tuple(float(v) for v in disc["spatial"]["length"])
         spacing = tuple(l / n for l, n in zip(length, shape))
         n_spatial = len(shape)
+        cells = [(0, n) for n in shape] if window is None else [
+            (int(a), int(b)) for a, b in window]
+        if len(cells) != n_spatial or any(not 0 <= a < b <= n for (a, b), n in zip(cells, shape)):
+            raise ValueError(f"{self.source}: window={window} must give 0 <= start < stop <= n "
+                             f"on each axis of the {shape} grid")
+        #: The spatial part of every field read: the window's cells, or every cell.
+        self._cells = tuple(slice(a, b) for a, b in cells)
         #: Field -> the factor its stored values are multiplied by; 1 for a field not named.
         self._scale: dict[str, float] = {}
         #: The run's kinematic viscosity in the units ``box`` sets; None in lattice units.
@@ -145,11 +167,11 @@ class KinetRawTrajectory(HDF5Trajectory):
             else ("periodic",) * n_spatial
         )
         self._grid = GridSpec(
-            shape=shape,
+            shape=tuple(b - a for a, b in cells),
             spacing=spacing,
             boundary=boundary_t,
             dims=("x", "y", "z")[:n_spatial],
-            origin=(0.0,) * n_spatial,
+            origin=tuple(a * s for (a, _), s in zip(cells, spacing)),
         )
         self._times = read_time_axis(
             self._file["time" if cell is None else "time_index"], remote=self.is_remote,
@@ -202,13 +224,30 @@ class KinetRawTrajectory(HDF5Trajectory):
         self._options = {"chunk_cache_mb": chunk_cache_mb, "nan_policy": nan_policy,
                          "include_redundant": include_redundant, "boundary": boundary,
                          "sim_index": sim_index, "time_axis": time_axis,
-                         "frame_stride": frame_stride, "box": box, "cell": cell}
+                         "frame_stride": frame_stride, "box": box, "cell": cell,
+                         "window": window}
         #: The candidate run's location, beside this file (a path or a URL), or None.
         self._candidate = (None if candidate is None
                            else posixpath.join(posixpath.dirname(self.source), candidate))
         if self._candidate is not None:
             with self.predictions() as run:
                 self._candidate_resolution = run.grid.shape[0]
+        #: The ensemble's members, the truth excluded; empty without ``members``.
+        self._members: list[KinetRawTrajectory] = []
+        if members is not None:
+            if candidate is not None or self.is_remote:
+                raise ValueError(f"{self.source}: members needs a local file and no candidate")
+            for found in sorted(self.path.parent.glob(members)):
+                if found.resolve() != self.path.resolve():
+                    self._members.append(KinetRawTrajectory(found, **self._options))
+            odd = [run.source for run in self._members if (run.grid, run.fields) != (
+                self._grid, self._fields) or not np.array_equal(run.times, self._times)]
+            if odd or len(self._members) < 2:
+                self.close()
+                raise ValueError(f"{self.source}: members={members!r} matches "
+                                 f"{len(self._members)} other file(s); a spread needs two, and "
+                                 f"each must share the truth's grid, clock and fields: {odd}")
+            self.is_ensemble = True
 
     def predictions(self) -> KinetRawTrajectory | None:
         """The candidate run, opened with this run's options, or None without one."""
@@ -218,9 +257,16 @@ class KinetRawTrajectory(HDF5Trajectory):
 
     def frame_columns(self, t: int) -> dict[str, Any]:
         """With a candidate, every row is labelled as a forecast's, with the candidate's
-        resolution."""
+        resolution; with members, every row records its lead time."""
+        if self._members:
+            return {"lead_time": float(self.times[t] - self.times[0])}
         return ({} if self._candidate is None
                 else self._candidate_columns(t, self._candidate_resolution))
+
+    def close(self) -> None:
+        for run in getattr(self, "_members", []):
+            run.close()
+        super().close()
 
     def read_frame(self, t: int, fields: Sequence[str]) -> dict[str, np.ndarray]:
         """Read one frame.
@@ -228,11 +274,15 @@ class KinetRawTrajectory(HDF5Trajectory):
         ``ds[sim, :, t]`` returns ``(C, *spatial)`` directly for every channel count, so
         there is no squeeze, reshape or scalar special case. The time position is always a
         plain int -- never a slice. See the module docstring in ``base.py``. Frame ``t`` is
-        stored frame ``t * frame_stride``.
+        stored frame ``t * frame_stride``. With members, ``f"{name}__members"`` stacks theirs.
         """
         out: dict[str, np.ndarray] = {}
         for name in fields:
             ds = self._file[FIELD_MAP[name]]
-            out[name] = np.asarray(ds[self._sim, :, int(t) * self._stride],
+            out[name] = np.asarray(ds[(self._sim, slice(None), int(t) * self._stride,
+                                       *self._cells)],
                                    dtype=np.float64) * self._scale.get(name, 1.0)
+            if self._members:
+                out[f"{name}__members"] = np.stack(
+                    [run.read_frame(t, [name])[name] for run in self._members])
         return out

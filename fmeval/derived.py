@@ -151,7 +151,9 @@ def recompute_frame(frame: Frame) -> Frame:
 
     Used to put the *native* grid on the same footing as every coarse grid, so a
     grid-independence sweep compares like with like rather than a lattice-stencil
-    vorticity against a spectral one. A derived field whose inputs are absent is kept.
+    vorticity against a spectral one. A derived field whose inputs are absent is kept. Every
+    ensemble member is recomputed from its own primitives, as :func:`fmeval.remap.remap_frame`
+    remaps it.
     """
     targets = [n for n in frame.fields if n in DERIVED_FIELDS and recomputable(n, frame.fields)]
     if not targets:
@@ -159,7 +161,13 @@ def recompute_frame(frame: Frame) -> Frame:
     out = dict(frame.fields)
     for name in targets:
         out[name] = recompute(name, frame.fields, frame.grid)
-    return frame.with_fields(out, frame.grid)
+    members = None
+    if frame.has_members:
+        per_member = [recompute_frame(Frame(index=frame.index, time=frame.time, grid=frame.grid,
+                                            fields={n: m[i] for n, m in frame.members.items()}))
+                      .fields for i in range(len(next(iter(frame.members.values()))))]
+        members = {n: np.stack([fields[n] for fields in per_member]) for n in frame.members}
+    return frame.with_fields(out, frame.grid, members=members)
 
 
 class RecomputingTrajectory:

@@ -65,7 +65,8 @@ RESULT_DTYPES: dict[str, str] = {
     "frame_index": "int32",
     "time": "float64",
     "lead_step": "Int32",            # a forecast's prediction step: solver steps since its start;
-    "lead_time": "float64",          # and the physical time since its start. Null off a forecast
+    "lead_time": "float64",          # and the physical time since its start. Null off a forecast;
+                                     # an ensemble from one start sets it alone (kinet_raw members)
     # what was measured, on what
     "field": "category",
     "analysis_grid": "int32",

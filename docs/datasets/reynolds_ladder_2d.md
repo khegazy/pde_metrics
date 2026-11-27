@@ -40,6 +40,7 @@ the numbers behind each are in the JSON beside it under `docs/datasets/_generate
 | `kinet_re1e6` | The same flow at $\mathrm{Re} = 10^6$, on $1024^2$ cells: 40001 frames, 11.4 TB. Read every fourth stored frame, so its frame $i$ is the same physical time as frame $i$ of `kinet_re5e4` (below) |
 | `kinet_re5e4_512` | The same run as `kinet_re5e4` on $512^2$ cells: 20001 frames, 1.43 TB. Read every second stored frame, so its frame $i$ is the same physical time as frame $i$ of `kinet_re5e4`. It is not a nested refinement of the $256^2$ run: both were initialised with nodes at $i/(N-1)$, so their initial velocities differ by $7 \times 10^{-3}$ of the rms velocity after block-averaging ([below](#the-shear-layer-on-three-nested-grids)). Evaluated on 21 frames, every 400th of frames 2000 to 10000, on the $256^2$ analysis grid its configuration states (`docs/datasets/logs/reynolds_ladder_2d.md`) |
 | `kinet_shear_layer_refinement` | The same shear layer rerun on $128^2$, $256^2$ and $512^2$ cells to $t = 0.451$ with nested cells; the $128^2$ or $256^2$ run (`dataset.trajectory=128` or `256`) scored against the $512^2$ run block-averaged onto its cells, on 10 frames. Described [below](#the-shear-layer-on-three-nested-grids) |
+| `kinet_shear_layer_ensemble` | A physical ensemble: from each of three start states of `kinet_re5e4` (solver steps 2000, 5000, 8000, by `dataset.trajectory`), 17 runs of 5000 steps from independent small velocity perturbations, one fixed as the truth and 16 as the members, evaluated at 10 lead times per start. Described [below](#a-physical-ensemble-from-three-start-states) |
 
 ![Vorticity at Re = 10^6 at five times](_generated/kinet_re1e6_vorticity.png)
 
@@ -138,6 +139,63 @@ point. Block-averaged, the $512^2$ initial field differs from the $256^2$ one by
 $2.9 \times 10^{-4}$ rms in velocity, $7 \times 10^{-3}$ of the rms velocity, fourteen times the
 $2.0 \times 10^{-5}$ of the new pair. So the old pair is two runs of slightly different initial
 conditions, not a refinement; the new runs are the refinement.
+
+## A physical ensemble from three start states
+
+`kinet_shear_layer_ensemble` is the first ensemble of real flow in the repository
+(`dataset_specs/01_physical_ensemble.md`, Option B; build-order step 21). From each of three
+stored states of `kinet_re5e4`, solver steps 2000, 5000 and 8000, kinet continued 17 runs for
+5000 steps, each from the stored populations plus its own solenoidal velocity perturbation of
+rms $10^{-3} u_\mathrm{rms}$ on the modes $1 \le |k| \le 16$, entered as
+$F + F^\mathrm{eq}(\rho, u + \delta u) - F^\mathrm{eq}(\rho, u)$. No run is unperturbed, so the 17
+are exchangeable. Saved every 10th step, a run has 501 frames, frame $k$ at lead $10k$ steps, and
+its clock starts at zero at the start state. The runs, their driver and the checks on them are in
+`docs/datasets/logs/kinet_runs/shear_layer_ensemble/`.
+
+**One truth, sixteen members.** The `kinet_raw` option `members` opens the other run files of a
+start beside the file it reads, which is the truth, as `Frame.members`. The truth is `member_00`,
+the run of the lowest seed index, fixed before anything was scored. On every frame the ensemble
+metrics score the 16 members against it; the deterministic metrics score the member mean; and
+the ensemble ladder (`spread_inflate`, `spread_deflate`, `bias`, `flow_dependence`,
+`member_shape`) and the default ladder degrade the members, never the truth (`fmeval/ladder.py`).
+Each row records its lead time (`lead_time`).
+
+```bash
+python evaluate.py -m dataset=kinet_shear_layer_ensemble \
+    dataset.trajectory=start_02000,start_05000,start_08000 \
+    degradation=ensemble_miscalibration 'metrics=[crps,spread_skill,rank_histogram]'
+```
+
+and the three folders are pooled with `fmeval.io.combine_runs(<folders>, stamp,
+across="trajectory")`.
+
+**Why not every run as the truth in turn.** Pooled over all 17 choices of truth, the ratio of the
+ensemble mean's squared error to the members' variance is $17/16$ identically, for any data, and
+the pooled rank histogram is exactly flat: both are algebraic identities, not measurements
+(`dataset_specs/01_physical_ensemble.md`, Section 3, correction). With one fixed truth the ratio
+is a measurement, but one case of a wide scatter: over the 51 runs taken as truth one at a time,
+the velocity ratio spans 1.02 to 1.12 at short leads and 0.46 to 1.93 at lead 5000. The fixed
+truth's own velocity ratio at leads 500 to 5000 is 1.12, 0.98, 0.69, 0.58, 0.65, 0.58 (start 2000,
+leads 500, 1000, 2000, 3000, 4000, 5000), 1.03 to 1.33 (start 5000) and 0.82 to 1.22 (start
+8000). **Three starts are three cases.** A spread-to-skill ratio or rank histogram read here is
+one case of that scatter, not a test of whether the ensemble is calibrated, and the binned
+spread-error diagram cannot be drawn from three cases.
+
+**What the dataset does show.** A spread that grows with lead time as a real flow's does: from
+start 2000 the velocity spread doubles every 455 steps and reaches 16 times its start by lead
+4000; from 5000 and 8000 it grows 3.0 and 2.0 times by lead 5000; no ensemble saturates. The
+small scales decorrelate long before the vortex pair: at start 2000 and lead 5000 the member
+variance over the mean energy is 0.37 at $64 < |k| \le 182$ and $5.7 \times 10^{-5}$ at
+$|k| \le 4$, and the vorticity spread sits on the filaments between the vortices
+(`spread_map_start_02000.png` in the run archive). And the ensemble ladder acts on physical
+members, so each ensemble metric's response to a too-wide, too-narrow or biased ensemble is
+measured on real flow, within each frame.
+
+**What part is evaluated.** Leads 500 to 5000 steps, every 500th (frames 50 to 500), 10 leads per
+start and 30 frames over the three starts, on the native $256^2$ grid; `variogram_score`, whose
+cost grows with the square of the cell count, on a $64^2$ grid (`slow_metrics`). Lead 0 is left
+out: the perturbation leaves the density untouched, so the density members are identical there.
+The costs measured are in the log (`docs/datasets/logs/reynolds_ladder_2d.md`).
 
 ## Forecast pairs
 

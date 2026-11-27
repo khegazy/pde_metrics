@@ -321,3 +321,140 @@ coarse solver as a candidate, a solver-made degradation beside the ladder's oper
 - No dynamics figure.
 - The sequence is not an observed order; a three-grid order would need a reading of the
   $128^2$ run against the $256^2$ one, which `observed_order` does not take.
+
+## `kinet_shear_layer_ensemble` (a physical ensemble, one fixed truth per start, 2026-11-27)
+
+### What it is for
+
+The first ensemble of real flow (`dataset_specs/01_physical_ensemble.md`, Option B;
+`FUTURE_EXPERIMENTS_CATALOG.md`, D1 and B1; build-order step 21): evidence for the eight
+ensemble metrics on physical members, along lead time, which is the axis their field reports
+along (spread and error against lead time; the `spread_skill`, `crps` and `rank_histogram`
+cards, "How its field reports it"), and the ensemble ladder (`spread_inflate`, `spread_deflate`,
+`bias`, `flow_dependence`, `member_shape`) applied to physical members. The deterministic
+metrics score the member mean.
+
+### How it is treated
+
+- **Source.** 51 kinet runs made on 2026-11-27 by the job agent: 17 from each of the stored
+  states of `kinet_re5e4` at solver steps 2000, 5000 and 8000, 5000 steps each, every run from
+  its own solenoidal velocity perturbation of rms $10^{-3} u_\mathrm{rms}$ on $1 \le |k| \le 16$,
+  none unperturbed; saved every 10th step. Records, driver, checks and findings in
+  `docs/datasets/logs/kinet_runs/shear_layer_ensemble/` and that README's section "The
+  shear-layer ensemble".
+- **Conversion.** `convert_kinet_grouped` on each rollout to
+  `/global/cfs/cdirs/m4790/Data/kinet/doubly_periodic/weakly_compressible_isoT_fluids/sys_Re-5e4_Ma-1en1_ensemble/start_<step>/member_<i>_amp1e-03.h5`
+  (51 files of 1.051 GB, 53.6 GB, 113 s on a login node): 501 frames, frame $k$ at lead $10k$
+  steps, the clock (`time_convection`) zero at the start; density, velocity, vorticity. Checked
+  equal to the rollout at frames 0, 1, 250, 500 in every field, on the step index and at both ends
+  of the clock (decision 1 for why every frame is kept).
+- **Reader.** `kinet_raw` on `member_00_amp1e-03.h5` of the start `dataset.trajectory` names,
+  with a new option `members: member_*_amp1e-03.h5` (decision 2): the other 16 files of the folder
+  are opened with the same options, checked to share the grid, clock and fields, and returned as
+  `Frame.members`; the reader is then an ensemble (`is_ensemble`). Every row carries `lead_time`,
+  the time since frame 0 (decision 4).
+- **Fields.** Density, velocity, vorticity; vorticity recomputed from velocity on the analysis
+  grid, for the truth and for each member (decision 5).
+
+### What part is evaluated
+
+- **Kept:** leads 500 to 5000 steps, every 500th (frames 50 to 500 by the fragment's reduction 50),
+  10 leads per start, the three starts swept as trajectories and pooled with
+  `combine_runs(..., across="trajectory")`: 30 frames, on the native $256^2$ grid.
+  `variogram_score` on $64^2$ at the first and sixth lead (500 and 3000 steps) only
+  (`slow_metrics: {variogram_score: {analysis_resolution: 64, every: 5}}`).
+- **Why these leads.** The ensemble metrics' field draws them against lead time. From start 2000
+  the velocity spread doubles every 455 steps and grows 16-fold by lead 4000, from 5000 and 8000
+  it grows 3.0 and 2.0 times by lead 5000; one lead per 500 steps is one per doubling at the
+  fastest start. Lead 0 is left out: the perturbation leaves the density untouched, so the density
+  members are identical there and every ensemble score is degenerate. The frames of one start are
+  one forecast, not independent samples; the three starts are the independent cases.
+- **Why $256^2$.** The spread lives at small scales: at start 2000 and lead 5000 the member
+  variance over the mean energy is 0.37 at $64 < |k| \le 182$ and $5.7 \times 10^{-5}$ at
+  $|k| \le 4$. A coarser grid would average away most of what the ensemble metrics measure.
+  `variogram_score` alone goes to $64^2$, because its cost grows with the square of the cell count.
+- **Measured cost** (login node, 2026-11-27, `evaluate.py`, one frame, start 2000, lead 500):
+  the seven ensemble metrics other than `variogram_score` on `ensemble_miscalibration` (30
+  levels), 8.3 s of metrics and 10.8 s of degradation a frame at $256^2$; `variogram_score` on the
+  same ladder at $64^2$, 164 s a frame; the 23 deterministic metrics other than the two
+  persistence ones on the default ladder (91 levels), 64 s of metrics and 69 s of degradation a
+  frame (every one of 16 members is degraded), 226 s wall with the calibration;
+  `persistence_distance` 28.5 s of metrics a frame on the same ladder (about 14 minutes more over
+  the 30 frames; `persistence_wasserstein` not measured, framework limit 1). Projected for the 30 frames: about 10 minutes for the ensemble metrics, 16
+  minutes for `variogram_score` (6 frames), and about 70 minutes for the deterministic metrics,
+  which dominate. Reading a frame (17 files) takes 0.1 to 1.4 s.
+- **Disk.** 53.6 GB on CFS, of which the evaluated part reads 30 frames of 17 files.
+
+### Decisions and why
+
+1. **Every saved step kept on CFS, not a thinned copy** (agent). The alternatives were every
+   50th step (101 frames a run, 10.8 GB) or only the evaluated leads (11 frames, 1.2 GB), each
+   needing a stride option in the converter. Kept whole because scratch is purged and these files
+   are the only copy of 51 GPU runs, the converter needs no change, the 10-step cadence resolves
+   the linear phase (leads 0 to 500, where the amplitude check is exact) that a later spread-growth
+   measurement needs, and 53.6 GB is 0.6% of the project's free space (about 9 TB). To reverse:
+   delete the files and convert a thinned copy.
+2. **A `members` option on `kinet_raw`, not a new reader** (agent; the plan's "options on existing
+   readers first"). About 25 lines: a glob in the truth's folder, each match opened as a
+   `KinetRawTrajectory` with the same options, a check that it shares the grid, clock and fields,
+   the members stacked in `read_frame`, closed in `close`. The ensemble flag is set on the
+   instance, which is what `Trajectory.frame` reads. Local files only (a glob cannot list a URL).
+   To reverse: delete the option and the configuration.
+3. **One fixed truth, `member_00`** (agent, as the coordinator's brief required). The members are
+   exchangeable, so any choice is equivalent in distribution; the lowest seed index is a rule
+   fixed before any score was computed, and is not to be changed after reading one. Every run as
+   the truth in turn was the specification's plan and is wrong: pooled, the error-to-variance
+   ratio is $(N + 1)/N$ identically and the pooled rank histogram exactly flat, for any data
+   (spec 01, Section 3, correction). The fixed truth's velocity ratio (its squared error from the
+   other 16's mean over their mean variance) at leads 500, 1000, 2000, 3000, 4000, 5000: 1.115,
+   0.982, 0.686, 0.583, 0.648, 0.581 (start 2000), 1.035, 1.059, 1.332, 1.214, 1.203, 1.084
+   (start 5000), 1.040, 0.987, 0.881, 0.851, 1.223, 0.815 (start 8000), against a range over the
+   51 single truths of 0.455 to 1.930 at lead 5000. Recorded, not tuned.
+4. **`lead_time` on the rows, `lead_step` left null** (agent). `fmeval.analysis` reads a row with
+   a `lead_step` as a candidate forecast's row (its damage normalised by the anchor in its own
+   frame, left out of the probe summary, drawn as a forecast); an ensemble's ladder rows are not
+   that, and its undamaged forecast is the clean level itself. The solver step of a frame is ten
+   times its index. To reverse: return `lead_step` from `frame_columns`, after the analysis learns
+   to tell an ensemble's rows from a candidate's.
+5. **`RecomputingTrajectory` now keeps the members** (agent; a bug fix). `recompute_frame`
+   rebuilt a frame with a derived field without its members, so any ensemble with vorticity and
+   `recompute_derived` (the default) lost them before the pipeline saw them; the first smoke run
+   produced no ensemble row. It now recomputes each member's derived fields from that member's own
+   primitives, as `remap_frame` already did. No existing dataset was affected: `synthetic_ensemble`
+   sets `recompute_derived: false` and has no velocity.
+6. **Registered as evidence** with the label "a physical ensemble of three cases", which says
+   that one truth's calibration scatters and gives the range (`configs/cards/default.yaml`).
+
+### Log entries
+
+**2026-11-27, dataset agent (build-order step 21 integrated).**
+
+- Converted the 51 runs (above). The amplitude-check run and the validation runs are not
+  converted and stay on scratch.
+- Code: `members` (and `window`, for the cylinder) on `KinetRawTrajectory`
+  (`fmeval/data/kinet_raw.py`); members kept by `recompute_frame` (`fmeval/derived.py`); the
+  `lead_time` comment in `fmeval/pipeline.py`. Configuration
+  `configs/dataset/kinet_shear_layer_ensemble.yaml`; page section "A physical ensemble from three
+  start states"; registration; `python -m fmeval.cards catalog`.
+- Documents corrected for the vacuous check (appended, dated, nothing deleted): spec 01,
+  Section 3, Option B and Section 7; `FUTURE_EXPERIMENTS_CATALOG.md`, D1, B1 and their table rows;
+  `BUILD_ORDER.md` step 21; `proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md`.
+- Verified through the reader: the velocity spread from start 2000 relative to lead 0 is 1.112,
+  1.922, 7.602, 13.95, 16.02, 16.19 at leads 500 to 5000 (the job's table: 1.11, 1.92, 7.6, 13.9,
+  16, 16.2); over the 51 single truths at lead 5000 the velocity ratio spans 0.455 to 1.930, as
+  the job's; pooled over a start's 17 truths it is 1.0625 to 1e-11 at every lead read. A `data`
+  test pins these (`test_the_shear_layer_ensemble_reproduces_the_jobs_spread_and_single_truth_ratios`);
+  a synthetic test pins the assembly (`test_members_assemble_an_ensemble_around_a_truth_from_one_folder`),
+  both in `tests/test_loader_contract.py`.
+- Smoke runs under `/pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/ensemble_smoke`:
+  the eight ensemble metrics on `ensemble_miscalibration` (one frame; `variogram_score` written to
+  its own folder at $64^2$), the deterministic panel on the default ladder (one frame).
+- Not run: the evidence, and a run of the three starts pooled.
+
+### Open points
+
+- The cards' lead-time figure and binned spread-error diagram are not built; with three cases
+  the binned diagram cannot be drawn honestly (spec 01, Section 3, correction).
+- The deterministic panel on the member mean costs about 70 minutes on the evaluated part; if
+  that is too much, those metrics could run on fewer leads (`dataset.time.reduction=100`).
+- No dynamics figure.

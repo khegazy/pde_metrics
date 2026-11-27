@@ -1,7 +1,7 @@
 # Log: supersonic flow past a cylinder
 
-This log covers [the supersonic cylinder page](../supersonic_cylinder.md). No configuration
-reads this flow yet.
+This log covers [the supersonic cylinder page](../supersonic_cylinder.md). One configuration,
+`kinet_supersonic_cylinder`, reads this flow (its section is the last).
 
 ## The kinet run `a92b16`
 
@@ -154,3 +154,106 @@ measurements after the rerun confirm or replace it.
   wake probe (`_scripts_batch2/cylinder_settling_T2000.txt`); the wake's period is not measured.
 - Spectral metrics on its non-square, non-periodic grid are not run (they need a periodic
   domain); issue 046 concerns the wavenumber magnitude on non-square grids.
+
+## `kinet_supersonic_cylinder` (the bow shock in a window upstream of the body, 2026-11-27)
+
+### What it is for
+
+The repository's only two-dimensional solver shock: the bow shock of a steady Mach 1.8 flow, a
+real curved front for the shock detector and the shock-set metrics
+(`dataset_specs/03_two_dimensional_shocks.md`, Sect. 4.7; build-order step 28). It supersedes the
+open point of the batch-2 entry above: the coordinator chose option 1 of the three, a spatial
+window.
+
+### How it is treated
+
+- **Source.** The converted rerun
+  `/global/cfs/cdirs/m4790/Data/kinet/flow_around_objects/compressible_fluids/Pr-71en2_vuy-1.4_Re-3e2/D2Q9_shape-500-300_T-2000_H-33f78849.h5`
+  (batch-2 entry above; run record in `docs/datasets/logs/kinet_runs/supersonic_cylinder_rerun/`).
+- **Reader.** `kinet_raw` with `include_redundant: true` (the pressure is the absolute $p = \rho T$),
+  and a new option `window: [[0, 144], [6, 294]]`: cells `[start, stop)` per axis, read as the
+  spatial part of every field read (the time position stays an integer); the grid's shape is
+  the window's, $144 \times 288$, and its origin the window's first cell, $(0, 6)$, so a position
+  keeps the run's coordinate; `run_meta.json` records the window among the reader options.
+- **Fields.** Density, velocity, pressure. The run stores no vorticity.
+- **Boundaries.** `neumann` on every face; the low-x face is the inlet, the other three are cuts
+  (decision 2).
+
+### What part is evaluated
+
+- **Kept:** frames 120, 160 and 200 (steps 1200, 1600, 2000), on the native $144 \times 288$ grid.
+- **Why.** The stand-off on the centre line is 37 cells from step 1200 on (the job's
+  `_scripts_batch2/cylinder_settling_T2000.txt`), so frames before 120 are the start-up. The
+  settled frames are not identical: measured against frame 200 in the window, the rms difference
+  over the spatial standard deviation is, for pressure, 9.1e-2 at frame 120, 5.1e-2 at 140,
+  2.5e-2 at 160 and 9.7e-3 at 180 (density alike, velocity a quarter of that), and the flagged
+  cells move from x 108 to 110 (frame 120) to x 107 to 109 (frame 200): the shock creeps upstream
+  by about one cell. So the 81 settled frames hold one state with a slow drift; three frames
+  sample it, and each added frame is a near copy. A per-frame rank statistic here is a median of
+  three nearly equal frames, not three independent samples.
+- **Not set:** an exclusion (every default-ladder level runs, decision 3), an analysis grid (native),
+  or a slow metric.
+- **Measured cost** (login node, 2026-11-27, `evaluate.py`, the three frames, default ladder of 91
+  levels): the 15 deterministic metrics that run here (12 need a periodic domain and are not run),
+  30.9 s in the pipeline and 52.7 s wall; `persistence_distance` 41.1 s (about 11 s of metric time a
+  frame). `persistence_wasserstein` not measured. Disk: the 965 MB file, of which the window reads
+  28% of each frame.
+
+### Decisions and why
+
+1. **A window option on `kinet_raw`** (the coordinator chose it among the three options above;
+   the agent built it). About 10 lines: a pair of cell bounds per axis, applied to the spatial part
+   of each read, the grid's shape and origin set from it. Alternatives: the whole domain (no code;
+   the shock-set metrics would mostly score the body's outline), a mask carried through the
+   pipeline (a change to every metric and degradation). To reverse: remove `window` from the
+   configuration (and the option, if nothing else uses it).
+2. **Every face declared `neumann`, three of them cuts** (agent). A cut is not a boundary of the
+   flow, and the vocabulary (`BOUNDARIES` in `fmeval/data/base.py`) has only `periodic` and
+   `neumann`. At the high-x cut the mirror makes the field continuous but reflected: a degradation
+   whose kernel reaches the cut mixes the field with its mirror image instead of the flow beyond,
+   so within a kernel width of it a degraded field differs from the same degradation of the whole
+   domain. `periodic` would join the shock layer (p up to 0.93) to the inflow (p 0.2), a jump that
+   the FFT-based degradations would smear into a false shock across the seam. At the y cuts and the
+   inlet the flow is uniform to 3e-5 (y faces, frames 120 to 200) and 2e-13 (inlet), so the mirror
+   is the flow. The detector pads by repeating the edge value, never wrapping, so the declaration
+   does not change what it flags. To reverse: a boundary type for an open face, with an extension
+   continuous across its seam, would be a new `BOUNDARIES` entry.
+3. **The window is $144 \times 288$, not $146 \times 300$** (agent). The first window, x below 146
+   (the page's suggestion) and all of y, dropped the four default-ladder levels of factors 8 and 16
+   of `coarsen`, `coarsen_bandlimited` and `subsample`, because the mirror-extended grid
+   ($292 \times 600$) is not divisible by 8 along x or by 16 along y. Ending two columns earlier and
+   six rows inside each y face keeps every level and moves the cuts into uniform flow (y) or two
+   nodes ahead of the body (x). The flagged cells are the same in both windows.
+4. **Three frames** (agent): the reason is under "What part is evaluated". To reverse: lower
+   `time.reduction`.
+5. **The wake is not evaluated** (follows from decision 1): it is downstream of the body. A
+   dataset of the wake would need a window behind the body, where the cylinder's outline is again
+   a cut, and its unsteady shedding at Re 300 would supply the independent frames this window
+   lacks. Not built.
+6. **Registered as evidence** with a label that says it is the bow shock of a steady flow in a
+   window upstream of the body, with cuts declared Neumann (`configs/cards/default.yaml`).
+
+### Log entries
+
+**2026-11-27, dataset agent (build-order step 28 completed).**
+
+- Code: `window` on `KinetRawTrajectory` (`fmeval/data/kinet_raw.py`); configuration
+  `configs/dataset/kinet_supersonic_cylinder.yaml`; page sections "The window upstream of the
+  body"; registration and `python -m fmeval.cards catalog`.
+- Measured with `shock_mask` (the detector of `shock_set_distance`, default threshold) in the
+  window at frames 100 to 200: 45 to 56 flagged cells per frame, x 107 to 111, y 125 to 175, at
+  least 38 nodes from the cylinder (centre (166.5, 150.5), radius 20); none at the cut.
+- Tests: `test_window_keeps_a_block_of_cells_at_the_runs_coordinates` (synthetic, non-square;
+  shape, origin, values, refusals) and the `data` test
+  `test_the_cylinder_window_holds_the_bow_shock_and_none_of_the_body`, both in
+  `tests/test_loader_contract.py`.
+- Smoke runs under `/pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/cylinder_smoke`
+  (the deterministic panel on the three frames; `persistence_distance`).
+- Not verified: what each degradation does within a kernel width of the high-x cut, compared with
+  the same degradation of the whole domain (decision 2 states it, no run measures it).
+
+### Open points
+
+- No dynamics figure.
+- `persistence_wasserstein`'s cost here is not measured.
+- The wake, behind the body, is not a dataset (decision 5).

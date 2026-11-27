@@ -25,7 +25,7 @@ answer. Several wanted datasets are already on disk without a reader.
 
 | # | Build | What it is | Metrics it reaches | Cost | Blocked on |
 |---|---|---|---|---|---|
-| 1 | **Solver ensemble job** (B1) | 17 perturbed kinet runs from each of 3 start states, every run the truth in turn, stored every 10th step | 32 of 39: the 8 ensemble metrics directly, every other metric through its damage anchor | 51 runs of 5 000 steps at 256²; about 14 GB | A wall-clock measurement of one run |
+| 1 | **Solver ensemble job** (B1) | 17 perturbed kinet runs from each of 3 start states, every run the truth in turn (corrected 2026-11-27: one fixed truth per start, see D1), stored every 10th step | 32 of 39: the 8 ensemble metrics directly, every other metric through its damage anchor | 51 runs of 5 000 steps at 256²; about 14 GB | A wall-clock measurement of one run |
 | 2 | **Readers for data on disk** (B7) | The 512² reference run, three independent isotropic realisations, the old Reynolds-ladder members, Well sets with pressure, kinet Sod and obstacle runs | Varies; the 512² run gives the 8 pointwise norms a real refinement comparison today | A reader each, no simulation | Issue 046 for the non-square Sod runs; boundary mapping for the Well |
 | 3 | **Correlated noise** (X1) | Additive noise with a chosen correlation length, a spatially smooth error instead of white noise | 32 | One bundle | Nothing |
 | 4 | **Graded phase randomisation** (X2) | Rotate every Fourier phase by a random angle up to sπ; s = 1 is the impostor | 25 (all but shock and ensemble) | One bundle | Fixing the impostor's per-channel phase draw first |
@@ -47,7 +47,7 @@ it. Cluster IDs are the ones used in Section 2.
 
 | ID | Need | One line | Asked by | Reach | Cost |
 |---|---|---|---|---|---|
-| D1 | Physical ensemble and independent realisations | N + 1 perturbed solver runs, each the truth in turn; plus unrelated realisations | 8 ensemble cards; issue 004; judgement 001 | 32 | Solver runs |
+| D1 | Physical ensemble and independent realisations | N + 1 perturbed solver runs, each the truth in turn (corrected 2026-11-27: one fixed truth, see below); plus unrelated realisations | 8 ensemble cards; issue 004; judgement 001 | 32 | Solver runs |
 | D2 | Many initial conditions, scored step by step | Reference trajectories from many starts; candidates from analytic formulas or degraded solver runs; each metric averaged over starts at every step | 13 cards, the most-cited want | 13 + time-dependent ideas | Readers; minute-scale kinet runs |
 | D3 | Two-dimensional shock dataset | Sedov, 2D Riemann, shocklet turbulence | 6 shock cards; issue 002 | 7 + ideas | Euler solver runs |
 | D4 | Stationary forced turbulence with an inertial range | Forced 2D compressible run with drag, or 3D cutouts | 8 spectral and tail cards | 14 + ideas | New simulation or a database reader |
@@ -237,6 +237,18 @@ ECMWF Tech. Memo. 514; the reviewer's sub-agent read the memorandum). The exchan
 load-bearing: with the unperturbed run as truth the ratio of squared error to spread is
 1/(N − 1) instead of (N + 1)/(N − 1) at lead zero, a factor N + 1, and the factor persists
 through the linear-growth regime (the reviewer's derivation, not simulated).
+*Corrected 2026-11-27, after the runs (build-order step 21):* "each the truth in turn" makes the
+check vacuous. Pooled over all N + 1 choices of truth, the ratio of the ensemble mean's squared
+error to the members' variance is (N + 1)/N identically, for any data, because
+x_j − mean_{−j} = (M/(M − 1))(x_j − mean) with M = N + 1 (derivation in
+`dataset_specs/01_physical_ensemble.md`, Section 3, correction); the runs gave 1.062500 = 17/16
+at every lead, and the pooled rank histogram is exactly flat for the same reason. The known
+answer holds in expectation for one fixed truth, and a single truth scatters: velocity ratios
+of 1.02 to 1.12 at short leads and 0.46 to 1.93 at lead 5 000 over the 51 single truths. The
+dataset built from the runs, `kinet_shear_layer_ensemble`, takes one fixed truth per start, so
+its three starts are three cases: it shows how a metric reads a real, growing spread and the
+ensemble ladder on physical members, and cannot certify calibration or draw the binned
+spread-error diagram.
 *Cost:* (N + 1) runs per start; the proposal's arithmetic is 51 runs of the horizon
 at 256² for 16 members and three starts. A reader that assembles members from separate runs.
 *Dedupe note:* issue 004 (unrelated initial conditions) and the perturbed-initial-condition
@@ -853,6 +865,11 @@ reviewer's corrections:
    the 512² shear-layer run.
 7. **Known answer.** The exchangeable-ensemble relation of D1 at every lead time and in every
    spread bin.
+   *Corrected 2026-11-27:* with every run the truth in turn, that relation is an identity and
+   tests nothing (D1, correction). The job ran as items 1, 2 and 4 describe, except that every
+   10th step was saved for all 5 000 steps; the reader of item 6 is the `kinet_raw` option
+   `members`, with one fixed truth per start (`kinet_shear_layer_ensemble`); converted, the 51
+   runs hold 53.6 GB (density, velocity, vorticity, 501 frames each).
 
 Cost: 51 runs of 5 000 steps at 256² plus one 128² run. Storage, from the reviewer's file-size
 measurement (kinet writes 34 float64 values per cell at its default output, 272 bytes per cell

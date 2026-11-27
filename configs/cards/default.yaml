@@ -80,6 +80,15 @@
 # - `kinet_shear_layer_refinement` scores a coarser kinet run of the shear layer against the
 #   512^2 run block-averaged onto its cells. Its label says the reference is the finest grid,
 #   not an exact solution, and that the three grids are not in the asymptotic range.
+# - `kinet_shear_layer_ensemble` is the first physical ensemble: 16 perturbed kinet runs of the
+#   shear layer against a 17th, fixed as the truth, from each of three start states. Its label
+#   says it is three cases and that one truth's calibration scatters (velocity error-to-variance
+#   ratio 0.46 to 1.93 at the longest lead over the 51 possible truths), so a calibration score on
+#   it is read against that scatter; pooling over every choice of truth would make the ratio 17/16
+#   identically (dataset_specs/01_physical_ensemble.md, Section 3, correction).
+# - `kinet_supersonic_cylinder` is the bow shock of a steady supersonic flow, read in a window
+#   upstream of the body so that the shock-set metrics score the shock and not the body's outline;
+#   the wake is not in it, and three of the window's faces are cuts declared Neumann.
 evidence_datasets:
   kinet_re5e4: developed flow
   kinet_re1e6: >-
@@ -154,6 +163,16 @@ evidence_datasets:
     a lattice-Boltzmann solver's Re = 5e4 shear layer on 128^2 or 256^2 cells scored against
     the same run on 512^2 cells, block-averaged onto the coarser cells: a solver's departure from
     a finer grid of itself, not from an exact solution, on grids not in the asymptotic range
+  kinet_shear_layer_ensemble: >-
+    a physical ensemble of three cases: 16 perturbed lattice-Boltzmann runs of the Re = 5e4 shear
+    layer scored against a 17th, fixed as the truth, from each of three start states, along lead
+    times over which the spread grows 2- to 16-fold; one truth's calibration scatters (over the
+    51 possible truths the velocity error-to-variance ratio spans 0.46 to 1.93 at the longest
+    lead), so a calibration score here is one case of that scatter, not a test of calibration
+  kinet_supersonic_cylinder: >-
+    the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window
+    upstream of the body that holds the shock and none of the body or the wake, its downstream
+    and side faces cuts declared Neumann; nothing about turbulence
 
 # What each evidence dataset offers a metric, so every metric card's "Across the experiments"
 # table and the site's coverage page can say why a metric is not run on a dataset without
@@ -187,6 +206,8 @@ evidence_dataset_properties:
   kinet_taylor_green_fixed_mach: {periodic: true, ensemble: false}
   kinet_sod_refinement: {periodic: false, ensemble: false}    # Neumann ends of the tube
   kinet_shear_layer_refinement: {periodic: true, ensemble: false}
+  kinet_shear_layer_ensemble: {periodic: true, ensemble: true}
+  kinet_supersonic_cylinder: {periodic: false, ensemble: false}  # Neumann; three faces are cuts
 
 # The window within kinet_re5e4 that counts as developed flow: the convention a run cited
 # as evidence follows (`dataset.time.start`, `dataset.time.reduction`). Nothing reads it to
@@ -212,6 +233,9 @@ evidence_dataset_properties:
 #   together by `fmeval.analysis.observed_order`.
 # - kinet_shear_layer_refinement: both candidates, `-m dataset.trajectory=256,128`, each on its
 #   own grid (the configuration sets the analysis grid from the trajectory).
+# - kinet_shear_layer_ensemble: the three starts, `-m dataset.trajectory=start_02000,start_05000,
+#   start_08000`, gathered with `fmeval.io.combine_runs(..., across="trajectory")`; the ensemble
+#   metrics on `degradation=ensemble_miscalibration`, the others on the default ladder.
 evidence_window:
   start: 2000       # the flow is developed well before this
   reduction: 50     # every 50th frame; ~160 frames, a run of about a minute
