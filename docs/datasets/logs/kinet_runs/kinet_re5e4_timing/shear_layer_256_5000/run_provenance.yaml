@@ -1,0 +1,27 @@
+launches:
+- started_at: '2026-11-27T16:25:02.385156+00:00'
+  run_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/shear_layer_256_5000/outputs/doubly_periodic/shear_layer/simulate/job_261127_082500_749364
+  case_path: doubly_periodic/shear_layer
+  case_id: shear_layer
+  task: simulate
+  hostname: nid002877
+  pid: 870277
+  stamp: null
+  resume_from: null
+  slurm_job_id: '62100814'
+  slurm_job_name: kinet-sl256
+  slurm_submit_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work
+  slurm_stdout: /pscratch/sd/k/khegazy/kinet_datasets/_work/shear_layer_256_5000/outputs/doubly_periodic/shear_layer/simulate/job_261127_082500_749364/logs/62100814/slurm.out
+  slurm_stderr: /pscratch/sd/k/khegazy/kinet_datasets/_work/shear_layer_256_5000/outputs/doubly_periodic/shear_layer/simulate/job_261127_082500_749364/logs/62100814/slurm.err
+  hydra_overrides:
+  - task=simulate
+  - case=doubly_periodic/shear_layer
+  - ++case.discretization.spatial.grid=[256,256]
+  - ++case.discretization.temporal.grid=5000
+  - ++case.physics.parameters.reynolds=50000
+  - ++case.io.save_every_n=10
+  - ++case.io.record_distributions=false
+  - ++case.io.record_equilibria=false
+  - ++paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/shear_layer_re5e4
+  - ++distributed.is_distributed=false
+  - ++distributed.is_slurm=true

@@ -1,0 +1,28 @@
+launches:
+- started_at: '2026-11-27T16:39:51.087327+00:00'
+  run_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/tg_re50_diffusive_N128/outputs/taylor_green_vortex/Re-50k_Ma-1en1/simulate/job_261127_083949_364358
+  case_path: taylor_green_vortex/Re-50k_Ma-1en1
+  case_id: Re-50k_Ma-1en1
+  task: simulate
+  hostname: nid002328
+  pid: 775312
+  stamp: null
+  resume_from: null
+  slurm_job_id: '62101127'
+  slurm_job_name: kinet-tgdiffA
+  slurm_submit_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work
+  slurm_stdout: /pscratch/sd/k/khegazy/kinet_datasets/_work/tg_re50_diffusive_N128/outputs/taylor_green_vortex/Re-50k_Ma-1en1/simulate/job_261127_083949_364358/logs/62101127/slurm.out
+  slurm_stderr: /pscratch/sd/k/khegazy/kinet_datasets/_work/tg_re50_diffusive_N128/outputs/taylor_green_vortex/Re-50k_Ma-1en1/simulate/job_261127_083949_364358/logs/62101127/slurm.err
+  hydra_overrides:
+  - task=simulate
+  - case=taylor_green_vortex/Re-50k_Ma-1en1
+  - ++case.discretization.spatial.grid=[128,128]
+  - ++case.discretization.temporal.grid=3520
+  - ++case.physics.parameters.reynolds=50
+  - ++case.physics.parameters.mach=0.04
+  - ++case.io.save_every_n=88
+  - ++case.io.record_distributions=false
+  - ++case.io.record_equilibria=false
+  - ++paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/taylor_green_re50
+  - ++distributed.is_distributed=false
+  - ++distributed.is_slurm=true

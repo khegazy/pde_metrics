@@ -1,0 +1,51 @@
+#!/bin/bash
+# Run one or more kinet simulate runs in one Slurm job, from a working directory on scratch.
+#
+# Mirrors kinet's `slurm_scripts/submit_perlmutter.sh --run-job simulate 1 1` (single rank:
+# the same OMP settings and the same `python -m kinet.apps.simulate ... distributed.is_distributed=false
+# distributed.is_slurm=true` line), but runs outside the kinet checkout with KINET_PROJECT set,
+# so no Hydra output, cache or __pycache__ lands in the kinet tree. It does not source
+# kinet's export_env.sh (module loads for MPI and ADIOS2): kinet's .venv ran single-GPU
+# simulate without modules on 2026-11-26 (00_how_to_use_kinet.md, Section 2).
+#
+# Usage: sbatch <flags> run_kinet_job.sh RUNS_FILE
+#   RUNS_FILE: one run per line, "<run name> <data root> <hydra overrides...>".
+# Submitted with: --account=m4790 --constraint=gpu --qos=debug --nodes=1 --ntasks=1
+#   --cpus-per-task=32 --gpus-per-node=1 --time=...
+
+set -uo pipefail
+RUNS_FILE=${1:?runs file required}
+if [ "${COLD_CACHE:-0}" = "1" ]; then
+    export CACHE_ROOT=/pscratch/sd/k/khegazy/kinet_datasets/_cache/job_${SLURM_JOB_ID}
+fi
+source /pscratch/sd/k/khegazy/kinet_datasets/_work/env.sh
+
+nplace="${SLURM_CPUS_PER_TASK:-32}"
+export OMP_NUM_THREADS="${nplace}" OMP_PLACES=threads OMP_PROC_BIND=spread
+export MKL_NUM_THREADS="${nplace}" OPENBLAS_NUM_THREADS="${nplace}" NUMEXPR_NUM_THREADS="${nplace}"
+
+echo "job ${SLURM_JOB_ID} on $(hostname) start $(date -Is)"
+nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv
+echo "kinet $(git -C "$KINET_PROJECT" rev-parse HEAD) $(git -C "$KINET_PROJECT" branch --show-current)"
+
+set -f  # no globbing of overrides such as [256,256]
+status=0
+while read -r name data_root overrides; do
+    [ -z "${name}" ] && continue
+    [[ "${name}" == \#* ]] && continue
+    rundir="$W/_work/${name}"
+    mkdir -p "${rundir}"
+    cd "${rundir}" || exit 1
+    # shellcheck disable=SC2086
+    cmd=(python -m kinet.apps.simulate task=simulate ${overrides} paths.data_root=${data_root}
+         distributed.is_distributed=false distributed.is_slurm=true)
+    printf '%q ' "${cmd[@]}" > command.txt; echo >> command.txt
+    t0=$(date +%s.%N)
+    "${cmd[@]}" > log.txt 2>&1
+    rc=$?
+    t1=$(date +%s.%N)
+    echo "${name} rc=${rc} wall_s=$(python -c "print(round(${t1}-${t0},2))") start=${t0} end=${t1}" | tee -a "$W/_work/job_${SLURM_JOB_ID}_runs.txt"
+    [ ${rc} -ne 0 ] && status=${rc}
+done < "${RUNS_FILE}"
+echo "job end $(date -Is)"
+exit ${status}

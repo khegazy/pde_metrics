@@ -1,0 +1,9 @@
+shear_layer_256_5000         N= 256 steps=  5000 startup_s=   157 first_step_s=  74.1 steady_ms=  3.92 cell_steps_per_s=1.672e+07 rollout_s=  104.3 wall_s=   265
+tg_re50_fixedMa0p1_N64       N=  64 steps=   704 startup_s=   159 first_step_s=  85.8 steady_ms=  2.50 cell_steps_per_s=1.635e+06 rollout_s=   89.7 wall_s=   252
+tg_re50_fixedMa0p1_N128      N= 128 steps=  1408 startup_s=   149 first_step_s=  64.3 steady_ms=  2.84 cell_steps_per_s=5.769e+06 rollout_s=   70.7 wall_s=   223
+tg_re50_fixedMa0p1_N256      N= 256 steps=  2816 startup_s=   185 first_step_s=  58.2 steady_ms=  3.15 cell_steps_per_s=2.081e+07 rollout_s=   69.3 wall_s=   257
+tg_re50_fixedMa0p1_N512      N= 512 steps=  5632 startup_s=   214 first_step_s=  32.0 steady_ms=  4.28 cell_steps_per_s=6.125e+07 rollout_s=   58.0 wall_s=   275
+tg_re50_diffusive_N64        N=  64 steps=   880 startup_s=   166 first_step_s=  71.5 steady_ms=  2.57 cell_steps_per_s=1.594e+06 rollout_s=   76.6 wall_s=   245
+tg_re50_diffusive_N128       N= 128 steps=  3520 startup_s=   177 first_step_s=  53.0 steady_ms=  2.75 cell_steps_per_s=5.958e+06 rollout_s=   65.3 wall_s=   245
+tg_re50_diffusive_N256       N= 256 steps= 14080 startup_s=    64 first_step_s=  21.1 steady_ms=  2.87 cell_steps_per_s=2.283e+07 rollout_s=   65.8 wall_s=   133
+tg_re50_diffusive_N512       N= 512 steps= 56320 startup_s=   325 first_step_s=  76.1 steady_ms=  2.54 cell_steps_per_s=1.032e+08 rollout_s=  225.3 wall_s=   552

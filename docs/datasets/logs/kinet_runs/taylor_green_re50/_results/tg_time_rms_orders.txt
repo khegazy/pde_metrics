@@ -1,0 +1,10 @@
+diffusive: errors RMS over the saved frames after step 1 (t/td from ~0.025 to 1.003), / U0
+  N64   frames=40 L2=3.240e-04  Linf=8.215e-04  amplitude_error=4.546e-04  shape_L2=2.308e-04
+  N128  frames=40 L2=8.074e-05 (p=2.00)  Linf=2.055e-04 (p=2.00)  amplitude_error=1.132e-04 (p=2.01)  shape_L2=5.758e-05 (p=2.00)
+  N256  frames=40 L2=2.048e-05 (p=1.98)  Linf=5.205e-05 (p=1.98)  amplitude_error=2.829e-05 (p=2.00)  shape_L2=1.481e-05 (p=1.96)
+  N512  frames=40 L2=4.824e-06 (p=2.09)  Linf=1.220e-05 (p=2.09)  amplitude_error=7.073e-06 (p=2.00)  shape_L2=3.281e-06 (p=2.17)
+fixed_mach: errors RMS over the saved frames after step 1 (t/td from ~0.025 to 1.003), / U0
+  N64   frames=32 L2=3.872e-04  Linf=1.007e-03  amplitude_error=2.841e-04  shape_L2=3.602e-04
+  N128  frames=32 L2=4.109e-04 (p=-0.09)  Linf=8.737e-04 (p=0.20)  amplitude_error=3.925e-04 (p=-0.47)  shape_L2=3.611e-04 (p=-0.00)
+  N256  frames=32 L2=4.294e-04 (p=-0.06)  Linf=8.920e-04 (p=-0.03)  amplitude_error=4.641e-04 (p=-0.24)  shape_L2=3.613e-04 (p=-0.00)
+  N512  frames=32 L2=4.274e-04 (p=0.01)  Linf=8.903e-04 (p=0.00)  amplitude_error=4.562e-04 (p=0.02)  shape_L2=3.614e-04 (p=-0.00)

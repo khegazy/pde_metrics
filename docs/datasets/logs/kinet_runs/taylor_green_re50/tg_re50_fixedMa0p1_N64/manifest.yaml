@@ -1,0 +1,8 @@
+version: 1
+case_path: taylor_green_vortex/Re-50k_Ma-1en1
+simulation_subdir: taylor_green_vortex/Re-50k_Ma-1en1/b4252ea2
+identity_key: b4252ea2
+active:
+  full: tiers/full/rollout.h5
+  tiers: {}
+updated_at: '2026-11-27T16:27:26.768215+00:00'
