@@ -1,0 +1,52 @@
+# Shared by every realisation of decaying two-dimensional isotropic turbulence: Ma = 0.1, D2Q9
+# entropic BGK, doubly periodic, kinet's random-mode initial condition (k0 = 4) from each run's
+# own seed, stored on 256^2 cells as 1001 frames (every 10th of 10000 steps at 256^2, with the
+# initial condition as frame 0; Re = 5e4 differs in how, see its config), ending at the same
+# dimensionless time 2.2553. Each was converted from the grouped archive
+# neurde/hit_scaling/Re-<Re>_Ma-1en1_2d/<key> by `python -m fmeval.data.convert_kinet`.
+# One option per Reynolds number states its folder and a default realisation; any other
+# converted realisation is chosen with `dataset.trajectory=<key>` (docs/datasets/decaying_isotropic_2d.md).
+#
+# A file whose name starts with `_` is a fragment inherited through a `defaults:` list, not a
+# dataset you can select.
+format: kinet_raw
+
+# pressure is the weakly compressible gauge (rho - 1) c_s^2 and is not converted.
+fields: [density, velocity, vorticity]
+
+complexity:
+  family: decaying_isotropic_2d
+  params: {mach: 0.1, dim: 2, resolution: 256}
+
+# What is evaluated (docs/recipes/add-a-dataset.md step 3; measured 2026-11-26, details and
+# numbers in docs/datasets/logs/decaying_isotropic_2d.md, section 3). The same window at every
+# Reynolds number, so frame i is the same physical time on all three.
+#
+# - Window, frames 150 to 599 (t = 0.34 to 1.35): developed decaying turbulence. Frames 0 to
+#   149 are dropped: frame 0 is a random-phase field with no content above |k| = 32, the
+#   small scales and kinet's start-up transient take about one initial turnover time (115 to
+#   127 frames) to form, and on a random-phase field the Gaussian impostor is nearly the truth.
+#   Frames 600 to 1000 are dropped: the energy peak sits at the box scale (|k| = 1) and the
+#   turnover time grows to 270 to 400 frames, a slowly evolving condensate that adds few
+#   independent states. It is still readable with dataset.time.start=600 dataset.time.stop=null.
+# - Stride 25 frames (250 solver steps), 18 frames per trajectory. The integrated
+#   autocorrelation time of mse's paired step inside the window is 57 to 70 frames (Bartlett
+#   window of 100 frames; Politis-White block length 41), so each trajectory holds about 6 to
+#   11 independent samples and a stride of 25 keeps them at about two frames per
+#   autocorrelation time.
+# - Trajectories: the first five drawn at each Reynolds number, swept with
+#   `-m dataset.trajectory=<k1>,...,<k5>` (the keys are listed in each option). Independent
+#   realisations are independent samples, so five give about 30 to 55 per Reynolds number.
+# - Analysis grid: run with analysis_grid.resolution=128 (a top-level key, so it cannot be set
+#   here). It loses at most 2% of the enstrophy, and 3 to 8% of the palinstrophy at Re 1.25e4
+#   and 2.5e4 but about 30% at Re 5e4, and the full panel costs a third of the native grid's.
+# - Cost on the login node at 128: about 34 s of metric time per frame for the panel without
+#   persistence_wasserstein (persistence_distance 11 s, energy_distance 9 s, wasserstein 2 s,
+#   mse 0.01 s), so 270 frames take about 2.7 h in one process.
+#   persistence_wasserstein would add 33 to 530 s per frame at 128 (issues/144).
+time:
+  start: 150
+  stop: 600
+  reduction: 25
+
+notes: "Decaying 2D isotropic turbulence, Ma=0.1, D2Q9 entropic BGK, 256^2, one seed per trajectory, dimensionless units."

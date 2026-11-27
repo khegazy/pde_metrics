@@ -1,0 +1,117 @@
+# Log: supersonic flow past a cylinder
+
+This log covers [the supersonic cylinder page](../supersonic_cylinder.md). No configuration
+reads this flow yet.
+
+## The kinet run `a92b16`
+
+### What it is for
+
+It is the planned test of a shock detector on a real curved front. The bow shock is normal
+to the stream at the nose (Mach 1.8, a pressure ratio of 3.61) and weakens along its arc, so
+the length of front that a detector flags depends on its threshold
+(`dataset_specs/03_two_dimensional_shocks.md`, Sect. 4.7). Build-order step 4 asked for it to
+be converted. Completing it is now build-order step 28.
+
+### How it is treated
+
+- **Source.** `/global/cfs/cdirs/m4790/Data/kinet/flow_around_objects/compressible_fluids/Pr-71en2_vuy-1.4_Re-3e2/D2Q9_shape-500-300_T-1000_H-a92b16.h5`
+  (12 GB), with its run configuration in `configs/a92b16.yaml` and two simulation checkpoints,
+  at steps 133 and 156, beside it.
+- **Solver.** kinet, compressible D2Q9 with entropic BGK collision; $\gamma = 1.4$, Prandtl
+  number 0.71, Reynolds number 300, on 500 × 300 nodes. It starts from a uniform stream with
+  $\rho = 1$, $T = 0.2$ and Mach 1.8.
+- **Obstacle.** A cylinder of radius 20 nodes, centred at (166, 150).
+- **Boundaries.** The run configuration has an inlet on the low-x face and Neumann on the
+  other three faces.
+- **Layout.** It is kinet's older grouped layout, as the Sod runs are: no `pressure_convention`
+  and no `time_convection`; its clock is `time/time`, 1/300 per step. Pressure equals
+  $\rho T$ exactly.
+- **Not converted.** No configuration reads it.
+
+### What part will be evaluated (planned for the rerun, build-order step 28)
+
+This is a plan written before the rerun exists. The agent made it on 2026-11-26, and the
+measurements after the rerun confirm or replace it.
+
+- **What to save.** Save only the macroscopic observables: `io.record_distributions=false
+  io.record_equilibria=false` (`BUILD_ORDER.md`, "How kinet runs are configured"). The stored
+  file then holds density, velocity, pressure, temperature, energy and Mach number, plus the
+  two stability fields kinet always writes. That is about 9 channels, or 72 bytes per node per
+  saved frame: 10.8 MB per frame on 500 × 300 nodes. The converter keeps density, velocity and
+  pressure, which is 4.8 MB per frame (the agent's arithmetic).
+- **How often.** Save every 10th step (`io.save_every_n=10`) for the 1000 steps of step 28:
+  101 frames, about 1.1 GB stored and 0.5 GB converted. The inflow moves at
+  $1.8 \sqrt{1.4 \times 0.2} = 0.95$ nodes per step, so the stream crosses the cylinder's
+  diameter of 40 nodes in about 42 steps. Saving every 10th step resolves that time, and
+  saving every step, as the interrupted run did, multiplies the disk by ten without adding
+  independent frames.
+- **Which part is evaluated.** Steps 550 to 1000. The run starts from a uniform stream with
+  the cylinder already in place, so a starting disturbance must leave the domain before the
+  bow shock and the wake represent the flow. One pass of the stream through the 500 nodes
+  takes about 525 steps, so the first 550 steps are treated as transient. This estimate is
+  reasoning, not a measurement: after the rerun, measure the bow shock's stand-off distance on
+  the centre line against time, and start the window where it has settled to within one node.
+- **Stride.** Every 50th step to start with, which gives 10 frames. The bow shock should be
+  nearly steady, so its frames will be close to duplicates, and the independent information
+  comes from the unsteady wake at Reynolds number 300. The stride should then be set from the
+  measured Politis–White block length of a dense run, as was done for the Sod runs
+  (`logs/sod_shock_tube.md`, "What part is evaluated").
+- **Length.** If the settled window turns out shorter than one wake period, or holds fewer than
+  about five independent frames, run to 2000 steps rather than 1000. At 1.5e5 nodes that is
+  still minutes of GPU time (not measured for this solver).
+
+### Decisions and why
+
+1. **The run is not converted.**
+   - Made by: the agent, 2026-11-26, applying the converter's existing rule that only a
+     complete rollout is converted. The coordinator's brief for step 4 also said to refuse
+     what cannot be converted exactly.
+   - Reason: the root attribute `kinet_rollout_status` is `interrupted`. The file holds steps
+     1 to 155, and the other 845 time slots are NaN. Its metadata also disagree with each
+     other: `kinet_completed_sim_steps_global` is 156 and `kinet_last_completed_step` is 23.
+   - Alternative: convert the 155 stored steps. That would be exact for those frames, but it
+     needs a converter option to accept an unfinished run, and it would only give the shock
+     while it is still forming.
+   - To reverse: add such an option to `fmeval/data/convert_kinet.py` and convert the stored
+     steps.
+2. **What completing it needs (build-order step 28).**
+   - **A finished run.** Rerun it to step 1000, saving only the macroscopic observables
+     (`BUILD_ORDER.md`, "How kinet runs are configured"), or resume it from its step-156
+     checkpoint. Then convert it as the Sod runs were.
+   - **An inlet boundary type.** `BOUNDARIES` in `fmeval/data/base.py` has only `periodic`
+     and `neumann`. An inlet is not a zero-gradient face, so the low-x face needs a new type
+     whose extension is continuous across its seam. The other three faces can be declared
+     `neumann`.
+   - **A cylinder mask.** The file stores no mask. Inside the cylinder the solver holds the
+     fluid at rest with $\rho = 1$, so a metric would score those nodes as flow. The mask has
+     to be built from the centre and radius in `configs/a92b16.yaml`, or recorded in a rerun.
+   - Made by: the agent, 2026-11-26; Kareem's build order lists the same three needs at
+     step 28.
+
+### Log entries
+
+**2026-11-26, agent (build-order step 4).**
+
+- Inspected the file's HDF5 tree and attributes, and its run configuration.
+- Ran `python -m fmeval.data.convert_kinet` on it. It was refused with "kinet_rollout_status
+  is 'interrupted', not 'complete'", and nothing was written.
+- Measured inside the cylinder at step 155: $\rho = 1$ and speed below $10^{-16}$.
+- Wrote `docs/datasets/supersonic_cylinder.md` and its row in `docs/datasets/README.md`.
+- Not verified: whether resuming from the step-156 checkpoint works with the current kinet.
+
+**2026-11-26, agent (planned evaluation for build-order step 28).**
+
+- Added the section "What part will be evaluated". It plans macroscopic observables only,
+  saved every 10th step for 1000 steps, with steps 550 to 1000 evaluated every 50th step.
+- The transient length and the stride are estimates from the flow speed. They are to be
+  measured on the rerun, as described in that section.
+- Nothing was run.
+
+### Open points
+
+- The run is not finished (step 28).
+- `BOUNDARIES` has no inlet type.
+- No cylinder mask exists. How the harness would exclude masked nodes from a metric was not
+  checked.
+- Spectral metrics on its non-square, non-periodic grid wait on issue 046.

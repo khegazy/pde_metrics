@@ -46,6 +46,11 @@ FIELD_MAP: dict[str, tuple[str, str]] = {
     "velocity": ("t1_fields", "velocity"),
 }
 
+#: The Well's ``bc_type`` attribute -> a :data:`fmeval.data.base.BOUNDARIES` entry. A wall and
+#: an open (outflow) face are both extended evenly, the ``neumann`` rule; at a no-slip wall that
+#: is not the odd extension of the velocity (see ``BOUNDARIES``). Any other type is refused.
+BOUNDARY_MAP: dict[str, str] = {"PERIODIC": "periodic", "WALL": "neumann", "OPEN": "neumann"}
+
 
 @register_reader("well")
 class WellTrajectory(HDF5Trajectory):
@@ -63,6 +68,7 @@ class WellTrajectory(HDF5Trajectory):
         include_degenerate: bool = False,
         sim_index: int = 0,
         time_axis: TimeAxisMode = "auto",
+        coordinates_span_domain: bool = False,
     ) -> None:
         """Open a Well-format file, locally or over HTTP.
 
@@ -78,6 +84,14 @@ class WellTrajectory(HDF5Trajectory):
             sim_index: Index along the leading trajectory axis.
             time_axis: How to read the clock. See ``fmeval.data._timeaxis``. This layout
                 stores it contiguously, so the default reads it directly either way.
+            coordinates_span_domain: Whether each coordinate array runs over the whole domain,
+                from its lower to its upper bound inclusive, so N cells have size
+                ``(c[-1] - c[0]) / N``. True of the files PolymathicAI publishes, whose last
+                periodic column is the neighbour of the first, not a copy of it. False, the
+                default, takes the size as the step between coordinates, as in the
+                repository's own Well-format files. Neither reads ``rayleigh_benard``
+                correctly: its rows lie on Gauss-Chebyshev nodes although its ``y`` array is
+                uniform (``dataset_specs/11_regime_data.md`` Sect. 3.3).
         """
         self._open(path, chunk_cache_mb=chunk_cache_mb, nan_policy=nan_policy,
                    sim_index=sim_index)
@@ -93,22 +107,32 @@ class WellTrajectory(HDF5Trajectory):
             )
         coords = [np.asarray(dims[name][:], dtype=np.float64) for name in names]
         shape = tuple(len(c) for c in coords)
+        for name, c in zip(names, coords):
+            # One spacing per axis is all GridSpec holds; float32 coordinates vary by ~1e-5.
+            if len(c) > 2 and not np.allclose(np.diff(c), c[1] - c[0], rtol=1e-4, atol=0):
+                raise ValueError(f"{self.source}: coordinate {name!r} is not uniformly spaced")
         spacing = tuple(
-            float(c[1] - c[0]) if len(c) > 1 else 1.0 for c in coords
+            float(c[-1] - c[0]) / (len(c) if coordinates_span_domain else len(c) - 1)
+            if len(c) > 1 else 1.0 for c in coords
         )
-        # The Well records a periodic axis as a `<dim>_periodic` group. Other boundary types
-        # are not mapped yet, so an axis without that group is refused rather than guessed.
-        open_axes = [name for name in names
-                     if f"{name}_periodic" not in self._file.get("boundary_conditions", {})]
-        if open_axes:
+        # Each `boundary_conditions/*` group names its axes and a `bc_type`. An axis no group
+        # names, or a type BOUNDARY_MAP lacks, is refused rather than guessed.
+        declared = {}
+        for group in self._file.get("boundary_conditions", {}).values():
+            bc_type = group.attrs["bc_type"]
+            bc_type = bc_type.decode() if isinstance(bc_type, bytes) else str(bc_type)
+            for dim in group.attrs["associated_dims"]:
+                declared[dim.decode() if isinstance(dim, bytes) else str(dim)] = bc_type
+        unmapped = {n: declared.get(n) for n in names if declared.get(n) not in BOUNDARY_MAP}
+        if unmapped:
             raise ValueError(
-                f"{self.source}: axes {open_axes} are not periodic, and no Well boundary type "
-                "is mapped to a fmeval.data.base.BOUNDARIES entry yet"
+                f"{self.source}: axis boundary types {unmapped} have no entry in the Well "
+                f"reader's BOUNDARY_MAP {sorted(BOUNDARY_MAP)}"
             )
         self._grid = GridSpec(
             shape=shape,
             spacing=spacing,
-            boundary=("periodic",) * len(names),
+            boundary=tuple(BOUNDARY_MAP[declared[n]] for n in names),
             dims=tuple(names),
             origin=tuple(float(c[0]) for c in coords),
         )

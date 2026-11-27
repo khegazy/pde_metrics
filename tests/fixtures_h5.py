@@ -125,14 +125,56 @@ def write_kinet_raw(path: Path, shape: tuple[int, ...] = SHAPE,
     return path
 
 
+def write_kinet_grouped(path: Path, save_every: int = 3,
+                        pressure_convention: str = "absolute") -> Path:
+    """Write the frames of :func:`write_kinet_raw` in the grouped layout of the current kinet.
+
+    Frame 0 goes under ``initial_conditions/`` and frame ``k`` to solver step ``k *
+    save_every``, in slot ``step - 1`` of a time axis whose other slots are NaN; the clock is
+    ``time/time_convection``. Reproduces: step 1 saved off the cadence, with values no flat
+    frame holds, so a conversion that keeps it fails; pressure labelled by
+    ``pressure_convention``; the degenerate ``temperature``. A correct conversion of this file
+    is therefore the flat fixture itself, value for value. The flat file is left beside it.
+    """
+    flat = write_kinet_raw(path.with_name(path.stem + "_flat.h5"))
+    n_steps = (N_FRAMES - 1) * save_every
+    slots = np.arange(1, N_FRAMES) * save_every - 1
+    step = np.full(n_steps, np.nan)
+    step[slots] = slots + 1
+    step[0] = 1.0
+    with h5py.File(flat, "r") as src, h5py.File(path, "w") as f:
+        f.attrs.update(src.attrs)
+        disc = json.loads(src.attrs["discretization"])
+        disc["temporal"].update(grid=n_steps, length=float(n_steps))
+        f.attrs["discretization"] = json.dumps(disc)
+        f.attrs["pressure_convention"] = pressure_convention
+        f.attrs["identity_key"] = "0f1x7e"
+        for name in ("density", "velocity", "vorticity", "pressure", "temperature"):
+            data = src[name][:]
+            slotted = np.full((*data.shape[:2], n_steps, *data.shape[3:]), np.nan)
+            slotted[:, :, slots] = data[:, :, 1:]
+            slotted[:, :, 0] = data[:, :, 1] + 0.5
+            f.create_dataset(f"observables/{name}", data=slotted,
+                             chunks=(*data.shape[:2], 1, *data.shape[3:]))
+            f.create_dataset(f"initial_conditions/observables/{name}", data=data[:, :, :1])
+        # The flat clock is 0.25 per frame; step / save_every is exact for every saved step.
+        f.create_dataset("time/time_index", data=step, chunks=(1,))
+        f.create_dataset("time/time", data=step, chunks=(1,))
+        f.create_dataset("time/time_convection", data=step / save_every * 0.25, chunks=(1,))
+        for name in ("time_index", "time", "time_convection"):
+            f.create_dataset(f"initial_conditions/time/{name}", data=np.zeros(1))
+    return path
+
 def write_well(path: Path, shape: tuple[int, int] = SHAPE,
-               n_frames: int = N_FRAMES) -> Path:
+               n_frames: int = N_FRAMES,
+               bc_types: tuple[str | None, str | None] = ("PERIODIC", "PERIODIC")) -> Path:
     """Write a synthetic file in the PolymathicAI *Well* layout.
 
     Differs from raw kinet in three ways the reader must absorb: float32, no leading
     channel axis on scalars, and ``t1_fields/velocity`` is **channel-last**
     ``(1, T, *spatial, D)``. Velocity is u=1, v=2 at t=0, so a missed ``moveaxis`` shows up
-    immediately.
+    immediately. ``bc_types`` gives each axis's ``bc_type`` (``PERIODIC``, ``WALL``,
+    ``OPEN``, ...), or None to leave the axis undeclared.
     """
     with h5py.File(path, "w") as f:
         f.attrs["dataset_name"] = "synthetic"
@@ -172,9 +214,11 @@ def write_well(path: Path, shape: tuple[int, int] = SHAPE,
         t1.create_dataset("velocity", data=vel)
 
         bc = f.create_group("boundary_conditions")
-        for i, dim in enumerate(("x", "y")):
-            g = bc.create_group(f"{dim}_periodic")
-            g.attrs["bc_type"] = "PERIODIC"
+        for i, (dim, bc_type) in enumerate(zip(("x", "y"), bc_types)):
+            if bc_type is None:  # an axis no group declares
+                continue
+            g = bc.create_group(f"{dim}_{bc_type.lower()}")
+            g.attrs["bc_type"] = bc_type
             g.attrs["associated_dims"] = [dim]
             g.create_dataset("mask", data=np.zeros(shape[i], dtype=np.int8))
     return path

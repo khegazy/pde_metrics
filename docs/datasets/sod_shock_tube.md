@@ -1,9 +1,10 @@
 # Sod shock tube
 
-!!! note "Computed, not simulated: an analytic check"
-    This dataset is the exact solution of a textbook problem, computed on the fly whenever a
-    frame is read. It tests the evaluation harness, and the metrics that need a shock or
-    pressure, against an answer known in advance. A metric's page may cite it as an
+!!! note "`sod_shock_tube` is computed, not simulated: an analytic check"
+    This configuration is the exact solution of a textbook problem, computed on the fly
+    whenever a frame is read; the two kinet configurations below are simulations of it. It
+    tests the evaluation harness, and the metrics that need a shock or pressure, against an
+    answer known in advance. A metric's page may cite it as an
     **analytic check**: its evidence says the metric locates and scores a known shock
     correctly, and nothing about turbulence. Every page citing it says so in its run summary.
     A metric that needs a periodic domain is not run on it.
@@ -33,13 +34,55 @@ state.
 | Configuration | What it is | Readable here |
 |---|---|---|
 | `sod_shock_tube` | The exact solution below, with Sod's data: $\gamma = 1.4$, left $(\rho, p) = (1, 1)$, right $(0.125, 0.1)$, on 2048 cells, 10 frames from $t = 0.1$ to $t = 0.2$ | Yes, computed |
-| `kinet/sod/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en4/` | Lattice-Boltzmann simulation on 3001 × 5 cells, $\gamma = 1.4$, viscosity $10^{-4}$, Prandtl number 0.71, left $(\rho, p) = (1, 0.2)$, right $(0.125, 0.02)$, 1000 frames to $t = 200$, Neumann walls | Not yet: its HDF5 layout has no reader |
-| `kinet/sod/compressible_fluids/Pr-71en2_vuy-2_visc-25en3/` (two runs) | The same solver with $\gamma = 2$, viscosity 0.025, left $(\rho, p) = (0.5, 0.1)$, right $(2, 0.05)$ | Not yet, as above |
+| `kinet_sod_gamma1p4` | kinet's lattice-Boltzmann simulation (`kinet/sod/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en4/`) on 3001 × 5 nodes, $\gamma = 1.4$, viscosity $10^{-4}$, Prandtl number 0.71, left $(\rho, p) = (1, 0.2)$, right $(0.125, 0.02)$, 1001 frames to $t = 200$ | Yes, simulated |
+| `kinet_sod_gamma2` | The same solver with $\gamma = 2$, viscosity 0.025, left $(\rho, p) = (0.5, 0.1)$, right $(2, 0.05)$; two runs of it, `c76b17` (default) and `15aa6b`, equal to $10^{-13}$ | Yes, simulated |
 
-The exact solution can be evaluated for any of these by overriding the reader's options, for
-example `+dataset.reader.gamma=2 '+dataset.reader.left=[0.5,0.1]' '+dataset.reader.right=[2,0.05]'`.
-It covers any pair of states at rest with the higher pressure on the left. Scoring the
-simulations against it waits for a reader of their layout.
+The exact solution can be evaluated for either simulation by overriding the reader's options,
+for example `+dataset.reader.gamma=2 '+dataset.reader.left=[0.5,0.1]' '+dataset.reader.right=[2,0.05]'`.
+It covers any pair of states at rest with the higher pressure on the left. Scoring a simulation
+against it, frame by frame on the same nodes, is not built yet
+(`dataset_specs/02_grid_refinement_known_solution.md`, Sect. 5.2); today each simulation is a
+reference for the degradation ladder, as every simulated dataset is.
+
+### The kinet simulations
+
+- **Conversion.** kinet wrote each run in its grouped layout. `python -m fmeval.data.convert_kinet`
+  rewrote each into the flat layout the `kinet_raw` reader opens, as `<run>_flat.h5` beside
+  the original: density, velocity and the absolute pressure $p = \rho T$, with the initial
+  condition as frame 0. Every frame and the clock were read back and found equal to the
+  source. The populations, temperature and energy are not carried.
+- **Clock.** The time is kinet's own clock, 0.2 per solver step, so step 1000 is $t = 200$;
+  the solver step of every frame is in the file's `time_index`. The exact solution's window,
+  $t = 0.1$ to $0.2$ in tube units, is steps 671 to 1342 of the $\gamma = 1.4$ run (the
+  arithmetic of the specification above), of which steps 671 to 1000 exist.
+- **Read as two-dimensional.** The 5 transverse nodes are kept, so each frame is a 3001 × 5
+  field. Every field is uniform across them to $2 \times 10^{-14}$ and the transverse velocity
+  is below $10^{-15}$, so a mean over the grid is the mean along the tube, and no reader code
+  was needed to take one row. A degradation that adds noise does vary across them.
+- **Boundaries.** The tube's ends are Neumann, as kinet ran them. The transverse axis is
+  periodic: the run names no face on it, and the fields are uniform across it, so a Neumann
+  declaration would extend them identically.
+- **Window.** Steps 450 to 1000, every 50th step (12 frames), chosen to keep every wave
+  separated by more than ten times the ladder's largest translation in the $\gamma = 1.4$ run
+  and to hold its 6 to 7 independent samples; the reasons and measured costs are in the
+  dataset's log. The $\gamma = 2$ run's rarefaction never meets that rule (89 nodes wide at
+  step 1000).
+- **What the evaluation sees.** Measured with `python evaluate.py
+  'metrics=[mse,shock_set_distance,spectrum_l2]' dataset=<name> dataset.time.reduction=100
+  degradation.ladder.median_blur.enabled=false` on 2026-11-26:
+  - `spectrum_l2`, like every metric that needs a periodic domain, is not run.
+  - `coarsen`, `coarsen_bandlimited` and `subsample` are dropped at every level, because no
+    factor divides the 5 transverse nodes. `translate_y` leaves the fields unchanged and is
+    excluded.
+  - The median blur gives the right answer but is slow: its window is square, and a window
+    hundreds of nodes wide wraps the 5 transverse nodes many times. With it on, a run of 6
+    frames had not finished after four minutes; without it, it takes 36 s. It is degenerate on the
+    exact solution anyway, as the next section says.
+  - The shock detector of `shock_set_distance` flags one column of 5 nodes in the
+    $\gamma = 1.4$ run. It flags nothing in the $\gamma = 2$ run, whose viscous shock is spread
+    over enough nodes that no neighbouring pressure ratio exceeds 1.05, below the threshold of a
+    Mach 1.3 shock; every score there is the both-empty 0.
+- **Not yet evidence.** Neither run is in `evidence_datasets`.
 
 ## Equations
 
@@ -164,7 +207,7 @@ solution:
 
 Both ends of the tube are **Neumann** (zero-gradient) boundaries. Within the window no wave
 reaches them, so the solution does not depend on the boundary type. Neumann matches the
-simulations listed above.
+ends of the simulations listed above.
 
 The boundary matters for the degradations. Every degradation operator wraps at the edge of
 the array, so on this dataset the harness first extends each field by its mirror image. That

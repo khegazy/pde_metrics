@@ -1,0 +1,44 @@
+# The Well's `turbulent_radiative_layer_2D`, read in place from the published test split: one
+# Athena++ run of a dense cold layer (density 100) under a hot dilute one (density 1) sheared
+# past each other, the mixed gas cooling radiatively with cooling time tcool = 0.32, the middle
+# of the nine published values (0.03 to 3.16). 128 x 384 cells on [-0.5, 0.5] x [-1, 2],
+# periodic in x and open (outflow) in y; 101 frames from t = 0 to 159.7. See
+# docs/datasets/turbulent_radiative_layer_2d.md.
+name: well_radiative_layer_tcool0p32
+format: well
+trajectory: turbulent_radiative_layer_tcool_0.32
+path: ${paths.data}/well/datasets/turbulent_radiative_layer_2D/data/test/${.trajectory}.hdf5
+
+# pressure is the solver's own (an ideal gas with an energy equation and cooling), not a copy of
+# density. vorticity is omitted: the spectral curl refuses a grid that is not periodic.
+fields: [density, velocity, pressure]
+
+reader:
+  include_redundant: true
+  # The published coordinates run from each domain bound to the other inclusive: x has 128
+  # points on [-0.5, 0.5] and y 384 on [-1, 2], and only N cells, not N - 1, give the square
+  # cells of size 1/128 both axes share.
+  coordinates_span_domain: true
+
+# What part is evaluated (docs/recipes/add-a-dataset.md step 3; the log has the measurements):
+# - Window: frames 50 to 100, a proposal for a person to confirm. Up to frame 50 (t = 80) the
+#   fraction of cells at intermediate density (2 < rho < 50) and the rms vertical velocity both
+#   grow, from 0.003 and 0.005 at t = 0 to 0.045 and 0.030; after it they fluctuate about 0.03
+#   and 0.025 with no trend to t = 159.7.
+# - Stride 5: the integrated autocorrelation time of mse over those 51 frames has a median of
+#   5 frames (Bartlett window 10 or 20), so 11 frames are about all the independent ones.
+# - Trajectories: the one on disk. The test split holds one per cooling time.
+# - Analysis grid: the native 128 x 384 (the schema's default). The full non-ensemble panel costs
+#   27 s per frame there, about 5 minutes for the 11 frames; coarsening to 64 cuts that to
+#   about 1.5 minutes but halves the resolution of the small cold clumps the layer is about.
+time:
+  start: 50
+  reduction: 5
+
+complexity:
+  family: turbulent_radiative_layer_2d
+  rank: 0
+  params: {tcool: 0.32}
+  label: "t_\\mathrm{cool} = 0.32"
+
+notes: "The Well turbulent_radiative_layer_2D, tcool = 0.32, Athena++, 128 x 384, periodic x, open y, float32, dimensionless units."

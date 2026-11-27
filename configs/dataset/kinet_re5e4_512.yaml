@@ -1,0 +1,38 @@
+# The Re = 5e4 shear layer of kinet_re5e4 run on 512^2 cells: 20000 solver steps, 20001 frames,
+# 1.43 TB, ending at the same time (2.2553). At a fixed Mach number the solver step halves with
+# the cell size, so `frame_stride: 2` puts frame i at the time of frame i of kinet_re5e4. Not
+# yet a nested refinement of it: the shear-layer initialiser may place nodes at i/(N-1), which
+# would stretch the two initial fields differently (dataset_specs/02, Sect. 5.1).
+defaults:
+  - _re5e4_simulation
+  - _self_
+
+name: kinet_re5e4_512
+format: kinet_raw
+trajectory: D2Q9_shape-512-512_T-20000_H-56d32e
+
+reader:
+  frame_stride: 2
+
+# What is evaluated (docs/recipes/add-a-dataset.md, step 3; an agent's choice, 2026-11-26): the
+# developed-flow window of kinet_re5e4, frames 2000 to 10000 at every 50th (the inherited
+# reduction): 161 frames at the same times as kinet_re5e4's, which hold 7 to 12 independent
+# samples there (METRIC_EVALUATION_CRITIQUE.md, finding 2). Run it with
+# `analysis_grid.resolution=256`, the common grid with kinet_re5e4, for the metric ladder; the
+# native 512 grid is for the refinement comparison of dataset_specs/02, Sect. 5.1, only.
+# Measured on a shared login node, 2026-11-26, per frame at 256 with every severity level:
+# degradations 5.5 to 5.9 s; metrics mse 0.04 s, wasserstein 5.6 s, increment_w1_by_separation
+# 16.4 s, energy_distance 27.4 s, spectral_energy_flux 32.1 s, persistence_distance 34.0 s;
+# persistence_wasserstein did not finish one frame in 900 s and, as on kinet_re5e4, is not run
+# on this ladder (its card). Full panel without it: about 122 s per frame, 5.5 h for the 161
+# frames in one process (split it with dataset.time.shards). At the native 512 the degradations
+# alone take 76.5 s per frame, 3.4 h for the window. Read from disk: 8.4 MB per frame, 1.35 GB.
+# A cheaper choice is `dataset.time.reduction=200` (41 frames, about 1.4 h), which likely keeps
+# most of the independent samples; it was not taken, so the two runs share every frame.
+time:
+  start: 2000
+
+complexity:
+  params: {resolution: 512}
+
+notes: "Re=5e4, Ma=0.1, D2Q9 entropic BGK, 512^2 read every 2nd stored frame, dimensionless units."

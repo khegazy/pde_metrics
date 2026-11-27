@@ -27,15 +27,19 @@ import numpy as np
 import pytest
 
 from fmeval.data.base import FIELDS, READERS, GridSpec, TimeSelection, Trajectory
+from fmeval.data.convert_kinet import convert_kinet_grouped
 from fmeval.data.kinet_raw import KinetRawTrajectory
 from fmeval.data.well import WellTrajectory
-from tests.fixtures_h5 import N_FRAMES, SHAPE, write_kinet_raw, write_well
+from tests.fixtures_h5 import N_FRAMES, SHAPE, write_kinet_grouped, write_kinet_raw, write_well
 
-#: Every reader the contract holds: the writer of its synthetic file, its class, and the
-#: position of the time axis in a field read's h5py key -- ``(sim, C, T, ...)`` in the raw
-#: kinet layout, ``(sim, T, ...)`` in the Well layout.
+#: Every layout the contract holds: the writer of its synthetic file, the class that reads it,
+#: and the position of the time axis in a field read's h5py key -- ``(sim, C, T, ...)`` in the
+#: raw kinet layout, ``(sim, T, ...)`` in the Well layout. ``kinet_grouped`` is kinet's current
+#: grouped layout after ``fmeval.data.convert_kinet``, read by the raw reader.
 LAYOUTS = {
     "kinet_raw": (write_kinet_raw, KinetRawTrajectory, 2),
+    "kinet_grouped": (lambda path: convert_kinet_grouped(
+        write_kinet_grouped(path.with_name("grouped.h5")), path), KinetRawTrajectory, 2),
     "well": (write_well, WellTrajectory, 1),
 }
 
@@ -311,13 +315,13 @@ def test_memory_stays_bounded(traj):
 
 
 def test_meta_carries_provenance(layout, traj):
-    name, _, _, _ = layout
+    _, _, cls, _ = layout
     meta = traj.meta
-    assert meta["format"] == name
+    assert meta["format"] == cls.FORMAT
     assert meta["n_frames"] == N_FRAMES
     assert meta["path"].endswith(".h5")
     attrs = meta["source_attrs"]
-    if name == "kinet_raw":
+    if cls is KinetRawTrajectory:
         # JSON-string attributes must come back parsed, not as raw strings.
         assert attrs["discretization"]["spatial"]["grid"] == list(SHAPE)
     else:
@@ -326,8 +330,8 @@ def test_meta_carries_provenance(layout, traj):
 
 
 def test_reader_is_registered(layout):
-    name, _, cls, _ = layout
-    assert READERS[name] is cls
+    _, _, cls, _ = layout
+    assert READERS[cls.FORMAT] is cls
     assert issubclass(cls, Trajectory)
 
 
@@ -345,6 +349,114 @@ def test_well_rejects_an_unexpected_spatial_order(tmp_path):
         f["dimensions"].attrs["spatial_dims"] = ["y", "x"]
     with pytest.raises(ValueError, match="spatial_dims"):
         WellTrajectory(path)
+
+
+@pytest.mark.parametrize("bc_type", ["WALL", "OPEN"])
+def test_well_reads_a_wall_or_open_axis_as_neumann(tmp_path, bc_type):
+    """Both non-periodic types the published 2D sets use extend evenly; the periodic axis and
+    the fields are unaffected."""
+    with WellTrajectory(write_well(tmp_path / "f.h5", bc_types=("PERIODIC", bc_type))) as traj:
+        assert traj.grid.boundary == ("periodic", "neumann")
+        assert traj.frame(0, ["velocity"])["velocity"].shape == (2, *SHAPE)
+
+
+@pytest.mark.parametrize("bc_type", ["SYMMETRIC", None])
+def test_well_refuses_an_unmapped_or_undeclared_axis(tmp_path, bc_type):
+    """A type the mapping lacks, or an axis no group names, fails rather than being guessed."""
+    with pytest.raises(ValueError, match="BOUNDARY_MAP"):
+        WellTrajectory(write_well(tmp_path / "f.h5", bc_types=("PERIODIC", bc_type)))
+
+
+def test_well_coordinates_spanning_the_domain_give_n_cells(tmp_path):
+    """The fixture's coordinates are 0, 1, ..., N-1: a unit step by default, and N cells over
+    the span N - 1 when they are declared to run from bound to bound."""
+    path = write_well(tmp_path / "f.h5")
+    with WellTrajectory(path) as traj:
+        assert traj.grid.spacing == (1.0, 1.0)
+    with WellTrajectory(path, coordinates_span_domain=True) as traj:
+        assert traj.grid.spacing == pytest.approx(tuple((n - 1) / n for n in SHAPE), rel=1e-12)
+
+
+def test_well_refuses_a_non_uniform_coordinate(tmp_path):
+    """GridSpec holds one spacing per axis, so stretched coordinates cannot be represented."""
+    path = write_well(tmp_path / "f.h5")
+    with h5py.File(path, "r+") as f:
+        del f["dimensions/y"]
+        f["dimensions"].create_dataset("y", data=np.arange(SHAPE[1], dtype=np.float64) ** 2)
+    with pytest.raises(ValueError, match="not uniformly spaced"):
+        WellTrajectory(path)
+
+
+# --- converting kinet's grouped layout ------------------------------------------------
+
+
+def _as_older_rollout(f: h5py.File) -> None:
+    """Rewrite a grouped fixture as kinet wrote it before ``pressure_convention`` and
+    ``time_convection`` existed (the Sod runs): no convention, the clock in ``time/time``."""
+    del f.attrs["pressure_convention"]
+    for group in ("time", "initial_conditions/time"):
+        f[f"{group}/time"][...] = f[f"{group}/time_convection"][...]
+        del f[f"{group}/time_convection"]
+
+
+@pytest.mark.parametrize("older", [False, True], ids=["current", "older"])
+def test_a_converted_grouped_rollout_is_the_flat_file_it_was_built_from(older, tmp_path):
+    """The grouped fixture holds the flat fixture's frames, its initial condition apart, NaN in
+    the unsaved slots and an off-cadence step 1; converting it must give back every frame and
+    the clock exactly, the solver step of every frame, and the source's identity. An older
+    rollout's clock is its ``time/time``, and its pressure, which satisfies ``p = rho T``, is
+    carried as absolute."""
+    grouped = write_kinet_grouped(tmp_path / "grouped.h5", save_every=3)
+    if older:
+        with h5py.File(grouped, "r+") as f:
+            _as_older_rollout(f)
+    converted = convert_kinet_grouped(grouped, tmp_path / "out" / "converted.h5")
+    with KinetRawTrajectory(tmp_path / "grouped_flat.h5", include_redundant=True) as want, \
+            KinetRawTrajectory(converted, include_redundant=True) as got:
+        assert got.fields == ("density", "velocity", "vorticity", "pressure"), "the populations "\
+            "are not observables, and an absolute pressure is carried"
+        assert np.array_equal(got.times, want.times)
+        for t in range(len(want)):
+            a, b = want.frame(t, got.fields), got.frame(t, got.fields)
+            for name in got.fields:
+                assert np.array_equal(a[name], b[name]), f"{name} differs at frame {t}"
+        attrs = got.meta["source_attrs"]
+        assert attrs["identity_key"] == "0f1x7e"
+        assert attrs["converted_from"] == str(grouped.resolve())
+        assert attrs["discretization"]["temporal"]["resolution"] == 3.0
+    with h5py.File(converted, "r") as f:
+        assert f["time_index"][:].tolist() == [0, 3, 6, 9, 12]
+    with pytest.raises(FileExistsError):
+        convert_kinet_grouped(grouped, converted)
+
+
+@pytest.mark.parametrize("change,match", [
+    (lambda f: f.attrs.__setitem__("kinet_rollout_status", "running"), "complete"),
+    (lambda f: f.attrs.__setitem__("pressure_convention", "gauge"), "pressure_convention"),
+    (lambda f: [f[f"time/{n}"].__setitem__(4, 5.0) for n in ("time_index", "time_convection")],
+     "evenly spaced"),
+    (lambda f: f["time/time_index"].__setitem__(4, 5.0), "slot s - 1"),
+    (lambda f: [_as_older_rollout(f), f["initial_conditions/observables/pressure"].__setitem__(
+        Ellipsis, 0.0)], "pressure_convention"),
+])
+def test_a_grouped_rollout_that_cannot_be_converted_exactly_is_refused(change, match, tmp_path):
+    """An unfinished run, an unknown pressure, a saved step off the cadence, a clock that
+    disagrees with the steps, and an older rollout whose pressure is not rho T are refused, and
+    nothing is left at the destination."""
+    grouped = write_kinet_grouped(tmp_path / "grouped.h5")
+    with h5py.File(grouped, "r+") as f:
+        change(f)
+    with pytest.raises(ValueError, match=match):
+        convert_kinet_grouped(grouped, tmp_path / "converted.h5")
+    assert not list(tmp_path.glob("converted.h5*"))
+
+
+def test_a_gauge_pressure_is_not_converted(tmp_path):
+    """The weakly compressible physics stores (rho - 1) c_s^2, which is not a pressure."""
+    grouped = write_kinet_grouped(tmp_path / "grouped.h5",
+                                  pressure_convention="fluctuation_referenced")
+    with h5py.File(convert_kinet_grouped(grouped, tmp_path / "converted.h5"), "r") as f:
+        assert "pressure" not in f and {"density", "velocity", "vorticity"} <= set(f)
 
 
 # --- the abstraction validated against ground truth ----------------------------------
@@ -383,3 +495,79 @@ def test_raw_and_well_readers_agree_on_the_same_simulation():
                     a[name], b[name], rtol=1e-6, atol=1e-8,
                     err_msg=f"{name} differs at t={t} between the raw and Well readers",
                 )
+
+
+WELL_DATA = "datasets/well/datasets"
+RADIATIVE = f"{WELL_DATA}/turbulent_radiative_layer_2D/data/test/turbulent_radiative_layer_tcool_0.32.hdf5"
+CONVECTION = f"{WELL_DATA}/rayleigh_benard/data/test/rayleigh_benard_Rayleigh_1e6_Prandtl_1.hdf5"
+
+
+@pytest.mark.data
+def test_well_radiative_layer_reads_with_square_cells_and_an_open_y_axis():
+    """128 x 384 on [-0.5, 0.5] x [-1, 2]: cells of 1/128 on both axes only when N cells span
+    each domain (configs/dataset/well_radiative_layer_tcool0p32.yaml)."""
+    if not Path(RADIATIVE).exists():
+        pytest.skip(f"{RADIATIVE} not available")
+    with WellTrajectory(RADIATIVE, include_redundant=True, coordinates_span_domain=True) as traj:
+        assert traj.grid.shape == (128, 384)
+        assert traj.grid.boundary == ("periodic", "neumann")
+        assert traj.grid.spacing == pytest.approx((1 / 128, 1 / 128), rel=1e-6)
+        assert set(traj.fields) == {"density", "pressure", "velocity"}
+        for t in (0, 1):
+            assert traj.frame(t, list(traj.fields))["velocity"].shape == (2, 128, 384)
+        # The initial condition: the dense layer (density 100) below y = 0, the dilute one above.
+        rho = traj.frame(0, ["density"])["density"][0]
+        assert rho[:, 0].mean() == pytest.approx(100.0) and rho[:, -1].mean() == pytest.approx(1.0)
+
+
+@pytest.mark.data
+def test_well_rayleigh_benard_rows_are_not_on_its_uniform_y_coordinate():
+    """The file's y array is uniform on [0, 1], but its rows lie on Gauss-Chebyshev nodes.
+
+    The reader opens the file (periodic x, WALL y as neumann), but no option reads its grid
+    correctly. Near a wall the mean buoyancy is linear in the true height (a conductive
+    sublayer), and on the nodes y_j = (1 - cos(pi (j + 1/2) / N)) / 2 the height grows as
+    (j + 1/2)^2, so the steps between the first rows grow as 1 : 2 : 3 : 4. On uniform rows they
+    would be equal. dataset_specs/11_regime_data.md Sect. 3.3 has the flux check behind this.
+    """
+    if not Path(CONVECTION).exists():
+        pytest.skip(f"{CONVECTION} not available")
+    with WellTrajectory(CONVECTION) as traj:
+        assert traj.grid.shape == (512, 128)
+        assert traj.grid.boundary == ("periodic", "neumann")
+        assert traj.fields == ("velocity",)  # buoyancy is unmapped, pressure redundant by default
+        assert traj.frame(0, ["velocity"])["velocity"].shape == (2, 512, 128)
+    with h5py.File(CONVECTION, "r") as f:
+        profile = np.asarray(f["t0_fields/buoyancy"][1, 199], dtype=np.float64).mean(axis=0)
+    steps = -np.diff(profile[:5])
+    np.testing.assert_allclose(steps / steps[0], [1, 2, 3, 4], rtol=0.03)
+
+
+HIT_GROUPED = ("datasets/neurde/hit_scaling/Re-25k_Ma-1en1_2d/004ae2/tiers/full/rollout.h5")
+HIT_RAW = ("datasets/kinet/homogeneous_isotropic_turbulence/weakly_compressible_isoT_fluids/"
+           "sys_Re-25k_Ma-1en1/004ae2.h5")
+SOD = "datasets/kinet/sod/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en4/D2Q9_shape-3001-5_T-1000_H-d17baf"
+
+
+@pytest.mark.data
+@pytest.mark.parametrize("grouped,flat,clock", [
+    (HIT_GROUPED, HIT_RAW, "time_convection"),
+    (f"{SOD}.h5", f"{SOD}_flat.h5", "time"),
+], ids=["isotropic", "sod"])
+def test_a_converted_rollout_matches_its_grouped_source(grouped, flat, clock):
+    """Every frame of a converted trajectory (the Re 25k isotropic one; the gamma = 1.4 Sod run,
+    an older rollout with its absolute pressure), read by the raw reader, is the grouped
+    source's initial condition or its slot ``step - 1``, value for value, on its clock."""
+    for path in (grouped, flat):
+        if not Path(path).exists():
+            pytest.skip(f"{path} not available")
+    with h5py.File(grouped, "r") as src, KinetRawTrajectory(flat, include_redundant=True) as raw:
+        steps = raw._file["time_index"][:].astype(int)
+        assert steps[0] == 0 and len(raw) == len(steps) == 1001
+        assert np.array_equal(raw.times[1:], src[f"time/{clock}"][steps[1:] - 1])
+        for t, step in enumerate(steps):
+            got = raw.frame(t, raw.fields)
+            for name in raw.fields:
+                want = (src[f"initial_conditions/observables/{name}"][0, :, 0] if t == 0
+                        else src[f"observables/{name}"][0, :, step - 1])
+                assert np.array_equal(got[name], want), f"{name} differs at step {step}"

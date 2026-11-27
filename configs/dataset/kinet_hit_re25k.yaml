@@ -1,0 +1,19 @@
+# Decaying two-dimensional isotropic turbulence at Re = 2.5e4. `trajectory` is the first
+# realisation of the subset drawn for this Reynolds number; choose another converted one with
+# `dataset.trajectory=<key>` (docs/datasets/decaying_isotropic_2d.md lists them).
+#
+# The evaluated trajectories are the first five drawn (the fragment says why five):
+#   python evaluate.py -m 'metrics=[...]' dataset=kinet_hit_re25k \
+#       dataset.trajectory=c95586,49a8ad,2bf18d,0789a4,e72a16 analysis_grid.resolution=128
+defaults:
+  - _decaying_isotropic_2d
+  - _self_
+
+name: kinet_hit_re25k
+trajectory: "c95586"
+path: ${paths.data}/kinet/homogeneous_isotropic_turbulence/weakly_compressible_isoT_fluids/sys_Re-25k_Ma-1en1/${.trajectory}.h5
+
+complexity:
+  rank: 1
+  params: {reynolds: 2.5e4}
+  label: "Re = 2.5\\times10^{4}"

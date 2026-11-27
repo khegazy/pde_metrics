@@ -1,0 +1,22 @@
+# Decaying two-dimensional isotropic turbulence at Re = 5e4. Simulated on 512^2 cells for
+# 20000 steps and archived coarse-grained by two in space and time (root attribute
+# `time_stride: 2`), so its frames are the same 256^2 grid and the same clock as the other two
+# Reynolds numbers. `trajectory` is the first realisation of the subset drawn for this Reynolds
+# number; choose another converted one with `dataset.trajectory=<key>`
+# (docs/datasets/decaying_isotropic_2d.md lists them).
+#
+# The evaluated trajectories are the first five drawn (the fragment says why five):
+#   python evaluate.py -m 'metrics=[...]' dataset=kinet_hit_re50k \
+#       dataset.trajectory=cf7333,6729a8,3cf779,137164,f19e41 analysis_grid.resolution=128
+defaults:
+  - _decaying_isotropic_2d
+  - _self_
+
+name: kinet_hit_re50k
+trajectory: "cf7333"
+path: ${paths.data}/kinet/homogeneous_isotropic_turbulence/weakly_compressible_isoT_fluids/sys_Re-50k_Ma-1en1/${.trajectory}.h5
+
+complexity:
+  rank: 2
+  params: {reynolds: 5.0e4}
+  label: "Re = 5\\times10^{4}"
