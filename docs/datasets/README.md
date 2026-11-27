@@ -16,7 +16,7 @@ Two kinds of dataset appear:
   and its run summary then names the kind of claim the numbers support:
   `synthetic_ensemble` as a **calibrated null**, for the probabilistic metrics, and
   `sod_shock_tube` as an **analytic check**, for the metrics that need a shock or pressure.
-  Neither is evidence about turbulence. `taylor_green_2d` and `advecting_blobs` are never cited.
+  Neither is evidence about turbulence. `taylor_green_2d` and `advecting_blobs` are never cited, and `random_field` is not yet registered.
 
 | Problem | Configurations | Kind | Grid | Boundaries |
 |---|---|---|---|---|
@@ -27,7 +27,8 @@ Two kinds of dataset appear:
 | [Supersonic flow past a cylinder](supersonic_cylinder.md) | none: the one run stopped at step 155 of 1000 | simulated, not readable | 500 × 300 | inlet and Neumann |
 | [Taylor–Green vortex](taylor_green_vortex.md) | `taylor_green_2d` | computed: exact solution of the Navier–Stokes equations | $256^2$ | periodic |
 | [Synthetic exchangeable ensemble](synthetic_ensemble.md) | `synthetic_ensemble` | computed: a formula and a seed | $64^2$ | periodic |
-| [Advecting Gaussian blobs](advecting_blobs.md) | `advecting_blobs` | computed: exact solution of passive advection, a test bed for time-dependent degradations | $64^2$ | periodic |
+| [Advecting Gaussian blobs](advecting_blobs.md) | `advecting_blobs`, `feature_population` | computed: exact solution of passive advection, a test bed for time-dependent degradations; `feature_population` bumps, vortices and fronts with known answers, not yet evidence | $64^2$; $128^2$ in `feature_population` | periodic |
+| [Periodic random fields with known statistics](random_field.md) | `random_field`, with its other families as reader options | computed: Gaussian and non-Gaussian random fields of prescribed spectrum with exact increment statistics; not yet evidence | $256^2$ | periodic |
 
 **Boundaries.** Each dataset states the boundary of each axis. On an axis that is not
 periodic, the degradations act on the field extended across the boundary by that boundary's

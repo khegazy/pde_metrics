@@ -8,6 +8,24 @@
 #
 # The window is the reader's default: 21 frames from t = 0 to t = 10 on 64^2 cells, in which the
 # blobs travel between 0.5 and 0.8 of the domain.
+#
+# A candidate with a known error is the reader option `candidate`, for example
+# '+dataset.reader.candidate={diffusivity:1e-5}'; the page lists them. The same reader places
+# vortices, pressure fronts and bumps through its options: see feature_population.yaml.
+#
+# WHAT PART IS EVALUATED (2026-11-26; costs measured on a login node, full reasoning in
+# docs/datasets/logs/advecting_blobs.md). Nothing below changes a default.
+# - Ladder: kept whole, the default 21 frames over t = 0..10 on 64^2. Measured per frame under
+#   the 91-level ladder: mse 0.2 s, persistence_distance 0.5 s, wasserstein 0.7 s; the full
+#   deterministic panel without persistence_wasserstein took 75 s for all 21 frames.
+#   persistence_wasserstein stalled for over 6 min on the first frame in two runs (see the log).
+# - Candidates (the ladder is replaced by 3 entries; well under 1 s per frame):
+#   wrong speed '+dataset.reader.candidate={velocities:[[0.15,0.0],[0.0,0.08],[-0.06,0.04]]}'
+#   +dataset.reader.n_frames=41: the first bump is 0.1 too fast along x, so its phase period is
+#   1 / 0.1 = 10, the whole window, and the error rises, plateaus and returns to zero at t = 10
+#   (11 s measured); wrong diffusivity '+dataset.reader.candidate={diffusivity:1e-4}';
+#   persistence '+dataset.reader.candidate={velocities:[[0,0],[0,0],[0,0]]}'; unrelated
+#   realisation '+dataset.reader.candidate={seed:1}'.
 name: advecting_blobs
 format: advecting_blobs
 

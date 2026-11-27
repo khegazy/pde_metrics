@@ -10,6 +10,25 @@
 # cells, so the velocity amplitude falls to 1/e. The field is a single Fourier mode at every
 # time and every frame is a scalar multiple of the first, so the frames are not independent
 # evidence and calibrated spectral severities collapse onto one shell (see the page).
+#
+# A candidate with a known error is the reader option `candidate`, for example
+# '+dataset.reader.candidate={nu:0.02}'; the page lists them.
+#
+# WHAT PART IS EVALUATED (2026-11-26; costs measured on a login node, full reasoning in
+# docs/datasets/logs/taylor_green_vortex.md). Nothing below changes a default.
+# - Ladder: every frame is a scalar multiple of the first, so the whole trajectory is one
+#   independent sample. The default 10 frames stay, because the dynamics figures read this
+#   selection and need five frames, but the ladder is run as
+#   `dataset=taylor_green_2d dataset.time.reduction=4` (frames at t = 0, 22.2, 44.4). Measured
+#   per 256^2 frame under the 91-level ladder: mse 7.7 s (almost all applying the ladder),
+#   persistence_distance 6.6 s, the full deterministic panel 85 s. Projected full panel: about
+#   6 min for 3 frames, 16 min for all 10.
+# - Candidates (the ladder is replaced by 3 entries, about 3 s per frame for the full panel):
+#   wrong viscosity '+dataset.reader.candidate={nu:0.02}' on the default 10 frames over
+#   t = 0..50 (the error grows smoothly to |1 - D'/D| = 0.63); phase drift
+#   '+dataset.reader.candidate={drift:[0.26,0.13]}' +dataset.reader.n_frames=21 (phase periods
+#   24.2 and 48.3, so the error returns to zero once within the window, at 10 frames per
+#   faster period; 103 s measured); persistence '+dataset.reader.candidate={nu:0}'.
 name: taylor_green_2d
 format: taylor_green_2d
 

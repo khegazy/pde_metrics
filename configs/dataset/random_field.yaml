@@ -1,0 +1,58 @@
+# Periodic random fields whose statistics are known in advance, computed on the fly by the
+# random_field reader (fmeval/data/analytic.py; docs/datasets/random_field.md). Specified in
+# dataset_specs/09_random_fields_known_statistics.md.
+#
+# NOT PHYSICAL EVIDENCE, and not registered in evidence_datasets. A Gaussian field has Gaussian
+# increments of exactly known variance at every separation, so increment flatness 3, the Hill
+# value 0.0928 at 256^2 and the distances between two such fields are known before any metric
+# runs. It has no cascade, flux or coherent structure.
+#
+# This configuration is spec 09's Gaussian null: 12 independent frames on 256^2 cells, a shell
+# spectrum falling as k^-5/3 below k = 32 and k^-3 above it, on the band 4 <= |k| <= 120. The
+# other families are reader options (the page lists each as one override line), for example
+#   stationary in time:  +dataset.reader.tau=8 dataset.reader.n_frames=201 dataset.reader.t_end=200
+#   intermittent:        dataset.reader.slopes=[-1,3] dataset.reader.k_break=14.4 \
+#                        +dataset.reader.k_min=1 +dataset.reader.transform=exp \
+#                        +dataset.reader.density_sigma=0.5 +dataset.reader.multifractal_lambda=0.05 \
+#                        dataset.reader.n_frames=48 dataset.reader.t_end=47
+# and a candidate with a known error is '+dataset.reader.candidate={seed:1,density_sigma:0.075}'.
+#
+# WHAT PART IS EVALUATED (docs/recipes/add-a-dataset.md, step 3; the log's section 3).
+# Every frame is an independent draw, so every frame is an independent sample and there is no
+# window to choose. 12 frames: the per-frame rank statistics then rest on 12 independent samples,
+# as many as the 161-frame kinet window holds (7 to 12), and the Gaussian answers are measured
+# well inside the tests' tolerances (per frame at 256^2: flatness spread about 0.03, Hill
+# estimate 0.0027, so 12-frame standard errors of 0.01 and 0.0008). 256^2 is kept because it is
+# every kinet analysis grid and the grid of the registered tail_index value 0.0928. Measured
+# cost per frame on a login node, default ladder (91 variants), three fields: mse 1 s (almost
+# all of it the degradations), increment_flatness 10 s, increment_w1_by_separation 23 s,
+# energy_distance 51 s, wasserstein (density) 13 s, persistence_distance (density, vorticity)
+# 142 s, persistence_wasserstein more than 30 min (stopped unfinished). The other deterministic
+# metrics come to about 2 min per frame, so 12 frames cost about 25 min without the two
+# persistence metrics, 53 min with persistence_distance, and more than 6 h with
+# persistence_wasserstein, which alone sets the full panel's time.
+# The heavy-tailed families are compared as frame averages and need more frames: 48 for the
+# intermittent and Hermite families (8% to 12% on the flatness), 24 for the Pareto spikes (7%).
+name: random_field
+format: random_field
+
+# Unused: the reader computes its frames. Declared because every dataset config carries one.
+path: ${paths.data}
+trajectory: random_field
+
+fields: [density, velocity, vorticity]
+
+reader:
+  n_frames: 12
+  t_end: 11          # one unit of time per frame, the scale of tau
+  slopes: [1.6666666666666667, 3.0]
+  k_break: 32
+
+complexity:
+  family: random_field
+  rank: -1          # generated: below every physical dataset
+  label: "Periodic random fields, 2D (known increment statistics)"
+
+notes: "Gaussian and non-Gaussian periodic random fields of prescribed spectrum, computed on the
+  fly, whose increment statistics are known exactly. A known-statistics null, not a flow; see
+  docs/datasets/random_field.md."

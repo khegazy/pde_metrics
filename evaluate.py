@@ -29,7 +29,6 @@ from fmeval import CONFIGS
 from fmeval import io as fio
 from fmeval.config import Config, build_job
 from fmeval.data.base import READERS, Trajectory
-from fmeval.data.forecast import ForecastPairs
 from fmeval.data.locate import trajectory_provenance
 from fmeval.data.readers import open_trajectory
 from fmeval.derived import RECIPES, RecomputingTrajectory
@@ -103,7 +102,7 @@ def main(cfg: DictConfig) -> Path:
     severity_levels = build_ladder(job.degradation)
     anchor = job.analysis.anchor
     trajectory = open_trajectory(job.dataset, job.paths)
-    prediction = trajectory.predictions() if isinstance(trajectory, ForecastPairs) else None
+    prediction = trajectory.predictions() if hasattr(trajectory, "predictions") else None
     if prediction is not None:
         # The predictor's own errors replace the ladder. The anchor entry stays, so the damage
         # D keeps its meaning: the forecast's error as a fraction of the anchor's.

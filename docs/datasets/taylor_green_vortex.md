@@ -38,6 +38,28 @@ beside it under `docs/datasets/_generated/`.
 
 The viscosity, grid and window are reader options, for example `+dataset.reader.nu=0.05`.
 
+### Candidates with a known error
+
+The reader option `candidate` names parameters of the solution to change. The reader then
+supplies, beside its own frames, the same solution with those parameters, and `evaluate.py`
+scores it against the frames at every step as it scores a forecast: the rows are labelled
+`forecast` and carry the step and time since the first frame (`lead_step`, `lead_time`), and
+the ladder is not run except for its clean entry and the damage anchor `mean_field`, which is
+itself the climatology reference (the field's spatial mean). Both sides are exact, so every
+metric's error at every step is known in advance. With $D = e^{-2\nu t}$:
+
+| Override | Candidate | Exact error on velocity |
+|---|---|---|
+| `'+dataset.reader.candidate={nu:0.02}'` | A wrong viscosity $\nu'$, so $D' = e^{-2\nu' t}$ | The candidate is the truth times $D'/D$: mean squared error $\tfrac14 (D - D')^2$, `nrmse` $\lvert 1 - D'/D \rvert$, `spectrum_l2` $\lvert 1 - (D'/D)^2 \rvert$ |
+| `'+dataset.reader.candidate={drift:[0.03,-0.05]}'` | A phase drift: the truth translated by $\boldsymbol\delta = \mathbf{U} t$, $\mathbf{U}$ the drift | Mean squared error $\tfrac12 D^2 (1 - \cos\delta_x \cos\delta_y)$; kinetic energy, enstrophy, palinstrophy and `spectrum_l2` equal the truth's at every step |
+| `'+dataset.reader.candidate={nu:0}'` | Persistence, the first frame at every step, when the window starts at $t = 0$ | The wrong-viscosity row with $D' = 1$ |
+
+The derivations are in `dataset_specs/05_initial_conditions_and_degraded_solver_runs.md`,
+Sect. 3.3, and `tests/test_analytic_datasets.py` asserts them through the pipeline for the
+thirteen metrics whose cards report an error per step, on two non-square grids, to $10^{-12}$
+relative. The translated vortex solves eq. (1) only with the uniform flow $\mathbf{U}$ added,
+so `drift` is meant for the candidate and the reader's own frames keep its default of zero.
+
 ## Equations
 
 ### Governing equations

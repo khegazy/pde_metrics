@@ -13,15 +13,21 @@ from __future__ import annotations
 import numpy as np
 
 
-def wavenumber_magnitude(shape: tuple[int, ...]) -> np.ndarray:
+def wavenumber_magnitude(shape: tuple[int, ...],
+                         stretch: tuple[float, ...] | None = None) -> np.ndarray:
     """Grid of ``|k|`` in integer wavenumber units -- cycles across the domain.
 
     Args:
         shape: Spatial shape, in the canonical trailing-axes order.
+        stretch: A factor per axis multiplying that axis's wavenumber before the magnitude is
+            taken, for a spectrum evaluated at a stretched wavevector (an anisotropic random
+            field, ``fmeval.data.analytic.band_transfer``); None for none.
 
     Returns:
         Array of ``shape`` holding the Euclidean magnitude of each mode's wavevector. Not
         rounded: the magnitudes a filter cutoff is actually compared against.
     """
-    axes = np.meshgrid(*[np.fft.fftfreq(n) * n for n in shape], indexing="ij")
+    factors = (1.0,) * len(shape) if stretch is None else tuple(float(s) for s in stretch)
+    axes = np.meshgrid(*[np.fft.fftfreq(n) * n * s for n, s in zip(shape, factors, strict=True)],
+                       indexing="ij")
     return np.sqrt(sum(a**2 for a in axes))

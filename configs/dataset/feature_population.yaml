@@ -1,0 +1,76 @@
+# A population of features with known answers, computed on the fly by the advecting_blobs reader
+# (fmeval/data/analytic.py; docs/datasets/advecting_blobs.md, "The feature population"). Static,
+# one frame, 128^2. Each field holds its own features, on cell centres 0.5 apart (20 widths, so
+# their tails meet below round-off; at 12 widths they overlap at 1.5e-8 and break the exact
+# answers):
+#   density   four bumps of height 1.0, 0.8, 0.6, 0.3 on the level 1;
+#   vorticity four Gaussian (Lamb-Oseen) vortices of peak +1, -1, -0.5, +0.5, net circulation 0,
+#             and the velocity they induce;
+#   pressure  three fronts of jump 1.5 on the level 1 (ratio 2.5, above the shock detector's
+#             1.805): a circle of radius 0.1, an ellipse 0.12 by 0.06 at 30 degrees, and a
+#             straight stripe along y whose two fronts lie on the cell faces x = 92/128, 100/128.
+# Not registered in evidence_datasets.
+#
+# WHAT PART IS EVALUATED (agent, 2026-11-26; docs/recipes/add-a-dataset.md step 3; the log is
+# docs/datasets/logs/advecting_blobs.md). The fields are deterministic and static, so a second
+# frame would repeat the first exactly: one frame carries everything, and it is one sample per
+# metric, field and axis. 128^2 resolves every Gaussian (width 3.2 cells: its cell-centre
+# integrals and spectral Biot-Savart inversion are exact to round-off) while keeping the features
+# 20 widths apart; 256^2 would cost several times more and add no answer. Measured on a
+# Perlmutter login node (load 37 to 46), results under
+# /pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/cost_feature_population/:
+#   91-level ladder, pipeline time for the one frame: mse 2.9 s, shock_set_distance 2.9 s,
+#   wasserstein 16.4 s, persistence_distance 16.9 s; the full panel without
+#   persistence_wasserstein 34 s (80 s wall). persistence_wasserstein was not run: it has
+#   stalled or taken over 15 minutes per frame elsewhere.
+#   Each candidate below with that panel: about 2 s (10 s wall).
+# Projected default set, the ladder plus the four candidates: about 2 minutes wall.
+#
+# The named candidate experiments, one per known answer (w = 0.025; measured value in brackets):
+#   remove the weakest bump, the four bumps then the rest unchanged:
+#     '+dataset.reader.candidate={amplitude:[1.0,0.8,0.6,0,1.0,-1.0,-0.5,0.5,1.5,1.5,1.5]}'
+#     MSE = pi w^2 a^2 = 1.767e-4 [equal], persistence_distance a/2 = 0.15 [0.15].
+#   move that bump 8 cells along x (2.5 w, past the double-penalty crossover at 1.665 w): the
+#     fourth pair of `centres` set to [0.81640625, 0.75390625]
+#     MSE = 2 pi w^2 a^2 (1 - e^(-s^2/4w^2)) = 2.793e-4 > the removal's [equal];
+#     persistence_distance and increment_w1 0 [both exactly 0].
+#   flip the vortex of peak -0.5: amplitude [1.0,0.8,0.6,0.3,1.0,-1.0,0.5,0.5,1.5,1.5,1.5]
+#     MSE on vorticity 4 pi w^2 a^2 - 4 Gamma^2 = 1.948e-3 [equal]; increment_w1 0 [8e-15, the
+#     round-off of the harness's recomputed vorticity]; persistence_distance |a|/2 [0.25].
+#   move the stripe 2 cells along x: the last pair of `centres` set to [0.765625, 0.5]
+#     shock_set_hausdorff 2/128 [0.015625]; shock_set_distance (2 - 1/2)/128 for the stripe,
+#     pooled with the unmoved circle and ellipse at zero distance [0.00777].
+name: feature_population
+format: advecting_blobs
+
+# Unused: the reader computes its frames. Declared because every dataset config carries one.
+path: ${paths.data}
+trajectory: feature_population
+
+fields: [density, velocity, vorticity, pressure]
+
+reader:
+  grid: [128, 128]
+  n_frames: 1
+  t_end: 0.0
+  kinds: [bump, bump, bump, bump, vortex, vortex, vortex, vortex, front, front, front]
+  velocities: [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0],
+               [0, 0]]
+  centres: [[0.25390625, 0.25390625], [0.75390625, 0.25390625], [0.25390625, 0.75390625],
+            [0.75390625, 0.75390625], [0.25390625, 0.25390625], [0.75390625, 0.25390625],
+            [0.25390625, 0.75390625], [0.75390625, 0.75390625], [0.25390625, 0.25390625],
+            [0.25390625, 0.75390625], [0.75, 0.5]]
+  width: [0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.1, 0.12, 0.03125]
+  amplitude: [1.0, 0.8, 0.6, 0.3, 1.0, -1.0, -0.5, 0.5, 1.5, 1.5, 1.5]
+  aspect: [1, 1, 1, 1, 1, 1, 1, 1, 1, 0.5, 1]
+  orientation: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0.5235987755982988, 0]
+  directions: [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0],
+               [0, 1]]
+
+complexity:
+  family: advecting_blobs
+  rank: -1          # generated: below every physical dataset
+  label: "Feature population, 2D (bumps, vortices and fronts with known answers)"
+
+notes: "Density bumps, Gaussian vortices and pressure fronts at listed positions, computed on the
+  fly; every single-feature candidate has a known answer. See docs/datasets/advecting_blobs.md."

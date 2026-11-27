@@ -3,10 +3,11 @@
 Three kinds, each a single feature on a non-square periodic grid ``(Nx, Ny)`` with unit spacing,
 height ``h`` above a background, translated along x by ``d`` cells:
 
-* ``bump`` -- a Gaussian of width ``w``, periodised over the nearest images so it is smooth and
-  periodic. Its autocorrelation is Gaussian, ``C(d) = C0 exp(-d^2 / 4w^2)`` with
-  ``C0 = pi w^2 h^2 / (Nx Ny)``, so ``MSE(d) = 2 (C(0) - C(d)) = 2 C0 (1 - exp(-d^2 / 4w^2))``,
-  which is ``d^2 <(dg/dx)^2>`` for small d: quadratic. To leading order
+* ``bump`` -- a Gaussian of width ``w``, the reader's own (``AdvectingBlobs``, minimum image), so
+  the repository has one definition of it. Its autocorrelation is Gaussian,
+  ``C(d) = C0 exp(-d^2 / 4w^2)`` with ``C0 = pi w^2 h^2 / (Nx Ny)``, so
+  ``MSE(d) = 2 (C(0) - C(d)) = 2 C0 (1 - exp(-d^2 / 4w^2))``, which is ``d^2 <(dg/dx)^2>`` for
+  small d: quadratic. To leading order
   ``MAE(d) = d <|dg/dx|> = d * 2 sqrt(2 pi) h w / (Nx Ny)``: linear.
 * ``step`` -- a stripe of ``width`` cells raised by h, constant along y: a minimal shock with two
   edges. An integer shift ``d <= min(width, Nx - width)`` changes exactly ``2 d Ny`` cells by h, so
@@ -27,6 +28,7 @@ from __future__ import annotations
 import numpy as np
 
 from fmeval.context import derive_rng
+from fmeval.data.analytic import AdvectingBlobs
 from fmeval.data.base import GridSpec, Trajectory
 
 KINDS = ("bump", "step", "mode")
@@ -55,13 +57,14 @@ def canonical_field(kind: str, shape: tuple[int, int] = SHAPE, *, width: float |
     _check(kind)
     nx, ny = shape
     x = np.arange(nx, dtype=float)[:, None]
-    y = np.arange(ny, dtype=float)[None, :]
     w = _width(kind, width, shape)
     if kind == "bump":
-        feature = sum(
-            np.exp(-((x - nx // 2 + a * nx) ** 2 + (y - ny // 2 + b * ny) ** 2) / (2 * w**2))
-            for a in (-1, 0, 1) for b in (-1, 0, 1)
-        )
+        # Centred on cell (nx // 2, ny // 2). The reader's square is [0, 1)^2, where a cell is 1/nx
+        # by 1/ny, so w cells is a width w/nx along x and an aspect nx/ny makes it w/ny along y.
+        unit = AdvectingBlobs(grid=shape, n_frames=1, t_end=0.0, velocities=[(0.0, 0.0)],
+                              centres=[((nx // 2 + 0.5) / nx, (ny // 2 + 0.5) / ny)],
+                              width=w / nx, aspect=nx / ny, amplitude=1.0)
+        feature = unit.frame(0, ["density"])["density"][0] - 1.0
     elif kind == "step":
         if not 0 < w < nx:
             raise ValueError(f"step width must lie strictly between 0 and {nx}; got {w}")
@@ -106,6 +109,20 @@ def expected_response(kind: str, metric: str, degradation: str, severity: float,
     if degradation == "gaussian_blur" and kind == "mode" and metric == "mse":
         return float(height**2 * (1 - _gaussian_attenuation(d, k)) ** 2 / 2)
     raise ValueError(f"no closed form for {kind} / {metric} / {degradation}")
+
+
+def gaussian_mean_square(per_mode: np.ndarray) -> tuple[float, float]:
+    """Expectation and standard deviation of the cell mean of ``f^2`` for one draw of a periodic
+    stationary Gaussian field ``f`` with ``E|f_k|^2 / M^2 = per_mode`` and no power on a
+    self-conjugate mode (k = 0 or a Nyquist corner), as a ``random_field`` draw has.
+
+    By Parseval the cell mean is ``sum_k |f_k|^2 / M^2``. The modes k and -k carry one complex
+    Gaussian coefficient between them, whose squared modulus is exponential with variance equal
+    to its mean squared, and distinct pairs are independent; so the sum has mean
+    ``sum q_k`` and variance ``sum over pairs (2 q_k)^2 = 2 sum_k q_k^2`` (our derivation,
+    ``dataset_specs/09_random_fields_known_statistics.md``, Sect. 3.2, "Spectrum").
+    """
+    return float(per_mode.sum()), float(np.sqrt(2.0 * np.sum(per_mode**2)))
 
 
 class AnalyticTrajectory(Trajectory):

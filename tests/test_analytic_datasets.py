@@ -15,6 +15,19 @@ Sources cited below:
   https://doi.org/10.1016/j.sciaf.2020.e00573 (arXiv:2108.01709).
 * Taylor (1923), "On the decay of vortices in a viscous fluid", Phil. Mag. (6) 46(274),
   671-674, https://doi.org/10.1080/14786442308634295.
+* Boffetta & Ecke (2012), "Two-dimensional turbulence", Annu. Rev. Fluid Mech. 44, 427-451,
+  https://doi.org/10.1146/annurev-fluid-120710-101240.
+* Porcu, Bevilacqua, Schaback & Oates (2023), "The Matern model: a journey through statistics,
+  numerical analysis and machine learning", arXiv:2303.02759.
+* Hill (1975), "A simple general approach to inference about the tail of a distribution",
+  Ann. Stat. 3(5), 1163-1174, https://doi.org/10.1214/aos/1176343247.
+
+The candidate tests check the closed-form error curves of
+``dataset_specs/05_initial_conditions_and_degraded_solver_runs.md`` (Sects. 3.1 and 3.3; the
+derivations there are its author's), re-derived in each test's docstring. The random-field tests
+check the known statistics of ``dataset_specs/09_random_fields_known_statistics.md`` (Eqs. 2-11,
+also its author's derivations), each restated where it is used. Those answers are expectations
+over draws, so their tolerances are a few standard errors of a frame mean, each stated.
 """
 
 from __future__ import annotations
@@ -22,22 +35,36 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from collections.abc import Sequence
+from math import comb
 
 import numpy as np
+import pandas as pd
 import pytest
+from scipy import integrate, stats
 
 from fmeval import CONFIGS, REPO
 from fmeval.cards import dataset_figures
 from fmeval.config import build_job, compose_config
-from fmeval.data.analytic import AdvectingBlobs, SodShockTube, TaylorGreen2D
+from fmeval.data.analytic import (
+    AdvectingBlobs,
+    ClosedFormTrajectory,
+    RandomField,
+    SodShockTube,
+    TaylorGreen2D,
+    biot_savart,
+)
 from fmeval.data.base import READERS
 from fmeval.data.readers import open_trajectory
 from fmeval.derived import RecomputingTrajectory
-from fmeval.external.kinet_spectral import divergence, spectral_derivative
-from fmeval.io import read_maps, read_run_meta
+from fmeval.external.kinet_spectral import divergence, spectral_derivative, spectral_vorticity
+from fmeval.io import read_maps, read_results, read_run_meta
 from fmeval.ladder import build_ladder
 from fmeval.pipeline import DatasetInfo, parse_map_key, run
+from fmeval.wavenumbers import wavenumber_magnitude
 from metrics import registry as metric_registry
+from metrics.vrmse.metric import EPSILON
+from tests.analytic_fields import gaussian_mean_square
 from tests.conftest import GRID
 
 #: Every dataset config whose reader computes its frames rather than reading a file.
@@ -308,6 +335,170 @@ def test_taylor_green_runs_through_the_pipeline_and_its_single_mode_collapses_th
     assert np.isfinite(result.rows["value"]).all()
 
 
+@pytest.mark.parametrize("grid", [(48, 32), (25, 64)])
+def test_taylor_green_fixes_the_energy_enstrophy_and_palinstrophy_budgets(grid):
+    """``kinetic_energy``, ``enstrophy`` and ``palinstrophy``, run by the pipeline on the
+    reader's frames with vorticity recomputed from velocity, take the closed-form values, and
+    with them Boffetta & Ecke (2012) Eqs. (5) and (6), dE/dt = -2 nu Omega and
+    dOmega/dt = -2 nu P (no forcing, no friction), hold exactly.
+
+    With D = exp(-2 nu t), u = D (sin x cos y, -cos x sin y) and omega = 2 D sin x sin y, and
+    each cell-centre mean of sin^2 or cos^2 over a whole period equal to 1/2 (any N >= 3):
+    E = (1/2) <|u|^2> = D^2/4, Omega = (1/2) <omega^2> = D^2/2, and
+    P = (1/2) <|grad omega|^2> = (1/2) 4 D^2 <cos^2 x sin^2 y + sin^2 x cos^2 y> = D^2. Then
+    dE/dt = -nu D^2 = -2 nu Omega and dOmega/dt = -2 nu D^2 = -2 nu P. Both derivatives (the
+    curl and the palinstrophy gradient) are spectral, exact for a resolved single mode, so the
+    only error is round-off and the tolerance is 1e-12 relative. A centred difference would
+    instead multiply Omega by (sin h / h)^2, h = 2 pi / N. Two non-square grids, one with an
+    odd count, catch a swapped axis or an odd-length wavenumber error."""
+    nu = 0.01
+    result = run(RecomputingTrajectory(TaylorGreen2D(nu=nu, grid=grid, n_frames=4, t_end=60.0)),
+                 [metric_registry.get(n) for n in ("kinetic_energy", "enstrophy", "palinstrophy")],
+                 build_ladder({}), fields=["velocity", "vorticity"],
+                 dataset=DatasetInfo(name="taylor_green_2d"))
+    values = result.rows.pivot(index="time", columns="metric", values="value")
+    d2 = np.exp(-4.0 * nu * values.index.to_numpy())
+    energy, enstrophy, palinstrophy = (values[n].to_numpy()
+                                       for n in ("kinetic_energy", "enstrophy", "palinstrophy"))
+    assert energy == pytest.approx(d2 / 4, rel=1e-12), f"kinetic_energy {energy} is not D^2/4"
+    assert enstrophy == pytest.approx(d2 / 2, rel=1e-12), f"enstrophy {enstrophy} is not D^2/2"
+    assert palinstrophy == pytest.approx(d2, rel=1e-12), f"palinstrophy {palinstrophy} is not D^2"
+    # The exact time derivatives of the closed forms D^2/4 and D^2/2, against the bundles.
+    assert -2.0 * nu * enstrophy == pytest.approx(-nu * d2, rel=1e-12), (
+        "dE/dt = -2 nu Omega fails: the enstrophy normalisation disagrees with kinetic_energy's")
+    assert -2.0 * nu * palinstrophy == pytest.approx(-2.0 * nu * d2, rel=1e-12), (
+        "dOmega/dt = -2 nu P fails: the palinstrophy normalisation disagrees with enstrophy's")
+
+
+#: The thirteen metrics whose cards report them per step of a candidate trajectory.
+PER_STEP = ("mse", "mae", "rmse", "rmse_channel_mean", "nrmse", "vrmse", "max_error",
+            "max_error_channel_mean", "h1_relative", "spectrum_l2", "kinetic_energy", "enstrophy",
+            "palinstrophy")
+
+
+def scored_candidate(truth: ClosedFormTrajectory, metrics: Sequence[str] = PER_STEP,
+                     fields: Sequence[str] = ("velocity", "vorticity")) -> dict[str, pd.DataFrame]:
+    """Each metric on the truth (``identity``) and on its candidate (``forecast``), indexed by
+    field and time, through the pipeline's prediction path with vorticity recomputed from
+    velocity, as ``evaluate.py`` does."""
+    rows = run(RecomputingTrajectory(truth), [metric_registry.get(n) for n in metrics],
+               build_ladder({}), fields=list(fields), dataset=DatasetInfo(name=truth.FORMAT),
+               prediction=RecomputingTrajectory(truth.predictions())).rows
+    assert (rows["lead_step"] == rows["frame_index"]).all(), "the lead is the frame's step"
+    return {side: rows[rows["degradation"] == side].pivot(index=["field", "time"],
+                                                          columns="metric", values="value")
+            for side in ("identity", "forecast")}
+
+
+@pytest.mark.parametrize("grid", [(48, 32), (25, 64)])
+def test_taylor_green_with_a_wrong_viscosity_has_a_closed_form_error_in_every_per_step_metric(
+        grid):
+    """The candidate with viscosity nu' is the truth times r = D'/D, D = exp(-2 nu t), so every
+    error is |1 - r| times a property of the truth's pattern (spec 05, Sect. 3.3, table):
+
+    * velocity's mean square per channel is D^2/4 (cell-centre means of sin^2 cos^2 are 1/4 on
+      any N >= 3), so mse = (D - D')^2/4, rmse = rmse_channel_mean = |D - D'|/2, nrmse =
+      |1 - r|, and vrmse = (|D - D'|/2) / sqrt(M/(M-1) D^2/4 + 1e-7) over M cells, the sample
+      variance with ddof = 1 and the card's epsilon (``metrics/vrmse/card.md``);
+    * h1_relative = 2 |1 - r|, one ratio per channel, and spectrum_l2 = |1 - r^2|, all energy
+      in one shell;
+    * the single-field metrics take the candidate's own closed forms, E = D'^2/4,
+      Omega = D'^2/2, P = D'^2 (as in the budget test above);
+    * mae and the maxima separate into one factor per axis, |sin| or |cos| at the cell centres
+      of that axis. The spec's max_error cos^2(pi/N) |D - D'| holds only when 4 divides N: with
+      N = 25 a centre lies a quarter cell from the peak of sin x, so the factor is
+      cos(pi/50), which the 25-cell grid checks.
+
+    Tolerance 1e-12 relative: both sides are evaluated in closed form and every derivative is
+    spectral. h1_relative adds the library's 1e-8 to sqrt of the reference's H^1 sum, at least
+    sqrt(M/4) D, about 10 here, so its bias is below 1e-9 and its tolerance 1e-8."""
+    nu, nu_candidate = 0.01, 0.025
+    truth = TaylorGreen2D(nu=nu, grid=grid, n_frames=4, t_end=30.0,
+                          candidate={"nu": nu_candidate})
+    got = scored_candidate(truth)["forecast"]
+    velocity, vorticity = got.loc["velocity"], got.loc["vorticity"]
+    t = velocity.index.to_numpy()
+    d, d_candidate = np.exp(-2 * nu * t), np.exp(-2 * nu_candidate * t)
+    gap, r, cells = np.abs(d - d_candidate), d_candidate / d, grid[0] * grid[1]
+    sin_x, cos_x, sin_y, cos_y = (np.abs(f((np.arange(n) + 0.5) * 2 * np.pi / n))
+                                  for n in grid for f in (np.sin, np.cos))
+    peaks = np.array([sin_x.max() * cos_y.max(), cos_x.max() * sin_y.max()])
+    expected = {
+        "mse": gap**2 / 4, "rmse": gap / 2, "rmse_channel_mean": gap / 2,
+        "nrmse": np.abs(1 - r),
+        "vrmse": gap / 2 / np.sqrt(cells / (cells - 1) * d**2 / 4 + EPSILON),
+        "spectrum_l2": np.abs(1 - r**2), "kinetic_energy": d_candidate**2 / 4,
+        "mae": gap * (sin_x.mean() * cos_y.mean() + cos_x.mean() * sin_y.mean()) / 2,
+        "max_error": gap * peaks.max(), "max_error_channel_mean": gap * peaks.mean(),
+    }
+    for name, value in expected.items():
+        assert velocity[name].to_numpy() == pytest.approx(value, rel=1e-12), name
+    assert velocity["h1_relative"].to_numpy() == pytest.approx(2 * np.abs(1 - r), rel=1e-8)
+    assert vorticity["enstrophy"].to_numpy() == pytest.approx(d_candidate**2 / 2, rel=1e-12)
+    assert vorticity["palinstrophy"].to_numpy() == pytest.approx(d_candidate**2, rel=1e-12)
+
+
+@pytest.mark.parametrize("grid", [(48, 32), (25, 64)])
+def test_taylor_green_with_a_phase_drift_is_seen_by_pointwise_errors_only(grid):
+    """The candidate is the truth translated by delta = U t at unchanged amplitude. For
+    f = sin x cos y the cell-centre mean of f(x) f(x - delta) is cos(dx) cos(dy) / 4 (any
+    N >= 3), and likewise for the other channel, so each channel's mean squared error is
+    D^2 (1 - cos dx cos dy) / 2: mse is that, rmse its root and nrmse = sqrt(2 (1 - cos dx
+    cos dy)) (spec 05, Sect. 3.3). A translation keeps every Fourier amplitude, so
+    kinetic_energy, enstrophy, palinstrophy and spectrum_l2 equal the truth's at every lead:
+    position-blind. Tolerance 1e-12 relative, or 1e-12 absolute where the value is zero."""
+    nu, drift = 0.01, np.array([0.03, -0.05])
+    truth = TaylorGreen2D(nu=nu, grid=grid, n_frames=4, t_end=30.0,
+                          candidate={"drift": drift.tolist()})
+    scored = scored_candidate(truth)
+    got, clean = scored["forecast"], scored["identity"]
+    t = got.loc["velocity"].index.to_numpy()
+    mse = np.exp(-4 * nu * t) * (1 - np.cos(drift[0] * t) * np.cos(drift[1] * t)) / 2
+    assert got.loc["velocity", "mse"].to_numpy() == pytest.approx(mse, rel=1e-12)
+    assert got.loc["velocity", "rmse"].to_numpy() == pytest.approx(np.sqrt(mse), rel=1e-12)
+    assert got.loc["velocity", "nrmse"].to_numpy() == pytest.approx(
+        np.sqrt(2 * (1 - np.cos(drift[0] * t) * np.cos(drift[1] * t))), rel=1e-12)
+    assert (mse[1:] > 1e-3).all(), "the drift must be large enough to be seen"
+    blind = got[["kinetic_energy", "enstrophy", "palinstrophy"]].dropna(how="all")
+    assert blind.to_numpy() == pytest.approx(
+        clean.loc[blind.index, blind.columns].to_numpy(), rel=1e-12, nan_ok=True)
+    assert got["spectrum_l2"].to_numpy() == pytest.approx(0.0, abs=1e-12)
+
+
+def test_evaluate_scores_a_closed_form_candidate_in_place_of_the_ladder(tmp_path):
+    """End to end: a reader option selects the candidate, ``evaluate.py`` scores the reader's
+    ``predictions()`` as it scores a forecast's, keeps only the clean entry and the anchor of
+    the ladder, labels every row with its lead and resolution as a forecast's rows are (the
+    forecast figure reads both), and nrmse on velocity is |1 - D'/D|."""
+    subprocess.run(
+        [sys.executable, str(REPO / "evaluate.py"), "dataset=taylor_green_2d", "metrics=[nrmse]",
+         "+dataset.reader.candidate={nu:0.02}", "+dataset.reader.grid=[48,32]",
+         "+dataset.reader.n_frames=4", "dataset.fields=[velocity]",
+         f"paths.results={tmp_path}", f"hydra.run.dir={tmp_path}/h"],
+        check=True, capture_output=True, cwd=tmp_path,
+    )
+    (folder,) = [p for p in tmp_path.glob("nrmse_*") if p.is_dir()]
+    rows = read_results(folder)
+    assert set(rows["degradation"]) == {"identity", "mean_field", "forecast"}
+    assert (rows["lead_step"] == rows["frame_index"]).all()
+    assert (rows["param_resolution"] == 48).all()
+    forecast = rows[rows["degradation"] == "forecast"].sort_values("time")
+    t = forecast["time"].to_numpy()
+    assert forecast["value"].to_numpy() == pytest.approx(np.abs(1 - np.exp(-0.02 * t)),
+                                                          rel=1e-12)
+    assert read_run_meta(folder)["reader_options"]["candidate"] == {"nu": 0.02}
+
+
+@pytest.mark.parametrize("kwargs, match", [
+    ({"candidate": {"viscosity": 0.02}}, "not parameters of the solution"),
+    ({"candidate": {"grid": [8, 8]}}, "not parameters of the solution"),
+    ({"drift": (0.1,)}, "pair"),
+])
+def test_taylor_green_refuses_a_candidate_it_cannot_build(kwargs, match):
+    with pytest.raises(ValueError, match=match):
+        TaylorGreen2D(**kwargs)
+
+
 def test_taylor_green_grid_is_periodic_and_frames_decay_together():
     tg = TaylorGreen2D(grid=GRID)
     assert tg.grid.boundary == ("periodic", "periodic")
@@ -344,6 +535,40 @@ def test_a_blob_is_carried_rigidly_at_its_velocity():
     first, later = (blob.frame(i, ["density"])["density"] for i in (0, 1))
     assert later == pytest.approx(np.roll(first, 2, axis=-2), rel=1e-12)
     assert blob.grid.boundary == ("periodic", "periodic")
+
+
+@pytest.mark.parametrize("candidate", [
+    {"velocities": [[0.07, 0.0]]},                             # a wrong speed
+    {"diffusivity": 1e-5},                                     # a wrong diffusivity
+    {"velocities": [[0.03, 0.04]], "diffusivity": 1e-5},       # both
+])
+def test_a_blob_candidate_with_a_wrong_speed_or_diffusivity_has_its_closed_form_mse(candidate):
+    """Two Gaussians g_i = a_i exp(-|x - c_i|^2 / (2 s_i)) on the unit square, with
+    s_i = w^2 + 2 kappa_i t and a_i = a w^2 / s_i (the reader's solution), centres Delta =
+    (u' - u) t apart: from int g_i^2 = pi a_i^2 s_i and int g_1 g_2 = 2 pi a_1 a_2 s_1 s_2 /
+    (s_1 + s_2) exp(-|Delta|^2 / (2 (s_1 + s_2))) (our derivation, the product of two
+    Gaussians), MSE = pi a_1^2 s_1 + pi a_2^2 s_2 - 4 pi a_1 a_2 s_1 s_2 / (s_1 + s_2)
+    exp(-|Delta|^2 / (2 (s_1 + s_2))). The cell-centre mean is the integral to within
+    exp(-2 pi^2 s / (2 h^2)) < 1e-30 for a resolved Gaussian, and the minimum-image seam is
+    below 5e-15 of the peak here (s <= 0.0038). The density is 1 plus the bump, so each cell's
+    difference carries an absolute round-off of 1e-16 against bumps whose difference is
+    1e-4 under the wrong diffusivity: measured relative error 2e-12, tolerance 1e-10."""
+    a, w = 0.1, 0.06
+    truth = AdvectingBlobs(grid=(64, 48), n_frames=6, t_end=10.0, velocities=[[0.05, 0.02]],
+                           amplitude=a, width=w, candidate=candidate)
+    rows = run(truth, [metric_registry.get("mse")], build_ladder({}), fields=["density"],
+               dataset=DatasetInfo(name="advecting_blobs"), prediction=truth.predictions()).rows
+    forecast = rows[rows["degradation"] == "forecast"]
+    t = forecast["time"].to_numpy()
+    s1, s2 = (w**2 + 2 * kappa * t for kappa in
+              (truth.meta["diffusivity"], candidate.get("diffusivity", 0.0)))
+    a1, a2 = a * w**2 / s1, a * w**2 / s2
+    shift = np.subtract(candidate.get("velocities", truth.meta["velocities"])[0],
+                        truth.meta["velocities"][0])
+    mse = (np.pi * a1**2 * s1 + np.pi * a2**2 * s2 - 4 * np.pi * a1 * a2 * s1 * s2 / (s1 + s2)
+           * np.exp(-(shift @ shift) * t**2 / (2 * (s1 + s2))))
+    assert forecast["value"].to_numpy() == pytest.approx(mse, rel=1e-10, abs=1e-20)
+    assert (forecast["value"].to_numpy()[1:] > 0).all()
 
 
 def test_blobs_at_distinct_speeds_change_the_error_from_frame_to_frame():
@@ -399,3 +624,515 @@ def test_a_per_unit_time_strength_the_grid_cannot_take_is_dropped_before_the_run
                fields=["density"], dataset=DatasetInfo(name="advecting_blobs")).rows
     assert "grow" not in set(rows["degradation"].astype(str))
     assert "translate_x" in set(rows["degradation"].astype(str))
+
+
+# --- the feature population: advecting_blobs' options (dataset_specs/06, Sect. 3.5) ---------
+
+#: A non-square grid whose cell centres are dyadic, so a whole-cell move changes no bit of a
+#: feature's values, and four of its cell centres 0.5 apart. At ``WIDTH`` that is 20 widths, so
+#: a Gaussian's tail at the midpoint is e^-50 of its peak, below the round-off of a field of
+#: order 1: the features are isolated to the bit (at the 12 widths of spec 06, Sect. 3.3, the
+#: tails overlap at 1.5e-8, which measurably breaks the exact answers below). ``WIDTH`` is 6.4 by
+#: 3.2 cells, so the cell-centre mean of a product of two Gaussians is its integral to within
+#: e^(-pi^2 (w/h)^2) = e^-101 (Poisson summation), and the Fourier amplitude at the Nyquist
+#: wavenumber, e^(-pi^2 (w/h)^2 / 2) = e^-50, leaves the spectral Biot-Savart inversion exact.
+POPULATION = {"grid": (256, 128), "n_frames": 1, "t_end": 0.0, "velocities": [[0.0, 0.0]] * 4,
+              "centres": [[(64.5 + 128 * i) / 256, (32.5 + 64 * j) / 128]
+                          for j in (0, 1) for i in (0, 1)],
+              "width": 0.025}
+WIDTH = POPULATION["width"]
+
+
+def test_the_blob_defaults_are_the_closed_form_bit_for_bit():
+    """With none of the population's options set, the reader is the three advected blobs of its
+    docstring's equation, evaluated in that order, to the last bit: the population's Gaussian
+    reduces to the blob's at aspect 1 and orientation 0 operation by operation. The fields the
+    options add are empty: no velocity, no vorticity, a uniform pressure of 1."""
+    blobs = AdvectingBlobs(grid=(48, 32))
+    x, y = blobs.centres
+    starts = np.random.default_rng(0).random((3, 2))
+    for t in (0, 7, len(blobs) - 1):
+        frame = blobs.frame(t, list(AdvectingBlobs.FIELDS))
+        expected = np.ones_like(x)
+        for centre, velocity in zip(starts, np.asarray(blobs.meta["velocities"]), strict=True):
+            cx, cy = (centre + velocity * blobs.times[t]) % 1.0
+            squared = ((x - cx + 0.5) % 1.0 - 0.5) ** 2 + ((y - cy + 0.5) % 1.0 - 0.5) ** 2
+            expected += 0.1 * (0.06**2 / 0.06**2) * np.exp(-squared / (2.0 * 0.06**2))
+        assert np.array_equal(frame["density"][0], expected), f"frame {t} moved off eq. (1)"
+        assert not frame["velocity"].any() and not frame["vorticity"].any()
+        assert (frame["pressure"] == 1.0).all()
+
+
+def test_a_vortex_population_carries_the_biot_savart_velocity_of_its_vorticity():
+    """The stored vorticity has zero mean (a torus holds no net circulation), and the harness's
+    own spectral curl of the stored velocity returns it, with zero divergence and zero mean
+    velocity: on a periodic domain those three fix the velocity uniquely, so the inversion and
+    its sign are right. A positive vortex turns counter-clockwise: the flow is up (+y) on its
+    +x side and down on its -x side. Measured curl error 1.8e-13 of a peak of 1, the round-off
+    of two spectral derivatives at |k| up to pi/h; tolerance 1e-12."""
+    vortices = AdvectingBlobs(**POPULATION, kinds="vortex", amplitude=[1.0, -1.0, 0.5, -0.5])
+    frame = vortices.frame(0, ["velocity", "vorticity"])
+    spacing = vortices.grid.spacing
+    assert abs(frame["vorticity"].mean()) < 1e-15
+    assert np.abs(spectral_vorticity(frame["velocity"], spacing=spacing)
+                  - frame["vorticity"][0]).max() < 1e-12
+    assert np.abs(divergence(frame["velocity"], spacing=spacing)).max() < 1e-12
+    assert np.abs(frame["velocity"].mean(axis=(1, 2))).max() < 1e-15
+    i, j = 64, 32  # the cell of the first, positive, vortex
+    assert frame["velocity"][1, i + 4, j] > 0 > frame["velocity"][1, i - 4, j]
+
+
+def test_moving_one_bump_past_1_665_widths_costs_more_than_removing_it():
+    """The double penalty in closed form (spec 06, Sect. 3.5, Eq. 5): the other bump cancels in
+    the difference, so a bump of height a moved by s costs MSE = 2 pi w^2 a^2 (1 - e^(-s^2/4w^2))
+    (the overlap integral of two Gaussians), and removing it costs pi w^2 a^2. The move costs
+    more once s > 2 sqrt(ln 2) w = 1.665 w. The candidate gives the first bump a speed of w/2 per
+    unit time, so the frames sweep s from 0 to 4 w across the crossover. Measured error 2e-15
+    relative, the round-off of the density's level 1 against a difference of order a; the
+    cell-centre mean equals the integral far below it (``POPULATION``). Tolerance 1e-12."""
+    a, speed, frames = 0.5, WIDTH / 2, {"n_frames": 9, "t_end": 8.0}
+    pair = {**POPULATION, **frames, "velocities": [[0.0, 0.0]] * 2,
+            "centres": POPULATION["centres"][:2], "amplitude": [a, 0.8]}
+    moved, removed = (scored_candidate(AdvectingBlobs(**pair, candidate=candidate), ("mse",),
+                                       ("density",))["forecast"].loc["density", "mse"]
+                      for candidate in ({"velocities": [[speed, 0.0], [0.0, 0.0]]},
+                                        {"amplitude": [0.0, 0.8]}))
+    s = speed * moved.index.to_numpy()
+    assert moved.to_numpy() == pytest.approx(
+        2 * np.pi * WIDTH**2 * a**2 * (1 - np.exp(-(s**2) / (4 * WIDTH**2))), rel=1e-12, abs=0)
+    assert removed.to_numpy() == pytest.approx(np.pi * WIDTH**2 * a**2, rel=1e-12)
+    crossover = 2 * np.sqrt(np.log(2)) * WIDTH
+    assert (s < crossover).any() and (s > crossover).any(), "the frames must straddle it"
+    assert ((moved.to_numpy() > removed.to_numpy()) == (s > crossover)).all()
+
+
+#: The second bump moved by three cells along x and two along y, to cell centres again.
+MOVED = [POPULATION["centres"][0], [195.5 / 256, 34.5 / 128], *POPULATION["centres"][2:]]
+
+
+@pytest.mark.parametrize("candidate, distance", [
+    ({"amplitude": [1.0, 0.0, 0.0, 0.6]}, 0.15),  # remove the bump of height 0.3
+    ({"amplitude": [1.0, 0.3, 0.2, 0.6]}, 0.10),  # add one of height 0.2 at the empty site
+    ({"centres": MOVED}, 0.0),                    # move one by whole cells
+], ids=["remove", "add", "move"])
+def test_removing_or_adding_a_bump_moves_the_persistence_diagram_by_half_its_height(candidate,
+                                                                                     distance):
+    """Sublevel sets of bumps on the level 1 of a torus (spec 06, Sect. 3.5, measured there):
+    every bump but the tallest is one finite point (1, 1 + a) of the diagram, whose L-infinity
+    distance to the diagonal is a/2. Removing a bump that is not the tallest, or adding one, adds
+    or deletes only that point, so the bottleneck distance is half its height; a whole-cell move
+    changes no value, so no point moves. The bumps sit on cell centres, so each sampled peak is
+    its height exactly. Tolerance 1e-12, above gudhi's precision of a few bits (measured
+    1.3e-16)."""
+    truth = AdvectingBlobs(**POPULATION, amplitude=[1.0, 0.3, 0.0, 0.6], candidate=candidate)
+    got = scored_candidate(truth, ("persistence_distance",), ("density",))["forecast"]
+    assert got["persistence_distance"].to_numpy() == pytest.approx([distance], abs=1e-12)
+
+
+def test_increment_w1_is_blind_to_a_whole_cell_move_and_to_a_centred_vortex_flip():
+    """Three answers of spec 06, Sect. 3.5, for the one-cell increments.
+
+    * A whole-cell move of one isolated bump permutes the increments, so W1 = 0; with dyadic cell
+      centres every value is reproduced to the bit and the zero is exact.
+    * Removing the bump of height a sends each of its increments to zero. On each axis the
+      monotone coupling then costs the mean absolute increment, and a unimodal periodic row
+      varies by twice its peak, so W1 along x is (2 / M) sum over rows of the row's peak,
+      a exp(-dy^2 / 2w^2), over M cells; the metric averages the two axes. Measured 4e-16
+      relative; tolerance 1e-12.
+    * Flipping a vortex centred on a cell centre negates its increments, and a Gaussian symmetric
+      about a cell centre has a multiset of increments closed under negation, so W1 = 0; the mean
+      the flip shifts is a constant, which only rounds. Each increment is a difference of values
+      of order 1, so the rounding is a few units of 2.2e-16 at most; measured 3e-19, tolerance
+      1e-15. MSE shows the flip happened: the stored vorticity changes by -2 g + 2 Gamma, with
+      Gamma = 2 pi w^2 |a| the vortex's circulation, so MSE = 4 pi w^2 a^2 - 4 Gamma^2 (spec 06,
+      Sect. 3.5); measured equal to double precision on the vorticity recomputed from the
+      velocity, tolerance 1e-12."""
+    bumps = {**POPULATION, "amplitude": [1.0, 0.3, 0.0, 0.6]}
+    moved, removed = (scored_candidate(AdvectingBlobs(**bumps, candidate=candidate),
+                                       ("increment_w1",), ("density",))["forecast"]
+                      for candidate in ({"centres": MOVED}, {"amplitude": [1.0, 0.0, 0.0, 0.6]}))
+    assert moved["increment_w1"].to_numpy() == [0.0]
+    (nx, ny), (cx, cy) = POPULATION["grid"], POPULATION["centres"][1]
+    peaks = [0.3 * np.exp(-(((np.arange(n) + 0.5) / n - c + 0.5) % 1.0 - 0.5) ** 2
+                          / (2 * WIDTH**2)) for n, c in ((ny, cy), (nx, cx))]
+    expected = (peaks[0].sum() + peaks[1].sum()) / (nx * ny)  # (W1_x + W1_y) / 2
+    assert removed["increment_w1"].to_numpy() == pytest.approx([expected], rel=1e-12)
+
+    a = 0.5
+    flipped = scored_candidate(
+        AdvectingBlobs(**POPULATION, kinds="vortex", amplitude=[1.0, -1.0, a, -a],
+                       candidate={"amplitude": [1.0, -1.0, -a, -a]}),
+        ("increment_w1", "mse"), ("vorticity",))["forecast"]
+    assert flipped["increment_w1"].to_numpy() == pytest.approx([0.0], abs=1e-15)
+    circulation = 2 * np.pi * WIDTH**2 * a
+    assert flipped["mse"].to_numpy() == pytest.approx(
+        [4 * np.pi * WIDTH**2 * a**2 - 4 * circulation**2], rel=1e-12)
+
+
+@pytest.mark.parametrize("cells", [1, 3])
+@pytest.mark.parametrize("placement, centre, assd_offset", [
+    ("faces", 0.5, 0.5),            # fronts at x = 24/64 and 40/64, both cell faces
+    ("centres", 32.5 / 64, 0.0),    # fronts through the centres of cells 24 and 40
+])
+def test_a_straight_front_moved_by_whole_cells_has_its_shock_set_distance(placement, centre,
+                                                                          assd_offset, cells):
+    """A stripe of half-width 8 cells running along y, raising the pressure from 1 to 2.5 across
+    a tanh of a quarter cell, moved by s whole cells along x. The detector flags a cell whose
+    two neighbours along an axis differ by the ratio 1.805 (``shock_set_distance`` card, Eq. 1).
+    A front on a cell face flags the cell on each side of it, ratios 2.47 and 2.43, so each
+    flagged cell's partner is s - 1 or s cells away and ASSD = (s - 1/2) dx (card, Eq. 3); a front
+    through a cell centre flags that cell only (its neighbours see 1.75 and 1.43), so
+    ASSD = s dx. The Hausdorff distance is s dx in both. The two fronts of the stripe are 16
+    cells apart, more than twice the move, so each finds its own partner (spec 06, Sect. 3.5).
+    The distances are exact multiples of the spacing; tolerance 1e-12."""
+    dx = 1 / 64
+    truth = AdvectingBlobs(grid=(64, 48), n_frames=1, t_end=0.0, velocities=[[0.0, 0.0]],
+                           centres=[[centre, 0.5]], kinds="front", directions=[[0, 1]],
+                           width=8 * dx, amplitude=1.5,
+                           candidate={"centres": [[centre + cells * dx, 0.5]]})
+    got = scored_candidate(truth, ("shock_set_distance", "shock_set_hausdorff"),
+                           ("pressure",))["forecast"]
+    assert got["shock_set_distance"].to_numpy() == pytest.approx(
+        [(cells - assd_offset) * dx], rel=1e-12), placement
+    assert got["shock_set_hausdorff"].to_numpy() == pytest.approx([cells * dx], rel=1e-12)
+
+
+def test_a_background_is_band_limited_has_its_rms_and_cancels_from_a_pointwise_error():
+    """The background is ``_apply_filter`` on seeded white noise, so it holds no power outside
+    its band (exact, up to the round-off of two FFTs), its expected mean square is rms^2, and,
+    being the same in the truth and the candidate, it cancels from a pointwise error, which keeps
+    the flat background's closed form (spec 06, Sect. 3.5): removing a bump of height a costs
+    pi w^2 a^2 (measured to 2e-16; tolerance 1e-12). With a flat spectrum over the band
+    1 <= |k| <= 64 (slope -1) about 1.3e4 modes, half of them independent, carry the variance,
+    so one draw's mean square scatters by about sqrt(2 / 6.4e3) = 1.8%; the tolerance of 10%
+    on the rms is over five standard deviations."""
+    band = {"slope": -1.0, "k_min": 1, "k_max": 64}
+    flat = AdvectingBlobs(**POPULATION, amplitude=0.0, seed=3,
+                          background={"rms": {"density": 0.05, "pressure": 0.2}, **band})
+    frame = flat.frame(0, ["density", "pressure"])
+    for name, rms in (("density", 0.05), ("pressure", 0.2)):
+        b = frame[name][0] - 1.0
+        power = np.abs(np.fft.fftn(b)) ** 2
+        outside = (wavenumber_magnitude(b.shape) < 1) | (wavenumber_magnitude(b.shape) > 64)
+        assert power[outside].sum() < 1e-20 * power.sum(), f"{name} has power outside its band"
+        assert np.sqrt(np.mean(b**2)) == pytest.approx(rms, rel=0.1), name
+    a = 0.3
+    truth = AdvectingBlobs(**POPULATION, amplitude=[1.0, a, 0.0, 0.6], seed=3,
+                           background={"rms": {"density": 0.05}, **band},
+                           candidate={"amplitude": [1.0, 0.0, 0.0, 0.6]})
+    got = scored_candidate(truth, ("mse",), ("density",))["forecast"]
+    assert got["mse"].to_numpy() == pytest.approx([np.pi * WIDTH**2 * a**2], rel=1e-12)
+
+
+@pytest.mark.parametrize("options, match", [
+    ({"kinds": "blob"}, "kinds"),
+    ({"amplitude": [-0.1, 0.1, 0.1]}, "non-negative"),
+    ({"width": [0.06, 0.06]}, "one value per velocity"),
+    ({"aspect": 0.0}, "positive"),
+    ({"kinds": "front", "directions": [[2, 2], [0, 1], [0, 0]]}, "coprime"),
+    ({"directions": [[0, 1], [0, 0], [0, 0]]}, "coprime"),        # a stripe on a bump
+    ({"kinds": "front", "diffusivity": 1e-5}, "zero with a front"),
+    ({"background": {"rms": {"velocity": 0.1}, "slope": 3, "k_min": 1, "k_max": 8}},
+     "background"),
+    ({"background": {"rms": {"density": 0.1}, "slope": 3, "k_min": 0, "k_max": 0.5}}, "band"),
+])
+def test_the_population_refuses_what_it_cannot_build(options, match):
+    with pytest.raises(ValueError, match=match):
+        AdvectingBlobs(**options)
+
+
+def test_a_background_that_makes_the_density_non_positive_is_refused_when_read():
+    blobs = AdvectingBlobs(background={"rms": {"density": 2.0}, "slope": 0, "k_min": 1,
+                                       "k_max": 8})
+    with pytest.raises(ValueError, match="not positive"):
+        blobs.frame(0, ["density"])
+
+
+# --- random fields with known statistics (dataset_specs/09) -----------------------------------
+
+#: A Gaussian field with the broken power law of spec 09's first configuration (shell slopes 5/3
+#: then 3, broken at k = 16) on a non-square grid, every frame an independent draw.
+BROKEN = {"grid": (128, 96), "slopes": [5 / 3, 3.0], "k_break": 16.0, "k_min": 4.0,
+          "k_max": 40.0, "n_frames": 12}
+
+
+def matern(grid: tuple[int, int], rho: float, nu: float = 1.0) -> dict:
+    """``RandomField`` options of a Matern field of smoothness ``nu`` and length ``rho`` cells of
+    the x axis, on every mode below the smaller Nyquist line."""
+    return {"grid": grid, "slopes": [-1.0, 2 * nu + 1], "k_min": 1.0,
+            "k_break": grid[0] * np.sqrt(2 * nu) / (2 * np.pi * rho), "k_max": min(grid) // 2 - 1}
+
+
+def separation_curves(result) -> pd.DataFrame:
+    """Frame mean of ``increment_flatness.by_separation``, by field and separation."""
+    curves = result.companions[result.companions["metric"] == "increment_flatness.by_separation"]
+    return curves.groupby(["field", "coordinate"], observed=True)["value"].mean()
+
+
+def test_a_random_field_has_its_spectrum_and_a_solenoidal_velocity_whose_curl_it_stores():
+    """The draw puts power only on the band, in the prescribed shape: a power law
+    ``v ~ |k|^-(beta + 1)`` (a shell spectrum ``k^-beta``, spec 09, Sect. 3.2), and the Matern
+    density ``(1 + alpha^2 kappa^2)^-(nu + 1)`` of Porcu et al. (2023), Eq. 23, with
+    ``alpha = rho / sqrt(2 nu)`` and ``kappa = 2 pi k`` on the unit square. The harness's own
+    spectral curl of the velocity returns the stored vorticity and its divergence vanishes; both
+    are round-off of two spectral derivatives at |kappa| up to 2 pi 40, measured 1e-14 of the
+    vorticity's largest value; tolerance 1e-12."""
+    power_law = RandomField(grid=(128, 96), slopes=[5 / 3], k_min=4.0, k_max=40.0, n_frames=1)
+    k = wavenumber_magnitude((128, 96))
+    band = (k >= 4) & (k <= 40)
+    t2 = power_law.transfers["density"] ** 2
+    assert not t2[~band].any(), "power outside the band"
+    assert t2[band] / t2[band].max() == pytest.approx((k[band] / 4.0) ** -(5 / 3 + 1), rel=1e-12)
+
+    rho, nu = 6.0, 1.5
+    options = matern((128, 96), rho, nu)
+    alpha = rho / 128 / np.sqrt(2 * nu)  # rho cells of the x axis, in domain lengths
+    density = RandomField(**options, n_frames=1).transfers["density"] ** 2
+    shape = (1 + alpha**2 * (2 * np.pi * k) ** 2) ** -(nu + 1)
+    inside = (k >= 1) & (k <= options["k_max"])
+    assert density[inside] / density[inside].max() == pytest.approx(
+        shape[inside] / shape[inside].max(), rel=1e-12)
+
+    frame = RandomField(**BROKEN).frame(3, ["velocity", "vorticity"])
+    spacing = power_law.grid.spacing
+    scale = np.abs(frame["vorticity"]).max()
+    assert np.abs(spectral_vorticity(frame["velocity"], spacing=spacing)
+                  - frame["vorticity"][0]).max() < 1e-12 * scale
+    assert np.abs(divergence(frame["velocity"], spacing=spacing)).max() < 1e-12 * scale
+
+
+@pytest.mark.parametrize("options", [BROKEN, {**matern((192, 128), 8.0), "anisotropy": 2.0,
+                                               "n_frames": 12}], ids=["broken", "anisotropic"])
+def test_a_gaussian_field_has_flatness_3_and_its_exact_increment_variance_along_each_axis(
+        options):
+    """Every increment of a Gaussian field is Gaussian, so the increment flatness is 3 on every
+    field and axis, before and after a whole-cell translation. A translation by l cells along
+    axis j makes the MSE the empirical increment variance, whose expectation is spec 09, Eq. 3,
+    ``S_2(l) = sum_k q_k`` with ``q_k = sigma^2 T_k^2 / M * 2 (1 - cos(2 pi k_j l / N_j))``
+    for density (``T`` the reader's transfer; vorticity likewise with its own), and whose
+    spread is :func:`gaussian_mean_square`'s. The anisotropic Matern field (a = 2: correlation
+    lengths 16 and 4 cells of the x axis along x and y) has a different correlation function
+    along each axis, so this pins both correlation lengths.
+
+    Tolerances: the frame mean of the MSE within four of its exact standard errors; the frame
+    mean of the flatness within 0.08 of 3, four standard errors of a 12-frame mean at the largest
+    per-frame spread measured, 0.07 (0.02 to 0.07 across fields, spectra and six seeds, whose
+    12-frame means all lay within 0.03 of 3)."""
+    shifts = [1, 4, 16]
+    ladder = build_ladder({"shift_x": {"op": "translate", "severities": shifts},
+                           "shift_y": {"op": "translate", "severities": shifts,
+                                       "options": {"axis": "y"}}})
+    field = RandomField(**options)
+    result = run(RecomputingTrajectory(field), [metric_registry.get(n) for n in
+                                                ("mse", "increment_flatness")],
+                 ladder, fields=["density", "velocity", "vorticity"],
+                 dataset=DatasetInfo(name="random_field"))
+    rows = result.rows
+    flatness = rows[rows["metric"] == "increment_flatness"].groupby(
+        ["field", "degradation", "level"], observed=True)["value"].mean()
+    assert np.abs(flatness - 3.0).max() < 0.08, flatness.to_string()
+
+    mse = rows[rows["metric"] == "mse"].groupby(["field", "degradation", "level"],
+                                                observed=True)["value"].mean()
+    m_x, m_y = np.meshgrid(*[np.fft.fftfreq(n) * n for n in field.grid.shape], indexing="ij")
+    scales = {"density": field.meta["density_sigma"] ** 2, "vorticity": 1.0}
+    for name, scale in scales.items():
+        per_mode = scale * field.transfers[name] ** 2 / m_x.size
+        for label, m, n in (("shift_x", m_x, field.grid.shape[0]),
+                            ("shift_y", m_y, field.grid.shape[1])):
+            for level, shift in enumerate(shifts, start=1):
+                expected, spread = gaussian_mean_square(
+                    per_mode * 2 * (1 - np.cos(2 * np.pi * m * shift / n)))
+                got = mse[name, label, level]
+                assert abs(got - expected) < 4 * spread / np.sqrt(len(field)), (
+                    f"{name} {label} {shift}: MSE {got:.6g}, Eq. 3 gives {expected:.6g} "
+                    f"+- {spread / np.sqrt(len(field)):.2g}")
+
+
+def test_two_gaussian_fields_are_their_amplitude_gap_apart_in_increment_w1():
+    """On the line the 1-Wasserstein distance is the L1 distance of the quantile functions
+    (Peyre & Cuturi 2019, Remark 2.30, Eq. 2.36, as ``increment_w1`` cites), and those of two
+    centred normals are ``s_i Phi^-1``, so ``W1 = |s_1 - s_2| sqrt(2/pi)`` (spec 09, Eq. 5). The
+    candidate is an independent realisation (another seed) at 1.5 times the density amplitude;
+    along axis j both increments have standard deviation ``sigma_i sqrt(S_2(1))``, and the
+    metric averages the two axes. Measured per-frame spread 5.4%, so a 12-frame mean has a
+    standard error of 1.6%; tolerance 6%."""
+    truth = RandomField(**BROKEN, candidate={"seed": 1, "density_sigma": 0.075})
+    rows = run(truth, [metric_registry.get("increment_w1")], build_ladder({}),
+               fields=["density"], dataset=DatasetInfo(name="random_field"),
+               prediction=truth.predictions()).rows
+    got = rows.loc[rows["degradation"] == "forecast", "value"].mean()
+    covariance = np.fft.ifft2(truth.transfers["density"] ** 2).real
+    s2 = 2 * (covariance[0, 0] - np.array([covariance[1, 0], covariance[0, 1]]))
+    expected = np.mean(abs(0.05 - 0.075) * np.sqrt(s2)) * np.sqrt(2 / np.pi)
+    assert got == pytest.approx(expected, rel=0.06)
+
+
+def test_the_hill_estimate_of_a_gaussian_field_is_its_population_value():
+    """A Gaussian has extreme-value index 0, but at a fixed order k of n the Hill estimate
+    (Hill 1975; ``tail_index`` card, Eq. 2) converges to ``E[ln(X / u) | X > u]`` for
+    ``X = |Z|`` and ``u`` its upper ``p = k/n`` quantile (spec 09, Sect. 3.2). That depends on
+    neither the spectrum nor the amplitude, since every increment is a scaled normal and the
+    estimate is scale-free: 0.0928 at ``k = 256 = sqrt(n)`` on 256^2, the registered order.
+    Measured per-frame spread 0.0027 (spec 09 and here), so an 8-frame mean has a standard
+    error of 0.001; tolerance 0.004."""
+    n = 256 * 256
+    p = np.ceil(np.sqrt(n)) / n
+    u = stats.norm.isf(p / 2)
+    population = integrate.quad(lambda x: np.log(x / u) * 2 * stats.norm.pdf(x), u,
+                                np.inf)[0] / p
+    assert population == pytest.approx(0.0928, abs=5e-5)
+    rows = run(RandomField(grid=(256, 256), n_frames=8), [metric_registry.get("tail_index")],
+               build_ladder({}), fields=["density"], dataset=DatasetInfo(name="random_field")).rows
+    assert rows["value"].mean() == pytest.approx(population, abs=0.004)
+
+
+@pytest.mark.parametrize("alpha", [2.0, 4.0])
+def test_pareto_spikes_give_the_hill_estimate_their_tail_index(alpha):
+    """Spikes of Pareto size ``floor (1 + Lomax(alpha))`` on a fraction 2/sqrt(n) of the cells:
+    each makes two one-cell increments per axis of about its own size, so when the k + 1
+    largest increments are all spike increments the Hill estimate is a mean of log-ratios of
+    Pareto values, exponential with mean 1/alpha (spec 09, Sect. 3.7). That needs more than
+    k/2 spikes, a fraction of 1/(2 sqrt(n)), which fails as the catalog's G2 reviewer found; 2/
+    sqrt(n) is the margin the catalog asks for, and the floor must exceed the largest Gaussian
+    increment, checked here. Measured on 256 x 192 over four seeds: 24-frame means 4.6% low to
+    0.6% high at alpha = 2 and 5.2% low to 0.4% high at alpha = 4, with a per-frame spread of 7%
+    to 10% (a standard error of 2% at most); tolerance 7%."""
+    grid, floor = (256, 192), 0.3
+    plain = RandomField(grid=grid, k_max=95, n_frames=24)
+    gaussian = plain.frame(0, ["density"])["density"][0]
+    assert floor > max(np.abs(np.roll(gaussian, -1, axis) - gaussian).max() for axis in (0, 1))
+    spiked = RandomField(grid=grid, k_max=95, n_frames=24, spikes={
+        "fraction": 2 / np.sqrt(grid[0] * grid[1]), "alpha": alpha, "floor": floor})
+    rows = run(spiked, [metric_registry.get("tail_index")], build_ladder({}),
+               fields=["density"], dataset=DatasetInfo(name="random_field")).rows
+    assert rows["value"].mean() == pytest.approx(1 / alpha, rel=0.07)
+
+
+@pytest.mark.parametrize("transform, sigma, tolerance", [("hermite2", 0.3, 0.08),
+                                                         ("exp", 0.5, 0.12)])
+def test_intermittent_fields_have_their_exact_flatness_at_every_separation(transform, sigma,
+                                                                           tolerance):
+    """Three non-Gaussian increment laws with exact flatness at every separation l, read from
+    ``increment_flatness.by_separation`` and averaged over frames, on the Matern field
+    (rho = 4 cells, nu = 1) whose correlation ``c(l)`` per axis is ``ifft(T^2)``:
+
+    * density ``1 + sigma (g^2 - 1)``: the increment is a product of two independent normals,
+      so its flatness is exactly 9 at every l (spec 09, Eq. 8);
+    * density ``exp(sigma g - sigma^2/2)``: from the bivariate normal's moment generating
+      function, ``E[d^q] = sum_j C(q, j) (-1)^j exp(sigma^2/2 ((q-j)^2 + j^2 + 2 (q-j) j c))``
+      (spec 09, Eq. 9), so the flatness rises from about 5.9 at large l to 7.9 at one cell;
+    * multifractal vorticity and velocity (lambda = 0.05): conditional on the log-volatility
+      the increment is Gaussian with variance ``sum_y A_l(y) e^(2(omega - V))``, with
+      ``A_l = (K(y + l e_j) - K(y))^2`` for the field's kernel K, so the flatness is
+      ``3 sum A A' e^(4 C_omega) / (sum A)^2``, two FFTs (spec 09, Eq. 11; the construction of
+      Lakhal et al. 2025, Eqs. 1-4). Velocity is read longitudinally; its kernel is the
+      Biot-Savart velocity of the vorticity's.
+
+    The metric averages the per-axis flatnesses, so the target is the mean over axes. A sample
+    flatness of heavy-tailed increments is a noisy ratio, biased low on few independent areas
+    (spec 09, Sect. 3.5), so the frame mean is compared at a stated tolerance: over eight seeds
+    of 48 frames the 48-frame means lay between -2.0% and +4.4% of the exact value (hermite2),
+    -2.2% and +7.2% (exp), and -4.5% and +1.5% (multifractal, both fields, both transforms);
+    tolerances 8%, 12% and 8%."""
+    field = RandomField(**matern((256, 192), 4.0), n_frames=48, transform=transform,
+                        density_sigma=sigma, multifractal_lambda=0.05)
+    result = run(RecomputingTrajectory(field), [metric_registry.get("increment_flatness")],
+                 build_ladder({}), fields=["density", "velocity", "vorticity"],
+                 dataset=DatasetInfo(name="random_field"))
+    curves = separation_curves(result)
+
+    correlation = np.fft.ifft2(field.transfers["density"] ** 2).real
+    weight = np.exp(4 * np.fft.ifft2(field.chaos_transfer**2).real)
+    vorticity = np.fft.ifft2(field.transfers["vorticity"]).real
+    kernels = {"vorticity": [(vorticity, 0), (vorticity, 1)],
+               "velocity": list(zip(biot_savart(vorticity, field.grid), (0, 1), strict=True))}
+
+    def moment(q: int, c: float) -> float:
+        return sum(comb(q, j) * (-1) ** j * np.exp(sigma**2 / 2 * ((q - j) ** 2 + j**2
+                                                                   + 2 * (q - j) * j * c))
+                   for j in range(q + 1))
+
+    for (name, separation), got in curves.items():
+        lag = int(separation)
+        if name == "density":
+            per_axis = [9.0 if transform == "hermite2"
+                        else moment(4, c) / moment(2, c) ** 2
+                        for c in (correlation[lag, 0], correlation[0, lag])]
+            limit = tolerance
+        else:
+            per_axis = []
+            for kernel, axis in kernels[name]:
+                a = (np.roll(kernel, -lag, axis) - kernel) ** 2
+                per_axis.append(3 * np.sum(a * np.fft.ifft2(np.fft.fft2(a) * np.fft.fft2(
+                    weight)).real) / a.sum() ** 2)
+            limit = 0.08
+        assert got == pytest.approx(np.mean(per_axis), rel=limit), (
+            f"{name} at {lag} cells: frame-mean flatness {got:.3f}, exact {np.mean(per_axis):.3f}")
+    density = curves["density"].to_numpy()
+    if transform == "exp":
+        assert density[0] > density[-1] + 1, "the log-normal flatness must rise as l falls"
+
+
+def test_an_ornstein_uhlenbeck_field_decorrelates_mode_by_mode():
+    """Each Fourier mode follows an Ornstein-Uhlenbeck process sampled exactly (spec 09, Eq. 7),
+    so its correlation at a lag of n frames is ``a_k^n``, ``a_k = exp(-dt / tau_k)``, with
+    ``tau_k = tau (|k| / k_min)^-p``. The candidate ``tau = inf`` repeats the first frame (the
+    persistence candidate), so the MSE against frame n is the mean square of
+    ``g_n - g_0``, whose modes are Gaussian of variance ``2 v_k (1 - a_k^n)``: expectation and
+    spread from :func:`gaussian_mean_square`. A flat spectrum spreads the variance over all
+    3e3 modes of the band, so one frame's MSE scatters by a few percent. Frames are correlated
+    in time, so each frame is held to four of its own standard errors; the first frame is the
+    candidate's own, an MSE of zero."""
+    truth = RandomField(grid=(96, 64), slopes=[-1.0], k_min=1.0, k_max=31.0, n_frames=9,
+                        t_end=8.0, tau=4.0, candidate={"tau": float("inf")})
+    rows = run(truth, [metric_registry.get("mse")], build_ladder({}), fields=["density"],
+               dataset=DatasetInfo(name="random_field"), prediction=truth.predictions()).rows
+    forecast = rows[rows["degradation"] == "forecast"].sort_values("frame_index")
+    per_mode = truth.meta["density_sigma"] ** 2 * truth.transfers["density"] ** 2 / 96 / 64
+    assert forecast["value"].iloc[0] < 1e-30
+    for n, got in enumerate(forecast["value"].to_numpy()[1:], start=1):
+        expected, spread = gaussian_mean_square(2 * per_mode * (1 - truth.decay**n))
+        assert abs(got - expected) < 4 * spread, (
+            f"lag {n}: MSE {got:.4g}, the correlation a^n gives {expected:.4g} +- {spread:.2g}")
+
+
+#: The default ladder's linear, shift-invariant operators, and noise added to a Gaussian field:
+#: each leaves a Gaussian field Gaussian (spec 09, Sect. 3.8).
+LINEAR = ["gaussian_blur", "box_blur", "disk_blur", "epanechnikov_blur", "lowpass_ideal",
+          "lowpass_butterworth", "highpass_ideal", "highpass_butterworth", "band_attenuate",
+          "translate_subpixel", "additive_noise", "gaussian_impostor"]
+
+
+def test_linear_degradations_keep_a_gaussian_field_gaussian():
+    """A linear shift-invariant operator maps a Gaussian field to a Gaussian field with per-mode
+    variance ``|T_k|^2 v_k``, and adding independent Gaussian noise or randomising the phases of
+    complex Gaussian coefficients does too (spec 09, Sect. 3.8), so the increment flatness stays
+    3 on every severity level of the default ladder: a blind axis with an exact answer. Smoothing
+    lengthens the correlation and so widens the frame-to-frame spread, measured 0.03 to 0.28 per
+    frame on 128 x 96, so each level is held to four standard errors of its own 12-frame mean,
+    and the spread must stay small enough that this still separates 3 from a non-Gaussian law."""
+    rows = run(RandomField(**BROKEN), [metric_registry.get("increment_flatness")],
+               build_ladder(build_job(compose_config()).degradation, only=LINEAR),
+               fields=["density"], dataset=DatasetInfo(name="random_field")).rows
+    assert set(rows["degradation"].astype(str)) == {"identity", *LINEAR}
+    levels = rows.groupby(["degradation", "level"], observed=True)["value"].agg(
+        ["mean", "std", "count"])
+    error = levels["std"] / np.sqrt(levels["count"])
+    assert (error < 0.1).all(), levels.to_string()
+    assert (np.abs(levels["mean"] - 3.0) < 4 * error).all(), levels.to_string()
+
+
+@pytest.mark.parametrize("options, match", [
+    ({"slopes": [5 / 3, 3]}, "k_break"),
+    ({"slopes": [5 / 3], "k_break": 16.0}, "k_break"),
+    ({"k_max": 128}, "Nyquist"),
+    ({"transform": "square"}, "transform"),
+    ({"anisotropy": 0.0}, "anisotropy"),
+    ({"tau": 1.0, "multifractal_lambda": 0.05}, "multifractal"),
+    ({"spikes": {"fraction": 0.01, "alpha": 2.0}}, "spikes"),
+    ({"k_min": 0.0}, "band"),
+])
+def test_the_random_field_refuses_what_it_cannot_build(options, match):
+    with pytest.raises(ValueError, match=match):
+        RandomField(**options)
