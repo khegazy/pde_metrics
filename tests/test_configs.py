@@ -38,7 +38,7 @@ from fmeval.config import (
 )
 from fmeval.data import readers  # noqa: F401  (registers every format)
 from fmeval.data.base import READERS, TimeSelection
-from fmeval.io import read_config, read_run_meta
+from fmeval.io import read_config, read_results, read_run_meta
 from fmeval.ladder import DegradationConfig
 from fmeval.pipeline import MapRequest
 from metrics import registry as metric_registry
@@ -162,6 +162,11 @@ def test_a_misspelt_key_added_with_plus_is_refused_too(override):
     # Options of a reader or an operator that the YAML leaves at their default sit in an
     # untyped mapping, so setting one adds a key and takes `+`.
     ("+dataset.reader.chunk_cache_mb=8", lambda c: c.dataset.reader.chunk_cache_mb == 8),
+    # What a dataset leaves out or evaluates more cheaply, from the command line too.
+    ("+dataset.exclude_degradations.median_blur=slow",
+     lambda c: dict(c.dataset.exclude_degradations) == {"median_blur": "slow"}),
+    ("+dataset.slow_metrics.mse={analysis_resolution: 64, every: 4}",
+     lambda c: dict(c.dataset.slow_metrics.mse) == {"analysis_resolution": 64, "every": 4}),
     ("+degradation.ladder.lowpass_butterworth.options.order=2",
      lambda c: c.degradation.ladder.lowpass_butterworth.options.order == 2),
     # Reporting.
@@ -409,6 +414,82 @@ def test_a_run_records_the_reader_options_its_config_leaves_out(tmp_path):
     assert stated["sigma"] == recorded["sigma"] == 0.2
     assert recorded["n_members"] == stated["n_members"]
     assert set(recorded) == set(signature) - {"path"}
+
+
+def test_a_dataset_states_its_analysis_grid_and_a_family_or_the_command_line_replaces_it():
+    """`dataset.analysis_resolution` is the grid of the dataset's evaluated part; the run's
+    `analysis_grid.resolution` follows it unless a family option or an override says otherwise."""
+    def grid(*overrides: str) -> int | None:
+        return build_job(compose_config(*overrides)).analysis_grid.resolution
+    assert grid("dataset=kinet_re5e4") is None
+    assert grid("dataset=kinet_re5e4", "dataset.analysis_resolution=128") == 128
+    assert grid("dataset=kinet_re5e4", "dataset.analysis_resolution=128",
+                "analysis_grid.resolution=64") == 64
+    assert grid("dataset=kinet_re5e4", "dataset.analysis_resolution=128",
+                "analysis_grid.resolution=null") is None
+    assert grid("dataset_family=reynolds_ladder_2d", "dataset=kinet_re5e4",
+                "dataset.analysis_resolution=64") == 128
+
+
+def test_every_dataset_exclusion_and_slow_metric_names_something_real():
+    """An exclusion is matched to the run's ladder by label and silently does nothing when the
+    ladder lacks it, so a misspelt one would never apply: each must name an entry of the default
+    ladder, with a reason. A slow metric must be registered (evaluate.py refuses it otherwise)."""
+    ladder = OmegaConf.load(CONFIGS / "degradation" / "default.yaml").ladder
+    for name in _options("dataset"):
+        dataset = build_job(compose_config(f"dataset={name}")).dataset
+        for label, reason in dataset.exclude_degradations.items():
+            assert label in ladder, f"{name} excludes {label!r}, which no default entry is"
+            assert reason.strip(), f"{name} excludes {label!r} without a reason"
+        for metric in dataset.slow_metrics:
+            metric_registry.get(metric)
+
+
+def test_a_dataset_excludes_a_degradation_and_slows_a_metric_on_the_record(tmp_path):
+    """End to end: the excluded entry is not run and is recorded with its reason; the slow metric
+    runs on its own grid and every second frame, in a folder of its own that says so, and only the
+    metrics on the run's grid are compared."""
+    done = subprocess.run(
+        [sys.executable, str(REPO / "evaluate.py"), "dataset=advecting_blobs", "degradation=quick",
+         "metrics=[mse,rmse,mae]", "+dataset.reader.n_frames=4",
+         "+dataset.exclude_degradations.gaussian_blur=its window wraps",
+         "+dataset.slow_metrics.mae={analysis_resolution: 32, every: 2}",
+         f"paths.results={tmp_path}", f"hydra.run.dir={tmp_path}/h"],
+        capture_output=True, text=True, cwd=tmp_path,
+    )
+    assert done.returncode == 0, done.stderr[-2000:]
+    assert "excludes ladder entry gaussian_blur: its window wraps" in done.stdout
+    folders = {p.name.rsplit("_", 1)[0]: p for p in tmp_path.glob("*_*") if p.is_dir()}
+    rows = {name: read_results(folder) for name, folder in folders.items()}
+    for name in ("mse", "rmse", "mae", "comparison"):
+        meta = read_run_meta(folders[name])
+        assert meta["excluded_degradations"] == {"gaussian_blur": "its window wraps"}
+        assert meta["slow_metrics"] == {"mae": {"analysis_resolution": 32, "every": 2}}
+        assert "gaussian_blur" not in set(rows[name]["degradation"])
+    assert set(rows["mse"]["analysis_grid"]) == {64} and set(rows["mae"]["analysis_grid"]) == {32}
+    assert sorted(rows["mse"]["frame_index"].unique()) == [0, 1, 2, 3]
+    assert sorted(rows["mae"]["frame_index"].unique()) == [0, 2]
+    assert read_run_meta(folders["mae"])["analysis_grid"] == 32
+    assert read_run_meta(folders["mae"])["n_frames"] == 2
+    assert set(rows["comparison"]["metric"]) == {"mse", "rmse"}
+
+
+@pytest.mark.parametrize("override,named", [
+    ("+dataset.slow_metrics.mse={evry: 2}", "evry"),
+    ("+dataset.slow_metrics.msee={every: 2}", "msee"),
+    ("+dataset.slow_metrics.mse={every: 0}", "every must be >= 1"),
+    ("+dataset.slow_metrics.mse={analysis_resolution: 128}", "finer than the run's"),
+])
+def test_a_slow_metric_setting_that_cannot_apply_is_refused_before_any_data(override, named,
+                                                                             tmp_path):
+    done = subprocess.run(
+        [sys.executable, str(REPO / "evaluate.py"), "dataset=advecting_blobs", "metrics=[mse]",
+         "analysis_grid.resolution=32", override, f"paths.results={tmp_path}",
+         f"hydra.run.dir={tmp_path}/h"],
+        capture_output=True, text=True, cwd=tmp_path,
+    )
+    assert done.returncode != 0 and named in done.stderr, done.stderr[-2000:]
+    assert not list(tmp_path.glob("mse_*"))
 
 
 def test_the_data_root_does_not_depend_on_the_working_directory(tmp_path, monkeypatch):

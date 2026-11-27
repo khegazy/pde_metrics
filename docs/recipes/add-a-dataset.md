@@ -104,8 +104,13 @@ of the whole panel. Choose it to balance three things (Kareem, 2026-11-26):
    time.
 
 Use the existing selectors rather than new ones: `dataset.time.start`, `stop`, `reduction`
-and `max_frames`; `frame_stride` on the reader; `analysis_grid.resolution`; and, for a dataset
-of many trajectories, the list of trajectories kept. A small dataset may be kept whole. Write
+and `max_frames`; `frame_stride` on the reader; the dataset's own analysis grid,
+`analysis_resolution` (the command line's `analysis_grid.resolution` still overrides it);
+`exclude_degradations`, a ladder entry undefined or pathological on the dataset with the reason,
+which every run records; `slow_metrics`, a coarser grid or every Nth frame for a named slow
+metric; and, for a dataset of many trajectories, the list of trajectories kept, whose runs
+`fmeval.io.combine_runs(..., across="trajectory")` gathers for an analysis that pools them
+(their schema is `DatasetConfig` in `fmeval/config.py`). A small dataset may be kept whole. Write
 the choice and the reasoning, with the measured costs, as comments in the dataset's YAML file
 and in its log (step 7). The agent that adds the dataset makes this decision and records it;
 a person may override it.

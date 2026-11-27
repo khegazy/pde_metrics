@@ -235,6 +235,7 @@ is the relative error of the integral of `### How its field reports it`, with it
 | `noh` | an analytic check: the exact cylindrical Noh implosion, a circular shock of constant strength, and nothing about turbulence | not yet run |
 | `feature_population` | an analytic check: one static field of isolated bumps, vortices and pressure fronts with known answers, and nothing about turbulence | not yet run |
 | `transport_pairs` | an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence | not applicable: needs velocity, which this dataset does not provide |
+| `advecting_blobs` | an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence | not applicable: needs velocity, which this dataset does not provide |
 | `random_field` | a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence | not yet run |
 | `helmholtz_mixture_2d` | an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence | not yet run |
 

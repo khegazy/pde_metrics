@@ -123,17 +123,28 @@ override it. The frames are deterministic, so each is one known answer, not a sa
   table shows it as *not yet run* or *not applicable* with the reason (`python -m fmeval.cards
   catalog`). Producing that evidence is its own step in `BUILD_ORDER.md` and needs compute.
 
+### 2026-11-27: the observed order computed by the analysis (step-32 agent)
+
+- **What changed.** `fmeval.analysis.observed_order` takes the rows of the sequence's runs
+  (`fmeval.io.load_runs` of the four folders) and returns p of Equation (4) per metric, field
+  and time for each pair of successive grids, with `ratio` and `order_change`, the change of p
+  from the next coarser pair, so the asymptotic range is read rather than assumed. The test of
+  the central scheme now reads the order from it rather than computing it itself. `ROW_KEYS`
+  did not gain `param_resolution`: the order is computed from the concatenated rows outside
+  `analyse`, which still refuses them, now naming `observed_order`, because a grid sequence is
+  not one sample.
+- **Why, and who decided.** Framework limit 5 of `dataset_specs/BUILD_ORDER.md`, fixed in step
+  32 under Kareem's approval of 2026-11-27 (decision 15); the design is this agent's.
+- **Verified.** The test's assertions are unchanged and pass. A smoke multirun under
+  `/pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/step32_smoke/burgers` read back
+  from its four folders gives 1.93 to 2.02 on (64, 128), 1.997 to 2.005 on (128, 256) and 1.995
+  to 2.001 on (256, 512), the values recorded above.
+- **Supersedes** open point 1 and the line "nothing computes the order from rows yet" of the
+  registration entry.
+
 ## Open points
 
-1. **The analysis does not compute the observed order** (issue 126). It would need a function
-   in `fmeval/analysis.py` that takes the rows of several runs (several run folders, since one
-   run holds one grid), groups them by metric, field and time, orders them by
-   `param_resolution`, and applies Equation (4) to each successive pair with $r$ the ratio of
-   resolutions; and a report section or card table to show it with the asymptotic range
-   checked (steady over pairs and times). One obstacle is concrete: `analyse` refuses rows
-   that share a key of `ROW_KEYS` (`dataset`, `metric`, `field`, `frame_index`,
-   `variant_label`), and the four runs of the sequence share all five, since
-   `param_resolution` is not among them. So either the key gains `param_resolution`, or the
-   order is computed before `analyse` from the concatenated rows (the agent's judgement; not tried).
+1. No report section or card table shows the observed order; it is a function of the analysis
+   that a caller reads.
 2. A cell-average sampling option (the alternative of decision 2) and an upwind scheme are not
    built.

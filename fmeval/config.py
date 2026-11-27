@@ -45,6 +45,31 @@ class Complexity:
 
 
 @dataclass
+class SlowMetric:
+    """How one costly metric is evaluated more cheaply than the rest of a run, fixed per dataset.
+
+    Built by ``evaluate.py`` from an entry of ``dataset.slow_metrics``.
+
+    Its rows carry the grid in ``analysis_grid`` and its frames in ``frame_index``, as every row
+    does. A metric on a coarser grid is scored on a ladder applied at that grid, a different
+    experiment, so ``evaluate.py`` writes it a folder of its own and leaves it out of the
+    comparison folder; a metric on fewer frames scores the same experiments as the rest and
+    stays in it.
+    """
+
+    analysis_resolution: int | None = None
+    """A coarser analysis grid for this metric alone; None keeps the run's."""
+    every: int = 1
+    """Evaluate the metric on every Nth of the run's selected frames, counted from the first."""
+
+    def __post_init__(self) -> None:
+        if self.every < 1:
+            raise ValueError(f"every must be >= 1, got {self.every}")
+        if self.analysis_resolution is not None and self.analysis_resolution < 1:
+            raise ValueError(f"analysis_resolution must be >= 1, got {self.analysis_resolution}")
+
+
+@dataclass
 class DatasetConfig:
     """A ``configs/dataset/`` option."""
 
@@ -63,6 +88,21 @@ class DatasetConfig:
     recompute_derived: bool = True
     """Recompute derived fields with our own operator even at the native resolution, so the
     native grid and every coarse grid use the same discretisation."""
+    analysis_resolution: int | None = None
+    """The analysis grid this dataset's evaluated part uses (``docs/recipes/add-a-dataset.md``,
+    step 3); None keeps the native resolution. ``configs/config.yaml`` points
+    ``analysis_grid.resolution`` at it, so a family option or the command line still overrides."""
+    exclude_degradations: dict[str, str] = field(default_factory=dict)
+    """Ladder entry label -> why the entry is undefined or pathological on this dataset.
+    ``evaluate.py`` drops each one present in the run's ladder, logs it with its reason and
+    records it as ``excluded_degradations`` in ``run_meta.json``; the report's provenance
+    table lists it."""
+    slow_metrics: dict[str, Any] = field(default_factory=dict)
+    """Metric name -> the keyword arguments of a :class:`SlowMetric`, a coarser grid or fewer
+    frames for that metric alone, which ``evaluate.py`` builds (refusing an unknown key) and
+    records as ``slow_metrics`` in ``run_meta.json``. Untyped because Hydra cannot add a mapping
+    to a typed one from the command line: ``+dataset.slow_metrics.<metric>={every: 4}``. Set per
+    dataset, never per model, like every fixed choice here."""
 
 
 @dataclass

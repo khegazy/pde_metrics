@@ -50,7 +50,19 @@ same Reynolds number is read by naming its identity key, for example
 python evaluate.py 'metrics=[mse]' dataset=kinet_hit_re25k dataset.trajectory=49a8ad
 ```
 
-and `-m dataset.trajectory=<key>,<key>,...` runs several in one sweep.
+and `-m dataset.trajectory=<key>,<key>,...` runs several in one sweep. The evaluated part is
+the first five drawn at each Reynolds number, frames 150 to 550 every 50th, on a $128^2$
+analysis grid that the configurations state. Their run folders are gathered into one, which the
+analysis reads as one sample of 45 frames with the realisations independent and the frames
+within each dependent:
+
+```python
+from fmeval import io as fio
+folder = fio.combine_runs(["results/comparison_<a>", ..., "results/comparison_<e>"],
+                          fio.claim_stamp("results"), across="trajectory")
+```
+
+The reasoning and costs are in its log, `docs/datasets/logs/decaying_isotropic_2d.md`.
 
 ## The converted subset
 

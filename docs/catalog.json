@@ -1704,6 +1704,15 @@
           "state": "not applicable"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -2022,6 +2031,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -3730,6 +3748,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": null,
@@ -5686,6 +5713,15 @@
           "state": "not applicable"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -6007,6 +6043,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -6731,6 +6776,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": "needs vorticity, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": "needs vorticity, which this dataset does not provide",
@@ -8967,6 +9021,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": null,
@@ -12388,6 +12451,15 @@
           "state": "not yet run"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -15697,6 +15769,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": null,
@@ -19074,6 +19155,15 @@
           "state": "not yet run"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -22403,6 +22493,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": null,
@@ -25769,6 +25868,15 @@
           "state": "not yet run"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -28114,6 +28222,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": "needs velocity, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": "needs velocity, which this dataset does not provide",
@@ -30814,6 +30931,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": null,
@@ -35562,6 +35688,15 @@
           "state": "not yet run"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -40271,6 +40406,15 @@
           "state": "not yet run"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -43569,6 +43713,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": null,
@@ -48313,6 +48466,15 @@
           "state": "not yet run"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -52086,6 +52248,15 @@
           "state": "not applicable"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": "needs vorticity, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -53882,6 +54053,15 @@
           "state": "not yet run"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -55335,6 +55515,15 @@
           "state": "not yet run"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -55678,6 +55867,15 @@
           "state": "not applicable"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -55996,6 +56194,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -57683,6 +57890,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": null,
@@ -62415,6 +62631,15 @@
           "state": "not yet run"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -64733,6 +64958,15 @@
           "state": "not applicable"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -65434,6 +65668,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": "needs pressure, which this dataset does not provide",
@@ -66149,6 +66392,15 @@
           "state": "not applicable"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -66850,6 +67102,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": "needs pressure, which this dataset does not provide",
@@ -67565,6 +67826,15 @@
           "state": "not applicable"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -68266,6 +68536,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": "needs pressure, which this dataset does not provide",
@@ -69016,6 +69295,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": "needs velocity, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": "needs velocity, which this dataset does not provide",
@@ -71318,6 +71606,15 @@
           "state": "not yet run"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -73273,6 +73570,15 @@
           "state": "not applicable"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -75019,6 +75325,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": null,
@@ -78416,6 +78731,15 @@
           "state": "not yet run"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -80386,6 +80710,15 @@
           "state": "not applicable"
         },
         {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
           "claim": "a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence",
           "dataset": "random_field",
           "note": null,
@@ -82056,6 +82389,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": null,
@@ -85835,6 +86177,15 @@
         {
           "claim": "an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence",
           "dataset": "transport_pairs",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "an analytic check: three Gaussian density bumps carried at different constant velocities, their exact solution known at every time, and nothing about turbulence",
+          "dataset": "advecting_blobs",
           "note": null,
           "primary": false,
           "reason": null,

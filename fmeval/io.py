@@ -341,17 +341,28 @@ def combine_runs(folders: Sequence[Path | str], stamp: int, *,
     selection, so it is checked equal), and the first member's provenance, including its git
     state, with ``metric`` naming every metric and ``n_frames`` every frame.
 
+    ``across="trajectory"``: one run per realisation of one dataset (``dataset.trajectory``, which
+    the dataset's ``path`` may interpolate), on one commit, ladder and grid, for an analysis that
+    pools them into one sample (:func:`fmeval.analysis.pool_trajectories`). The combined folder is
+    ``<dataset>_<stamp>`` beside the first; it holds every member's rows and companion rows, their
+    calibration tables with a ``trajectory`` column (each realisation calibrates its own ladder),
+    and the first member's provenance with ``n_frames`` the sum, ``trajectories`` listed and
+    ``members`` naming each one's folder. Error maps are not carried: their keys do not name the
+    trajectory.
+
     Raises:
         ValueError: On fewer than two members; members whose configurations differ in anything
-            but the dataset (for datasets) or the metric list and frame shard (for shards), or
-            whose provenance differs in a :data:`SHARED_META` key (for shards, also in git state
-            or calibration): their damages would not be on one scale. For datasets, a member
+            but the dataset (for datasets), the metric list and frame shard (for shards) or the
+            trajectory and its path (for trajectories), or whose provenance differs in a
+            :data:`SHARED_META` key (for shards and trajectories, also in git state; for shards,
+            in calibration): their damages would not be on one scale. For datasets, a member
             holding several datasets or one the others hold too, or members of different
             families; for shards, two members holding the same metric on the same frame, or
-            metrics covering different frames (a shard is missing).
+            metrics covering different frames (a shard is missing); for trajectories, a member
+            holding several trajectories or one another member holds.
     """
-    if across not in ("dataset", "shards"):
-        raise ValueError(f"across must be 'dataset' or 'shards', got {across!r}")
+    if across not in ("dataset", "shards", "trajectory"):
+        raise ValueError(f"across must be 'dataset', 'shards' or 'trajectory', got {across!r}")
     members = [_folder(f) for f in folders]
     if len(members) < 2:
         raise ValueError(f"a comparison needs at least two runs, got {len(members)}")
@@ -360,18 +371,22 @@ def combine_runs(folders: Sequence[Path | str], stamp: int, *,
     # Shards may score different fields (a density-only metric reads density alone), so for them
     # the fields and the metric list are unions, and the calibration is checked field by field.
     shared = [k for k in SHARED_META if not (across == "shards" and k in ("metric", "fields"))]
-    if across == "shards":
+    if across != "dataset":
         shared.append("git")
-    free = {"dataset"} if across == "dataset" else {"metrics"}
+    free = {"dataset": {"dataset"}, "shards": {"metrics"}, "trajectory": set()}[across]
 
     def settled(config: dict) -> dict:
-        """The configuration without the frame shard: shards may differ in how they split the
-        frames, and the merge checks instead that every metric covers the same frames."""
+        """The configuration without what the members may differ in inside ``dataset``: the
+        frame shard, for shards, which the merge replaces by checking that every metric covers
+        the same frames; the trajectory and the path naming it, for trajectories."""
         if across == "dataset":
             return config
-        time = {k: v for k, v in config.get("dataset", {}).get("time", {}).items()
-                if k not in ("shard", "shards")}
-        return {**config, "dataset": {**config.get("dataset", {}), "time": time}}
+        dataset = config.get("dataset", {})
+        if across == "trajectory":
+            return {**config, "dataset": {k: v for k, v in dataset.items()
+                                          if k not in ("trajectory", "path")}}
+        time = {k: v for k, v in dataset.get("time", {}).items() if k not in ("shard", "shards")}
+        return {**config, "dataset": {**dataset, "time": time}}
 
     for member, config, meta in zip(members[1:], configs[1:], metas[1:], strict=True):
         differ = sorted(k for k in {*configs[0], *config} - free
@@ -391,6 +406,11 @@ def combine_runs(folders: Sequence[Path | str], stamp: int, *,
         if len(families) != 1 or not families[0]:
             raise ValueError(f"the members must belong to one dataset family, got {list(families)}")
         name = str(families[0])
+    elif across == "trajectory":
+        held = rows.groupby("run_dir", observed=True)["trajectory"].unique()
+        if any(len(t) != 1 for t in held) or len({t[0] for t in held}) != len(members):
+            raise ValueError(f"each member must hold one trajectory of its own: {held.to_dict()}")
+        name = str(metas[0]["dataset"])
     else:
         pairs = rows.drop_duplicates(["run_dir", "metric", "frame_index"])
         repeated = pairs[pairs.duplicated(["metric", "frame_index"], keep=False)]
@@ -399,8 +419,9 @@ def combine_runs(folders: Sequence[Path | str], stamp: int, *,
                              f"{sorted(set(zip(repeated['metric'], repeated['frame_index'])))[:5]}")
         covered = pairs.groupby("metric", observed=True)["frame_index"].apply(frozenset)
         if covered.nunique() != 1:
-            raise ValueError("the metrics do not cover the same frames, so a shard is missing: "
-                             f"{ {m: len(f) for m, f in covered.items()} }")
+            raise ValueError("the metrics do not cover the same frames, so a shard is missing "
+                             "or a metric was thinned by dataset.slow_metrics (merge its shards "
+                             f"apart from the others): { {m: len(f) for m, f in covered.items()} }")
         name = "comparison"
 
     folder = make_run_folder(members[0].root.parent, name, stamp)
@@ -409,14 +430,19 @@ def combine_runs(folders: Sequence[Path | str], stamp: int, *,
            for m in members):
         write_results(folder, load_runs((m.root for m in members), COMPANIONS)
                       .drop(columns="run_dir"), name=COMPANIONS)
+    # Each member's label beside its calibration table: its dataset, or its trajectory.
+    labels = ([meta["dataset"] for meta in metas] if across == "dataset" else
+              [str(rows.loc[rows["run_dir"] == m.root.name, "trajectory"].iloc[0])
+               for m in members] if across == "trajectory" else [])
     for table in ("calibration", "calibration_spectrum"):
         frames = [pd.read_csv(m.data / f"{table}.csv") for m in members
                   if (m.data / f"{table}.csv").exists()]
         if not frames:
             continue
-        if across == "dataset":
+        if across != "shards":
             write_table(folder, pd.concat(
-                [f.assign(dataset=meta["dataset"]) for f, meta in zip(frames, metas, strict=True)],
+                [f.assign(**{across: label})
+                 for f, label in zip(frames, labels, strict=True)],
                 ignore_index=True), table)
         else:
             union: dict[str, pd.DataFrame] = {}
@@ -438,6 +464,16 @@ def combine_runs(folders: Sequence[Path | str], stamp: int, *,
                       "dataset_family": name,
                       "members": {meta["dataset"]: {"run": m.root.name, **meta}
                                   for m, meta in zip(members, metas, strict=True)}}
+    elif across == "trajectory":
+        digest = write_config(folder, {**configs[0], "dataset": {
+            **settled(configs[0])["dataset"], "trajectory": labels}})
+        meta_extra = {**{k: v for k, v in metas[0].items()
+                         if k not in _OWN_META and k not in ("data_source", "reader_options")},
+                      "git": metas[0].get("git"), "registries": metas[0].get("registries"),
+                      "metric": metas[0].get("metric"), "n_rows": len(rows),
+                      "n_frames": sum(int(meta.get("n_frames", 0)) for meta in metas),
+                      "trajectories": labels,
+                      "members": {t: m.root.name for t, m in zip(labels, members, strict=True)}}
     else:
         ran = list(dict.fromkeys(x for config in configs for x in config["metrics"]))
         digest = write_config(folder, {**settled(configs[0]), "metrics": ran})

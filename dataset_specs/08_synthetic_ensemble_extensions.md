@@ -7,7 +7,7 @@ family that builds it). **Metrics served:** the eight ensemble metrics (`crps`,
 on an ensemble's member mean. **Proposals and issues served:**
 `EXP-crps-gneiting-forecaster-suite`, `EXP-spread_skill-heteroscedastic-synthetic-ensemble`,
 `EXP-energy_score-correlated-synthetic-ensemble`, the test half of
-`MTR-energy_score-patched-energy-score`; issues 044 (run seed), 127 and 083 (only their need for
+`MTR-energy_score-patched-energy-score`; issues 127 and 083 (only their need for
 dispersion that varies between cells), and 111 (which two of the new operators also trigger).
 **Date:** 2026-11-26. **Author:** research sub-agent (branch `build_datasets`). Nothing here is
 built. Every number marked "measured" comes from short scripts in the session scratchpad that
@@ -40,8 +40,9 @@ experiments these metrics' own fields run, and the cards say so:
   Limitations).
 - **No positive density.** `wasserstein` is `not_run` because the signed pattern makes every
   value NaN (`metrics/wasserstein/card.yaml`).
-- **One draw of the null.** The reader ignores the run seed (issue 044), so the sampling
-  spread of a metric on a calibrated ensemble cannot be measured across draws.
+- **One draw of the null.** The reader draws from its own `seed` option, not the run's, so a
+  second draw of the null is a second reader seed (`+dataset.reader.seed=<n>`); Kareem decided
+  on 2026-11-27 that the reader does not need to know the run's seed.
 
 This document specifies the reader options and ensemble operators that close each gap, each
 with an answer known in advance. It stays inside the generated ensemble; physical ensembles,
@@ -406,14 +407,14 @@ calls untested, with its answer.
    `flow_dependence`, `member_shape`) leaves it exactly unchanged, the same blindness recorded
    for `h_minus_one` on `synthetic_ensemble`; only `bias` and the anchor move it.
 
-### 3.7 Several draws of the null (issue 044)
+### 3.7 Several draws of the null
 
-Add `seed: ${seed}` to the `reader` block of `configs/dataset/synthetic_ensemble.yaml`; the
-same file already interpolates `path: ${paths.data}`, so this needs no Python. This is issue
-044's option 1 and **needs Kareem's decision**: it changes every number of a synthetic run, so
-the four ensemble cards' pinned evidence must be regenerated. Each frame is already an
-independent draw, so twelve frames give twelve draws within a run; seeds add more and make the
-recorded seed honest. Measured spread over 40 seeds of the default reader (frame 0, 64², 16
+**Not done, by decision.** This proposed adding `seed: ${seed}` to the `reader` block of
+`configs/dataset/synthetic_ensemble.yaml`, which would change every number of a synthetic run.
+Kareem decided on 2026-11-27 that the reader does not need to know the seed used to generate the
+data, so the reader keeps its own `seed` option and another draw is another reader seed. Each
+frame is already an independent draw, so twelve frames give twelve draws within a run; reader
+seeds add more. Measured spread over 40 seeds of the default reader (frame 0, 64², 16
 members): `crps` 0.0846 ± 0.0010 (closed form σ/√π = 0.0846), `spread_skill` 1.0005 ± 0.0109,
 `ensemble_mean_rmse` 0.1546 ± 0.0016 (σ sqrt(17/16) = 0.1546), `energy_score` 6.786 ± 0.075
 (large-d limit 6.788), `rank_histogram` 0.052 ± 0.011 (multinomial null 0.050 ± 0.009),
@@ -429,8 +430,7 @@ repeated here.
 
 ## 5. Recommendation
 
-1. **The seed interpolation (3.7) first**, once Kareem decides issue 044, because it changes
-   the evidence every later variant is compared with. One line.
+1. ~~The seed interpolation (3.7)~~: not done, by Kareem's decision of 2026-11-27 (3.7).
 2. **The Gneiting suite (3.1)**: the only item with published values, and the clearest
    demonstration on any card that calibration is not skill.
 3. **`member_offset` (3.5) and `member_shape` (3.4)**: a reader option of two lines and one

@@ -182,3 +182,24 @@ person may override it.
 - **Not done:** no metric was run on it for a card; every metric card's *Across the experiments*
   table shows it as *not yet run* or *not applicable* with the reason (`python -m fmeval.cards
   catalog`). Producing that evidence is its own step in `BUILD_ORDER.md` and needs compute.
+
+#### 2026-11-27: the evaluated part cut to 21 frames, its grid stated in the config (step-32 agent)
+
+- **What changed.** `time.reduction` went from the inherited 50 to 400 in
+  `configs/dataset/kinet_re5e4_512.yaml`: frames 2000 to 10000 every 400th, 21 frames instead
+  of 161, still at times of kinet_re5e4's frames. The 256 analysis grid is now the config's own
+  `analysis_resolution: 256`, a dataset key added by step 32; it is no longer a command-line
+  setting, and `analysis_grid.resolution=null` reads the native 512 for the refinement
+  comparison.
+- **Why.** Kareem asked why the evidence needs so long. The 161 frames held only 7 to 12
+  independent samples (METRIC_EVALUATION_CRITIQUE.md, finding 2), and matching kinet_re5e4 frame
+  for frame had no statistical reason. 21 frames keep one or two frames per independent sample.
+- **Who decided.** The coordinating session made the cut, recorded as decision 17 of
+  `dataset_specs/BUILD_ORDER.md`; this agent applied it.
+- **Cost.** About 122 s per frame at 256 for the panel without `persistence_wasserstein`
+  (measured 2026-11-26, above), so about 43 minutes for the 21 frames in one process (my
+  arithmetic).
+- **Verified.** The configuration builds into the schema with 21 selected frames (2000, 2400,
+  ..., 10000) of the reader's 10001 and an analysis grid of 256. No metric was run.
+- **Supersedes** the 161-frame window and the command-line grid of "What part is evaluated" and
+  of the registration entry above.

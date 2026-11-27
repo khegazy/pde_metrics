@@ -29,24 +29,31 @@ complexity:
 #   Frames 600 to 1000 are dropped: the energy peak sits at the box scale (|k| = 1) and the
 #   turnover time grows to 270 to 400 frames, a slowly evolving condensate that adds few
 #   independent states. It is still readable with dataset.time.start=600 dataset.time.stop=null.
-# - Stride 25 frames (250 solver steps), 18 frames per trajectory. The integrated
-#   autocorrelation time of mse's paired step inside the window is 57 to 70 frames (Bartlett
-#   window of 100 frames; Politis-White block length 41), so each trajectory holds about 6 to
-#   11 independent samples and a stride of 25 keeps them at about two frames per
-#   autocorrelation time.
+# - Stride 50 frames (500 solver steps), 9 frames per trajectory (cut from 25 on 2026-11-27,
+#   decision 17 of dataset_specs/BUILD_ORDER.md). The integrated autocorrelation time of mse's
+#   paired step inside the window is 57 to 70 frames (Bartlett window of 100 frames;
+#   Politis-White block length 41), so each trajectory holds about 6 to 11 independent samples
+#   and a stride of 50 keeps about one frame per autocorrelation time. Nine frames are too few
+#   for one trajectory's statistics; the five trajectories are analysed together.
 # - Trajectories: the first five drawn at each Reynolds number, swept with
-#   `-m dataset.trajectory=<k1>,...,<k5>` (the keys are listed in each option). Independent
-#   realisations are independent samples, so five give about 30 to 55 per Reynolds number.
-# - Analysis grid: run with analysis_grid.resolution=128 (a top-level key, so it cannot be set
-#   here). It loses at most 2% of the enstrophy, and 3 to 8% of the palinstrophy at Re 1.25e4
-#   and 2.5e4 but about 30% at Re 5e4, and the full panel costs a third of the native grid's.
+#   `-m dataset.trajectory=<k1>,...,<k5>` (the keys are listed in each option) and gathered with
+#   `fmeval.io.combine_runs(<folders>, stamp, across="trajectory")`, which the analysis reads as
+#   one sample of 45 frames: independent realisations are independent samples, frames within one
+#   are not (TEST_DESCRIPTION.md, "Several trajectories of one dataset").
+# - Analysis grid 128. It loses at most 2% of the enstrophy, and 3 to 8% of the palinstrophy at
+#   Re 1.25e4 and 2.5e4 but about 30% at Re 5e4, and the full panel costs a third of the native
+#   grid's.
 # - Cost on the login node at 128: about 34 s of metric time per frame for the panel without
 #   persistence_wasserstein (persistence_distance 11 s, energy_distance 9 s, wasserstein 2 s,
-#   mse 0.01 s), so 270 frames take about 2.7 h in one process.
-#   persistence_wasserstein would add 33 to 530 s per frame at 128 (issues/144).
+#   mse 0.01 s), so the 135 frames of the five trajectories at three Reynolds numbers take about
+#   1.3 h in one process. persistence_wasserstein would add 33 to 530 s per frame at 128
+#   (issues/144); `dataset.slow_metrics` can give it a coarser grid or fewer frames, which no
+#   one has chosen here yet.
+analysis_resolution: 128
+
 time:
   start: 150
   stop: 600
-  reduction: 25
+  reduction: 50
 
 notes: "Decaying 2D isotropic turbulence, Ma=0.1, D2Q9 entropic BGK, 256^2, one seed per trajectory, dimensionless units."

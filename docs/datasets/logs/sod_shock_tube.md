@@ -292,6 +292,23 @@ where it is marked as arithmetic.
   table shows it as *not yet run* or *not applicable* with the reason (`python -m fmeval.cards
   catalog`). Producing that evidence is its own step in `BUILD_ORDER.md` and needs compute.
 
+#### 2026-11-27: the median blur excluded in the config (step-32 agent)
+
+- **What changed.** `configs/dataset/_kinet_sod.yaml` now states
+  `exclude_degradations: {median_blur: ...}`, a dataset key added by step 32. A run drops the
+  entry, logs it with the reason and records it as `excluded_degradations` in `run_meta.json`;
+  the report's provenance table lists it. `degradation.skip=[median_blur]` is no longer needed on
+  the command line, and no longer listed beside `evidence_window`.
+- **Why.** The median blur's square window wraps the 5 transverse nodes and costs about 11
+  minutes per frame here ("What part is evaluated" and decision 8 above); an exclusion in the config is recorded with its
+  reason, where a command-line skip was recorded only as an override.
+- **Who decided.** Kareem approved fixing the framework limits, this one among them, on
+  2026-11-27 (decision 15 of `dataset_specs/BUILD_ORDER.md`, step 32); the coordinating session
+  asked for the exclusion on these configurations; this agent applied it.
+- **Verified.** Both configurations build with the exclusion; a test runs an exclusion end to end
+  on another dataset and checks the log line, `run_meta.json` and the missing rows
+  (`tests/test_configs.py`). No metric was run on these runs.
+
 ### Open points
 
 - Scoring each run against the exact solution, frame by frame on the same nodes, is not

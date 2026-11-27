@@ -20,9 +20,9 @@ the page's run summary quotes that label beside the numbers: `synthetic_ensemble
 **calibrated null**, `random_field` a **known-statistics null**, and the other computed
 configurations **analytic checks**, none of them evidence about turbulence. Every dataset built
 for the evaluation plan is registered (`docs/decisions.md`, "Every evaluation dataset is
-evidence, under its label"). Three are not: `taylor_green_2d`, whose frames are scalar multiples
-of one another; `advecting_blobs`, a test bed for the harness; and
-`well_radiative_layer_tcool0p32`, which awaits a decision. A registered dataset no metric has
+evidence, under its label"), and so is `advecting_blobs`, the harness's test bed, as an analytic
+check. Two are not: `taylor_green_2d`, whose frames are scalar multiples of one another, and
+`well_radiative_layer_tcool0p32`, which no test of an existing metric needs. A registered dataset no metric has
 been run on yet shows as *not yet run* on every metric's page.
 
 | Problem | Configurations | Kind | Grid | Boundaries |
@@ -37,7 +37,7 @@ been run on yet shows as *not yet run* on every metric's page.
 | [Supersonic flow past a cylinder](supersonic_cylinder.md) | none: the one run stopped at step 155 of 1000 | simulated, not readable | 500 × 300 | inlet and Neumann |
 | [Taylor–Green vortex](taylor_green_vortex.md) | `taylor_green_2d`, `helmholtz_mixture_2d` | computed: exact solution of the Navier–Stokes equations, not evidence; `helmholtz_mixture_2d` the vortex plus an exact acoustic mode, its solenoidal and dilatational parts known | $256^2$; $64^2$ in `helmholtz_mixture_2d` | periodic |
 | [Synthetic exchangeable ensemble](synthetic_ensemble.md) | `synthetic_ensemble` | computed: a formula and a seed | $64^2$ | periodic |
-| [Advecting Gaussian blobs](advecting_blobs.md) | `advecting_blobs`, `feature_population`, `transport_pairs` | computed: exact solution of passive advection, a test bed for time-dependent degradations; `feature_population` bumps, vortices and fronts with known answers; `transport_pairs` a density pair at an exactly known Wasserstein distance; `advecting_blobs` itself is not evidence | $64^2$; $128^2$ in `feature_population` | periodic |
+| [Advecting Gaussian blobs](advecting_blobs.md) | `advecting_blobs`, `feature_population`, `transport_pairs` | computed: exact solution of passive advection, a test bed for time-dependent degradations; `feature_population` bumps, vortices and fronts with known answers; `transport_pairs` a density pair at an exactly known Wasserstein distance | $64^2$; $128^2$ in `feature_population` | periodic |
 | [Periodic random fields with known statistics](random_field.md) | `random_field`, with its other families as reader options | computed: Gaussian and non-Gaussian random fields of prescribed spectrum with exact increment statistics | $256^2$ | periodic |
 
 **Boundaries.** Each dataset states the boundary of each axis. On an axis that is not

@@ -99,8 +99,9 @@ The axis is **periodic**, which is the problem's own boundary condition.
 - **The grid sequence reaches the known order.** Against the exact solution the scheme's
   observed order is 1.93 to 2.02 between 64 and 128 cells, and within 0.006 of 2 between 128,
   256 and 512 cells, for both `rmse` and `max_error` at all four times
-  (`tests/test_analytic_datasets.py`). The analysis does not yet compute Equation (4) from the
-  rows; the test does.
+  (`tests/test_analytic_datasets.py`). The analysis computes Equation (4) from the rows of the
+  four runs, `fmeval.analysis.observed_order(fmeval.io.load_runs(<folders>),
+  anchor_label="mean_field")`, with the change of the order between pairs beside it.
 - **Twenty metrics run on a one-dimensional velocity.** The pointwise errors, the gradient and
   negative-norm metrics, the spectral, increment and tail metrics, and `kinetic_energy`. The
   metrics of density, vorticity or pressure, the transport and persistence metrics among them,

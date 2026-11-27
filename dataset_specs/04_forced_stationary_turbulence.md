@@ -175,8 +175,8 @@ change, intermittency or coherent structures. It is the time-resolved version of
 BUILD_ORDER item 0.8 ("Random fields with known statistics", spec 09, not yet written); the
 reader should be written once there and share the impostor's spectral code. **Reader needs:**
 grid $N$, box length, spectrum form and exponent(s), $k_{\min}, k_{\max}$, amplitude (target
-rms speed), $\tau_k$ law, number of frames and frame spacing, and a seed (issue 044 asks for the
-run seed to reach readers).
+rms speed), $\tau_k$ law, number of frames and frame spacing, and a seed (the reader's own: the
+reader does not need to know the run's seed, Kareem, 2026-11-27).
 
 ### 3.4 A4: stationary one-dimensional Burgers turbulence (a cheap simulation)
 

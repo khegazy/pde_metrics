@@ -188,3 +188,36 @@ def test_block_bootstrap_matches_the_existing_moving_block_construction():
     assert np.array_equal(idx, np.concatenate([np.arange(s, s + 3) for s in starts]))
     whole = next(stats.block_bootstrap(5, 9, 1, np.random.default_rng(0)))
     assert np.array_equal(whole, np.arange(5)), "a block longer than the series is the series"
+
+
+# --- several independent series: the trajectories of a pooled analysis -------------------------
+
+
+def test_one_segment_is_the_series_itself():
+    """Passing the whole series as its one segment changes neither the block length nor a draw,
+    so a run of one trajectory resamples exactly as before segments existed."""
+    for s in range(3):
+        x = _ar1(0.7, 120, s)
+        assert stats.politis_white_block_length(x, [120]) == stats.politis_white_block_length(x)
+    plain = list(stats.block_bootstrap(40, 6, 5, np.random.default_rng(3)))
+    segmented = list(stats.block_bootstrap(40, 6, 5, np.random.default_rng(3), [40]))
+    assert all(np.array_equal(a, b) for a, b in zip(plain, segmented, strict=True))
+
+
+def test_blocks_stay_inside_their_segment_and_are_cut_to_the_shortest():
+    segments = [7, 9, 5]
+    owner = np.repeat(np.arange(3), segments)
+    for idx in stats.block_bootstrap(21, 6, 50, np.random.default_rng(0), segments):
+        blocks = owner[idx].reshape(-1, 5)        # cut from 6 to the shortest segment, 5
+        assert all(len(set(block)) == 1 for block in blocks), blocks
+    with pytest.raises(ValueError, match="add up"):
+        next(stats.block_bootstrap(20, 3, 1, np.random.default_rng(0), [7, 9, 5]))
+
+
+def test_block_length_of_independent_segments_reads_each_ones_persistence():
+    """Four independent AR(1) series pooled: white ones need no blocks, persistent ones do, as
+    each would alone; no lag pairs a value with one from another series."""
+    white = np.concatenate([_ar1(0.0, 100, s) for s in range(4)])
+    persistent = np.concatenate([_ar1(0.9, 100, s) for s in range(4)])
+    assert stats.politis_white_block_length(white, [100] * 4) <= 3
+    assert stats.politis_white_block_length(persistent, [100] * 4) >= 8

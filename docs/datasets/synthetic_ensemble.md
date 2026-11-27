@@ -62,8 +62,9 @@ $T(b + \sigma(\mathbf{x})\eta_0)$ and each member $T(b + \delta\sigma(\mathbf{x}
 
 None of these has a dataset configuration of its own yet.
 
-The ensemble's seed is the reader's own, not the run's
-([issue 044](https://github.com/khegazy/pde_metrics/blob/main/issues/044-synthetic-ensemble-ignores-the-run-seed.md)).
+The ensemble's seed is the reader's own `seed` option, not the run's: the reader does not need to
+know the seed used to generate the data (Kareem, 2026-11-27). `run_meta.json` records it under
+`reader_options`.
 
 ## What the evaluation sees
 

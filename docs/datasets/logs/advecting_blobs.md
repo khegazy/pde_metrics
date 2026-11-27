@@ -449,6 +449,25 @@ rewrite an old one.
   taken from the spec, not re-read; the tolerance argument of `circle_w2`'s search interval
   ($\lvert\theta\rvert < 1$) is mine and only checked on the cases above.
 
+**2026-11-27, step-32 agent: registered as evidence.**
+
+- **Registered:** `advecting_blobs` (`{periodic: true, ensemble: false}`) in `evidence_datasets`
+  and `evidence_dataset_properties` of `configs/cards/default.yaml`, under the label "an
+  analytic check: three Gaussian density bumps carried at different constant velocities, their
+  exact solution known at every time, and nothing about turbulence".
+- **Why, and who decided.** Decision 16 of `dataset_specs/BUILD_ORDER.md` (the smaller calls
+  Kareem left to the agents, made on 2026-11-27): it is the reader of the registered
+  `feature_population` and `transport_pairs`, its blobs move at different velocities so its
+  frames are not scalar multiples of one another, and the candidates built on it in step 9 are
+  evaluation experiments. This supersedes "not in evidence_datasets" in the configuration's
+  comments and on the dataset page, both rewritten.
+- **Window:** the configuration's 21 frames on $64^2$ (section "What part is evaluated");
+  nothing needs a command-line setting.
+- **Not done:** no metric was run on it for a card; `python -m fmeval.cards catalog` added its
+  *not yet run* or *not applicable* row to every metric card. The `persistence_wasserstein`
+  stall on its first frame (open points) is unchanged; `dataset.slow_metrics` can now give that
+  metric fewer frames or a coarser grid, but a stall on one input is not avoided that way.
+
 ### Open points
 
 - The upwind and Lax–Friedrichs candidates (decision 6).

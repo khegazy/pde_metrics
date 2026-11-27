@@ -98,7 +98,8 @@ the shock moves, which is the double penalty.
   - The median blur gives the right answer but is slow: its window is square, and a window
     hundreds of nodes wide wraps the 5 transverse nodes many times. With it on, a run of 6
     frames had not finished after four minutes; without it, it takes 36 s. It is degenerate on the
-    exact solution anyway, as the next section says.
+    exact solution anyway, as the next section says. The configurations exclude it
+    (`exclude_degradations`), and every run records the exclusion with its reason.
   - The shock detector of `shock_set_distance` flags one column of 5 nodes in the
     $\gamma = 1.4$ run. It flags nothing in the $\gamma = 2$ run, whose viscous shock is spread
     over enough nodes that no neighbouring pressure ratio exceeds 1.05, below the threshold of a

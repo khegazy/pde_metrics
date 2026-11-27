@@ -11,6 +11,7 @@ import pandas as pd
 import pytest
 
 from fmeval import analysis as an
+from fmeval import stats
 from tests.conftest import make_frame
 
 # --- normalisation --------------------------------------------------------------------
@@ -1082,3 +1083,108 @@ def test_a_strength_growing_in_time_is_still_one_row_per_level():
     one = scored[scored["metric"] == "a"]
     nearest = an._nearest_level(one, float(curve.loc[2, "damage_median"]))
     assert nearest == f"drift={2 * np.median(times):g}", nearest
+
+
+# --- several trajectories of one dataset, pooled into one sample -----------------------------
+
+
+def _trajectories(n: int = 3, n_frames: int = 10) -> pd.DataFrame:
+    """``n`` independent trajectories of one dataset, each numbering its frames from 0."""
+    return pd.concat([make_frame(axes={"a": [1.0, 2.0, 3.0], "mean_field": [4.0]}, noise=0.3,
+                                 seed=k, n_frames=n_frames).assign(trajectory=f"t{k}")
+                      for k in range(n)], ignore_index=True)
+
+
+def test_trajectories_of_one_dataset_are_pooled_into_one_measurement():
+    """Each trajectory's frames become frames of their own, so a rank correlation is still taken
+    within each frame and its median is over the frames of every trajectory (AGENTS.md §9)."""
+    rows = _trajectories()
+    axis = an.analyse(rows, n_bootstrap=0).axes.set_index("degradation").loc["a"]
+    assert axis["n_frames"] == 30
+    per_frame = [an._per_frame_rho(sub[sub["degradation"].isin(["a"]) & (sub["level"] > 0)])
+                 for _, sub in rows.groupby("trajectory")]
+    assert axis["rho"] == pytest.approx(np.median([r for p in per_frame for r in p.values()]))
+
+
+def test_pooling_leaves_one_trajectory_and_a_forecasts_files_unchanged():
+    one = make_frame(axes={"a": [1.0, 2.0]})
+    assert an.pool_trajectories(one) is one
+    files = one.assign(trajectory=np.where(one["frame_index"] < 6, "f0", "f1"))
+    assert an.pool_trajectories(files) is files, "frames numbered apart are already distinct"
+
+
+def test_pooled_frames_keep_each_trajectory_consecutive_and_in_order():
+    pooled = an.pool_trajectories(_trajectories(n=2, n_frames=4))
+    order = pooled.drop_duplicates("frame_index").sort_values("frame_index")
+    assert order["trajectory"].tolist() == ["t0"] * 4 + ["t1"] * 4
+    assert (order["frame_index"] % 4).tolist() == [0, 1, 2, 3] * 2
+    assert an._segments(pooled, np.sort(pooled["frame_index"].unique())) == [4, 4]
+
+
+def test_no_resampled_block_joins_two_trajectories():
+    """Trajectories are independent samples and frames within one are dependent, so a block of
+    frames stays inside one trajectory; a block longer than a trajectory draws whole ones."""
+    rows = an.pool_trajectories(_trajectories(n=3, n_frames=5))
+    frames = np.sort(rows["frame_index"].unique())
+    owner = rows.drop_duplicates("frame_index").set_index("frame_index")["trajectory"]
+    for idx in stats.block_bootstrap(len(frames), 10, 20, np.random.default_rng(0),
+                                     an._segments(rows, frames)):
+        blocks = owner.loc[frames[idx]].to_numpy().reshape(-1, 5)
+        assert all(len(set(block)) == 1 for block in blocks), blocks
+
+
+def test_trajectories_on_several_grids_are_refused_as_a_grid_sequence():
+    rows = _trajectories(n=2).assign(param_resolution=lambda d: np.where(
+        d["trajectory"] == "t0", 64, 128))
+    with pytest.raises(ValueError, match=r"grid sequence.*observed_order"):
+        an.analyse(rows, n_bootstrap=0)
+
+
+# --- the observed order of a grid sequence ---------------------------------------------------
+
+
+def _grid_sequence(errors: dict[int, float], times=(0.5, 1.0)) -> pd.DataFrame:
+    """A candidate's rows on several grids: its error ``errors[N]`` on ``N`` cells at each time,
+    beside the reference row (level 0) and an anchor row every run carries."""
+    rows = []
+    for cells, error in errors.items():
+        for frame, t in enumerate(times):
+            for label, level, value in (("identity", 0, 0.0), ("mean_field", 1, 9.0),
+                                        ("forecast", 1, error * (1 + t))):
+                rows.append({"dataset": "d", "metric": "m", "field": "f", "arity": "pairwise",
+                             "param_resolution": cells, "frame_index": frame, "time": t,
+                             "lead_step": frame + 1, "degradation": label, "level": level,
+                             "value": value})
+    return pd.DataFrame(rows)
+
+
+def test_observed_order_recovers_a_known_order_with_a_varying_ratio():
+    """L = C h^p on grids 32, 64, 192: p = ln(L_k / L_{k+1}) / ln r for each pair, with r = 2,
+    then 3, exactly (Roy 2005, Eq. 8); the anchor and the reference rows are not the candidate."""
+    order = an.observed_order(_grid_sequence({n: n ** -2.0 for n in (32, 64, 192)}),
+                              anchor_label="mean_field")
+    assert len(order) == 4 and order["ratio"].tolist() == [2.0, 3.0, 2.0, 3.0]
+    assert order["order"].to_numpy() == pytest.approx(2.0, abs=1e-12)
+    assert order["order_change"].isna().tolist() == [True, False, True, False]
+    assert order["order_change"].dropna().to_numpy() == pytest.approx(0.0, abs=1e-12)
+
+
+def test_observed_order_shows_a_sequence_leaving_its_asymptotic_range():
+    """An error whose third-order term still matters on these grids, L = h^2 + 50 h^3, gives an
+    order above 2 that falls towards 2 as the grids are refined (2.69, 2.52, 2.36 here); the
+    change between pairs is reported, not hidden."""
+    order = an.observed_order(_grid_sequence({n: n ** -2.0 + 50 * n ** -3.0
+                                              for n in (16, 32, 64, 128)}),
+                              anchor_label="mean_field")
+    first = order[order["time"] == 0.5]
+    assert first["order"].is_monotonic_decreasing and (first["order"] > 2.0).all()
+    change = first["order_change"].dropna().to_numpy()
+    assert (change < 0).all()
+
+
+def test_observed_order_refuses_one_grid_and_two_values_per_grid():
+    with pytest.raises(ValueError, match="at least two grids"):
+        an.observed_order(_grid_sequence({64: 1.0}), anchor_label="mean_field")
+    twice = _grid_sequence({64: 1.0, 128: 0.25})
+    with pytest.raises(ValueError, match="more than one value"):
+        an.observed_order(pd.concat([twice, twice]), anchor_label="mean_field")

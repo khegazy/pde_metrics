@@ -53,9 +53,12 @@
 # included, with a label naming the kind of claim a run on it supports (docs/decisions.md,
 # "Every evaluation dataset is evidence, under its label"). The labels are the agent's wording
 # (2026-11-27). Every computed dataset's label says "nothing about turbulence", which
-# tests/test_configs.py requires. Left out: `taylor_green_2d` (above); `advecting_blobs`, the
-# harness's test bed for time-dependent degradations, which predates that plan; and
-# `well_radiative_layer_tcool0p32`, whose status Kareem has not decided.
+# tests/test_configs.py requires. Left out: `taylor_green_2d` (above), and
+# `well_radiative_layer_tcool0p32`, which stays unregistered (BUILD_ORDER.md, decision 16).
+# `advecting_blobs`, the harness's test bed for time-dependent degradations, predates that plan
+# and was admitted on 2026-11-27 as an analytic check (decision 16): it is the reader of the
+# registered `feature_population` and `transport_pairs`, its blobs move at different velocities
+# so its frames are not scalar multiples of one another, and its candidates are experiments.
 # - `kinet_sod_gamma2`'s viscous shock is too spread for the shock detector, so every shock-set
 #   metric scores the both-empty 0 on it; its label says so, so the zero is not read as a perfect
 #   score.
@@ -63,7 +66,8 @@
 #   another, but its vorticity, the vortex's alone, is; its label says so.
 # - `random_field` is the Gaussian null only; its other families are overrides of it and would
 #   each need a configuration of their own to carry a different label. Like synthetic_ensemble,
-#   it draws from its own seed, not the run's (issues/044).
+#   it draws from its own `seed` reader option, not the run's: the reader does not need to know
+#   the seed used to generate the data (Kareem, 2026-11-27).
 evidence_datasets:
   kinet_re5e4: developed flow
   kinet_re1e6: >-
@@ -110,6 +114,9 @@ evidence_datasets:
   transport_pairs: >-
     an analytic check: density pairs at an exactly known quadratic Wasserstein distance,
     and nothing about turbulence
+  advecting_blobs: >-
+    an analytic check: three Gaussian density bumps carried at different constant velocities,
+    their exact solution known at every time, and nothing about turbulence
   random_field: >-
     a known-statistics null: independent Gaussian random fields of a prescribed spectrum,
     whose increment statistics are known exactly, and nothing about turbulence
@@ -143,6 +150,7 @@ evidence_dataset_properties:
   noh: {periodic: false, ensemble: false}                 # Neumann on both axes
   feature_population: {periodic: true, ensemble: false}
   transport_pairs: {periodic: true, ensemble: false}
+  advecting_blobs: {periodic: true, ensemble: false}
   random_field: {periodic: true, ensemble: false}
   helmholtz_mixture_2d: {periodic: true, ensemble: false}
 
@@ -151,18 +159,17 @@ evidence_dataset_properties:
 # select frames; a test checks the exemplar frame below lies inside it, and each fingerprint
 # records the frames its run actually used.
 #
-# It is one window, kinet_re5e4's, and it also holds for kinet_re1e6 (same clock) and
-# kinet_re5e4_512 (`frame_stride: 2` puts its frames at the same times; its config states the
-# start). Every other evidence dataset's evaluated part is the `time:` selection and reader
-# options of its own configs/dataset/<name>.yaml, chosen and measured in its log
+# It is one window, kinet_re5e4's, and it also holds for kinet_re1e6 (same clock); kinet_re5e4_512
+# reads the same window at every 400th frame (`frame_stride: 2` puts its frames at the times of
+# kinet_re5e4's; its config states the start and stride). Every other evidence dataset's
+# evaluated part is the `time:` selection, reader options, `analysis_resolution` and
+# `exclude_degradations` of its own configs/dataset/<name>.yaml, chosen and measured in its log
 # (docs/datasets/logs/), and a run cited from it uses those, as Sod's runs use the reader's own
-# frames. What no config can state, because the framework has no key for it
-# (dataset_specs/BUILD_ORDER.md, "Framework limits"), is given on the command line:
-# - kinet_hit_*: `analysis_grid.resolution=128`, and five realisations each, swept with
-#   `-m dataset.trajectory=<k1>,...,<k5>` (the keys are in each config's comments);
-# - kinet_re5e4_512: `analysis_grid.resolution=256`, the grid shared with kinet_re5e4;
-# - kinet_sod_*: `degradation.skip=[median_blur]`, whose window costs about 11 minutes a frame
-#   on the 5 transverse nodes;
+# frames: the 128 grid of kinet_hit_*, the 256 grid of kinet_re5e4_512, and the median blur
+# kinet_sod_* exclude. What a config still does not state is given on the command line:
+# - kinet_hit_*: five realisations each, swept with `-m dataset.trajectory=<k1>,...,<k5>` (the
+#   keys are in each config's comments) and gathered with `fmeval.io.combine_runs(...,
+#   across="trajectory")`;
 # - helmholtz_mixture_2d: the two disabled `scale_dilatational` ladder entries switched on;
 # - feature_population: its single-feature candidates, one override each (its config lists them).
 evidence_window:

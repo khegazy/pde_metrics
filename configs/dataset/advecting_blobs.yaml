@@ -2,9 +2,10 @@
 # square, computed on the fly. See fmeval/data/analytic.py and docs/datasets/advecting_blobs.md.
 #
 # NOT PHYSICAL EVIDENCE. It is the test bed for time-dependent degradations
-# (`per_unit_time: true` on a ladder entry) and for the dynamics family (issues/094); it is not
-# in evidence_datasets. Because the blobs move at different velocities their relative positions
-# change, so an error measured on it varies from frame to frame, which one blob would not do.
+# (`per_unit_time: true` on a ladder entry) and for the dynamics family (issues/094), and in
+# evidence_datasets as an analytic check (configs/cards/default.yaml, under its label; admitted
+# 2026-11-27). Because the blobs move at different velocities their relative positions change,
+# so an error measured on it varies from frame to frame, which one blob would not do.
 #
 # The window is the reader's default: 21 frames from t = 0 to t = 10 on 64^2 cells, in which the
 # blobs travel between 0.5 and 0.8 of the domain.

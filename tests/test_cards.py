@@ -1005,6 +1005,20 @@ def test_load_run_goes_through_the_one_analysis_entry_point(tmp_path):
     assert run.anchor_label == "uncorrelated"
 
 
+def test_a_card_counts_the_frames_of_every_pooled_trajectory(tmp_path):
+    """A folder gathering several trajectories of one dataset is one sample of all their frames,
+    and the run summary says how many frames over how many trajectories; one trajectory reads as
+    before."""
+    one = make_frame(metric="mse", axes={"a": [1.0, 2.0], "mean_field": [4.0]}, n_frames=6)
+    single = evidence.load_run(_run_folder(tmp_path / "comparison_1", one, "kinet_hit_re25k"))
+    assert "(6 frames of " in evidence._provenance(single)
+    three = pd.concat([one.assign(trajectory=t) for t in ("a", "b", "c")], ignore_index=True)
+    pooled = evidence.load_run(_run_folder(tmp_path / "kinet_hit_re25k_2", three,
+                                           "kinet_hit_re25k"))
+    assert "frames 0 to 5 (18 frames over 3 trajectories of " in evidence._provenance(pooled)
+    assert (pooled.axes["n_frames"] == 18).all()
+
+
 def test_the_cross_metric_table_has_one_column_per_field(tmp_path):
     """The card reads the redundancy matrix field by field, never pooled: mae runs on one of
     mse's two fields only, so it gets a number there and a dash on the other."""

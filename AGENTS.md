@@ -111,10 +111,11 @@ did not evaluate it the way that field does.
   turbulence `kinet_hit_re12p5k`, `kinet_hit_re25k`, `kinet_hit_re50k`; the shear layer on
   512^2, `kinet_re5e4_512`; the solver's Sod runs `kinet_sod_gamma1p4` and `kinet_sod_gamma2`;
   and the analytic checks `burgers`, `sedov_taylor`, `noh`, `feature_population`,
-  `transport_pairs`, `random_field` and `helmholtz_mixture_2d`. Each is run on its own
-  configuration's window, with the command-line settings listed beside `evidence_window` in
-  `configs/cards/default.yaml`. `advecting_blobs` and `taylor_green_2d` are fixtures, not
-  evidence (`docs/decisions.md`). A card cites one run per experiment:
+  `transport_pairs`, `advecting_blobs`, `random_field` and `helmholtz_mixture_2d`. Each is run
+  on its own configuration's evaluated part (its window, `analysis_resolution` and
+  `exclude_degradations`), with the command-line settings listed beside `evidence_window` in
+  `configs/cards/default.yaml`. `taylor_green_2d` is a fixture, not evidence
+  (`docs/decisions.md`). A card cites one run per experiment:
   `python -m fmeval.cards evidence <name> --results <primary run> --results <run> ...` puts
   the primary run, the field-standard experiment where it exists here, in `## Performance` and
   the subsections per test, and each further run in a subsection headed with its dataset. The

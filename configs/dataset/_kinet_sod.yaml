@@ -40,11 +40,13 @@ reader:
 #   that run here; about 3.5 minutes per configuration for the full panel.
 # - The default ladder's median blur gives the right answer but costs about 11 minutes per
 #   frame here (its square window grows with the square of a width of hundreds of nodes on the
-#   5 transverse nodes). No dataset-level ladder exclusion exists, so run these configurations
-#   with `degradation.skip=[median_blur]`.
+#   5 transverse nodes), so it is excluded below; the run records it, with the reason.
 time:
   start: 450
   reduction: 50
+
+exclude_degradations:
+  median_blur: "its window wraps the 5 transverse nodes: about 11 minutes a frame"
 
 complexity:
   family: sod_shock_tube

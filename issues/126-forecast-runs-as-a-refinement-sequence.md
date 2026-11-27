@@ -2,7 +2,12 @@
 
 **Category:** deferred functionality
 **Priority:** medium
-**Status:** open. Needs the provenance of the predictions before anything is computed.
+**Status:** open in part. Still open: the provenance of the forecast runs' predictions, and a
+reader that pairs a coarse prediction with the $256^2$ target. Now possible (step 32 of
+`dataset_specs/BUILD_ORDER.md`, 2026-11-27): computing Equation (1) from the rows of a grid
+sequence, `fmeval.analysis.observed_order`, per metric, field and time for each pair of
+successive grids, with the change of the order between pairs reported so the asymptotic range is
+read rather than assumed; the Burgers grid sequence is its known-answer test.
 
 ## Context
 
@@ -53,11 +58,13 @@ $\hat{p}$ little there (1.79 instead of 1.73 for density at that step).
    two coarse runs scored against the $256^2$ reference are a two-grid sequence with a known
    reference, and Equation (1) applies at short lead; if a trained model, refinement does not
    apply (`docs/ideas/infrastructure/grid_convergence.md`, Pitfalls).
-2. If it applies: a computation in `fmeval/analysis.py` of $\hat{p}$ per (metric, field,
-   forecast start, prediction step) from rows that carry `param_resolution`, `lead_step` and
-   `lead_time`, scored against one reference (the $256^2$ target, which needs the reader to pair
-   a coarse prediction with the fine target), with the asymptotic range checked rather than
-   assumed, for instance by requiring the order to be steady over the first steps.
+2. If it applies: the coarse predictions scored against one reference, the $256^2$ target,
+   which needs the reader to pair a coarse prediction with the fine target; not built. The
+   order itself is then `observed_order` on those rows, which groups by metric, field and
+   `time` (so by prediction step within one forecast start) and reports `order_change`; it is
+   built and tested on Burgers (`tests/test_analytic_datasets.py`) and on synthetic sequences
+   (`tests/test_analysis.py`). Run on the forecast rows as they stand it would read the
+   $256^2$ run's error against itself, which is not a discretisation error.
 
 ## Related
 

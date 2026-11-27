@@ -12,10 +12,11 @@ defaults:
   - dataset: kinet_re5e4_dev
   - degradation: default
   - report: default
+  # Before the family, so a family's `analysis_grid` replaces this file's.
+  - _self_
   # None by default. `dataset_family=<name>` with `-m` runs every member of a family and
   # gathers them into one folder (configs/dataset_family/).
   - dataset_family: null
-  - _self_
 
 paths:
   # The `datasets` link in the repository root, found from the code rather than the working
@@ -37,8 +38,11 @@ paths:
 metrics: [mae, mse, vrmse]
 
 # `fields` (default: every field the dataset lists that a selected metric accepts) and
-# `analysis_grid` (default: the native resolution, block_mean) are documented on their schema
-# in fmeval/config.py.
+# `analysis_grid` (block_mean) are documented on their schema in fmeval/config.py. The grid is
+# the one the dataset's evaluated part names, `dataset.analysis_resolution` (None: native); a
+# family option or `analysis_grid.resolution=<n>` on the command line replaces it.
+analysis_grid:
+  resolution: ${dataset.analysis_resolution}
 
 # The analysis layer. `anchor` is the LADDER ENTRY (a label under degradation.ladder, not an
 # operator) whose median value defines damage D = 1. It must be a non-ordinal entry. Fixed once

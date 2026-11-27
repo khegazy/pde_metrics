@@ -57,8 +57,9 @@ GROUP_KEYS: list[str] = ["dataset", "metric", "field"]
 #: What identifies one result row: one metric evaluation of one variant of one frame. Every
 #: statistic reads a row as one point on one trace, and pairs a frame's levels with that frame's
 #: clean value by ``frame_index`` within a :data:`GROUP_KEYS` group, so a second row under the
-#: same key -- another trajectory's frame of the same index included -- would be merged into it
-#: silently; :func:`normalisation` refuses that.
+#: same key would be merged into it silently; :func:`normalisation` refuses that. Another
+#: trajectory's frame of the same index is told apart by :func:`pool_trajectories` first, and a
+#: grid sequence is read by :func:`observed_order`, not pooled.
 ROW_KEYS: list[str] = [*GROUP_KEYS, "frame_index", "variant_label"]
 
 #: The ladder entry the profile's displacement elasticity is read from: a sub-pixel shift, the
@@ -131,6 +132,52 @@ _TEXT_COLUMNS = frozenset({"elasticity_x", "response_shape"})
 DEGENERATE_SPAN: float = 1e-9
 
 
+# --- trajectories ---------------------------------------------------------------------
+
+
+def pool_trajectories(rows: pd.DataFrame) -> pd.DataFrame:
+    """The rows of several independent trajectories of one dataset, as one sample of frames.
+
+    Runs of one dataset on several realisations (``dataset.trajectory``, gathered by
+    ``fmeval.io.combine_runs(..., across="trajectory")`` or :func:`fmeval.io.load_runs`) number
+    their frames alike, so frame 150 of one and frame 150 of another would be read as one frame.
+    Here each frame of each trajectory becomes a frame of its own,
+    ``frame_index = k * stride + frame_index`` with ``k`` the trajectory's place in sorted order
+    and ``stride`` one more than the largest frame index, which keeps every trajectory's frames
+    consecutive and in order. Every statistic then runs as on one trajectory: rank correlations
+    within each frame, never across frames (``AGENTS.md`` §9), their median over the frames of all
+    trajectories; and the resamplings treat the trajectories as independent series and the frames
+    within each as dependent (:func:`_segments`).
+
+    Rows of one trajectory, and rows whose trajectories number their frames apart (a forecast's
+    files), are returned unchanged; so are trajectories on several grids, which are a grid sequence
+    and not one sample (:func:`observed_order`).
+    """
+    if "trajectory" not in rows.columns:
+        return rows
+    frames = rows[["trajectory", "frame_index"]].drop_duplicates()
+    if not frames["frame_index"].duplicated().any() or (
+            "param_resolution" in rows.columns and rows["param_resolution"].nunique() > 1):
+        return rows
+    place = {t: k for k, t in enumerate(sorted(frames["trajectory"].astype(str).unique()))}
+    stride = int(frames["frame_index"].max()) + 1
+    return rows.assign(frame_index=rows["trajectory"].astype(str).map(place).astype(int) * stride
+                       + rows["frame_index"])
+
+
+def _segments(rows: pd.DataFrame, frames: np.ndarray) -> list[int] | None:
+    """How many of the sorted ``frames`` each trajectory holds, in order: the independent series a
+    block of the bootstrap must not join (:func:`pool_trajectories`). None for one trajectory."""
+    if "trajectory" not in rows.columns:
+        return None
+    owner = (rows.drop_duplicates("frame_index").set_index("frame_index")["trajectory"]
+             .astype(str).reindex(frames).to_numpy())
+    if len(set(owner)) < 2:
+        return None
+    starts = np.flatnonzero(owner[1:] != owner[:-1]) + 1
+    return np.diff([0, *starts, len(frames)]).tolist()
+
+
 # --- normalisation --------------------------------------------------------------------
 
 
@@ -188,12 +235,18 @@ def normalisation(df: pd.DataFrame, *, anchor_label: str = MEAN_FIELD_LABEL,
     keys = [k for k in ROW_KEYS if k in df.columns]
     repeated = df.duplicated(keys, keep=False)
     if repeated.any():
+        grids = (sorted(df.loc[repeated, "param_resolution"].dropna().unique().tolist())
+                 if "param_resolution" in df.columns else [])
         raise ValueError(
             f"{int(repeated.sum())} result rows share a key of {ROW_KEYS} with another row, "
             f"e.g. {df.loc[repeated, keys].head(2).to_dict('records')}. "
             "Every statistic reads one row as one point of one trace and pairs frames by "
-            "frame_index within a dataset; concatenate runs under distinct dataset names, or "
-            "analyse them separately."
+            "frame_index within a dataset; "
+            + (f"these rows lie on the grids {grids}, a grid sequence, whose statistics are not "
+               "pooled: read its order with observed_order, and analyse each grid's run alone."
+               if len(grids) > 1 else
+               "analyse the trajectories of one dataset with analyse(), which pools them, "
+               "concatenate other runs under distinct dataset names, or analyse them separately.")
         )
     rows = []
     for key, g in df.groupby(GROUP_KEYS, observed=True):
@@ -568,8 +621,9 @@ def summarise_axes(df: pd.DataFrame, *, norm: pd.DataFrame | None = None,
             span_size = None if span is None else abs(span)
             rho_by_frame = _per_frame_rho(oriented, frame_scale)
             per_frame = np.fromiter(rho_by_frame.values(), dtype=float, count=len(rho_by_frame))
-            lo, hi = _block_bootstrap_rho(rho_by_frame, np.sort(g["frame_index"].unique()), rng,
-                                          block_length, n_bootstrap)
+            frames = np.sort(g["frame_index"].unique())
+            lo, hi = _block_bootstrap_rho(rho_by_frame, frames, rng, block_length, n_bootstrap,
+                                          _segments(g, frames))
             # An all-NaN per-frame correlation is a documented outcome, not a surprise: it is
             # what a metric invariant to this axis produces once the round-off guard has done
             # its job. Suppressed here so it does not read as a numerical accident.
@@ -794,7 +848,7 @@ def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean
                 and largest_response > 0):
             damage = paired / largest_response   # the anchor is degenerate: read against the ladder
         if np.isfinite(damage).any():
-            out.update(_blindness_bound(damage, Z, n_bootstrap, rng))
+            out.update(_blindness_bound(damage, Z, n_bootstrap, rng, _segments(g, frames)))
     if axis_round_off:
         return out
     with warnings.catch_warnings():
@@ -822,7 +876,8 @@ def _response_statistics(g: pd.DataFrame, oriented: pd.DataFrame, oriented_clean
 
 
 def _blindness_bound(D: np.ndarray, Z: np.ndarray, n_bootstrap: int,
-                     rng: np.random.Generator) -> dict[str, float]:
+                     rng: np.random.Generator,
+                     segments: list[int] | None = None) -> dict[str, float]:
     """An upper bound on the largest damage one degradation produces, and how surely it is small.
 
     A metric that does not respond significantly is not thereby shown to be blind to the
@@ -845,16 +900,18 @@ def _blindness_bound(D: np.ndarray, Z: np.ndarray, n_bootstrap: int,
     Args:
         D: Frames by levels, damage (or the relative response when the anchor is degenerate).
         Z: Frames by levels, the same values divided by the metric's scale in each frame.
+        segments: The frames of each pooled trajectory, in order (:func:`_segments`): the block
+            length is estimated within them and no block joins two of them.
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
-        block = stats.politis_white_block_length(np.nanmedian(Z, axis=1))
+        block = stats.politis_white_block_length(np.nanmedian(Z, axis=1), segments)
         out: dict[str, float] = {"blindness_block_length": block}
         if len(D) < 2 * block:
             return out
         draws = np.array([
             np.nanmax(np.abs(np.nanmedian(D[idx], axis=0)))
-            for idx in stats.block_bootstrap(len(D), block, n_bootstrap, rng)
+            for idx in stats.block_bootstrap(len(D), block, n_bootstrap, rng, segments)
         ])
     draws = draws[np.isfinite(draws)]
     if draws.size:
@@ -987,13 +1044,14 @@ def _threshold_level(g: pd.DataFrame, clean: float, fraction: float,
 
 def _block_bootstrap_rho(per_frame: Mapping[int, float], frames: np.ndarray,
                          rng: np.random.Generator, block_length: int,
-                         n: int) -> tuple[float, float]:
+                         n: int, segments: list[int] | None = None) -> tuple[float, float]:
     """Percentile interval for the per-frame Spearman median, over blocks of frames.
 
     Blocks of frames, for the reason given at :data:`N_BOOTSTRAP`. The
     resampling is :func:`fmeval.stats.block_bootstrap` over the sorted ``frames``, and what is
     resampled is the per-frame statistic :func:`_per_frame_rho` computed, round-off guard
     included -- so an axis whose ``rho`` is withheld as round-off cannot carry a finite interval.
+    ``segments`` are the frames of each pooled trajectory (:func:`_segments`), which no block joins.
     """
     if len(frames) < 2 * block_length or n <= 0 or not per_frame:
         return (float("nan"), float("nan"))
@@ -1003,7 +1061,7 @@ def _block_bootstrap_rho(per_frame: Mapping[int, float], frames: np.ndarray,
     all_round_off = not np.isfinite(list(per_frame.values())).any()
 
     draws = []
-    for idx in stats.block_bootstrap(len(frames), block_length, n, rng):
+    for idx in stats.block_bootstrap(len(frames), block_length, n, rng, segments):
         values = [per_frame[f] for f in frames[idx] if f in per_frame]
         if values and not all_round_off:
             # A resample can still land only on withheld frames when some are round-off.
@@ -1340,6 +1398,9 @@ def analyse(rows: pd.DataFrame, *, companions: pd.DataFrame | None = None,
     Called with neither, on rows that come from no run folder, it uses the current defaults:
     :data:`MEAN_FIELD_LABEL` and :data:`PROBE_LABELS`.
 
+    Rows of several trajectories of one dataset are pooled into one sample first
+    (:func:`pool_trajectories`), so each statistic is one measurement over all of them.
+
     ``companions`` are the run's curve-companion rows. Each coordinate is analysed as a metric of
     its own (:func:`per_coordinate`) by the same functions as the panel, with no bootstrap, into
     tables of their own beside it. Adjacent coordinates of one curve are strongly correlated, so a
@@ -1348,6 +1409,9 @@ def analyse(rows: pd.DataFrame, *, companions: pd.DataFrame | None = None,
     anchor, probe_labels = (run_labels(meta or {}, config)
                             if meta is not None or config is not None
                             else (MEAN_FIELD_LABEL, PROBE_LABELS))
+    rows = pool_trajectories(rows)
+    if companions is not None:
+        companions = pool_trajectories(companions)
     norm = normalisation(rows, anchor_label=anchor, probe_labels=probe_labels)
     scored = add_damage(rows, norm)
     axes = summarise_axes(scored, norm=norm, block_length=block_length, n_bootstrap=n_bootstrap,
@@ -1615,6 +1679,65 @@ def forecast_by_lead(scored: pd.DataFrame, *, metric: str, anchor_label: str) ->
     out = out[columns].astype({"field": str, "trajectory": str})
     return out.sort_values(["field", "start", "param_resolution", "lead_time"],
                            kind="stable").reset_index(drop=True)
+
+
+def observed_order(rows: pd.DataFrame, *, anchor_label: str) -> pd.DataFrame:
+    """The observed order of accuracy of a candidate on a grid sequence, per metric, field, time.
+
+    ``rows`` are the runs of one candidate on several grids, each scored against the exact solution
+    on its own cells (``param_resolution``), such as the Burgers grid sequence of
+    ``configs/dataset/burgers.yaml``; :func:`fmeval.io.load_runs` gathers them. For each pair of
+    successive grids, coarse ``N_k`` and fine ``N_{k+1}`` cells, with error norms ``L_k`` and
+    ``L_{k+1}`` of a two-field metric on the candidate's rows (those with a ``lead_step``, a level
+    above the reference and not the anchor ``anchor_label``, as in :func:`forecast_by_lead`):
+
+        p = ln(L_k / L_{k+1}) / ln r,   r = N_{k+1} / N_k = h_k / h_{k+1}
+
+    (Roy 2005, *J. Comput. Phys.* 205(1), 131-156, Eq. 8, for errors against an exact solution).
+
+    **p estimates the formal order only in the asymptotic range**, where the leading term of the
+    discretisation error dominates every higher-order term Roy's Eq. 5 neglects. Nothing here
+    assumes that range: ``order_change`` is p minus the p of the next coarser pair at the same
+    metric, field and time, which settles towards zero as the grids enter it, and a reader judges
+    from it. A chaotic flow, an error that is not a discretisation error (a target that is the
+    reference itself), or a single-field quantity has no order to observe.
+
+    Returns:
+        One row per (metric, field, time, pair of successive grids): ``resolution_coarse``,
+        ``resolution_fine``, ``ratio``, ``value_coarse``, ``value_fine``, ``order`` and
+        ``order_change`` (NaN for the coarsest pair), sorted by metric, field, time and grid.
+
+    Raises:
+        ValueError: If two rows give one metric, field, time and grid two values, or the rows
+            hold fewer than two grids.
+    """
+    columns = ["metric", "field", "time", "resolution_coarse", "resolution_fine", "ratio",
+               "value_coarse", "value_fine", "order", "order_change"]
+    keys = ["metric", "field", "time", "param_resolution"]
+    candidate = rows[rows["lead_step"].notna() & (rows["level"] > 0)
+                     & rows["degradation"].ne(anchor_label) & rows["arity"].eq("pairwise")]
+    repeated = candidate.duplicated(keys, keep=False)
+    if repeated.any():
+        raise ValueError(
+            f"{int(repeated.sum())} candidate rows give one metric, field, time and grid more than "
+            f"one value, e.g. {candidate.loc[repeated, keys].head(2).to_dict('records')}; pass "
+            "the rows of one candidate's grid sequence")
+    grids = sorted(int(n) for n in candidate["param_resolution"].dropna().unique())
+    if len(grids) < 2:
+        raise ValueError(f"an observed order needs at least two grids, the rows hold {grids}")
+    wide = (candidate.astype({"metric": str, "field": str})
+            .pivot(index=keys[:3], columns="param_resolution", values="value")[grids])
+    pairs = []
+    for coarse, fine in pairwise(grids):
+        with np.errstate(divide="ignore", invalid="ignore"):
+            order = np.log(wide[coarse] / wide[fine]) / np.log(fine / coarse)
+        pairs.append(pd.DataFrame({
+            "resolution_coarse": coarse, "resolution_fine": fine, "ratio": fine / coarse,
+            "value_coarse": wide[coarse], "value_fine": wide[fine], "order": order}).reset_index())
+    out = pd.concat(pairs, ignore_index=True).sort_values(
+        ["metric", "field", "time", "resolution_coarse"], kind="stable")
+    out["order_change"] = out.groupby(["metric", "field", "time"])["order"].diff()
+    return out[columns].reset_index(drop=True)
 
 
 def _metric_columns(wide: pd.DataFrame) -> list[str]:

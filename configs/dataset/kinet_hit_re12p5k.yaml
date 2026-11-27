@@ -4,7 +4,7 @@
 #
 # The evaluated trajectories are the first five drawn (the fragment says why five):
 #   python evaluate.py -m 'metrics=[...]' dataset=kinet_hit_re12p5k \
-#       dataset.trajectory=c5ccb2,6f3450,3c2c65,10383c,f151b4 analysis_grid.resolution=128
+#       dataset.trajectory=c5ccb2,6f3450,3c2c65,10383c,f151b4
 defaults:
   - _decaying_isotropic_2d
   - _self_

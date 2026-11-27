@@ -190,10 +190,21 @@ frames matter. Nothing is stored, so the disk used is zero.
   table shows it as *not yet run* or *not applicable* with the reason (`python -m fmeval.cards
   catalog`). Producing that evidence is its own step in `BUILD_ORDER.md` and needs compute.
 
+### 2026-11-27: issue 044 closed with no change (step-32 agent)
+
+- **Decision.** Kareem, 2026-11-27: "The reader does not need to know the seed used to generate
+  the data" (decision 14 of `dataset_specs/BUILD_ORDER.md`). The reader keeps its own `seed`
+  option, which `run_meta.json` records under `reader_options`; the run seed reaches the
+  degradation operators only. Another draw of the null is another reader seed
+  (`+dataset.reader.seed=<n>`).
+- **Done.** Issue 044 deleted with its row in `issues/README.md`, and every reference that said
+  something waited on it rewritten to state the decision. No code, configuration or card number
+  changed.
+
 ## Open points
 
 1. A configuration per family, each with its own `evidence_datasets` label, if the other
-   families are to be cited; issue 044 is to be decided before evidence is produced.
+   families are to be cited.
 2. Spec 09's Eq. (6) (`energy_distance`), the `tail_exceedance` bias with spikes and the
    expected `spectrum_l2` floor between two draws are derived but not asserted.
 3. The Pareto option should move to the X4 `pareto_spikes` degradation when that is built.

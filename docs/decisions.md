@@ -156,14 +156,19 @@ turbulence" (`tests/test_configs.py`). Two computed datasets were admitted befor
 because `kinet_re5e4` has neither shocks nor pressure and every metric is run on every
 experiment where that makes sense (`AGENTS.md` §1, "How every metric is evaluated").
 
-Three datasets stay out:
+Two datasets stay out:
 
 - `taylor_green_2d`, a single Fourier mode, every frame a scalar multiple of the first, so its
   frames are not independent evidence. Any dataset whose frames are scalar multiples of one
   another stays out for the same reason.
-- `advecting_blobs`, the harness's test bed for time-dependent degradations, which predates that
-  plan.
-- `well_radiative_layer_tcool0p32`, whose status Kareem has not decided.
+- `well_radiative_layer_tcool0p32`: no test of an existing metric needs it (an agent's call
+  under Kareem's delegation, `dataset_specs/BUILD_ORDER.md`, decision 16).
+
+`advecting_blobs`, the harness's test bed for time-dependent degradations, predates that plan and
+was admitted on 2026-11-27 as an analytic check, by the same delegation: it is the reader of the
+registered `feature_population` and `transport_pairs`, its blobs move at different velocities so
+its frames are not scalar multiples of one another, and the candidates built on it are
+evaluation experiments.
 
 Why: a closed form says what a metric does to an idealised feature, not to turbulence, and its
 numbers, once written into a page, would read exactly like numbers from a flow. Admitting it is

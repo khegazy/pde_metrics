@@ -151,12 +151,17 @@ def _provenance(run: Run) -> str:
     """
     meta, rows, dataset = run.meta, run.rows, dataset_of(run)
     frames = sorted(rows["frame_index"].unique())
+    # Several trajectories numbering their frames alike are one sample of all their frames.
+    pooled = an.pool_trajectories(rows)
+    count = (f"{len(frames)} frames" if pooled is rows else
+             f"{pooled['frame_index'].nunique()} frames over {rows['trajectory'].nunique()} "
+             "trajectories")
     git = meta.get("git", {})
     sha = str(git.get("sha") or "not recorded")[:12]
     dirty = " (working tree dirty)" if git.get("dirty") else ""
     return (
         f"Measured on `{dataset}`, frames {frames[0]} to {frames[-1]} "
-        f"({len(frames)} frames of {load_cards_config().evidence_datasets[dataset]}), on the "
+        f"({count} of {load_cards_config().evidence_datasets[dataset]}), on the "
         f"{meta.get('analysis_grid') or 'native'} analysis grid, seed "
         f"{meta.get('seed', '—')}, at commit `{sha}`{dirty}. Run `{run.folder.name}`."
     )

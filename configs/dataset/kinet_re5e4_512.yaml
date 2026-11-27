@@ -14,23 +14,25 @@ trajectory: D2Q9_shape-512-512_T-20000_H-56d32e
 reader:
   frame_stride: 2
 
-# What is evaluated (docs/recipes/add-a-dataset.md, step 3; an agent's choice, 2026-11-26): the
-# developed-flow window of kinet_re5e4, frames 2000 to 10000 at every 50th (the inherited
-# reduction): 161 frames at the same times as kinet_re5e4's, which hold 7 to 12 independent
-# samples there (METRIC_EVALUATION_CRITIQUE.md, finding 2). Run it with
-# `analysis_grid.resolution=256`, the common grid with kinet_re5e4, for the metric ladder; the
-# native 512 grid is for the refinement comparison of dataset_specs/02, Sect. 5.1, only.
+# What is evaluated (docs/recipes/add-a-dataset.md, step 3): the developed-flow window of
+# kinet_re5e4, frames 2000 to 10000, at every 400th frame: 21 frames, on the 256 analysis grid
+# shared with kinet_re5e4. Cut on 2026-11-27 from every 50th (161 frames; decision 17 of
+# dataset_specs/BUILD_ORDER.md): the 161 frames held only 7 to 12 independent samples
+# (METRIC_EVALUATION_CRITIQUE.md, finding 2), and matching kinet_re5e4 frame for frame had no
+# statistical reason. The native 512 grid is for the refinement comparison of dataset_specs/02,
+# Sect. 5.1, only (analysis_grid.resolution=null).
 # Measured on a shared login node, 2026-11-26, per frame at 256 with every severity level:
 # degradations 5.5 to 5.9 s; metrics mse 0.04 s, wasserstein 5.6 s, increment_w1_by_separation
 # 16.4 s, energy_distance 27.4 s, spectral_energy_flux 32.1 s, persistence_distance 34.0 s;
 # persistence_wasserstein did not finish one frame in 900 s and, as on kinet_re5e4, is not run
-# on this ladder (its card). Full panel without it: about 122 s per frame, 5.5 h for the 161
-# frames in one process (split it with dataset.time.shards). At the native 512 the degradations
-# alone take 76.5 s per frame, 3.4 h for the window. Read from disk: 8.4 MB per frame, 1.35 GB.
-# A cheaper choice is `dataset.time.reduction=200` (41 frames, about 1.4 h), which likely keeps
-# most of the independent samples; it was not taken, so the two runs share every frame.
+# on this ladder (its card). Full panel without it: about 122 s per frame, so about 43 minutes
+# for the 21 frames in one process. At the native 512 the degradations alone take 76.5 s per
+# frame. Read from disk: 8.4 MB per frame.
+analysis_resolution: 256
+
 time:
   start: 2000
+  reduction: 400
 
 complexity:
   params: {resolution: 512}

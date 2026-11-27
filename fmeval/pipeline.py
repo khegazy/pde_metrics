@@ -251,6 +251,7 @@ def run(
     maps: MapRequest | None = None,
     calibration_frames: int = 5,
     prediction: Trajectory | None = None,
+    every: Mapping[str, int] | None = None,
 ) -> PipelineResult:
     """Evaluate every metric against every severity level, over the selected frames.
 
@@ -270,6 +271,9 @@ def run(
         prediction: The prediction paired with every frame of ``trajectory``, on the same frame
             axis, for a dataset of real forecasts (:mod:`fmeval.data.forecast`). Each frame's
             prediction is scored against it as one more variant, :data:`FORECAST_LEVEL`.
+        every: Metric name -> N: that metric is evaluated on every Nth frame of the whole
+            selection, counted from its first, so every shard of a selection thins it alike.
+            Every other metric runs on every frame (``dataset.slow_metrics``).
 
     Returns:
         A :class:`PipelineResult` whose ``rows`` follow :data:`RESULT_DTYPES` exactly.
@@ -343,6 +347,9 @@ def run(
         analysis_grid=grid_size, times=trajectory.times[indices], time_origin=time_origin,
     )
 
+    # A thinned metric keeps frames by their position in the whole selection, before sharding.
+    position = {int(index): p for p, index in enumerate(indices)}
+    every = every or {}
     # This process's part of the selection; the calibration above used all of it.
     indices = selection.part(indices)
     run_columns = {**dataset.row(), "analysis_grid": grid_size, "remap_op": remap_method,
@@ -385,6 +392,8 @@ def run(
                 # zeros or NaNs is indistinguishable from a metric that ran and found
                 # nothing wrong. Reported once per run, below.
                 skipped_ensemble.add(spec.name)
+                continue
+            if position[int(index)] % every.get(spec.name, 1):
                 continue
             for field in (f for f in available if spec.accepts(f)):
                 reference = frame.fields[field]

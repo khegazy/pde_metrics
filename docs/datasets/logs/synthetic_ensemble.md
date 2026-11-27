@@ -216,11 +216,19 @@ severities each, which would save about 6 s of the 42 s per frame.
 - Not verified: the timings on a compute node, and how few frames the binned spread–error
   slope tolerates.
 
+### 2026-11-27: issue 044 closed with no change (step-32 agent)
+
+- **Decision.** Kareem, 2026-11-27: "The reader does not need to know the seed used to generate
+  the data" (decision 14 of `dataset_specs/BUILD_ORDER.md`). The reader keeps its own `seed`
+  option, which `run_meta.json` records under `reader_options`; the run seed reaches the
+  degradation operators only. Another draw of the null is another reader seed
+  (`+dataset.reader.seed=<n>`).
+- **Done.** Issue 044 deleted with its row in `issues/README.md`, and every reference that said
+  something waited on it rewritten to state the decision. No code, configuration or card number
+  changed.
+
 ## Open points
 
-- **Issue 044, the run seed.** Spec 08 proposes `seed: ${seed}` in the dataset config so the
-  run seed reaches the reader. It was left out on purpose: it changes every number on the four
-  ensemble cards, and Kareem has not decided it.
 - **The published climatological CRPS.** Gneiting, Balabdaoui and Raftery (2007), Table 5,
   report 0.78 for the climatological forecaster, about three standard errors below the exact
   0.7979 (spec 08, Sect. 3.1). The cause is not established; a different random draw or

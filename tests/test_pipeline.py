@@ -15,6 +15,7 @@ import pytest
 
 from evaluate import select_fields
 from fmeval import io as fio
+from fmeval.analysis import analyse
 from fmeval.data.base import GridSpec, TimeSelection
 from fmeval.data.kinet_raw import KinetRawTrajectory
 from fmeval.derived import RecomputingTrajectory, recompute_frame
@@ -379,6 +380,27 @@ def test_frame_shards_together_are_the_whole_run(traj):
     pd.testing.assert_series_equal(merged["severity"], expected["severity"])
 
 
+def test_a_thinned_metric_scores_every_nth_frame_of_the_whole_selection(traj):
+    """``every`` keeps a slow metric to every Nth selected frame, counted over the whole selection
+    so that frame shards thin it alike, and changes nothing else: the other metric's rows and the
+    thinned metric's values on the frames it keeps are the unthinned run's, value for value."""
+    whole = evaluate(traj).rows
+    thinned = evaluate(traj, every={"mae": 2}).rows
+    frames = sorted(whole["frame_index"].unique())          # 1, 2, 3, 4
+    assert sorted(thinned.loc[thinned["metric"] == "mae", "frame_index"].unique()) == frames[::2]
+    assert sorted(thinned.loc[thinned["metric"] == "mse", "frame_index"].unique()) == frames
+    key = ["metric", "field", "degradation", "level", "frame_index"]
+    kept = whole[(whole["metric"] == "mse") | whole["frame_index"].isin(frames[::2])]
+    pd.testing.assert_series_equal(
+        thinned.sort_values(key)["value"].reset_index(drop=True),
+        kept.sort_values(key)["value"].reset_index(drop=True))
+    shards = [evaluate(traj, every={"mae": 2},
+                       selection=TimeSelection(start=1, shard=k, shards=2)).rows
+              for k in range(2)]
+    assert sorted(pd.concat(shards).query("metric == 'mae'")["frame_index"].unique()) == \
+        frames[::2]
+
+
 def test_shards_scoring_different_fields_merge_with_one_calibration_per_field(tmp_path, traj):
     """A density-only metric's shard calibrates density alone; the merge keeps each field's
     calibration once."""
@@ -404,6 +426,48 @@ def test_combine_runs_refuses_shards_that_overlap_or_ran_different_ladders(tmp_p
         fio.combine_runs([_shard(tmp_path, rows, names[:1], 3),
                           _shard(tmp_path, rows, names[1:], 4, calibration=1)], 9,
                          across="shards")
+
+
+def _realisation(tmp_path, rows, trajectory: str, stamp: int, **dataset):
+    """A run folder as evaluate.py writes it for one realisation of dataset ``a``."""
+    folder = fio.make_run_folder(tmp_path, "comparison", stamp)
+    fio.write_results(folder, rows.assign(dataset="a", trajectory=trajectory))
+    fio.write_table(folder, pd.DataFrame({"field": ["density"], "x": [stamp]}), "calibration")
+    fio.write_config(folder, {"seed": 1, "dataset": {"name": "a", "trajectory": trajectory,
+                                                     "path": f"/data/{trajectory}.h5",
+                                                     **dataset}})
+    fio.write_run_meta(folder, dataset="a", analysis_grid=8, anchor_label="mean_field",
+                       metric="mse", n_frames=int(rows["frame_index"].nunique()))
+    return folder.root
+
+
+def test_combine_runs_gathers_the_trajectories_of_one_dataset_for_pooling(tmp_path, traj):
+    """Realisations of one dataset differ only in their trajectory and the path naming it; the
+    combined folder holds every row, each calibration beside its trajectory, and the analysis
+    reads it as one sample of all their frames."""
+    rows = evaluate(traj).rows
+    members = [_realisation(tmp_path, rows, t, k) for k, t in enumerate(("r1", "r0"), start=1)]
+    folder = fio.combine_runs(members, 3, across="trajectory")
+    assert folder.root.name == "a_3"
+    combined = fio.read_results(folder)
+    assert combined.groupby("trajectory").size().to_dict() == {"r0": len(rows), "r1": len(rows)}
+    meta = fio.read_run_meta(folder)
+    assert meta["n_frames"] == 2 * rows["frame_index"].nunique()
+    assert meta["members"] == {"r1": "comparison_1", "r0": "comparison_2"}
+    assert fio.read_config(folder)["dataset"] == {"name": "a", "trajectory": ["r1", "r0"]}
+    assert sorted(pd.read_csv(folder.data / "calibration.csv")["trajectory"]) == ["r0", "r1"]
+    axes = analyse(combined, n_bootstrap=0).axes
+    assert (axes["n_frames"] == 2 * rows["frame_index"].nunique()).all()
+
+
+def test_combine_runs_refuses_realisations_that_differ_beyond_their_trajectory(tmp_path, traj):
+    rows = evaluate(traj).rows
+    a = _realisation(tmp_path, rows, "r0", 1)
+    with pytest.raises(ValueError, match=r"\['dataset'\]"):
+        fio.combine_runs([a, _realisation(tmp_path, rows, "r1", 2, time={"start": 5})], 9,
+                         across="trajectory")
+    with pytest.raises(ValueError, match="one trajectory of its own"):
+        fio.combine_runs([a, _realisation(tmp_path, rows, "r0", 3)], 9, across="trajectory")
 
 
 def test_a_map_key_round_trips_even_when_the_label_contains_a_double_underscore():

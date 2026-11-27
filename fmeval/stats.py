@@ -11,7 +11,8 @@ Production quality. Equations taken from the literature cite author, year and ve
 from __future__ import annotations
 
 import warnings
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
+from itertools import pairwise
 
 import numpy as np
 from scipy.optimize import OptimizeWarning, curve_fit
@@ -214,7 +215,7 @@ def _flat_top(t: np.ndarray) -> np.ndarray:
     return np.where(t <= 0.5, 1.0, np.where(t <= 1.0, 2.0 * (1.0 - t), 0.0))
 
 
-def politis_white_block_length(x: np.ndarray) -> int:
+def politis_white_block_length(x: np.ndarray, segments: Sequence[int] | None = None) -> int:
     """Automatic block length for the moving-block bootstrap of a dependent series.
 
     The selector of Politis & White (2004, *Econometric Reviews* 23(1):53-70), with the correction
@@ -228,20 +229,28 @@ def politis_white_block_length(x: np.ndarray) -> int:
     the per-frame trace of a median, which is a heuristic transfer rather than the case it was
     derived for.
 
+    ``segments`` splits ``x`` into consecutive independent series of one process (the lengths, in
+    order), such as the traces of several trajectories: the autocovariance at each lag sums the
+    products within each series only, over all ``N`` values, and no lag exceeds the longest series.
+    None is one series.
+
     Returns:
         A block length of at least 1; 1 for a constant series or one too short to estimate.
     """
     x = np.asarray(x, float)
-    x = x[np.isfinite(x)]
+    parts = [p[np.isfinite(p)] for p in
+             (np.split(x, np.cumsum(segments)[:-1]) if segments is not None else [x])]
+    x = np.concatenate(parts)
     n = len(x)
     if n < 2:
         return 1
     k_n = max(5, int(np.ceil(np.sqrt(np.log10(n)))))
     if n < 2 * k_n + 2 or np.ptp(x) == 0:
         return 1
-    x = x - x.mean()
-    m_max = min(int(np.ceil(np.sqrt(n))) + k_n, n - 1)
-    R = np.array([np.dot(x[: n - k], x[k:]) / n for k in range(m_max + 1)])
+    parts = [p - x.mean() for p in parts]
+    m_max = min(int(np.ceil(np.sqrt(n))) + k_n, max(len(p) for p in parts) - 1)
+    R = np.array([sum(np.dot(p[: len(p) - k], p[k:]) for p in parts if len(p) > k) / n
+                  for k in range(m_max + 1)])
     if R[0] <= 0:
         return 1
     insignificant = np.abs(R[1:] / R[0]) < FLAT_TOP_C * np.sqrt(np.log10(n) / n)   # lags 1..m_max
@@ -261,16 +270,29 @@ def politis_white_block_length(x: np.ndarray) -> int:
 
 
 def block_bootstrap(n_frames: int, block_length: int, n_draws: int,
-                    rng: np.random.Generator) -> Iterator[np.ndarray]:
+                    rng: np.random.Generator,
+                    segments: Sequence[int] | None = None) -> Iterator[np.ndarray]:
     """Positional index arrays for a moving-block bootstrap (Künsch 1989, *Ann. Stat.* 17(3)).
 
     Each draw concatenates ``ceil(n_frames / L)`` blocks of ``L`` consecutive indices whose starts
     are drawn uniformly with replacement. Overlapping blocks, no wrap, no truncation. The
     rank-correlation interval and the blindness bound in :mod:`fmeval.analysis` both resample
     with it.
+
+    ``segments`` splits the positions into consecutive independent series (their lengths, in
+    order), such as several trajectories: a block never crosses from one into the next, and is
+    cut to the shortest series, so a block as long as every series draws whole series. None is
+    one series.
+
+    Raises:
+        ValueError: If ``segments`` do not add up to ``n_frames``.
     """
-    L = max(1, min(int(block_length), int(n_frames)))
-    starts = np.arange(n_frames - L + 1)
+    segments = [int(n_frames)] if segments is None else [int(n) for n in segments]
+    if sum(segments) != n_frames:
+        raise ValueError(f"segments {segments} do not add up to {n_frames} frames")
+    L = max(1, min(int(block_length), *segments))
+    edges = np.cumsum([0, *segments])
+    starts = np.concatenate([np.arange(a, b - L + 1) for a, b in pairwise(edges)])
     n_blocks = int(np.ceil(n_frames / L))
     for _ in range(n_draws):
         chosen = rng.choice(starts, size=n_blocks)

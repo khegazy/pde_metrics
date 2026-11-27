@@ -13,6 +13,7 @@ resolved config and full provenance, so they regenerate their own report without
 
 from __future__ import annotations
 
+import dataclasses
 import inspect
 import logging
 import sys
@@ -27,13 +28,13 @@ from omegaconf import DictConfig
 
 from fmeval import CONFIGS
 from fmeval import io as fio
-from fmeval.config import Config, build_job
+from fmeval.config import Config, SlowMetric, build_job
 from fmeval.data.base import READERS, Trajectory
 from fmeval.data.locate import trajectory_provenance
 from fmeval.data.readers import open_trajectory
 from fmeval.derived import RECIPES, RecomputingTrajectory
 from fmeval.ladder import FORECAST_LEVEL, build_ladder, ladder_axes
-from fmeval.pipeline import DatasetInfo, parse_map_key, run
+from fmeval.pipeline import DatasetInfo, PipelineResult, parse_map_key, run
 from metrics import registry as metric_registry
 
 log = logging.getLogger(__name__)
@@ -100,6 +101,23 @@ def main(cfg: DictConfig) -> Path:
 
     specs = [metric_registry.get(name) for name in job.metrics]
     severity_levels = build_ladder(job.degradation)
+    # Entries undefined or pathological on this dataset are dropped with the dataset's reason,
+    # logged and recorded, never silently; an exclusion the ladder does not hold is not one.
+    excluded = {label: reason for label, reason in job.dataset.exclude_degradations.items()
+                if any(level.label == label for level in severity_levels)}
+    for label, reason in excluded.items():
+        log.warning("dataset %s excludes ladder entry %s: %s", job.dataset.name, label, reason)
+    severity_levels = [level for level in severity_levels if level.label not in excluded]
+    # Metrics the dataset evaluates more cheaply (dataset.slow_metrics), checked before any data
+    # is read: a misspelt name or a grid finer than the run's is refused, not ignored.
+    slow = {name: SlowMetric(**options) for name, options in job.dataset.slow_metrics.items()}
+    for name, setting in slow.items():
+        metric_registry.get(name)
+        if (setting.analysis_resolution is not None and job.analysis_grid.resolution is not None
+                and setting.analysis_resolution > job.analysis_grid.resolution):
+            raise ValueError(
+                f"dataset.slow_metrics.{name}.analysis_resolution={setting.analysis_resolution} "
+                f"is finer than the run's analysis grid {job.analysis_grid.resolution}")
     anchor = job.analysis.anchor
     trajectory = open_trajectory(job.dataset, job.paths)
     prediction = trajectory.predictions() if hasattr(trajectory, "predictions") else None
@@ -144,19 +162,31 @@ def main(cfg: DictConfig) -> Path:
             if prediction is not None:
                 prediction = RecomputingTrajectory(prediction)
 
-        result = run(
-            trajectory,
-            specs,
-            severity_levels,
-            fields=fields,
-            selection=selection,
-            dataset=dataset_info(job),
-            seed=job.seed,
-            analysis_resolution=job.analysis_grid.resolution,
-            remap_method=job.analysis_grid.method,
-            maps=job.report.error_map,
-            prediction=prediction,
-        )
+        # A slow metric on a coarser grid (dataset.slow_metrics) is a pass of the pipeline of its
+        # own at that grid, with the ladder applied there; one on fewer frames is thinned inside
+        # the pass of its grid. Every other metric runs in the pass at the run's grid.
+        passes: dict[int | None, list[metric_registry.MetricSpec]] = {}
+        for spec in specs:
+            own = slow[spec.name].analysis_resolution if spec.name in slow else None
+            passes.setdefault(job.analysis_grid.resolution if own is None else own,
+                              []).append(spec)
+        results = {
+            grid: run(
+                trajectory,
+                group,
+                severity_levels,
+                fields=fields,
+                selection=selection,
+                dataset=dataset_info(job),
+                seed=job.seed,
+                analysis_resolution=grid,
+                remap_method=job.analysis_grid.method,
+                maps=job.report.error_map,
+                prediction=prediction,
+                every={name: setting.every for name, setting in slow.items()},
+            )
+            for grid, group in passes.items()
+        }
         # Before the `finally`: the request counters live on the HTTP file object, which
         # close() releases.
         data_source = trajectory_provenance(trajectory)
@@ -166,30 +196,32 @@ def main(cfg: DictConfig) -> Path:
             prediction.close()
 
     elapsed = time.perf_counter() - started
-    log.info(
-        "%d rows on a %d-cell analysis grid in %.1fs (io %.1fs, degrade %.1fs, metrics %.1fs)",
-        len(result.rows), result.analysis_grid, elapsed, result.io_seconds,
-        result.degrade_seconds, result.metric_seconds,
-    )
-
-    # The severity calibration is part of a run's identity: a calibrated axis means nothing
-    # without the measured field properties it was resolved against, and two datasets are only
-    # comparable on such an axis if their calibrations are recorded alongside the numbers.
-    calibration_table = pd.DataFrame(result.calibration.summary())
-    spectrum_table = pd.DataFrame(result.calibration.spectrum_frame())
+    for result in results.values():
+        log.info("%d rows on a %d-cell analysis grid (io %.1fs, degrade %.1fs, metrics %.1fs)",
+                 len(result.rows), result.analysis_grid, result.io_seconds,
+                 result.degrade_seconds, result.metric_seconds)
+    log.info("finished in %.1fs", elapsed)
+    result_of = {spec.name: results[grid] for grid, group in passes.items() for spec in group}
 
     overrides = _overrides()
 
-    def write_folder(name: str, rows: pd.DataFrame, maps: dict, companions: pd.DataFrame,
-                     **meta: Any) -> Path:
-        """One self-contained run folder: numbers, calibration, config, maps, provenance."""
+    def write_folder(name: str, result: PipelineResult, rows: pd.DataFrame, maps: dict,
+                     companions: pd.DataFrame, **meta: Any) -> Path:
+        """One self-contained run folder: numbers, calibration, config, maps, provenance.
+
+        The severity calibration is part of a run's identity: a calibrated axis means nothing
+        without the measured field properties it was resolved against, and two datasets are only
+        comparable on such an axis if their calibrations are recorded alongside the numbers.
+        ``result`` is the pass of the pipeline the rows come from, which measured it.
+        """
         folder = fio.make_run_folder(job.paths.results, name, stamp)
         fio.write_results(folder, rows)
         if not companions.empty:
             fio.write_results(folder, companions, name=fio.COMPANIONS)
         if result.calibration.fields:       # none on a forecast, which runs no ladder
-            fio.write_table(folder, calibration_table, "calibration")
-            fio.write_table(folder, spectrum_table, "calibration_spectrum")
+            fio.write_table(folder, pd.DataFrame(result.calibration.summary()), "calibration")
+            fio.write_table(folder, pd.DataFrame(result.calibration.spectrum_frame()),
+                            "calibration_spectrum")
         digest = fio.write_config(folder, cfg, overrides)
         fio.write_maps(folder, maps)
         fio.copy_documentation(folder)
@@ -201,7 +233,7 @@ def main(cfg: DictConfig) -> Path:
             dataset_label=job.dataset.complexity.label,
             dataset_notes=job.dataset.notes,
             data_source=data_source,
-            n_frames=result.n_frames,
+            n_frames=int(rows["frame_index"].nunique()),
             trajectory_frames=trajectory_frames,
             reader_options={k: v for k, v in reader.arguments.items() if k != "path"},
             boundary=list(trajectory.grid.boundary),
@@ -210,6 +242,8 @@ def main(cfg: DictConfig) -> Path:
             analysis_grid=result.analysis_grid,
             ladder_axes=axes,
             n_severity_levels=len(recorded),
+            excluded_degradations=excluded,
+            slow_metrics={name: dataclasses.asdict(setting) for name, setting in slow.items()},
             anchor_label=anchor,
             probe_labels=probes,
             seed=job.seed,
@@ -218,13 +252,16 @@ def main(cfg: DictConfig) -> Path:
         )
         return folder.root
 
-    timings = {"total_s": elapsed, "io_s": result.io_seconds,
-               "degrade_s": result.degrade_seconds, "metric_s": result.metric_seconds}
+    timings = {"total_s": elapsed,
+               **{key: sum(getattr(r, attribute) for r in results.values())
+                  for key, attribute in (("io_s", "io_seconds"), ("degrade_s", "degrade_seconds"),
+                                         ("metric_s", "metric_seconds"))}}
     # A metric the pipeline did not run on this dataset -- an ensemble metric on one
     # realization, a periodic-only metric on a bounded domain -- has no rows, and a folder
     # without rows is not a run: its report would fail. The pipeline logged why. A run in which
     # no metric produced a row wrote nothing, so it fails rather than exiting as a success.
-    ran = [spec.name for spec in specs if (result.rows["metric"] == spec.name).any()]
+    ran = [spec.name for spec in specs
+           if (result_of[spec.name].rows["metric"] == spec.name).any()]
     if not ran:
         raise ValueError(
             f"no metric produced a row on dataset {job.dataset.name!r} "
@@ -237,20 +274,27 @@ def main(cfg: DictConfig) -> Path:
         spec = metric_registry.get(name)
         return {name} | {metric_registry.companion_label(name, c.name) for c in spec.companions}
 
-    written = [
-        write_folder(name, result.rows[result.rows["metric"] == name],
-                     {k: v for k, v in result.maps.items() if parse_map_key(k)[0] in labels(name)},
-                     (result.companions[result.companions["metric"].isin(labels(name))]
-                      if not result.companions.empty else result.companions),
-                     metric=name, timings=timings)
-        for name in ran
-    ]
+    written = []
+    for name in ran:
+        result = result_of[name]
+        written.append(write_folder(
+            name, result, result.rows[result.rows["metric"] == name],
+            {k: v for k, v in result.maps.items() if parse_map_key(k)[0] in labels(name)},
+            (result.companions[result.companions["metric"].isin(labels(name))]
+             if not result.companions.empty else result.companions),
+            metric=name, timings=timings))
     # Cross-metric figures -- redundancy, the selectivity comparison, the cost frontier --
     # are meaningless inside a single-metric folder and are skipped there by their own
-    # preconditions. They live in one comparison folder holding every metric's rows.
-    if len(ran) > 1:
-        written.append(write_folder("comparison", result.rows, result.maps, result.companions,
-                                    metric=", ".join(ran), comparison=True))
+    # preconditions. They live in one comparison folder holding the rows of every metric scored
+    # on the run's own grid; a slow metric on a coarser grid answered a different ladder and is
+    # compared with nothing, which its own folder's slow_metrics records.
+    if job.analysis_grid.resolution in results:
+        main = results[job.analysis_grid.resolution]
+        compared = [name for name in ran if result_of[name] is main]
+        if len(compared) > 1:
+            written.append(write_folder("comparison", main, main.rows, main.maps,
+                                        main.companions, metric=", ".join(compared),
+                                        comparison=True))
 
     for path in written:
         log.info("wrote %s", path)

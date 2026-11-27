@@ -43,3 +43,13 @@ runs finished within about 3 hours.
 3. Run the 256 x 256 ladder on compute nodes under an allocation, as many shards as there are
    frames, instead of on a login node.
 4. Fewer frames: a larger `dataset.time.reduction` for this metric alone.
+
+Options 1 and 4 can be stated in a dataset's configuration since step 32 of
+`dataset_specs/BUILD_ORDER.md` (2026-11-27): `slow_metrics: {persistence_wasserstein:
+{analysis_resolution: 128, every: 4}}`, or the same with `+dataset.slow_metrics.<metric>=...` on
+the command line. The metric then runs in a pass of its own at that grid, its rows carry the grid
+in `analysis_grid`, and it sits in a folder of its own outside the comparison folder. Which grid
+and stride to use per dataset is not chosen. Neither option avoids a stall inside Hera on one
+input (`docs/datasets/logs/advecting_blobs.md`, `sedov_taylor.md`); a time limit per evaluation
+is not built, because Hera does not return control to Python while it runs, so a limit would
+need a process per evaluation.

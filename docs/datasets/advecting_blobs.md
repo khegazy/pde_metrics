@@ -3,9 +3,9 @@
 !!! note "Computed, not simulated"
     This dataset is a formula evaluated whenever a frame is read. It tests the machinery for
     time-dependent degradations and for metrics that read how a prediction evolves, not physics.
-    It is not evidence about a flow, so no metric's page cites the `advecting_blobs`
-    configuration. Two other configurations of the same reader, `feature_population` and
-    `transport_pairs`, are registered as evidence, as analytic checks with known answers.
+    It is not evidence about a flow. All three configurations of the reader, `advecting_blobs`,
+    `feature_population` and `transport_pairs`, are registered as evidence, as analytic checks
+    with known answers, under labels that say so.
 
 ## The problem
 

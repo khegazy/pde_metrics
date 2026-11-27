@@ -38,7 +38,7 @@ the numbers behind each are in the JSON beside it under `docs/datasets/_generate
 | `well_re5e4` | The same simulation in the PolymathicAI Well format, in float32 and without the distribution functions. A data-marked test reads it beside `kinet_re5e4` and requires identical values, so it is not drawn separately |
 | `forecast_re5e4` | Real predictions of this flow paired with their targets, at ten prediction steps from two starting times, in three runs at $256^2$, $128^2$ and $64^2$. Who produced the predictions is not recorded. Described under [Forecast pairs](#forecast-pairs) below |
 | `kinet_re1e6` | The same flow at $\mathrm{Re} = 10^6$, on $1024^2$ cells: 40001 frames, 11.4 TB. Read every fourth stored frame, so its frame $i$ is the same physical time as frame $i$ of `kinet_re5e4` (below) |
-| `kinet_re5e4_512` | The same run as `kinet_re5e4` on $512^2$ cells: 20001 frames, 1.43 TB. Read every second stored frame, so its frame $i$ is the same physical time as frame $i$ of `kinet_re5e4`. Its initial field may not be a nested refinement of the $256^2$ one (`dataset_specs/02_grid_refinement_known_solution.md`, Sect. 5.1) |
+| `kinet_re5e4_512` | The same run as `kinet_re5e4` on $512^2$ cells: 20001 frames, 1.43 TB. Read every second stored frame, so its frame $i$ is the same physical time as frame $i$ of `kinet_re5e4`. Its initial field may not be a nested refinement of the $256^2$ one (`dataset_specs/02_grid_refinement_known_solution.md`, Sect. 5.1). Evaluated on 21 frames, every 400th of frames 2000 to 10000, on the $256^2$ analysis grid its configuration states (`docs/datasets/logs/reynolds_ladder_2d.md`) |
 
 ![Vorticity at Re = 10^6 at five times](_generated/kinet_re1e6_vorticity.png)
 

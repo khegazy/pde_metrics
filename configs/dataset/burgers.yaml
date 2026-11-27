@@ -17,8 +17,9 @@
 # cells against the numerical candidate:
 #   python evaluate.py -m dataset=burgers metrics=[rmse,max_error] \
 #     '+dataset.reader.candidate={scheme:central}' '+dataset.reader.grid=[64],[128],[256],[512]'
-# Every row carries param_resolution; the order p = ln(L_k / L_{k+1}) / ln 2 is not computed
-# by the analysis yet (issue 126).
+# Every row carries param_resolution; the order p = ln(L_k / L_{k+1}) / ln 2 is read from the
+# four folders with fmeval.analysis.observed_order(fmeval.io.load_runs(<folders>),
+# anchor_label="mean_field").
 name: burgers
 format: burgers
 

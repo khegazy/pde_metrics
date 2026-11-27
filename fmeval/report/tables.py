@@ -347,6 +347,9 @@ def provenance_table(ctx, df, opts) -> TableResult:
         ("analysis grid", meta.get("analysis_grid", "")),
         ("ladder axes", len(meta.get("ladder_axes", []) or [])),
         ("severity levels", meta.get("n_severity_levels", "")),
+        # Ladder entries the dataset excludes, with its reasons; absent when it excludes none.
+        *[(f"excluded: {label}", reason)
+          for label, reason in (meta.get("excluded_degradations") or {}).items()],
         ("seed", meta.get("seed", "")),
         ("config hash", meta.get("config_hash", "")),
         ("git commit", (git.get("sha") or "")[:12]),

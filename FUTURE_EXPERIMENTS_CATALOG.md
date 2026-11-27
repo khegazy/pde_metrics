@@ -81,7 +81,6 @@ it. Cluster IDs are the ones used in Section 2.
   exactly.
 - Fix the impostor's per-channel phase draw, which puts about a quarter of a solenoidal
   velocity's energy into a divergent part; open an issue first.
-- Pass the run seed to the synthetic-ensemble reader (issue 044).
 
 ### Decisions only a person can take
 
@@ -747,8 +746,7 @@ autocorrelation time beside every scatter statistic, since 161 frames hold 7 to 
 samples (`METRIC_EVALUATION_CRITIQUE.md`); a spatial block bootstrap over tiles (issue 132);
 an uncertainty on every metric value and test splits by trajectory
 (`docs/ideas/evaluation_design.md`); comparable wall-clock costs (issue 125) and a grid-size
-cost guard (issue 114); git state at run start (issue 115); the run seed reaching the
-synthetic-ensemble reader (issue 044); a dataset's γ, Re and Ma in `ctx` (issue 022); metric
+cost guard (issue 114); git state at run start (issue 115); a dataset's γ, Re and Ma in `ctx` (issue 022); metric
 options from configuration (issue 049) and a declared dimensionality per metric (issue 117, the
 3-D side of issue 005); a trusted solver and an adjoint (issues 069, 072), which are infrastructure rather than
 experiments.
@@ -893,8 +891,9 @@ fix is in; a positive background so density stays positive) and seven ensemble o
 (four forecasters of Gneiting et al. 2007, Table 1; three flow-dependence operators; one
 correlation-length redraw). The operators replace members rather than perturb them, so they
 declare no `preserves`; the correlation redraw preserves per-cell variance only in
-expectation, which the `preserves` vocabulary cannot yet say. Also pass the run seed to the
-reader (issue 044) so several draws of the null can be taken.
+expectation, which the `preserves` vocabulary cannot yet say. The reader keeps its own `seed` option, not the
+run's (Kareem, 2026-11-27: the reader does not need to know the seed used to generate the
+data), so another draw of the null is another reader seed.
 
 **B4. A two-dimensional shock dataset (D3), in three tiers.**
 Reach: the 6 shock cards, `persistence_distance`, the compressible flux, H2's first customer.

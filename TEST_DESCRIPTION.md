@@ -79,7 +79,27 @@ measured, by averaging over blocks of cells. Fields that are computed from other
 vorticity, which is the curl of velocity — are **recomputed** on that grid rather than
 averaged directly, because the average of a curl is not the curl of the average. Measured,
 the difference between recomputing and averaging is 5.6% / 18.3% / 25.9% at coarsening
-factors 2 / 4 / 8, which is not a rounding detail.
+factors 2 / 4 / 8, which is not a rounding detail. A dataset states the grid its evaluated part
+uses (`dataset.analysis_resolution`); `analysis_grid.resolution` on the command line replaces it.
+
+**What a dataset leaves out or thins.** A dataset may exclude ladder entries that are undefined or
+pathological on it, each with its reason (`dataset.exclude_degradations`); they are not run, and
+`run_meta.json` and the report's provenance table name them under `excluded_degradations`. It may
+also evaluate a slow metric on a coarser analysis grid or on every Nth frame
+(`dataset.slow_metrics`, recorded under that name). Every row records its grid in `analysis_grid`
+and its frame in `frame_index`. A metric on a coarser grid was scored against a ladder applied
+at that grid, a different experiment, so its rows sit in a folder of their own and in no
+comparison folder; a metric on fewer frames scored the same experiments and stays in the
+comparison.
+
+**Several trajectories of one dataset.** Independent realisations of one flow, each run in its
+own folder, are read as one sample: `fmeval.io.combine_runs(..., across="trajectory")` gathers
+them, and the analysis gives each trajectory's frames frame numbers of their own
+(`fmeval.analysis.pool_trajectories`). Every statistic below is then one measurement over all
+the trajectories: a rank correlation is still taken within each frame and never across frames,
+and its median runs over the frames of every trajectory; the resampling treats the trajectories
+as independent and the frames within each as dependent, so no block of frames joins two
+trajectories.
 
 **Why so many numbers per degradation.** A metric can put the strengths in the right order
 and still be useless: if neighbouring severity levels overlap from one snapshot to the next,
@@ -170,7 +190,9 @@ narrow to be honest.
 
 **Caveats.** Undefined when there are fewer than twice the block length in frames, which
 shows as `--`. The block length should reflect the decorrelation time of the flow and is
-currently a configured constant, not measured from the data.
+currently a configured constant, not measured from the data. On pooled trajectories a block
+stays inside one trajectory and is cut to the shortest, so trajectories shorter than a block
+are resampled whole.
 
 **Where they appear.** `axis_detail__field-*.csv`.
 
@@ -489,7 +511,8 @@ be longer than the flow's decorrelation time or the bound is tighter than the da
 
 **How it is computed.** Estimated per row with the Politis–White selector (Politis and White 2004;
 Patton, Politis and White 2009) on the trace of the frame-scaled values, so the drift of the flow
-along the trajectory is not read as persistence, and capped at a quarter of the frames. The rank
+along the trajectory is not read as persistence, and capped at a quarter of the frames. On pooled
+trajectories the autocovariance at each lag sums products within each trajectory only. The rank
 correlation interval `rho_ci_lo`/`rho_ci_hi` does not use it; it keeps its fixed block length.
 
 **Caveats.** On the pinned run the selector returned a median of 21 frames (1 to 22 over 360 rows,
@@ -618,6 +641,29 @@ row; on `forecast_re5e4` the runs' lead times at one step differ by at most 4.9e
 `forecast_re5e4`* of a metric page that cites a forecast run, as tables and the lead-time figure,
 and its `fingerprint.json` under `other_runs[...].forecast`; the `response_along_time` figures
 with `along-lead` in their name.
+
+### `order`, `order_change` — the observed order of accuracy on a grid sequence
+
+**What it is.** One candidate scored against the exact solution on several grids, each on its
+own cells (`param_resolution`), such as the second-order Burgers candidate on 64, 128, 256 and
+512 cells (`configs/dataset/burgers.yaml`). For each pair of successive grids, coarse `N_k`
+and fine `N_{k+1}` cells with error norms `L_k` and `L_{k+1}`, per metric, field and time
+(`fmeval.analysis.observed_order`):
+
+    order = ln(L_k / L_{k+1}) / ln r,   r = N_{k+1} / N_k
+
+(Roy 2005, *J. Comput. Phys.* 205(1), 131–156, Eq. 8). `order_change` is the order minus that
+of the next coarser pair.
+
+**Caveats.** The order estimates the scheme's formal order only in the asymptotic range, where
+the leading error term dominates; nothing assumes the grids are in it. An `order_change` that
+does not settle towards zero says they are not. Only a two-field error against the exact
+solution has an order: a single-field quantity, an error against a target that is not exact, or
+a chaotic flow does not.
+
+**Where it appears.** Returned by `observed_order` from the rows of the runs on each grid
+(`fmeval.io.load_runs`); `analyse` refuses those rows together, since a grid sequence is not
+one sample.
 
 ### `uncorrelated_value`, `uncorrelated_damage`, `uncorrelated_nearest_level` — the right statistics in the wrong place
 

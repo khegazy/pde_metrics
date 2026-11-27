@@ -56,6 +56,7 @@ import pytest
 from scipy import integrate, stats
 
 from fmeval import CONFIGS, REPO
+from fmeval.analysis import MEAN_FIELD_LABEL, observed_order
 from fmeval.cards import dataset_figures
 from fmeval.config import build_job, compose_config
 from fmeval.data.analytic import (
@@ -390,20 +391,21 @@ def test_the_central_scheme_has_its_observed_order_of_two_through_the_pipeline()
     ``max_error`` (his L-infinity). The formal order is 2; p departs from it by the
     higher-order terms Roy's Eq. 5 neglects, which shrink with h. Measured: 1.93 to 2.02 on
     (64, 128), 1.997 to 2.005 on (128, 256), 1.995 to 2.001 on (256, 512). Asserted: within
-    0.1 of 2 on the coarsest pair and 0.01 on the two finer ones. The analysis does not compute
-    p (issue 126), so it is computed here from the rows."""
-    errors = {}
+    0.1 of 2 on the coarsest pair and 0.01 on the two finer ones, read by the analysis
+    (``fmeval.analysis.observed_order``) from the four runs' rows together."""
+    runs = []
     for cells in (64, 128, 256, 512):
         truth = Burgers(grid=(cells,), candidate={"scheme": "central"})
-        rows = run(truth, [metric_registry.get(n) for n in ("rmse", "max_error")],
-                   build_ladder({}), fields=["velocity"], dataset=DatasetInfo(name="burgers"),
-                   prediction=truth.predictions()).rows
-        forecast = rows[rows["degradation"] == "forecast"]
-        assert (forecast["param_resolution"] == cells).all()
-        errors[cells] = forecast.pivot(index="time", columns="metric", values="value")
-    for coarse, fine, tolerance in ((64, 128, 0.1), (128, 256, 0.01), (256, 512, 0.01)):
-        order = np.log(errors[coarse] / errors[fine]) / np.log(2)
-        assert np.abs(order.to_numpy() - 2).max() <= tolerance, f"{coarse}/{fine}:\n{order}"
+        runs.append(run(truth, [metric_registry.get(n) for n in ("rmse", "max_error")],
+                        build_ladder({}), fields=["velocity"], dataset=DatasetInfo(name="burgers"),
+                        prediction=truth.predictions()).rows)
+        assert (runs[-1]["param_resolution"] == cells).all()
+    order = observed_order(pd.concat(runs, ignore_index=True), anchor_label=MEAN_FIELD_LABEL)
+    assert len(order) == 2 * 4 * 3, "two metrics, four times, three pairs of grids"
+    assert (order["ratio"] == 2).all()
+    for coarse, tolerance in ((64, 0.1), (128, 0.01), (256, 0.01)):
+        pair = order[order["resolution_coarse"] == coarse]
+        assert (pair["order"] - 2).abs().max() <= tolerance, f"{coarse}:\n{pair}"
 
 
 @pytest.mark.parametrize("kwargs, match", [

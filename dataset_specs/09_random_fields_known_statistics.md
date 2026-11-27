@@ -578,8 +578,9 @@ identical along x and y.
   lacks for `increment_flatness`, and the spread of the Hill estimate over many seeds is
   route 2 of issue 132 (measured here: 0.0027 at k = 256 on Gaussian frames, and 0.007 to 0.05 on
   spiked frames). Separations in units of a known correlation length answer the request of
-  issue 128 on this dataset. Issue 044 should be settled before the configs are registered, so
-  the seed a card records is the seed that drew its fields.
+  issue 128 on this dataset. The fields are drawn from the reader's own `seed`, not the run's;
+  Kareem decided on 2026-11-27 that the reader does not need to know the run's seed, and
+  `run_meta.json` records the reader's under `reader_options`.
 
 ## 9. Existing code reused and new code needed
 

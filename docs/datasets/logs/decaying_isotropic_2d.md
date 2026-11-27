@@ -619,6 +619,34 @@ checked: the frames are 150, 175, ..., 575 on all three options.
   table shows it as *not yet run* or *not applicable* with the reason (`python -m fmeval.cards
   catalog`). Producing that evidence is its own step in `BUILD_ORDER.md` and needs compute.
 
+### 2026-11-27: stride 50, the grid in the config, the trajectories pooled (step-32 agent)
+
+- **What changed.** In `configs/dataset/_decaying_isotropic_2d.yaml`, `time.reduction` went from
+  25 to 50: frames 150 to 550 every 50th, 9 frames per trajectory instead of 18. The 128
+  analysis grid is now the fragment's own `analysis_resolution: 128`, a dataset key added by
+  step 32, and no longer a command-line setting. The five trajectories per Reynolds number are
+  still swept with `-m dataset.trajectory=...`, and their folders are now gathered by
+  `fmeval.io.combine_runs(<folders>, stamp, across="trajectory")`, which the analysis reads as
+  one sample of 45 frames per Reynolds number (`fmeval.analysis.pool_trajectories`): rank
+  correlations within each frame, their median over all 45, and resampling blocks that never
+  join two trajectories.
+- **Why.** Kareem asked why the evidence needs so long. With pooling, the five independent
+  realisations supply the samples, and a stride of 50 still keeps about one frame per
+  autocorrelation time (57 to 70 frames, section 3), so halving the frames loses few
+  independent samples. Nine frames alone would be too few for one trajectory's statistics,
+  which is why section 3 kept 25 before pooling existed.
+- **Who decided.** The coordinating session made the cut, recorded as decision 17 of
+  `dataset_specs/BUILD_ORDER.md`; this agent applied it and built the pooling (step 32).
+- **Cost.** About 34 s of metric time per frame at 128 without `persistence_wasserstein`
+  (section 3), so the 135 frames of the three Reynolds numbers take about 1.3 h in one process
+  (my arithmetic), against 2.7 h before.
+- **Verified.** The configurations build with 9 selected frames (150, 200, ..., 550) and an
+  analysis grid of 128 (`build_job`, reader opened on `kinet_hit_re25k`). The pooling is tested
+  on synthetic rows and through `combine_runs` (`tests/test_analysis.py`,
+  `tests/test_pipeline.py`). No metric was run on these data.
+- **Supersedes** the stride of section 3, the command-line grid of the registration entry above,
+  and the two open points on pooling and on the grid, rewritten below.
+
 ## 6. Open points
 
 - The other 270 complete runs are not converted. Section 4 gives the two routes for doing so.
@@ -635,14 +663,10 @@ checked: the frames are 150, 175, ..., 575 on all three options.
   unverified.
 - At Re 50k, the vorticity median blur has only one usable strength on a 64-cell grid. A run
   that needs a rank correlation on that axis should use a finer analysis grid.
-- Five realisations per Reynolds number are evaluated, each as its own run. No harness step
-  pools rank statistics across trajectories, so the 32 to 55 independent samples per Reynolds
-  number in section 3 are not yet used together in one statistic. Pooling would be a change to
-  `fmeval.io.combine_runs` or to the analysis.
-- The analysis grid of 128 is set only by the command line and the comments, because a dataset
-  config cannot set the top-level `analysis_grid`. A `configs/dataset_family/decaying_isotropic_2d.yaml`
-  would pin it, as `reynolds_ladder_2d` does, but it would run only one trajectory per
-  Reynolds number.
-- `persistence_wasserstein` is not affordable at 128 on the kept part (2.5 to 40 h); issue 144
-  applies here as on the shear layer.
+- Five realisations per Reynolds number are each run on their own and pooled afterwards
+  (`combine_runs(..., across="trajectory")`); no Hydra callback gathers them at the end of the
+  sweep, as `FamilyComparison` does for a family, so the gathering is a one-line Python call.
+- `persistence_wasserstein` is not affordable at 128 on the kept part (2.5 to 40 h at stride
+  25); issue 144 applies here as on the shear layer. `dataset.slow_metrics` can now give it a
+  coarser grid or fewer frames than the rest; no one has chosen them for this dataset.
 - The window was chosen from the three default trajectories only.

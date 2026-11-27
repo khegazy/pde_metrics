@@ -144,7 +144,7 @@ here works.
 | `dataset.time.start=2000` | Skip the early, undeveloped part of the trajectory |
 | `dataset.time.max_frames=5` | Hard cap, applied after the reduction. Good for a smoke test |
 | `fields=[vorticity]` | Restrict to one field instead of all the dataset offers |
-| `analysis_grid.resolution=128` | Coarsen both fields onto a common grid before measuring |
+| `analysis_grid.resolution=128` | Coarsen both fields onto a common grid before measuring; replaces the grid a dataset states as `analysis_resolution` |
 | `degradation=quick` | A 3-axis ladder, for iterating |
 | `degradation.only=[translate_x]` | Run only these ladder entries |
 | `degradation.skip=[median_blur]` | Drop these ladder entries |
@@ -152,6 +152,8 @@ here works.
 | `degradation.ladder.<entry>.severities=[1,2,4]` | Change one entry's severity levels |
 | `+degradation.ladder.<entry>.options.<key>=<value>` | Change an operator option the config leaves at its default (`+`, because the key is not in the file) |
 | `+dataset.reader.<key>=<value>` | Change a reader option the dataset config leaves at its default |
+| `+dataset.exclude_degradations.<entry>=<reason>` | Drop a ladder entry undefined on this dataset, recorded with its reason in `run_meta.json` and the report |
+| `'+dataset.slow_metrics.<metric>={analysis_resolution: 64, every: 4}'` | Score one slow metric on a coarser grid (its own folder) or on every 4th frame |
 | `report=none` | Store no pointwise error maps, for smaller run folders |
 | `seed=1` | Change the run seed |
 | `paths.data=/path/to/data` | Point at your own data instead of the `datasets` symlink |
