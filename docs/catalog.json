@@ -1,6 +1,6 @@
 {
   "counts": {
-    "degradations": 28,
+    "degradations": 29,
     "metrics": 39,
     "reviewed": 0,
     "with_measurements": 39
@@ -1125,6 +1125,56 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Shifts the field by a large random displacement: on a periodic domain, the right statistics in the wrong place. A probe, not the damage anchor."
+    },
+    {
+      "card": "degradations/scale_dilatational/card.md",
+      "category": "spectral",
+      "declared": {
+        "calibration": null,
+        "defaults": {
+          "amplify": false
+        },
+        "ensemble": false,
+        "family": "spectral",
+        "fields": [
+          "velocity"
+        ],
+        "ordinal": true,
+        "preserves": [
+          "spatial_mean"
+        ],
+        "severity_direction": "increasing",
+        "severity_name": "fraction of the dilatational part removed or added",
+        "severity_units": "",
+        "stochastic": false
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "kind": "degradation",
+      "math": null,
+      "name": "scale_dilatational",
+      "other_evidence": [],
+      "output": {
+        "description": "The fraction of the dilatational part removed (1 - severity of it is kept), or added with the option amplify (1 + severity of it is kept).",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "degradations/scale_dilatational",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Weakens or strengthens the compressive, curl-free part of the velocity while leaving its vortical part, its mean and every other field exactly as they were."
     },
     {
       "card": "degradations/spread_deflate/card.md",

@@ -1,0 +1,39 @@
+# The typed half of this degradation's card. Every field is documented in
+# fmeval/cards/schema.py. Run `python -m fmeval.cards check <name>` after editing.
+schema_version: 1
+
+name: scale_dilatational
+kind: degradation
+category: spectral
+
+summary: >-
+  Weakens or strengthens the compressive, curl-free part of the velocity while leaving its
+  vortical part, its mean and every other field exactly as they were.
+
+status: candidate
+owners: [khegazy]
+
+failure_mode: >-
+  A surrogate that gets the vortices right but the sound or compression wrong: acoustic
+  waves damped away, or compressive motion exaggerated, with the vorticity untouched.
+
+output:
+  description: >-
+    The fraction of the dilatational part removed (1 - severity of it is kept), or added with
+    the option amplify (1 + severity of it is kept).
+  bounds:
+    lower: 0.0
+    upper: null
+
+exemplars:
+  mode: severity
+  levels: [0.25, 0.5, 1.0]
+  field_name: velocity
+  diagnostics: [difference]
+  rationale: >-
+    A quarter, a half and all of the dilatational part removed. The field row barely changes
+    on a nearly incompressible flow; the difference row is the dilatational part itself,
+    scaled by the severity, so it shows where the flow compresses and expands.
+
+references: [chukovasznay1958, bhatia2013]
+review: null

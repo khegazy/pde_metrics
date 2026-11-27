@@ -1,8 +1,8 @@
 # Log: Taylor–Green vortex
 
 This log covers every configuration on [the Taylor–Green vortex page](../taylor_green_vortex.md).
-Today that is one configuration, `taylor_green_2d`, the exact solution computed on the fly by
-the reader `TaylorGreen2D` in `fmeval/data/analytic.py`.
+Since 2026-11-27 there are two, `taylor_green_2d` and `helmholtz_mixture_2d`, both exact
+solutions computed on the fly by the reader `TaylorGreen2D` in `fmeval/data/analytic.py`.
 
 ## History before this log
 
@@ -272,6 +272,18 @@ rewrite an old one.
   grid only; on a coarsened analysis grid the block mean scales the amplitude, so the closed
   forms would not hold exactly.
 
+**2026-11-27, agent (build-order step 14: the reader gained an acoustic part).**
+
+- `TaylorGreen2D` gained the options `amplitude`, `sound_speed`, `longitudinal_viscosity` and
+  `acoustic` (section `helmholtz_mixture_2d` below). With the defaults (amplitude 1, no sound
+  speed) the output of `taylor_green_2d` is bitwise that of HEAD `97cd481`: 138 arrays compared
+  (the default trajectory, a 25 × 64 window from $t = 1$ with $\nu = 0.03$, a drifting 48 × 32
+  one, and the wrong-viscosity candidate of each).
+- **Its frames are still scalar multiples of one another**, so it stays out of
+  `evidence_datasets` (decision 7). The new options do not change that unless set.
+- The new options are candidate parameters too, so `'+dataset.reader.candidate={amplitude:0.9}'`
+  is a wrong vortex amplitude; it was not needed by any test and is not pinned.
+
 ### Open points
 
 - No mean and spread over many initial conditions: this reader has one initial condition,
@@ -279,3 +291,156 @@ rewrite an old one.
 - The skill score of spec 05, Sect. 3.4 is an analysis, not built.
 - `lead_step` counts from the trajectory's first frame, not from the first frame a run
   selects with `dataset.time.start`, as a forecast's lead counts from its file's start.
+
+## `helmholtz_mixture_2d`
+
+### What it is for
+
+- **Fields whose solenoidal and dilatational parts are known in closed form.** Build-order
+  step 14 (`dataset_specs/BUILD_ORDER.md`), following
+  `dataset_specs/10_acoustic_and_helmholtz_fields.md`, Sect. 3 (Option A). The only stored
+  field with a compressive part, `kinet_re5e4`, holds 1e-6 to 1e-5 of its velocity's
+  fluctuation energy in it (spec 10, Sect. 1), so no metric's response to that part could be
+  told from round-off.
+- **The blind-axis test for curl-based metrics**, and the reference for the degradation
+  `scale_dilatational`, which issue 057 named as the missing experiment for the planned
+  Helmholtz-split metric (the proposal `EXP-orchestrator-20261023-dilatational-scaling.md`,
+  deleted in this change because it is now built).
+- **A candidate whose error is purely dilatational**: a wrong sound speed.
+
+### How it is treated
+
+- **Source.** The vortex of `taylor_green_2d` at amplitude $U$, plus the exact solution of the
+  linearised isothermal equations about rest (the page's eqs. (7) and (8), spec 10's Eqs. (2)
+  and (3), whose derivation is its author's; the split into uncoupled vorticity and sound modes
+  is Chu and Kovásznay 1958, abstract).
+- **Reader and options.** `taylor_green_2d` with `sound_speed: 2.0`, `acoustic:
+  [{kind: potential, mode: [1, 1], amplitude: 1.0}]` (the vortex's mirror image), `grid:
+  [64, 64]`, `n_frames: 9`, `t_end: 1.1`; $\nu = 0.01$ and $\nu_L = 2\nu$ by default.
+- **Fields.** Velocity (both parts), pressure (the vortex's plus $c^2\rho'$) and vorticity (the
+  vortex's alone). No density (decision 3).
+- **Grid and boundaries.** Cell centres, both axes periodic.
+
+### What part is evaluated
+
+Decided by the agent on 2026-11-27, under Kareem's rule of 2026-11-26. The whole configured
+trajectory is evaluated; the reader stores nothing.
+
+- **Half an acoustic period, 9 frames.** Every frame is $D(t)\,\mathbf{u}_s + f(t)\,\mathbf{u}_d$
+  for two fixed patterns, and with the default $\nu_L = 2\nu$ the two factors decay at the same
+  rate $0.02$, so the velocity one period $2\pi/\Omega$ later is exactly a scalar multiple of
+  the earlier one (my derivation from eq. (8): $\cos$ and $\sin$ return, and both envelopes
+  fall by $e^{-0.02 \cdot 2\pi/\Omega}$); the pressure nearly is, its vortex term falling at
+  twice that rate. Half a period, $\pi/\Omega = 1.11$, takes $f$ from 1 to
+  $-1$, so the dilatational fraction runs from 1/2 to nearly 0 ($f = 0.008$ at $t = 0.55$) and
+  back with the mirror image's sign reversed: every state the trajectory reaches, once.
+  Spec 10 proposed 41 frames over $t = 0$ to 10, about nine periods of near-repeats.
+- **The frames are not scalar multiples of one another** in velocity or pressure, since two
+  patterns combine with a changing ratio; vorticity, the vortex's alone, is. So by
+  `BUILD_ORDER.md`, "The task", it may be registered as evidence; it is not registered
+  (instruction for this step), and `configs/cards/default.yaml` is untouched.
+- **$64^2$.** Both parts are single Fourier modes, so every closed form holds on any grid of at
+  least 3 cells; $256^2$ would cost about 16 times as much for no further answer.
+- **Measured costs**, on a Perlmutter login node under a load of 35 to 50, results and
+  `measure.sh` under `/pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/helmholtz_mixture/`:
+
+  | Run (all 9 frames) | Wall time |
+  |---|---|
+  | `mse`, `kinetic_energy`, `enstrophy`; default ladder with both dilatational entries on | 6.6 s (3.0 s applying the ladder) |
+  | Every deterministic metric, same ladder | 90 s; 34 s of metric time, 3.8 s per frame (`spectral_energy_flux` 0.62 s, `energy_distance` 0.54 s, `persistence_wasserstein` 0.41 s); no stall |
+  | Every deterministic metric, the candidate `{sound_speed: 2.5}` | 9.6 s |
+
+  About 36 s of each run is fixed (start-up, calibration, writing folders). No disk.
+- **Why this balance.** The whole set of distinct states costs a minute and a half for the
+  full panel, so nothing is dropped; more frames or a finer grid would repeat answers.
+
+### Decisions and why
+
+Spec 10 was written before build-order steps 10 and 13 landed. Decisions 1 to 6 fit its design
+to the code as it is now; all are the agent's, 2026-11-27.
+
+1. **Options on `TaylorGreen2D`, no new reader.** By the plan's rule. The acoustic velocity is a
+   spectral gradient of $\phi$, so neither step 10's `biot_savart` (velocity from vorticity) nor
+   step 13's `potential` option on `AdvectingBlobs` (a transport map that displaces a density)
+   applies; nothing of either was reused, and nothing duplicates them. The options are recorded
+   in `params`, so step 9's `candidate` makes `{sound_speed: c'}` with no new code.
+   - To reverse: remove the four options and the acoustic branch of `solution`.
+2. **`scale_dilatational` acts on velocity alone (`fields=("velocity",)`), not as a
+   `whole_frame=True` operator as spec 10 and the proposal wrote.** It needs only the velocity
+   array. The ladder already passes a field the operator does not accept through unchanged,
+   which is exactly what vorticity, density and pressure need; a whole-frame operator is refused
+   on a non-periodic grid, is switched off on ensemble frames, and is called with a mapping, which
+   every generic contract check would have had to special-case. The severity is the magnitude
+   $s \in [0, 1]$ with the option `amplify` (spec 10's correction of the catalog's signed
+   severity, kept), `preserves=("spatial_mean",)`, family `spectral`, not calibrated.
+   - Consequence: the generic checks in `tests/test_degradation_contract.py` now hand every
+     operator a two-channel field (`CHANNELS = 2`), since a velocity operator cannot take one
+     channel; all 28 existing operators pass unchanged.
+   - To reverse: declare `whole_frame=True` and return the other fields from the operator.
+3. **No `density` field.** Spec 10 added $\rho = 1 + p/c^2$. That is an equation of state written
+   by the reader, which the repository keeps out of readers; the pressure already carries the
+   exact $c^2\rho'$, and no test needs density. The kinet comparison of spec 10, Sect. 4 (a job,
+   not built) would need it; add it then.
+4. **A standing plane wave is not an option**: it is two travelling waves with opposite modes,
+   `{kind: plane}` twice.
+5. **Overdamped modes are refused** ($\nu_L k \ge 2c$ anywhere on the grid), not computed with a
+   complex $\Omega$, whose $e^{-\gamma t}\cosh(\beta t)$ overflows to NaN at long times. At the
+   default $\nu_L = 2\nu = 0.02$ on $256^2$ this needs $c > 1.81$; the pulse override on the
+   page uses $\nu = 10^{-4}$.
+6. **`helmholtz_split(velocity, grid)` in `fmeval/derived.py`**, returning both parts, as spec 10
+   proposed. No projection existed (`fmeval/derived.py`, `fmeval/external/kinet_spectral.py` and
+   `biot_savart` were searched; issue 024 asked for one). Its callers are the operator and the
+   tests; issues 024 and 057 now point at it.
+7. **One configuration instead of spec 10's three.** `acoustic_pulse_2d` and
+   `vortex_and_pulse_2d` are overrides; the page gives the pulse alone as an example.
+8. **Both ladder entries are disabled by default** (`configs/degradation/default.yaml`): on an
+   incompressible field every level would be flagged as doing nothing, and on `kinet_re5e4` the
+   change is a few thousandths of the velocity's RMS. Enable them on the command line.
+9. **The candidate's error with a travelling plane wave is not zero at $t = 0$**: its starting
+   potential $\varepsilon c/k\,\sin(\mathbf{k}\cdot\mathbf{x})$ depends on $c$. It is still
+   purely dilatational. The potential and the pulse start the same at any $c$, which is why the
+   test uses the potential.
+
+### Log entries
+
+**2026-11-27, agent (build-order step 14).**
+
+- Code: `fmeval/data/analytic.py` (`TaylorGreen2D`: `amplitude`, `sound_speed`,
+  `longitudinal_viscosity`, `acoustic`, the per-mode propagator); `fmeval/derived.py`
+  (`helmholtz_split`); the bundle `degradations/scale_dilatational/` (scaffolded by
+  `python -m fmeval.cards new`, no exemplar panel generated; `python -m fmeval.cards check`
+  passes); its entries in `configs/degradation/default.yaml`, `TEST_DESCRIPTION.md` and `LADDERS`;
+  `docs/catalog.json` regenerated. Config `configs/dataset/helmholtz_mixture_2d.yaml`; page
+  section "An acoustic part".
+- Tests, in `tests/test_analytic_datasets.py`, through `pipeline.run` where the answer is a
+  metric value, on 48 × 32 and 25 × 64 unless stated:
+  - eq. (7) satisfied by a potential, an oblique plane wave and a pulse together (96 × 64), with
+    fourth-order time differences, to 1e-9 of the largest term (measured 5e-11), at
+    $\nu_L = 0.03$ and 0; zero curl (1e-12; measured 7e-15); acoustic energy constant at
+    $\nu_L = 0$ to 1e-12 relative (measured 1.3e-15);
+  - the travelling plane wave against its closed form, to 1e-13 (measured 2.5e-15);
+  - `enstrophy` and `palinstrophy` below 1e-24 on the mirror image alone; `kinetic_energy`
+    $E_d$ alone and $E_s + E_d$ with the vortex, `enstrophy` the vortex's, to 1e-12 relative;
+    `helmholtz_split` returning each part to 1e-14 (measured 9e-16);
+  - `scale_dilatational` at $s = 0.5, 1$ and amplified 0.5: `kinetic_energy`
+    $E_s + \lambda^2E_d$ and velocity `mse` $(\lambda - 1)^2E_d$ to 1e-12, vorticity `mse`
+    exactly 0, `enstrophy` unchanged;
+  - the wrong sound speed: velocity `mse` $A^2(f_c - f_{c'})^2/4$ to 1e-12, vorticity `mse`
+    below 1e-28, `enstrophy` equal to the truth's, no solenoidal part in the error (1e-14);
+  - five refusals.
+- Verified: the default output of `taylor_green_2d` is bitwise unchanged (entry above); the
+  smoke and cost runs of "What part is evaluated", where at $t = 0$ the run read kinetic energy
+  0.25 with the part removed and 1.25 with it doubled, and velocity `mse` $0.25\,s^2$.
+- Not verified: spec 10's pulse against the free-space Bessel integral (its Eq. 4), the
+  `h1_seminorm`, `spectrum_l2` and `spectral_energy_flux` answers of its Sect. 3.6, and the
+  dilatational fractions it derived for `additive_noise` and `gaussian_impostor`: none is
+  pinned by a test.
+
+### Open points
+
+- Spec 10's Option B, a kinet pulse run scored against this reader, is a job and not built; it
+  needs the `forecast` half of step 1's conversion and the density field (decision 3).
+- Not registered in `evidence_datasets` (instruction); its frames qualify (see above).
+- The answers of spec 10, Sect. 3.6 listed under "Not verified".
+- A broadband dilatational random field (spec 10, Sect. 5, a proposal for `random_field`) is
+  not built.

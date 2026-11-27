@@ -1316,6 +1316,7 @@ gives density two usable severity levels of four — so the high-pass degradatio
 five that the other degradations do. No severity list fixes this; a field with more energy at high
 wavenumbers would.
 | `band_attenuate` | retained fraction | Damages one wavenumber band only. The direct test of whether a metric is scale-selective |
+| `scale_dilatational` | fraction of the dilatational part removed (or added, `amplify`) | Multiplies the velocity's curl-free part, found by Fourier projection, by 1 − severity or 1 + severity; the vortical part, the mean and every other field are unchanged. The blind-axis test for curl-based metrics, which must read no change. Disabled by default (`scale_dilatational_down`, `scale_dilatational_up`): it does nothing on an incompressible field and almost nothing on `kinet_re5e4`, whose compressive part is 1e-6 to 1e-5 of the velocity's energy; it is meant for `taylor_green_2d` with an acoustic part |
 
 **Geometric** — the test for the double penalty. Shape and amplitude stay exactly correct;
 only position changes.

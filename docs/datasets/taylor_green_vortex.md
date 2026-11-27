@@ -34,6 +34,7 @@ beside it under `docs/datasets/_generated/`.
 | Configuration | What it is | Readable here |
 |---|---|---|
 | `taylor_green_2d` | The exact solution below, viscosity $\nu = 0.01$, on $256^2$ cells, 10 frames from $t = 0$ to $t = 50$, when the velocity has fallen to $1/e$ of its initial size | Yes, computed |
+| `helmholtz_mixture_2d` | The same vortex plus its curl-free mirror image, an exact acoustic mode at sound speed 2 (section "An acoustic part"), on $64^2$ cells, 9 frames over half an acoustic period, $t = 0$ to $1.1$ | Yes, computed |
 | `kinet/taylor_green_vortex/` | A directory for lattice-Boltzmann runs (`Re-50k_Ma-1en1`, `weakly_compressible_isoT_fluids`). On 2026-10-20 it held no trajectory, only a decomposition file | No data yet |
 
 The viscosity, grid and window are reader options, for example `+dataset.reader.nu=0.05`.
@@ -59,6 +60,94 @@ Sect. 3.3, and `tests/test_analytic_datasets.py` asserts them through the pipeli
 thirteen metrics whose cards report an error per step, on two non-square grids, to $10^{-12}$
 relative. The translated vortex solves eq. (1) only with the uniform flow $\mathbf{U}$ added,
 so `drift` is meant for the candidate and the reader's own frames keep its default of zero.
+
+## An acoustic part
+
+The vortex is purely solenoidal: its velocity has no divergence. The reader options
+`amplitude`, `sound_speed`, `longitudinal_viscosity` and `acoustic` add an exact dilatational
+(curl-free) part, so the two parts of the Helmholtz split of the velocity are set in closed
+form with any energy fraction. On such a field a curl-based metric must read only the vortex,
+and the degradation `scale_dilatational`, which multiplies the dilatational part by a known
+factor, has an exact answer for every metric. This follows
+`dataset_specs/10_acoustic_and_helmholtz_fields.md`, Sect. 3, whose derivations are its
+author's.
+
+### Equations
+
+The acoustic part solves the linearised isothermal equations about a fluid at rest at density
+1, with density perturbation $\rho'$, velocity $\mathbf{u}_d = \nabla\phi$, sound speed $c$ and
+longitudinal viscosity $\nu_L$ (the coefficient that damps compression):
+
+$$
+\partial_t \rho' = -\nabla^2\phi, \qquad
+\partial_t \phi = -c^2\rho' + \nu_L\nabla^2\phi. \tag{7}
+$$
+
+The linearised compressible equations split into a vorticity mode and a sound mode that do
+not interact (Chu and Kovásznay 1958, abstract; an isothermal gas has no entropy mode), so the
+vortex of eq. (3) and this field add to an exact solution of the linear equations. Each Fourier
+mode of eq. (7) is a $2\times2$ linear system. With $k = |\mathbf{k}|$, $\gamma = \nu_L k^2/2$
+and $\Omega = \sqrt{c^2k^2 - \gamma^2}$, its matrix exponential is
+
+$$
+\hat\rho'(t) = e^{-\gamma t}\Bigl[\hat\rho'_0\cos\Omega t + \bigl(\gamma\hat\rho'_0 + k^2\hat\phi_0\bigr)\frac{\sin\Omega t}{\Omega}\Bigr],
+\quad
+\hat\phi(t) = e^{-\gamma t}\Bigl[\hat\phi_0\cos\Omega t - \bigl(\gamma\hat\phi_0 + c^2\hat\rho'_0\bigr)\frac{\sin\Omega t}{\Omega}\Bigr], \tag{8}
+$$
+
+which is spec 10's Eq. (3) at $\rho_0 = 1$. The reader returns the velocity
+$U\,\mathbf{u}_{TG} + \nabla\phi$, the pressure of eq. (5) times $U^2$ plus $c^2\rho'$, and the
+vortex's own vorticity, which the acoustic part does not change. It stores no density. The
+default $\nu_L = 2\nu$ is the value of kinet's D2Q9 lattice-Boltzmann scheme (spec 10, Sect.
+3.1); a mode with $\nu_L k \ge 2c$ would be damped past oscillation, and the reader refuses a
+grid that holds one.
+
+Each entry of `acoustic` is a starting condition sampled at the cell centres:
+
+- `{kind: plane, mode: [m, n], amplitude: eps}`, a travelling wave
+  $\rho' = \varepsilon\cos(\mathbf{k}\cdot\mathbf{x} - ckt)$ without viscosity, $\mathbf{k} = (m, n)$;
+  a standing wave is two of them with opposite modes;
+- `{kind: potential, mode: [m, n], amplitude: A}`, $\phi = A\cos mx\cos ny$ at rest density. At
+  $m = n = 1$ its velocity at $t = 0$ is $-A(\sin x\cos y,\ \cos x\sin y)$, the mirror image of
+  the vortex's;
+- `{kind: pulse, centre: [x, y], width: sigma, amplitude: eps}`, a Gaussian pulse of density at
+  rest, the two-dimensional benchmark of the first computational-aeroacoustics workshop (spec
+  10, Sect. 3.3), including every periodic image. Its width must lie between three cells and
+  0.35, where its sampling and minimum image are exact to round-off.
+
+### Known answers
+
+With the mirror image at amplitude $A$ beside the vortex at $U$, $E_s = U^2e^{-4\nu t}/4$ and
+$E_d = A^2 f^2/4$, $f = e^{-\gamma t}(\cos\Omega t - (\gamma/\Omega)\sin\Omega t)$ at $k^2 = 2$.
+`tests/test_analytic_datasets.py` asserts each through the pipeline on two non-square grids:
+
+| Quantity | Exact value |
+|---|---|
+| `enstrophy`, `palinstrophy` | the vortex's alone, $U^2e^{-4\nu t}/2$ and $U^2e^{-4\nu t}$; 0 with $U = 0$ |
+| `kinetic_energy` | $E_s + E_d$: the parts are orthogonal mode by mode |
+| `fmeval.derived.helmholtz_split` | each part, to $10^{-14}$ |
+| `scale_dilatational` at severity $s$ | velocity $\mathbf{u}_s + \lambda\mathbf{u}_d$, $\lambda = 1 \mp s$: `kinetic_energy` $E_s + \lambda^2E_d$, `mse` on velocity $(\lambda - 1)^2E_d$; vorticity and pressure unchanged, so their `mse` is exactly 0 |
+| candidate `'+dataset.reader.candidate={sound_speed:2.5}'` | the twin at the wrong frequency: `mse` on velocity $A^2(f_c - f_{c'})^2/4$, vorticity unchanged, and the error has no solenoidal part |
+
+The test also checks eq. (7) itself with time derivatives taken by finite differences of the
+reader, and the constant acoustic energy at $\nu_L = 0$. With `longitudinal_viscosity` left at
+its default, a candidate with another `nu` changes both parts.
+
+### `helmholtz_mixture_2d`
+
+The vortex at $U = 1$ plus its mirror image at $A = 1$, $c = 2$, $\nu = 0.01$: the two halves
+of the kinetic energy are equal at $t = 0$, where the $x$-velocity is exactly zero, and the
+dilatational fraction falls to nearly zero at a quarter of an acoustic period and returns as
+the mode reverses. The window is half an acoustic period ($\pi/\Omega = 1.11$), in which the
+mirror image's factor runs from 1 to $-1$. Run the dilatational ladder with
+`degradation.ladder.scale_dilatational_down.enabled=true
+degradation.ladder.scale_dilatational_up.enabled=true`. Measured on 2026-11-27: every
+dilatational level is a distinct experiment; vorticity and pressure read `mse` exactly 0 at every
+level; the sharp filters collapse as on `taylor_green_2d`, every mode sitting at $|k| = \sqrt2$
+or 2. Other fields with an acoustic part are overrides, for example a pulse alone:
+`dataset=taylor_green_2d +dataset.reader.amplitude=0 +dataset.reader.sound_speed=1
+'+dataset.reader.acoustic=[{kind:pulse,centre:[3.14,3.14],width:0.1,amplitude:0.01}]'
++dataset.reader.nu=0.0001`.
 
 ## Equations
 
@@ -167,6 +256,9 @@ and the default ladder on 2026-10-20.
 
 - Taylor, G. I. (1923). On the decay of vortices in a viscous fluid. *Philosophical Magazine*
   (6) 46(274), 671–674. <https://doi.org/10.1080/14786442308634295>
+- Chu, B.-T. and Kovásznay, L. S. G. (1958). Non-linear interactions in a viscous
+  heat-conducting compressible gas. *Journal of Fluid Mechanics* 3(5), 494–514.
+  <https://doi.org/10.1017/S0022112058000148> (abstract read)
 - Taylor, G. I. and Green, A. E. (1937). Mechanism of the production of small eddies from
   large ones. *Proceedings of the Royal Society A* 158, 499–521.
   <https://doi.org/10.1098/rspa.1937.0036>

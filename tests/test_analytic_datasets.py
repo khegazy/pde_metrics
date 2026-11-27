@@ -61,7 +61,7 @@ from fmeval.data.analytic import (
 )
 from fmeval.data.base import READERS
 from fmeval.data.readers import open_trajectory
-from fmeval.derived import RecomputingTrajectory
+from fmeval.derived import RecomputingTrajectory, helmholtz_split
 from fmeval.external.kinet_spectral import divergence, spectral_derivative, spectral_vorticity
 from fmeval.io import read_maps, read_results, read_run_meta
 from fmeval.ladder import build_ladder
@@ -498,6 +498,15 @@ def test_evaluate_scores_a_closed_form_candidate_in_place_of_the_ladder(tmp_path
     ({"candidate": {"viscosity": 0.02}}, "not parameters of the solution"),
     ({"candidate": {"grid": [8, 8]}}, "not parameters of the solution"),
     ({"drift": (0.1,)}, "pair"),
+    ({"acoustic": [{"kind": "potential", "mode": [1, 1], "amplitude": 1.0}]}, "sound_speed"),
+    ({"sound_speed": 2.0, "acoustic": [{"kind": "wave", "mode": [1, 0], "amplitude": 1.0}]},
+     "acoustic entry"),
+    ({"sound_speed": 2.0, "acoustic": [{"kind": "plane", "mode": [0.5, 1], "amplitude": 1.0}]},
+     "two integers"),
+    ({"sound_speed": 2.0, "acoustic": [{"kind": "pulse", "centre": [1.0, 1.0], "width": 0.05,
+                                        "amplitude": 0.1}]}, "pulse width"),
+    # nu_L = 2 nu = 0.02 and |k| up to 181 on 256^2 cells: 3.6 > 2 c.
+    ({"sound_speed": 1.0}, "damped past oscillation"),
 ])
 def test_taylor_green_refuses_a_candidate_it_cannot_build(kwargs, match):
     with pytest.raises(ValueError, match=match):
@@ -510,6 +519,174 @@ def test_taylor_green_grid_is_periodic_and_frames_decay_together():
     first, last = (tg.frame(i, ["velocity"])["velocity"] for i in (0, len(tg) - 1))
     ratio = np.exp(-2 * 0.01 * (tg.times[-1] - tg.times[0]))
     assert last == pytest.approx(ratio * first, rel=1e-12, abs=1e-15)
+
+
+# --- Taylor-Green with an acoustic part (dataset_specs/10, Sect. 3) ---------------------------
+
+
+#: The vortex's mirror image (spec 10, Sect. 3.3, item 2): phi = A cos x cos y at rest density,
+#: whose velocity at t = 0 is -A (sin x cos y, cos x sin y). With nu = 0.01 the default
+#: nu_L = 2 nu = 0.02.
+TWIN = {"nu": 0.01, "n_frames": 4, "t_end": 30.0, "sound_speed": 2.0,
+        "acoustic": [{"kind": "potential", "mode": [1, 1], "amplitude": 0.7}]}
+
+
+def twin_factor(t: np.ndarray, c: float, nu_l: float = 0.02) -> np.ndarray:
+    """The twin's dilatational velocity over its starting value, f(t) = e^(-gamma t)
+    (cos Omega t - (gamma / Omega) sin Omega t) with |k|^2 = 2, gamma = nu_L |k|^2 / 2 and
+    Omega^2 = c^2 |k|^2 - gamma^2: spec 10, Eq. 3 with rho_0 = 0. Cell-centre means of
+    sin^2 cos^2 are 1/4 on any N >= 3, so its energy is E_d = A^2 f^2 / 4."""
+    gamma = nu_l
+    omega = np.sqrt(2 * c**2 - gamma**2)
+    return np.exp(-gamma * t) * (np.cos(omega * t) - gamma / omega * np.sin(omega * t))
+
+
+@pytest.mark.parametrize("nu_l", [0.03, 0.0])
+def test_the_acoustic_part_solves_the_linearised_equations_and_keeps_its_energy(nu_l):
+    """A potential, an oblique plane wave and a pulse at once, with no vortex, satisfy the
+    linearised isothermal equations of spec 10, Eq. (1), at rest density 1,
+
+        d_t rho' + div u = 0,   d_t u = -c^2 grad rho' + nu_L grad(div u),
+
+    with rho' = p / c^2 read from the pressure, space derivatives spectral and time
+    derivatives by the fourth-order centred difference of step h = 1e-3, whose truncation
+    h^4 omega^5 / 30 is below 1e-10 of each term at the frequencies c |k| that carry the
+    energy, and whose round-off is about 1e-16 / h. Measured: at most 5e-11 of the largest
+    term, so 1e-9. The velocity is curl-free (spectral curl below 1e-12; measured 7e-15). At
+    nu_L = 0 the acoustic energy <|u|^2 / 2 + c^2 rho'^2 / 2> is constant, each mode being an
+    undamped oscillator (measured to 1.3e-15 relative over t = 0..50, so 1e-12). A grid of
+    96 x 64 holds the pulse of width 0.33 inside the reader's bounds [3 dx, 0.35]."""
+    c = 1.3
+    tg = TaylorGreen2D(amplitude=0.0, sound_speed=c, longitudinal_viscosity=nu_l, grid=(96, 64),
+                       acoustic=[{"kind": "potential", "mode": [1, 1], "amplitude": 0.4},
+                                 {"kind": "plane", "mode": [3, -2], "amplitude": 0.05},
+                                 {"kind": "pulse", "centre": [2.0, 4.0], "width": 0.33,
+                                  "amplitude": 0.2}])
+    dx, t, h = tg.grid.spacing, 1.7, 1e-3
+
+    def d(f, axis):
+        return spectral_derivative(f, axis, spacing=dx)
+
+    def d_dt(name):
+        s = [tg.solution(t + j * h)[name] for j in (-2, -1, 1, 2)]
+        return (s[0] - 8 * s[1] + 8 * s[2] - s[3]) / (12 * h)
+
+    now = tg.solution(t)
+    u, rho = now["velocity"], now["pressure"][0] / c**2
+    drho, du = d_dt("pressure")[0] / c**2, d_dt("velocity")
+    div = divergence(u, spacing=dx)
+    assert np.abs(drho + div).max() < 1e-9 * np.abs(drho).max(), "continuity"
+    for a in range(2):
+        residual = du[a] + c**2 * d(rho, a) - nu_l * d(div, a)
+        assert np.abs(residual).max() < 1e-9 * np.abs(du).max(), f"momentum, component {a}"
+    assert np.abs(spectral_vorticity(u, spacing=list(dx))).max() < 1e-12
+    if nu_l == 0:
+        energy = np.array([0.5 * (s["velocity"] ** 2).sum(axis=0).mean()
+                           + 0.5 * (s["pressure"][0] ** 2).mean() / c**2
+                           for s in (tg.solution(time) for time in tg.times)])
+        assert energy == pytest.approx(energy[0], rel=1e-12)
+
+
+def test_a_travelling_plane_wave_moves_at_the_sound_speed():
+    """Without viscosity the plane-wave start is the travelling wave of linear acoustics,
+    rho' = eps cos(k . x - c |k| t) and u = eps c k_hat cos(k . x - c |k| t) (spec 10, Sect.
+    3.3, item 1), here along (3, -2) on 48 x 32 cells, to 1e-13 absolute (measured 2.5e-15 on
+    a pressure of size 0.085). A wrong sign of the phase speed or of the potential fails it."""
+    c, eps, m = 1.3, 0.05, np.array([3, -2])
+    tg = TaylorGreen2D(amplitude=0.0, sound_speed=c, longitudinal_viscosity=0.0, grid=(48, 32),
+                       acoustic=[{"kind": "plane", "mode": m.tolist(), "amplitude": eps}])
+    k = np.hypot(*m)
+    for t in tg.times:
+        s = tg.solution(t)
+        wave = np.cos(m[0] * tg.centres[0] + m[1] * tg.centres[1] - c * k * t)
+        assert np.abs(s["pressure"][0] - c**2 * eps * wave).max() < 1e-13
+        for a in range(2):
+            assert np.abs(s["velocity"][a] - eps * c * m[a] / k * wave).max() < 1e-13
+
+
+@pytest.mark.parametrize("grid", [(48, 32), (25, 64)])
+def test_curl_metrics_read_only_the_vortex_and_the_energies_of_the_two_parts_add(grid):
+    """Through the pipeline, vorticity recomputed from velocity:
+
+    * the twin alone (U = 0) has `enstrophy` and `palinstrophy` 0 (below 1e-24; the curl is
+      round-off) and `kinetic_energy` E_d = A^2 f^2 / 4 (:func:`twin_factor`);
+    * with the vortex added, `kinetic_energy` is E_s + E_d, E_s = e^(-4 nu t) / 4, because the
+      parts are orthogonal mode by mode, and `enstrophy` stays the vortex's e^(-4 nu t) / 2;
+    * the Fourier projection `helmholtz_split` returns each part, the vortex alone and the twin
+      alone, to 1e-14 (measured 9e-16).
+
+    Tolerance 1e-12 relative: closed forms against spectral operators on single modes."""
+    mixture = TaylorGreen2D(grid=grid, **TWIN)
+    twin = TaylorGreen2D(grid=grid, amplitude=0.0, **TWIN)
+    metrics = [metric_registry.get(n) for n in ("kinetic_energy", "enstrophy", "palinstrophy")]
+    values = {name: run(RecomputingTrajectory(reader), metrics, build_ladder({}),
+                        fields=["velocity", "vorticity"],
+                        dataset=DatasetInfo(name="taylor_green_2d")).rows.pivot(
+                            index="time", columns="metric", values="value")
+              for name, reader in (("mixture", mixture), ("twin", twin))}
+    t = values["twin"].index.to_numpy()
+    e_s, e_d = np.exp(-4 * 0.01 * t) / 4, 0.7**2 * twin_factor(t, 2.0) ** 2 / 4
+    assert values["twin"]["kinetic_energy"].to_numpy() == pytest.approx(e_d, rel=1e-12)
+    assert values["twin"][["enstrophy", "palinstrophy"]].abs().to_numpy().max() < 1e-24
+    assert values["mixture"]["kinetic_energy"].to_numpy() == pytest.approx(e_s + e_d, rel=1e-12)
+    assert values["mixture"]["enstrophy"].to_numpy() == pytest.approx(2 * e_s, rel=1e-12)
+    vortex = TaylorGreen2D(grid=grid, **{k: TWIN[k] for k in ("nu", "n_frames", "t_end")})
+    for i in range(len(mixture)):
+        solenoidal, dilatational = helmholtz_split(mixture.frame(i, ["velocity"])["velocity"],
+                                                   mixture.grid)
+        assert np.abs(solenoidal - vortex.frame(i, ["velocity"])["velocity"]).max() < 1e-14
+        assert np.abs(dilatational - twin.frame(i, ["velocity"])["velocity"]).max() < 1e-14
+
+
+@pytest.mark.parametrize("grid", [(48, 32), (25, 64)])
+def test_scale_dilatational_keeps_the_vorticity_and_scales_the_dilatational_energy(grid):
+    """On the vortex plus its twin, the operator multiplies the dilatational part by
+    lambda = 1 + delta (delta = -s, or +s with ``amplify``) and touches nothing else (spec 10,
+    Sect. 3.6): `kinetic_energy` = E_s + lambda^2 E_d, `mse` on velocity = delta^2 E_d (the
+    error delta u_d, averaged over two components), and vorticity is passed through, so its
+    `mse` is exactly 0 and `enstrophy` is the reference's. Tolerance 1e-12 relative."""
+    ladder = build_ladder({
+        "down": {"op": "scale_dilatational", "severities": [0.5, 1.0]},
+        "up": {"op": "scale_dilatational", "severities": [0.5], "options": {"amplify": True}}})
+    rows = run(RecomputingTrajectory(TaylorGreen2D(grid=grid, **TWIN)),
+               [metric_registry.get(n) for n in ("kinetic_energy", "enstrophy", "mse")], ladder,
+               fields=["velocity", "vorticity"], dataset=DatasetInfo(name="taylor_green_2d")).rows
+    t = np.sort(rows["time"].unique())
+    e_s, e_d = np.exp(-4 * 0.01 * t) / 4, 0.7**2 * twin_factor(t, 2.0) ** 2 / 4
+    values = rows.pivot(index=["degradation", "severity", "field", "time"], columns="metric",
+                        values="value")
+    for degradation, delta in (("down", -0.5), ("down", -1.0), ("up", 0.5)):
+        velocity = values.loc[(degradation, abs(delta), "velocity")]
+        vorticity = values.loc[(degradation, abs(delta), "vorticity")]
+        assert velocity["kinetic_energy"].to_numpy() == pytest.approx(
+            e_s + (1 + delta) ** 2 * e_d, rel=1e-12), (degradation, delta)
+        assert velocity["mse"].to_numpy() == pytest.approx(delta**2 * e_d, rel=1e-12)
+        assert (vorticity["mse"] == 0).all()
+        assert vorticity["enstrophy"].to_numpy() == pytest.approx(2 * e_s, rel=1e-12)
+
+
+@pytest.mark.parametrize("grid", [(48, 32), (25, 64)])
+def test_a_wrong_sound_speed_is_an_error_in_the_dilatational_part_only(grid):
+    """The candidate ``{sound_speed: 2.5}`` keeps the vortex and the twin's starting potential,
+    so its error is the twin's at the wrong frequency: `mse` on velocity is
+    A^2 (f_c - f_c')^2 / 4 (:func:`twin_factor`), `mse` on vorticity is round-off (below 1e-28)
+    and `enstrophy` equals the truth's, and the error field has no solenoidal part (below
+    1e-14). Tolerance 1e-12 relative, 1e-15 absolute at t = 0 where both errors vanish."""
+    truth = TaylorGreen2D(grid=grid, **TWIN, candidate={"sound_speed": 2.5})
+    scored = scored_candidate(truth, ("mse", "enstrophy"))
+    got = scored["forecast"]
+    t = got.loc["velocity"].index.to_numpy()
+    mse = 0.7**2 * (twin_factor(t, 2.0) - twin_factor(t, 2.5)) ** 2 / 4
+    assert got.loc["velocity", "mse"].to_numpy() == pytest.approx(mse, rel=1e-12, abs=1e-15)
+    assert (mse[1:] > 1e-3).all(), "the frequency error must be large enough to be seen"
+    assert got.loc["vorticity", "mse"].max() < 1e-28
+    assert got.loc["vorticity", "enstrophy"].to_numpy() == pytest.approx(
+        scored["identity"].loc["vorticity", "enstrophy"].to_numpy(), rel=1e-12)
+    candidate = truth.predictions()
+    for i in range(len(truth)):
+        error = (candidate.frame(i, ["velocity"])["velocity"]
+                 - truth.frame(i, ["velocity"])["velocity"])
+        assert np.abs(helmholtz_split(error, truth.grid)[0]).max() < 1e-14
 
 
 

@@ -39,6 +39,11 @@ CALIBRATION_SHAPE = (64, 48)
 
 SHAPE = (32, 16)  # non-square, and divisible by the coarsening factors under test
 
+#: Channels of the field the generic checks hand every operator: a velocity on the 2D grid, so
+#: the velocity-only `scale_dilatational` can be called, and every per-channel operator has
+#: its channel axis exercised.
+CHANNELS = 2
+
 
 def smooth_field(shape: tuple[int, ...] = CALIBRATION_SHAPE) -> np.ndarray:
     """A field with a decaying spectrum, so it has a characteristic scale to calibrate against."""
@@ -120,6 +125,8 @@ LADDERS: dict[str, list[float]] = {
     "mean_field": [0],
     "gain": [0.05, 0.2, 0.5],
     "bias": [0.05, 0.2, 0.5],
+    # The fraction of the velocity's dilatational part removed; 1 removes all of it.
+    "scale_dilatational": [0.25, 0.5, 1.0],
     # Ensemble dispersion. Severities are fractions of the calibrated spread: excess for
     # inflate, removed for deflate, so zero is a no-op on both and neither exceeds one.
     "spread_inflate": [0.25, 1.0, 3.0],
@@ -164,7 +171,7 @@ def test_zero_severity_matches_its_declaration(spec):
     the lowest shells a little. Checked both ways, so an operator that is the identity at 0
     without declaring it is caught as surely as one that declares it falsely.
     """
-    x = synthetic_field(SHAPE, 1, seed=0)
+    x = synthetic_field(SHAPE, CHANNELS, seed=0)
     want = members(x) if spec.ensemble else x
     unchanged = np.allclose(call(spec, x, 0), want, rtol=0, atol=1e-15)
     assert unchanged == spec.zero_is_identity, (
@@ -181,7 +188,7 @@ def test_declared_direction_is_true(spec):
     if not spec.ordinal or spec.name == "identity":
         pytest.skip("not on a monotone axis")
     x = (smooth_field() if spec.calibration
-         else synthetic_field(SHAPE, 1, seed=0, noise=0.02))
+         else synthetic_field(SHAPE, CHANNELS, seed=0, noise=0.02))
     severities = spec.sort_severities(LADDERS[spec.name])
     if spec.ensemble:
         # An ensemble operator is judged by how far it moves the *members* from the
@@ -211,7 +218,7 @@ def test_sort_severities_orders_by_damage(spec):
 def test_deterministic_operators_are_reproducible(spec):
     if spec.stochastic:
         pytest.skip("stochastic")
-    x = synthetic_field(SHAPE, 1, seed=0)
+    x = synthetic_field(SHAPE, CHANNELS, seed=0)
     s = LADDERS[spec.name][-1]
     assert np.array_equal(call(spec, x, s), call(spec, x, s))
 
@@ -782,7 +789,7 @@ def test_declared_preservation_is_true(spec):
     """
     if not spec.preserves:
         pytest.skip("declares nothing")
-    x = synthetic_field(SHAPE, 1, seed=0)
+    x = synthetic_field(SHAPE, CHANNELS, seed=0)
     before = members(x) if spec.ensemble else x
     for severity in LADDERS[spec.name]:
         y = call(spec, x, severity)

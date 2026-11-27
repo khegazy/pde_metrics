@@ -20,7 +20,7 @@ The rule this follows: an open question with no obvious answer and no clear publ
 
 ## What would unblock it
 
-Decisions on the decomposed field and the reported number, and an experiment that changes the partition in a controlled way (see [the dilatational-scaling proposal](../proposals/EXP-orchestrator-20261023-dilatational-scaling.md)). Related: [024](024-leray-projection.md), the solenoidal projection for the spectral operators.
+Decisions on the decomposed field and the reported number. The third point is met since 2026-11-27: the degradation `scale_dilatational` multiplies the velocity's dilatational part by a known factor and leaves the solenoidal part exactly unchanged, and `taylor_green_2d` with a sound speed and an `acoustic` part supplies a reference whose two parts are set in closed form with any energy fraction (`docs/datasets/taylor_green_vortex.md`, "An acoustic part"). The Fourier projection is `fmeval.derived.helmholtz_split`. Related: [024](024-leray-projection.md), the solenoidal projection for the spectral operators.
 
 ## Related
 

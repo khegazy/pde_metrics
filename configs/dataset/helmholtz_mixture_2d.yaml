@@ -1,0 +1,57 @@
+# The Taylor-Green vortex plus its curl-free mirror image, an exact acoustic field, computed on
+# the fly by the taylor_green_2d reader (fmeval/data/analytic.py; docs/datasets/
+# taylor_green_vortex.md, "An acoustic part"; dataset_specs/10_acoustic_and_helmholtz_fields.md,
+# Sect. 3). The velocity is u_s + u_d: the vortex u_s = D (sin x cos y, -cos x sin y), D =
+# exp(-2 nu t), and the twin u_d = grad phi, phi = A f(t) cos x cos y, an acoustic standing mode
+# at sound speed 2 with f = exp(-gamma t) (cos Omega t - (gamma / Omega) sin Omega t), gamma =
+# nu_L = 2 nu, Omega = sqrt(8 - gamma^2). With A = U = 1 the two halves of the kinetic energy are
+# equal at t = 0 and the x-velocity is exactly zero there. The parts are set in closed form, so a
+# curl-based metric must read only the vortex, and scale_dilatational changes only the twin.
+# Not registered in evidence_datasets.
+#
+# WHAT PART IS EVALUATED (agent, 2026-11-27; docs/recipes/add-a-dataset.md step 3; the log is
+# docs/datasets/logs/taylor_green_vortex.md). The whole trajectory: 9 frames over half an acoustic
+# period, pi / Omega = 1.11, on 64^2.
+# - Why half a period: every frame is u_s D(t) + u_d f(t), two fixed patterns, and with the default
+#   nu_L = 2 nu both decay at the same rate, so the velocity one period later is exactly a scalar
+#   multiple of the earlier one (the pressure nearly). Half a period takes f from 1 to -1: the
+#   dilatational fraction runs from 1/2 to almost 0 (f = 0.008 at t = 0.55) and back, the second
+#   half with the mirror image's sign reversed. The frames are not scalar multiples of one another in velocity or pressure; vorticity,
+#   the vortex's alone, is.
+# - Why 64^2: both parts are single modes, so every closed form holds on any grid of at least 3
+#   cells, and 256^2 would cost 16 times as much for no further answer.
+# - Measured on a Perlmutter login node (load 35 to 50), results under
+#   /pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/helmholtz_mixture/ (measure.sh):
+#     mse, kinetic_energy and enstrophy, default ladder with both scale_dilatational entries on,
+#       all 9 frames: 6.6 s wall (3.0 s applying the ladder);
+#     every deterministic metric, the same ladder, all 9 frames: 90 s wall, 34 s of metric time
+#       (3.8 s per frame; spectral_energy_flux 0.62 s, energy_distance 0.54 s,
+#       persistence_wasserstein 0.41 s), no stall;
+#     every deterministic metric, the wrong-sound-speed candidate '+dataset.reader.candidate=
+#       {sound_speed:2.5}', all 9 frames: 9.6 s wall; its velocity mse matched the closed form to
+#       1.5e-13 relative.
+# Run the dilatational ladder with degradation.ladder.scale_dilatational_down.enabled=true
+# degradation.ladder.scale_dilatational_up.enabled=true.
+name: helmholtz_mixture_2d
+format: taylor_green_2d
+
+# Unused: the reader computes its frames. Declared because every dataset config carries one.
+path: ${paths.data}
+trajectory: helmholtz_mixture_2d
+
+fields: [velocity, pressure, vorticity]
+
+reader:
+  sound_speed: 2.0
+  acoustic: [{kind: potential, mode: [1, 1], amplitude: 1.0}]
+  grid: [64, 64]
+  n_frames: 9
+  t_end: 1.1
+
+complexity:
+  family: taylor_green_vortex
+  rank: -1          # generated: below every physical dataset
+  label: "Taylor-Green vortex plus an exact acoustic mode, 2D (solenoidal and dilatational parts in closed form)"
+
+notes: "The decaying 2D Taylor-Green vortex plus its curl-free mirror image, an exact linear
+  acoustic standing mode, computed on the fly. See docs/datasets/taylor_green_vortex.md."

@@ -25,7 +25,6 @@ Status is `proposed`, or `see also <file>` for a near-duplicate of another propo
 | [EXP-nrmse-rollouts-over-many-initial-conditions.md](EXP-nrmse-rollouts-over-many-initial-conditions.md) | Model rollouts against the solver over many initial conditions | proposed |
 | [EXP-orchestrator-20261023-anisotropic-blur.md](EXP-orchestrator-20261023-anisotropic-blur.md) | A directional (anisotropic) blur | proposed |
 | [EXP-orchestrator-20261023-constraint-violation.md](EXP-orchestrator-20261023-constraint-violation.md) | Controlled violations of admissibility conditions | proposed |
-| [EXP-orchestrator-20261023-dilatational-scaling.md](EXP-orchestrator-20261023-dilatational-scaling.md) | Scaling the dilatational part of the velocity | proposed |
 | [EXP-orchestrator-20261023-known-vortex-field.md](EXP-orchestrator-20261023-known-vortex-field.md) | A field with a known vortex population | proposed |
 | [EXP-orchestrator-20261023-temporal-ladder.md](EXP-orchestrator-20261023-temporal-ladder.md) | A degradation ladder for trajectories | proposed |
 | [EXP-persistence_distance-spurious-feature-injection.md](EXP-persistence_distance-spurious-feature-injection.md) | Injecting isolated spurious features of known depth | proposed |

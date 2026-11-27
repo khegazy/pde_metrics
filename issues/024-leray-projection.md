@@ -17,8 +17,9 @@ conditions -- so this has to be written against the vendored wavenumber grid.
 
 ## What is needed
 
-A projection helper and a `project_solenoidal` option on the spectral operators, off by
-default so the harder probe remains the default.
+A `project_solenoidal` option on the spectral operators, off by default so the harder probe
+remains the default. The projection exists: the solenoidal part returned by
+`fmeval.derived.helmholtz_split`, which `scale_dilatational` already uses.
 
 ## Acceptance criteria
 

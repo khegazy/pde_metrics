@@ -64,6 +64,16 @@ ladder:
   # 10000, every 50th) by 3.8e-5 of density's fluctuation energy, 1.0e-3 of velocity's and 0.19
   # of vorticity's: a measurement of where each field keeps its energy, not a defect.
   band_attenuate:      {enabled: true,  severities: [0.8, 0.5, 0.2, 0.0]}
+  # The velocity's dilatational (curl-free) part multiplied by 1 - s (down) or 1 + s (up), the
+  # vortical part, the mean and every other field unchanged. Disabled: it means something only
+  # where the velocity has a compressive part. On kinet_re5e4 that part holds 1e-6 to 1e-5 of the
+  # velocity's fluctuation energy (dataset_specs/10, Sect. 1), and on the incompressible analytic
+  # fields it is round-off, so every level would be flagged as doing nothing. Enable both on
+  # taylor_green_2d with an acoustic part (docs/datasets/taylor_green_vortex.md).
+  scale_dilatational_down: {enabled: false, op: scale_dilatational,
+                            severities: [0.25, 0.5, 0.75, 1.0]}
+  scale_dilatational_up: {enabled: false, op: scale_dilatational,
+                          severities: [0.25, 0.5, 0.75, 1.0], options: {amplify: true}}
 
   # --- geometric: the double-penalty probe ----------------------------------------
   translate_x:         {enabled: true, op: translate, severities: [1, 2, 4, 8, 16]}

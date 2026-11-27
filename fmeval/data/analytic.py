@@ -350,40 +350,135 @@ class TaylorGreen2D(ClosedFormTrajectory):
     wrong-viscosity candidate. The error of either against the truth is closed-form
     (``dataset_specs/05_initial_conditions_and_degraded_solver_runs.md``, Sect. 3.3), and
     ``tests/test_analytic_datasets.py`` asserts it for the thirteen per-step metrics.
+
+    **An acoustic part** (``dataset_specs/10_acoustic_and_helmholtz_fields.md``, Sect. 3).
+    ``amplitude`` ``U`` scales the vortex (0 removes it), and a ``sound_speed`` ``c`` with a
+    list ``acoustic`` adds an exact curl-free velocity ``u_d = grad phi`` and a density
+    perturbation ``rho'``, solving the linearised isothermal equations about rest at density 1,
+
+        d_t rho' = -lap phi,   d_t phi = -c^2 rho' + nu_L lap phi,
+
+    the sound mode of the split of the linearised compressible equations into uncoupled
+    vorticity and sound modes (Chu & Kovasznay 1958, J. Fluid Mech. 3(5), 494-514,
+    https://doi.org/10.1017/S0022112058000148, abstract; the isothermal gas has no entropy
+    mode). ``nu_L``, the ``longitudinal_viscosity``, damps compression; its default ``2 nu`` is
+    the D2Q9 BGK lattice-Boltzmann value kinet measures (spec 10, Sect. 3.1). Each Fourier mode
+    is a 2x2 linear system solved exactly by its matrix exponential (spec 10, Eq. 3). The vortex
+    solves ``d_t u_s = nu lap u_s`` exactly and has no density in linear theory, so the sum is
+    an exact solution of the linear equations with the vortical and acoustic parts exact
+    separately; the vortex's own pressure is kept, and the acoustic part adds ``c^2 rho'``. Each
+    entry of ``acoustic`` is a starting condition sampled at the cell centres:
+
+    * ``{kind: plane, mode: [m, n], amplitude: eps}``: the travelling wave
+      ``rho' = eps cos(k . x - c |k| t)``, ``u = eps c k_hat cos(k . x - c |k| t)`` without
+      viscosity, ``k = (m, n)``; a standing wave is two of them with opposite modes;
+    * ``{kind: potential, mode: [m, n], amplitude: A}``: ``phi = A cos(m x) cos(n y)`` at rest
+      density; at ``m = n = 1`` and ``A = U`` the mirror image of the vortex's velocity;
+    * ``{kind: pulse, centre: [x, y], width: sigma, amplitude: eps}``:
+      ``rho' = eps exp(-r^2 / (2 sigma^2))`` at rest, ``r`` the minimum-image distance, the
+      Gaussian pulse of the first computational-aeroacoustics workshop (spec 10, Sect. 3.3,
+      item 3), including every periodic image.
+
+    Every option is a candidate parameter, so ``{sound_speed: c'}`` is a candidate whose error
+    lies wholly in the dilatational part. ``drift`` translates the acoustic part with the vortex.
     """
 
     FORMAT = "taylor_green_2d"
     FIELDS = ("velocity", "pressure", "vorticity")
+    #: The keys of each kind of entry of ``acoustic``.
+    ACOUSTIC: ClassVar[dict[str, set[str]]] = {
+        "plane": {"kind", "mode", "amplitude"}, "potential": {"kind", "mode", "amplitude"},
+        "pulse": {"kind", "centre", "width", "amplitude"}}
 
     def __init__(self, path: str | None = None, *, nu: float = 0.01,
-                 drift: Sequence[float] = (0.0, 0.0), grid: Sequence[int] = (256, 256),
+                 drift: Sequence[float] = (0.0, 0.0), amplitude: float = 1.0,
+                 sound_speed: float | None = None, longitudinal_viscosity: float | None = None,
+                 acoustic: Sequence[Mapping[str, Any]] = (), grid: Sequence[int] = (256, 256),
                  n_frames: int = 10, t_start: float = 0.0, t_end: float = 50.0,
                  candidate: Mapping[str, Any] | None = None) -> None:
-        """Cache the spatial patterns, unless they drift.
+        """Cache the spatial patterns, unless they drift, and the acoustic starting spectra.
 
         Args:
             path: Ignored; accepted so every reader is constructed the same way.
             nu: Kinematic viscosity, non-negative.
             drift: Velocity ``(U_x, U_y)`` at which every field is translated.
+            amplitude: ``U``, the vortex's velocity amplitude.
+            sound_speed: ``c``, positive, or None for no acoustic part.
+            longitudinal_viscosity: ``nu_L``, non-negative, or None for ``2 nu``.
+            acoustic: The starting conditions above; empty without a sound speed.
             grid: Cells along ``(x, y)``.
             n_frames: Number of frames.
             t_start, t_end: The window.
-            candidate: ``nu`` and ``drift`` of the candidate (:meth:`predictions`), or None.
+            candidate: Any parameter above from ``nu`` on, changed for the candidate
+                (:meth:`predictions`), or None.
 
         Raises:
-            ValueError: On a negative viscosity, a drift that is not a pair, or an invalid
-                grid, window or candidate.
+            ValueError: On a negative viscosity, a drift that is not a pair, an acoustic option
+                without a positive sound speed, an entry of ``acoustic`` of an unknown kind or
+                keys, a mode that is not two integers not both zero, a pulse width outside
+                ``[3 dx, 0.35]`` (the bounds that keep its sampling and its minimum image
+                exact to round-off, spec 10, Sect. 3.3), a mode on the grid damped past
+                oscillation (``nu_L |k| >= 2 c``), or an invalid grid, window or candidate.
         """
         if float(nu) < 0:
             raise ValueError(f"nu must be non-negative, got {nu}")
         if np.shape(drift) != (2,):
             raise ValueError(f"drift must be one (U_x, U_y) pair, got {drift}")
+        if (sound_speed is None and (acoustic or longitudinal_viscosity is not None)) or (
+                sound_speed is not None and float(sound_speed) <= 0) or (
+                longitudinal_viscosity is not None and float(longitudinal_viscosity) < 0):
+            raise ValueError(f"acoustic and longitudinal_viscosity need a positive sound_speed, "
+                             f"and nu_L must be non-negative; got sound_speed={sound_speed}, "
+                             f"longitudinal_viscosity={longitudinal_viscosity}")
+        waves = [{key: str(value) if key == "kind" else np.asarray(value, dtype=float).tolist()
+                  for key, value in wave.items()} for wave in acoustic]
+        for wave in waves:
+            if set(wave) != self.ACOUSTIC.get(wave.get("kind"), set()) or ("mode" in wave and (
+                    np.shape(wave["mode"]) != (2,) or not any(wave["mode"])
+                    or wave["mode"] != np.round(wave["mode"]).tolist())):
+                raise ValueError(f"each acoustic entry must be one of {self.ACOUSTIC}, with a "
+                                 f"mode of two integers not both zero; got {wave}")
         super().__init__(grid=grid, length=(2 * np.pi, 2 * np.pi),
                          boundary=("periodic", "periodic"), n_frames=n_frames,
                          t_start=t_start, t_end=t_end, candidate=candidate,
-                         params={"nu": float(nu), "drift": [float(d) for d in drift]})
+                         params={"nu": float(nu), "drift": [float(d) for d in drift],
+                                 "amplitude": float(amplitude),
+                                 "sound_speed": None if sound_speed is None else float(sound_speed),
+                                 "longitudinal_viscosity": None if longitudinal_viscosity is None
+                                 else float(longitudinal_viscosity), "acoustic": waves})
         self._nu, self._drift = float(nu), np.asarray(drift, dtype=float)
+        self._amplitude, self._sound_speed = float(amplitude), sound_speed
         self._patterns = None if self._drift.any() else self._patterns_at(0.0)
+        if sound_speed is None:
+            return
+        c = float(sound_speed)
+        nu_l = 2.0 * self._nu if longitudinal_viscosity is None else float(longitudinal_viscosity)
+        x, y = self.centres
+        rho, phi = np.zeros_like(x), np.zeros_like(x)
+        for wave in waves:
+            if wave["kind"] == "pulse":
+                if not 3.0 * max(self._grid.spacing) <= wave["width"] <= 0.35:
+                    raise ValueError(f"a pulse width must lie in [3 dx, 0.35] = "
+                                     f"[{3.0 * max(self._grid.spacing):.4g}, 0.35], got {wave}")
+                squared = sum(((p - q + np.pi) % (2 * np.pi) - np.pi) ** 2
+                              for p, q in zip(self.centres, wave["centre"], strict=True))
+                rho += wave["amplitude"] * np.exp(-squared / (2.0 * wave["width"] ** 2))
+                continue
+            m, n = wave["mode"]
+            if wave["kind"] == "plane":
+                rho += wave["amplitude"] * np.cos(m * x + n * y)
+                phi += wave["amplitude"] * c / np.hypot(m, n) * np.sin(m * x + n * y)
+            else:
+                phi += wave["amplitude"] * np.cos(m * x) * np.cos(n * y)
+        #: Wavevector components on the 2 pi box, integers.
+        self._k = physical_wavenumber_grid(self._grid.shape, self._grid.spacing)
+        k_squared = self._k[0] ** 2 + self._k[1] ** 2
+        gamma = 0.5 * nu_l * k_squared
+        if (gamma[k_squared > 0] ** 2 >= c**2 * k_squared[k_squared > 0]).any():
+            raise ValueError(f"nu_L |k| >= 2 c on this grid (nu_L={nu_l}, c={c}): a mode is "
+                             "damped past oscillation; lower nu_L or raise c")
+        self._acoustic = (np.fft.fft2(rho), np.fft.fft2(phi), k_squared, gamma,
+                          np.sqrt(c**2 * k_squared - gamma**2), c**2)
 
     def _patterns_at(self, time: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Velocity, pressure and vorticity at unit amplitude, translated by ``drift * time``."""
@@ -395,9 +490,25 @@ class TaylorGreen2D(ClosedFormTrajectory):
     def solution(self, time: float) -> dict[str, np.ndarray]:
         """Velocity, pressure and vorticity at ``time`` on the cell centres."""
         velocity, pressure, vorticity = self._patterns or self._patterns_at(time)
-        decay = np.exp(-2.0 * self._nu * time)
-        return {"velocity": velocity * decay, "pressure": pressure * decay**2,
-                "vorticity": vorticity * decay}
+        decay = self._amplitude * np.exp(-2.0 * self._nu * time)
+        fields = {"velocity": velocity * decay, "pressure": pressure * decay**2,
+                  "vorticity": vorticity * decay}
+        if self._sound_speed is None:
+            return fields
+        rho_0, phi_0, k_squared, gamma, omega, c_squared = self._acoustic
+        # Spec 10, Eq. (3): the matrix exponential of [[0, k^2], [-c^2, -2 gamma]], gamma =
+        # nu_L k^2 / 2, Omega^2 = c^2 k^2 - gamma^2 (its author's derivation; the trace and
+        # determinant fix it). sin(Omega t) / Omega = t sinc(Omega t / pi) is t at Omega = 0.
+        # The drift translates by drift * t, a phase exp(-i k . drift t) on every mode.
+        cos, sin_over = np.cos(omega * time), time * np.sinc(omega * time / np.pi)
+        factor = np.exp(-gamma * time - 1j * time * (self._k[0] * self._drift[0]
+                                                     + self._k[1] * self._drift[1]))
+        rho = factor * (rho_0 * cos + (gamma * rho_0 + k_squared * phi_0) * sin_over)
+        phi = factor * (phi_0 * cos - (gamma * phi_0 + c_squared * rho_0) * sin_over)
+        fields["velocity"] = fields["velocity"] + np.real(np.fft.ifft2(1j * np.stack(self._k)
+                                                                        * phi))
+        fields["pressure"] = fields["pressure"] + c_squared * np.real(np.fft.ifft2(rho))[None]
+        return fields
 
 
 @register_reader("advecting_blobs")

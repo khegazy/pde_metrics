@@ -43,7 +43,7 @@ from typing import Any
 import numpy as np
 
 from .data.base import DERIVED_FIELDS, Frame, GridSpec, Trajectory
-from .external.kinet_spectral import spectral_vorticity
+from .external.kinet_spectral import physical_wavenumber_grid, spectral_vorticity
 
 #: Derived field -> the primitives it is computed from. Only kinematic quantities belong
 #: here: anything that needs an equation of state, such as pressure, is a property of the
@@ -90,6 +90,42 @@ def vorticity_from_velocity(velocity: np.ndarray, grid: GridSpec) -> np.ndarray:
     # scale the result by the coarsening factor.
     omega = spectral_vorticity(velocity, spacing=list(grid.spacing))
     return omega[np.newaxis, ...] if omega.ndim == grid.n_spatial else omega
+
+
+def helmholtz_split(velocity: np.ndarray, grid: GridSpec) -> tuple[np.ndarray, np.ndarray]:
+    """The solenoidal and dilatational parts of a periodic velocity, by Fourier projection.
+
+    Each mode's dilatational part is its projection onto its wavevector,
+    ``u_d_hat = k (k . u_hat) / |k|^2``, which is curl-free; the solenoidal part
+    ``u - u_d`` is divergence-free and keeps the spatial mean, which belongs to neither
+    (the Helmholtz-Hodge decomposition on a periodic domain; Bhatia, Norgard, Pascucci &
+    Bremer 2013, IEEE TVCG 19(8), 1386-1404, https://doi.org/10.1109/TVCG.2012.316). The
+    two parts are orthogonal mode by mode, so their kinetic energies add.
+
+    Args:
+        velocity: ``(D, *spatial)`` with D == grid.n_spatial.
+        grid: The periodic grid the velocity lives on; its spacing sets the wavevectors.
+
+    Returns:
+        ``(solenoidal, dilatational)``, each shaped like ``velocity``.
+
+    Raises:
+        ValueError: On a velocity that is not one component per axis of ``grid``, or a grid
+            that is not periodic on every axis.
+    """
+    if velocity.shape != (grid.n_spatial, *grid.shape) or not grid.is_periodic:
+        raise ValueError(f"the Helmholtz split needs a velocity of shape "
+                         f"{(grid.n_spatial, *grid.shape)} on a periodic grid, got "
+                         f"{velocity.shape} on boundaries {grid.boundary}")
+    k = physical_wavenumber_grid(grid.shape, grid.spacing)
+    k_squared = sum(component**2 for component in k)
+    k_squared[(0,) * grid.n_spatial] = np.inf  # the mean has no dilatational part
+    axes = tuple(range(1, velocity.ndim))
+    u_hat = np.fft.fftn(velocity, axes=axes)
+    projection = sum(component * u for component, u in zip(k, u_hat, strict=True)) / k_squared
+    dilatational = np.real(np.fft.ifftn(np.stack([component * projection for component in k]),
+                                        axes=axes))
+    return velocity - dilatational, dilatational
 
 
 def recompute(
