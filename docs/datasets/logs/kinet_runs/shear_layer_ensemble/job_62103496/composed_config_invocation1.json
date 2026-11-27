@@ -1,0 +1,114 @@
+{
+ "case_path": "doubly_periodic/shear_layer",
+ "case": {
+  "id": "shear_layer",
+  "group": "doubly_periodic",
+  "units": "lattice",
+  "N_simulations": 1,
+  "discretization": {
+   "spatial": {
+    "type": "provided",
+    "grid": [
+     256,
+     256
+    ],
+    "length": [
+     256.0,
+     256.0
+    ],
+    "resolution": 1.0
+   },
+   "temporal": {
+    "type": "provided",
+    "grid": 100,
+    "length": 100.0,
+    "resolution": 1.0
+   }
+  },
+  "simulation_subdir": "doubly_periodic/shear_layer/3484e2b7",
+  "physics": {
+   "type": "weakly_compressible_isothermal_fluids",
+   "parameters": {
+    "reynolds": 50000.0,
+    "mach": 0.1,
+    "reference": {
+     "density": 1.0
+    }
+   },
+   "output_variables": [
+    "vorticity"
+   ]
+  },
+  "collision": {
+   "type": "entropic_BGK",
+   "stabilizer": {
+    "type": "entropic",
+    "max_iterations": 50,
+    "input_dists": [
+     "F",
+     "Feq"
+    ]
+   }
+  },
+  "subgrid": {},
+  "lattice": {
+   "type": "D2Q9",
+   "shifts": [
+    0.0,
+    0.0
+   ],
+   "use_static_weights": false
+  },
+  "solver": {
+   "type": "lbm",
+   "gather": "sequential",
+   "interpolation": {
+    "family": "lagrange",
+    "degree": 1
+   }
+  },
+  "simulate_equilibrium_closure": {
+   "F": {
+    "type": "entropic",
+    "output_dists": [
+     {
+      "calculator": "neq",
+      "dist_label": "F",
+      "variations": [
+       "L2"
+      ]
+     }
+    ]
+   }
+  },
+  "features": [
+   "turbulence"
+  ],
+  "boundary_conditions": {
+   "Periodic": {
+    "axes": [
+     "x",
+     "y"
+    ]
+   }
+  },
+  "initial_conditions": {
+   "lambda": 80,
+   "epsilon": 0.05
+  },
+  "assets": {},
+  "coarse_grain": {
+   "ignore_datasets": [
+    "stability_scale"
+   ],
+   "skip_existing": true,
+   "scheduler": "threads"
+  }
+ },
+ "precision": {
+  "dtype": "torch.float64"
+ },
+ "normalization": {
+  "feature": "none"
+ }
+}

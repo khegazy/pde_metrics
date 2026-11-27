@@ -1,0 +1,1 @@
+--start 2000 --members 0-16 --amplitude 1e-3 --extra 0:1e-2 --steps 5000 --save-every 10 --out /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble

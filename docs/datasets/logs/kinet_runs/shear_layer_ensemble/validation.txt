@@ -1,0 +1,28 @@
+2a step, max|drho|, max|du|, rms du:
+     1 3.423e-11 3.128e-11 7.072e-13
+     2 5.670e-11 4.903e-11 1.017e-12
+     5 5.926e-11 5.841e-11 1.596e-12
+    10 5.760e-11 8.094e-11 2.285e-12
+    20 6.845e-11 1.114e-10 3.416e-12
+    50 1.002e-10 2.456e-10 7.027e-12
+   100 7.026e-11 2.040e-10 9.355e-12
+2b over 52 members: min / max
+  amplitude                            1.000e-03 1.000e-02
+  max_abs_density_change               6.661e-16 1.110e-15
+  rms_over_u_rms                       1.000e-03 1.000e-02
+  max_div_over_max_vort_spectral       9.930e-13 1.495e-11
+  max_div_over_max_vort_central        2.516e-03 3.963e-03
+  max_div_over_max_vort_d2q9           1.077e-05 1.618e-05
+  energy_fraction_outside_band         2.602e-26 2.631e-24
+  energy_weighted_mean_k               1.024e+01 1.101e+01
+2c ratio at lead 0: 0.9929136103126905
+  lead     0 rms|u_a - u_b| = 7.890e-05 (0.993 x sqrt2 A)
+  lead     1 rms|u_a - u_b| = 7.792e-05 (0.981 x sqrt2 A)
+  lead    10 rms|u_a - u_b| = 7.844e-05 (0.987 x sqrt2 A)
+  lead   100 rms|u_a - u_b| = 7.850e-05 (0.988 x sqrt2 A)
+  lead   500 rms|u_a - u_b| = 8.884e-05 (1.118 x sqrt2 A)
+  lead  1000 rms|u_a - u_b| = 1.614e-04 (2.031 x sqrt2 A)
+  lead  2000 rms|u_a - u_b| = 6.634e-04 (8.349 x sqrt2 A)
+  lead  3000 rms|u_a - u_b| = 1.238e-03 (15.581 x sqrt2 A)
+  lead  4000 rms|u_a - u_b| = 1.474e-03 (18.546 x sqrt2 A)
+  lead  5000 rms|u_a - u_b| = 1.494e-03 (18.797 x sqrt2 A)

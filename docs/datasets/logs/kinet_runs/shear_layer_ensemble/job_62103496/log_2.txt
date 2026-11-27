@@ -1,0 +1,912 @@
+[2026-11-27 09:42:49] Building solver lbm
+[2026-11-27 09:42:50] Building physics weakly_compressible_isothermal_fluids
+[2026-11-27 09:42:50] the Reynolds number 50000 is measured on the first length of the domain, 256
+[2026-11-27 09:42:50] No pressure reference (lattice run): the recorded 'pressure' is the fluctuation cs^2*(rho - rho0).
+[2026-11-27 09:42:50] Building numeric stability model entropic
+[2026-11-27 09:42:50] Entropic stability params: max_iterations=50 tol=None (tolerance on the Newton step in alpha; sqrt(machine_eps) if unset)
+[2026-11-27 09:42:50] 
+========== Normalization Report (physics: weakly_compressible_isothermal_fluids) ===========
+ CHECK                               VALUE  ACCEPTED                                  STATUS
+--------------------------------------------------------------------------------------------
+ tau1                              0.50089  (> 0.5)                                     PASS
+ Re round-trip                           0  (rel < 1e-12)                               PASS
+ grid                                  256  (N >= 1)                                    PASS
+ openlb_parity                   9.541e-18  |nu_l - (tau - 1/2) theta| <= 1.000e-12     PASS
+ u_l                              0.057735  (< 0.423; WARN density variation > 0.005)   PASS
+ isothermal_consistency            0.33333  gamma*R*theta == lat_ref_temperature        PASS
+--------------------------------------------------------------------------------------------
+                                                                              0 FAIL, 0 WARN
+ sources: see kinet/units/references.py
+============================================================================================
+[2026-11-27 09:43:05] [kinet-compile] layout full_step compiled=['step']
+[2026-11-27 09:43:05] reference consistency: {'permutation_old_to_new': [0, 2, 4, 1, 3, 5, 8, 6, 7], 'max_abs_u_minus_moment_of_reordered_F': 5.551115123125783e-17, 'max_abs_kinet_Feq_minus_stored_Feq': 1.6653345369377348e-16}
+[2026-11-27 09:43:05] [record] io mode: backend=hdf5, parallel_hdf5=False, world_size=1
+[2026-11-27 09:43:05] [record] equilibrium serialization: disabled
+[2026-11-27 09:43:05] [record] distribution serialization: disabled
+[2026-11-27 09:43:05] Saving results to /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/pair/start_02000/member_00_amp1e-03/rollout.h5
+[2026-11-27 09:43:05] Creating h5 datasets
+[2026-11-27 09:43:05] 	compression=off
+[2026-11-27 09:43:05] 	observables/density : (1, 1, 5000, 256, 256) chunks=(1, 1, 1, 256, 256)
+[2026-11-27 09:43:05] 	observables/pressure : (1, 1, 5000, 256, 256) chunks=(1, 1, 1, 256, 256)
+[2026-11-27 09:43:05] 	observables/temperature : (1, 1, 5000, 1, 1) chunks=(1, 1, 1, 1, 1)
+[2026-11-27 09:43:05] 	time/time : (5000,) chunks=(1,)
+[2026-11-27 09:43:05] 	time/time_convection : (5000,) chunks=(1,)
+[2026-11-27 09:43:05] 	time/time_index : (5000,) chunks=(1,)
+[2026-11-27 09:43:05] 	observables/velocity : (1, 2, 5000, 256, 256) chunks=(1, 2, 1, 256, 256)
+[2026-11-27 09:43:05] 	observables/vorticity : (1, 1, 5000, 256, 256) chunks=(1, 1, 1, 256, 256)
+[2026-11-27 09:43:05] [record] snapshots are staged in up to 10 reusable host buffer sets of ~2.5 MiB
+[2026-11-27 09:43:05] [record] HDF5 async writer enabled (serial HDF5); queue depth will be set from first snapshot using io.async_queue_memory_fraction (basis=available)
+[2026-11-27 09:43:05] [record] wrote /geometry/masks + 0 overlay(s)
+[2026-11-27 09:43:05] [rollout] torch.compile is active -- the first forward pass will trigger tracing + kernel compilation (HIP/nvcc). This can take several minutes.
+[2026-11-27 09:43:05] [rollout] entering rollout loop: pred_length=5000, save_results=True, io.save_every_n (save cadence)=10, progress_every_n=100, sim_stats_every_n=100
+/global/u2/k/khegazy/projects/pde/kinet/.venv/lib/python3.12/site-packages/triton/knobs.py:504: UserWarning: TRITON_DEFAULT_FP_FUSION is unset: defaulting to FP fusion ENABLED for backward compatibility in Triton 3.9. The default will change to DISABLED in Triton 3.10; set TRITON_DEFAULT_FP_FUSION=1 to keep fusion enabled or =0 to adopt the new default early and silence this warning.
+  warn_once(FP_FUSION_DEFAULT_WARNING)
+[2026-11-27 09:43:32] [rollout] first accepted step complete in 26.50 s (includes torch.compile)
+[2026-11-27 09:43:32] [rollout] u_max WARN at step=1: max |u| = 0.0823 drives a density variation of 0.01, above the tolerance 0.005. FIX: lower the flow speed
+[2026-11-27 09:43:32] [record] HDF5 async queue sized from memory: io.async_queue_memory_fraction=0.7, basis=available, ~3.5 MiB/snapshot -> effective_depth=8 (~0.0 GiB max queued payloads)
+[2026-11-27 09:43:36] [rollout]       accepted step=100/5000
+[2026-11-27 09:43:36]                 elapsed=31s recent 99 steps=4.3s (43.38 ms/step) eta=3m 33s
+[2026-11-27 09:43:36] [lbm]           step=   100 t=100.000000 t_unit=step t_conv=0.0226
+[2026-11-27 09:43:36]                 density=[0.9883,1.0032] velocity=[-0.0859,0.0858] temperature=[0.3333,0.3333] pressure=[-0.0039,0.0011]
+[2026-11-27 09:43:36] [lbm]           entropic
+[2026-11-27 09:43:36]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:36]                 iter_max=3  iter_mean=1.9324  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:36]                 sample_count=65536
+[2026-11-27 09:43:36] [rollout]       accepted step=200/5000
+[2026-11-27 09:43:36]                 elapsed=31s recent 100 steps=0.4s (4.06 ms/step) eta=20s
+[2026-11-27 09:43:36] [lbm]           step=   200 t=200.000000 t_unit=step t_conv=0.0451
+[2026-11-27 09:43:36]                 density=[0.9858,1.0027] velocity=[-0.0905,0.0905] temperature=[0.3333,0.3333] pressure=[-0.0047,9.104e-04]
+[2026-11-27 09:43:36] [lbm]           entropic
+[2026-11-27 09:43:36]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:36]                 iter_max=3  iter_mean=1.9498  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:36]                 sample_count=65536
+[2026-11-27 09:43:37] [rollout]       accepted step=300/5000
+[2026-11-27 09:43:37]                 elapsed=32s recent 100 steps=0.4s (4.07 ms/step) eta=19s
+[2026-11-27 09:43:37] [lbm]           step=   300 t=300.000000 t_unit=step t_conv=0.0677
+[2026-11-27 09:43:37]                 density=[0.9809,1.0040] velocity=[-0.0955,0.0955] temperature=[0.3333,0.3333] pressure=[-0.0064,0.0013]
+[2026-11-27 09:43:37] [lbm]           entropic
+[2026-11-27 09:43:37]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:37]                 iter_max=3  iter_mean=1.9629  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:37]                 sample_count=65536
+[2026-11-27 09:43:37] [rollout]       accepted step=400/5000
+[2026-11-27 09:43:37]                 elapsed=32s recent 100 steps=0.4s (4.08 ms/step) eta=19s
+[2026-11-27 09:43:37] [lbm]           step=   400 t=400.000000 t_unit=step t_conv=0.0902
+[2026-11-27 09:43:37]                 density=[0.9768,1.0039] velocity=[-0.1003,0.1002] temperature=[0.3333,0.3333] pressure=[-0.0077,0.0013]
+[2026-11-27 09:43:37] [lbm]           entropic
+[2026-11-27 09:43:37]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:37]                 iter_max=3  iter_mean=1.9733  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:37]                 sample_count=65536
+[2026-11-27 09:43:37] [rollout]       accepted step=500/5000
+[2026-11-27 09:43:37]                 elapsed=32s recent 100 steps=0.4s (4.08 ms/step) eta=18s
+[2026-11-27 09:43:37] [lbm]           step=   500 t=500.000000 t_unit=step t_conv=0.1128
+[2026-11-27 09:43:37]                 density=[0.9737,1.0032] velocity=[-0.1039,0.1037] temperature=[0.3333,0.3333] pressure=[-0.0088,0.0011]
+[2026-11-27 09:43:37] [lbm]           entropic
+[2026-11-27 09:43:37]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:37]                 iter_max=3  iter_mean=1.9818  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:37]                 sample_count=65536
+[2026-11-27 09:43:38] [rollout]       accepted step=600/5000
+[2026-11-27 09:43:38]                 elapsed=33s recent 100 steps=0.4s (4.09 ms/step) eta=18s
+[2026-11-27 09:43:38] [lbm]           step=   600 t=600.000000 t_unit=step t_conv=0.1353
+[2026-11-27 09:43:38]                 density=[0.9692,1.0044] velocity=[-0.1054,0.1053] temperature=[0.3333,0.3333] pressure=[-0.0103,0.0015]
+[2026-11-27 09:43:38] [lbm]           entropic
+[2026-11-27 09:43:38]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:38]                 iter_max=3  iter_mean=1.9899  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:38]                 sample_count=65536
+[2026-11-27 09:43:38] [rollout]       accepted step=700/5000
+[2026-11-27 09:43:38]                 elapsed=33s recent 100 steps=0.4s (4.10 ms/step) eta=18s
+[2026-11-27 09:43:38] [lbm]           step=   700 t=700.000000 t_unit=step t_conv=0.1579
+[2026-11-27 09:43:38]                 density=[0.9664,1.0047] velocity=[-0.1046,0.1043] temperature=[0.3333,0.3333] pressure=[-0.0112,0.0016]
+[2026-11-27 09:43:38] [lbm]           entropic
+[2026-11-27 09:43:38]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:38]                 iter_max=3  iter_mean=2.0017  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:38]                 sample_count=65536
+[2026-11-27 09:43:39] [rollout]       accepted step=800/5000
+[2026-11-27 09:43:39]                 elapsed=34s recent 100 steps=0.4s (4.10 ms/step) eta=17s
+[2026-11-27 09:43:39] [lbm]           step=   800 t=800.000000 t_unit=step t_conv=0.1804
+[2026-11-27 09:43:39]                 density=[0.9658,1.0038] velocity=[-0.1016,0.1014] temperature=[0.3333,0.3333] pressure=[-0.0114,0.0013]
+[2026-11-27 09:43:39] [lbm]           entropic
+[2026-11-27 09:43:39]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:39]                 iter_max=3  iter_mean=2.0129  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:39]                 sample_count=65536
+[2026-11-27 09:43:39] [rollout]       accepted step=900/5000
+[2026-11-27 09:43:39]                 elapsed=34s recent 100 steps=0.4s (4.12 ms/step) eta=17s
+[2026-11-27 09:43:39] [lbm]           step=   900 t=900.000000 t_unit=step t_conv=0.2030
+[2026-11-27 09:43:39]                 density=[0.9643,1.0048] velocity=[-0.0983,0.0982] temperature=[0.3333,0.3333] pressure=[-0.0119,0.0016]
+[2026-11-27 09:43:39] [lbm]           entropic
+[2026-11-27 09:43:39]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:39]                 iter_max=3  iter_mean=2.0203  iter_p95=2.1100  residual_max=1.490e-08
+[2026-11-27 09:43:39]                 sample_count=65536
+[2026-11-27 09:43:40] [rollout]       accepted step=1000/5000
+[2026-11-27 09:43:40]                 elapsed=34s recent 100 steps=0.4s (4.15 ms/step) eta=17s
+[2026-11-27 09:43:40] [lbm]           step=  1000 t=1000.000000 t_unit=step t_conv=0.2255
+[2026-11-27 09:43:40]                 density=[0.9634,1.0055] velocity=[-0.0996,0.0992] temperature=[0.3333,0.3333] pressure=[-0.0122,0.0018]
+[2026-11-27 09:43:40] [lbm]           entropic
+[2026-11-27 09:43:40]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:40]                 iter_max=3  iter_mean=2.0289  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:40]                 sample_count=65536
+[2026-11-27 09:43:40] [rollout]       accepted step=1100/5000
+[2026-11-27 09:43:40]                 elapsed=35s recent 100 steps=0.4s (4.14 ms/step) eta=16s
+[2026-11-27 09:43:40] [lbm]           step=  1100 t=1100.000000 t_unit=step t_conv=0.2481
+[2026-11-27 09:43:40]                 density=[0.9643,1.0045] velocity=[-0.1000,0.0999] temperature=[0.3333,0.3333] pressure=[-0.0119,0.0015]
+[2026-11-27 09:43:40] [lbm]           entropic
+[2026-11-27 09:43:40]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:40]                 iter_max=3  iter_mean=2.0348  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:40]                 sample_count=65536
+[2026-11-27 09:43:40] [rollout]       accepted step=1200/5000
+[2026-11-27 09:43:40]                 elapsed=35s recent 100 steps=0.4s (4.14 ms/step) eta=16s
+[2026-11-27 09:43:40] [lbm]           step=  1200 t=1200.000000 t_unit=step t_conv=0.2706
+[2026-11-27 09:43:40]                 density=[0.9636,1.0051] velocity=[-0.0998,0.0999] temperature=[0.3333,0.3333] pressure=[-0.0121,0.0017]
+[2026-11-27 09:43:40] [lbm]           entropic
+[2026-11-27 09:43:40]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:40]                 iter_max=3  iter_mean=2.0361  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:40]                 sample_count=65536
+[2026-11-27 09:43:41] [rollout]       accepted step=1300/5000
+[2026-11-27 09:43:41]                 elapsed=36s recent 100 steps=0.4s (4.11 ms/step) eta=15s
+[2026-11-27 09:43:41] [lbm]           step=  1300 t=1300.000000 t_unit=step t_conv=0.2932
+[2026-11-27 09:43:41]                 density=[0.9623,1.0062] velocity=[-0.0991,0.0986] temperature=[0.3333,0.3333] pressure=[-0.0126,0.0021]
+[2026-11-27 09:43:41] [lbm]           entropic
+[2026-11-27 09:43:41]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:41]                 iter_max=3  iter_mean=2.0393  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:41]                 sample_count=65536
+[2026-11-27 09:43:41] [rollout]       accepted step=1400/5000
+[2026-11-27 09:43:41]                 elapsed=36s recent 100 steps=0.4s (4.11 ms/step) eta=15s
+[2026-11-27 09:43:41] [lbm]           step=  1400 t=1400.000000 t_unit=step t_conv=0.3157
+[2026-11-27 09:43:41]                 density=[0.9628,1.0052] velocity=[-0.0972,0.0970] temperature=[0.3333,0.3333] pressure=[-0.0124,0.0017]
+[2026-11-27 09:43:41] [lbm]           entropic
+[2026-11-27 09:43:41]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:41]                 iter_max=3  iter_mean=2.0459  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:41]                 sample_count=65536
+[2026-11-27 09:43:42] [rollout]       accepted step=1500/5000
+[2026-11-27 09:43:42]                 elapsed=37s recent 100 steps=0.4s (4.09 ms/step) eta=14s
+[2026-11-27 09:43:42] [lbm]           step=  1500 t=1500.000000 t_unit=step t_conv=0.3383
+[2026-11-27 09:43:42]                 density=[0.9623,1.0055] velocity=[-0.0983,0.0980] temperature=[0.3333,0.3333] pressure=[-0.0126,0.0018]
+[2026-11-27 09:43:42] [lbm]           entropic
+[2026-11-27 09:43:42]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:42]                 iter_max=3  iter_mean=2.0522  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:42]                 sample_count=65536
+[2026-11-27 09:43:42] [rollout]       accepted step=1600/5000
+[2026-11-27 09:43:42]                 elapsed=37s recent 100 steps=0.4s (4.11 ms/step) eta=14s
+[2026-11-27 09:43:42] [lbm]           step=  1600 t=1600.000000 t_unit=step t_conv=0.3608
+[2026-11-27 09:43:42]                 density=[0.9609,1.0066] velocity=[-0.0984,0.0981] temperature=[0.3333,0.3333] pressure=[-0.0130,0.0022]
+[2026-11-27 09:43:42] [lbm]           entropic
+[2026-11-27 09:43:42]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:42]                 iter_max=3  iter_mean=2.0590  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:42]                 sample_count=65536
+[2026-11-27 09:43:42] [rollout]       accepted step=1700/5000
+[2026-11-27 09:43:42]                 elapsed=37s recent 100 steps=0.4s (4.10 ms/step) eta=14s
+[2026-11-27 09:43:42] [lbm]           step=  1700 t=1700.000000 t_unit=step t_conv=0.3834
+[2026-11-27 09:43:42]                 density=[0.9613,1.0059] velocity=[-0.0988,0.0982] temperature=[0.3333,0.3333] pressure=[-0.0129,0.0020]
+[2026-11-27 09:43:42] [lbm]           entropic
+[2026-11-27 09:43:42]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:42]                 iter_max=3  iter_mean=2.0653  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:42]                 sample_count=65536
+[2026-11-27 09:43:43] [rollout]       accepted step=1800/5000
+[2026-11-27 09:43:43]                 elapsed=38s recent 100 steps=0.4s (4.10 ms/step) eta=13s
+[2026-11-27 09:43:43] [lbm]           step=  1800 t=1800.000000 t_unit=step t_conv=0.4059
+[2026-11-27 09:43:43]                 density=[0.9614,1.0058] velocity=[-0.0975,0.0973] temperature=[0.3333,0.3333] pressure=[-0.0129,0.0019]
+[2026-11-27 09:43:43] [lbm]           entropic
+[2026-11-27 09:43:43]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:43]                 iter_max=3  iter_mean=2.0686  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:43]                 sample_count=65536
+[2026-11-27 09:43:43] [rollout]       accepted step=1900/5000
+[2026-11-27 09:43:43]                 elapsed=38s recent 100 steps=0.4s (4.11 ms/step) eta=13s
+[2026-11-27 09:43:43] [lbm]           step=  1900 t=1900.000000 t_unit=step t_conv=0.4285
+[2026-11-27 09:43:43]                 density=[0.9605,1.0069] velocity=[-0.0961,0.0957] temperature=[0.3333,0.3333] pressure=[-0.0132,0.0023]
+[2026-11-27 09:43:43] [lbm]           entropic
+[2026-11-27 09:43:43]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:43]                 iter_max=3  iter_mean=2.0759  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:43]                 sample_count=65536
+[2026-11-27 09:43:44] [rollout]       accepted step=2000/5000
+[2026-11-27 09:43:44]                 elapsed=39s recent 100 steps=0.4s (4.15 ms/step) eta=12s
+[2026-11-27 09:43:44] [lbm]           step=  2000 t=2000.000000 t_unit=step t_conv=0.4511
+[2026-11-27 09:43:44]                 density=[0.9610,1.0064] velocity=[-0.0944,0.0938] temperature=[0.3333,0.3333] pressure=[-0.0130,0.0021]
+[2026-11-27 09:43:44] [lbm]           entropic
+[2026-11-27 09:43:44]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:44]                 iter_max=3  iter_mean=2.0781  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:44]                 sample_count=65536
+[2026-11-27 09:43:44] [rollout]       accepted step=2100/5000
+[2026-11-27 09:43:44]                 elapsed=39s recent 100 steps=0.4s (4.12 ms/step) eta=12s
+[2026-11-27 09:43:44] [lbm]           step=  2100 t=2100.000000 t_unit=step t_conv=0.4736
+[2026-11-27 09:43:44]                 density=[0.9614,1.0061] velocity=[-0.0934,0.0936] temperature=[0.3333,0.3333] pressure=[-0.0129,0.0020]
+[2026-11-27 09:43:44] [lbm]           entropic
+[2026-11-27 09:43:44]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:44]                 iter_max=3  iter_mean=2.0794  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:44]                 sample_count=65536
+[2026-11-27 09:43:44] [rollout]       accepted step=2200/5000
+[2026-11-27 09:43:44]                 elapsed=39s recent 100 steps=0.4s (4.11 ms/step) eta=12s
+[2026-11-27 09:43:44] [lbm]           step=  2200 t=2200.000000 t_unit=step t_conv=0.4962
+[2026-11-27 09:43:44]                 density=[0.9605,1.0071] velocity=[-0.0931,0.0934] temperature=[0.3333,0.3333] pressure=[-0.0132,0.0024]
+[2026-11-27 09:43:44] [lbm]           entropic
+[2026-11-27 09:43:44]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:44]                 iter_max=3  iter_mean=2.0839  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:44]                 sample_count=65536
+[2026-11-27 09:43:45] [rollout]       accepted step=2300/5000
+[2026-11-27 09:43:45]                 elapsed=40s recent 100 steps=0.4s (4.10 ms/step) eta=11s
+[2026-11-27 09:43:45] [lbm]           step=  2300 t=2300.000000 t_unit=step t_conv=0.5187
+[2026-11-27 09:43:45]                 density=[0.9606,1.0068] velocity=[-0.0928,0.0944] temperature=[0.3333,0.3333] pressure=[-0.0131,0.0023]
+[2026-11-27 09:43:45] [lbm]           entropic
+[2026-11-27 09:43:45]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:45]                 iter_max=3  iter_mean=2.0880  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:45]                 sample_count=65536
+[2026-11-27 09:43:45] [rollout]       accepted step=2400/5000
+[2026-11-27 09:43:45]                 elapsed=40s recent 100 steps=0.4s (4.10 ms/step) eta=11s
+[2026-11-27 09:43:45] [lbm]           step=  2400 t=2400.000000 t_unit=step t_conv=0.5413
+[2026-11-27 09:43:45]                 density=[0.9609,1.0062] velocity=[-0.0926,0.0945] temperature=[0.3333,0.3333] pressure=[-0.0130,0.0021]
+[2026-11-27 09:43:45] [lbm]           entropic
+[2026-11-27 09:43:45]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:45]                 iter_max=3  iter_mean=2.0917  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:45]                 sample_count=65536
+[2026-11-27 09:43:46] [rollout]       accepted step=2500/5000
+[2026-11-27 09:43:46]                 elapsed=41s recent 100 steps=0.4s (4.13 ms/step) eta=10s
+[2026-11-27 09:43:46] [lbm]           step=  2500 t=2500.000000 t_unit=step t_conv=0.5638
+[2026-11-27 09:43:46]                 density=[0.9601,1.0072] velocity=[-0.0922,0.0939] temperature=[0.3333,0.3333] pressure=[-0.0133,0.0024]
+[2026-11-27 09:43:46] [lbm]           entropic
+[2026-11-27 09:43:46]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:46]                 iter_max=3  iter_mean=2.0908  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:46]                 sample_count=65536
+[2026-11-27 09:43:46] [rollout]       accepted step=2600/5000
+[2026-11-27 09:43:46]                 elapsed=41s recent 100 steps=0.4s (4.10 ms/step) eta=9.8s
+[2026-11-27 09:43:46] [lbm]           step=  2600 t=2600.000000 t_unit=step t_conv=0.5864
+[2026-11-27 09:43:46]                 density=[0.9601,1.0070] velocity=[-0.0939,0.0936] temperature=[0.3333,0.3333] pressure=[-0.0133,0.0023]
+[2026-11-27 09:43:46] [lbm]           entropic
+[2026-11-27 09:43:46]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:46]                 iter_max=3  iter_mean=2.0857  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:46]                 sample_count=65536
+[2026-11-27 09:43:47] [rollout]       accepted step=2700/5000
+[2026-11-27 09:43:47]                 elapsed=41s recent 100 steps=0.4s (4.10 ms/step) eta=9.4s
+[2026-11-27 09:43:47] [lbm]           step=  2700 t=2700.000000 t_unit=step t_conv=0.6089
+[2026-11-27 09:43:47]                 density=[0.9608,1.0064] velocity=[-0.0953,0.0952] temperature=[0.3333,0.3333] pressure=[-0.0131,0.0021]
+[2026-11-27 09:43:47] [lbm]           entropic
+[2026-11-27 09:43:47]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:47]                 iter_max=3  iter_mean=2.0838  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:47]                 sample_count=65536
+[2026-11-27 09:43:47] [rollout]       accepted step=2800/5000
+[2026-11-27 09:43:47]                 elapsed=42s recent 100 steps=0.4s (4.11 ms/step) eta=9.0s
+[2026-11-27 09:43:47] [lbm]           step=  2800 t=2800.000000 t_unit=step t_conv=0.6315
+[2026-11-27 09:43:47]                 density=[0.9601,1.0073] velocity=[-0.0952,0.0949] temperature=[0.3333,0.3333] pressure=[-0.0133,0.0024]
+[2026-11-27 09:43:47] [lbm]           entropic
+[2026-11-27 09:43:47]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:47]                 iter_max=3  iter_mean=2.0853  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:47]                 sample_count=65536
+[2026-11-27 09:43:47] [rollout]       accepted step=2900/5000
+[2026-11-27 09:43:47]                 elapsed=42s recent 100 steps=0.4s (4.10 ms/step) eta=8.6s
+[2026-11-27 09:43:47] [lbm]           step=  2900 t=2900.000000 t_unit=step t_conv=0.6540
+[2026-11-27 09:43:47]                 density=[0.9604,1.0073] velocity=[-0.0936,0.0934] temperature=[0.3333,0.3333] pressure=[-0.0132,0.0024]
+[2026-11-27 09:43:47] [lbm]           entropic
+[2026-11-27 09:43:47]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:47]                 iter_max=3  iter_mean=2.0840  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:47]                 sample_count=65536
+[2026-11-27 09:43:48] [rollout]       accepted step=3000/5000
+[2026-11-27 09:43:48]                 elapsed=43s recent 100 steps=0.4s (4.13 ms/step) eta=8.3s
+[2026-11-27 09:43:48] [lbm]           step=  3000 t=3000.000000 t_unit=step t_conv=0.6766
+[2026-11-27 09:43:48]                 density=[0.9612,1.0065] velocity=[-0.0937,0.0912] temperature=[0.3333,0.3333] pressure=[-0.0129,0.0022]
+[2026-11-27 09:43:48] [lbm]           entropic
+[2026-11-27 09:43:48]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:48]                 iter_max=3  iter_mean=2.0765  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:48]                 sample_count=65536
+[2026-11-27 09:43:48] [rollout]       accepted step=3100/5000
+[2026-11-27 09:43:48]                 elapsed=43s recent 100 steps=0.4s (4.11 ms/step) eta=7.8s
+[2026-11-27 09:43:48] [lbm]           step=  3100 t=3100.000000 t_unit=step t_conv=0.6991
+[2026-11-27 09:43:48]                 density=[0.9606,1.0073] velocity=[-0.0955,0.0926] temperature=[0.3333,0.3333] pressure=[-0.0131,0.0024]
+[2026-11-27 09:43:48] [lbm]           entropic
+[2026-11-27 09:43:48]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:48]                 iter_max=3  iter_mean=2.0759  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:48]                 sample_count=65536
+[2026-11-27 09:43:49] [rollout]       accepted step=3200/5000
+[2026-11-27 09:43:49]                 elapsed=44s recent 100 steps=0.4s (4.11 ms/step) eta=7.4s
+[2026-11-27 09:43:49] [lbm]           step=  3200 t=3200.000000 t_unit=step t_conv=0.7217
+[2026-11-27 09:43:49]                 density=[0.9606,1.0074] velocity=[-0.0966,0.0929] temperature=[0.3333,0.3333] pressure=[-0.0131,0.0025]
+[2026-11-27 09:43:49] [lbm]           entropic
+[2026-11-27 09:43:49]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:49]                 iter_max=3  iter_mean=2.0784  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:49]                 sample_count=65536
+[2026-11-27 09:43:49] [rollout]       accepted step=3300/5000
+[2026-11-27 09:43:49]                 elapsed=44s recent 100 steps=0.4s (4.16 ms/step) eta=7.1s
+[2026-11-27 09:43:49] [lbm]           step=  3300 t=3300.000000 t_unit=step t_conv=0.7442
+[2026-11-27 09:43:49]                 density=[0.9614,1.0065] velocity=[-0.0948,0.0908] temperature=[0.3333,0.3333] pressure=[-0.0129,0.0022]
+[2026-11-27 09:43:49] [lbm]           entropic
+[2026-11-27 09:43:49]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:49]                 iter_max=3  iter_mean=2.0785  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:49]                 sample_count=65536
+[2026-11-27 09:43:49] [rollout]       accepted step=3400/5000
+[2026-11-27 09:43:49]                 elapsed=44s recent 100 steps=0.4s (4.10 ms/step) eta=6.6s
+[2026-11-27 09:43:49] [lbm]           step=  3400 t=3400.000000 t_unit=step t_conv=0.7668
+[2026-11-27 09:43:49]                 density=[0.9606,1.0073] velocity=[-0.0909,0.0896] temperature=[0.3333,0.3333] pressure=[-0.0131,0.0024]
+[2026-11-27 09:43:49] [lbm]           entropic
+[2026-11-27 09:43:49]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:49]                 iter_max=3  iter_mean=2.0742  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:49]                 sample_count=65536
+[2026-11-27 09:43:50] [rollout]       accepted step=3500/5000
+[2026-11-27 09:43:50]                 elapsed=45s recent 100 steps=0.4s (4.10 ms/step) eta=6.2s
+[2026-11-27 09:43:50] [lbm]           step=  3500 t=3500.000000 t_unit=step t_conv=0.7893
+[2026-11-27 09:43:50]                 density=[0.9604,1.0077] velocity=[-0.0924,0.0925] temperature=[0.3333,0.3333] pressure=[-0.0132,0.0026]
+[2026-11-27 09:43:50] [lbm]           entropic
+[2026-11-27 09:43:50]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:50]                 iter_max=3  iter_mean=2.0703  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:50]                 sample_count=65536
+[2026-11-27 09:43:50] [rollout]       accepted step=3600/5000
+[2026-11-27 09:43:50]                 elapsed=45s recent 100 steps=0.4s (4.11 ms/step) eta=5.7s
+[2026-11-27 09:43:50] [lbm]           step=  3600 t=3600.000000 t_unit=step t_conv=0.8119
+[2026-11-27 09:43:50]                 density=[0.9616,1.0066] velocity=[-0.0964,0.0962] temperature=[0.3333,0.3333] pressure=[-0.0128,0.0022]
+[2026-11-27 09:43:50] [lbm]           entropic
+[2026-11-27 09:43:50]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:50]                 iter_max=3  iter_mean=2.0702  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:50]                 sample_count=65536
+[2026-11-27 09:43:51] [rollout]       accepted step=3700/5000
+[2026-11-27 09:43:51]                 elapsed=46s recent 100 steps=0.4s (4.10 ms/step) eta=5.3s
+[2026-11-27 09:43:51] [lbm]           step=  3700 t=3700.000000 t_unit=step t_conv=0.8345
+[2026-11-27 09:43:51]                 density=[0.9613,1.0072] velocity=[-0.0940,0.0936] temperature=[0.3333,0.3333] pressure=[-0.0129,0.0024]
+[2026-11-27 09:43:51] [lbm]           entropic
+[2026-11-27 09:43:51]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:51]                 iter_max=3  iter_mean=2.0709  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:51]                 sample_count=65536
+[2026-11-27 09:43:51] [rollout]       accepted step=3800/5000
+[2026-11-27 09:43:51]                 elapsed=46s recent 100 steps=0.4s (4.16 ms/step) eta=5.0s
+[2026-11-27 09:43:51] [lbm]           step=  3800 t=3800.000000 t_unit=step t_conv=0.8570
+[2026-11-27 09:43:51]                 density=[0.9611,1.0079] velocity=[-0.0907,0.0900] temperature=[0.3333,0.3333] pressure=[-0.0130,0.0026]
+[2026-11-27 09:43:51] [lbm]           entropic
+[2026-11-27 09:43:51]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:51]                 iter_max=3  iter_mean=2.0656  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:51]                 sample_count=65536
+[2026-11-27 09:43:51] [rollout]       accepted step=3900/5000
+[2026-11-27 09:43:51]                 elapsed=46s recent 100 steps=0.4s (4.11 ms/step) eta=4.5s
+[2026-11-27 09:43:51] [lbm]           step=  3900 t=3900.000000 t_unit=step t_conv=0.8796
+[2026-11-27 09:43:51]                 density=[0.9625,1.0067] velocity=[-0.0906,0.0914] temperature=[0.3333,0.3333] pressure=[-0.0125,0.0022]
+[2026-11-27 09:43:51] [lbm]           entropic
+[2026-11-27 09:43:51]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:51]                 iter_max=3  iter_mean=2.0563  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:51]                 sample_count=65536
+[2026-11-27 09:43:52] [rollout]       accepted step=4000/5000
+[2026-11-27 09:43:52]                 elapsed=47s recent 100 steps=0.4s (4.11 ms/step) eta=4.1s
+[2026-11-27 09:43:52] [lbm]           step=  4000 t=4000.000000 t_unit=step t_conv=0.9021
+[2026-11-27 09:43:52]                 density=[0.9625,1.0069] velocity=[-0.0933,0.0952] temperature=[0.3333,0.3333] pressure=[-0.0125,0.0023]
+[2026-11-27 09:43:52] [lbm]           entropic
+[2026-11-27 09:43:52]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:52]                 iter_max=3  iter_mean=2.0552  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:52]                 sample_count=65536
+[2026-11-27 09:43:52] [rollout]       accepted step=4100/5000
+[2026-11-27 09:43:52]                 elapsed=47s recent 100 steps=0.4s (4.11 ms/step) eta=3.7s
+[2026-11-27 09:43:52] [lbm]           step=  4100 t=4100.000000 t_unit=step t_conv=0.9247
+[2026-11-27 09:43:52]                 density=[0.9616,1.0079] velocity=[-0.0913,0.0911] temperature=[0.3333,0.3333] pressure=[-0.0128,0.0026]
+[2026-11-27 09:43:52] [lbm]           entropic
+[2026-11-27 09:43:52]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:52]                 iter_max=3  iter_mean=2.0575  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:52]                 sample_count=65536
+[2026-11-27 09:43:53] [rollout]       accepted step=4200/5000
+[2026-11-27 09:43:53]                 elapsed=48s recent 100 steps=0.4s (4.10 ms/step) eta=3.3s
+[2026-11-27 09:43:53] [lbm]           step=  4200 t=4200.000000 t_unit=step t_conv=0.9472
+[2026-11-27 09:43:53]                 density=[0.9625,1.0069] velocity=[-0.0894,0.0895] temperature=[0.3333,0.3333] pressure=[-0.0125,0.0023]
+[2026-11-27 09:43:53] [lbm]           entropic
+[2026-11-27 09:43:53]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:53]                 iter_max=3  iter_mean=2.0561  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:43:53]                 sample_count=65536
+[2026-11-27 09:43:53] [rollout]       accepted step=4300/5000
+[2026-11-27 09:43:53]                 elapsed=48s recent 100 steps=0.4s (4.12 ms/step) eta=2.9s
+[2026-11-27 09:43:53] [lbm]           step=  4300 t=4300.000000 t_unit=step t_conv=0.9698
+[2026-11-27 09:43:53]                 density=[0.9623,1.0066] velocity=[-0.0867,0.0928] temperature=[0.3333,0.3333] pressure=[-0.0126,0.0022]
+[2026-11-27 09:43:53] [lbm]           entropic
+[2026-11-27 09:43:53]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:53]                 iter_max=3  iter_mean=2.0470  iter_p95=2.7500  residual_max=1.490e-08
+[2026-11-27 09:43:53]                 sample_count=65536
+[2026-11-27 09:43:54] [rollout]       accepted step=4400/5000
+[2026-11-27 09:43:54]                 elapsed=48s recent 100 steps=0.4s (4.15 ms/step) eta=2.5s
+[2026-11-27 09:43:54] [lbm]           step=  4400 t=4400.000000 t_unit=step t_conv=0.9923
+[2026-11-27 09:43:54]                 density=[0.9610,1.0078] velocity=[-0.0909,0.0971] temperature=[0.3333,0.3333] pressure=[-0.0130,0.0026]
+[2026-11-27 09:43:54] [lbm]           entropic
+[2026-11-27 09:43:54]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:54]                 iter_max=3  iter_mean=2.0402  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:54]                 sample_count=65536
+[2026-11-27 09:43:54] [rollout]       accepted step=4500/5000
+[2026-11-27 09:43:54]                 elapsed=49s recent 100 steps=0.4s (4.12 ms/step) eta=2.1s
+[2026-11-27 09:43:54] [lbm]           step=  4500 t=4500.000000 t_unit=step t_conv=1.0149
+[2026-11-27 09:43:54]                 density=[0.9614,1.0069] velocity=[-0.0924,0.0987] temperature=[0.3333,0.3333] pressure=[-0.0129,0.0023]
+[2026-11-27 09:43:54] [lbm]           entropic
+[2026-11-27 09:43:54]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:54]                 iter_max=3  iter_mean=2.0392  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:54]                 sample_count=65536
+[2026-11-27 09:43:54] [rollout]       accepted step=4600/5000
+[2026-11-27 09:43:54]                 elapsed=49s recent 100 steps=0.4s (4.14 ms/step) eta=1.7s
+[2026-11-27 09:43:54] [lbm]           step=  4600 t=4600.000000 t_unit=step t_conv=1.0374
+[2026-11-27 09:43:54]                 density=[0.9619,1.0063] velocity=[-0.0891,0.0964] temperature=[0.3333,0.3333] pressure=[-0.0127,0.0021]
+[2026-11-27 09:43:54] [lbm]           entropic
+[2026-11-27 09:43:54]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:54]                 iter_max=3  iter_mean=2.0370  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:54]                 sample_count=65536
+[2026-11-27 09:43:55] [rollout]       accepted step=4700/5000
+[2026-11-27 09:43:55]                 elapsed=50s recent 100 steps=0.4s (4.10 ms/step) eta=1.2s
+[2026-11-27 09:43:55] [lbm]           step=  4700 t=4700.000000 t_unit=step t_conv=1.0600
+[2026-11-27 09:43:55]                 density=[0.9607,1.0074] velocity=[-0.0911,0.0904] temperature=[0.3333,0.3333] pressure=[-0.0131,0.0025]
+[2026-11-27 09:43:55] [lbm]           entropic
+[2026-11-27 09:43:55]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:55]                 iter_max=3  iter_mean=2.0284  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:55]                 sample_count=65536
+[2026-11-27 09:43:55] [rollout]       accepted step=4800/5000
+[2026-11-27 09:43:55]                 elapsed=50s recent 100 steps=0.4s (4.15 ms/step) eta=0.8s
+[2026-11-27 09:43:55] [lbm]           step=  4800 t=4800.000000 t_unit=step t_conv=1.0825
+[2026-11-27 09:43:55]                 density=[0.9611,1.0070] velocity=[-0.0937,0.0934] temperature=[0.3333,0.3333] pressure=[-0.0130,0.0023]
+[2026-11-27 09:43:55] [lbm]           entropic
+[2026-11-27 09:43:55]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:55]                 iter_max=3  iter_mean=2.0240  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:55]                 sample_count=65536
+[2026-11-27 09:43:56] [rollout]       accepted step=4900/5000
+[2026-11-27 09:43:56]                 elapsed=51s recent 100 steps=0.4s (4.12 ms/step) eta=0.4s
+[2026-11-27 09:43:56] [lbm]           step=  4900 t=4900.000000 t_unit=step t_conv=1.1051
+[2026-11-27 09:43:56]                 density=[0.9619,1.0060] velocity=[-0.0913,0.0911] temperature=[0.3333,0.3333] pressure=[-0.0127,0.0020]
+[2026-11-27 09:43:56] [lbm]           entropic
+[2026-11-27 09:43:56]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:56]                 iter_max=3  iter_mean=2.0232  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:56]                 sample_count=65536
+[2026-11-27 09:43:56] [rollout]       accepted step=5000/5000
+[2026-11-27 09:43:56]                 elapsed=51s recent 100 steps=0.4s (4.12 ms/step) eta=0.0s
+[2026-11-27 09:43:56] [lbm]           step=  5000 t=5000.000000 t_unit=step t_conv=1.1276
+[2026-11-27 09:43:56]                 density=[0.9609,1.0070] velocity=[-0.0928,0.0956] temperature=[0.3333,0.3333] pressure=[-0.0130,0.0023]
+[2026-11-27 09:43:56] [lbm]           entropic
+[2026-11-27 09:43:56]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:56]                 iter_max=3  iter_mean=2.0257  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:56]                 sample_count=65536
+[2026-11-27 09:43:56] [rollout] finished: 5000 accepted, 5000 trials, stop=completed
+[2026-11-27 09:43:56] [record] Draining HDF5 async writer before rollout finalize…
+[2026-11-27 09:43:56] [record] HDF5 async drain: wall=0.000 s, pre_stop estimate=0.008 s (delta=-0.008 s, wall/est=0.020); queue qsize≈0 (+1 in-flight in estimate); worker CPU in save_results 3.763 s over 501 writes; rates s/write (used=0.0080, p95=0.0080, p50=0.0074, mean=0.0075, ewma=0.0074)
+[2026-11-27 09:43:57] Wrote ParaView VTKHDF view tree: /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/pair/start_02000/member_00_amp1e-03/rollout.h5 (hardlink: /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/pair/start_02000/member_00_amp1e-03/rollout.vtkhdf)
+[2026-11-27 09:43:57] [rollout] component summaries
+[2026-11-27 09:43:57] [lbm]           summary entropic
+[2026-11-27 09:43:57]                 steps=5000
+[2026-11-27 09:43:57]                 clamp_frac_avg=0.00%  converged_frac_avg=100.00%  fallback_frac_avg=0.00%  hit_max_iter_frac_avg=0.00%
+[2026-11-27 09:43:57]                 iter_max=3  iter_mean_avg=2.0466  iter_p95_avg=2.6772  residual_max=1.490e-08
+[2026-11-27 09:43:57]                 sample_count=327680000
+[2026-11-27 09:43:57] [Rollout memory] Peak GPU used / device total: 0.60 / 39.49 GiB (1.5%)
+[2026-11-27 09:43:57] [Rollout memory] Peak GPU alloc / reserved (max_memory_allocated / max_memory_reserved): 0.08 / 0.10 GiB
+[2026-11-27 09:43:57] [Rollout memory] Peak host RAM: process RSS 1.53 GiB; system used 23.48 GiB
+[2026-11-27 09:43:57] [rollout] Simulation step compute (main thread, no forced per-step CUDA synchronize): 48s
+[2026-11-27 09:43:57] [rollout] I/O open/metadata (hdf5): 0.1s
+[2026-11-27 09:43:57] [rollout] I/O main thread (snapshot + enqueue + queue waits): 0.1s
+[2026-11-27 09:43:57] [rollout] I/O background writer thread (sequential sum of wall time inside engine writes): 3.8s
+[2026-11-27 09:43:57] [rollout] I/O close (hdf5): 0.0s
+[2026-11-27 09:43:57] [rollout] Wall clock (forecast loop → after I/O teardown): 52s
+[2026-11-27 09:43:57] [rollout] Main-thread time sum (compute + I/O lines above): 48s
+[2026-11-27 09:43:57] [rollout] Wall clock is elapsed real time. Main-thread sum counts only the main thread; the background I/O worker sum (3.8s) runs on another thread and overlaps compute and main-thread I/O, so wall clock is usually **less than** main-thread sum + worker sum.
+[2026-11-27 09:43:57] RUN {"name": "member_00_amp1e-03", "member": 0, "seed": [20261127, 2000, 0], "amplitude": 0.001, "steps": 5000, "stop_reason": "completed", "accepted_steps": 5000, "kinet_rollout_status": "complete", "last_saved_step": 5000, "reached_last_step": true, "rollout_wall_s": 51.74, "path": "/pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/pair/start_02000/member_00_amp1e-03/rollout.h5", "bytes": 1842229482, "perturbation_checks": {"rms": 5.618757616845237e-05, "spectral_divergence_over_vorticity": 1.7351087906431764e-15, "energy_fraction_outside_band": 9.249472140112873e-32}, "momentum_err": 2.7755575615628914e-16, "density_err": 8.881784197001252e-16}
+[2026-11-27 09:43:57] [record] io mode: backend=hdf5, parallel_hdf5=False, world_size=1
+[2026-11-27 09:43:57] [record] equilibrium serialization: disabled
+[2026-11-27 09:43:57] [record] distribution serialization: disabled
+[2026-11-27 09:43:57] Saving results to /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/pair/start_02000/member_01_amp1e-03/rollout.h5
+[2026-11-27 09:43:57] Creating h5 datasets
+[2026-11-27 09:43:57] 	compression=off
+[2026-11-27 09:43:57] 	observables/density : (1, 1, 5000, 256, 256) chunks=(1, 1, 1, 256, 256)
+[2026-11-27 09:43:57] 	observables/pressure : (1, 1, 5000, 256, 256) chunks=(1, 1, 1, 256, 256)
+[2026-11-27 09:43:57] 	observables/temperature : (1, 1, 5000, 1, 1) chunks=(1, 1, 1, 1, 1)
+[2026-11-27 09:43:57] 	time/time : (5000,) chunks=(1,)
+[2026-11-27 09:43:57] 	time/time_convection : (5000,) chunks=(1,)
+[2026-11-27 09:43:57] 	time/time_index : (5000,) chunks=(1,)
+[2026-11-27 09:43:57] 	observables/velocity : (1, 2, 5000, 256, 256) chunks=(1, 2, 1, 256, 256)
+[2026-11-27 09:43:57] 	observables/vorticity : (1, 1, 5000, 256, 256) chunks=(1, 1, 1, 256, 256)
+[2026-11-27 09:43:57] [record] snapshots are staged in up to 10 reusable host buffer sets of ~2.5 MiB
+[2026-11-27 09:43:57] [record] HDF5 async writer enabled (serial HDF5); queue depth will be set from first snapshot using io.async_queue_memory_fraction (basis=available)
+[2026-11-27 09:43:57] [record] wrote /geometry/masks + 0 overlay(s)
+[2026-11-27 09:43:57] [rollout] torch.compile is active -- the first forward pass will trigger tracing + kernel compilation (HIP/nvcc). This can take several minutes.
+[2026-11-27 09:43:57] [rollout] entering rollout loop: pred_length=5000, save_results=True, io.save_every_n (save cadence)=10, progress_every_n=100, sim_stats_every_n=100
+[2026-11-27 09:43:57] [rollout] first accepted step complete in 0.00 s (includes torch.compile)
+[2026-11-27 09:43:57] [rollout] u_max WARN at step=1: max |u| = 0.0823 drives a density variation of 0.01, above the tolerance 0.005. FIX: lower the flow speed
+[2026-11-27 09:43:57] [record] HDF5 async queue sized from memory: io.async_queue_memory_fraction=0.7, basis=available, ~3.5 MiB/snapshot -> effective_depth=8 (~0.0 GiB max queued payloads)
+[2026-11-27 09:43:57] [rollout]       accepted step=100/5000
+[2026-11-27 09:43:57]                 elapsed=0.4s recent 99 steps=0.4s (4.17 ms/step) eta=20s
+[2026-11-27 09:43:57] [lbm]           step=   100 t=100.000000 t_unit=step t_conv=0.0226
+[2026-11-27 09:43:57]                 density=[0.9884,1.0032] velocity=[-0.0859,0.0858] temperature=[0.3333,0.3333] pressure=[-0.0039,0.0011]
+[2026-11-27 09:43:57] [lbm]           entropic
+[2026-11-27 09:43:57]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:57]                 iter_max=3  iter_mean=1.9346  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:57]                 sample_count=65536
+[2026-11-27 09:43:58] [rollout]       accepted step=200/5000
+[2026-11-27 09:43:58]                 elapsed=0.8s recent 100 steps=0.4s (4.08 ms/step) eta=20s
+[2026-11-27 09:43:58] [lbm]           step=   200 t=200.000000 t_unit=step t_conv=0.0451
+[2026-11-27 09:43:58]                 density=[0.9858,1.0027] velocity=[-0.0905,0.0905] temperature=[0.3333,0.3333] pressure=[-0.0047,9.080e-04]
+[2026-11-27 09:43:58] [lbm]           entropic
+[2026-11-27 09:43:58]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:58]                 iter_max=3  iter_mean=1.9512  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:58]                 sample_count=65536
+[2026-11-27 09:43:58] [rollout]       accepted step=300/5000
+[2026-11-27 09:43:58]                 elapsed=1.2s recent 100 steps=0.4s (4.09 ms/step) eta=19s
+[2026-11-27 09:43:58] [lbm]           step=   300 t=300.000000 t_unit=step t_conv=0.0677
+[2026-11-27 09:43:58]                 density=[0.9809,1.0040] velocity=[-0.0954,0.0955] temperature=[0.3333,0.3333] pressure=[-0.0064,0.0013]
+[2026-11-27 09:43:58] [lbm]           entropic
+[2026-11-27 09:43:58]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:58]                 iter_max=3  iter_mean=1.9618  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:58]                 sample_count=65536
+[2026-11-27 09:43:58] [rollout]       accepted step=400/5000
+[2026-11-27 09:43:58]                 elapsed=1.6s recent 100 steps=0.4s (4.08 ms/step) eta=19s
+[2026-11-27 09:43:58] [lbm]           step=   400 t=400.000000 t_unit=step t_conv=0.0902
+[2026-11-27 09:43:58]                 density=[0.9769,1.0039] velocity=[-0.1004,0.1002] temperature=[0.3333,0.3333] pressure=[-0.0077,0.0013]
+[2026-11-27 09:43:58] [lbm]           entropic
+[2026-11-27 09:43:58]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:58]                 iter_max=3  iter_mean=1.9724  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:58]                 sample_count=65536
+[2026-11-27 09:43:59] [rollout]       accepted step=500/5000
+[2026-11-27 09:43:59]                 elapsed=2.1s recent 100 steps=0.4s (4.11 ms/step) eta=19s
+[2026-11-27 09:43:59] [lbm]           step=   500 t=500.000000 t_unit=step t_conv=0.1128
+[2026-11-27 09:43:59]                 density=[0.9737,1.0032] velocity=[-0.1041,0.1038] temperature=[0.3333,0.3333] pressure=[-0.0088,0.0011]
+[2026-11-27 09:43:59] [lbm]           entropic
+[2026-11-27 09:43:59]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:59]                 iter_max=3  iter_mean=1.9822  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:59]                 sample_count=65536
+[2026-11-27 09:43:59] [rollout]       accepted step=600/5000
+[2026-11-27 09:43:59]                 elapsed=2.5s recent 100 steps=0.4s (4.14 ms/step) eta=18s
+[2026-11-27 09:43:59] [lbm]           step=   600 t=600.000000 t_unit=step t_conv=0.1353
+[2026-11-27 09:43:59]                 density=[0.9692,1.0044] velocity=[-0.1054,0.1054] temperature=[0.3333,0.3333] pressure=[-0.0103,0.0015]
+[2026-11-27 09:43:59] [lbm]           entropic
+[2026-11-27 09:43:59]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:43:59]                 iter_max=3  iter_mean=1.9915  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:43:59]                 sample_count=65536
+[2026-11-27 09:44:00] [rollout]       accepted step=700/5000
+[2026-11-27 09:44:00]                 elapsed=2.9s recent 100 steps=0.4s (4.13 ms/step) eta=18s
+[2026-11-27 09:44:00] [lbm]           step=   700 t=700.000000 t_unit=step t_conv=0.1579
+[2026-11-27 09:44:00]                 density=[0.9664,1.0047] velocity=[-0.1045,0.1044] temperature=[0.3333,0.3333] pressure=[-0.0112,0.0016]
+[2026-11-27 09:44:00] [lbm]           entropic
+[2026-11-27 09:44:00]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:00]                 iter_max=3  iter_mean=2.0029  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:44:00]                 sample_count=65536
+[2026-11-27 09:44:00] [rollout]       accepted step=800/5000
+[2026-11-27 09:44:00]                 elapsed=3.3s recent 100 steps=0.4s (4.15 ms/step) eta=17s
+[2026-11-27 09:44:00] [lbm]           step=   800 t=800.000000 t_unit=step t_conv=0.1804
+[2026-11-27 09:44:00]                 density=[0.9658,1.0038] velocity=[-0.1016,0.1014] temperature=[0.3333,0.3333] pressure=[-0.0114,0.0013]
+[2026-11-27 09:44:00] [lbm]           entropic
+[2026-11-27 09:44:00]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:00]                 iter_max=3  iter_mean=2.0128  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:44:00]                 sample_count=65536
+[2026-11-27 09:44:00] [rollout]       accepted step=900/5000
+[2026-11-27 09:44:00]                 elapsed=3.7s recent 100 steps=0.4s (4.18 ms/step) eta=17s
+[2026-11-27 09:44:00] [lbm]           step=   900 t=900.000000 t_unit=step t_conv=0.2030
+[2026-11-27 09:44:00]                 density=[0.9643,1.0048] velocity=[-0.0983,0.0982] temperature=[0.3333,0.3333] pressure=[-0.0119,0.0016]
+[2026-11-27 09:44:00] [lbm]           entropic
+[2026-11-27 09:44:00]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:00]                 iter_max=3  iter_mean=2.0201  iter_p95=2.0900  residual_max=1.490e-08
+[2026-11-27 09:44:00]                 sample_count=65536
+[2026-11-27 09:44:01] [rollout]       accepted step=1000/5000
+[2026-11-27 09:44:01]                 elapsed=4.1s recent 100 steps=0.4s (4.12 ms/step) eta=16s
+[2026-11-27 09:44:01] [lbm]           step=  1000 t=1000.000000 t_unit=step t_conv=0.2255
+[2026-11-27 09:44:01]                 density=[0.9634,1.0055] velocity=[-0.0997,0.0991] temperature=[0.3333,0.3333] pressure=[-0.0122,0.0018]
+[2026-11-27 09:44:01] [lbm]           entropic
+[2026-11-27 09:44:01]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:01]                 iter_max=3  iter_mean=2.0287  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:01]                 sample_count=65536
+[2026-11-27 09:44:01] [rollout]       accepted step=1100/5000
+[2026-11-27 09:44:01]                 elapsed=4.5s recent 100 steps=0.4s (4.14 ms/step) eta=16s
+[2026-11-27 09:44:01] [lbm]           step=  1100 t=1100.000000 t_unit=step t_conv=0.2481
+[2026-11-27 09:44:01]                 density=[0.9643,1.0045] velocity=[-0.1000,0.0999] temperature=[0.3333,0.3333] pressure=[-0.0119,0.0015]
+[2026-11-27 09:44:01] [lbm]           entropic
+[2026-11-27 09:44:01]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:01]                 iter_max=3  iter_mean=2.0342  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:01]                 sample_count=65536
+[2026-11-27 09:44:02] [rollout]       accepted step=1200/5000
+[2026-11-27 09:44:02]                 elapsed=5.0s recent 100 steps=0.4s (4.14 ms/step) eta=16s
+[2026-11-27 09:44:02] [lbm]           step=  1200 t=1200.000000 t_unit=step t_conv=0.2706
+[2026-11-27 09:44:02]                 density=[0.9636,1.0051] velocity=[-0.0998,0.0999] temperature=[0.3333,0.3333] pressure=[-0.0121,0.0017]
+[2026-11-27 09:44:02] [lbm]           entropic
+[2026-11-27 09:44:02]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:02]                 iter_max=3  iter_mean=2.0352  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:02]                 sample_count=65536
+[2026-11-27 09:44:02] [rollout]       accepted step=1300/5000
+[2026-11-27 09:44:02]                 elapsed=5.4s recent 100 steps=0.4s (4.16 ms/step) eta=15s
+[2026-11-27 09:44:02] [lbm]           step=  1300 t=1300.000000 t_unit=step t_conv=0.2932
+[2026-11-27 09:44:02]                 density=[0.9623,1.0062] velocity=[-0.0991,0.0985] temperature=[0.3333,0.3333] pressure=[-0.0126,0.0021]
+[2026-11-27 09:44:02] [lbm]           entropic
+[2026-11-27 09:44:02]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:02]                 iter_max=3  iter_mean=2.0387  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:02]                 sample_count=65536
+[2026-11-27 09:44:02] [rollout]       accepted step=1400/5000
+[2026-11-27 09:44:02]                 elapsed=5.8s recent 100 steps=0.4s (4.14 ms/step) eta=15s
+[2026-11-27 09:44:02] [lbm]           step=  1400 t=1400.000000 t_unit=step t_conv=0.3157
+[2026-11-27 09:44:02]                 density=[0.9628,1.0052] velocity=[-0.0971,0.0969] temperature=[0.3333,0.3333] pressure=[-0.0124,0.0017]
+[2026-11-27 09:44:02] [lbm]           entropic
+[2026-11-27 09:44:02]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:02]                 iter_max=3  iter_mean=2.0457  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:02]                 sample_count=65536
+[2026-11-27 09:44:03] [rollout]       accepted step=1500/5000
+[2026-11-27 09:44:03]                 elapsed=6.2s recent 100 steps=0.4s (4.12 ms/step) eta=14s
+[2026-11-27 09:44:03] [lbm]           step=  1500 t=1500.000000 t_unit=step t_conv=0.3383
+[2026-11-27 09:44:03]                 density=[0.9623,1.0055] velocity=[-0.0983,0.0980] temperature=[0.3333,0.3333] pressure=[-0.0126,0.0018]
+[2026-11-27 09:44:03] [lbm]           entropic
+[2026-11-27 09:44:03]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:03]                 iter_max=3  iter_mean=2.0515  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:03]                 sample_count=65536
+[2026-11-27 09:44:03] [rollout]       accepted step=1600/5000
+[2026-11-27 09:44:03]                 elapsed=6.6s recent 100 steps=0.4s (4.12 ms/step) eta=14s
+[2026-11-27 09:44:03] [lbm]           step=  1600 t=1600.000000 t_unit=step t_conv=0.3608
+[2026-11-27 09:44:03]                 density=[0.9609,1.0066] velocity=[-0.0983,0.0979] temperature=[0.3333,0.3333] pressure=[-0.0130,0.0022]
+[2026-11-27 09:44:03] [lbm]           entropic
+[2026-11-27 09:44:03]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:03]                 iter_max=3  iter_mean=2.0587  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:03]                 sample_count=65536
+[2026-11-27 09:44:04] [rollout]       accepted step=1700/5000
+[2026-11-27 09:44:04]                 elapsed=7.0s recent 100 steps=0.4s (4.14 ms/step) eta=14s
+[2026-11-27 09:44:04] [lbm]           step=  1700 t=1700.000000 t_unit=step t_conv=0.3834
+[2026-11-27 09:44:04]                 density=[0.9613,1.0059] velocity=[-0.0987,0.0981] temperature=[0.3333,0.3333] pressure=[-0.0129,0.0020]
+[2026-11-27 09:44:04] [lbm]           entropic
+[2026-11-27 09:44:04]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:04]                 iter_max=3  iter_mean=2.0655  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:04]                 sample_count=65536
+[2026-11-27 09:44:04] [rollout]       accepted step=1800/5000
+[2026-11-27 09:44:04]                 elapsed=7.4s recent 100 steps=0.4s (4.13 ms/step) eta=13s
+[2026-11-27 09:44:04] [lbm]           step=  1800 t=1800.000000 t_unit=step t_conv=0.4059
+[2026-11-27 09:44:04]                 density=[0.9614,1.0057] velocity=[-0.0973,0.0972] temperature=[0.3333,0.3333] pressure=[-0.0129,0.0019]
+[2026-11-27 09:44:04] [lbm]           entropic
+[2026-11-27 09:44:04]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:04]                 iter_max=3  iter_mean=2.0692  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:04]                 sample_count=65536
+[2026-11-27 09:44:05] [rollout]       accepted step=1900/5000
+[2026-11-27 09:44:05]                 elapsed=7.9s recent 100 steps=0.4s (4.19 ms/step) eta=13s
+[2026-11-27 09:44:05] [lbm]           step=  1900 t=1900.000000 t_unit=step t_conv=0.4285
+[2026-11-27 09:44:05]                 density=[0.9605,1.0069] velocity=[-0.0960,0.0957] temperature=[0.3333,0.3333] pressure=[-0.0132,0.0023]
+[2026-11-27 09:44:05] [lbm]           entropic
+[2026-11-27 09:44:05]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:05]                 iter_max=3  iter_mean=2.0762  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:05]                 sample_count=65536
+[2026-11-27 09:44:05] [rollout]       accepted step=2000/5000
+[2026-11-27 09:44:05]                 elapsed=8.3s recent 100 steps=0.4s (4.14 ms/step) eta=12s
+[2026-11-27 09:44:05] [lbm]           step=  2000 t=2000.000000 t_unit=step t_conv=0.4511
+[2026-11-27 09:44:05]                 density=[0.9610,1.0064] velocity=[-0.0943,0.0937] temperature=[0.3333,0.3333] pressure=[-0.0130,0.0021]
+[2026-11-27 09:44:05] [lbm]           entropic
+[2026-11-27 09:44:05]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:05]                 iter_max=3  iter_mean=2.0783  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:05]                 sample_count=65536
+[2026-11-27 09:44:05] [rollout]       accepted step=2100/5000
+[2026-11-27 09:44:05]                 elapsed=8.7s recent 100 steps=0.4s (4.14 ms/step) eta=12s
+[2026-11-27 09:44:05] [lbm]           step=  2100 t=2100.000000 t_unit=step t_conv=0.4736
+[2026-11-27 09:44:05]                 density=[0.9614,1.0060] velocity=[-0.0933,0.0936] temperature=[0.3333,0.3333] pressure=[-0.0129,0.0020]
+[2026-11-27 09:44:05] [lbm]           entropic
+[2026-11-27 09:44:05]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:05]                 iter_max=3  iter_mean=2.0793  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:05]                 sample_count=65536
+[2026-11-27 09:44:06] [rollout]       accepted step=2200/5000
+[2026-11-27 09:44:06]                 elapsed=9.1s recent 100 steps=0.4s (4.13 ms/step) eta=12s
+[2026-11-27 09:44:06] [lbm]           step=  2200 t=2200.000000 t_unit=step t_conv=0.4962
+[2026-11-27 09:44:06]                 density=[0.9605,1.0071] velocity=[-0.0929,0.0934] temperature=[0.3333,0.3333] pressure=[-0.0132,0.0024]
+[2026-11-27 09:44:06] [lbm]           entropic
+[2026-11-27 09:44:06]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:06]                 iter_max=3  iter_mean=2.0836  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:06]                 sample_count=65536
+[2026-11-27 09:44:06] [rollout]       accepted step=2300/5000
+[2026-11-27 09:44:06]                 elapsed=9.5s recent 100 steps=0.4s (4.18 ms/step) eta=11s
+[2026-11-27 09:44:06] [lbm]           step=  2300 t=2300.000000 t_unit=step t_conv=0.5187
+[2026-11-27 09:44:06]                 density=[0.9606,1.0067] velocity=[-0.0926,0.0944] temperature=[0.3333,0.3333] pressure=[-0.0131,0.0022]
+[2026-11-27 09:44:06] [lbm]           entropic
+[2026-11-27 09:44:06]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:06]                 iter_max=3  iter_mean=2.0877  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:06]                 sample_count=65536
+[2026-11-27 09:44:07] [rollout]       accepted step=2400/5000
+[2026-11-27 09:44:07]                 elapsed=9.9s recent 100 steps=0.4s (4.12 ms/step) eta=11s
+[2026-11-27 09:44:07] [lbm]           step=  2400 t=2400.000000 t_unit=step t_conv=0.5413
+[2026-11-27 09:44:07]                 density=[0.9609,1.0062] velocity=[-0.0924,0.0944] temperature=[0.3333,0.3333] pressure=[-0.0130,0.0021]
+[2026-11-27 09:44:07] [lbm]           entropic
+[2026-11-27 09:44:07]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:07]                 iter_max=3  iter_mean=2.0918  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:07]                 sample_count=65536
+[2026-11-27 09:44:07] [rollout]       accepted step=2500/5000
+[2026-11-27 09:44:07]                 elapsed=10s recent 100 steps=0.4s (4.11 ms/step) eta=10s
+[2026-11-27 09:44:07] [lbm]           step=  2500 t=2500.000000 t_unit=step t_conv=0.5638
+[2026-11-27 09:44:07]                 density=[0.9601,1.0071] velocity=[-0.0921,0.0936] temperature=[0.3333,0.3333] pressure=[-0.0133,0.0024]
+[2026-11-27 09:44:07] [lbm]           entropic
+[2026-11-27 09:44:07]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:07]                 iter_max=3  iter_mean=2.0907  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:07]                 sample_count=65536
+[2026-11-27 09:44:07] [rollout]       accepted step=2600/5000
+[2026-11-27 09:44:07]                 elapsed=11s recent 100 steps=0.4s (4.13 ms/step) eta=9.9s
+[2026-11-27 09:44:07] [lbm]           step=  2600 t=2600.000000 t_unit=step t_conv=0.5864
+[2026-11-27 09:44:07]                 density=[0.9601,1.0070] velocity=[-0.0939,0.0934] temperature=[0.3333,0.3333] pressure=[-0.0133,0.0023]
+[2026-11-27 09:44:07] [lbm]           entropic
+[2026-11-27 09:44:07]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:07]                 iter_max=3  iter_mean=2.0847  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:07]                 sample_count=65536
+[2026-11-27 09:44:08] [rollout]       accepted step=2700/5000
+[2026-11-27 09:44:08]                 elapsed=11s recent 100 steps=0.4s (4.13 ms/step) eta=9.5s
+[2026-11-27 09:44:08] [lbm]           step=  2700 t=2700.000000 t_unit=step t_conv=0.6089
+[2026-11-27 09:44:08]                 density=[0.9608,1.0064] velocity=[-0.0952,0.0950] temperature=[0.3333,0.3333] pressure=[-0.0131,0.0021]
+[2026-11-27 09:44:08] [lbm]           entropic
+[2026-11-27 09:44:08]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:08]                 iter_max=3  iter_mean=2.0842  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:08]                 sample_count=65536
+[2026-11-27 09:44:08] [rollout]       accepted step=2800/5000
+[2026-11-27 09:44:08]                 elapsed=12s recent 100 steps=0.4s (4.13 ms/step) eta=9.1s
+[2026-11-27 09:44:08] [lbm]           step=  2800 t=2800.000000 t_unit=step t_conv=0.6315
+[2026-11-27 09:44:08]                 density=[0.9601,1.0073] velocity=[-0.0951,0.0946] temperature=[0.3333,0.3333] pressure=[-0.0133,0.0024]
+[2026-11-27 09:44:08] [lbm]           entropic
+[2026-11-27 09:44:08]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:08]                 iter_max=3  iter_mean=2.0832  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:08]                 sample_count=65536
+[2026-11-27 09:44:09] [rollout]       accepted step=2900/5000
+[2026-11-27 09:44:09]                 elapsed=12s recent 100 steps=0.4s (4.14 ms/step) eta=8.7s
+[2026-11-27 09:44:09] [lbm]           step=  2900 t=2900.000000 t_unit=step t_conv=0.6540
+[2026-11-27 09:44:09]                 density=[0.9604,1.0072] velocity=[-0.0933,0.0929] temperature=[0.3333,0.3333] pressure=[-0.0132,0.0024]
+[2026-11-27 09:44:09] [lbm]           entropic
+[2026-11-27 09:44:09]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:09]                 iter_max=3  iter_mean=2.0808  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:09]                 sample_count=65536
+[2026-11-27 09:44:09] [rollout]       accepted step=3000/5000
+[2026-11-27 09:44:09]                 elapsed=12s recent 100 steps=0.4s (4.14 ms/step) eta=8.3s
+[2026-11-27 09:44:09] [lbm]           step=  3000 t=3000.000000 t_unit=step t_conv=0.6766
+[2026-11-27 09:44:09]                 density=[0.9612,1.0065] velocity=[-0.0934,0.0913] temperature=[0.3333,0.3333] pressure=[-0.0129,0.0022]
+[2026-11-27 09:44:09] [lbm]           entropic
+[2026-11-27 09:44:09]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:09]                 iter_max=3  iter_mean=2.0754  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:09]                 sample_count=65536
+[2026-11-27 09:44:10] [rollout]       accepted step=3100/5000
+[2026-11-27 09:44:10]                 elapsed=13s recent 100 steps=0.4s (4.10 ms/step) eta=7.8s
+[2026-11-27 09:44:10] [lbm]           step=  3100 t=3100.000000 t_unit=step t_conv=0.6991
+[2026-11-27 09:44:10]                 density=[0.9606,1.0073] velocity=[-0.0953,0.0930] temperature=[0.3333,0.3333] pressure=[-0.0131,0.0024]
+[2026-11-27 09:44:10] [lbm]           entropic
+[2026-11-27 09:44:10]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:10]                 iter_max=3  iter_mean=2.0761  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:10]                 sample_count=65536
+[2026-11-27 09:44:10] [rollout]       accepted step=3200/5000
+[2026-11-27 09:44:10]                 elapsed=13s recent 100 steps=0.4s (4.17 ms/step) eta=7.5s
+[2026-11-27 09:44:10] [lbm]           step=  3200 t=3200.000000 t_unit=step t_conv=0.7217
+[2026-11-27 09:44:10]                 density=[0.9606,1.0074] velocity=[-0.0962,0.0934] temperature=[0.3333,0.3333] pressure=[-0.0131,0.0025]
+[2026-11-27 09:44:10] [lbm]           entropic
+[2026-11-27 09:44:10]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:10]                 iter_max=3  iter_mean=2.0783  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:10]                 sample_count=65536
+[2026-11-27 09:44:10] [rollout]       accepted step=3300/5000
+[2026-11-27 09:44:10]                 elapsed=14s recent 100 steps=0.4s (4.16 ms/step) eta=7.1s
+[2026-11-27 09:44:10] [lbm]           step=  3300 t=3300.000000 t_unit=step t_conv=0.7442
+[2026-11-27 09:44:10]                 density=[0.9614,1.0065] velocity=[-0.0941,0.0911] temperature=[0.3333,0.3333] pressure=[-0.0129,0.0022]
+[2026-11-27 09:44:10] [lbm]           entropic
+[2026-11-27 09:44:10]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:10]                 iter_max=3  iter_mean=2.0772  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:10]                 sample_count=65536
+[2026-11-27 09:44:11] [rollout]       accepted step=3400/5000
+[2026-11-27 09:44:11]                 elapsed=14s recent 100 steps=0.4s (4.17 ms/step) eta=6.7s
+[2026-11-27 09:44:11] [lbm]           step=  3400 t=3400.000000 t_unit=step t_conv=0.7668
+[2026-11-27 09:44:11]                 density=[0.9607,1.0073] velocity=[-0.0904,0.0889] temperature=[0.3333,0.3333] pressure=[-0.0131,0.0024]
+[2026-11-27 09:44:11] [lbm]           entropic
+[2026-11-27 09:44:11]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:11]                 iter_max=3  iter_mean=2.0732  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:11]                 sample_count=65536
+[2026-11-27 09:44:11] [rollout]       accepted step=3500/5000
+[2026-11-27 09:44:11]                 elapsed=14s recent 100 steps=0.4s (4.16 ms/step) eta=6.2s
+[2026-11-27 09:44:11] [lbm]           step=  3500 t=3500.000000 t_unit=step t_conv=0.7893
+[2026-11-27 09:44:11]                 density=[0.9604,1.0077] velocity=[-0.0924,0.0919] temperature=[0.3333,0.3333] pressure=[-0.0132,0.0026]
+[2026-11-27 09:44:11] [lbm]           entropic
+[2026-11-27 09:44:11]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:11]                 iter_max=3  iter_mean=2.0686  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:11]                 sample_count=65536
+[2026-11-27 09:44:12] [rollout]       accepted step=3600/5000
+[2026-11-27 09:44:12]                 elapsed=15s recent 100 steps=0.4s (4.10 ms/step) eta=5.7s
+[2026-11-27 09:44:12] [lbm]           step=  3600 t=3600.000000 t_unit=step t_conv=0.8119
+[2026-11-27 09:44:12]                 density=[0.9616,1.0066] velocity=[-0.0959,0.0956] temperature=[0.3333,0.3333] pressure=[-0.0128,0.0022]
+[2026-11-27 09:44:12] [lbm]           entropic
+[2026-11-27 09:44:12]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:12]                 iter_max=3  iter_mean=2.0672  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:12]                 sample_count=65536
+[2026-11-27 09:44:12] [rollout]       accepted step=3700/5000
+[2026-11-27 09:44:12]                 elapsed=15s recent 100 steps=0.4s (4.12 ms/step) eta=5.4s
+[2026-11-27 09:44:12] [lbm]           step=  3700 t=3700.000000 t_unit=step t_conv=0.8345
+[2026-11-27 09:44:12]                 density=[0.9613,1.0072] velocity=[-0.0930,0.0924] temperature=[0.3333,0.3333] pressure=[-0.0129,0.0024]
+[2026-11-27 09:44:12] [lbm]           entropic
+[2026-11-27 09:44:12]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:12]                 iter_max=3  iter_mean=2.0673  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:12]                 sample_count=65536
+[2026-11-27 09:44:12] [rollout]       accepted step=3800/5000
+[2026-11-27 09:44:12]                 elapsed=16s recent 100 steps=0.4s (4.15 ms/step) eta=5.0s
+[2026-11-27 09:44:12] [lbm]           step=  3800 t=3800.000000 t_unit=step t_conv=0.8570
+[2026-11-27 09:44:12]                 density=[0.9611,1.0079] velocity=[-0.0905,0.0899] temperature=[0.3333,0.3333] pressure=[-0.0130,0.0026]
+[2026-11-27 09:44:12] [lbm]           entropic
+[2026-11-27 09:44:12]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:12]                 iter_max=3  iter_mean=2.0615  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:12]                 sample_count=65536
+[2026-11-27 09:44:13] [rollout]       accepted step=3900/5000
+[2026-11-27 09:44:13]                 elapsed=16s recent 100 steps=0.4s (4.10 ms/step) eta=4.5s
+[2026-11-27 09:44:13] [lbm]           step=  3900 t=3900.000000 t_unit=step t_conv=0.8796
+[2026-11-27 09:44:13]                 density=[0.9625,1.0067] velocity=[-0.0909,0.0911] temperature=[0.3333,0.3333] pressure=[-0.0125,0.0022]
+[2026-11-27 09:44:13] [lbm]           entropic
+[2026-11-27 09:44:13]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:13]                 iter_max=3  iter_mean=2.0530  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:13]                 sample_count=65536
+[2026-11-27 09:44:13] [rollout]       accepted step=4000/5000
+[2026-11-27 09:44:13]                 elapsed=17s recent 100 steps=0.4s (4.10 ms/step) eta=4.1s
+[2026-11-27 09:44:13] [lbm]           step=  4000 t=4000.000000 t_unit=step t_conv=0.9021
+[2026-11-27 09:44:13]                 density=[0.9626,1.0069] velocity=[-0.0935,0.0944] temperature=[0.3333,0.3333] pressure=[-0.0125,0.0023]
+[2026-11-27 09:44:13] [lbm]           entropic
+[2026-11-27 09:44:13]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:13]                 iter_max=3  iter_mean=2.0538  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:13]                 sample_count=65536
+[2026-11-27 09:44:14] [rollout]       accepted step=4100/5000
+[2026-11-27 09:44:14]                 elapsed=17s recent 100 steps=0.4s (4.10 ms/step) eta=3.7s
+[2026-11-27 09:44:14] [lbm]           step=  4100 t=4100.000000 t_unit=step t_conv=0.9247
+[2026-11-27 09:44:14]                 density=[0.9616,1.0079] velocity=[-0.0912,0.0908] temperature=[0.3333,0.3333] pressure=[-0.0128,0.0026]
+[2026-11-27 09:44:14] [lbm]           entropic
+[2026-11-27 09:44:14]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:14]                 iter_max=3  iter_mean=2.0565  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:14]                 sample_count=65536
+[2026-11-27 09:44:14] [rollout]       accepted step=4200/5000
+[2026-11-27 09:44:14]                 elapsed=17s recent 100 steps=0.4s (4.11 ms/step) eta=3.3s
+[2026-11-27 09:44:14] [lbm]           step=  4200 t=4200.000000 t_unit=step t_conv=0.9472
+[2026-11-27 09:44:14]                 density=[0.9625,1.0069] velocity=[-0.0891,0.0888] temperature=[0.3333,0.3333] pressure=[-0.0125,0.0023]
+[2026-11-27 09:44:14] [lbm]           entropic
+[2026-11-27 09:44:14]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:14]                 iter_max=3  iter_mean=2.0549  iter_p95=3  residual_max=1.490e-08
+[2026-11-27 09:44:14]                 sample_count=65536
+[2026-11-27 09:44:14] [rollout]       accepted step=4300/5000
+[2026-11-27 09:44:14]                 elapsed=18s recent 100 steps=0.4s (4.12 ms/step) eta=2.9s
+[2026-11-27 09:44:14] [lbm]           step=  4300 t=4300.000000 t_unit=step t_conv=0.9698
+[2026-11-27 09:44:14]                 density=[0.9623,1.0066] velocity=[-0.0877,0.0926] temperature=[0.3333,0.3333] pressure=[-0.0126,0.0022]
+[2026-11-27 09:44:14] [lbm]           entropic
+[2026-11-27 09:44:14]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:14]                 iter_max=3  iter_mean=2.0453  iter_p95=2.5500  residual_max=1.490e-08
+[2026-11-27 09:44:14]                 sample_count=65536
+[2026-11-27 09:44:15] [rollout]       accepted step=4400/5000
+[2026-11-27 09:44:15]                 elapsed=18s recent 100 steps=0.4s (4.13 ms/step) eta=2.5s
+[2026-11-27 09:44:15] [lbm]           step=  4400 t=4400.000000 t_unit=step t_conv=0.9923
+[2026-11-27 09:44:15]                 density=[0.9609,1.0078] velocity=[-0.0922,0.0971] temperature=[0.3333,0.3333] pressure=[-0.0130,0.0026]
+[2026-11-27 09:44:15] [lbm]           entropic
+[2026-11-27 09:44:15]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:15]                 iter_max=3  iter_mean=2.0395  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:44:15]                 sample_count=65536
+[2026-11-27 09:44:15] [rollout]       accepted step=4500/5000
+[2026-11-27 09:44:15]                 elapsed=19s recent 100 steps=0.4s (4.12 ms/step) eta=2.1s
+[2026-11-27 09:44:15] [lbm]           step=  4500 t=4500.000000 t_unit=step t_conv=1.0149
+[2026-11-27 09:44:15]                 density=[0.9613,1.0069] velocity=[-0.0934,0.0985] temperature=[0.3333,0.3333] pressure=[-0.0129,0.0023]
+[2026-11-27 09:44:15] [lbm]           entropic
+[2026-11-27 09:44:15]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:15]                 iter_max=3  iter_mean=2.0389  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:44:15]                 sample_count=65536
+[2026-11-27 09:44:16] [rollout]       accepted step=4600/5000
+[2026-11-27 09:44:16]                 elapsed=19s recent 100 steps=0.4s (4.12 ms/step) eta=1.6s
+[2026-11-27 09:44:16] [lbm]           step=  4600 t=4600.000000 t_unit=step t_conv=1.0374
+[2026-11-27 09:44:16]                 density=[0.9619,1.0063] velocity=[-0.0894,0.0957] temperature=[0.3333,0.3333] pressure=[-0.0127,0.0021]
+[2026-11-27 09:44:16] [lbm]           entropic
+[2026-11-27 09:44:16]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:16]                 iter_max=3  iter_mean=2.0367  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:44:16]                 sample_count=65536
+[2026-11-27 09:44:16] [rollout]       accepted step=4700/5000
+[2026-11-27 09:44:16]                 elapsed=19s recent 100 steps=0.4s (4.09 ms/step) eta=1.2s
+[2026-11-27 09:44:16] [lbm]           step=  4700 t=4700.000000 t_unit=step t_conv=1.0600
+[2026-11-27 09:44:16]                 density=[0.9607,1.0074] velocity=[-0.0917,0.0906] temperature=[0.3333,0.3333] pressure=[-0.0131,0.0025]
+[2026-11-27 09:44:16] [lbm]           entropic
+[2026-11-27 09:44:16]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:16]                 iter_max=3  iter_mean=2.0277  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:44:16]                 sample_count=65536
+[2026-11-27 09:44:17] [rollout]       accepted step=4800/5000
+[2026-11-27 09:44:17]                 elapsed=20s recent 100 steps=0.4s (4.16 ms/step) eta=0.8s
+[2026-11-27 09:44:17] [lbm]           step=  4800 t=4800.000000 t_unit=step t_conv=1.0825
+[2026-11-27 09:44:17]                 density=[0.9611,1.0069] velocity=[-0.0942,0.0930] temperature=[0.3333,0.3333] pressure=[-0.0130,0.0023]
+[2026-11-27 09:44:17] [lbm]           entropic
+[2026-11-27 09:44:17]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:17]                 iter_max=3  iter_mean=2.0252  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:44:17]                 sample_count=65536
+[2026-11-27 09:44:17] [rollout]       accepted step=4900/5000
+[2026-11-27 09:44:17]                 elapsed=20s recent 100 steps=0.4s (4.11 ms/step) eta=0.4s
+[2026-11-27 09:44:17] [lbm]           step=  4900 t=4900.000000 t_unit=step t_conv=1.1051
+[2026-11-27 09:44:17]                 density=[0.9618,1.0059] velocity=[-0.0913,0.0916] temperature=[0.3333,0.3333] pressure=[-0.0127,0.0020]
+[2026-11-27 09:44:17] [lbm]           entropic
+[2026-11-27 09:44:17]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:17]                 iter_max=3  iter_mean=2.0239  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:44:17]                 sample_count=65536
+[2026-11-27 09:44:17] [rollout]       accepted step=5000/5000
+[2026-11-27 09:44:17]                 elapsed=21s recent 100 steps=0.4s (4.12 ms/step) eta=0.0s
+[2026-11-27 09:44:17] [lbm]           step=  5000 t=5000.000000 t_unit=step t_conv=1.1276
+[2026-11-27 09:44:17]                 density=[0.9608,1.0069] velocity=[-0.0941,0.0966] temperature=[0.3333,0.3333] pressure=[-0.0131,0.0023]
+[2026-11-27 09:44:17] [lbm]           entropic
+[2026-11-27 09:44:17]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:44:17]                 iter_max=3  iter_mean=2.0254  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:44:17]                 sample_count=65536
+[2026-11-27 09:44:17] [rollout] finished: 5000 accepted, 5000 trials, stop=completed
+[2026-11-27 09:44:17] [record] Draining HDF5 async writer before rollout finalize…
+[2026-11-27 09:44:17] [record] HDF5 async drain: wall=0.000 s, pre_stop estimate=0.008 s (delta=-0.008 s, wall/est=0.016); queue qsize≈0 (+1 in-flight in estimate); worker CPU in save_results 3.793 s over 501 writes; rates s/write (used=0.0081, p95=0.0081, p50=0.0075, mean=0.0076, ewma=0.0075)
+[2026-11-27 09:44:18] Wrote ParaView VTKHDF view tree: /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/pair/start_02000/member_01_amp1e-03/rollout.h5 (hardlink: /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/pair/start_02000/member_01_amp1e-03/rollout.vtkhdf)
+[2026-11-27 09:44:18] [rollout] component summaries
+[2026-11-27 09:44:18] [lbm]           summary entropic
+[2026-11-27 09:44:18]                 steps=5000
+[2026-11-27 09:44:18]                 clamp_frac_avg=0.00%  converged_frac_avg=100.00%  fallback_frac_avg=0.00%  hit_max_iter_frac_avg=0.00%
+[2026-11-27 09:44:18]                 iter_max=3  iter_mean_avg=2.0461  iter_p95_avg=2.6728  residual_max=1.490e-08
+[2026-11-27 09:44:18]                 sample_count=327680000
+[2026-11-27 09:44:18] [Rollout memory] Peak GPU used / device total: 0.60 / 39.49 GiB (1.5%)
+[2026-11-27 09:44:18] [Rollout memory] Peak GPU alloc / reserved (max_memory_allocated / max_memory_reserved): 0.05 / 0.10 GiB
+[2026-11-27 09:44:18] [Rollout memory] Peak host RAM: process RSS 1.55 GiB; system used 24.49 GiB
+[2026-11-27 09:44:18] [rollout] Simulation step compute (main thread, no forced per-step CUDA synchronize): 17s
+[2026-11-27 09:44:18] [rollout] I/O open/metadata (hdf5): 0.0s
+[2026-11-27 09:44:18] [rollout] I/O main thread (snapshot + enqueue + queue waits): 0.1s
+[2026-11-27 09:44:18] [rollout] I/O background writer thread (sequential sum of wall time inside engine writes): 3.8s
+[2026-11-27 09:44:18] [rollout] I/O close (hdf5): 0.0s
+[2026-11-27 09:44:18] [rollout] Wall clock (forecast loop → after I/O teardown): 21s
+[2026-11-27 09:44:18] [rollout] Main-thread time sum (compute + I/O lines above): 18s
+[2026-11-27 09:44:18] [rollout] Wall clock is elapsed real time. Main-thread sum counts only the main thread; the background I/O worker sum (3.8s) runs on another thread and overlaps compute and main-thread I/O, so wall clock is usually **less than** main-thread sum + worker sum.
+[2026-11-27 09:44:18] RUN {"name": "member_01_amp1e-03", "member": 1, "seed": [20261127, 2000, 1], "amplitude": 0.001, "steps": 5000, "stop_reason": "completed", "accepted_steps": 5000, "kinet_rollout_status": "complete", "last_saved_step": 5000, "reached_last_step": true, "rollout_wall_s": 21.27, "path": "/pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/pair/start_02000/member_01_amp1e-03/rollout.h5", "bytes": 1842229482, "perturbation_checks": {"rms": 5.618757616845236e-05, "spectral_divergence_over_vorticity": 2.0277161934178417e-15, "energy_fraction_outside_band": 9.477248167135246e-32}, "momentum_err": 2.7755575615628914e-16, "density_err": 8.881784197001252e-16}

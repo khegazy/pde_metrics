@@ -1,0 +1,37 @@
+# Ensemble job 62103588
+slurm_job_id: 62103588
+sacct: 62103588|ens-08000|gpu_ss11|gpu_debug|m4790_g|2026-11-27T09:44:58|2026-11-27T09:53:53|2026-11-27T10:01:44|00:07:51|COMPLETED|0:0|nid002480
+sbatch_exact (from /pscratch/sd/k/khegazy/kinet_datasets/_work/shear_layer_ensemble): sbatch --account=m4790 --constraint=gpu --qos=debug --nodes=1 --ntasks=1 --cpus-per-task=32 --gpus-per-node=1 --time=00:30:00 --job-name=ens-08000 --output=/pscratch/sd/k/khegazy/kinet_datasets/_work/shear_layer_ensemble/slurm_%j.out /pscratch/sd/k/khegazy/kinet_datasets/_provenance/shear_layer_ensemble/run_ensemble_job.sh /pscratch/sd/k/khegazy/kinet_datasets/_provenance/shear_layer_ensemble/args_start08000.txt
+args_file: /pscratch/sd/k/khegazy/kinet_datasets/_provenance/shear_layer_ensemble/args_start08000.txt (copied here)
+kinet: d1cd353b83e994376d2c4476c968e82bca823f5f branch perf/cleanup
+environment: source /pscratch/sd/k/khegazy/kinet_datasets/_work/env.sh   # kinet .venv unchanged, KINET_PROJECT, caches on scratch
+working_directory: /pscratch/sd/k/khegazy/kinet_datasets/_work/shear_layer_ensemble/job_62103588
+invocations (rc and wall time from run_ensemble_job.sh):
+  invocation 1 rc=0 wall_s=466.03 args: --start 8000 --members 0-16 --amplitude 1e-3 --steps 5000 --save-every 10 --out /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble
+invocation 1:
+  command: python -u -B /pscratch/sd/k/khegazy/kinet_datasets/_provenance/shear_layer_ensemble/ensemble_driver.py --start 8000 --members 0-16 --amplitude 1e-3 --steps 5000 --save-every 10 --out /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble
+  device: NVIDIA A100-SXM4-40GB; kinet commit recorded by the driver: d1cd353b83e994376d2c4476c968e82bca823f5f
+  start step: 8000 of /global/cfs/cdirs/m4790/Data/kinet/doubly_periodic/weakly_compressible_isoT_fluids/sys_Re-5e4_Ma-1en1/D2Q9_shape-256-256_T-10000_H-dc804f.h5
+  u_rms of the start frame: 5.589577e-02; kmax 16.0; io.save_every_n 10
+  reference consistency: {"permutation_old_to_new": [0, 2, 4, 1, 3, 5, 8, 6, 7], "max_abs_u_minus_moment_of_reordered_F": 4.85722573273506e-17, "max_abs_kinet_Feq_minus_stored_Feq": 1.6653345369377348e-16}
+  output: /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000 (30G)
+  runs (name | seed = SeedSequence entropy | amplitude/u_rms | steps | stop_reason | status | last saved step | reached | rollout wall s | bytes | path):
+    member_00_amp1e-03 | [20261127, 8000, 0] | 0.001 | 5000 | completed | complete | 5000 | True | 47.57 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_00_amp1e-03/rollout.h5
+    member_01_amp1e-03 | [20261127, 8000, 1] | 0.001 | 5000 | completed | complete | 5000 | True | 21.06 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_01_amp1e-03/rollout.h5
+    member_02_amp1e-03 | [20261127, 8000, 2] | 0.001 | 5000 | completed | complete | 5000 | True | 21.02 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_02_amp1e-03/rollout.h5
+    member_03_amp1e-03 | [20261127, 8000, 3] | 0.001 | 5000 | completed | complete | 5000 | True | 21.0 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_03_amp1e-03/rollout.h5
+    member_04_amp1e-03 | [20261127, 8000, 4] | 0.001 | 5000 | completed | complete | 5000 | True | 21.12 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_04_amp1e-03/rollout.h5
+    member_05_amp1e-03 | [20261127, 8000, 5] | 0.001 | 5000 | completed | complete | 5000 | True | 21.4 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_05_amp1e-03/rollout.h5
+    member_06_amp1e-03 | [20261127, 8000, 6] | 0.001 | 5000 | completed | complete | 5000 | True | 21.11 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_06_amp1e-03/rollout.h5
+    member_07_amp1e-03 | [20261127, 8000, 7] | 0.001 | 5000 | completed | complete | 5000 | True | 20.98 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_07_amp1e-03/rollout.h5
+    member_08_amp1e-03 | [20261127, 8000, 8] | 0.001 | 5000 | completed | complete | 5000 | True | 21.02 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_08_amp1e-03/rollout.h5
+    member_09_amp1e-03 | [20261127, 8000, 9] | 0.001 | 5000 | completed | complete | 5000 | True | 21.06 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_09_amp1e-03/rollout.h5
+    member_10_amp1e-03 | [20261127, 8000, 10] | 0.001 | 5000 | completed | complete | 5000 | True | 21.03 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_10_amp1e-03/rollout.h5
+    member_11_amp1e-03 | [20261127, 8000, 11] | 0.001 | 5000 | completed | complete | 5000 | True | 21.01 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_11_amp1e-03/rollout.h5
+    member_12_amp1e-03 | [20261127, 8000, 12] | 0.001 | 5000 | completed | complete | 5000 | True | 21.13 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_12_amp1e-03/rollout.h5
+    member_13_amp1e-03 | [20261127, 8000, 13] | 0.001 | 5000 | completed | complete | 5000 | True | 21.01 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_13_amp1e-03/rollout.h5
+    member_14_amp1e-03 | [20261127, 8000, 14] | 0.001 | 5000 | completed | complete | 5000 | True | 21.13 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_14_amp1e-03/rollout.h5
+    member_15_amp1e-03 | [20261127, 8000, 15] | 0.001 | 5000 | completed | complete | 5000 | True | 21.02 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_15_amp1e-03/rollout.h5
+    member_16_amp1e-03 | [20261127, 8000, 16] | 0.001 | 5000 | completed | complete | 5000 | True | 21.2 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/start_08000/member_16_amp1e-03/rollout.h5
+every run reached its last step: True
+checkpoints: the driver deletes <run>/sim_checkpoints after each run; remaining: none

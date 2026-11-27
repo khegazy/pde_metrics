@@ -1,0 +1,32 @@
+# Ensemble job 62103496
+slurm_job_id: 62103496
+sacct: 62103496|ens-valid|gpu_ss11|gpu_debug|m4790_g|2026-11-27T09:39:30|2026-11-27T09:40:15|2026-11-27T09:44:21|00:04:06|COMPLETED|0:0|nid001661
+sbatch_exact (from /pscratch/sd/k/khegazy/kinet_datasets/_work/shear_layer_ensemble): sbatch --account=m4790 --constraint=gpu --qos=debug --nodes=1 --ntasks=1 --cpus-per-task=32 --gpus-per-node=1 --time=00:30:00 --job-name=ens-valid --output=/pscratch/sd/k/khegazy/kinet_datasets/_work/shear_layer_ensemble/slurm_%j.out /pscratch/sd/k/khegazy/kinet_datasets/_provenance/shear_layer_ensemble/run_ensemble_job.sh /pscratch/sd/k/khegazy/kinet_datasets/_provenance/shear_layer_ensemble/args_validation.txt
+args_file: /pscratch/sd/k/khegazy/kinet_datasets/_provenance/shear_layer_ensemble/args_validation.txt (copied here)
+kinet: d1cd353b83e994376d2c4476c968e82bca823f5f branch perf/cleanup
+environment: source /pscratch/sd/k/khegazy/kinet_datasets/_work/env.sh   # kinet .venv unchanged, KINET_PROJECT, caches on scratch
+working_directory: /pscratch/sd/k/khegazy/kinet_datasets/_work/shear_layer_ensemble/job_62103496
+invocations (rc and wall time from run_ensemble_job.sh):
+  invocation 1 rc=0 wall_s=105.22 args: --start 2000 --members none --control 100 --steps 100 --save-every 1 --out /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/control_every1
+  invocation 2 rc=0 wall_s=133.78 args: --start 2000 --members 0,1 --steps 5000 --save-every 10 --out /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/pair
+invocation 1:
+  command: python -u -B /pscratch/sd/k/khegazy/kinet_datasets/_provenance/shear_layer_ensemble/ensemble_driver.py --start 2000 --members none --control 100 --steps 100 --save-every 1 --out /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/control_every1
+  device: NVIDIA A100-SXM4-40GB; kinet commit recorded by the driver: d1cd353b83e994376d2c4476c968e82bca823f5f
+  start step: 2000 of /global/cfs/cdirs/m4790/Data/kinet/doubly_periodic/weakly_compressible_isoT_fluids/sys_Re-5e4_Ma-1en1/D2Q9_shape-256-256_T-10000_H-dc804f.h5
+  u_rms of the start frame: 5.618758e-02; kmax 16.0; io.save_every_n 1
+  reference consistency: {"permutation_old_to_new": [0, 2, 4, 1, 3, 5, 8, 6, 7], "max_abs_u_minus_moment_of_reordered_F": 5.551115123125783e-17, "max_abs_kinet_Feq_minus_stored_Feq": 1.6653345369377348e-16}
+  output: /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/control_every1/start_02000 (353M)
+  runs (name | seed = SeedSequence entropy | amplitude/u_rms | steps | stop_reason | status | last saved step | reached | rollout wall s | bytes | path):
+    control_amp0 | [20261127, 2000, -1] | 0 | 100 | completed | complete | 100 | True | 44.0 | 369784925 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/control_every1/start_02000/control_amp0/rollout.h5
+invocation 2:
+  command: python -u -B /pscratch/sd/k/khegazy/kinet_datasets/_provenance/shear_layer_ensemble/ensemble_driver.py --start 2000 --members 0\,1 --steps 5000 --save-every 10 --out /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/pair
+  device: NVIDIA A100-SXM4-40GB; kinet commit recorded by the driver: d1cd353b83e994376d2c4476c968e82bca823f5f
+  start step: 2000 of /global/cfs/cdirs/m4790/Data/kinet/doubly_periodic/weakly_compressible_isoT_fluids/sys_Re-5e4_Ma-1en1/D2Q9_shape-256-256_T-10000_H-dc804f.h5
+  u_rms of the start frame: 5.618758e-02; kmax 16.0; io.save_every_n 10
+  reference consistency: {"permutation_old_to_new": [0, 2, 4, 1, 3, 5, 8, 6, 7], "max_abs_u_minus_moment_of_reordered_F": 5.551115123125783e-17, "max_abs_kinet_Feq_minus_stored_Feq": 1.6653345369377348e-16}
+  output: /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/pair/start_02000 (3.5G)
+  runs (name | seed = SeedSequence entropy | amplitude/u_rms | steps | stop_reason | status | last saved step | reached | rollout wall s | bytes | path):
+    member_00_amp1e-03 | [20261127, 2000, 0] | 0.001 | 5000 | completed | complete | 5000 | True | 51.74 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/pair/start_02000/member_00_amp1e-03/rollout.h5
+    member_01_amp1e-03 | [20261127, 2000, 1] | 0.001 | 5000 | completed | complete | 5000 | True | 21.27 | 1842229482 | /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/pair/start_02000/member_01_amp1e-03/rollout.h5
+every run reached its last step: True
+checkpoints: the driver deletes <run>/sim_checkpoints after each run; remaining: none

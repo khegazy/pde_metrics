@@ -1,0 +1,2 @@
+--start 2000 --members none --control 100 --steps 100 --save-every 1 --out /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/control_every1
+--start 2000 --members 0,1 --steps 5000 --save-every 10 --out /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/pair

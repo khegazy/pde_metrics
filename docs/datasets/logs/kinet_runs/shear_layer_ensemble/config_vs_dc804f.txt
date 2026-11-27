@@ -1,0 +1,21 @@
+key                                        | dc804f (archived) | composed (current kinet)
+grid                                       | [256, 256] | [256, 256]
+lattice                                    | D2Q9 | D2Q9
+lattice shifts                             | [0.0, 0.0] | [0.0, 0.0]
+use_static_weights                         | False | False
+collision                                  | entropic_BGK | entropic_BGK
+enforce_positive                           | False | no key
+stabilizer type                            | entropic | entropic
+stabilizer input_dists                     | ['F', 'Feq'] | ['F', 'Feq']
+stabilizer max_iterations                  | 50 | 50
+equilibrium closure F                      | entropic | entropic
+physics                                    | weakly_compressible_isothermal_fluids | weakly_compressible_isothermal_fluids
+reynolds                                   | 50000.0 | 50000.0
+mach                                       | 0.1 | 0.1
+density (IC / reference)                   | 1.0 | 1.0
+lambda                                     | 80 | 80
+epsilon                                    | 0.05 | 0.05
+boundary                                   | {'Periodic': {'dimensions': [0, 1]}} | {'Periodic': {'axes': ['x', 'y']}}
+output_variables                           | ['vorticity'] | ['vorticity']
+dtype                                      | float64 | torch.float64
+steps (identity only; members run 5000)    | 10000 | 5000

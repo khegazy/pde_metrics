@@ -1,0 +1,76 @@
+[2026-11-27 09:41:04] Building solver lbm
+[2026-11-27 09:41:04] Building physics weakly_compressible_isothermal_fluids
+[2026-11-27 09:41:04] the Reynolds number 50000 is measured on the first length of the domain, 256
+[2026-11-27 09:41:04] No pressure reference (lattice run): the recorded 'pressure' is the fluctuation cs^2*(rho - rho0).
+[2026-11-27 09:41:05] Building numeric stability model entropic
+[2026-11-27 09:41:05] Entropic stability params: max_iterations=50 tol=None (tolerance on the Newton step in alpha; sqrt(machine_eps) if unset)
+[2026-11-27 09:41:05] 
+========== Normalization Report (physics: weakly_compressible_isothermal_fluids) ===========
+ CHECK                               VALUE  ACCEPTED                                  STATUS
+--------------------------------------------------------------------------------------------
+ tau1                              0.50089  (> 0.5)                                     PASS
+ Re round-trip                           0  (rel < 1e-12)                               PASS
+ grid                                  256  (N >= 1)                                    PASS
+ openlb_parity                   9.541e-18  |nu_l - (tau - 1/2) theta| <= 1.000e-12     PASS
+ u_l                              0.057735  (< 0.423; WARN density variation > 0.005)   PASS
+ isothermal_consistency            0.33333  gamma*R*theta == lat_ref_temperature        PASS
+--------------------------------------------------------------------------------------------
+                                                                              0 FAIL, 0 WARN
+ sources: see kinet/units/references.py
+============================================================================================
+[2026-11-27 09:41:19] [kinet-compile] layout full_step compiled=['step']
+[2026-11-27 09:41:19] reference consistency: {'permutation_old_to_new': [0, 2, 4, 1, 3, 5, 8, 6, 7], 'max_abs_u_minus_moment_of_reordered_F': 5.551115123125783e-17, 'max_abs_kinet_Feq_minus_stored_Feq': 1.6653345369377348e-16}
+[2026-11-27 09:41:19] [record] io mode: backend=hdf5, parallel_hdf5=False, world_size=1
+[2026-11-27 09:41:19] [record] equilibrium serialization: disabled
+[2026-11-27 09:41:19] [record] distribution serialization: disabled
+[2026-11-27 09:41:19] Saving results to /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/control_every1/start_02000/control_amp0/rollout.h5
+[2026-11-27 09:41:19] Creating h5 datasets
+[2026-11-27 09:41:19] 	compression=off
+[2026-11-27 09:41:19] 	observables/density : (1, 1, 100, 256, 256) chunks=(1, 1, 1, 256, 256)
+[2026-11-27 09:41:19] 	observables/pressure : (1, 1, 100, 256, 256) chunks=(1, 1, 1, 256, 256)
+[2026-11-27 09:41:19] 	observables/temperature : (1, 1, 100, 1, 1) chunks=(1, 1, 1, 1, 1)
+[2026-11-27 09:41:19] 	time/time : (100,) chunks=(1,)
+[2026-11-27 09:41:19] 	time/time_convection : (100,) chunks=(1,)
+[2026-11-27 09:41:19] 	time/time_index : (100,) chunks=(1,)
+[2026-11-27 09:41:19] 	observables/velocity : (1, 2, 100, 256, 256) chunks=(1, 2, 1, 256, 256)
+[2026-11-27 09:41:19] 	observables/vorticity : (1, 1, 100, 256, 256) chunks=(1, 1, 1, 256, 256)
+[2026-11-27 09:41:20] [record] snapshots are staged in up to 10 reusable host buffer sets of ~2.5 MiB
+[2026-11-27 09:41:20] [record] HDF5 async writer enabled (serial HDF5); queue depth will be set from first snapshot using io.async_queue_memory_fraction (basis=available)
+[2026-11-27 09:41:20] [record] wrote /geometry/masks + 0 overlay(s)
+[2026-11-27 09:41:20] [rollout] torch.compile is active -- the first forward pass will trigger tracing + kernel compilation (HIP/nvcc). This can take several minutes.
+[2026-11-27 09:41:20] [rollout] entering rollout loop: pred_length=100, save_results=True, io.save_every_n (save cadence)=1, progress_every_n=100, sim_stats_every_n=100
+/global/u2/k/khegazy/projects/pde/kinet/.venv/lib/python3.12/site-packages/triton/knobs.py:504: UserWarning: TRITON_DEFAULT_FP_FUSION is unset: defaulting to FP fusion ENABLED for backward compatibility in Triton 3.9. The default will change to DISABLED in Triton 3.10; set TRITON_DEFAULT_FP_FUSION=1 to keep fusion enabled or =0 to adopt the new default early and silence this warning.
+  warn_once(FP_FUSION_DEFAULT_WARNING)
+[2026-11-27 09:41:55] [rollout] first accepted step complete in 35.54 s (includes torch.compile)
+[2026-11-27 09:41:55] [rollout] u_max WARN at step=1: max |u| = 0.0823 drives a density variation of 0.01, above the tolerance 0.005. FIX: lower the flow speed
+[2026-11-27 09:41:55] [record] HDF5 async queue sized from memory: io.async_queue_memory_fraction=0.7, basis=available, ~3.5 MiB/snapshot -> effective_depth=8 (~0.0 GiB max queued payloads)
+[2026-11-27 09:42:03] [rollout]       accepted step=100/100
+[2026-11-27 09:42:03]                 elapsed=43s recent 99 steps=7.9s (80.12 ms/step) eta=0.0s
+[2026-11-27 09:42:03] [lbm]           step=   100 t=100.000000 t_unit=step t_conv=0.0226
+[2026-11-27 09:42:03]                 density=[0.9884,1.0032] velocity=[-0.0859,0.0858] temperature=[0.3333,0.3333] pressure=[-0.0039,0.0011]
+[2026-11-27 09:42:03] [lbm]           entropic
+[2026-11-27 09:42:03]                 clamp_frac=0.00%  converged_frac=100.00%  fallback_frac=0.00%  hit_max_iter_frac=0.00%
+[2026-11-27 09:42:03]                 iter_max=3  iter_mean=1.9340  iter_p95=2  residual_max=1.490e-08
+[2026-11-27 09:42:03]                 sample_count=65536
+[2026-11-27 09:42:03] [rollout] finished: 100 accepted, 100 trials, stop=completed
+[2026-11-27 09:42:03] [record] Draining HDF5 async writer before rollout finalize…
+[2026-11-27 09:42:03] [record] HDF5 async drain: wall=0.070 s, pre_stop estimate=0.071 s (delta=-0.001 s, wall/est=0.992); queue qsize≈8 (+1 in-flight in estimate); worker CPU in save_results 1.217 s over 100 writes; rates s/write (used=0.0079, p95=0.0079, p50=0.0074, mean=0.0125, ewma=0.0075)
+[2026-11-27 09:42:03] Wrote ParaView VTKHDF view tree: /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/control_every1/start_02000/control_amp0/rollout.h5 (hardlink: /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/control_every1/start_02000/control_amp0/rollout.vtkhdf)
+[2026-11-27 09:42:03] [rollout] component summaries
+[2026-11-27 09:42:03] [lbm]           summary entropic
+[2026-11-27 09:42:03]                 steps=100
+[2026-11-27 09:42:03]                 clamp_frac_avg=0.00%  converged_frac_avg=100.00%  fallback_frac_avg=0.00%  hit_max_iter_frac_avg=0.00%
+[2026-11-27 09:42:03]                 iter_max=3  iter_mean_avg=1.9340  iter_p95_avg=2  residual_max=1.490e-08
+[2026-11-27 09:42:03]                 sample_count=6553600
+[2026-11-27 09:42:03] [Rollout memory] Peak GPU used / device total: 0.64 / 39.49 GiB (1.6%)
+[2026-11-27 09:42:03] [Rollout memory] Peak GPU alloc / reserved (max_memory_allocated / max_memory_reserved): 0.09 / 0.14 GiB
+[2026-11-27 09:42:03] [Rollout memory] Peak host RAM: process RSS 1.60 GiB; system used 22.73 GiB
+[2026-11-27 09:42:03] [rollout] Simulation step compute (main thread, no forced per-step CUDA synchronize): 43s
+[2026-11-27 09:42:03] [rollout] I/O open/metadata (hdf5): 0.1s
+[2026-11-27 09:42:03] [rollout] I/O main thread (snapshot + enqueue + queue waits): 0.6s
+[2026-11-27 09:42:03] [rollout] I/O background writer thread (sequential sum of wall time inside engine writes): 1.2s
+[2026-11-27 09:42:03] [rollout] I/O close (hdf5): 0.0s
+[2026-11-27 09:42:03] [rollout] Wall clock (forecast loop → after I/O teardown): 44s
+[2026-11-27 09:42:03] [rollout] Main-thread time sum (compute + I/O lines above): 44s
+[2026-11-27 09:42:03] [rollout] Wall clock is elapsed real time. Main-thread sum counts only the main thread; the background I/O worker sum (1.2s) runs on another thread and overlaps compute and main-thread I/O, so wall clock is usually **less than** main-thread sum + worker sum.
+[2026-11-27 09:42:03] RUN {"name": "control_amp0", "member": -1, "seed": [20261127, 2000, -1], "amplitude": 0.0, "steps": 100, "stop_reason": "completed", "accepted_steps": 100, "kinet_rollout_status": "complete", "last_saved_step": 100, "reached_last_step": true, "rollout_wall_s": 44.0, "path": "/pscratch/sd/k/khegazy/kinet_datasets/shear_layer_ensemble/_validation/control_every1/start_02000/control_amp0/rollout.h5", "bytes": 369784925, "perturbation_checks": {"rms": 0.0}, "momentum_err": 9.71445146547012e-17, "density_err": 4.440892098500626e-16}
