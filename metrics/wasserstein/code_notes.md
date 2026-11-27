@@ -120,7 +120,14 @@ All in `metrics/wasserstein/test_metric.py`; the registry-wide contract is in
   added in the review round as the regression test for the solver bug. During the build, a
   density with contrast ±40% shifted by 1 to 128 of 256 cells matched to a relative
   $2.6 \times 10^{-5}$ to $4.9 \times 10^{-5}$; the reviewer reran it and confirmed that the test's
-  implementation matches Delon et al.'s cost formula.
+  implementation matches Delon et al.'s cost formula. Since build-order step 13 (2026-11-27) the
+  test's own quantile-grid solver is replaced by `circle_w2` in `tests/analytic_fields.py`, which
+  integrates the piecewise-linear quantile functions exactly (the grid of $10^5$ levels returned
+  0.1000253 for an exact 0.1 on near-empty densities). It is given the smooth profile on $2^{16}$
+  sub-cells, and the metric then agrees to $1.7 \times 10^{-9}$ and $3.8 \times 10^{-10}$; the
+  tolerance is $10^{-8}$. The $2.6$ to $4.9 \times 10^{-5}$ above are of the size of the 256-cell
+  reading's own discretisation (measured $3.9 \times 10^{-5}$ and $1.8 \times 10^{-5}$ on the
+  two profiles here), so they were most likely the oracle's error, not the solver's.
 - **`test_lies_within_the_h_minus_one_bounds`.** $b^{-1/2}H \le W_2 \le 2a^{-1/2}H$ on a smooth
   density and its blurred copy (Peyré 2018, Corollary 3 and Theorem 5, Eq. 17). The reviewer
   showed that the bounds are about a factor of three apart on this pair
@@ -273,6 +280,10 @@ had 9 tests passing, and 931 passed in the contract, cards and documentation tes
 
 ## For the next agent
 
+- **Exact pairs exist now.** `transport_pairs` and the `potential` option of `advecting_blobs`
+  (build-order step 13, `docs/datasets/advecting_blobs.md`) give pairs with an exact $W_2$; their
+  tests and the measured reach of the solve (a uniform-side solve fails between $a = 0.94$ and
+  $0.965$, density ratio 32 to 56) are in `docs/datasets/logs/advecting_blobs.md`.
 - **Untested convergence.** Whether the iteration converges for densities with near-empty regions is
   untested beyond the contract field. The test suite reaches the non-convergence warning only by
   capping the iterations; the branch where no damping lowers the residual was checked only with

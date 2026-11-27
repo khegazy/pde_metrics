@@ -246,6 +246,77 @@ nothing, so no disk is used.
     - Reason: bumps, vortices and fronts live in different fields, so they share a domain
       without overlapping; one static frame carries every family's answer.
     - To reverse: split it into three configurations with their own `fields`.
+18. **Spec 07's transport pairs are one option, `potential`, not three.**
+    - Made by: the agent (step 13), 2026-11-27, under "change the plan to fit the code"
+      (`BUILD_ORDER.md`). Spec 07 was written before steps 9, 10 and 12 landed.
+    - What changed from spec 07, Sect. 5.1: `amplitude` 0 was already allowed (step 12);
+      `reverse` is dropped, because a plain reference with the candidate
+      `{potential: [...]}` is the pair the other way round, through step 9's `candidate`;
+      `predictions()` and the pairing in `evaluate.py` existed (step 9); and
+      `transport_distance(t)` is dropped: the reader exposes `displacement` ($\nabla u$ at the
+      cell centres), and a test evaluates eq. (7) of the page on a refined reader in two lines.
+      The blob density is evaluated at arbitrary points by evaluating the existing loop at the
+      displaced centres, not by a new function. About 20 lines of code in the reader, and its
+      docstring.
+    - To reverse: delete `potential`, `displacement` and the two lines of `solution` that use them.
+19. **Only the density is mapped, and a density background is refused with a potential.**
+    - Made by: the agent (step 13).
+    - Reason: spec 07 needs density only (its Sect. 2). Bumps are evaluated at
+      $\mathbf{x} + \nabla u$ and the density multiplied by $\det(I + D^2 u)$; vortices and
+      fronts keep the cell centres, so a population with a potential is still well defined.
+      The background is a field on the grid with no closed form at displaced points, so a
+      density background would make eq. (6) inexact; it is refused, not interpolated.
+    - To reverse: interpolate the background spectrally at the displaced points, losing exactness.
+20. **The reader checks the sufficient bound $\sum_j \lvert a_j\rvert < 1$, not exact convexity.**
+    - Made by: the agent (step 13), following spec 07, Sect. 3.1.
+    - Reason: the bound is deterministic and guarantees $I + D^2 u$ positive definite everywhere,
+      not only at the cell centres. Its cost: Saumier's two-mode example is admitted only for
+      $\lambda < 1/2$, although it is convex up to $\lambda < 1$ (spec 07); the tests use 0.45.
+    - Alternative: check the eigenvalues on a fine grid, which certifies nothing between nodes.
+    - To reverse: replace the bound in the constructor's check.
+21. **The exact circle solver is `circle_w2` in `tests/analytic_fields.py`, not in `conftest.py`.**
+    - Made by: the agent (step 13). Spec 07 proposed `tests/conftest.py`.
+    - Reason: `AGENTS.md` §7 and `tests/conftest.py`'s docstring name `analytic_fields` as the
+      shared helper module for closed-form targets, where step 10 put `gaussian_mean_square`;
+      `conftest.py` holds fixtures. It replaces the quantile-grid solver of
+      `metrics/wasserstein/test_metric.py`, which is deleted.
+    - What it does: reads each density as constant on its cells, so both quantile functions are
+      piecewise linear in the mass level; integrates the squared difference exactly between
+      merged knots; minimises the convex cost over the rotation by bounded Brent search. Cells
+      lighter than the round-off of a level near 1 count as empty, and the fraction of a cell is
+      clipped to [0, 1]; without those two, tails of $10^{-24}$ made the cost $10^{26}$ at some
+      rotations (measured while building it).
+    - Measured: a periodised Gaussian of width 0.03 moved by 0.1 gives 0.1 to $2 \times
+      10^{-15}$ on $2^{14}$ and $2^{16}$ cells (the old solver: 0.1000253); a $\cos^2$ bump of
+      width 0.2 keeps $W_2/s = 1$ to $3 \times 10^{-12}$ up to $s = 0.3$ and gives 0.99969 at 0.35, as
+      spec 07 states; $1 + a\cos$ against uniform converges as $h^2$ ($4 \times 10^{-10}$ on
+      $2^{16}$ cells), 0.4 to 0.7 s per pair there.
+    - To reverse: not intended.
+22. **One configuration, `transport_pairs`, with the plain blobs as the reference.**
+    - Made by: the agent (step 13), under the least-configuration rule. Spec 07 proposed two
+      (`transport_manufactured`, `transport_manufactured_contrast`).
+    - Reason: the other pairs are overrides on the page. The orientation: with the potential on
+      the reference, the config must state `candidate: {potential: null}`, which
+      `tests/test_configs.py` reads as restating the reader's default; with the potential on
+      the candidate it states nothing redundant, and the distance is the same. The solve then
+      runs from the plain side, which is not one step: measured within $7 \times 10^{-7}$ in
+      every frame.
+    - To reverse: move `potential` to the reader block and teach the config test that a
+      candidate's values are changes.
+23. **The failure range of the solve is documented, not pinned by a test.**
+    - Made by: the agent (step 13), as the coordinator allowed for an unstable threshold.
+    - Reason: from the uniform side `wasserstein` returns NaN somewhere between $a = 0.94$ and
+      $a = 0.965$, but not monotonically: on $64 \times 48$ along the diagonal it fails at 0.94
+      and converges at 0.95 (scan in the log entry of 2026-11-27). A pinned value would encode
+      the solver's damping path, and a better solver would fail the test.
+    - To reverse: add a test asserting NaN at $a = 0.97$ (NaN on every grid and mode scanned).
+24. **No stripe shape, no Gaussians and no signed fields here.**
+    - Made by: the agent (step 13), under the least-code rule.
+    - Reason: the potential with height 0 already gives one-axis profiles (one axis mode) and
+      products (two), with an exact answer through `circle_w2`; a stripe bump shape (spec 07,
+      Sect. 3.4) is needed only for the background-ratio sweep, which is left open. The
+      Gaussians (Sect. 3.5) and signed fields (Sect. 3.7) serve metrics that are not built.
+    - To reverse: add a `stripe` kind to the bump loop when the sweep is wanted.
 
 ### Log entries
 
@@ -318,6 +389,66 @@ rewrite an old one.
   `band_transfer` and `biot_savart` left the outputs bitwise unchanged (its agent's change,
   not re-checked here beyond the tests passing).
 
+**2026-11-27, agent (build-order step 13, the transport pairs).**
+
+- Code: the `potential` option and the `displacement` attribute of `AdvectingBlobs`
+  (decisions 18 to 20); `circle_w2` in `tests/analytic_fields.py` (decision 21), replacing the
+  quantile-grid solver of `metrics/wasserstein/test_metric.py`, whose circle test now compares
+  with the smooth profile on $2^{16}$ sub-cells at $10^{-8}$ (measured $1.7 \times 10^{-9}$ and
+  $3.8 \times 10^{-10}$; it was $2 \times 10^{-4}$).
+- Configuration `configs/dataset/transport_pairs.yaml` (decision 22); page section "Transport
+  pairs with a known distance"; the row in `docs/datasets/README.md`; a note in
+  `metrics/wasserstein/code_notes.md`.
+- Tests, in `tests/test_analytic_datasets.py`, through the pipeline on $64 \times 48$ (and
+  $128 \times 96$ for the convergence check): one mode both ways (eq. 8; $10^{-12}$ from the
+  deformed side up to $a = 0.998$, $10^{-5}$ and a tenfold fall from the uniform side,
+  `h_minus_one` $10^{-12}$ both ways); Saumier's map with $g = 1$ and with the blobs at height
+  3, both ways (eq. 7; $10^{-12}$ and $10^{-5}$); a product pair both ways (eq. 9, $10^{-5}$);
+  a translated product ($10^{-5}$) and the translated blobs inside their bracket; five refusals.
+- Measured, all through `fmeval.pipeline.run` with scratch scripts that were not kept:
+
+  | Pair (relative error of `wasserstein`) | $64 \times 48$ | $128 \times 96$ |
+  |---|---|---|
+  | One mode, deformed side, $a$ from 0.3 to 0.998, axis and oblique | $\le 4.4 \times 10^{-16}$ | $\le 4.4 \times 10^{-16}$ |
+  | One mode, uniform side, $a = 0.3$, axis / oblique | $1.3 \times 10^{-7}$ / $2.3 \times 10^{-6}$ | $8.1 \times 10^{-9}$ / $1.5 \times 10^{-7}$ |
+  | One mode, uniform side, $a = 0.9$, axis / oblique | $1.2 \times 10^{-5}$ / $2.3 \times 10^{-2}$ | $3.1 \times 10^{-5}$ / $3.9 \times 10^{-3}$ |
+  | Saumier, $\lambda = 0.45$, $g = 1$, forward / reverse | $8.6 \times 10^{-14}$ / $5.5 \times 10^{-7}$ | $8.6 \times 10^{-14}$ / $3.5 \times 10^{-8}$ |
+  | Saumier, blobs at height 1, forward / reverse (3 frames, max) | $3.8 \times 10^{-7}$ / $7.0 \times 10^{-7}$ | $8.6 \times 10^{-9}$ / $4.7 \times 10^{-8}$ |
+  | Saumier, blobs at height 3, forward / reverse (3 frames, max) | $1.0 \times 10^{-6}$ / $9.6 \times 10^{-7}$ | $2.3 \times 10^{-8}$ / $6.8 \times 10^{-8}$ |
+  | Product pair, forward / swapped | $8.0 \times 10^{-8}$ / $5.3 \times 10^{-7}$ | $1.1 \times 10^{-8}$ / $2.8 \times 10^{-8}$ |
+  | Translated product, 1 to 16 cells along $x$ (the $y$ move was not measured apart from the test) | $3.7$ to $6.9 \times 10^{-8}$ | $1.9$ to $3.9 \times 10^{-9}$ |
+
+  `h_minus_one` was exact to $3 \times 10^{-16}$ on every one-mode pair, and on Saumier's map
+  with $g = 1$ it reads 1.013 times $W_2$ (1.09 to 1.10 and 1.28 to 1.30 with blobs at height 1
+  and 3). The
+  translated blobs at height 0.1 and 3 sat 23% to 99% above the marginal lower bound and far
+  below the shift.
+- NaN scan, uniform side, phase 0.4 (`ok` converged, `NaN` returned NaN with its warning):
+
+  | Grid, mode | 0.90 | 0.92 | 0.94 | 0.95 | 0.96 | 0.965 | 0.97 |
+  |---|---|---|---|---|---|---|---|
+  | $64 \times 48$, (1, 0) | ok | ok | ok | NaN | NaN | NaN | NaN |
+  | $64 \times 48$, (2, 1) | ok | ok | NaN | ok | NaN | NaN | NaN |
+  | $64^2$, (1, 0) | ok | ok | ok | NaN | NaN | NaN | NaN |
+  | $64^2$, (2, 1) | ok | ok | NaN | NaN | NaN | NaN | NaN |
+  | $128 \times 96$, (1, 0) | ok | ok | NaN | ok | ok | NaN | NaN |
+  | $128 \times 96$, (2, 1) | ok | ok | NaN | ok | NaN | NaN | NaN |
+  | $128^2$, (1, 0) | ok | ok | NaN | ok | ok | NaN | NaN |
+  | $128^2$, (2, 1) | ok | ok | NaN | ok | NaN | NaN | NaN |
+
+  From the deformed side nothing failed up to $a = 0.998$. Spec 07's "NaN at $a \ge 0.97$" holds;
+  its single threshold does not.
+- Verified: the reader's output with every option at its default, and `feature_population`,
+  bitwise equal to HEAD (`61f27e3`) on seven option sets over three grids, every frame and field
+  (592 arrays); the
+  `evaluate.py` smoke runs and costs of section `transport_pairs` below; the page's three
+  override rows each run through `evaluate.py` and match their closed form (uniform side
+  $2.1 \times 10^{-6}$, deformed side $7 \times 10^{-16}$, product $7.5 \times 10^{-8}$). Test results: the default `pytest` exit 0 (2905 passed, 405
+  skipped, 4 xfailed); `pytest metrics/wasserstein metrics/h_minus_one` exit 0 (15 passed).
+- Not verified: the optimality argument of spec 07, Sect. 3.1 (McCann; Cordero-Erausquin) was
+  taken from the spec, not re-read; the tolerance argument of `circle_w2`'s search interval
+  ($\lvert\theta\rvert < 1$) is mine and only checked on the cases above.
+
 ### Open points
 
 - The upwind and Lax–Friedrichs candidates (decision 6).
@@ -334,6 +465,12 @@ rewrite an old one.
 - Spec 06's time-dependent variants, the background-ratio sweep configurations and Option B
   (a kinet run seeded with a vortex population) are not built; `feature_population` is not in
   `evidence_datasets`.
+- From spec 07 (step 13), not built: the exact background-ratio sweep (Sects. 3.3 and 3.4,
+  which needs a stripe bump on a background reaching 0, decision 24); the Gaussian pairs and
+  their sliced and entropic answers (Sect. 3.5) and the signed-field answers (Sect. 3.7), for
+  metrics not yet built; Option B (a discrete solver, POT not installed); the two
+  findings for the `wasserstein` card (Sect. 3.6), which this log measures but no card states;
+  `transport_pairs` in `evidence_datasets` (not done, by instruction).
 
 ## `feature_population`
 
@@ -391,3 +528,47 @@ also written as comments in `configs/dataset/feature_population.yaml`. Nothing i
 - **Why this balance.** The whole dataset is one frame and costs about two minutes, so nothing
   is gained by cutting it; adding frames or resolution would add cost and no answer.
 
+
+## `transport_pairs`
+
+### What it is for
+
+Build-order step 13 and `dataset_specs/07_transport_known_answer_pairs.md`: density pairs whose
+quadratic Wasserstein distance is known exactly, so that `wasserstein` (and later the planned
+sliced and Sinkhorn transport metrics, issues 048 and 067) can be checked against the true
+distance rather than another approximation, and its reach in contrast measured. It serves
+`EXP-wasserstein-known-answer-transport`. Decisions 18 to 24 above cover how it is built.
+
+### How it is treated
+
+The `advecting_blobs` reader with its default blobs at height 3 as the reference, and as the
+candidate the same blobs pulled back through Saumier et al.'s (2015, Sect. 5.1) potential at
+$\lambda = 0.45$, `candidate: {potential: [...]}` (page, eqs. (5) to (7)). Density only, on the
+default $64^2$ cells and 21 frames from $t = 0$ to 10, both axes periodic. The exact distance is
+eq. (7) of the page, from the candidate's `displacement`, 0.0497 to 0.0515 across the frames; the
+candidate's density ranges over a factor of 25.
+
+### What part is evaluated
+
+Decided by the agent on 2026-11-27 (step 3 of `docs/recipes/add-a-dataset.md`); also written in
+`configs/dataset/transport_pairs.yaml`. Nothing is stored.
+
+- **The default 21 frames on $64^2$, kept whole.** The candidate replaces the ladder, so a frame
+  is one pair (plus the clean entry and the `mean_field` anchor). The frames are deterministic:
+  21 known answers that change as the blobs move, not 21 statistical samples.
+- **$64^2$ rather than $128^2$.** `wasserstein` is within $7 \times 10^{-7}$ of the exact distance
+  in every frame at $64^2$ and within $5$ to $7 \times 10^{-8}$ on three frames at
+  $128 \times 96$ (both measured, solving from the plain blobs), and one pair costs 0.10 s at $64^2$ against 0.32 s at $128^2$.
+- **Measured costs**, on a Perlmutter login node under a load of 33 to 51, results under
+  `/pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/transport_pairs/`:
+
+  | Run, all 21 frames | Cost |
+  |---|---|
+  | `mse`, `wasserstein`, `h_minus_one` | 10 s wall; `wasserstein` 0.10 s per pair, 0.24 s against the anchor |
+  | Every deterministic density metric but `persistence_wasserstein` | 8.0 s of metric time, 13 s wall; `wasserstein` is 90% of it |
+  | `persistence_wasserstein` alone | 3 s wall; it did not stall here |
+  | `wasserstein` on $128^2$ | 0.32 s per pair, 0.79 s against the anchor |
+
+- **Why this balance.** The whole set costs under 20 s, so nothing is gained by cutting frames,
+  and a finer grid would triple the dominant cost to shrink an error far below anything the
+  ladder or a candidate changes.

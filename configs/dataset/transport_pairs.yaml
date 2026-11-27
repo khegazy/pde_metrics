@@ -1,0 +1,50 @@
+# A transport pair whose quadratic Wasserstein distance is known exactly, computed on the fly by
+# the advecting_blobs reader (fmeval/data/analytic.py; docs/datasets/advecting_blobs.md, "Transport
+# pairs with a known distance"; dataset_specs/07_transport_known_answer_pairs.md, Sect. 3.1).
+# The reference is the three advecting blobs at amplitude 3, g; the candidate is their density
+# pulled back through Saumier, Agueh & Khouider's (2015, Sect. 5.1) potential
+# u = (1/k) cos(2 pi x) sin(2 pi y) at lambda = (2 pi)^2 / k = 0.45, the two oblique modes below:
+# f = g(x + grad u) det(I + D^2 u). x + grad u is the optimal map from f to g, so W_2 is the
+# f-weighted rms of grad u in every frame: 0.0497 to 0.0515 across the window, changing as the
+# blobs move. The candidate's density ranges over a factor of 25.
+# Not registered in evidence_datasets.
+#
+# WHAT PART IS EVALUATED (agent, 2026-11-27; docs/recipes/add-a-dataset.md step 3; the log is
+# docs/datasets/logs/advecting_blobs.md). The reader's default 21 frames over t = 0..10 on 64^2,
+# kept whole: the ladder is replaced by the candidate, so each frame is one pair, and the frames
+# are deterministic, so they are 21 known answers rather than 21 samples. Measured on a
+# Perlmutter login node (load 33 to 51), results under
+# /pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/transport_pairs/:
+#   wasserstein is within 7e-7 of the exact distance in every frame (5e-8 to 7e-8 at 128x96);
+#   wasserstein 0.10 s per pair at 64^2, 0.32 s at 128^2;
+#   mse, wasserstein, h_minus_one: 10 s wall for all 21 frames;
+#   every deterministic density metric but persistence_wasserstein: 8.0 s of metric time,
+#   13 s wall (wasserstein is 90% of it); persistence_wasserstein alone 3 s wall, no stall.
+# 64^2 is kept: the whole set costs under 20 s, and 128^2 would triple the dominant cost to
+# shrink an error already far below any difference the ladder makes.
+#
+# The other pairs with an exact answer are overrides (the page lists them), for example one mode
+# against the uniform density, W_2 = H^-1 = a / (sqrt(2) |k|):
+#   dataset.reader.amplitude=0 'dataset.reader.candidate={potential:[[2,1,0.3,0.4]]}'
+#   +dataset.reader.n_frames=1 (every frame is the same without blobs).
+name: transport_pairs
+format: advecting_blobs
+
+# Unused: the reader computes its frames. Declared because every dataset config carries one.
+path: ${paths.data}
+trajectory: transport_pairs
+
+fields: [density]
+
+reader:
+  amplitude: 3.0
+  candidate: {potential: [[1, 1, 0.45, 1.5707963267948966], [1, -1, -0.45, 1.5707963267948966]]}
+
+complexity:
+  family: advecting_blobs
+  rank: -1          # generated: below every physical dataset
+  label: "Transport pair, 2D (a manufactured Monge-Ampere map with an exact Wasserstein distance)"
+
+notes: "Advecting Gaussian blobs and their density pulled back through a convex periodic potential,
+  computed on the fly; the Wasserstein distance between the two is known in every frame. See
+  docs/datasets/advecting_blobs.md."

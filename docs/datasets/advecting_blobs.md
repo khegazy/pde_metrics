@@ -28,6 +28,7 @@ JSON beside it under `docs/datasets/_generated/`.
 |---|---|---|
 | `advecting_blobs` | Three bumps of width 0.06 and height 0.1 on $64^2$ cells, 21 frames from $t = 0$ to $t = 10$, velocities $(0.05, 0)$, $(0, 0.08)$ and $(-0.06, 0.04)$ domain lengths per unit time, starting centres drawn from seed 0 | Yes, computed |
 | `feature_population` | One static frame on $128^2$ cells: four density bumps of height 1, 0.8, 0.6 and 0.3, four vortices of peak vorticity $+1$, $-1$, $-0.5$ and $+0.5$ with their velocity, all of width 0.03 on cell centres 0.5 apart, and three pressure fronts of jump 1.5 (a circle of radius 0.1, an ellipse 0.12 by 0.06 at 30°, a straight stripe of half-width 0.03), described below | Yes, computed |
+| `transport_pairs` | The default blobs at height 3 against their density pulled back through Saumier's periodic potential, a pair whose quadratic Wasserstein distance is known exactly in each of the 21 frames (0.0497 to 0.0515), described below | Yes, computed |
 
 The grid, window, velocities, width, height, diffusivity and seed are reader options, for
 example `+dataset.reader.seed=1`. One bump per velocity. The diffusivity is zero by default.
@@ -179,6 +180,97 @@ round-off:
 - **Vortices and background.** The harness's spectral curl of the velocity returns the stored
   vorticity to $10^{-12}$ of its peak, with zero mean and divergence; a background has no power
   outside its band, its rms within 10% of the requested one, and cancels from a pointwise error.
+
+## Transport pairs with a known distance
+
+The option `potential` turns the density into one side of a pair whose quadratic Wasserstein
+distance is known before any transport metric runs
+(specification 07 (`dataset_specs/07_transport_known_answer_pairs.md`), Sect. 3.1). It lists
+modes $[m_x, m_y, a, \varphi]$ of a periodic potential (spec 07, Eq. 4),
+
+$$
+u(\mathbf{x}) = -\sum_j \frac{a_j}{\lvert\mathbf{k}_j\rvert^2}
+\cos(\mathbf{k}_j \cdot \mathbf{x} + \varphi_j), \qquad
+\mathbf{k}_j = 2\pi (m_{x,j}, m_{y,j}), \qquad \sum_j \lvert a_j \rvert < 1, \tag{5}
+$$
+
+with integers $m$, and the density $g$ of eq. (1) becomes the source density of the periodic
+Monge–Ampère equation in the form of Saumier, Agueh and Khouider (2015, *IMA J. Appl. Math.*
+80(1), 135–157, [doi:10.1093/imamat/hxt032](https://doi.org/10.1093/imamat/hxt032), Eq. 4):
+
+$$
+f(\mathbf{x}) = g\bigl(\mathbf{x} + \nabla u(\mathbf{x})\bigr)\,
+\det\bigl(I + D^2 u(\mathbf{x})\bigr). \tag{6}
+$$
+
+$\nabla u$ and $D^2 u$ are evaluated in closed form, and each bump of $g$ exactly at the displaced
+point. The bound on the $a_j$ keeps $I + D^2 u$ positive definite, so
+$\mathbf{x} + \nabla u$ is the optimal map from $f$ to $g$ on the torus and its displacement is
+the shortest one (spec 07, Sect. 3.1, its author's argument from McCann's and
+Cordero-Erausquin's theorems). The distance is then (Saumier et al., Eq. 3)
+
+$$
+W_2(f, g)^2 = \frac{\langle f\, \lvert \nabla u \rvert^2 \rangle}{\langle f \rangle}, \tag{7}
+$$
+
+with $\langle\cdot\rangle$ the mean over the domain; the reader exposes $\nabla u$ at the cell
+centres as `displacement`, and the tests evaluate eq. (7) on a grid refined four times. Only the
+density is mapped; a density `background`, which has no closed form at the displaced points, is
+refused with a potential. The other side of the pair is the `candidate`
+`{potential: null}`, or, the other way round, a plain reference with a `potential` candidate,
+which is how `transport_pairs` is set up. Two special cases, with height 0 so that $g = 1$:
+
+- **One mode** gives $f = 1 + a\cos(\mathbf{k}\cdot\mathbf{x} + \varphi)$ and (spec 07, Eq. 5)
+
+  $$
+  W_2 = \frac{a}{\sqrt 2\, \lvert\mathbf{k}\rvert} = \lVert f - 1 \rVert_{\dot H^{-1}}, \tag{8}
+  $$
+
+  for every lattice wavevector, so `wasserstein` and `h_minus_one` agree exactly at every
+  amplitude, up to a density ratio of $(1 + a)/(1 - a)$.
+- **Two axis modes** make $D^2 u$ diagonal and $f = p(x)\,q(y)$ a product of one-mode
+  profiles. Against another product (spec 07, Eq. 8, its author's derivation),
+
+  $$
+  W_2^2(p \otimes q,\; p' \otimes q') = W_2^2(p, p') + W_2^2(q, q'), \tag{9}
+  $$
+
+  each term a distance on the circle, which `circle_w2` in `tests/analytic_fields.py` computes
+  exactly (Delon, Salomon and Sobolevski 2010, *SIAM J. Appl. Math.* 70(7), 2239–2258,
+  [doi:10.1137/090772708](https://doi.org/10.1137/090772708), Eq. 14, integrated piece by piece).
+  A translation is the existing `translate` degradation: a product moved along one axis is at
+  that axis's circle distance, below the shift on the torus.
+
+| Pair | Overrides |
+|---|---|
+| Saumier's map from the blobs at height 3 (the configuration) | `dataset=transport_pairs` |
+| One mode against the uniform density, eq. (8) | `dataset=transport_pairs dataset.reader.amplitude=0 'dataset.reader.candidate={potential:[[2,1,0.3,0.4]]}' +dataset.reader.n_frames=1` |
+| The same from the deformed side | as above with `'+dataset.reader.potential=[[2,1,0.3,0.4]]'` and `'dataset.reader.candidate={potential:null}'` |
+| A product pair, eq. (9) | `dataset=transport_pairs dataset.reader.amplitude=0 '+dataset.reader.potential=[[1,0,0.5,0],[0,2,0.3,1]]' 'dataset.reader.candidate={potential:[[1,0,0.2,2],[0,1,0.4,0]]}' +dataset.reader.n_frames=1` |
+
+### Known answers asserted by the tests
+
+`tests/test_analytic_datasets.py`, through the pipeline on non-square grids:
+
+- **One mode, eq. (8).** From the deformed side `wasserstein` and `h_minus_one` equal
+  $a/(\sqrt2\lvert\mathbf{k}\rvert)$ to $10^{-12}$ along an axis and obliquely, up to $a = 0.998$
+  (density ratio 999); the solve is one Laplacian step. From the uniform side the solve iterates:
+  within $10^{-5}$ at $a = 0.3$ on $64 \times 48$, and at least ten times closer on
+  $128 \times 96$ (measured 15 to 16 times).
+- **Saumier's example**, $u = (1/k)\cos(2\pi x)\sin(2\pi y)$ at $\lambda = (2\pi)^2/k = 0.45$:
+  with $g = 1$ eq. (7) equals $\lambda/(2\sqrt2\,\pi)$ (spec 07, Eq. 6) to $10^{-14}$ and the
+  metric matches it to $10^{-12}$; with the three moving blobs at height 3 (density ratio 25) the
+  distance changes from frame to frame and the metric matches eq. (7) to $10^{-5}$ both ways
+  round.
+- **A product pair, eq. (9)**, to $10^{-5}$ both ways round.
+- **Translations.** A translated product is at its circle distance to $10^{-5}$; the translated
+  blobs, which have no closed form, lie strictly inside the certified bracket of spec 07,
+  Sect. 3.3: above the circle distance of their x-marginals and below the shift.
+
+Where the solve stops: from the uniform side it returns NaN, with its warning, from a one-mode
+amplitude between 0.94 and 0.965 (density ratio 32 to 56), on four grids and two wavevectors,
+and not monotonically in between, so no test pins the threshold
+([the log](logs/advecting_blobs.md) has the scan).
 
 ## What it is for
 

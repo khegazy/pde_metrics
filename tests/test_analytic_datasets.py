@@ -21,13 +21,18 @@ Sources cited below:
   numerical analysis and machine learning", arXiv:2303.02759.
 * Hill (1975), "A simple general approach to inference about the tail of a distribution",
   Ann. Stat. 3(5), 1163-1174, https://doi.org/10.1214/aos/1176343247.
+* Saumier, Agueh & Khouider (2015), "An efficient numerical algorithm for the L2 optimal
+  transport problem with periodic densities", IMA J. Appl. Math. 80(1), 135-157,
+  https://doi.org/10.1093/imamat/hxt032 (arXiv:1009.6039).
 
 The candidate tests check the closed-form error curves of
 ``dataset_specs/05_initial_conditions_and_degraded_solver_runs.md`` (Sects. 3.1 and 3.3; the
 derivations there are its author's), re-derived in each test's docstring. The random-field tests
 check the known statistics of ``dataset_specs/09_random_fields_known_statistics.md`` (Eqs. 2-11,
 also its author's derivations), each restated where it is used. Those answers are expectations
-over draws, so their tolerances are a few standard errors of a frame mean, each stated.
+over draws, so their tolerances are a few standard errors of a frame mean, each stated. The
+transport pairs check the exact distances of ``dataset_specs/07_transport_known_answer_pairs.md``
+(Eqs. 3, 5, 6 and 8), against closed forms and the exact circle solver ``circle_w2``.
 """
 
 from __future__ import annotations
@@ -64,7 +69,7 @@ from fmeval.pipeline import DatasetInfo, parse_map_key, run
 from fmeval.wavenumbers import wavenumber_magnitude
 from metrics import registry as metric_registry
 from metrics.vrmse.metric import EPSILON
-from tests.analytic_fields import gaussian_mean_square
+from tests.analytic_fields import circle_w2, gaussian_mean_square
 from tests.conftest import GRID
 
 #: Every dataset config whose reader computes its frames rather than reading a file.
@@ -846,6 +851,154 @@ def test_a_background_that_makes_the_density_non_positive_is_refused_when_read()
                                        "k_max": 8})
     with pytest.raises(ValueError, match="not positive"):
         blobs.frame(0, ["density"])
+
+
+# --- transport pairs with a known distance: advecting_blobs' potential (dataset_specs/07) -------
+
+#: One static frame without blobs (``g = 1``) on a non-square grid.
+UNIFORM = {"grid": (64, 48), "n_frames": 1, "t_end": 0.0, "amplitude": 0.0}
+#: Saumier, Agueh & Khouider (2015), Sect. 5.1: u = (1/k) cos(2 pi x) sin(2 pi y), which is
+#: (1/2k) [sin(k_+ . x) - sin(k_- . x)] with k_+- = 2 pi (1, +-1): the two oblique modes of
+#: spec 07, Eq. 4, each with |a| = lambda = (2 pi)^2 / k, here 0.45.
+SAUMIER = [[1, 1, 0.45, np.pi / 2], [1, -1, -0.45, np.pi / 2]]
+#: Mass levels of 2^16 sub-cells, on which ``circle_w2`` of a smooth profile is within 4e-10 of
+#: the continuous distance (spec 07, Sect. 3.2: the cell-constant reading converges as h^2).
+LEVELS = (np.arange(2**16) + 0.5) / 2**16
+
+
+def transport(truth: AdvectingBlobs) -> pd.DataFrame:
+    """``wasserstein`` and ``h_minus_one`` on the reader's candidate, by time, through the
+    pipeline's prediction path."""
+    return scored_candidate(truth, ("wasserstein", "h_minus_one"), ("density",))[
+        "forecast"].loc["density"]
+
+
+def axis_profile(mode: Sequence[float], shift: float = 0.0) -> np.ndarray:
+    """``1 + a cos(2 pi m (x - shift) + phi)`` on ``LEVELS``, for an axis mode
+    ``[m_x, m_y, a, phi]`` with one of ``m_x, m_y`` zero."""
+    return 1.0 + mode[2] * np.cos(2 * np.pi * (mode[0] + mode[1]) * (LEVELS - shift) + mode[3])
+
+
+@pytest.mark.parametrize("mode", [(1, 0), (2, 1)], ids=["axis", "oblique"])
+def test_one_mode_against_the_uniform_density_is_at_w2_equal_to_h_minus_one(mode):
+    """Spec 07, Eq. 5: with ``g = 1`` and one mode, ``f = 1 + a cos(k . x + phi)`` and the
+    displacement is ``(a / |k|) |sin|``, so W_2 = a / (sqrt(2) |k|) for every lattice wavevector;
+    H^-1 of ``a cos(k . x)`` is the same number (the ``h_minus_one`` card, Eq. 3), so the two
+    metrics agree exactly at every amplitude. From the deformed side the solve is one Laplacian
+    step (the ``wasserstein`` worked example), exact to round-off up to a = 0.998, a density
+    ratio of 999; measured 4e-16, tolerance 1e-12. From the uniform side it iterates and
+    interpolates: measured 1.3e-7 and 2.3e-6 on 64 x 48 at a = 0.3, falling 15 to 16 times on
+    128 x 96 (fourth order in the cell size); tolerance 1e-5, and at least a tenfold fall.
+    ``h_minus_one`` is a difference, exact both ways (measured 3e-16)."""
+    k = 2 * np.pi * np.hypot(*mode)
+    for a in (0.3, 0.998):
+        got = transport(AdvectingBlobs(**UNIFORM, potential=[[*mode, a, 0.4]],
+                                       candidate={"potential": None}))
+        assert got.to_numpy() == pytest.approx(a / (np.sqrt(2) * k), rel=1e-12), a
+    errors = []
+    for grid in ((64, 48), (128, 96)):
+        got = transport(AdvectingBlobs(**{**UNIFORM, "grid": grid},
+                                       candidate={"potential": [[*mode, 0.3, 0.4]]}))
+        exact = 0.3 / (np.sqrt(2) * k)
+        assert got["h_minus_one"].to_numpy() == pytest.approx(exact, rel=1e-12)
+        errors.append(abs(got["wasserstein"].iloc[0] / exact - 1))
+    assert errors[0] < 1e-5 and errors[1] < errors[0] / 10, f"relative errors {errors}"
+
+
+@pytest.mark.parametrize("amplitude", [0.0, 3.0], ids=["uniform_target", "blob_target"])
+def test_saumiers_manufactured_map_has_its_exact_distance_both_ways(amplitude):
+    """Saumier et al.'s example: ``f = g(x + grad u) det(I + D^2 u)`` is carried to ``g`` by
+    the optimal map ``x + grad u`` (convex, lambda < 1/2 within the reader's bound), so
+    W_2^2 = <f |grad u|^2> / <f> (Saumier et al., Eq. 3; spec 07, Eq. 3), evaluated by
+    quadrature on the grid refined four times, where it agrees with eight times to 2e-16. With
+    ``g = 1`` that is lambda / (sqrt(2) 2 pi) (spec 07, Eq. 6), to 1e-14; with the three moving
+    blobs at amplitude 3, ``f`` ranges over a factor of 25 and the distance changes from frame
+    to frame. ``wasserstein`` from ``f`` to ``g = 1`` measured 8.6e-14 (tolerance 1e-12);
+    otherwise 2e-7 to 1e-6 on 64 x 48, either way round (tolerance 1e-5)."""
+    options = {"grid": (64, 48), "n_frames": 3, "t_end": 10.0, "amplitude": amplitude}
+    fine = AdvectingBlobs(**{**options, "grid": (256, 192)}, potential=SAUMIER)
+    exact = []
+    for t in range(len(fine)):
+        f = fine.frame(t, ["density"])["density"][0]
+        exact.append(np.sqrt(np.mean(f * (fine.displacement**2).sum(axis=0)) / f.mean()))
+    if amplitude == 0:
+        assert exact == pytest.approx([0.45 / (np.sqrt(2) * 2 * np.pi)] * 3, rel=1e-14)
+    else:
+        assert np.ptp(exact) > 1e-3 * np.mean(exact), "the blobs must change the distance"
+    forward = transport(AdvectingBlobs(**options, potential=SAUMIER,
+                                       candidate={"potential": None}))["wasserstein"]
+    reverse = transport(AdvectingBlobs(**options, candidate={"potential": SAUMIER}))[
+        "wasserstein"]
+    assert forward.to_numpy() == pytest.approx(exact, rel=1e-12 if amplitude == 0 else 1e-5)
+    assert reverse.to_numpy() == pytest.approx(exact, rel=1e-5)
+
+
+def test_a_product_pair_is_at_the_sum_of_its_two_circle_distances():
+    """Two axis modes make ``D^2 u`` diagonal, so with ``g = 1`` the density is the product
+    ``p(x) q(y)`` of two one-mode profiles. The squared torus distance is the sum of the squared
+    circle distances along the axes, and the product of the two optimal circle plans attains
+    the lower bound that sum gives, so W_2^2(p q, p' q') = W_2^2(p, p') + W_2^2(q, q') (spec 07,
+    Eq. 8, its author's derivation), each from ``circle_w2``. Measured 8e-8 and 5e-7 on 64 x 48,
+    the two ways round; tolerance 1e-5."""
+    reference, candidate = [[1, 0, 0.5, 0.0], [0, 2, 0.3, 1.0]], [[1, 0, 0.2, 2.0], [0, 1, 0.4, 0.0]]
+    pair = AdvectingBlobs(**UNIFORM, potential=reference, candidate={"potential": candidate})
+    x, y = pair.centres
+    assert pair.frame(0, ["density"])["density"][0] == pytest.approx(
+        (1 + 0.5 * np.cos(2 * np.pi * x)) * (1 + 0.3 * np.cos(4 * np.pi * y + 1.0)), rel=1e-14)
+    exact = np.hypot(*(circle_w2(axis_profile(r), axis_profile(c))
+                       for r, c in zip(reference, candidate, strict=True)))
+    swapped = AdvectingBlobs(**UNIFORM, potential=candidate, candidate={"potential": reference})
+    for truth in (pair, swapped):
+        assert transport(truth)["wasserstein"].to_numpy() == pytest.approx([exact], rel=1e-5)
+
+
+def test_a_translation_keeps_its_circle_distance_on_a_product_and_its_bracket_on_blobs():
+    """The ``translate`` degradation moves the field by whole cells, s along one axis.
+
+    * A product ``p(x) q(y)`` moved along x is at the circle distance of ``p`` from its
+      translate, and along y of ``q`` (spec 07, Eq. 8 with one factor unchanged), computed for
+      the analytic profile shifted by s; measured 4e-8 to 7e-8, tolerance 1e-5. On the torus
+      that is below s for a positive density (spec 07, Sect. 3.3).
+    * The radial blobs have no closed form, but a certified bracket: projecting to one axis
+      does not increase distances, so W_2 is at least the circle distance of the x-marginals,
+      and the translation plan bounds it by s (spec 07, Sect. 3.3). Measured inside it with a
+      margin of 23% or more below; the marginal is summed on 16384 cells along x."""
+    ladder = build_ladder({"translate_x": {"op": "translate", "severities": [1, 4, 16]},
+                           "translate_y": {"op": "translate", "severities": [2],
+                                           "options": {"axis": "y"}}})
+    product = [[1, 0, 0.5, 0.0], [0, 2, 0.3, 1.0]]
+    rows = run(AdvectingBlobs(**UNIFORM, potential=product), [metric_registry.get("wasserstein")],
+               ladder, fields=["density"], dataset=DatasetInfo(name="advecting_blobs")).rows
+    moved = rows[rows["degradation"].astype(str).str.startswith("translate")]
+    assert len(moved) == 4
+    for row in moved.itertuples():
+        axis = 0 if row.degradation == "translate_x" else 1
+        s = row.severity / UNIFORM["grid"][axis]
+        exact = circle_w2(axis_profile(product[axis]), axis_profile(product[axis], s))
+        assert row.value == pytest.approx(exact, rel=1e-5), (row.degradation, row.severity)
+        assert exact < s
+
+    blobs = {"n_frames": 3, "t_end": 10.0, "amplitude": 3.0}
+    rows = run(AdvectingBlobs(**blobs, grid=(64, 48)), [metric_registry.get("wasserstein")],
+               ladder, fields=["density"], dataset=DatasetInfo(name="advecting_blobs")).rows
+    fine = AdvectingBlobs(**blobs, grid=(16384, 48))
+    for row in rows[rows["degradation"] == "translate_x"].itertuples():
+        marginal = fine.frame(row.frame_index, ["density"])["density"][0].sum(axis=1)
+        cells = int(row.severity) * 16384 // 64
+        assert circle_w2(marginal, np.roll(marginal, cells)) < row.value < row.severity / 64
+
+
+@pytest.mark.parametrize("options", [
+    {"potential": [[1, 1, 0.6, 0.0], [1, -1, 0.4, 0.0]]},  # sum |a| = 1: convexity not certain
+    {"potential": [[0, 0, 0.3, 0.0]]},                       # k = 0 is not a mode
+    {"potential": [[0.5, 1, 0.3, 0.0]]},                     # not periodic on the unit square
+    {"potential": [[1, 1, 0.3]]},                            # a mode is [m_x, m_y, a, phi]
+    {"potential": [[1, 0, 0.3, 0.0]],                        # no closed form at x + grad u
+     "background": {"rms": {"density": 0.01}, "slope": 0, "k_min": 1, "k_max": 8}},
+])
+def test_the_transport_pair_refuses_a_potential_without_a_known_optimal_map(options):
+    with pytest.raises(ValueError, match="potential"):
+        AdvectingBlobs(**options)
 
 
 # --- random fields with known statistics (dataset_specs/09) -----------------------------------

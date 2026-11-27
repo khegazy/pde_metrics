@@ -463,6 +463,28 @@ class AdvectingBlobs(ClosedFormTrajectory):
     candidates are degradations (``translate``, ``gain``, ...), not candidates. Features are
     summed wherever they overlap; the known answers of spec 06, Sect. 3.5, assume them isolated,
     and ``tests/test_analytic_datasets.py`` places them so.
+
+    **A manufactured transport pair** (``dataset_specs/07_transport_known_answer_pairs.md``,
+    Sect. 3.1). ``potential`` lists modes ``[m_x, m_y, a, phi]`` of a periodic potential
+
+        u(x) = -sum_j (a_j / |k_j|^2) cos(k_j . x + phi_j),   k_j = 2 pi (m_x, m_y),
+
+    (spec 07, Eq. 4), and the density becomes Saumier, Agueh & Khouider's (2015, IMA J. Appl.
+    Math. 80(1), 135-157, Eq. 4) source density for the target ``g``, the density above:
+
+        f(x) = g(x + grad u(x)) det(I + D^2 u(x)),
+
+    with ``grad u`` and ``D^2 u`` in closed form and ``g``'s bumps evaluated exactly at the
+    displaced points. ``sum_j |a_j| < 1`` bounds the operator norm of ``D^2 u`` below 1, so
+    ``|x|^2 / 2 + u`` is convex and ``x + grad u`` is the optimal map from ``f`` to ``g`` on the
+    torus, its displacement the shortest one (spec 07, Sect. 3.1, after McCann 2001, Geom.
+    Funct. Anal. 11(3), and Cordero-Erausquin 1999, the latter through Saumier et al.'s
+    Theorem 2.1). The exact distance is then the ``f``-weighted mean square of
+    :attr:`displacement` (Saumier et al., Eq. 3; spec 07, Eq. 3). The candidate
+    ``{potential: null}`` is ``g`` itself, and a plain reference with a ``potential`` candidate
+    is the pair the other way round. With ``amplitude`` 0, ``g = 1``: one mode gives
+    ``f = 1 + a cos(k . x + phi)`` at ``W_2 = a / (sqrt(2) |k|)`` (spec 07, Eq. 5), and two axis
+    modes the product ``p(x) q(y)``. Only the density is mapped; vortices and fronts are not.
     """
 
     FORMAT = "advecting_blobs"
@@ -482,6 +504,7 @@ class AdvectingBlobs(ClosedFormTrajectory):
                  orientation: float | Sequence[float] = 0.0,
                  directions: Sequence[Sequence[int]] | None = None,
                  front_thickness: float = 0.25, background: Mapping[str, Any] | None = None,
+                 potential: Sequence[Sequence[float]] | None = None,
                  candidate: Mapping[str, Any] | None = None) -> None:
         """Lay out the features, draw any centres not given and the background.
 
@@ -514,6 +537,8 @@ class AdvectingBlobs(ClosedFormTrajectory):
                 slope). It is the repository's one random-field draw, ``_apply_filter``
                 applied to white noise from ``derive_rng(seed, "background", 0, field)``:
                 exactly Gaussian with that covariance. It is static.
+            potential: None, or modes ``[m_x, m_y, a, phi]``, integers ``m`` not both zero and
+                ``sum |a| < 1``, mapping the density to the source of the transport pair above.
             candidate: Any of the parameters above from ``velocities`` on, changed for the
                 candidate (:meth:`predictions`), or None.
 
@@ -521,8 +546,9 @@ class AdvectingBlobs(ClosedFormTrajectory):
             ValueError: On an option that is neither a scalar nor one value per velocity, a
                 non-positive width, aspect or thickness, a negative bump or front amplitude, an
                 unknown kind, a stripe direction that is not coprime integers on a front, a
-                negative diffusivity or one with a front, an invalid background, or an invalid
-                grid, window or candidate.
+                negative diffusivity or one with a front, an invalid background, an invalid
+                potential or one with a density background (which has no closed form at the
+                displaced points), or an invalid grid, window or candidate.
         """
         speeds = np.asarray(velocities, dtype=float)
         if speeds.ndim != 2 or speeds.shape[1] != 2 or len(speeds) == 0:
@@ -556,6 +582,14 @@ class AdvectingBlobs(ClosedFormTrajectory):
         if float(diffusivity) < 0 or (float(diffusivity) > 0 and (kind == "front").any()):
             raise ValueError(f"diffusivity must be non-negative, and zero with a front, got "
                              f"{diffusivity}")
+        modes = None if potential is None else np.asarray(potential, dtype=float)
+        if modes is not None and (
+                modes.ndim != 2 or modes.shape[1] != 4 or len(modes) == 0
+                or (modes[:, :2] != np.round(modes[:, :2])).any()
+                or not modes[:, :2].any(axis=1).all() or np.abs(modes[:, 2]).sum() >= 1
+                or "density" in (background or {}).get("rms", {})):
+            raise ValueError(f"potential must be modes [m_x, m_y, a, phi] with integers m not both "
+                             f"zero and sum |a| < 1, without a density background; got {potential}")
         super().__init__(grid=grid, length=(1.0, 1.0), boundary=("periodic", "periodic"),
                          n_frames=n_frames, t_start=t_start, t_end=t_end, candidate=candidate,
                          params={"velocities": speeds.tolist(),
@@ -568,10 +602,23 @@ class AdvectingBlobs(ClosedFormTrajectory):
                                  "orientation": np.asarray(orientation, dtype=float).tolist(),
                                  "directions": None if directions is None else lines.tolist(),
                                  "front_thickness": float(front_thickness),
-                                 "background": None if background is None else dict(background)})
+                                 "background": None if background is None else dict(background),
+                                 "potential": None if modes is None else modes.tolist()})
         self._velocities, self._diffusivity, self._centres = speeds, float(diffusivity), starts
         self._features = list(zip(kind, widths, amplitudes, aspects, angles, lines, strict=True))
         self._thickness = float(front_thickness) * min(self._grid.spacing)
+
+        #: ``grad u`` of ``potential`` at the cell centres, ``(2, X, Y)``; zero without one.
+        self.displacement = np.zeros((2, *self._grid.shape))
+        self._jacobian: float | np.ndarray = 1.0
+        if modes is not None:
+            k = 2.0 * np.pi * modes[:, :2]
+            phase = np.einsum("jd,dxy->jxy", k, np.stack(self.centres)) + modes[:, 3, None, None]
+            weight = modes[:, 2] / (k**2).sum(axis=1)  # a_j / |k_j|^2 of spec 07, Eq. 4
+            self.displacement = np.einsum("j,jd,jxy->dxy", weight, k, np.sin(phase))
+            hessian = np.einsum("j,jd,je,jxy->dexy", weight, k, k, np.cos(phase))
+            self._jacobian = (1.0 + hessian[0, 0]) * (1.0 + hessian[1, 1]) - hessian[0, 1] ** 2
+        self._displaced = [c + d for c, d in zip(self.centres, self.displacement, strict=True)]
 
         self._background: dict[str, np.ndarray] = {}
         if background is not None:
@@ -599,8 +646,10 @@ class AdvectingBlobs(ClosedFormTrajectory):
         for (kind, w, a, eps, angle, line), centre, velocity in zip(
                 self._features, self._centres, self._velocities, strict=True):
             position = (centre + velocity * time) % 1.0
-            dx, dy = (((x - c + 0.5) % 1.0 - 0.5) for x, c in zip(self.centres, position,
-                                                                   strict=True))
+            # A bump is evaluated at x + grad u, so the density is g(x + grad u) before the
+            # Jacobian below (Saumier et al. 2015, Eq. 4); without a potential that is x.
+            points = self._displaced if kind == "bump" else self.centres
+            dx, dy = (((x - c + 0.5) % 1.0 - 0.5) for x, c in zip(points, position, strict=True))
             along = np.cos(angle) * dx + np.sin(angle) * dy
             across = np.cos(angle) * dy - np.sin(angle) * dx
             if kind != "front":
@@ -618,6 +667,7 @@ class AdvectingBlobs(ClosedFormTrajectory):
             else:
                 level = np.sqrt(eps) * (np.hypot(along, across / eps) - w)
             fields["pressure"] += a * 0.5 * (1.0 + np.tanh(-level / self._thickness))
+        fields["density"] *= self._jacobian  # det(I + D^2 u); exactly 1.0 without a potential
         if min(fields["density"].min(), fields["pressure"].min()) <= 0:
             raise ValueError(f"density or pressure is not positive at t={time}; lower the "
                              "background's rms")

@@ -12,9 +12,10 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from scipy import ndimage, optimize
+from scipy import ndimage
 
 from metrics.h_minus_one.metric import h_minus_one
+from tests.analytic_fields import circle_w2
 from tests.conftest import cosine_mode, make_ctx
 
 from . import metric as metric_module
@@ -63,39 +64,24 @@ def test_agrees_with_the_exact_solution_on_the_circle_for_a_shifted_density(prof
     """A density varying along x only, against itself moved by an eighth of the domain.
 
     The optimal map then acts along x only, so the two-dimensional solve must equal the
-    transport distance on the circle. Delon, Salomon & Sobolevski (2010), SIAM J. Appl. Math.
-    70(7), Sect. 2, give it exactly: lift both cumulative distribution functions to the line
-    with F(x + L) = F(x) + 1, couple mass level v of the reference with mass level v + theta of
-    the candidate, and minimise the mean squared distance between the two quantile functions
-    over the rotation theta, a convex function of theta. Evaluated here on a fine quantile
-    grid, with each density read as constant on its cell. That is an independent algorithm,
-    with neither a Monge-Ampere solve nor a spline, and on this smooth profile the two
-    readings of the cells differ by less than the tolerance.
+    transport distance on the circle, which ``circle_w2`` computes exactly (Delon, Salomon &
+    Sobolevski 2010, SIAM J. Appl. Math. 70(7), Eq. 14): an independent algorithm, with neither
+    a Monge-Ampere solve nor a spline. It is given the smooth profile on 2^16 sub-cells, whose
+    cell-constant reading is within 4e-10 of the continuous distance (it converges as the square
+    of the cell size, ``dataset_specs/07_transport_known_answer_pairs.md``, Sect. 3.2); the
+    256-cell reading would differ from it by 4e-5. Measured agreement 1.7e-9 and 3.8e-10;
+    tolerance 1e-8.
 
     The peaked profile is the regression test for a step that overshoots where the candidate
     density is several times its mean; it must converge and agree, not return NaN.
     """
-    n = 256
-    x = np.arange(n)
-    f = profile(x, n)
-    g = np.roll(f, n // 8)
+    n, fine = 256, 2**16
+    f = profile(np.arange(n), n)
     field = lambda profile: np.broadcast_to(profile[:, None], (n, 4))[None].copy()  # noqa: E731
-    got = wasserstein(field(f), field(g), ctx=make_ctx((n, 4)))
-
-    edges = np.arange(n + 1) - 0.5   # cell edges; cell centres sit on the integers
-    cdf = [np.concatenate([[0.0], np.cumsum(p) / p.sum()]) for p in (f, g)]
-    v = (np.arange(100_000) + 0.5) / 100_000
-
-    def quantile(c: np.ndarray, levels: np.ndarray) -> np.ndarray:
-        """The inverse of the lifted distribution function: one period further per unit."""
-        return np.interp(levels % 1.0, c, edges) + n * np.floor(levels)
-
-    def cost(theta: float) -> float:
-        return float(np.mean((quantile(cdf[0], v) - quantile(cdf[1], v + theta)) ** 2))
-
-    exact = np.sqrt(optimize.minimize_scalar(cost, bounds=(-0.5, 0.5), method="bounded",
-                                             options={"xatol": 1e-10}).fun)
-    assert got == pytest.approx(exact, rel=2e-4)
+    got = wasserstein(field(f), field(np.roll(f, n // 8)), ctx=make_ctx((n, 4)))
+    smooth = profile((np.arange(fine) + 0.5) * n / fine - 0.5, n)  # cell centres on integers
+    exact = circle_w2(smooth, np.roll(smooth, fine // 8), length=n)
+    assert got == pytest.approx(exact, rel=1e-8)
 
 
 def test_lies_within_the_h_minus_one_bounds():

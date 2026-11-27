@@ -26,6 +26,7 @@ every frame. A test fixture, not evidence: nothing measured on it says anything 
 from __future__ import annotations
 
 import numpy as np
+from scipy import optimize
 
 from fmeval.context import derive_rng
 from fmeval.data.analytic import AdvectingBlobs
@@ -123,6 +124,68 @@ def gaussian_mean_square(per_mode: np.ndarray) -> tuple[float, float]:
     ``dataset_specs/09_random_fields_known_statistics.md``, Sect. 3.2, "Spectrum").
     """
     return float(per_mode.sum()), float(np.sqrt(2.0 * np.sum(per_mode**2)))
+
+
+def circle_w2(f: np.ndarray, g: np.ndarray, length: float = 1.0) -> float:
+    """The exact quadratic Wasserstein distance between two densities on a circle of ``length``,
+    each read as constant on its cells (``len(f)`` equal cells, cell 0 starting at 0).
+
+    Lift each cumulative distribution function to the line with ``F(x + L) = F(x) + 1``. The
+    transport cost on the circle is the minimum over the rotation ``theta`` of mass levels of
+    ``C(theta) = int_0^1 |F^-1(v) - G^-1(v + theta)|^2 dv`` (Delon, Salomon & Sobolevski 2010,
+    SIAM J. Appl. Math. 70(7), 2239-2258, Eq. 14, convex in theta by the lemma opening their
+    Sect. 5; Rabin, Delon & Gousseau 2011, J. Math. Imaging Vis. 41, Eq. 9). A cell-constant
+    density has a quantile function linear between the cumulative cell masses, so on each
+    interval between the merged knots of ``F^-1(v)`` and ``G^-1(v + theta)`` the difference is
+    linear and its square integrates exactly, ``(v1 - v0)(d0^2 + d0 d1 + d1^2) / 3``. Each piece
+    is evaluated from the cell its interval's midpoint falls in, so an empty cell, where the
+    quantile function jumps, is exact too (``dataset_specs/07_transport_known_answer_pairs.md``,
+    Sect. 3.2). The convex ``C`` is minimised by bounded Brent search over ``|theta| <= 1.5``,
+    which holds the minimum (our argument): at the optimum the lift is the nearest one, so no
+    mass moves more than ``L / 2``, which puts ``G^-1(theta)`` above ``-L / 2`` and
+    ``G^-1(1 + theta)`` below ``3L / 2``, hence ``|theta| < 1``.
+
+    Raises:
+        ValueError: If the profiles differ in length, are not 1-D, or are negative or empty of
+            mass.
+    """
+    f, g = (np.asarray(p, dtype=float) for p in (f, g))
+    if f.ndim != 1 or f.shape != g.shape or min(f.min(), g.min()) < 0 or min(f.sum(), g.sum()) <= 0:
+        raise ValueError(f"need two non-negative 1-D profiles of one length with mass, got shapes "
+                         f"{f.shape} and {g.shape}")
+    n, width = len(f), length / len(f)
+    # Per profile, the cells whose mass the cumulative masses resolve: their indices and the mass
+    # levels they span. A cell lighter than the round-off of a level near 1 counts as empty.
+    cells = []
+    for p in (f, g):
+        c = np.concatenate([[0.0], np.cumsum(p)])
+        c /= c[-1]  # by the running sum's own end, so the levels end at exactly 1
+        kept = np.flatnonzero(np.diff(c) > 0)
+        cells.append((kept, c[kept], c[kept + 1]))
+
+    def piece(profile: int, middle: np.ndarray, ends: tuple[np.ndarray, ...]) -> list:
+        """The lifted quantile function of ``profile``, on the linear piece holding mass level
+        ``middle``, at each of ``ends``. The ends lie in that piece's cell; clipping the fraction
+        of the cell to [0, 1] removes the round-off of ``ends`` against a cell of tiny mass."""
+        kept, start, stop = cells[profile]
+        period = np.floor(middle)
+        j = np.clip(np.searchsorted(start, middle - period, side="right") - 1, 0, len(kept) - 1)
+        return [(kept[j] + np.clip((e - period - start[j]) / (stop[j] - start[j]), 0.0, 1.0)
+                 + period * n) * width for e in ends]
+
+    def cost(theta: float) -> float:
+        levels = [np.concatenate([[0.0], stop]) for _, _, stop in cells]
+        lifted = (levels[1][None, :] - theta + np.arange(-2, 3)[:, None]).ravel()
+        knots = np.unique(np.concatenate([levels[0], lifted[(lifted > 0) & (lifted < 1)]]))
+        lo, hi = knots[:-1], knots[1:]
+        f0, f1 = piece(0, (lo + hi) / 2, (lo, hi))
+        g0, g1 = piece(1, (lo + hi) / 2 + theta, (lo + theta, hi + theta))
+        d0, d1 = f0 - g0, f1 - g1
+        return float(np.sum((hi - lo) * (d0**2 + d0 * d1 + d1**2)) / 3.0)
+
+    best = optimize.minimize_scalar(cost, bounds=(-1.5, 1.5), method="bounded",
+                                    options={"xatol": 1e-13})
+    return float(np.sqrt(best.fun))
 
 
 class AnalyticTrajectory(Trajectory):
