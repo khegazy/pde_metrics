@@ -1,0 +1,27 @@
+launches:
+- started_at: '2026-11-27T17:14:45.605152+00:00'
+  run_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/sod_g1p4_N3001/outputs/sod/transonic/simulate/job_261127_091444_495611
+  case_path: sod/transonic
+  case_id: transonic
+  task: simulate
+  hostname: nid003485
+  pid: 1675823
+  stamp: null
+  resume_from: null
+  slurm_job_id: '62102238'
+  slurm_job_name: kinet-sodref
+  slurm_submit_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work
+  slurm_stdout: /pscratch/sd/k/khegazy/kinet_datasets/_work/sod_g1p4_N3001/outputs/sod/transonic/simulate/job_261127_091444_495611/logs/62102238/slurm.out
+  slurm_stderr: /pscratch/sd/k/khegazy/kinet_datasets/_work/sod_g1p4_N3001/outputs/sod/transonic/simulate/job_261127_091444_495611/logs/62102238/slurm.err
+  hydra_overrides:
+  - task=simulate
+  - case=sod/transonic
+  - ++case.io.record_distributions=false
+  - ++case.io.record_equilibria=false
+  - ++case.discretization.spatial.grid=[3001,5]
+  - ++case.discretization.temporal.grid=1000
+  - ++case.physics.parameters.dynamic_viscosity=1e-04
+  - ++case.io.save_every_n=4
+  - ++paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/sod_refinement
+  - ++distributed.is_distributed=false
+  - ++distributed.is_slurm=true

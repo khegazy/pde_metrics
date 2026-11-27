@@ -1,0 +1,17 @@
+# Run cyl_m1p8_test200_shift0p55
+slurm_job_id: 62102239
+sacct: 62102239|kinet-cyltest|gpu_ss11|gpu_debug|m4790_g|2026-11-27T09:07:07|2026-11-27T09:14:46|2026-11-27T09:21:13|00:06:27|COMPLETED|0:0|nid001660
+run_in_job: cyl_m1p8_test200_shift0p55 rc=0 wall_s=154.45 start=1795799918.217199712 end=1795800072.666695214
+kinet: d1cd353b83e994376d2c4476c968e82bca823f5f branch perf/cleanup
+device: cuda (launch.device), torch 2.15.0+cu132 cuda 13.2
+gpu: NVIDIA A100-SXM4-40GB, 40960 MiB, 580.196.07
+rollout: /pscratch/sd/k/khegazy/kinet_datasets/supersonic_cylinder_test/shift0p55/flow_around_objects/cylinder/7b624020/tiers/full/rollout.h5
+rollout_bytes: 336112572
+output_dir_size_after_checkpoint_delete: 321M (/pscratch/sd/k/khegazy/kinet_datasets/supersonic_cylinder_test/shift0p55/flow_around_objects/cylinder/7b624020)
+last_step_check: kinet_rollout_status=complete kinet_last_completed_step=200 total_pred_length=200 last_saved_step=200 saved_frames=21 reached_last_step=True
+working_directory: /pscratch/sd/k/khegazy/kinet_datasets/_work/cyl_m1p8_test200_shift0p55
+environment: source /pscratch/sd/k/khegazy/kinet_datasets/_work/env.sh   # kinet .venv, KINET_PROJECT, caches on scratch
+command (run inside the working directory by run_kinet_job.sh):
+  python -m kinet.apps.simulate task=simulate case=flow_around_objects/cylinder case.collision.stabilizer.scales=\[2.0\,1.905\,1.481\] case.collision.stabilizer.tolerances=\[0.01\,0.1\,1.0\] io.record_distributions=false io.record_equilibria=false case.discretization.temporal.grid=200 io.save_every_n=10 paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/supersonic_cylinder_test/shift0p55 distributed.is_distributed=false distributed.is_slurm=true 
+sbatch_exact (from /pscratch/sd/k/khegazy/kinet_datasets/_work): sbatch --account=m4790 --constraint=gpu --qos=debug --nodes=1 --ntasks=1 --cpus-per-task=32 --gpus-per-node=1 --output=/pscratch/sd/k/khegazy/kinet_datasets/_work/slurm_%j.out --time=00:25:00 --job-name=kinet-cyltest run_kinet_job.sh runs_cyl_test.txt
+sbatch: sbatch --account=m4790 --constraint=gpu --qos=debug --nodes=1 --ntasks=1 --cpus-per-task=32 --gpus-per-node=1 --time=<limit> run_kinet_job.sh <runs file>

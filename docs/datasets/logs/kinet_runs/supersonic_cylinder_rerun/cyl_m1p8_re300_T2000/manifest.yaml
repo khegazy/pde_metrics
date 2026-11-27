@@ -1,0 +1,8 @@
+version: 1
+case_path: flow_around_objects/cylinder
+simulation_subdir: flow_around_objects/cylinder/33f78849
+identity_key: 33f78849
+active:
+  full: tiers/full/rollout.h5
+  tiers: {}
+updated_at: '2026-11-27T17:28:21.914377+00:00'

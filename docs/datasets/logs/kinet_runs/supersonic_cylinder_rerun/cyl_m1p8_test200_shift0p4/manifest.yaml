@@ -1,0 +1,8 @@
+version: 1
+case_path: flow_around_objects/cylinder
+simulation_subdir: flow_around_objects/cylinder/d7ecadea
+identity_key: d7ecadea
+active:
+  full: tiers/full/rollout.h5
+  tiers: {}
+updated_at: '2026-11-27T17:18:33.978105+00:00'

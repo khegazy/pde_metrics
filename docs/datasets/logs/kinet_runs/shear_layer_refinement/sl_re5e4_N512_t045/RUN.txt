@@ -1,0 +1,17 @@
+# Run sl_re5e4_N512_t045
+slurm_job_id: 62102236
+sacct: 62102236|kinet-slref|gpu_ss11|gpu_debug|m4790_g|2026-11-27T09:07:07|2026-11-27T09:07:40|2026-11-27T09:14:42|00:07:02|COMPLETED|0:0|nid001557
+run_in_job: sl_re5e4_N512_t045 rc=0 wall_s=109.64 start=1795799572.660514335 end=1795799682.302552822
+kinet: d1cd353b83e994376d2c4476c968e82bca823f5f branch perf/cleanup
+device: device: cuda (launch.device), torch 2.15.0+cu132 cuda 13.2
+gpu: NVIDIA A100-SXM4-40GB, 40960 MiB, 580.196.07
+rollout: /pscratch/sd/k/khegazy/kinet_datasets/shear_layer_refinement/doubly_periodic/shear_layer/2b86fad7/tiers/full/rollout.h5
+rollout_bytes: 1495776200
+output_dir_size_after_checkpoint_delete: 1.4G (/pscratch/sd/k/khegazy/kinet_datasets/shear_layer_refinement/doubly_periodic/shear_layer/2b86fad7)
+last_step_check: kinet_rollout_status=complete kinet_last_completed_step=4000 total_pred_length=4000 last_saved_step=4000 saved_frames=101 reached_last_step=True
+working_directory: /pscratch/sd/k/khegazy/kinet_datasets/_work/sl_re5e4_N512_t045
+environment: source /pscratch/sd/k/khegazy/kinet_datasets/_work/env.sh   # kinet .venv, KINET_PROJECT, caches on scratch
+command (run inside the working directory by run_kinet_job.sh):
+  python -m kinet.apps.simulate task=simulate case=doubly_periodic/shear_layer case.physics.parameters.reynolds=50000 io.record_distributions=false io.record_equilibria=false case.discretization.spatial.grid=\[512\,512\] case.discretization.temporal.grid=4000 io.save_every_n=40 paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/shear_layer_refinement distributed.is_distributed=false distributed.is_slurm=true 
+sbatch_exact (from /pscratch/sd/k/khegazy/kinet_datasets/_work): sbatch --account=m4790 --constraint=gpu --qos=debug --nodes=1 --ntasks=1 --cpus-per-task=32 --gpus-per-node=1 --output=/pscratch/sd/k/khegazy/kinet_datasets/_work/slurm_%j.out --time=00:30:00 --job-name=kinet-slref run_kinet_job.sh runs_sl_refinement.txt
+sbatch: sbatch --account=m4790 --constraint=gpu --qos=debug --nodes=1 --ntasks=1 --cpus-per-task=32 --gpus-per-node=1 --time=<limit> run_kinet_job.sh <runs file>

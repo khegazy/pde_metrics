@@ -1,0 +1,17 @@
+# Run sod_g1p4_N1501
+slurm_job_id: 62102238
+sacct: 62102238|kinet-sodref|gpu_ss11|gpu_debug|m4790_g|2026-11-27T09:07:07|2026-11-27T09:07:40|2026-11-27T09:16:03|00:08:23|COMPLETED|0:0|nid003485
+run_in_job: sod_g1p4_N1501 rc=0 wall_s=112.41 start=1795799533.783893938 end=1795799646.189039624
+kinet: d1cd353b83e994376d2c4476c968e82bca823f5f branch perf/cleanup
+device: cuda (launch.device), torch 2.15.0+cu132 cuda 13.2
+gpu: NVIDIA A100-SXM4-40GB, 40960 MiB, 580.196.07
+rollout: /pscratch/sd/k/khegazy/kinet_datasets/sod_refinement/sod/transonic/dd337542/tiers/full/rollout.h5
+rollout_bytes: 181516167
+output_dir_size_after_checkpoint_delete: 174M (/pscratch/sd/k/khegazy/kinet_datasets/sod_refinement/sod/transonic/dd337542)
+last_step_check: kinet_rollout_status=complete kinet_last_completed_step=500 total_pred_length=500 last_saved_step=500 saved_frames=251 reached_last_step=True
+working_directory: /pscratch/sd/k/khegazy/kinet_datasets/_work/sod_g1p4_N1501
+environment: source /pscratch/sd/k/khegazy/kinet_datasets/_work/env.sh   # kinet .venv, KINET_PROJECT, caches on scratch
+command (run inside the working directory by run_kinet_job.sh):
+  python -m kinet.apps.simulate task=simulate case=sod/transonic io.record_distributions=false io.record_equilibria=false case.discretization.spatial.grid=\[1501\,5\] case.discretization.temporal.grid=500 case.physics.parameters.dynamic_viscosity=5e-05 io.save_every_n=2 paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/sod_refinement distributed.is_distributed=false distributed.is_slurm=true 
+sbatch_exact (from /pscratch/sd/k/khegazy/kinet_datasets/_work): sbatch --account=m4790 --constraint=gpu --qos=debug --nodes=1 --ntasks=1 --cpus-per-task=32 --gpus-per-node=1 --output=/pscratch/sd/k/khegazy/kinet_datasets/_work/slurm_%j.out --time=00:30:00 --job-name=kinet-sodref run_kinet_job.sh runs_sod_refinement.txt
+sbatch: sbatch --account=m4790 --constraint=gpu --qos=debug --nodes=1 --ntasks=1 --cpus-per-task=32 --gpus-per-node=1 --time=<limit> run_kinet_job.sh <runs file>

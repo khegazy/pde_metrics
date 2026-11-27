@@ -1,0 +1,8 @@
+version: 1
+case_path: sod/transonic
+simulation_subdir: sod/transonic/aee3fbb1
+identity_key: aee3fbb1
+active:
+  full: tiers/full/rollout.h5
+  tiers: {}
+updated_at: '2026-11-27T17:12:10.046977+00:00'

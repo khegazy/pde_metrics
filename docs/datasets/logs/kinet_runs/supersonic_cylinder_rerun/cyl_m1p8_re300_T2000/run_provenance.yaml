@@ -1,0 +1,28 @@
+launches:
+- started_at: '2026-11-27T17:26:08.028232+00:00'
+  run_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/cyl_m1p8_re300_T2000/outputs/flow_around_objects/cylinder/simulate/job_261127_092606_404382
+  case_path: flow_around_objects/cylinder
+  case_id: cylinder
+  task: simulate
+  hostname: nid001465
+  pid: 1775216
+  stamp: null
+  resume_from: null
+  slurm_job_id: '62103249'
+  slurm_job_name: kinet-cyl2000
+  slurm_submit_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work
+  slurm_stdout: /pscratch/sd/k/khegazy/kinet_datasets/_work/cyl_m1p8_re300_T2000/outputs/flow_around_objects/cylinder/simulate/job_261127_092606_404382/logs/62103249/slurm.out
+  slurm_stderr: /pscratch/sd/k/khegazy/kinet_datasets/_work/cyl_m1p8_re300_T2000/outputs/flow_around_objects/cylinder/simulate/job_261127_092606_404382/logs/62103249/slurm.err
+  hydra_overrides:
+  - task=simulate
+  - case=flow_around_objects/cylinder
+  - ++case.collision.stabilizer.scales=[2.0,1.905,1.481]
+  - ++case.collision.stabilizer.tolerances=[0.01,0.1,1.0]
+  - ++case.io.record_distributions=false
+  - ++case.io.record_equilibria=false
+  - ++case.lattice.shifts=[0.4,0.0]
+  - ++case.discretization.temporal.grid=2000
+  - ++case.io.save_every_n=10
+  - ++paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/supersonic_cylinder
+  - ++distributed.is_distributed=false
+  - ++distributed.is_slurm=true

@@ -1,0 +1,190 @@
+case:
+  id: transonic
+  group: sod
+  units: lattice
+  N_simulations: 1
+  discretization:
+    spatial:
+      type: provided
+      grid:
+      - 1501
+      - 5
+      length:
+      - 1501.0
+      - 5.0
+      resolution: 1.0
+    temporal:
+      type: provided
+      grid: 500
+      length: 500.0
+      resolution: 1.0
+  simulation_subdir: sod/transonic/dd337542
+  physics:
+    type: compressible_fluids
+    parameters:
+      dimension: 1
+      specific_heat_ratio: 1.4
+      prandtl: 0.71
+      dynamic_viscosity: 5.0e-05
+      freestream_hold: reynolds
+      reference:
+        density: 1.0
+  collision:
+    type: entropic_BGK
+    stabilizer:
+      type: piecewise
+      input_dists:
+      - F
+      - Feq
+      tolerances:
+      - 0.001
+      - 0.01
+      - 0.1
+      - 1.0
+      scales:
+      - 2.0
+      - 1.851
+      - 1.835
+      - 1.818
+  subgrid: {}
+  lattice:
+    type: D2Q9
+    shifts:
+    - 0.4
+    - 0.0
+    use_static_weights: false
+  solver:
+    type: lbm
+    gather: sequential
+    interpolation:
+      family: lagrange
+      degree: 1
+  simulate_equilibrium_closure:
+    G:
+      type: levermore
+      max_iters: 50
+      atol: 1.0e-06
+      delta_clip: 2.5
+      line_search: 8
+      initial_guess: zero
+      jacobian_reg: 1.0e-12
+      lambda_clamp: 1000000.0
+    F:
+      type: extended
+  features:
+  - shocks
+  boundary_conditions:
+    x:
+      low:
+        type: neuman
+      high:
+        type: neuman
+  initial_conditions:
+    interface: 0.5
+    left:
+      density: 1.0
+      temperature: 0.2
+    right:
+      density: 0.125
+      temperature: 0.16
+  assets: {}
+precision:
+  dtype: torch.float64
+  amp_enabled: false
+  amp_dtype: bf16
+normalization:
+  feature: none
+domain_decomposition:
+  enabled: false
+  mesh_shape:
+  - 4
+  - 2
+  halo_width:
+  - 1
+  - 1
+  print_topology: false
+io:
+  backend: hdf5
+  save_every_n: 2
+  save_burst: 1
+  save_results: true
+  record_equilibria: false
+  record_distributions: false
+  record_iter_maps: false
+  async_writer: true
+  parallel_hdf5: false
+  use_fill_value: true
+  async_queue_memory_fraction: 0.7
+  async_queue_memory_basis: available
+  async_queue_depth: -1
+  async_put_timeout_s: 30.0
+  staging_depth: 8
+  async_drain:
+    window: 64
+    rate_cap_mult: 4.0
+    estimate_cap_s: 1800.0
+    min_writes: 32
+    floor_s_per_item: 0.001
+    ewma_alpha: 0.2
+    walltime_preempt: true
+    margin_s: 240.0
+  dd_stage_sync_debug: false
+  adaptive_time_slots: true
+  trim_unused_time_slots: true
+  compact_after_trim: true
+  expandable_time_axis: true
+  compression_shuffle: true
+  adios2:
+    use_gpu_put: true
+    engine: BP5
+    put_mode: deferred
+    parameters:
+      Profile: 'Off'
+  viz:
+    vtkhdf_sidecar: true
+runtime_logging:
+  every_n: 100
+  store_iter_maps: false
+runtime_control:
+  tracks: {}
+  bindings: []
+  alarm_regions: {}
+  alarms: {}
+  signals: []
+weights: {}
+task:
+  name: simulate
+data: []
+distributed:
+  is_distributed: false
+  is_slurm: true
+paths:
+  data_root: /pscratch/sd/k/khegazy/kinet_datasets/sod_refinement
+  run_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/sod_g1p4_N1501/outputs/sod/transonic/simulate/job_261127_091254_067683
+launch:
+  device: cuda
+  seed: 2025
+  compile: true
+  num_data_workers: 1
+  num_prefetch: 2
+  resident_data_gib: 2.0
+  memory_scale: 0.6
+  tracker:
+    enabled: false
+    backend: wandb
+    project: kinet
+    tags: []
+    interactive_plots: false
+    insecure_tls: false
+plots:
+  backend:
+    type: matplotlib
+  output:
+    format: png
+    dpi: 150
+  error_log_scale: false
+  simulate:
+    iter_maps:
+      enabled: false
+      log_tracker: true
+      tracker_prefix: sim_stats/iter_maps

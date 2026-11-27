@@ -1,0 +1,8 @@
+version: 1
+case_path: sod/transonic
+simulation_subdir: sod/transonic/d1cac664
+identity_key: d1cac664
+active:
+  full: tiers/full/rollout.h5
+  tiers: {}
+updated_at: '2026-11-27T17:16:00.245682+00:00'

@@ -1,0 +1,8 @@
+version: 1
+case_path: sod/transonic
+simulation_subdir: sod/transonic/dd337542
+identity_key: dd337542
+active:
+  full: tiers/full/rollout.h5
+  tiers: {}
+updated_at: '2026-11-27T17:14:03.631321+00:00'

@@ -1,0 +1,8 @@
+version: 1
+case_path: doubly_periodic/shear_layer
+simulation_subdir: doubly_periodic/shear_layer/2686f5c9
+identity_key: 2686f5c9
+active:
+  full: tiers/full/rollout.h5
+  tiers: {}
+updated_at: '2026-11-27T17:12:49.855194+00:00'

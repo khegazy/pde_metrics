@@ -1,0 +1,95 @@
+case:
+  N_simulations: 1
+  assets: {}
+  boundary_conditions:
+    x:
+      high:
+        type: neuman
+      low:
+        type: neuman
+  collision:
+    stabilizer:
+      input_dists:
+      - F
+      - Feq
+      scales:
+      - 2.0
+      - 1.851
+      - 1.835
+      - 1.818
+      tolerances:
+      - 0.001
+      - 0.01
+      - 0.1
+      - 1.0
+      type: piecewise
+    type: entropic_BGK
+  discretization:
+    spatial:
+      grid:
+      - 3001
+      - 5
+      length:
+      - 3001.0
+      - 5.0
+      resolution: 1.0
+      type: provided
+    temporal:
+      grid: 1000
+      length: 1000.0
+      resolution: 1.0
+      type: provided
+  features:
+  - shocks
+  group: sod
+  id: transonic
+  initial_conditions:
+    interface: 0.5
+    left:
+      density: 1.0
+      temperature: 0.2
+    right:
+      density: 0.125
+      temperature: 0.16
+  lattice:
+    shifts:
+    - 0.4
+    - 0.0
+    type: D2Q9
+    use_static_weights: false
+  physics:
+    parameters:
+      dimension: 1
+      dynamic_viscosity: 0.0001
+      freestream_hold: reynolds
+      prandtl: 0.71
+      reference:
+        density: 1.0
+      specific_heat_ratio: 1.4
+    type: compressible_fluids
+  simulate_equilibrium_closure:
+    F:
+      type: extended
+    G:
+      atol: 1.0e-06
+      delta_clip: 2.5
+      initial_guess: zero
+      jacobian_reg: 1.0e-12
+      lambda_clamp: 1000000.0
+      line_search: 8
+      max_iters: 50
+      type: levermore
+  simulation_subdir: sod/transonic/d1cac664
+  solver:
+    gather: sequential
+    interpolation:
+      degree: 1
+      family: lagrange
+    type: lbm
+  subgrid: {}
+  units: lattice
+case_path: sod/transonic
+normalization:
+  feature: none
+precision:
+  dtype: torch.float64

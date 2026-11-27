@@ -1,0 +1,11 @@
+sl_re5e4_N128_t045           N= 128 steps=  1000 startup_s=   177 first_step_s=  26.3 steady_ms=  3.32 cell_steps_per_s=4.935e+06 rollout_s=   33.9 wall_s=   213
+sl_re5e4_N256_t045           N= 256 steps=  2000 startup_s=    54 first_step_s=  25.6 steady_ms=  3.38 cell_steps_per_s=1.939e+07 rollout_s=   36.6 wall_s=    93
+sl_re5e4_N512_t045           N= 512 steps=  4000 startup_s=    61 first_step_s=  25.8 steady_ms=  3.88 cell_steps_per_s=6.756e+07 rollout_s=   45.5 wall_s=   110
+sod_g1p4_N751                N= 751 steps=   250 startup_s=   177 first_step_s=  54.7 steady_ms= 11.22 cell_steps_per_s=5.027e+07 rollout_s=   87.9 wall_s=   268
+sod_g1p4_N1501               N=1501 steps=   500 startup_s=    58 first_step_s=  32.1 steady_ms=  8.25 cell_steps_per_s=2.731e+08 rollout_s=   51.1 wall_s=   112
+sod_g1p4_N3001               N=3001 steps=  1000 startup_s=    57 first_step_s=  34.0 steady_ms=  6.95 cell_steps_per_s=1.296e+09 rollout_s=   55.7 wall_s=   116
+Traceback (most recent call last):
+  File "/pscratch/sd/k/khegazy/kinet_datasets/_work/timings.py", line 28, in <module>
+    grid = re.search(r"grid=\\?\[(\d+)", open(os.path.join(run, "command.txt")).read()).group(1)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'group'

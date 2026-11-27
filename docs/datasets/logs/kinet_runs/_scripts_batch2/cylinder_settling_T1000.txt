@@ -1,0 +1,21 @@
+centre (np.int64(166), np.int64(150)), nose x 146, diameter 41, probe x 268, p2/p1 3.613
+  step    50  standoff  12.0 cells  wake u_y -0.0000
+  step   100  standoff  18.0 cells  wake u_y -0.0000
+  step   150  standoff  22.0 cells  wake u_y +0.0000
+  step   200  standoff  24.0 cells  wake u_y -0.0001
+  step   250  standoff  26.0 cells  wake u_y +0.0003
+  step   300  standoff  28.0 cells  wake u_y -0.0005
+  step   350  standoff  29.0 cells  wake u_y +0.0005
+  step   400  standoff  30.0 cells  wake u_y -0.0003
+  step   450  standoff  31.0 cells  wake u_y +0.0003
+  step   500  standoff  32.0 cells  wake u_y +0.0003
+  step   550  standoff  33.0 cells  wake u_y -0.0004
+  step   600  standoff  33.0 cells  wake u_y +0.0004
+  step   650  standoff  34.0 cells  wake u_y -0.0007
+  step   700  standoff  34.0 cells  wake u_y +0.0007
+  step   750  standoff  35.0 cells  wake u_y -0.0001
+  step   800  standoff  35.0 cells  wake u_y +0.0000
+  step   850  standoff  35.0 cells  wake u_y +0.0001
+  step   900  standoff  36.0 cells  wake u_y -0.0002
+  step   950  standoff  36.0 cells  wake u_y -0.0002
+  step  1000  standoff  36.0 cells  wake u_y +0.0002
