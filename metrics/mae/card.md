@@ -267,6 +267,19 @@ do, and what their strength numbers mean, is documented on their own pages.
 | `synthetic_ensemble` | a calibrated null: evidence that the estimator computes what it claims to compute, and nothing about turbulence | measured, run `comparison_1793812401`: under *On `synthetic_ensemble`*; on this dataset the metric scores the member mean of the ensemble |
 | `sod_shock_tube` | an analytic check: evidence that the metric locates and scores a known shock correctly, and nothing about turbulence | measured, run `comparison_1793812304`: under *On `sod_shock_tube`* |
 | `forecast_re5e4` | real predictions scored against their targets at each prediction step; who produced the predictions, a trained model or a coarser solver, is not recorded | measured, run `comparison_1793811840`: under *On `forecast_re5e4`* |
+| `kinet_re5e4_512` | the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested refinement of it | not yet run |
+| `kinet_hit_re12p5k` | decaying two-dimensional isotropic turbulence at Re = 1.25e4, one realisation per run | not yet run |
+| `kinet_hit_re25k` | decaying two-dimensional isotropic turbulence at Re = 2.5e4, one realisation per run | not yet run |
+| `kinet_hit_re50k` | decaying two-dimensional isotropic turbulence at Re = 5e4, simulated on 512^2 cells and stored coarse-grained to 256^2, one realisation per run | not yet run |
+| `kinet_sod_gamma1p4` | a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence | not yet run |
+| `kinet_sod_gamma2` | a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence | not yet run |
+| `burgers` | an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence | not yet run |
+| `sedov_taylor` | an analytic check: the exact cylindrical Sedov-Taylor blast wave, a shock oblique to the grid at every angle, and nothing about turbulence | not yet run |
+| `noh` | an analytic check: the exact cylindrical Noh implosion, a circular shock of constant strength, and nothing about turbulence | not yet run |
+| `feature_population` | an analytic check: one static field of isolated bumps, vortices and pressure fronts with known answers, and nothing about turbulence | not yet run |
+| `transport_pairs` | an analytic check: density pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence | not yet run |
+| `random_field` | a known-statistics null: independent Gaussian random fields of a prescribed spectrum, whose increment statistics are known exactly, and nothing about turbulence | not yet run |
+| `helmholtz_mixture_2d` | an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing about turbulence | not yet run |
 
 One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.
 

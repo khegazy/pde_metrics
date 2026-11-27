@@ -85,8 +85,23 @@ override it. The frames are deterministic, so each is one known answer, not a sa
   $\Delta r + \Delta x$ from the other; four refusals.
 - Not verified: Noh's own paper.
 
+### 2026-11-27: registered as evidence (registration agent)
+
+- **Registered:** `noh` (`{periodic: false, ensemble: false}`, Neumann on both axes) in
+  `evidence_datasets` and `evidence_dataset_properties` of `configs/cards/default.yaml`. Kareem
+  decided the rule on 2026-11-26 (`dataset_specs/BUILD_ORDER.md`, "The task" and decision 9:
+  every dataset built in that plan is an evaluation dataset, admitted to `evidence_datasets`
+  with a label naming the kind of claim it supports); the agent chose the label.
+- **Label** (completes "n frames of ..." in a card's run summary): "an analytic check: the exact
+  cylindrical Noh implosion, a circular shock of constant strength, and nothing about
+  turbulence".
+- **Window:** the reader's defaults, kept whole: four frames from t = 0.5 to 2 on 128^2; nothing
+  needs a command-line setting.
+- **Not done:** no metric was run on it for a card; every metric card's *Across the experiments*
+  table shows it as *not yet run* or *not applicable* with the reason (`python -m fmeval.cards
+  catalog`). Producing that evidence is its own step in `BUILD_ORDER.md` and needs compute.
+
 ## Open points
 
-- Registration in `evidence_datasets` (not done, by instruction).
 - Spec 03, Sect. 3.8's displaced (not enlarged) circle, ASSD near $(2/\pi)s$, is not pinned;
   the candidate here enlarges the circle.

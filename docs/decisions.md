@@ -137,24 +137,39 @@ degradation preserves is a fact about the operator; whether a metric responds is
 (`damage_max_ucb`, `blind_axes`). Put side by side, the two carry the information an expectation
 would, without a prediction.
 
-## Analytic fields are fixtures; Sod is an analytic check
+## Every evaluation dataset is evidence, under its label
 
 The fields in `tests/analytic_fields.py` — a Gaussian bump, a stripe, a single mode — have metric
 responses known in closed form and exist to test the statistics. Nothing measured on them may
-appear on a metric's page. Of the datasets computed from exact solutions, `taylor_green_2d` is
-the same kind of fixture and is not in `evidence_datasets`. `sod_shock_tube` is, as an
-**analytic check**, for every metric that can run on it: its evidence says how a metric scores
-a known shock, contact and rarefaction, and nothing about turbulence. A metric that needs a
-periodic domain is never run on it.
+appear on a metric's page.
 
-Why: a closed form says what a metric does to an idealised feature, not to turbulence. Numbers
-from a fixture, once written into a page, would read exactly like numbers from a flow. Sod is
-admitted anyway: `kinet_re5e4` has neither shocks nor pressure, so without it a shock or
-pressure metric would have no evidence at all, and every metric is run on every experiment where
-that makes sense (`AGENTS.md` §1, "How every metric is evaluated"). That is safe only because
-the label travels with the numbers. `evidence_datasets` maps each dataset to the kind of claim it supports, and every
-card's generated run summary quotes it, as it does for the calibrated null `synthetic_ensemble`.
-Taylor–Green stays refused: every frame is a scalar multiple of the first.
+An evaluation dataset is different: it is in `evidence_datasets` (`configs/cards/default.yaml`)
+with a label naming the kind of claim a run on it supports, and every card's generated run summary
+quotes that label beside the numbers. Kareem decided on 2026-11-26 that every dataset built
+under `dataset_specs/BUILD_ORDER.md` is an evaluation dataset, computed readers included: the
+metrics are evaluated on it, and how they behave there measures their sensitivity. So a
+simulation is labelled with the flow it is (decaying isotropic turbulence at a given Reynolds
+number, a solver's shock), and a computed dataset as an **analytic check**, a **calibrated
+null** or a **known-statistics null**, whose label must also say it is "nothing about
+turbulence" (`tests/test_configs.py`). Two computed datasets were admitted before that plan:
+`synthetic_ensemble`, the only ensemble the probabilistic metrics have, and `sod_shock_tube`,
+because `kinet_re5e4` has neither shocks nor pressure and every metric is run on every
+experiment where that makes sense (`AGENTS.md` §1, "How every metric is evaluated").
+
+Three datasets stay out:
+
+- `taylor_green_2d`, a single Fourier mode, every frame a scalar multiple of the first, so its
+  frames are not independent evidence. Any dataset whose frames are scalar multiples of one
+  another stays out for the same reason.
+- `advecting_blobs`, the harness's test bed for time-dependent degradations, which predates that
+  plan.
+- `well_radiative_layer_tcool0p32`, whose status Kareem has not decided.
+
+Why: a closed form says what a metric does to an idealised feature, not to turbulence, and its
+numbers, once written into a page, would read exactly like numbers from a flow. Admitting it is
+safe only because the label travels with the numbers. Where a dataset's numbers would mislead
+on their own, its label says why: `kinet_sod_gamma2`'s states that its shock is too spread for
+the detector, so every shock-set metric scores 0 there.
 
 ## A page is validated at `get()`, not at import
 

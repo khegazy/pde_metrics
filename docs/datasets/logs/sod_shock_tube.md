@@ -268,6 +268,30 @@ where it is marked as arithmetic.
   - a full panel run at the new default window;
   - the median blur's cost end to end (only extrapolated).
 
+#### 2026-11-27: registered as evidence (registration agent)
+
+- **Registered:** `kinet_sod_gamma1p4` and `kinet_sod_gamma2`, each `{periodic: false, ensemble:
+  false}` (Neumann ends), in `evidence_datasets` and `evidence_dataset_properties` of
+  `configs/cards/default.yaml`. Kareem decided the rule on 2026-11-26
+  (`dataset_specs/BUILD_ORDER.md`, "The task" and decision 9: every dataset built in that plan
+  is an evaluation dataset, admitted to `evidence_datasets` with a label naming the kind of
+  claim it supports); the agent chose the label.
+- **Label** (completes "n frames of ..." in a card's run summary): `kinet_sod_gamma1p4`: "a
+  lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the
+  exact one, and nothing about turbulence"; `kinet_sod_gamma2`: "a lattice-Boltzmann solver's
+  Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag,
+  so every shock-set metric scores 0 on it; nothing about turbulence". The gamma = 2 run was
+  registered rather than left out because Kareem's rule admits every built dataset and the zero
+  is itself a measurement of the detector; its label says the zero comes from no shock being
+  flagged, so a shock-set card citing it cannot be read as a perfect score.
+- **Window:** the fragment's `time:` selection, steps 450 to 1000 every 50th (12 frames).
+  `degradation.skip=[median_blur]` cannot be stated in a config (`BUILD_ORDER.md`, framework
+  limit 3) and is listed beside `evidence_window`.
+- **Supersedes** decision 11, "Not registered as evidence".
+- **Not done:** no metric was run on it for a card; every metric card's *Across the experiments*
+  table shows it as *not yet run* or *not applicable* with the reason (`python -m fmeval.cards
+  catalog`). Producing that evidence is its own step in `BUILD_ORDER.md` and needs compute.
+
 ### Open points
 
 - Scoring each run against the exact solution, frame by frame on the same nodes, is not
@@ -276,8 +300,7 @@ where it is marked as arithmetic.
 - The refinement sequence of spec 02, Sect. 5.2 (reruns at 1501 and 751 nodes) does not
   exist.
 - The $\gamma = 2$ run gives the shock metrics nothing to detect (decision 9).
-- Neither run has a developed-flow window confirmed for evidence, a dynamics figure, or a
-  place in `evidence_datasets`.
+- Neither run has a dynamics figure, and no metric has been run on either for a card.
 
 ## `sod_shock_tube`: the exact solution at a shifted time (2026-11-27)
 

@@ -106,6 +106,23 @@ override it. The frames are deterministic, so each is one known answer, not a sa
   nothing. A property of a single steepening sine, not a fault.
 - Not verified: Hopf (1950) and Cole (1951).
 
+### 2026-11-27: registered as evidence (registration agent)
+
+- **Registered:** `burgers` (`{periodic: true, ensemble: false}`) in `evidence_datasets` and
+  `evidence_dataset_properties` of `configs/cards/default.yaml`. Kareem decided the rule on
+  2026-11-26 (`dataset_specs/BUILD_ORDER.md`, "The task" and decision 9: every dataset built in
+  that plan is an evaluation dataset, admitted to `evidence_datasets` with a label naming the
+  kind of claim it supports); the agent chose the label.
+- **Label** (completes "n frames of ..." in a card's run summary): "an analytic check: the exact
+  Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed
+  by viscosity, and nothing about turbulence".
+- **Window:** the reader's defaults, kept whole: four frames, t = 0.5 to 2, on 256 cells at the
+  native resolution. The grid sequence of the observed order is a multirun of overrides and
+  stays so; nothing computes the order from rows yet (issue 126).
+- **Not done:** no metric was run on it for a card; every metric card's *Across the experiments*
+  table shows it as *not yet run* or *not applicable* with the reason (`python -m fmeval.cards
+  catalog`). Producing that evidence is its own step in `BUILD_ORDER.md` and needs compute.
+
 ## Open points
 
 1. **The analysis does not compute the observed order** (issue 126). It would need a function
@@ -118,6 +135,5 @@ override it. The frames are deterministic, so each is one known answer, not a sa
    `variant_label`), and the four runs of the sequence share all five, since
    `param_resolution` is not among them. So either the key gains `param_resolution`, or the
    order is computed before `analyse` from the concatenated rows (the agent's judgement; not tried).
-2. Registration in `evidence_datasets` (not done, by instruction).
-3. A cell-average sampling option (the alternative of decision 2) and an upwind scheme are not
+2. A cell-average sampling option (the alternative of decision 2) and an upwind scheme are not
    built.

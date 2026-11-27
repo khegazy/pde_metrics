@@ -146,11 +146,12 @@ python -m fmeval.cards evidence <name> --results results/<primary run> \
 ```
 
 Run the metric on every experiment where it makes sense, not only one: the degradation
-ladder on `kinet_re5e4`, the miscalibration ladder on `synthetic_ensemble`, and
+ladder on `kinet_re5e4`, the miscalibration ladder on `synthetic_ensemble`,
 `sod_shock_tube` with the reader's own frames
 (`python evaluate.py metrics=[<name>] dataset=sod_shock_tube`), whose run summary calls the
-numbers an analytic check. Then give the card one `--results` per experiment, the metric's
-field-standard experiment first where the repository has it: that run fills `## Performance`
+numbers an analytic check, and every other dataset in `evidence_datasets`
+(`configs/cards/default.yaml`), each on its own configuration's window. Then give the card one
+`--results` per experiment, the metric's field-standard experiment first where the repository has it: that run fills `## Performance`
 and the subsections per test, and each further run gets a subsection of `## Results` headed
 *On `<dataset>`*, inserted for you, whose generated block opens with the dataset's label.
 Write the reading below that block as for any other subsection. A card cites one run per

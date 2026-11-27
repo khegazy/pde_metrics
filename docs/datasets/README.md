@@ -12,26 +12,33 @@ Two kinds of dataset appear:
   a flow.
 - **Computed.** A closed-form solution or a generated field, evaluated on the fly whenever a
   frame is read. These check the evaluation harness against an answer known in advance, and
-  a computed dataset ranks below every simulated one. A metric's page may cite two of them,
-  and its run summary then names the kind of claim the numbers support:
-  `synthetic_ensemble` as a **calibrated null**, for the probabilistic metrics, and
-  `sod_shock_tube` as an **analytic check**, for the metrics that need a shock or pressure.
-  Neither is evidence about turbulence. `taylor_green_2d` and `advecting_blobs` are never cited, and `random_field`, `sedov_taylor`, `noh` and `burgers` are not yet registered.
+  a computed dataset ranks below every simulated one.
+
+Every configuration a metric's page may cite is in `evidence_datasets`
+(`configs/cards/default.yaml`) with a label naming the kind of claim a run on it supports, and
+the page's run summary quotes that label beside the numbers: `synthetic_ensemble` is a
+**calibrated null**, `random_field` a **known-statistics null**, and the other computed
+configurations **analytic checks**, none of them evidence about turbulence. Every dataset built
+for the evaluation plan is registered (`docs/decisions.md`, "Every evaluation dataset is
+evidence, under its label"). Three are not: `taylor_green_2d`, whose frames are scalar multiples
+of one another; `advecting_blobs`, a test bed for the harness; and
+`well_radiative_layer_tcool0p32`, which awaits a decision. A registered dataset no metric has
+been run on yet shows as *not yet run* on every metric's page.
 
 | Problem | Configurations | Kind | Grid | Boundaries |
 |---|---|---|---|---|
 | [Doubly periodic weakly compressible flow](reynolds_ladder_2d.md) | `kinet_re5e4`, `kinet_re5e4_dev`, `well_re5e4`, `kinet_re5e4_512`, `kinet_re1e6`, `forecast_re5e4` | simulated; `forecast_re5e4` pairs real predictions with their targets | $256^2$; $512^2$ in `kinet_re5e4_512`; $1024^2$ at $\mathrm{Re} = 10^6$; the forecasts also $128^2$ and $64^2$ | periodic |
-| [Decaying two-dimensional isotropic turbulence](decaying_isotropic_2d.md) | `kinet_hit_re12p5k`, `kinet_hit_re25k`, `kinet_hit_re50k`, each with ten realisations by `dataset.trajectory` | simulated; not yet evidence | $256^2$ | periodic |
+| [Decaying two-dimensional isotropic turbulence](decaying_isotropic_2d.md) | `kinet_hit_re12p5k`, `kinet_hit_re25k`, `kinet_hit_re50k`, each with ten realisations by `dataset.trajectory` | simulated | $256^2$ | periodic |
 | [Turbulent radiative mixing layer](turbulent_radiative_layer_2d.md) | `well_radiative_layer_tcool0p32` | simulated (The Well, Athena++); not yet evidence | $128 \times 384$ | periodic $x$, open $y$ (Neumann) |
-| [Sod shock tube](sod_shock_tube.md) | `sod_shock_tube`, `kinet_sod_gamma1p4`, `kinet_sod_gamma2` | `sod_shock_tube` computed: exact solution of the Euler equations; the kinet runs simulated, not yet evidence | 2048 cells, 1D; the kinet runs 3001 × 5 | Neumann walls; the kinet runs periodic across the tube |
-| [Viscous Burgers' equation, one-dimensional](burgers.md) | `burgers` | computed: exact Cole–Hopf solution, with a second-order scheme as the candidate of a grid-refinement sequence; not yet evidence | 256 cells, 1D; the sequence 64 to 512 | periodic |
-| [Sedov–Taylor blast wave, cylindrical](sedov_taylor.md) | `sedov_taylor` | computed: exact similarity solution of the Euler equations; a circular shock oblique to the grid at every angle; not yet evidence | $128^2$ | Neumann |
-| [Noh implosion, cylindrical](noh.md) | `noh` | computed: exact solution of the Euler equations; a circular shock of constant strength; not yet evidence | $128^2$ | Neumann |
+| [Sod shock tube](sod_shock_tube.md) | `sod_shock_tube`, `kinet_sod_gamma1p4`, `kinet_sod_gamma2` | `sod_shock_tube` computed: exact solution of the Euler equations; the kinet runs simulated | 2048 cells, 1D; the kinet runs 3001 × 5 | Neumann walls; the kinet runs periodic across the tube |
+| [Viscous Burgers' equation, one-dimensional](burgers.md) | `burgers` | computed: exact Cole–Hopf solution, with a second-order scheme as the candidate of a grid-refinement sequence | 256 cells, 1D; the sequence 64 to 512 | periodic |
+| [Sedov–Taylor blast wave, cylindrical](sedov_taylor.md) | `sedov_taylor` | computed: exact similarity solution of the Euler equations; a circular shock oblique to the grid at every angle | $128^2$ | Neumann |
+| [Noh implosion, cylindrical](noh.md) | `noh` | computed: exact solution of the Euler equations; a circular shock of constant strength | $128^2$ | Neumann |
 | [Supersonic flow past a cylinder](supersonic_cylinder.md) | none: the one run stopped at step 155 of 1000 | simulated, not readable | 500 × 300 | inlet and Neumann |
-| [Taylor–Green vortex](taylor_green_vortex.md) | `taylor_green_2d` | computed: exact solution of the Navier–Stokes equations | $256^2$ | periodic |
+| [Taylor–Green vortex](taylor_green_vortex.md) | `taylor_green_2d`, `helmholtz_mixture_2d` | computed: exact solution of the Navier–Stokes equations, not evidence; `helmholtz_mixture_2d` the vortex plus an exact acoustic mode, its solenoidal and dilatational parts known | $256^2$; $64^2$ in `helmholtz_mixture_2d` | periodic |
 | [Synthetic exchangeable ensemble](synthetic_ensemble.md) | `synthetic_ensemble` | computed: a formula and a seed | $64^2$ | periodic |
-| [Advecting Gaussian blobs](advecting_blobs.md) | `advecting_blobs`, `feature_population`, `transport_pairs` | computed: exact solution of passive advection, a test bed for time-dependent degradations; `feature_population` bumps, vortices and fronts with known answers; `transport_pairs` a density pair at an exactly known Wasserstein distance; neither yet evidence | $64^2$; $128^2$ in `feature_population` | periodic |
-| [Periodic random fields with known statistics](random_field.md) | `random_field`, with its other families as reader options | computed: Gaussian and non-Gaussian random fields of prescribed spectrum with exact increment statistics; not yet evidence | $256^2$ | periodic |
+| [Advecting Gaussian blobs](advecting_blobs.md) | `advecting_blobs`, `feature_population`, `transport_pairs` | computed: exact solution of passive advection, a test bed for time-dependent degradations; `feature_population` bumps, vortices and fronts with known answers; `transport_pairs` a density pair at an exactly known Wasserstein distance; `advecting_blobs` itself is not evidence | $64^2$; $128^2$ in `feature_population` | periodic |
+| [Periodic random fields with known statistics](random_field.md) | `random_field`, with its other families as reader options | computed: Gaussian and non-Gaussian random fields of prescribed spectrum with exact increment statistics | $256^2$ | periodic |
 
 **Boundaries.** Each dataset states the boundary of each axis. On an axis that is not
 periodic, the degradations act on the field extended across the boundary by that boundary's

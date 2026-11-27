@@ -15,10 +15,12 @@ scored against the reader's own frames as a forecast is (``evaluate.py``,
 ``fmeval.pipeline.run(prediction=...)``). Both sides are exact, so the error of every metric at
 every step is known in advance.
 
-None is **evidence about a flow**. ``sod_shock_tube`` is in ``evidence_datasets`` as an
-analytic check, for the metrics that need a shock or pressure; ``taylor_green_2d`` and
-``advecting_blobs`` are fixtures for the harness only (``docs/decisions.md``); ``random_field``,
-``sedov_taylor``, ``noh`` and ``burgers`` are not registered. Their pages are ``docs/datasets/``.
+None is **evidence about a flow**. ``sod_shock_tube``, ``burgers``, ``sedov_taylor``, ``noh``,
+``random_field`` and the ``feature_population``, ``transport_pairs`` and ``helmholtz_mixture_2d``
+configurations are in ``evidence_datasets``, each under a label saying it is an analytic check
+or a known-statistics null and nothing about turbulence; ``taylor_green_2d`` and
+``advecting_blobs`` are fixtures for the harness only (``docs/decisions.md``). Their pages are
+``docs/datasets/``.
 """
 
 from __future__ import annotations
@@ -922,8 +924,8 @@ class AdvectingBlobs(ClosedFormTrajectory):
     advection-diffusion equation for that velocity, blob by blob; a single uniform velocity
     would carry every blob alike. With distinct velocities the blobs' relative positions change,
     so an error measured on it changes from frame to frame; with one blob, or one velocity, it
-    would not. It tests the time-dependent machinery, not physics (``docs/decisions.md``), and is
-    not an evidence dataset.
+    would not. It tests the time-dependent machinery, not physics (``docs/decisions.md``), and the
+    ``advecting_blobs`` configuration is not an evidence dataset.
 
     Periodic wrap-around is the minimum image only: at a width of 0.06 the bump has fallen to
     ``exp(-0.5^2 / (2 * 0.06^2)) = 8.3e-16`` of its peak at the half-domain distance, so the

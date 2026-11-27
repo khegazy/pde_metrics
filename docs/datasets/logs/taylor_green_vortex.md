@@ -436,11 +436,30 @@ to the code as it is now; all are the agent's, 2026-11-27.
   dilatational fractions it derived for `additive_noise` and `gaussian_impostor`: none is
   pinned by a test.
 
+#### 2026-11-27: registered as evidence (registration agent)
+
+- **Registered:** `helmholtz_mixture_2d` (`{periodic: true, ensemble: false}`) in
+  `evidence_datasets` and `evidence_dataset_properties` of `configs/cards/default.yaml`. Kareem
+  decided the rule on 2026-11-26 (`dataset_specs/BUILD_ORDER.md`, "The task" and decision 9:
+  every dataset built in that plan is an evaluation dataset, admitted to `evidence_datasets`
+  with a label naming the kind of claim it supports); the agent chose the label.
+- **Label** (completes "n frames of ..." in a card's run summary): "an analytic check: a
+  Taylor-Green vortex plus an exact acoustic mode, its solenoidal and dilatational parts known
+  in closed form (its vorticity, the vortex's alone, is one pattern scaled in time), and nothing
+  about turbulence". Its velocity and pressure frames are not scalar multiples of one another
+  (section "What part is evaluated"), so the rule that keeps `taylor_green_2d` out does not
+  apply; its vorticity frames are, and the label says so.
+- **Window:** the whole trajectory, 9 frames over half an acoustic period on 64^2. The two
+  disabled `scale_dilatational` ladder entries must be switched on for its dilatational ladder;
+  no dataset config can enable a ladder entry, so that is listed beside `evidence_window`.
+- **Not done:** no metric was run on it for a card; every metric card's *Across the experiments*
+  table shows it as *not yet run* or *not applicable* with the reason (`python -m fmeval.cards
+  catalog`). Producing that evidence is its own step in `BUILD_ORDER.md` and needs compute.
+
 ### Open points
 
 - Spec 10's Option B, a kinet pulse run scored against this reader, is a job and not built; it
   needs the `forecast` half of step 1's conversion and the density field (decision 3).
-- Not registered in `evidence_datasets` (instruction); its frames qualify (see above).
 - The answers of spec 10, Sect. 3.6 listed under "Not verified".
 - A broadband dilatational random field (spec 10, Sect. 5, a proposal for `random_field`) is
   not built.

@@ -3,7 +3,7 @@
 # Tables 9 and 10) case: gamma = 5/3, gas of density 1 streaming inward at speed 1 toward the
 # centre of [0, 2)^2, pressure 1e-6 ahead of the shock. The shock is the circle r = t/3, with
 # density 16 and pressure 16/3 at rest behind it.
-# Not registered in evidence_datasets.
+# In evidence_datasets (configs/cards/default.yaml) as an analytic check, under the label there.
 #
 # WHAT PART IS EVALUATED: the reader's defaults, kept whole; the choice, its reasons and the
 # measured costs are in docs/datasets/logs/noh.md. Four frames from t = 0.5 to 2 on 128^2: the

@@ -596,11 +596,34 @@ checked: the frames are 150, 175, ..., 575 on all three options.
   stages fall at similar frames in every realisation, which the spec 05 table supports for the
   first run of each Reynolds number.
 
+### 2026-11-27: registered as evidence (registration agent)
+
+- **Registered:** `kinet_hit_re12p5k`, `kinet_hit_re25k` and `kinet_hit_re50k`, each `{periodic:
+  true, ensemble: false}`, in `evidence_datasets` and `evidence_dataset_properties` of
+  `configs/cards/default.yaml`. Kareem decided the rule on 2026-11-26
+  (`dataset_specs/BUILD_ORDER.md`, "The task" and decision 9: every dataset built in that plan
+  is an evaluation dataset, admitted to `evidence_datasets` with a label naming the kind of
+  claim it supports); the agent chose the label.
+- **Label** (completes "n frames of ..." in a card's run summary): `kinet_hit_re12p5k`:
+  "decaying two-dimensional isotropic turbulence at Re = 1.25e4, one realisation per run";
+  `kinet_hit_re25k`: "decaying two-dimensional isotropic turbulence at Re = 2.5e4, one
+  realisation per run"; `kinet_hit_re50k`: "decaying two-dimensional isotropic turbulence at Re
+  = 5e4, simulated on 512^2 cells and stored coarse-grained to 256^2, one realisation per run".
+- **Window:** the configs' own `time:` selection, frames 150 to 599 every 25th (section 3).
+  `evidence_window` is kinet_re5e4's single window and has no key per dataset, so the analysis
+  grid of 128 and the five realisations per Reynolds number, which no config can state
+  (`BUILD_ORDER.md`, framework limits 2 and 4), are listed in the comment beside
+  `evidence_window` and stay command-line settings. The data-marked check that each reader is
+  periodic and holds no members passed for all three.
+- **Not done:** no metric was run on it for a card; every metric card's *Across the experiments*
+  table shows it as *not yet run* or *not applicable* with the reason (`python -m fmeval.cards
+  catalog`). Producing that evidence is its own step in `BUILD_ORDER.md` and needs compute.
+
 ## 6. Open points
 
 - The other 270 complete runs are not converted. Section 4 gives the two routes for doing so.
-- The dataset is not registered as evidence. The evaluated part was chosen by an agent
-  (section 3) and is open to a person's override.
+- The evaluated part was chosen by an agent (section 3) and is open to a person's override.
+  No metric has been run on it for a card yet.
 - No `configs/dataset_family/decaying_isotropic_2d.yaml` exists. A sweep across the three
   Reynolds numbers would need one small file.
 - No dynamics figures are drawn on the dataset page.

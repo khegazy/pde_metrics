@@ -1,8 +1,9 @@
 # Decaying two-dimensional isotropic turbulence
 
-!!! note "Simulated; not yet cited by any metric's page"
-    Thirty-one realisations are readable now, at three Reynolds numbers. They are not
-    registered as evidence, and their developed-flow window has not been chosen.
+!!! note "Simulated; registered as evidence, not yet cited by any metric's page"
+    Thirty-one realisations are readable now, at three Reynolds numbers. The three
+    configurations are registered as evidence (`evidence_datasets` in
+    `configs/cards/default.yaml`); no metric has been run on them for its page yet.
 
 ## The problem
 

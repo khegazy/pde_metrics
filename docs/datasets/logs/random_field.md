@@ -167,9 +167,33 @@ frames matter. Nothing is stored, so the disk used is zero.
   four metrics; the intermittent override on the quick ladder, 38 s; a seed-and-amplitude
   candidate, 4 s); the dynamics figures, which were not drawn.
 
+### 2026-11-27: registered as evidence (registration agent)
+
+- **Registered:** `random_field` (`{periodic: true, ensemble: false}`) in `evidence_datasets`
+  and `evidence_dataset_properties` of `configs/cards/default.yaml`. Kareem decided the rule on
+  2026-11-26 (`dataset_specs/BUILD_ORDER.md`, "The task" and decision 9: every dataset built in
+  that plan is an evaluation dataset, admitted to `evidence_datasets` with a label naming the
+  kind of claim it supports); the agent chose the label.
+- **Label** (completes "n frames of ..." in a card's run summary): "a known-statistics null:
+  independent Gaussian random fields of a prescribed spectrum, whose increment statistics are
+  known exactly, and nothing about turbulence". Only the Gaussian null is registered; each other
+  family is an override of this configuration and would need its own configuration to carry its
+  own label (decision 8).
+- **Window:** the configuration's 12 independent frames on 256^2 (section "What part is
+  evaluated"); nothing needs a command-line setting.
+- **Issue 044 still open.** `BUILD_ORDER.md` step 10 listed issue 044 (the run seed does not
+  reach the reader) before registration. Registration was done under Kareem's rule,
+  because it produces no number; the issue matters when evidence is produced, since a card would
+  then state the run seed while the draw used the reader's own seed 0, as on the
+  `synthetic_ensemble` cards. Supersedes decision 9.
+- **Not done:** no metric was run on it for a card; every metric card's *Across the experiments*
+  table shows it as *not yet run* or *not applicable* with the reason (`python -m fmeval.cards
+  catalog`). Producing that evidence is its own step in `BUILD_ORDER.md` and needs compute.
+
 ## Open points
 
-1. A configuration per family, and the `evidence_datasets` entries, once issue 044 is decided.
+1. A configuration per family, each with its own `evidence_datasets` label, if the other
+   families are to be cited; issue 044 is to be decided before evidence is produced.
 2. Spec 09's Eq. (6) (`energy_distance`), the `tail_exceedance` bias with spikes and the
    expected `spectrum_l2` floor between two draws are derived but not asserted.
 3. The Pareto option should move to the X4 `pareto_spikes` degradation when that is built.

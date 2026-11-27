@@ -463,14 +463,12 @@ rewrite an old one.
   changes of moving one feature, the velocity error of its Eq. (6), the `wasserstein` bounds,
   sub-cell and rescale persistence, a width change, and the firing limit at 45°.
 - Spec 06's time-dependent variants, the background-ratio sweep configurations and Option B
-  (a kinet run seeded with a vortex population) are not built; `feature_population` is not in
-  `evidence_datasets`.
+  (a kinet run seeded with a vortex population) are not built.
 - From spec 07 (step 13), not built: the exact background-ratio sweep (Sects. 3.3 and 3.4,
   which needs a stripe bump on a background reaching 0, decision 24); the Gaussian pairs and
   their sliced and entropic answers (Sect. 3.5) and the signed-field answers (Sect. 3.7), for
   metrics not yet built; Option B (a discrete solver, POT not installed); the two
-  findings for the `wasserstein` card (Sect. 3.6), which this log measures but no card states;
-  `transport_pairs` in `evidence_datasets` (not done, by instruction).
+  findings for the `wasserstein` card (Sect. 3.6), which this log measures but no card states.
 
 ## `feature_population`
 
@@ -528,6 +526,29 @@ also written as comments in `configs/dataset/feature_population.yaml`. Nothing i
 - **Why this balance.** The whole dataset is one frame and costs about two minutes, so nothing
   is gained by cutting it; adding frames or resolution would add cost and no answer.
 
+### Log entries
+
+#### 2026-11-27: registered as evidence (registration agent)
+
+- **Registered:** `feature_population` (`{periodic: true, ensemble: false}`) in
+  `evidence_datasets` and `evidence_dataset_properties` of `configs/cards/default.yaml`. Kareem
+  decided the rule on 2026-11-26 (`dataset_specs/BUILD_ORDER.md`, "The task" and decision 9:
+  every dataset built in that plan is an evaluation dataset, admitted to `evidence_datasets`
+  with a label naming the kind of claim it supports); the agent chose the label.
+- **Label** (completes "n frames of ..." in a card's run summary): "an analytic check: one
+  static field of isolated bumps, vortices and pressure fronts with known answers, and nothing
+  about turbulence".
+- **Window:** the one static frame on 128^2 under the default ladder (section "What part is
+  evaluated" above). Its four single-feature candidates are overrides of the same configuration,
+  so a run of one is cited under the same name and label; they are listed beside
+  `evidence_window`, since no config key names a set of candidate runs.
+- **Single frame.** The rule that keeps out a dataset whose frames are scalar multiples of one
+  another does not bite: there is one frame, the per-frame rank statistics need only one, and
+  its features are not one pattern rescaled. A card citing it says "1 frames of", the
+  generator's wording.
+- **Not done:** no metric was run on it for a card; every metric card's *Across the experiments*
+  table shows it as *not yet run* or *not applicable* with the reason (`python -m fmeval.cards
+  catalog`). Producing that evidence is its own step in `BUILD_ORDER.md` and needs compute.
 
 ## `transport_pairs`
 
@@ -572,3 +593,22 @@ Decided by the agent on 2026-11-27 (step 3 of `docs/recipes/add-a-dataset.md`); 
 - **Why this balance.** The whole set costs under 20 s, so nothing is gained by cutting frames,
   and a finer grid would triple the dominant cost to shrink an error far below anything the
   ladder or a candidate changes.
+
+### Log entries
+
+#### 2026-11-27: registered as evidence (registration agent)
+
+- **Registered:** `transport_pairs` (`{periodic: true, ensemble: false}`) in `evidence_datasets`
+  and `evidence_dataset_properties` of `configs/cards/default.yaml`. Kareem decided the rule on
+  2026-11-26 (`dataset_specs/BUILD_ORDER.md`, "The task" and decision 9: every dataset built in
+  that plan is an evaluation dataset, admitted to `evidence_datasets` with a label naming the
+  kind of claim it supports); the agent chose the label.
+- **Label** (completes "n frames of ..." in a card's run summary): "an analytic check: density
+  pairs at an exactly known quadratic Wasserstein distance, and nothing about turbulence".
+- **Window:** the reader's 21 frames on 64^2, kept whole, each one pair of the reference and its
+  candidate (section "What part is evaluated" above); nothing needs a command-line setting.
+- **Frames not scalar multiples:** the blobs move at distinct velocities, so the pair changes
+  from frame to frame (the exact distance runs from 0.0497 to 0.0515).
+- **Not done:** no metric was run on it for a card; every metric card's *Across the experiments*
+  table shows it as *not yet run* or *not applicable* with the reason (`python -m fmeval.cards
+  catalog`). Producing that evidence is its own step in `BUILD_ORDER.md` and needs compute.

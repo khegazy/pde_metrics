@@ -106,7 +106,14 @@ did not evaluate it the way that field does.
   (`docs/datasets/reynolds_ladder_2d.md`, "Forecast pairs"), and the Reynolds ladder
   (`dataset_family=reynolds_ladder_2d` with `-m`: `kinet_re5e4` and `kinet_re1e6` on one
   128^2 grid, compared in report section 12; issue 011 holds its unreadable members).
-  Fixtures (`advecting_blobs`, `taylor_green_2d`) are not
+  Every dataset built under `dataset_specs/BUILD_ORDER.md` is an experiment too, registered in
+  `evidence_datasets` with its claim label (Kareem, 2026-11-26): the decaying isotropic
+  turbulence `kinet_hit_re12p5k`, `kinet_hit_re25k`, `kinet_hit_re50k`; the shear layer on
+  512^2, `kinet_re5e4_512`; the solver's Sod runs `kinet_sod_gamma1p4` and `kinet_sod_gamma2`;
+  and the analytic checks `burgers`, `sedov_taylor`, `noh`, `feature_population`,
+  `transport_pairs`, `random_field` and `helmholtz_mixture_2d`. Each is run on its own
+  configuration's window, with the command-line settings listed beside `evidence_window` in
+  `configs/cards/default.yaml`. `advecting_blobs` and `taylor_green_2d` are fixtures, not
   evidence (`docs/decisions.md`). A card cites one run per experiment:
   `python -m fmeval.cards evidence <name> --results <primary run> --results <run> ...` puts
   the primary run, the field-standard experiment where it exists here, in `## Performance` and

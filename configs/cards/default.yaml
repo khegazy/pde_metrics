@@ -46,6 +46,24 @@
 # `kinet_re1e6` is the same flow at twenty times the Reynolds number, the second member of
 # the Reynolds ladder (configs/dataset_family/reynolds_ladder_2d.yaml). Its frames are read on
 # kinet_re5e4's clock, so `evidence_window` selects the same physical times on both.
+#
+# Every dataset built under dataset_specs/BUILD_ORDER.md is an evaluation dataset (Kareem,
+# 2026-11-26, that file's "The task" and decision 9): the metrics are evaluated on it and their
+# behaviour there measures their sensitivity, so each is admitted below, analytic readers
+# included, with a label naming the kind of claim a run on it supports (docs/decisions.md,
+# "Every evaluation dataset is evidence, under its label"). The labels are the agent's wording
+# (2026-11-27). Every computed dataset's label says "nothing about turbulence", which
+# tests/test_configs.py requires. Left out: `taylor_green_2d` (above); `advecting_blobs`, the
+# harness's test bed for time-dependent degradations, which predates that plan; and
+# `well_radiative_layer_tcool0p32`, whose status Kareem has not decided.
+# - `kinet_sod_gamma2`'s viscous shock is too spread for the shock detector, so every shock-set
+#   metric scores the both-empty 0 on it; its label says so, so the zero is not read as a perfect
+#   score.
+# - `helmholtz_mixture_2d`'s velocity and pressure frames are not scalar multiples of one
+#   another, but its vorticity, the vortex's alone, is; its label says so.
+# - `random_field` is the Gaussian null only; its other families are overrides of it and would
+#   each need a configuration of their own to carry a different label. Like synthetic_ensemble,
+#   it draws from its own seed, not the run's (issues/044).
 evidence_datasets:
   kinet_re5e4: developed flow
   kinet_re1e6: >-
@@ -60,6 +78,45 @@ evidence_datasets:
   forecast_re5e4: >-
     real predictions scored against their targets at each prediction step; who produced
     the predictions, a trained model or a coarser solver, is not recorded
+  kinet_re5e4_512: >-
+    the developed flow of kinet_re5e4 simulated on 512^2 cells, at the same times; not yet
+    shown to be a nested refinement of it
+  kinet_hit_re12p5k: >-
+    decaying two-dimensional isotropic turbulence at Re = 1.25e4, one realisation per run
+  kinet_hit_re25k: >-
+    decaying two-dimensional isotropic turbulence at Re = 2.5e4, one realisation per run
+  kinet_hit_re50k: >-
+    decaying two-dimensional isotropic turbulence at Re = 5e4, simulated on 512^2 cells and
+    stored coarse-grained to 256^2, one realisation per run
+  kinet_sod_gamma1p4: >-
+    a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than
+    the exact one, and nothing about turbulence
+  kinet_sod_gamma2: >-
+    a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread
+    for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about
+    turbulence
+  burgers: >-
+    an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers'
+    equation, a steepening front smoothed by viscosity, and nothing about turbulence
+  sedov_taylor: >-
+    an analytic check: the exact cylindrical Sedov-Taylor blast wave, a shock oblique to the
+    grid at every angle, and nothing about turbulence
+  noh: >-
+    an analytic check: the exact cylindrical Noh implosion, a circular shock of constant
+    strength, and nothing about turbulence
+  feature_population: >-
+    an analytic check: one static field of isolated bumps, vortices and pressure fronts
+    with known answers, and nothing about turbulence
+  transport_pairs: >-
+    an analytic check: density pairs at an exactly known quadratic Wasserstein distance,
+    and nothing about turbulence
+  random_field: >-
+    a known-statistics null: independent Gaussian random fields of a prescribed spectrum,
+    whose increment statistics are known exactly, and nothing about turbulence
+  helmholtz_mixture_2d: >-
+    an analytic check: a Taylor-Green vortex plus an exact acoustic mode, its solenoidal and
+    dilatational parts known in closed form (its vorticity, the vortex's alone, is one pattern
+    scaled in time), and nothing about turbulence
 
 # What each evidence dataset offers a metric, so every metric card's "Across the experiments"
 # table and the site's coverage page can say why a metric is not run on a dataset without
@@ -75,11 +132,39 @@ evidence_dataset_properties:
   synthetic_ensemble: {periodic: true, ensemble: true}
   sod_shock_tube: {periodic: false, ensemble: false}      # walls at both ends
   forecast_re5e4: {periodic: true, ensemble: false}
+  kinet_re5e4_512: {periodic: true, ensemble: false}
+  kinet_hit_re12p5k: {periodic: true, ensemble: false}
+  kinet_hit_re25k: {periodic: true, ensemble: false}
+  kinet_hit_re50k: {periodic: true, ensemble: false}
+  kinet_sod_gamma1p4: {periodic: false, ensemble: false}  # Neumann ends of the tube
+  kinet_sod_gamma2: {periodic: false, ensemble: false}    # Neumann ends of the tube
+  burgers: {periodic: true, ensemble: false}
+  sedov_taylor: {periodic: false, ensemble: false}        # Neumann on both axes
+  noh: {periodic: false, ensemble: false}                 # Neumann on both axes
+  feature_population: {periodic: true, ensemble: false}
+  transport_pairs: {periodic: true, ensemble: false}
+  random_field: {periodic: true, ensemble: false}
+  helmholtz_mixture_2d: {periodic: true, ensemble: false}
 
 # The window within kinet_re5e4 that counts as developed flow: the convention a run cited
 # as evidence follows (`dataset.time.start`, `dataset.time.reduction`). Nothing reads it to
 # select frames; a test checks the exemplar frame below lies inside it, and each fingerprint
 # records the frames its run actually used.
+#
+# It is one window, kinet_re5e4's, and it also holds for kinet_re1e6 (same clock) and
+# kinet_re5e4_512 (`frame_stride: 2` puts its frames at the same times; its config states the
+# start). Every other evidence dataset's evaluated part is the `time:` selection and reader
+# options of its own configs/dataset/<name>.yaml, chosen and measured in its log
+# (docs/datasets/logs/), and a run cited from it uses those, as Sod's runs use the reader's own
+# frames. What no config can state, because the framework has no key for it
+# (dataset_specs/BUILD_ORDER.md, "Framework limits"), is given on the command line:
+# - kinet_hit_*: `analysis_grid.resolution=128`, and five realisations each, swept with
+#   `-m dataset.trajectory=<k1>,...,<k5>` (the keys are in each config's comments);
+# - kinet_re5e4_512: `analysis_grid.resolution=256`, the grid shared with kinet_re5e4;
+# - kinet_sod_*: `degradation.skip=[median_blur]`, whose window costs about 11 minutes a frame
+#   on the 5 transverse nodes;
+# - helmholtz_mixture_2d: the two disabled `scale_dilatational` ladder entries switched on;
+# - feature_population: its single-feature candidates, one override each (its config lists them).
 evidence_window:
   start: 2000       # the flow is developed well before this
   reduction: 50     # every 50th frame; ~160 frames, a run of about a minute

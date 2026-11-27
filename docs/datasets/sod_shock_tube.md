@@ -103,7 +103,10 @@ the shock moves, which is the double penalty.
     $\gamma = 1.4$ run. It flags nothing in the $\gamma = 2$ run, whose viscous shock is spread
     over enough nodes that no neighbouring pressure ratio exceeds 1.05, below the threshold of a
     Mach 1.3 shock; every score there is the both-empty 0.
-- **Not yet evidence.** Neither run is in `evidence_datasets`.
+- **Evidence, under their labels.** Both runs are in `evidence_datasets`
+  (`configs/cards/default.yaml`), labelled as a solver's shock rather than the exact one;
+  `kinet_sod_gamma2`'s label also says its shock-set metrics score 0 because no shock is
+  flagged.
 
 ## Equations
 

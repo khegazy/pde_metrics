@@ -7,7 +7,7 @@
 # nu_L = 2 nu, Omega = sqrt(8 - gamma^2). With A = U = 1 the two halves of the kinetic energy are
 # equal at t = 0 and the x-velocity is exactly zero there. The parts are set in closed form, so a
 # curl-based metric must read only the vortex, and scale_dilatational changes only the twin.
-# Not registered in evidence_datasets.
+# In evidence_datasets (configs/cards/default.yaml) as an analytic check, under the label there.
 #
 # WHAT PART IS EVALUATED (agent, 2026-11-27; docs/recipes/add-a-dataset.md step 3; the log is
 # docs/datasets/logs/taylor_green_vortex.md). The whole trajectory: 9 frames over half an acoustic

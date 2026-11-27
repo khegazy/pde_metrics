@@ -85,7 +85,6 @@ against grid refinement of the same flow. No test or card uses it yet.
   Spec 02 says the runs may predate that code. Until this is checked, `kinet_re5e4_512` must not
   be read as a nested refinement of `kinet_re5e4`. Spec 02 proposes rerunning 128², 256² and 512²
   with nodes at $i L/N$ (`BUILD_ORDER.md`, step 19).
-- No developed-flow window has been chosen, and the configuration is not evidence.
 - No dynamics figures are drawn on the page.
 - The rank collision described in section 3 must be resolved before the configuration joins the
   family sweep.
@@ -163,3 +162,23 @@ person may override it.
   running those four metrics together on 3 frames was stopped after about 44 minutes.
 - **Not verified:** the autocorrelation time on this run, the cost of the cheap metrics other
   than `mse`, and the times on an idle node.
+
+#### 2026-11-27: registered as evidence (registration agent)
+
+- **Registered:** `kinet_re5e4_512` (`{periodic: true, ensemble: false}`) in
+  `evidence_datasets` and `evidence_dataset_properties` of `configs/cards/default.yaml`. Kareem
+  decided the rule on 2026-11-26 (`dataset_specs/BUILD_ORDER.md`, "The task" and decision 9:
+  every dataset built in that plan is an evaluation dataset, admitted to `evidence_datasets`
+  with a label naming the kind of claim it supports); the agent chose the label.
+- **Label** (completes "n frames of ..." in a card's run summary): "the developed flow of
+  kinet_re5e4 simulated on 512^2 cells, at the same times; not yet shown to be a nested
+  refinement of it". It says the nested refinement is unchecked, because the node-placement
+  point of section 5 is open.
+- **Window:** kinet_re5e4's developed-flow window, frames 2000 to 10000 every 50th, which
+  `evidence_window` already states and `frame_stride: 2` maps onto the same times;
+  `analysis_grid.resolution=256` stays a command-line setting, listed beside `evidence_window`.
+- **Supersedes** the line "Not registered as evidence" of section 3 and the open point that no
+  window was chosen and the configuration is not evidence.
+- **Not done:** no metric was run on it for a card; every metric card's *Across the experiments*
+  table shows it as *not yet run* or *not applicable* with the reason (`python -m fmeval.cards
+  catalog`). Producing that evidence is its own step in `BUILD_ORDER.md` and needs compute.

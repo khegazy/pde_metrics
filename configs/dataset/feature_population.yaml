@@ -9,7 +9,7 @@
 #   pressure  three fronts of jump 1.5 on the level 1 (ratio 2.5, above the shock detector's
 #             1.805): a circle of radius 0.1, an ellipse 0.12 by 0.06 at 30 degrees, and a
 #             straight stripe along y whose two fronts lie on the cell faces x = 92/128, 100/128.
-# Not registered in evidence_datasets.
+# In evidence_datasets (configs/cards/default.yaml) as an analytic check, under the label there.
 #
 # WHAT PART IS EVALUATED (agent, 2026-11-26; docs/recipes/add-a-dataset.md step 3; the log is
 # docs/datasets/logs/advecting_blobs.md). The fields are deterministic and static, so a second

@@ -2,7 +2,8 @@
 # random_field reader (fmeval/data/analytic.py; docs/datasets/random_field.md). Specified in
 # dataset_specs/09_random_fields_known_statistics.md.
 #
-# NOT PHYSICAL EVIDENCE, and not registered in evidence_datasets. A Gaussian field has Gaussian
+# NOT PHYSICAL EVIDENCE: in evidence_datasets as a known-statistics null, under the label in
+# configs/cards/default.yaml, which says so. A Gaussian field has Gaussian
 # increments of exactly known variance at every separation, so increment flatness 3, the Hill
 # value 0.0928 at 256^2 and the distances between two such fields are known before any metric
 # runs. It has no cascade, flux or coherent structure.

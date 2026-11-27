@@ -3,8 +3,9 @@
 !!! note "`noh` is computed, not simulated"
     This configuration is the exact solution of a textbook problem, computed on the fly
     whenever a frame is read. It tests the metrics that need a shock or pressure against an
-    answer known in advance, on a circular front whose jump never changes. It is not
-    registered as evidence, and it says nothing about turbulence. A metric that needs a
+    answer known in advance, on a circular front whose jump never changes. It is registered as
+    evidence, as an analytic check (`evidence_datasets` in `configs/cards/default.yaml`), and
+    it says nothing about turbulence. A metric that needs a
     periodic domain is not run on it.
 
 ## The problem

@@ -4,7 +4,9 @@
     This dataset is a formula and a seed, evaluated whenever a frame is read. Its increment
     statistics are known before any metric runs, so it checks the spectral, increment and tail
     metrics against exact answers. It has no energy cascade, no flux and no coherent
-    structures, so it is not evidence about a flow and is not registered as evidence.
+    structures, so it is not evidence about a flow. It is registered as evidence as a
+    known-statistics null (`evidence_datasets` in `configs/cards/default.yaml`), a label every
+    metric page citing it quotes.
 
 ## The problem
 

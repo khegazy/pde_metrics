@@ -42,8 +42,11 @@ metric is evaluated"), and its page is read in the same order.
    [coverage page](coverage.md) say which experiments the page cites, which cannot apply and
    why, and which proposed experiments name the metric. The experiments are the degradation
    ladder on the developed flow `kinet_re5e4`, the same flow at a higher Reynolds number
-   `kinet_re1e6`, the real forecasts `forecast_re5e4`, the Sod shock tube `sod_shock_tube` and
-   the synthetic ensemble `synthetic_ensemble` ([datasets](datasets/README.md)).
+   `kinet_re1e6`, the real forecasts `forecast_re5e4`, the Sod shock tube `sod_shock_tube`,
+   the synthetic ensemble `synthetic_ensemble`, and the datasets added for the evaluation plan:
+   decaying isotropic turbulence at three Reynolds numbers, the shear layer on $512^2$, a
+   solver's Sod runs, and analytic checks with known answers
+   ([datasets](datasets/README.md)).
 
 Full references, with equation, section and figure numbers, are on each metric's page; this
 page names the source of each standard and links it.

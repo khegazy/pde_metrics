@@ -4,8 +4,9 @@
     This configuration is the exact solution of a textbook problem, computed on the fly
     whenever a frame is read. Its purpose is the grid-refinement experiment of numerical
     analysis: a numerical scheme run on a sequence of grids is scored against the exact
-    solution, and its error must fall at the scheme's known order. It is not registered as
-    evidence, and it says nothing about turbulence.
+    solution, and its error must fall at the scheme's known order. It is registered as
+    evidence, as an analytic check (`evidence_datasets` in `configs/cards/default.yaml`), and
+    it says nothing about turbulence.
 
 ## The problem
 

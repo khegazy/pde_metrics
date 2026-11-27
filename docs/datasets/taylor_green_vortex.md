@@ -3,7 +3,9 @@
 !!! note "Computed, not simulated"
     This dataset is the exact solution of a textbook problem, computed on the fly whenever a
     frame is read. It tests the evaluation harness against an answer known in advance. It is
-    not evidence about a simulated flow, so no metric's page cites it.
+    not evidence about a simulated flow, so no metric's page cites `taylor_green_2d`.
+    `helmholtz_mixture_2d`, the vortex plus an exact acoustic mode, is registered as evidence,
+    as an analytic check.
 
 ## The problem
 

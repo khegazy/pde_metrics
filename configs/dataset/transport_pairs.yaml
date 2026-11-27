@@ -7,7 +7,7 @@
 # f = g(x + grad u) det(I + D^2 u). x + grad u is the optimal map from f to g, so W_2 is the
 # f-weighted rms of grad u in every frame: 0.0497 to 0.0515 across the window, changing as the
 # blobs move. The candidate's density ranges over a factor of 25.
-# Not registered in evidence_datasets.
+# In evidence_datasets (configs/cards/default.yaml) as an analytic check, under the label there.
 #
 # WHAT PART IS EVALUATED (agent, 2026-11-27; docs/recipes/add-a-dataset.md step 3; the log is
 # docs/datasets/logs/advecting_blobs.md). The reader's default 21 frames over t = 0..10 on 64^2,

@@ -3,7 +3,7 @@
 # Sect. 3.1). Kamm & Timmes's (2007) standard cylindrical case: gamma = 1.4, ambient density 1,
 # energy 0.311357 per unit length at the centre of [0, 2)^2, ambient pressure 1e-6 ahead of the
 # front. The front is the circle r_2 = 0.750 t^(1/2); behind it the exact similarity profile.
-# Not registered in evidence_datasets.
+# In evidence_datasets (configs/cards/default.yaml) as an analytic check, under the label there.
 #
 # WHAT PART IS EVALUATED: the reader's defaults, kept whole; the choice, its reasons and the
 # measured costs are in docs/datasets/logs/sedov_taylor.md. Four frames from t = 0.25 to 1 on
