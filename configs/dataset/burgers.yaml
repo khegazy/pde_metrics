@@ -1,0 +1,37 @@
+# One-dimensional viscous Burgers' equation on the periodic [0, 2 pi), u(x, 0) = -sin x,
+# nu = 0.1, computed on the fly by the burgers reader from its Cole-Hopf solution
+# (fmeval/data/analytic.py; docs/datasets/burgers.md; dataset_specs/02, Sect. 4.5).
+# Not registered in evidence_datasets.
+#
+# WHAT PART IS EVALUATED: the reader's defaults, kept whole; the choice, its reasons and the
+# measured costs are in docs/datasets/logs/burgers.md. Four frames, t = 0.5, 1, 1.5, 2, on 256
+# cells, at the native resolution (no analysis-grid remap). The frames are deterministic, four
+# known answers, not samples. Measured on a Perlmutter login node, results under
+# /pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/burgers/:
+#   the 20 metrics that run on a 1D velocity, default ladder (86 levels), 4 frames: 14 s wall,
+#   4.2 s of it in the pipeline;
+#   rmse and max_error against the central-difference candidate on 64, 128, 256 and 512 cells,
+#   the four runs together: 6.1 s wall.
+#
+# The grid sequence of the observed order is four runs, one per grid, each scored on its own
+# cells against the numerical candidate:
+#   python evaluate.py -m dataset=burgers metrics=[rmse,max_error] \
+#     '+dataset.reader.candidate={scheme:central}' '+dataset.reader.grid=[64],[128],[256],[512]'
+# Every row carries param_resolution; the order p = ln(L_k / L_{k+1}) / ln 2 is not computed
+# by the analysis yet (issue 126).
+name: burgers
+format: burgers
+
+# Unused: the reader computes its frames. Declared because every dataset config carries one.
+path: ${paths.data}
+trajectory: burgers
+
+fields: [velocity]
+
+complexity:
+  family: burgers
+  rank: -1          # generated: below every physical dataset
+  label: "Viscous Burgers, periodic 1D (Cole-Hopf solution)"
+
+notes: "Viscous Burgers' equation from u = -sin x, nu = 0.1, computed on the fly from its
+  Cole-Hopf solution. See docs/datasets/burgers.md."

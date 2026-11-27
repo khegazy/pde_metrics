@@ -18,7 +18,7 @@ every step is known in advance.
 None is **evidence about a flow**. ``sod_shock_tube`` is in ``evidence_datasets`` as an
 analytic check, for the metrics that need a shock or pressure; ``taylor_green_2d`` and
 ``advecting_blobs`` are fixtures for the harness only (``docs/decisions.md``); ``random_field``,
-``sedov_taylor`` and ``noh`` are not registered. Their pages are ``docs/datasets/``.
+``sedov_taylor``, ``noh`` and ``burgers`` are not registered. Their pages are ``docs/datasets/``.
 """
 
 from __future__ import annotations
@@ -28,7 +28,9 @@ from collections.abc import Mapping, Sequence
 from typing import Any, ClassVar
 
 import numpy as np
+from scipy.integrate import solve_ivp
 from scipy.optimize import brentq
+from scipy.special import ive
 
 from degradations._shared.filters import _apply_filter
 from fmeval.context import derive_rng
@@ -331,6 +333,101 @@ class SodShockTube(ClosedFormTrajectory):
                              [p_l, p_l * (c / c_l) ** (2.0 * g / (g - 1.0)), self.star["pressure"]],
                              p_r)
         return {"density": density[None], "velocity": velocity[None], "pressure": pressure[None]}
+
+
+@register_reader("burgers")
+class Burgers(ClosedFormTrajectory):
+    """Viscous Burgers' equation ``u_t + u u_x = nu u_xx`` on the periodic ``[0, 2 pi)``, from
+    ``u(x, 0) = -sin x``, solved exactly by the Cole-Hopf transformation.
+
+    ``u = -2 nu psi_x / psi`` maps every positive solution of the heat equation
+    ``psi_t = nu psi_xx`` to a solution of Burgers' equation (Gesztesy & Holden 1998, "The
+    Cole-Hopf and Miura transformations revisited", arXiv:solv-int/9812025, Lemma 3.1 and
+    Eqs. 3.1-3.2). The initial condition needs ``psi(x, 0) = exp(-cos x / (2 nu))``, which with
+    ``a = 1 / (2 nu)`` is ``exp(a cos(x - pi))`` and so, by the expansion
+    ``exp(z cos theta) = I_0(z) + 2 sum_n I_n(z) cos(n theta)`` (DLMF 10.35.2), a Fourier
+    series whose modes the heat equation damps one by one::
+
+        psi = I_0(a) + 2 sum_{n>=1} (-1)^n I_n(a) exp(-nu n^2 t) cos(n x)
+        u   = 4 nu sum_{n>=1} n (-1)^n I_n(a) exp(-nu n^2 t) sin(n x) / psi
+
+    (``dataset_specs/02_grid_refinement_known_solution.md``, Sect. 4.5; the series is that
+    spec author's derivation, re-derived here). The Bessel functions enter only as ratios
+    ``I_n(a) / I_0(a)``, computed from the scaled ``ive`` so nothing overflows; the first
+    :attr:`TERMS` modes are kept. Checked against the heat-kernel integral of the same
+    transformation by quadrature (max difference 5e-13 at ``nu = 0.1``, t = 0.5 to 2), and
+    ``tests/test_analytic_datasets.py`` checks the equation's residual.
+
+    The series cancels: at ``t = 0`` the denominator falls to ``exp(-2a)`` of its largest
+    term, so round-off grows as ``eps exp(1 / nu)``. Measured at ``nu = 0.1``, 0.05 and 0.03:
+    1e-12, 2e-8 and 7e-4 against ``-sin x`` at ``t = 0``, and 5e-13, 9e-9 and 1e-3 against the
+    quadrature at ``t = 0.5``; so the reader refuses a viscosity below :attr:`MIN_NU`.
+
+    ``scheme="central"`` replaces the closed form with a numerical solution on the reader's own
+    cells, as a candidate (``candidate={"scheme": "central"}``) whose order of accuracy is
+    known: second-order centred differences of the flux ``u^2 / 2`` and of ``u_xx``, whose
+    truncation errors are ``h^2 (u^2/2)''' / 6`` and ``nu h^2 u'''' / 12``, integrated in time
+    by ``solve_ivp`` (DOP853) at a tolerance whose time error, 7e-12 at t = 2 on 512 cells, is
+    far below the spatial one, 5e-5. Its error against the exact solution falls as ``h^2``, so
+    the observed order (Roy 2005, J. Comput. Phys. 205(1), 131-156, Eq. 8) of ``rmse`` and
+    ``max_error`` over a grid sequence of ratio 2 is 2. It is the degraded-solver candidate of
+    ``dataset_specs/05_initial_conditions_and_degraded_solver_runs.md`` in miniature.
+    """
+
+    FORMAT = "burgers"
+    FIELDS = ("velocity",)
+    #: Fourier modes kept: at ``nu = MIN_NU`` the next ratio ``I_60(10) / I_0(10)`` is 6e-44.
+    TERMS = 60
+    #: The smallest viscosity at which the series' round-off stays near 2e-8 (see above).
+    MIN_NU = 0.05
+    SCHEMES = ("exact", "central")
+
+    def __init__(self, path: str | None = None, *, nu: float = 0.1, scheme: str = "exact",
+                 grid: Sequence[int] = (256,), n_frames: int = 4, t_start: float = 0.5,
+                 t_end: float = 2.0, candidate: Mapping[str, Any] | None = None) -> None:
+        """Compute the series' coefficients once.
+
+        Args:
+            path: Ignored; accepted so every reader is constructed the same way.
+            nu: Viscosity, at least :attr:`MIN_NU`.
+            scheme: ``"exact"`` for the closed form, ``"central"`` for the numerical solution.
+            grid: Cells along x.
+            n_frames: Number of frames.
+            t_start, t_end: The window.
+            candidate: ``nu`` or ``scheme`` changed for the candidate (:meth:`predictions`).
+
+        Raises:
+            ValueError: On a viscosity below :attr:`MIN_NU`, an unknown scheme, or an invalid
+                candidate.
+        """
+        if not float(nu) >= self.MIN_NU:
+            raise ValueError(f"nu must be at least {self.MIN_NU}, below which the series loses "
+                             f"its precision to cancellation, got {nu}")
+        if scheme not in self.SCHEMES:
+            raise ValueError(f"scheme must be one of {self.SCHEMES}, got {scheme!r}")
+        super().__init__(grid=grid, length=(2.0 * np.pi,), boundary=("periodic",),
+                         n_frames=n_frames, t_start=t_start, t_end=t_end, candidate=candidate,
+                         params={"nu": float(nu), "scheme": scheme})
+        a = 1.0 / (2.0 * float(nu))
+        self._modes = np.arange(1, self.TERMS + 1)
+        self._ratios = (-1.0) ** self._modes * ive(self._modes, a) / ive(0, a)
+        self._nu, self._scheme = float(nu), scheme
+
+    def solution(self, time: float) -> dict[str, np.ndarray]:
+        """Velocity at ``time`` on the cell centres, exact or by the scheme."""
+        x, nu, h, n = self.centres[0], self._nu, self._grid.spacing[0], self._modes
+        if self._scheme == "central":
+            def rhs(_: float, u: np.ndarray) -> np.ndarray:
+                right, left = np.roll(u, -1), np.roll(u, 1)
+                return -(right**2 - left**2) / (4.0 * h) + nu * (right - 2.0 * u + left) / h**2
+
+            u = solve_ivp(rhs, (0.0, time), -np.sin(x), method="DOP853", rtol=1e-10,
+                          atol=1e-12).y[:, -1]
+        else:
+            damped = self._ratios * np.exp(-nu * n**2 * time)
+            u = (4.0 * nu * (n * damped) @ np.sin(np.outer(n, x))
+                 / (1.0 + 2.0 * damped @ np.cos(np.outer(n, x))))
+        return {"velocity": u[None]}
 
 
 def polar(centres: Sequence[np.ndarray], length: float) -> tuple[np.ndarray, np.ndarray]:

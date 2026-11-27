@@ -28,6 +28,9 @@ Sources cited below:
   Los Alamos report LA-UR-07-2849, https://cococubed.com/papers/la-ur-07-2849.pdf.
 * Sutherland (2010), "A new computational fluid dynamics code I: Fyris Alpha", Astrophys. Space
   Sci. 327, 173-206, arXiv:1003.0724 (the cylindrical Noh problem, Sect. 6.1.6, Tables 9, 10).
+* Roy (2005), "Review of code and solution verification procedures for computational
+  simulation", J. Comput. Phys. 205(1), 131-156, https://doi.org/10.1016/j.jcp.2004.10.036
+  (the observed order, Eqs. 5, 7 and 8, as read for ``dataset_specs/02``).
 
 The candidate tests check the closed-form error curves of
 ``dataset_specs/05_initial_conditions_and_degraded_solver_runs.md`` (Sects. 3.1 and 3.3; the
@@ -57,6 +60,7 @@ from fmeval.cards import dataset_figures
 from fmeval.config import build_job, compose_config
 from fmeval.data.analytic import (
     AdvectingBlobs,
+    Burgers,
     ClosedFormTrajectory,
     Noh,
     RandomField,
@@ -342,6 +346,77 @@ def test_evaluate_fails_when_no_metric_produced_a_row(tmp_path):
     assert done.returncode != 0, done.stderr[-2000:]
     assert "no metric produced a row" in done.stderr, done.stderr[-2000:]
     assert not [p for p in tmp_path.glob("crps_*")]
+
+
+# --- Viscous Burgers (dataset_specs/02, Sect. 4.5) -----------------------------------------
+
+
+@pytest.mark.parametrize("nu, tolerance", [(0.1, 1e-11), (Burgers.MIN_NU, 1e-7)])
+def test_burgers_starts_from_minus_sin_x(nu, tolerance):
+    """At t = 0 the series is -sin x, to its round-off: 1.3e-12 at nu = 0.1 and 2.1e-8 at the
+    smallest admitted viscosity, where the series cancels most (measured)."""
+    start = Burgers(nu=nu, grid=(96,), n_frames=1, t_start=0.0, t_end=0.0)
+    u = start.frame(0, ["velocity"])["velocity"][0]
+    assert u == pytest.approx(-np.sin(start.centres[0]), rel=0, abs=tolerance)
+
+
+@pytest.mark.parametrize("time", [0.5, 1.0, 2.0])
+def test_burgers_solves_the_viscous_burgers_equation(time):
+    """The residual of u_t + u u_x - nu u_xx by centred differences in time and space, on the
+    reader's frames at t - dt, t, t + dt. Every stencil is second order, so on an exact solution
+    the residual is their truncation error alone, O(h^2 + dt^2): it falls by 4 when h and dt
+    halve, and a wrong solution leaves a residual that does not fall. Measured on 512 and 1024
+    cells with dt = 8e-3 and 4e-3: ratios 3.994 to 3.9995, the finer residual at most 2.7e-4 of
+    max |u u_x| (about 1). Asserted: a ratio within 4 +- 0.1, and a finer residual below 1e-3 of
+    max |u u_x|. At nu = 0.05 the series' round-off of 2e-8, over h^2, would dominate."""
+    nu, residuals, scales = 0.1, [], []
+    for cells, dt in ((512, 8e-3), (1024, 4e-3)):
+        burgers = Burgers(nu=nu, grid=(cells,), n_frames=3, t_start=time - dt, t_end=time + dt)
+        before, u, after = (burgers.frame(i, ["velocity"])["velocity"][0] for i in range(3))
+        h, right, left = burgers.grid.spacing[0], np.roll(u, -1), np.roll(u, 1)
+        advection = u * (right - left) / (2 * h)
+        residual = (after - before) / (2 * dt) + advection - nu * (right - 2 * u + left) / h**2
+        residuals.append(np.abs(residual).max())
+        scales.append(np.abs(advection).max())
+    assert residuals[0] / residuals[1] == pytest.approx(4.0, abs=0.1), residuals
+    assert residuals[1] < 1e-3 * scales[1], (residuals, scales)
+
+
+def test_the_central_scheme_has_its_observed_order_of_two_through_the_pipeline():
+    """The second-order scheme against the exact solution, each grid scored on its own cells
+    through ``pipeline.run``'s prediction path, on 64, 128, 256 and 512 cells (ratio 2), at
+    t = 0.5, 1, 1.5, 2. The observed order of each pair of grids is p = ln(L_k / L_{k+1}) / ln 2
+    (Roy 2005, J. Comput. Phys. 205(1), 131-156, Eq. 8), for L = ``rmse`` (Roy's L2, Eq. 7) and
+    ``max_error`` (his L-infinity). The formal order is 2; p departs from it by the
+    higher-order terms Roy's Eq. 5 neglects, which shrink with h. Measured: 1.93 to 2.02 on
+    (64, 128), 1.997 to 2.005 on (128, 256), 1.995 to 2.001 on (256, 512). Asserted: within
+    0.1 of 2 on the coarsest pair and 0.01 on the two finer ones. The analysis does not compute
+    p (issue 126), so it is computed here from the rows."""
+    errors = {}
+    for cells in (64, 128, 256, 512):
+        truth = Burgers(grid=(cells,), candidate={"scheme": "central"})
+        rows = run(truth, [metric_registry.get(n) for n in ("rmse", "max_error")],
+                   build_ladder({}), fields=["velocity"], dataset=DatasetInfo(name="burgers"),
+                   prediction=truth.predictions()).rows
+        forecast = rows[rows["degradation"] == "forecast"]
+        assert (forecast["param_resolution"] == cells).all()
+        errors[cells] = forecast.pivot(index="time", columns="metric", values="value")
+    for coarse, fine, tolerance in ((64, 128, 0.1), (128, 256, 0.01), (256, 512, 0.01)):
+        order = np.log(errors[coarse] / errors[fine]) / np.log(2)
+        assert np.abs(order.to_numpy() - 2).max() <= tolerance, f"{coarse}/{fine}:\n{order}"
+
+
+@pytest.mark.parametrize("kwargs, match", [
+    ({"nu": 0.03}, "at least"),
+    ({"nu": 0.0}, "at least"),
+    ({"scheme": "upwind"}, "scheme must be"),
+    ({"candidate": {"scheme": "spectral"}}, "scheme must be"),
+    ({"candidate": {"nu": 0.01}}, "at least"),
+    ({"candidate": {"grid": [128]}}, "not parameters"),
+])
+def test_burgers_refuses_what_it_cannot_compute(kwargs, match):
+    with pytest.raises(ValueError, match=match):
+        Burgers(**kwargs).predictions()
 
 
 # --- Cylindrical blast waves: Sedov-Taylor and Noh ------------------------------------

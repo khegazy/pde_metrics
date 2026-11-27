@@ -16,7 +16,7 @@ Two kinds of dataset appear:
   and its run summary then names the kind of claim the numbers support:
   `synthetic_ensemble` as a **calibrated null**, for the probabilistic metrics, and
   `sod_shock_tube` as an **analytic check**, for the metrics that need a shock or pressure.
-  Neither is evidence about turbulence. `taylor_green_2d` and `advecting_blobs` are never cited, and `random_field`, `sedov_taylor` and `noh` are not yet registered.
+  Neither is evidence about turbulence. `taylor_green_2d` and `advecting_blobs` are never cited, and `random_field`, `sedov_taylor`, `noh` and `burgers` are not yet registered.
 
 | Problem | Configurations | Kind | Grid | Boundaries |
 |---|---|---|---|---|
@@ -24,6 +24,7 @@ Two kinds of dataset appear:
 | [Decaying two-dimensional isotropic turbulence](decaying_isotropic_2d.md) | `kinet_hit_re12p5k`, `kinet_hit_re25k`, `kinet_hit_re50k`, each with ten realisations by `dataset.trajectory` | simulated; not yet evidence | $256^2$ | periodic |
 | [Turbulent radiative mixing layer](turbulent_radiative_layer_2d.md) | `well_radiative_layer_tcool0p32` | simulated (The Well, Athena++); not yet evidence | $128 \times 384$ | periodic $x$, open $y$ (Neumann) |
 | [Sod shock tube](sod_shock_tube.md) | `sod_shock_tube`, `kinet_sod_gamma1p4`, `kinet_sod_gamma2` | `sod_shock_tube` computed: exact solution of the Euler equations; the kinet runs simulated, not yet evidence | 2048 cells, 1D; the kinet runs 3001 × 5 | Neumann walls; the kinet runs periodic across the tube |
+| [Viscous Burgers' equation, one-dimensional](burgers.md) | `burgers` | computed: exact Cole–Hopf solution, with a second-order scheme as the candidate of a grid-refinement sequence; not yet evidence | 256 cells, 1D; the sequence 64 to 512 | periodic |
 | [Sedov–Taylor blast wave, cylindrical](sedov_taylor.md) | `sedov_taylor` | computed: exact similarity solution of the Euler equations; a circular shock oblique to the grid at every angle; not yet evidence | $128^2$ | Neumann |
 | [Noh implosion, cylindrical](noh.md) | `noh` | computed: exact solution of the Euler equations; a circular shock of constant strength; not yet evidence | $128^2$ | Neumann |
 | [Supersonic flow past a cylinder](supersonic_cylinder.md) | none: the one run stopped at step 155 of 1000 | simulated, not readable | 500 × 300 | inlet and Neumann |
