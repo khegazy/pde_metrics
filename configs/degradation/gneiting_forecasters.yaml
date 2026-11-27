@@ -1,0 +1,22 @@
+# The forecasters of Gneiting, Balabdaoui & Raftery (2007, JRSS-B 69(2):243, Table 1), whose
+# CRPS is known exactly (dataset_specs/08_synthetic_ensemble_extensions.md, Sect. 3.1).
+#
+# Only meaningful on the synthetic ensemble with case means and unit noise, where the clean
+# members ARE the ideal forecaster and every cell is one case:
+#   dataset=synthetic_ensemble +dataset.reader.base=case_means +dataset.reader.sigma=1
+# Each entry is a probe, not a severity level (the operator is ordinal=False), so the rank
+# correlations see none of them: the reference level is the ideal forecaster, and the three
+# others are compared with it and with each other. Expected CRPS: ideal 0.5642, Hamill's
+# 0.6144, unfocused 0.6319, climatological 0.7979.
+#
+# Cost on the default 12 frames of 64^2: the whole registry takes 9.5 s per frame over these
+# five levels (measured 2026-11-26), about 2 minutes. Twelve frames are needed: one frame
+# measures the CRPS to about 0.009, and the closest two forecasters differ by 0.0175.
+
+ladder:
+  climatological: {enabled: true, op: gneiting_forecaster, severities: [0]}
+  unfocused: {enabled: true, op: gneiting_forecaster, severities: [0], options: {kind: unfocused}}
+  hamill: {enabled: true, op: gneiting_forecaster, severities: [0], options: {kind: hamill}}
+
+  # The anchor, as on every ladder (configs/degradation/ensemble_miscalibration.yaml).
+  mean_field: {enabled: true, severities: [0]}

@@ -1,7 +1,8 @@
 """Shared implementation of the dispersion-scaling operators.
 
 It lives in ``_shared/``, which :func:`degradations.registry.discover` skips: this is a
-helper shared by the ``spread_inflate`` and ``spread_deflate`` bundles, not a bundle.
+helper shared by the ``spread_inflate``, ``spread_deflate`` and ``flow_dependence`` bundles,
+not a bundle.
 """
 
 from __future__ import annotations
@@ -9,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 
 
-def scale_spread(members: np.ndarray, factor: float) -> np.ndarray:
+def scale_spread(members: np.ndarray, factor: float | np.ndarray) -> np.ndarray:
     """Scale an ensemble's dispersion about its own mean, leaving that mean fixed.
 
     .. math::
@@ -23,7 +24,8 @@ def scale_spread(members: np.ndarray, factor: float) -> np.ndarray:
 
     Args:
         members: Ensemble members, ``(N, C, *spatial)`` with the member axis leading.
-        factor: Multiplier on the deviations. One is a no-op.
+        factor: Multiplier on the deviations. One is a no-op. An array shaped like one
+            member, ``(C, *spatial)``, scales each cell by its own factor.
 
     Returns:
         The rescaled ensemble, same shape.

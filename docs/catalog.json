@@ -1,6 +1,6 @@
 {
   "counts": {
-    "degradations": 25,
+    "degradations": 28,
     "metrics": 39,
     "reviewed": 0,
     "with_measurements": 39
@@ -393,6 +393,56 @@
       "summary": "Convolves the field with an isotropic epanechnikov kernel of a given radius, removing structure below that scale."
     },
     {
+      "card": "degradations/flow_dependence/card.md",
+      "category": "ensemble",
+      "declared": {
+        "calibration": null,
+        "defaults": {
+          "direction": "damp"
+        },
+        "ensemble": true,
+        "family": "ensemble",
+        "fields": [
+          "*"
+        ],
+        "ordinal": true,
+        "preserves": [
+          "ensemble_mean"
+        ],
+        "severity_direction": "increasing",
+        "severity_name": "change of the spread exponent",
+        "severity_units": "",
+        "stochastic": false
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "kind": "degradation",
+      "math": null,
+      "name": "flow_dependence",
+      "other_evidence": [],
+      "output": {
+        "description": "The change of the exponent a in spread -> k spread^a: a = 1 - severity with the default direction `damp`, a = 1 + severity with `amplify`.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "degradations/flow_dependence",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Redistributes an ensemble's spread between cells, too evenly or too unevenly, while keeping its mean and its average variance exactly."
+    },
+    {
       "card": "degradations/gain/card.md",
       "category": "pointwise",
       "declared": {
@@ -539,6 +589,54 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Replaces the field with a Gaussian random field that has the same amplitude spectrum and the same low-order moments, but random phases."
+    },
+    {
+      "card": "degradations/gneiting_forecaster/card.md",
+      "category": "ensemble",
+      "declared": {
+        "calibration": null,
+        "defaults": {
+          "kind": "climatological"
+        },
+        "ensemble": true,
+        "family": "ensemble",
+        "fields": [
+          "*"
+        ],
+        "ordinal": false,
+        "preserves": [],
+        "severity_direction": "increasing",
+        "severity_name": "n/a",
+        "severity_units": "",
+        "stochastic": true
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "kind": "degradation",
+      "math": null,
+      "name": "gneiting_forecaster",
+      "other_evidence": [],
+      "output": {
+        "description": "None. The severity is ignored; each kind is one experiment, chosen by the ladder entry's `kind` option.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "degradations/gneiting_forecaster",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Turns an ideal ensemble into one of three forecasters of known calibration and known exact CRPS: the climatological, the unfocused and Hamill's forecaster of Gneiting, Balabdaoui and Raftery (2007)."
     },
     {
       "card": "degradations/highpass_butterworth/card.md",
@@ -880,6 +978,56 @@
       "reviewed_by": null,
       "status": "candidate",
       "summary": "Replaces each cell with the median of a square neighbourhood, a nonlinear smoother that removes small features while leaving sharp edges in place."
+    },
+    {
+      "card": "degradations/member_shape/card.md",
+      "category": "ensemble",
+      "declared": {
+        "calibration": null,
+        "defaults": {
+          "family": "student_t"
+        },
+        "ensemble": true,
+        "family": "ensemble",
+        "fields": [
+          "*"
+        ],
+        "ordinal": true,
+        "preserves": [
+          "ensemble_mean"
+        ],
+        "severity_direction": "increasing",
+        "severity_name": "departure from the normal",
+        "severity_units": "1/nu, or the two-piece scale split",
+        "stochastic": false
+      },
+      "evidence": {
+        "axes": [],
+        "dataset": null,
+        "figures": [],
+        "measured": false,
+        "probes": [],
+        "profile": [],
+        "run": null
+      },
+      "kind": "degradation",
+      "math": null,
+      "name": "member_shape",
+      "other_evidence": [],
+      "output": {
+        "description": "With the default family `student_t`, one over the degrees of freedom of the Student-t the members are mapped onto; with `two_piece`, the split s of the two-piece normal's scales 1 - s and 1 + s.",
+        "lower_bound": 0.0,
+        "upper_bound": null
+      },
+      "owners": [
+        "khegazy"
+      ],
+      "path": "degradations/member_shape",
+      "reviewed": false,
+      "reviewed_at": null,
+      "reviewed_by": null,
+      "status": "candidate",
+      "summary": "Reshapes each cell's members into a heavy-tailed or skewed distribution while keeping their mean, their variance and their order exactly."
     },
     {
       "card": "degradations/multiplicative_noise/card.md",

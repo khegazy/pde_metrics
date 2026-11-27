@@ -1,0 +1,41 @@
+# The typed half of this degradation's card. Every field is documented in
+# fmeval/cards/schema.py. Run `python -m fmeval.cards check <name>` after editing.
+schema_version: 1
+
+name: gneiting_forecaster
+kind: degradation
+category: ensemble
+
+summary: >-
+  Turns an ideal ensemble into one of three forecasters of known calibration and known exact
+  CRPS: the climatological, the unfocused and Hamill's forecaster of Gneiting, Balabdaoui and
+  Raftery (2007).
+
+status: candidate
+owners: [khegazy]
+
+failure_mode: >-
+  A forecast that is calibrated, or nearly so, and still worse than the ideal one: it is
+  honest about its uncertainty on average but does not know which case it is in.
+
+output:
+  description: >-
+    None. The severity is ignored; each kind is one experiment, chosen by the ladder
+    entry's `kind` option.
+  bounds:
+    lower: 0.0
+    upper: null
+
+exemplars:
+  mode: draws
+  n_draws: 3
+  field_name: vorticity
+  diagnostics: [difference, pdf]
+  rationale: >-
+    Three independent draws of the default kind, the climatological forecaster, beside the
+    original member. The constants presuppose the case-means reader, where every cell is a
+    case of mean drawn from N(0, 1) and noise of unit variance; on a flow field the panel
+    shows only that each member is replaced by noise of variance two.
+
+references: [gneiting2007]
+review: null

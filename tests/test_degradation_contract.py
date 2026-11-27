@@ -12,6 +12,7 @@ import dataclasses
 
 import numpy as np
 import pytest
+from scipy import stats
 
 from degradations import registry as deg
 from degradations._shared.filters import _apply_filter
@@ -123,6 +124,11 @@ LADDERS: dict[str, list[float]] = {
     # inflate, removed for deflate, so zero is a no-op on both and neither exceeds one.
     "spread_inflate": [0.25, 1.0, 3.0],
     "spread_deflate": [0.25, 0.5, 0.9],
+    # Spec 08's ensemble operators: the forecaster probe takes no severity; the spread
+    # exponent changes by the severity; the shape severity is 1/nu of a Student-t.
+    "gneiting_forecaster": [0],
+    "flow_dependence": [0.25, 1.0, 2.0],
+    "member_shape": [0.1, 0.2, 0.4],
 }
 
 
@@ -495,6 +501,41 @@ def test_bias_shifts_the_mean_only():
     x = synthetic_field(SHAPE, 1, seed=0)
     y = call(deg.get("bias"), x, 0.25)
     assert np.allclose(y - x, 0.25 * fluctuation_rms(x))
+
+
+@pytest.mark.parametrize("kind, mean_shifts, variances", [
+    # Gneiting, Balabdaoui & Raftery (2007), Table 1, each cell's distribution about the case
+    # mean mu: climatological N(-mu, 2) with mu = 0 here; unfocused the mixture of N(0, 1) and
+    # N(tau, 1), so mean tau / 2 and variance 1.25; Hamill's N(delta, s^2).
+    ("climatological", [0.0], [2.0]),
+    ("unfocused", [-0.5, 0.5], [1.25]),
+    ("hamill", [-0.5, 0.0, 0.5], [1.0, 1.69]),
+])
+def test_gneiting_forecasters_draw_their_table_1_distributions(kind, mean_shifts, variances):
+    """Ideal members with case mean zero, 2 000 per cell over 64 cells: each cell's sample mean
+    and variance land on one of the forecaster's (shift, variance) pairs, within four standard
+    errors (at most 0.035 for a mean and 0.063 for a variance at this size)."""
+    ideal = np.random.default_rng(1).standard_normal((2000, 1, 8, 8))
+    out = deg.get("gneiting_forecaster").fn(ideal, 0, ctx=make_ctx(ideal[0]), kind=kind)
+    for mean, var in zip(out.mean(axis=0).ravel(), out.var(axis=0, ddof=1).ravel()):
+        assert np.min(np.abs(np.array(mean_shifts) - mean)) < 0.15, (kind, mean)
+        assert np.min(np.abs(np.array(variances) - var)) < 0.25, (kind, var)
+
+
+@pytest.mark.parametrize("family", ["student_t", "two_piece"])
+def test_member_shape_keeps_every_cell_s_mean_variance_and_ranks(family):
+    """The map is monotone and re-standardised (spec 08, Sect. 3.4), so each cell's sample mean
+    and variance, and the order of its members, are unchanged; only the shape moves: the
+    Student-t raises the members' kurtosis, the two-piece normal skews them to the right."""
+    x = members(synthetic_field(SHAPE, 1, seed=0), n_members=16)
+    y = deg.get("member_shape").fn(x, 0.4, family=family)
+    np.testing.assert_allclose(y.mean(axis=0), x.mean(axis=0), rtol=0, atol=1e-12)
+    np.testing.assert_allclose(y.var(axis=0, ddof=1), x.var(axis=0, ddof=1), rtol=1e-10)
+    np.testing.assert_array_equal(np.argsort(y, axis=0), np.argsort(x, axis=0))
+    if family == "student_t":
+        assert stats.kurtosis(y, axis=0).mean() > stats.kurtosis(x, axis=0).mean()
+    else:
+        assert stats.skew(y, axis=0).mean() > stats.skew(x, axis=0).mean() + 0.3
 
 
 # --- ladder construction --------------------------------------------------------------

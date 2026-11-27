@@ -1,0 +1,42 @@
+# The typed half of this degradation's card. Every field is documented in
+# fmeval/cards/schema.py. Run `python -m fmeval.cards check <name>` after editing.
+schema_version: 1
+
+name: member_shape
+kind: degradation
+category: ensemble
+
+summary: >-
+  Reshapes each cell's members into a heavy-tailed or skewed distribution while keeping their
+  mean, their variance and their order exactly.
+
+status: candidate
+owners: [khegazy]
+
+failure_mode: >-
+  An ensemble with the right centre and the right width whose distribution has the wrong
+  shape: tails that are too heavy, or a lopsided spread, as a generative model trained only on
+  the first two moments can produce.
+
+output:
+  description: >-
+    With the default family `student_t`, one over the degrees of freedom of the Student-t
+    the members are mapped onto; with `two_piece`, the split s of the two-piece normal's
+    scales 1 - s and 1 + s.
+  bounds:
+    lower: 0.0
+    upper: null
+
+exemplars:
+  mode: severity
+  levels: [0.1, 0.2, 0.4]
+  field_name: vorticity
+  diagnostics: [difference, pdf]
+  rationale: >-
+    One member of a synthetic ensemble built around the canonical field, mapped onto a
+    Student-t of ten, five and two and a half degrees of freedom. The member mean and every
+    cell's variance are unchanged, so the difference row is small and concentrated where a
+    member sat far from the consensus, which the heavier tails push further out.
+
+references: [jordan2019]
+review: null

@@ -1,0 +1,42 @@
+# The typed half of this degradation's card. Every field is documented in
+# fmeval/cards/schema.py. Run `python -m fmeval.cards check <name>` after editing.
+schema_version: 1
+
+name: flow_dependence
+kind: degradation
+category: ensemble
+
+summary: >-
+  Redistributes an ensemble's spread between cells, too evenly or too unevenly, while keeping
+  its mean and its average variance exactly.
+
+status: candidate
+owners: [khegazy]
+
+failure_mode: >-
+  An ensemble that is calibrated on average but does not know which regions are uncertain:
+  its spread follows the true uncertainty too weakly, not at all, the wrong way round, or too
+  strongly.
+
+output:
+  description: >-
+    The change of the exponent a in spread -> k spread^a: a = 1 - severity with the default
+    direction `damp`, a = 1 + severity with `amplify`.
+  bounds:
+    lower: 0.0
+    upper: null
+
+exemplars:
+  mode: severity
+  levels: [0.5, 1.0, 2.0]
+  field_name: vorticity
+  diagnostics: [difference]
+  rationale: >-
+    One member of a synthetic ensemble built around the canonical field, damped to exponents
+    one half, zero and minus one. The member mean is unchanged, so the difference row shows
+    where each member's departure from the consensus has grown or shrunk: by the middle
+    column every cell carries the same spread, and by the last the noisiest cells have become
+    the quietest.
+
+references: [leutbecherpalmer2008]
+review: null

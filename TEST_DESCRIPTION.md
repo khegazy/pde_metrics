@@ -1352,17 +1352,20 @@ displacement, with correct position and wrong magnitude.
 | `bias` | fraction of fluctuation RMS | A uniform offset, invisible to any metric built on fluctuations or gradients |
 | `identity` | — | severity level 0 |
 
-**Ensemble** — the ensemble is the wrong *width*, while its central prediction is
-untouched. These apply only to a dataset that provides an ensemble, and they act on the
-members: the reference the metrics are scored against is never degraded. Both scale the
-members about their own mean, so the ensemble mean is preserved exactly and any metric
-built on it alone is blind to this axis by construction — which is what makes these a
-clean test of whether a metric sees calibration at all.
+**Ensemble** — the ensemble is the wrong *width*, puts its spread in the wrong *places*, or
+has the wrong *shape*, while its central prediction is untouched. These apply only to a
+dataset that provides an ensemble, and they act on the members: the reference the metrics
+are scored against is never degraded. All four keep the member mean at every cell exactly,
+so any metric built on it alone is blind to them by construction — which is what makes these
+a clean test of whether a metric sees calibration at all.
 
 | operator | severity | notes |
 |---|---|---|
 | `spread_inflate` | fraction of the calibrated spread | Excess dispersion: the hedging forecast. Severity 1 doubles the spread |
 | `spread_deflate` | fraction of the calibrated spread | Lost dispersion: the overconfident forecast. Severity 1 collapses the ensemble onto its mean |
+| `flow_dependence` | change of the spread exponent | Each cell's spread raised to the power 1 − severity (`damp`) or 1 + severity (`amplify`), keeping the field's mean variance: an ensemble that does not know which regions are uncertain. Damp 1 makes the spread uniform, damp 2 inverts it. `spread_skill` and `ensemble_mean_rmse` are unchanged exactly |
+| `member_shape` | 1/ν, or the two-piece scale split | Each cell's members mapped onto a Student-t of ν degrees of freedom (`heavy_tails`) or a right-skewed two-piece normal (`skew`), keeping every cell's mean, variance and member order |
+| `gneiting_forecaster` | — | Not a severity level. On the case-means synthetic ensemble, turns the ideal forecaster into the climatological, unfocused or Hamill's forecaster of Gneiting, Balabdaoui and Raftery (2007, Table 1), calibrated or nearly so but less skilful, with exact expected CRPS 0.7979, 0.6319 and 0.6144 against 0.5642 for the ideal. Run by `configs/degradation/gneiting_forecasters.yaml` |
 
 They are two operators rather than one signed axis because the ladder sorts each
 operator's severities into one order of increasing damage, and dispersion error is least

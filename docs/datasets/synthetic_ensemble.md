@@ -45,6 +45,23 @@ noise. Drawn by `python -m fmeval.cards dynamics synthetic_ensemble`.*
 |---|---|
 | `synthetic_ensemble` | 16 members, 12 frames, $64^2$ cells, density only. $\sigma$ and the phase step keep the reader's defaults; every option can be overridden, for example `+dataset.reader.n_members=32` |
 
+Reader options for other known answers, each off by default and set with
+`+dataset.reader.<option>=...`
+(`dataset_specs/08_synthetic_ensemble_extensions.md`, Section 3). With them the truth is
+$T(b + \sigma(\mathbf{x})\eta_0)$ and each member $T(b + \delta\sigma(\mathbf{x}) +
+\sigma(\mathbf{x})\eta_i)$:
+
+| Option | What it changes | Known answer it gives |
+|---|---|---|
+| `base`: `case_means` or `zero` | $b$ becomes an independent $N(0, 1)$ value per cell, or nothing | With `sigma=1`, the ideal forecaster of Gneiting, Balabdaoui and Raftery (2007); the ladder `degradation=gneiting_forecasters` adds the other three, with exact CRPS 0.5642, 0.6144, 0.6319, 0.7979 |
+| `sigma_ratio` $R \ge 1$ | $\sigma(\mathbf{x}) = \sigma R^{w}$, $w = (1 + \sin 2\pi i/n_x)/2$ along the first axis | A calibrated ensemble whose true spread varies across the domain, on the diagonal of the binned spread-error diagram; the `flow_dependence` axes move it off |
+| `noise_length` $\ell$, `noise_covariance` | Noise with covariance $e^{-r/\ell}$ or $(1 + r/\ell)^{-1}$ in the torus distance $r$ (Scheuerer and Hamill 2015, Eq. 5) | Spatially correlated members and truth |
+| `member_noise_length`, `member_noise_covariance` | The members' covariance alone | A wrong correlation, which `variogram_score` sees and the per-cell scores do not |
+| `member_offset` $\delta$ | The members' centre, in units of $\sigma(\mathbf{x})$ | A calibrated spread around a wrong centre, on which `spread_deflate` and `spread_inflate` act |
+| `log_amplitude` $\lambda$ | $T(v) = e^{\lambda v}$ on truth and members | A positive density with every rank unchanged, on which `wasserstein` runs |
+
+None of these has a dataset configuration of its own yet.
+
 The ensemble's seed is the reader's own, not the run's
 ([issue 044](https://github.com/khegazy/pde_metrics/blob/main/issues/044-synthetic-ensemble-ignores-the-run-seed.md)).
 

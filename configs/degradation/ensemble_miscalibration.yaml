@@ -29,6 +29,25 @@ ladder:
   # the axis.
   spread_deflate: {enabled: true, severities: [0.25, 0.5, 0.7, 0.8]}
 
+  # --- where the spread sits, and its shape (dataset_specs/08, Sects. 3.2 and 3.4) ------
+  # Cost: these four entries add 16 of the ladder's 30 levels, and variogram_score spends
+  # 1.67 s per level and frame at 64^2, so they double the full panel's time on
+  # synthetic_ensemble (19 s to 42 s per frame, measured 2026-11-26; see
+  # docs/datasets/logs/synthetic_ensemble.md, section 3).
+  # Both keep the ensemble mean and the frame's mean variance, so spread_skill and
+  # ensemble_mean_rmse are flat on them by construction. flow_dependence raises each cell's
+  # spread to the power 1 -/+ severity: damp 1 makes it uniform, damp 2 inverts it. It is
+  # most telling on a reader whose true spread varies (`+dataset.reader.sigma_ratio=4`).
+  flow_dependence_damp: {enabled: true, op: flow_dependence,
+                         severities: [0.25, 0.5, 1.0, 1.5, 2.0]}
+  flow_dependence_amplify: {enabled: true, op: flow_dependence, severities: [0.5, 1.0, 2.0],
+                            options: {direction: amplify}}
+  # member_shape keeps every cell's mean and variance and maps the members onto a Student-t
+  # of 1/severity degrees of freedom (nu = 10 to 2.5), or a two-piece normal skewed right.
+  heavy_tails: {enabled: true, op: member_shape, severities: [0.1, 0.2, 0.3, 0.4]}
+  skew: {enabled: true, op: member_shape, severities: [0.2, 0.4, 0.6, 0.8],
+         options: {family: two_piece}}
+
   # --- accuracy, for contrast ---------------------------------------------------
   # An ordinary per-field operator, applied to each member independently. Included so a run
   # carries one axis that moves the ensemble MEAN beside the two that do not: it is what

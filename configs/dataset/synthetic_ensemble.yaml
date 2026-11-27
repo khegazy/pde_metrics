@@ -32,6 +32,29 @@ reader:
   grid: [64, 64]
   # sigma (the dispersion of both the members and the reference, equal by construction) and
   # omega (the phase advance between frames) keep the reader's defaults.
+  #
+  # What is evaluated (docs/recipes/add-a-dataset.md step 3; the log,
+  # docs/datasets/logs/synthetic_ensemble.md, section 3). Nothing is stored; the frames,
+  # members and grid set the time. Every frame is an independent draw, so 12 frames are 12
+  # independent samples of every per-frame statistic. Measured 2026-11-26 on a login node,
+  # per frame and severity level: crps 0.0009 s, variogram_score 1.67 s at 64^2 (0.12 s at
+  # 32^2, cost growing with the square of the cell count). The whole registry on one frame
+  # of ensemble_miscalibration (30 levels) takes 42 s, 97% of it variogram_score, so the full
+  # panel over 12 frames is about 8.4 minutes. 12 frames at 64^2 hold the Gneiting CRPS to a
+  # standard error of about 0.0025, a seventh of the smallest gap between forecasters. Kept
+  # as it is because the four ensemble cards cite these numbers; the 32^2 alternative is
+  # proposed in the log, not applied.
+  #
+  # The spec-08 experiments run on this config by override (no config of their own yet):
+  #   Gneiting:        degradation=gneiting_forecasters +dataset.reader.base=case_means
+  #                    +dataset.reader.sigma=1                      (12 frames, ~2 min)
+  #   spread varies:   +dataset.reader.sigma=0.05 +dataset.reader.sigma_ratio=4
+  #   correlated:      dataset.reader.grid=[32,32] dataset.reader.n_frames=40
+  #                    +dataset.reader.base=zero +dataset.reader.sigma=1
+  #                    +dataset.reader.noise_length=3, members varied with
+  #                    +dataset.reader.member_noise_length=...      (40 frames, ~3 min)
+  #   wrong centre:    +dataset.reader.member_offset=1
+  #   positive:        +dataset.reader.log_amplitude=0.1
 
 # No velocity, so there is no vorticity to recompute.
 recompute_derived: false
