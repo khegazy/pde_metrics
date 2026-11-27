@@ -1,0 +1,55 @@
+# Shared by the degraded solver runs of decaying two-dimensional isotropic turbulence
+# (dataset_specs/BUILD_ORDER.md step 20; dataset_specs/05_initial_conditions_and_degraded_solver_runs.md,
+# Options B and C). Each of the five evaluated realisations of a Reynolds number (the sweep line
+# of kinet_hit_re<Re>) was rerun by kinet from its own stored step-0 fields, degraded in one
+# stated way, and the rerun is scored as a prediction against that realisation: `predictions()`
+# of the kinet_raw reader, which evaluate.py scores in place of the degradation ladder (the
+# anchor, the realisation's spatial mean, is kept). Solver runs degraded on purpose; no
+# machine-learning model is involved. The kind of rerun is chosen with
+# dataset.reader.candidate=<kind>.h5:
+#   control.h5                      the realisation's own settings
+#   grid128.h5, grid64.h5           128^2 or 64^2 cells, started from the step-0 fields
+#                                   block-averaged; grid64 also needs dataset.analysis_resolution=64
+#   re0.9.h5, re0.75.h5, re0.5.h5   the Reynolds number times 0.9, 0.75 or 0.5 (a wrong viscosity)
+#   bgk.h5                          plain BGK collision instead of entropic BGK
+# The Re = 5e4 option holds only control, grid128, grid64 and bgk, and its control is not a
+# control (its own config says why).
+#
+# Files: ${paths.data}/kinet/homogeneous_isotropic_turbulence/weakly_compressible_isoT_fluids/
+# sys_Re-<Re>_Ma-1en1_candidates/<key>/{reference,<kind>}.h5, written by
+# `python -m fmeval.data.convert_kinet <rollout> <file> --every N`: each holds frames 0, 50, ...,
+# 1000 of the realisation's clock, 21 frames (N = 50 at 256^2 and 128^2, 25 at 64^2).
+# reference.h5 is the realisation itself at that stride, converted from its archived rollout and
+# bitwise equal to kinet_hit_re<Re>'s file at those frames; it sits beside the candidates so that
+# one candidate file name serves all five realisations and their runs combine with
+# `fmeval.io.combine_runs(..., across="trajectory")`. The runs, their configurations and the
+# job's own checks are in docs/datasets/logs/kinet_runs/isotropic_candidates/.
+#
+# cell: 1 reads every run in cells and solver steps of the 256^2 grid: a coarser candidate's
+# cell is 256/N of them (kinet_raw's `candidate`), so it spans the same domain, and the clock,
+# the solver step of each frame times its cell, is the same on every grid (frame k is step 500 k
+# of the 256^2 runs). The realisations record no lattice scales, which `box` would need.
+#
+# WHAT PART IS EVALUATED (2026-11-27; measured costs and reasons in
+# docs/datasets/logs/decaying_isotropic_2d.md, section 7): frames 3 to 11, which are the
+# realisations' frames 150 to 550 every 50th, the window and stride of _decaying_isotropic_2d, on
+# the same 128 analysis grid (64 for grid64). No candidate has decorrelated from its reference
+# there (distance over its decorrelated value at most 0.6 in velocity and 0.85 in vorticity,
+# candidates_checks.txt), so every frame distinguishes the kinds. Frame 0 (the shared start) and
+# frames 12 to 20 (steps 6000 to 10000, the condensate) are stored but not evaluated: they cost
+# little on disk, and dataset.time.start=0 dataset.time.stop=null reads them.
+defaults:
+  - _decaying_isotropic_2d
+
+reader:
+  cell: 1.0
+  candidate: grid128.h5
+
+time:
+  start: 3
+  stop: 12
+  reduction: 1
+
+notes: "Decaying 2D isotropic turbulence, Ma=0.1: a kinet rerun degraded on purpose (coarser grid,
+  wrong viscosity or plain BGK) from a realisation's step-0 fields, scored against that
+  realisation; cells and solver steps of the 256^2 grid. See docs/datasets/decaying_isotropic_2d.md."

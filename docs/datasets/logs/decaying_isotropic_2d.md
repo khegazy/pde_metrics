@@ -658,6 +658,33 @@ checked: the frames are 150, 175, ..., 575 on all three options.
   equilibrium populations, which the current case refuses (`dataset_specs/00_how_to_use_kinet.md`,
   Section 6c, corrected the same day).
 
+### 2026-11-27: the degraded solver runs as candidates (step-20 dataset agent)
+
+- **What was done.** The 105 kinet reruns of step 20 (`dataset_specs/BUILD_ORDER.md`) were made
+  readable as predictions scored against the realisation each started from, through the
+  existing `kinet_raw` option `candidate`. New: a converter option `every` (keep every Nth frame;
+  `fmeval/data/convert_kinet.py`), a rule that scales a candidate's `cell` to its grid
+  (`fmeval/data/kinet_raw.py`), the fragment `configs/dataset/_isotropic_candidates.yaml` and the
+  options `kinet_hit_re12p5k_candidates`, `kinet_hit_re25k_candidates`,
+  `kinet_hit_re50k_candidates`, registered as evidence. 90 reruns and 15 reference subsets were
+  converted to CFS (3.51 GB), and the runs' provenance archived in
+  `docs/datasets/logs/kinet_runs/isotropic_candidates/`. Section 7 holds the design, the evaluated
+  part with its measured costs, the decisions and the open points.
+- **Verified.** Every converted file equals its rollout at every kept frame and field, and every
+  `reference.h5` equals the realisation's full file read with `frame_stride=50` (all 105 files).
+  The candidates' clocks equal the realisations' bitwise on all three grids before conversion
+  (checked on one realisation per Reynolds number). Through `evaluate.py` and in the data-marked
+  test `test_the_isotropic_candidates_reproduce_the_jobs_distances`, the job's relative L2
+  distances are reproduced: `nrmse` on vorticity and the velocity distance from `mse`, for
+  `grid64`, `grid128`, `re0.5` and `bgk` at Re 2.5e4 and the 256^2 rerun at Re 5e4, on each
+  candidate's own grid, agree with `candidates_checks.json` to 3.3e-5 relative at worst (the job
+  printed five significant figures). The five realisations of one kind gather with
+  `combine_runs(..., across="trajectory")`, and `make_report.py` renders the gathered folder.
+- **Not verified.** Any metric beyond `mse`, `nrmse`, `rmse`, the 24-metric panel and
+  `persistence_wasserstein`, which were run on one kind of one realisation for the cost; any
+  kind at Re 1.25e4 through `evaluate.py` (the configuration composes and the files read; the
+  job's checks cover the numbers).
+
 ## 6. Open points
 
 - The other 270 complete runs are not converted. Section 4 gives the two routes for doing so.
@@ -681,3 +708,199 @@ checked: the frames are 150, 175, ..., 575 on all three options.
   25); issue 144 applies here as on the shear layer. `dataset.slow_metrics` can now give it a
   coarser grid or fewer frames than the rest; no one has chosen them for this dataset.
 - The window was chosen from the three default trajectories only.
+- The degraded solver runs have open points of their own, in section 7.
+
+## 7. The degraded solver runs (`kinet_hit_re12p5k_candidates`, `kinet_hit_re25k_candidates`, `kinet_hit_re50k_candidates`)
+
+Added on 2026-11-27 by the step-20 dataset agent. Sections 1 to 6 concern the realisations
+alone; this section concerns the kinet reruns scored against them, and follows the same
+structure.
+
+### What they are for
+
+- **Candidates of known provenance from many initial conditions.** Specification 05
+  (`dataset_specs/05_initial_conditions_and_degraded_solver_runs.md`, Options B and C) asks for
+  reference trajectories from many starts and, for each, candidate trajectories made by a solver
+  degraded in a controlled way, so that a metric's error can be read against the prediction step
+  and over the starts. That is how the thirteen per-step metric cards say their fields report
+  them (spec 05, Sect. 1). It is step 20 of `dataset_specs/BUILD_ORDER.md`, and the project's own
+  protocol (`CLAUDE.md`, "Evaluation protocol", steps 1 and 2): a trusted solver degraded on
+  purpose. Nothing here is a machine-learning model.
+- **A known answer, which is an ordering.** No exact error curve exists. What is known in advance
+  (spec 05, Sects. 4.1 and 4.2, reasoning there) and measured by the job is that the control
+  reproduces the realisation, that 64^2 is further off than 128^2, and that the error grows with
+  the viscosity error. No analysis in the repository reads that ordering across runs yet
+  (issue 147).
+- **Two orthogonal degradation axes**, as the protocol asks: the grid (128^2, 64^2) and a wrong
+  viscosity (Re times 0.9, 0.75, 0.5), with a third kind, a different collision model (BGK).
+
+### How they are treated
+
+- **Runs.** 105 kinet runs on scratch, 5 realisations times 7 kinds times 3 Reynolds numbers,
+  each started from its realisation's stored step-0 fields (block-averaged for a coarser grid)
+  with kinet's `initial_state` route and equilibrium populations, as the realisations started.
+  Commands, kinet commit, device, jobs, configurations and the job's checks are in
+  `docs/datasets/logs/kinet_runs/isotropic_candidates/` (the README there, "Degraded reruns of
+  the isotropic realisations").
+- **Conversion.** `python -m fmeval.data.convert_kinet <rollout> <file> --every N`, with `N`
+  50 for the 256^2 and 128^2 runs and 25 for the 64^2 runs, so every file holds the realisation's
+  frames 0, 50, ..., 1000 (21 frames; the realisation's step 500 k at frame k). The realisation
+  itself is converted the same way from its archived rollout into `reference.h5` beside its
+  reruns, and checked equal to its full file at those frames.
+- **Location.** `/global/cfs/cdirs/m4790/Data/kinet/homogeneous_isotropic_turbulence/weakly_compressible_isoT_fluids/sys_Re-<Re>_Ma-1en1_candidates/<key>/{reference,control,grid128,grid64,re0.9,re0.75,re0.5,bgk}.h5`,
+  beside the realisations' folders and named like them; at Re 5e4 only `reference`, `control`,
+  `grid128`, `grid64` and `bgk`.
+- **Reader.** `kinet_raw` with `cell: 1` and `candidate: <kind>.h5`. With `cell`, the reader reads
+  a run in cells and solver steps, and a candidate's cell is scaled by the ratio of the two runs'
+  cells along x (4 for a 64^2 rerun), so both span one domain and share one clock: frame k is time
+  500 k on every grid, bitwise. Velocity and density keep their lattice values, which kinet's
+  acoustic scaling makes comparable across grids (the lattice velocity of a run is the same on
+  every grid). Vorticity is recomputed from velocity on the analysis grid, as for the
+  realisations. Periodic on both axes (the reader's default, true of the runs). Fields density,
+  velocity and vorticity; no pressure (the gauge, not converted).
+- **Configuration.** The fragment `_isotropic_candidates.yaml` inherits `_decaying_isotropic_2d`
+  and sets the reader options, the frames and the notes; each option inherits its realisations'
+  option (`kinet_hit_re<Re>`, for the default realisation, the Reynolds number and the rank) and
+  the fragment, and states its name, path and label. The kind is chosen with
+  `dataset.reader.candidate=<kind>.h5` (default `grid128.h5`) and the realisation with
+  `dataset.trajectory=<key>`. With a candidate, `evaluate.py` replaces the ladder by three levels
+  per frame: the clean reference, the anchor `mean_field` and the rerun.
+
+### What part is evaluated
+
+| Selector | Value | Effect |
+|---|---|---|
+| `dataset.time` | start 3, stop 12, reduction 1 | The realisation's frames 150 to 550 every 50th: 9 frames |
+| Realisations | The five evaluated ones of `kinet_hit_re<Re>` | Swept with `-m dataset.trajectory=...` |
+| Kinds | 7 at Re 1.25e4 and 2.5e4, 4 at Re 5e4 | Swept with `-m dataset.reader.candidate=...` |
+| `analysis_resolution` | 128; 64 for `grid64` | `grid64` needs `dataset.analysis_resolution=64`; at 128 the run stops with "analysis grid 128 is finer than the data (64)" |
+
+That is 90 runs of 9 frames, 810 frames, each scored on three levels.
+
+- **Why this window and stride.** They are the realisations' own (section 3 and the step-32
+  entry), so a rerun's frames are the frames the realisations' ladder runs score, and nothing in
+  the reruns argued for others: inside the window no rerun has decorrelated from its
+  realisation (distance over its decorrelated value, `d / d_sat` in `candidates_checks.txt`, at
+  most 0.6 in velocity and 0.85 in vorticity, both `grid64` at frame 550), so every frame
+  distinguishes the kinds, while at frame 800 `grid64` has decorrelated in vorticity (1.02 at
+  Re 2.5e4, 0.99 at Re 5e4) and stays there. Before frame 150 the realisation is a random-phase field
+  (section 3) and the reruns' distances are small: `re0.9` is 0.005 or less in velocity at every
+  Reynolds number before frame 150, apart from the grid error at Re 5e4.
+- **Why frames are cheap here, and the stride was still kept.** A candidate replaces the ladder,
+  so a frame costs three evaluations per metric and field instead of one per level of the default
+  ladder, 89 of which a candidate run drops (`evaluate.py`'s log). Measured
+  (below), the 24-metric panel costs 0.68 s of metric time per frame here, against 34 s on the
+  ladder (section 3), so a finer stride would be affordable in time. It was not taken: a rerun's
+  error is one deterministic history per realisation, which grows smoothly between frames 150
+  and 550 (the job's table), so finer frames add points on that curve, not independent samples,
+  and they would double the disk (a finer `--every`).
+- **Independent samples.** The five realisations are independent samples outright; the nine
+  frames of one realisation are not.
+
+**Measured cost** on a login node, realisation `c95586` of Re 2.5e4, 9 frames, 128 grid unless
+stated (run folders under `/pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/step20_candidates/`):
+
+| What | Measured |
+|---|---|
+| `mse` and `nrmse`, whole `evaluate.py` run of 9 frames (inside one multirun) | 0.4 to 1.3 s per run; io 0.1 to 0.2 s |
+| `mse` metric time per frame (3 fields, 3 levels) | 0.0003 s |
+| Panel of the 24 metrics that run here, without `persistence_wasserstein`, `grid128` | 6.2 s of metric time (0.68 s per frame), 9.0 s run, 15.2 s wall with Python start-up |
+| The most expensive of them per frame | `persistence_distance` 0.22 s, `energy_distance` 0.15 s, `spectral_energy_flux` 0.11 s |
+| `persistence_wasserstein` alone, `grid128` | 4.7 s of metric time (0.52 s per frame), 7.7 s wall; it did not stall |
+
+The panel is every registered metric except the eight ensemble metrics, the six shock-set metrics
+(no absolute pressure) and `persistence_wasserstein`, as in section 3. **Projected** (my
+arithmetic): 90 runs of about 15 s each for the panel with `persistence_wasserstein`, about 25
+minutes in one process.
+
+**Disk.** 105 files, 3,512,431,320 bytes (3.51 GB): 90 reruns (2.85 GB; 44.07 MB per 256^2 file,
+11.04 MB per 128^2, 2.78 MB per 64^2) and 15 reference subsets (0.66 GB). The evaluated 9 of the
+21 frames are about 1.5 GB of it (my arithmetic). Converting the reruns whole would have taken
+about 135 GB (my arithmetic: 60 files of 2.10 GB at 256^2, 15 of 0.53 GB at 128^2 and 15 of
+0.066 GB at 64^2). The raw rollouts are 275.7 GB on scratch, which is purged after about eight
+weeks; every rerun is reproducible from the archived driver and configuration.
+
+**Why this balance.** The frames are the realisations' and cost little; the disk is 2.6% of whole
+conversion; the stored frames outside the window (frame 0, the shared start, and 600 to 1000,
+the condensate) cost about 2 GB and keep those stretches readable with `dataset.time.start` and
+`stop` without a second conversion.
+
+### Decisions and why
+
+1. **One configuration per Reynolds number, the kind a reader option.** Who: this agent, under
+   Kareem's rule to fit the plan to the code (`BUILD_ORDER.md`, "How code is written for this
+   plan"). Alternatives: one configuration per kind and Reynolds number (21 files that differ in
+   one line); one configuration for all three (the folder names `12p5k`, `25k`, `50k` cannot be
+   derived from a value a configuration holds, so the path cannot follow a Reynolds number).
+   Reverse: write per-kind options that inherit a per-Reynolds option and set `reader.candidate`.
+2. **A copy of each realisation at the reruns' stride, beside them (0.66 GB).** Who: this agent.
+   Why: `candidate` is a file name in the reference's folder. Beside the full realisation, the
+   name would have to contain the realisation's key, so two realisations' runs would differ in
+   `dataset.reader.candidate` and `combine_runs(..., across="trajectory")` would refuse them; and
+   the realisation (1001 frames) would have to be read at a stride of 50 while each rerun is read
+   at stride 1, which `kinet_raw` cannot do (every option is shared with the candidate). Either
+   would have needed a code change; the copy needs none, and is checked equal to the realisation
+   at every frame it holds. Alternative: extend `kinet_raw` to read the candidate at its own
+   stride and `combine_runs` to ignore a candidate path that names the trajectory. Reverse: point
+   `path` at `sys_Re-<Re>_Ma-1en1/<key>.h5` and make those two changes.
+3. **Convert every 50th frame of the realisation's clock, not the whole run.** Who: this agent.
+   Why: the evaluated frames are every 50th, and whole files would be about 135 GB instead of
+   3.51 GB. The converter gained one option, `every` (6 lines of code, a docstring entry and a
+   test). Alternative: convert
+   only the nine evaluated frames, which needs a frame list rather than a stride and would drop
+   frame 0 and the condensate. Reverse: reconvert with `--every 1`; a 64^2 rerun then holds 501
+   frames against the realisation's 1001, so the realisation would have to be read at stride 2 and
+   the rerun at stride 1, which needs the reader change of decision 2.
+4. **`cell: 1`, with a candidate's cell scaled to its grid.** Who: this agent. Why: a coarse
+   rerun must lie on the same domain as its realisation remapped, or the pair is refused ("a pair
+   must share its grid"); `box` would do it but needs the lattice scales, and the realisations'
+   `normalization_plan.lattice` is empty (they predate kinet recording it). The change is 4 lines
+   in `KinetRawTrajectory.predictions` and `__init__`, tested on a 16 x 8 run with an 8 x 4
+   candidate. Consequence: rows' `time` and `lead_time` are solver steps of the 256^2 run (0 to
+   10 000), not the convective units of `kinet_hit_*`'s rows (0 to 2.2553). Alternative: rewrite
+   the files' spatial length at conversion, which would put a value in the file that kinet did not
+   write. Reverse: drop `cell` and give the realisations' converted files lattice scales.
+5. **At Re 5e4, the three wrong-viscosity reruns are left out.** Who: this agent, asked by the
+   coordinating session to decide. Evidence (`candidates_checks.txt` and `.json`): the realisation
+   is a 512^2 run stored at 256^2, so the 256^2 "control" departs from it by a grid error (velocity
+   distance 0.011 at frame 150, 0.155 at 550). The viscosity reruns' own error is smaller than that
+   (`re0.9` 0.0115 at frame 150), so in vorticity `re0.9` and `re0.75` fall below the control at
+   frame 150, the control lies below every other rerun for 0 to 2 of the five realisations at
+   each evaluated frame, and the viscosity ordering holds for 0 to 5. Their known answer is lost,
+   and the same axis is tested cleanly at the two lower Reynolds numbers. `bgk`, whose own error
+   is about four times the grid error (0.047 against 0.011 at frame 150), and the grid reruns are
+   kept: among those four, the 256^2 rerun lies below the other three and `grid64` above `grid128`
+   for all five realisations at every evaluated frame in both fields. The `control` file keeps
+   its name, and its configuration and label say plainly that it is a grid candidate. Reverse:
+   convert `Re-50k/re0.*` from scratch before it is purged (the conversion loop of the kinet_runs
+   README), or rerun them from the archived driver, and add them to the kinds.
+6. **Analysis grid 128, and 64 for `grid64`.** Who: this agent. Why: 128 is the realisations'
+   grid (section 3) and `grid128`'s own, so every kind but `grid64` is scored on one grid; a rerun
+   can only be scored on its own grid or coarser. Consequence: the same-grid kinds are not scored
+   on their 256^2 grid, so their values differ from the job's distances, which were taken there
+   (`re0.5` vorticity `nrmse` 0.092 at 128 against the job's 0.108 at 256, frame 150 of
+   `c95586`), and `grid64` is on a grid of its own. Alternatives: 256 for the same-grid kinds,
+   affordable at this cost; 64 for every kind, one grid for all but losing most of the gradient
+   content (section 3). Reverse: `dataset.analysis_resolution=256` or `64`.
+7. **Kinds named as the driver named them** (`re0.9.h5`, not `re0p9.h5`), so one name runs from
+   the driver through the scratch folders and the job's checks to the files and the
+   configurations. Default kind `grid128.h5`, spec 05's first candidate (Option B).
+8. **No ordering analysis built.** Nothing in `fmeval/analysis.py` reads whether a metric's scores
+   follow the known order of several candidate runs, and it would be real new code. Written up as
+   issue 147, not built.
+
+### Open points
+
+- The ordering across kinds is read by hand until issue 147 is built.
+- A card cites one run per dataset, so which kind a card cites for these datasets is open
+  (step 30 of `BUILD_ORDER.md`).
+- `lead_step` on these rows is the frame index (3 to 11), as for `kinet_shear_layer_refinement`,
+  and `lead_time` is in solver steps of the 256^2 grid (decision 4).
+- The same-grid kinds are scored at 128, not on their own 256^2 grid (decision 6).
+- At Re 5e4 there is no control (decision 5).
+- The raw rollouts, the Re 5e4 viscosity reruns and every frame not kept exist only on scratch,
+  which is purged after about eight weeks.
+- No dynamics figures are drawn for the reruns.
+- Not run: any metric on every kind, realisation and Reynolds number; only the cost runs and
+  `mse`, `nrmse` and `rmse` on Re 2.5e4.
+

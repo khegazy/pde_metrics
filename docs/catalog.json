@@ -1783,6 +1783,33 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -2166,6 +2193,33 @@
         {
           "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
           "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -3942,6 +3996,33 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -5954,6 +6035,33 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -6340,6 +6448,33 @@
         {
           "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
           "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -7132,6 +7267,33 @@
           "reason": "needs vorticity, which this dataset does not provide",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -9431,6 +9593,33 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -12908,6 +13097,33 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -16287,6 +16503,33 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -19720,6 +19963,33 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -23119,6 +23389,33 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -26541,6 +26838,33 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -28951,6 +29275,33 @@
         {
           "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
           "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
           "note": null,
           "primary": false,
           "reason": null,
@@ -31714,6 +32065,33 @@
         {
           "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
           "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
           "note": null,
           "primary": false,
           "reason": null,
@@ -36523,6 +36901,33 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -41295,6 +41700,33 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -44658,6 +45090,33 @@
         {
           "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
           "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
           "note": null,
           "primary": false,
           "reason": null,
@@ -49463,6 +49922,33 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -53299,6 +53785,33 @@
           "reason": "needs a periodic domain, and this dataset is not periodic; needs vorticity, which this dataset does not provide",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -55158,6 +55671,33 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -56674,6 +57214,33 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -57080,6 +57647,33 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -57463,6 +58057,33 @@
         {
           "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
           "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -59213,6 +59834,33 @@
         {
           "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
           "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
           "note": null,
           "primary": false,
           "reason": null,
@@ -64006,6 +64654,33 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -66387,6 +67062,33 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -67158,6 +67860,33 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -67929,6 +68658,33 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -68700,6 +69456,33 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -69471,6 +70254,33 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -70242,6 +71052,33 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -71055,6 +71892,33 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -73413,6 +74277,33 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -75431,6 +76322,33 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -77247,6 +78165,33 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -80700,6 +81645,33 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -82733,6 +83705,33 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -84468,6 +85467,33 @@
         {
           "claim": "the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window upstream of the body that holds the shock and none of the body or the wake, its downstream and side faces cuts declared Neumann; nothing about turbulence",
           "dataset": "kinet_supersonic_cylinder",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
           "note": null,
           "primary": false,
           "reason": null,
@@ -88315,6 +89341,33 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re12p5k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off",
+          "dataset": "kinet_hit_re25k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)",
+          "dataset": "kinet_hit_re50k_candidates",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",

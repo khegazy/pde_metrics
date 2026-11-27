@@ -68,6 +68,7 @@ Designed, hooks in place, not built.
 | [081](081-modal-decompositions-need-trajectories.md) | Modal decompositions need time-resolved trajectories | unset |
 | [082](082-pair-correlation-waits-on-features.md) | Pair-correlation function of features waits on feature extraction | medium |
 | [083](083-predictive-uncertainty-needs-the-model.md) | Quality of predictive uncertainty needs a surrogate that reports uncertainty | unset |
+| [147](147-no-analysis-reads-the-order-of-several-candidate-runs.md) | No analysis reads whether a metric orders several candidate runs (the degraded isotropic reruns) as their degradation does | medium |
 
 ## Method and calibration
 

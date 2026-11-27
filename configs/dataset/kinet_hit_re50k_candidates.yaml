@@ -1,0 +1,34 @@
+# kinet_hit_re50k's five evaluated realisations, each scored against kinet reruns of itself on
+# 256^2 cells or coarser; the fragment says how they are read.
+#
+# NO CONTROL AT THIS REYNOLDS NUMBER. The realisations were simulated on 512^2 cells and stored
+# coarse-grained to 256^2, while every rerun ran on 256^2 or coarser from those stored fields. So
+# control.h5 is a grid candidate, 256^2 against the 512^2 run, not a reproduction: its velocity
+# relative L2 distance is 0.011 at frame 150 and 0.155 at frame 550 (median over the five;
+# candidates_checks.txt), where at Re = 1.25e4 and 2.5e4 the control is round-off. Every other
+# rerun carries that grid error too. The kinds kept are control (256^2), grid128, grid64 and bgk,
+# whose own error is larger than the shared grid error (bgk's velocity distance 0.047 against the
+# control's 0.011 at frame 150): among these four the 256^2 rerun lies below the other three, and
+# grid64 above grid128, for all five realisations at every evaluated frame in velocity and
+# vorticity (candidates_checks.json). The three wrong-viscosity reruns were run and checked but
+# are not converted: their own error is hidden under the grid error (re0.9's velocity distance 0.0115
+# against the control's 0.011 at frame 150, and in vorticity re0.75 falls below the control), so
+# the expected ordering they exist to test fails, and they would test nothing the two lower
+# Reynolds numbers do not (docs/datasets/logs/decaying_isotropic_2d.md, section 7).
+#
+#   python evaluate.py -m 'metrics=[...]' dataset=kinet_hit_re50k_candidates \
+#       dataset.trajectory=cf7333,6729a8,3cf779,137164,f19e41 \
+#       dataset.reader.candidate=control.h5,grid128.h5,bgk.h5
+#   python evaluate.py -m 'metrics=[...]' dataset=kinet_hit_re50k_candidates \
+#       dataset.trajectory=cf7333,6729a8,3cf779,137164,f19e41 \
+#       dataset.reader.candidate=grid64.h5 dataset.analysis_resolution=64
+defaults:
+  - kinet_hit_re50k
+  - _isotropic_candidates
+  - _self_
+
+name: kinet_hit_re50k_candidates
+path: ${paths.data}/kinet/homogeneous_isotropic_turbulence/weakly_compressible_isoT_fluids/sys_Re-50k_Ma-1en1_candidates/${.trajectory}/reference.h5
+
+complexity:
+  label: "Re = 5\\times10^{4}, a 256^2 or coarser kinet rerun against the 512^2 realisation"

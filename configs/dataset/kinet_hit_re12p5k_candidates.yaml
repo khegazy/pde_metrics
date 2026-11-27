@@ -1,0 +1,23 @@
+# kinet_hit_re12p5k's five evaluated realisations, each scored against kinet reruns of itself
+# degraded on purpose; the fragment says what each kind of rerun is and how it is read. The
+# control reproduces its realisation to round-off (velocity relative L2 distance 1.3e-11 at frame
+# 150 and 9.4e-10 at frame 1000, median over the five; candidates_checks.txt). Every kind but
+# grid64, for every realisation, as one sweep; then grid64 on its own grid:
+#   python evaluate.py -m 'metrics=[...]' dataset=kinet_hit_re12p5k_candidates \
+#       dataset.trajectory=c5ccb2,6f3450,3c2c65,10383c,f151b4 \
+#       dataset.reader.candidate=control.h5,grid128.h5,re0.9.h5,re0.75.h5,re0.5.h5,bgk.h5
+#   python evaluate.py -m 'metrics=[...]' dataset=kinet_hit_re12p5k_candidates \
+#       dataset.trajectory=c5ccb2,6f3450,3c2c65,10383c,f151b4 \
+#       dataset.reader.candidate=grid64.h5 dataset.analysis_resolution=64
+# and gather the five realisations of one kind with
+# fmeval.io.combine_runs(<folders>, stamp, across="trajectory").
+defaults:
+  - kinet_hit_re12p5k
+  - _isotropic_candidates
+  - _self_
+
+name: kinet_hit_re12p5k_candidates
+path: ${paths.data}/kinet/homogeneous_isotropic_turbulence/weakly_compressible_isoT_fluids/sys_Re-12p5k_Ma-1en1_candidates/${.trajectory}/reference.h5
+
+complexity:
+  label: "Re = 1.25\\times10^{4}, a degraded kinet rerun against its realisation"

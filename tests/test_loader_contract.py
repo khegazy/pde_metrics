@@ -326,6 +326,42 @@ def test_a_candidate_run_is_scored_against_this_run_block_averaged_onto_its_grid
             dataset=DatasetInfo(name="pair"), prediction=candidate)
 
 
+def test_under_cell_a_coarser_candidate_spans_the_runs_domain_on_its_clock(tmp_path):
+    """A 16 x 8 run whose frames are solver steps 0, 2, ..., 8 and an 8 x 4 candidate whose frames
+    are steps 0, 1, ..., 4, read with ``cell``: the candidate's cell and step are twice the run's,
+    so its spacing is twice the run's, its clock equals the run's, its velocity keeps its lattice
+    values and its vorticity is divided by its own cell. Through the pipeline on the candidate's
+    grid its ``rmse`` is the rms of the candidate minus the run averaged over 2 x 2 blocks
+    (1e-12). Without ``cell`` the two runs' spacings differ and the pair is refused."""
+    write_kinet_raw(tmp_path / "fine.h5")
+    with h5py.File(tmp_path / "fine.h5", "r+") as f:
+        f["time_index"][:] = 2 * np.arange(N_FRAMES)
+    write_kinet_raw(tmp_path / "coarse.h5", shape=(8, 4))
+    reference = KinetRawTrajectory(tmp_path / "fine.h5", cell=1.0, candidate="coarse.h5")
+    candidate = reference.predictions()
+    with KinetRawTrajectory(tmp_path / "coarse.h5") as plain:
+        assert candidate.grid.spacing == (2.0, 2.0) and reference.grid.spacing == (1.0, 1.0)
+        assert np.array_equal(candidate.times, reference.times)
+        assert candidate.times.tolist() == (2.0 * np.arange(N_FRAMES)).tolist()
+        assert np.array_equal(candidate.frame(3, ["velocity"])["velocity"],
+                              plain.frame(3, ["velocity"])["velocity"])
+        assert np.array_equal(candidate.frame(3, ["vorticity"])["vorticity"],
+                              plain.frame(3, ["vorticity"])["vorticity"] / 2.0)
+    rows = run(reference, [metric_registry.get("rmse")], build_ladder({}), fields=["velocity"],
+               dataset=DatasetInfo(name="pair"), analysis_resolution=8, prediction=candidate).rows
+    scored = rows[rows["lead_step"].notna() & (rows["level"] > 0)].sort_values("frame_index")
+    expected = [np.sqrt(np.mean((candidate.frame(t, ["velocity"])["velocity"] - reference.frame(
+        t, ["velocity"])["velocity"].reshape(2, 8, 2, 4, 2).mean(axis=(2, 4)))**2))
+        for t in range(N_FRAMES)]
+    assert scored["value"].to_numpy() == pytest.approx(expected, rel=1e-12)
+    assert (scored["param_resolution"] == 8).all()
+    with KinetRawTrajectory(tmp_path / "fine.h5", candidate="coarse.h5") as lattice:
+        with pytest.raises(ValueError, match="share its grid"):
+            run(lattice, [metric_registry.get("rmse")], build_ladder({}), fields=["velocity"],
+                dataset=DatasetInfo(name="pair"), analysis_resolution=8,
+                prediction=lattice.predictions())
+
+
 def test_window_keeps_a_block_of_cells_at_the_runs_coordinates(kinet_file):
     """``window`` reads cells ``[start, stop)`` of each axis: the frame is the plain frame's block,
     the grid's shape is the window's and its origin the window's first cell, the declared
@@ -468,6 +504,44 @@ def test_the_shear_layer_ensemble_reproduces_the_jobs_spread_and_single_truth_ra
         assert error.mean() / np.mean(variance) == pytest.approx(17 / 16, rel=1e-9)
     assert (round(min(ratios), 3), round(max(ratios), 3)) == (low, high)
     assert own["start_02000"] == pytest.approx(0.5807, abs=1e-4)
+
+
+#: The candidate job's distances (``candidates_checks.py``), per realisation, kind and frame.
+CANDIDATES = REPO / "docs/datasets/logs/kinet_runs/isotropic_candidates/candidates_checks.json"
+
+
+@pytest.mark.data
+@pytest.mark.parametrize("reynolds,kind,cells", [
+    ("25k", "grid64", 64), ("25k", "grid128", 128), ("25k", "re0.5", 256), ("25k", "bgk", 256),
+    ("50k", "control", 256)])
+def test_the_isotropic_candidates_reproduce_the_jobs_distances(reynolds, kind, cells):
+    """On the evaluated frames of ``kinet_hit_re<Re>_candidates`` (frames 3 to 11, the
+    realisation's frames 150 to 550), the candidate scored through the pipeline on its own grid,
+    derived fields recomputed as ``evaluate.py`` does, is at the job's relative L2 distances from
+    the realisation block-averaged onto that grid: ``nrmse`` on vorticity is d_w, and ``mse`` on
+    velocity times the two channels and the cells, over the reference's squared norm, is d_u
+    squared (the job printed five significant figures; asserted 1e-4)."""
+    job = build_job(compose_config(f"dataset=kinet_hit_re{reynolds}_candidates",
+                                   f"dataset.reader.candidate={kind}.h5",
+                                   f"dataset.analysis_resolution={cells}", "paths.data_url=null"))
+    reference = open_trajectory(job.dataset, job.paths)
+    rows = run(RecomputingTrajectory(reference),
+               [metric_registry.get("mse"), metric_registry.get("nrmse")], build_ladder({}),
+               fields=["velocity", "vorticity"], selection=job.dataset.time,
+               dataset=DatasetInfo(name=job.dataset.name), analysis_resolution=cells,
+               prediction=RecomputingTrajectory(reference.predictions())).rows
+    scored = rows[rows["lead_step"].notna() & (rows["level"] > 0)].set_index(
+        ["metric", "field", "frame_index"])["value"]
+    expected = json.loads(CANDIDATES.read_text())["Re"][reynolds][job.dataset.trajectory][kind]
+    factor = 256 // cells
+    for t in range(3, 12):
+        want = expected["series"][str(50 * t)]
+        fine = reference.frame(t, ["velocity"])["velocity"]
+        norm = np.sum(fine.reshape(2, cells, factor, cells, factor).mean(axis=(2, 4))**2)
+        assert np.sqrt(scored["mse", "velocity", t] * 2 * cells**2 / norm) == pytest.approx(
+            want["d_u"], rel=1e-4)
+        assert scored["nrmse", "vorticity", t] == pytest.approx(want["d_w"], rel=1e-4)
+    assert (rows.loc[rows["lead_step"].notna(), "param_resolution"] == cells).all()
 
 
 #: The cylinder of the supersonic run: centre and radius in nodes
@@ -663,6 +737,30 @@ def test_a_converted_grouped_rollout_is_the_flat_file_it_was_built_from(older, t
         assert f["time_index"][:].tolist() == [0, 3, 6, 9, 12]
     with pytest.raises(FileExistsError):
         convert_kinet_grouped(grouped, converted)
+
+
+def test_every_keeps_the_initial_condition_and_every_nth_frame_after_it(tmp_path):
+    """``every=2`` on the grouped fixture (frames 0 to 4 at steps 0, 3, ..., 12) keeps frames 0, 2
+    and 4 of the flat fixture, values and clock alike, at steps 0, 6, 12, with the temporal grid
+    and resolution counting the frames kept; a value that does not divide the four frames after
+    the initial condition is refused and leaves nothing behind."""
+    grouped = write_kinet_grouped(tmp_path / "grouped.h5", save_every=3)
+    converted = convert_kinet_grouped(grouped, tmp_path / "converted.h5", every=2)
+    with KinetRawTrajectory(tmp_path / "grouped_flat.h5") as want, \
+            KinetRawTrajectory(converted) as got:
+        assert np.array_equal(got.times, want.times[::2])
+        for t in range(len(got)):
+            a, b = want.frame(2 * t, got.fields), got.frame(t, got.fields)
+            for name in got.fields:
+                assert np.array_equal(a[name], b[name]), f"{name} differs at frame {t}"
+        temporal = got.meta["source_attrs"]["discretization"]["temporal"]
+        assert (temporal["grid"], temporal["resolution"]) == (2, 6.0)
+    with h5py.File(converted, "r") as f:
+        assert f["time_index"][:].tolist() == [0, 6, 12]
+    for bad in (0, 3):
+        with pytest.raises(ValueError, match="every="):
+            convert_kinet_grouped(grouped, tmp_path / f"bad{bad}.h5", every=bad)
+        assert not list(tmp_path.glob(f"bad{bad}.h5*"))
 
 
 @pytest.mark.parametrize("change,match", [

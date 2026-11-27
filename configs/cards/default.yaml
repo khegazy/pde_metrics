@@ -89,6 +89,12 @@
 # - `kinet_supersonic_cylinder` is the bow shock of a steady supersonic flow, read in a window
 #   upstream of the body so that the shock-set metrics score the shock and not the body's outline;
 #   the wake is not in it, and three of the window's faces are cuts declared Neumann.
+# - `kinet_hit_re12p5k_candidates`, `kinet_hit_re25k_candidates` and `kinet_hit_re50k_candidates`
+#   score kinet reruns of the isotropic realisations, degraded on purpose (a coarser grid, a wrong
+#   viscosity, plain BGK collision), against the realisation each started from; the kind of rerun
+#   is a reader option, so one configuration holds every kind. At Re = 5e4 the realisation ran on
+#   512^2 cells and every rerun on 256^2 or coarser, so even its control carries a grid error; its
+#   label says so, and its wrong-viscosity reruns are left out (its config says why).
 evidence_datasets:
   kinet_re5e4: developed flow
   kinet_re1e6: >-
@@ -173,6 +179,21 @@ evidence_datasets:
     the bow shock of a steady Mach 1.8 lattice-Boltzmann flow past a cylinder, read in a window
     upstream of the body that holds the shock and none of the body or the wake, its downstream
     and side faces cuts declared Neumann; nothing about turbulence
+  kinet_hit_re12p5k_candidates: >-
+    decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun
+    degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the
+    run's candidate file) scored against the realisation it started from, whose undegraded rerun
+    matches it to round-off
+  kinet_hit_re25k_candidates: >-
+    decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun
+    degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the
+    run's candidate file) scored against the realisation it started from, whose undegraded rerun
+    matches it to round-off
+  kinet_hit_re50k_candidates: >-
+    decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on
+    256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it
+    started from; there is no control, since even the rerun with the realisation's own settings
+    departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame)
 
 # What each evidence dataset offers a metric, so every metric card's "Across the experiments"
 # table and the site's coverage page can say why a metric is not run on a dataset without
@@ -208,6 +229,9 @@ evidence_dataset_properties:
   kinet_shear_layer_refinement: {periodic: true, ensemble: false}
   kinet_shear_layer_ensemble: {periodic: true, ensemble: true}
   kinet_supersonic_cylinder: {periodic: false, ensemble: false}  # Neumann; three faces are cuts
+  kinet_hit_re12p5k_candidates: {periodic: true, ensemble: false}
+  kinet_hit_re25k_candidates: {periodic: true, ensemble: false}
+  kinet_hit_re50k_candidates: {periodic: true, ensemble: false}
 
 # The window within kinet_re5e4 that counts as developed flow: the convention a run cited
 # as evidence follows (`dataset.time.start`, `dataset.time.reduction`). Nothing reads it to
@@ -236,6 +260,11 @@ evidence_dataset_properties:
 # - kinet_shear_layer_ensemble: the three starts, `-m dataset.trajectory=start_02000,start_05000,
 #   start_08000`, gathered with `fmeval.io.combine_runs(..., across="trajectory")`; the ensemble
 #   metrics on `degradation=ensemble_miscalibration`, the others on the default ladder.
+# - kinet_hit_re*_candidates: every kind of rerun for each of the five realisations, `-m
+#   dataset.trajectory=<k1>,...,<k5> dataset.reader.candidate=<kind>.h5,...`, with
+#   `dataset.analysis_resolution=64` for grid64.h5 (each config's comments list the keys and
+#   kinds), and the five realisations of one kind gathered with `fmeval.io.combine_runs(...,
+#   across="trajectory")`. A card cites one run per dataset, so which kind it cites is open.
 evidence_window:
   start: 2000       # the flow is developed well before this
   reduction: 50     # every 50th frame; ~160 frames, a run of about a minute

@@ -1,0 +1,71 @@
+case:
+  N_simulations: 1
+  assets: {}
+  boundary_conditions:
+    Periodic:
+      axes:
+      - x
+      - y
+  collision:
+    stabilizer:
+      input_dists:
+      - F
+      - Feq
+      max_iterations: 50
+      type: entropic
+    type: entropic_BGK
+  discretization:
+    spatial:
+      grid:
+      - 256
+      - 256
+      length:
+      - 256.0
+      - 256.0
+      resolution: 1.0
+      type: provided
+    temporal:
+      grid: 10000
+      length: 10000.0
+      resolution: 1.0
+      type: provided
+  features:
+  - turbulence
+  group: homogeneous_isotropic_turbulence
+  id: Re-50k_Ma-1en1
+  initial_conditions:
+    k0: 4
+    random_seed: 42
+  lattice:
+    shifts:
+    - 0.0
+    - 0.0
+    type: D2Q9
+    use_static_weights: true
+  physics:
+    output_variables:
+    - vorticity
+    parameters:
+      initialization_policy: equilibrium
+      mach: 0.1
+      reference:
+        density: 1.0
+      reynolds: 18750.0
+    type: weakly_compressible_isothermal_fluids
+  simulate_equilibrium_closure:
+    F:
+      type: entropic
+  simulation_subdir: homogeneous_isotropic_turbulence/Re-50k_Ma-1en1/34ec0dd9
+  solver:
+    gather: sequential
+    interpolation:
+      degree: 1
+      family: lagrange
+    type: lbm
+  subgrid: {}
+  units: lattice
+case_path: homogeneous_isotropic_turbulence/Re-50k_Ma-1en1
+normalization:
+  feature: none
+precision:
+  dtype: torch.float64

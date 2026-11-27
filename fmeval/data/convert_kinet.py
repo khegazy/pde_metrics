@@ -46,7 +46,7 @@ from .kinet_raw import FIELD_MAP, KinetRawTrajectory
 PRESSURE_CONVENTIONS = ("absolute", "fluctuation_referenced")
 
 
-def convert_kinet_grouped(source: str | Path, destination: str | Path) -> Path:
+def convert_kinet_grouped(source: str | Path, destination: str | Path, every: int = 1) -> Path:
     """Write the grouped rollout ``source`` to ``destination`` in the flat ``kinet_raw`` layout.
 
     Every root attribute is copied, so the identity key and its digests travel with the data.
@@ -62,6 +62,9 @@ def convert_kinet_grouped(source: str | Path, destination: str | Path) -> Path:
         source: A grouped ``rollout.h5`` written by kinet. Read only.
         destination: The flat file to create. Its folders are created; the file is not
             overwritten.
+        every: Keep the initial condition and every ``every``-th evenly spaced frame after it,
+            so that only the frames a dataset evaluates are stored. It must divide the number
+            of frames after the initial condition, so the last saved step is kept.
 
     Returns:
         ``destination``.
@@ -69,8 +72,9 @@ def convert_kinet_grouped(source: str | Path, destination: str | Path) -> Path:
     Raises:
         FileExistsError: If ``destination`` or its ``.partial`` file exists.
         ValueError: If the rollout is incomplete, its slots and step counts disagree, its saved
-            steps are unevenly spaced, its clock does not increase, a field is not float64 on
-            the declared grid, or its pressure convention is unknown.
+            steps are unevenly spaced, ``every`` does not divide them, its clock does not
+            increase, a field is not float64 on the declared grid, or its pressure convention
+            is unknown.
     """
     source, destination = Path(source), Path(destination)
     partial = destination.with_name(destination.name + ".partial")
@@ -102,6 +106,10 @@ def convert_kinet_grouped(source: str | Path, destination: str | Path) -> Path:
         if len(cadence) != 1:
             raise ValueError(f"{source}: the saved steps {frame_step[:6].tolist()}... are not "
                              "evenly spaced, so no frame_stride or reduction would be uniform.")
+        if every < 1 or len(saved) % every:
+            raise ValueError(f"{source}: every={every} must be a positive divisor of the "
+                             f"{len(saved)} saved frames after the initial condition.")
+        frame_step, saved, cadence = frame_step[::every], saved[every - 1::every], cadence * every
         times = np.concatenate([src[f"initial_conditions/time/{clock_name}"][:], clock[saved]])
         if not np.all(np.diff(times) > 0):
             raise ValueError(f"{source}: the clock time/{clock_name} does not increase.")
@@ -150,5 +158,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("source", type=Path, help="grouped rollout.h5 written by kinet")
     parser.add_argument("destination", type=Path, help="flat .h5 file to create")
+    parser.add_argument("--every", type=int, default=1,
+                        help="keep the initial condition and every Nth frame after it")
     args = parser.parse_args()
-    print(convert_kinet_grouped(args.source, args.destination))
+    print(convert_kinet_grouped(args.source, args.destination, args.every))

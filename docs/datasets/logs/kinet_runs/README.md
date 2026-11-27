@@ -586,6 +586,65 @@ at both ends of its clock. The dataset that reads them is `kinet_shear_layer_ens
 (`docs/datasets/logs/reynolds_ladder_2d.md`). The amplitude-check run and the validation runs stay
 on scratch only and will be purged with it; what they showed is in the archived tables.
 
+## Degraded reruns of the isotropic realisations: `isotropic_candidates/` (2026-11-27)
+
+Build-order step 20: 105 kinet runs, each a rerun of one of the five evaluated realisations of
+`kinet_hit_re12p5k`, `kinet_hit_re25k` or `kinet_hit_re50k`, started from that realisation's
+stored step-0 fields and changed in one way (`control`, `grid128`, `grid64`, `re0.9`, `re0.75`,
+`re0.5`, `bgk`; 5 realisations × 7 kinds × 3 Reynolds numbers). The job agent ran them; the
+dataset agent copied the files below on 2026-11-27 with `shutil.copyfile` and compared each byte
+for byte with its source under `/pscratch/sd/k/khegazy/kinet_datasets/_provenance/isotropic_candidates/`.
+
+- **What is here.** The driver `candidates_driver.py` (kinet's library route: `compose_run_config`,
+  `build_simulator`, `initial_state` from the realisation's frame 0, block-averaged for a coarser
+  grid; one process per job), the launch script `run_candidates_job.sh`, the job record writer
+  `write_run_txt.py`, the six argument files `args_re<Re>_{a,b}.txt`, `submitted.txt` (the six
+  `sbatch` lines that ran) and `submitted_cancelled_20261127.txt` (six earlier submissions of the
+  same jobs, cancelled), one folder per job with its `RUN.txt` and argument file, `configs/` with
+  each kind's composed run configuration (`Re-<Re>_<kind>.json`) and kinet's saved `config.yaml`
+  of its first run (`Re-<Re>_<kind>_config.yaml`; the five runs of a kind have identical
+  configurations, checked on `Re-25k/grid64`), and the job's checks: `candidates_checks.py`,
+  `candidates_checks.txt` and `candidates_checks.json` (relative L2 distances of velocity and
+  vorticity, energy and enstrophy ratios, and three expected orderings, per realisation, kind and
+  frame). The library route writes no `resolved_config.yaml` or `run_provenance.yaml`; the
+  composed configuration and `RUN.txt` stand in for them, as for the shear-layer ensemble.
+- **Recorded in each `RUN.txt`.** The exact `sbatch` line, the working directory, the
+  environment script (`/pscratch/sd/k/khegazy/kinet_datasets/_work/env.sh`: kinet's `.venv`,
+  `KINET_PROJECT`, caches on scratch), kinet `perf/cleanup` at `d1cd353b83e9`, no uncommitted
+  changes, torch `2.15.0+cu132`, one NVIDIA A100-SXM4-40GB, the `sacct` line, and for every run
+  its stop reason, rollout status, last saved step, saved frames, the largest difference between
+  its stored initial condition and the fields handed in (at most 5.6e-16), its wall time and its
+  size. Every run reached its last step. Jobs: 62104552 and 62104553 (Re 2.5e4), 62104554 and
+  62104555 (Re 1.25e4), 62104556 and 62105660 (Re 5e4), all on the GPU debug queue.
+- **Left out.** Each job's `log_1.txt` (0.85 to 1.08 MB each, 5.8 MB in all; kinet's log
+  without its per-step progress lines) and `slurm_<job>.out` (the raw Slurm output, whose content
+  is in `RUN.txt`). Both stay in the scratch folder above until it is purged. Nothing in the copied
+  files is an email address, a token or a credential (searched with regular expressions; the
+  matches of an email pattern are Hydra overrides such as `collision@case.collision`). The one
+  path into a home directory is the kinet checkout in `write_run_txt.py`, the same path this
+  README's environment block gives.
+- **Raw output.** `/pscratch/sd/k/khegazy/kinet_datasets/isotropic_candidates/Re-<Re>/<kind>/<key>/rollout.h5`,
+  275.7 GB (256.7 GiB) for the 105 rollouts (`rollout.vtkhdf` beside each is a hard link to the
+  same file). Scratch is purged after about eight weeks. Every run is reproducible from this
+  folder: `python -u -B candidates_driver.py --re <Re> --kinds <kinds> --out <dir>` with the
+  environment above, from the archived realisation's converted file (the driver reads frame 0 of
+  `sys_Re-<Re>_Ma-1en1/<key>.h5` on CFS). Whether such a rerun is bitwise identical to these
+  runs has not been checked.
+- **After the simulation.** Each kept run, and each realisation at the same stride, was converted
+  by `fmeval.data.convert_kinet.convert_kinet_grouped(<rollout>, <destination>, every=N)` on
+  2026-11-27 from the repository's `.venv` on a login node (105 files, 3.51 GB, 425 s with the
+  checks), to `/global/cfs/cdirs/m4790/Data/kinet/homogeneous_isotropic_turbulence/weakly_compressible_isoT_fluids/sys_Re-<Re>_Ma-1en1_candidates/<key>/<kind>.h5`,
+  with `N` 50 for the 256^2 and 128^2 runs and 25 for the 64^2 runs, so every file holds the
+  realisation's frames 0, 50, ..., 1000. `reference.h5` beside them is the realisation's archived
+  rollout (`neurde/hit_scaling/Re-<Re>_Ma-1en1_2d/<key>/tiers/{full,256}/rollout.h5`) converted
+  with `N = 50`. Each converted file was checked equal to its rollout at every kept frame and
+  field, and each `reference.h5` equal to the realisation's full converted file read with
+  `frame_stride=50`. Not converted: the Re 5e4 runs `re0.9`, `re0.75` and `re0.5` (15 runs; why is
+  in `docs/datasets/logs/decaying_isotropic_2d.md`, section 7).
+
+The datasets that read them are `kinet_hit_re12p5k_candidates`, `kinet_hit_re25k_candidates` and
+`kinet_hit_re50k_candidates` (`docs/datasets/logs/decaying_isotropic_2d.md`, section 7).
+
 ## Other kinet data on CFS that no dataset here reads
 
 Not copied, because no configuration of this repository reads them; listed so that nothing

@@ -1,0 +1,1 @@
+--re 50k --kinds re0.9,re0.75,re0.5 --out /pscratch/sd/k/khegazy/kinet_datasets/isotropic_candidates

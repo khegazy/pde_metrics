@@ -106,8 +106,12 @@ class KinetRawTrajectory(HDF5Trajectory):
             candidate: The file name of another run of the same problem in this file's folder,
                 on its own grid: :meth:`predictions` opens it with every other option given here,
                 and the pipeline scores it against this run remapped onto the analysis grid,
-                which must be the candidate's (``dataset.analysis_resolution``). Its rows are
-                labelled as a forecast's, with the candidate's resolution.
+                which must be the candidate's or coarser (``dataset.analysis_resolution``). Its
+                rows are labelled as a forecast's, with the candidate's resolution. With ``cell``,
+                the candidate's cell is ``cell`` times the ratio of this run's cells along x to
+                the candidate's, so both runs span one domain and, a step lasting one cell, share
+                one clock: kinet's acoustic scaling, which keeps the lattice velocity of a run the
+                same on every grid.
             window: Keep only the cells ``[start, stop)`` of each axis, one pair per axis in
                 ``(x, y[, z])`` order. The grid is the window's, with its origin at the window's
                 first cell, so a position keeps the run's coordinate. A face where the window
@@ -230,7 +234,7 @@ class KinetRawTrajectory(HDF5Trajectory):
         self._candidate = (None if candidate is None
                            else posixpath.join(posixpath.dirname(self.source), candidate))
         if self._candidate is not None:
-            with self.predictions() as run:
+            with KinetRawTrajectory(self._candidate, **self._options) as run:
                 self._candidate_resolution = run.grid.shape[0]
         #: The ensemble's members, the truth excluded; empty without ``members``.
         self._members: list[KinetRawTrajectory] = []
@@ -250,10 +254,13 @@ class KinetRawTrajectory(HDF5Trajectory):
             self.is_ensemble = True
 
     def predictions(self) -> KinetRawTrajectory | None:
-        """The candidate run, opened with this run's options, or None without one."""
+        """The candidate run, opened with this run's options, its ``cell`` scaled to its grid
+        (``candidate`` in :meth:`__init__`), or None without one."""
         if self._candidate is None:
             return None
-        return KinetRawTrajectory(self._candidate, **self._options)
+        cell = self._options["cell"]
+        return KinetRawTrajectory(self._candidate, **{**self._options, "cell": None if cell is None
+                                  else cell * self._grid.shape[0] / self._candidate_resolution})
 
     def frame_columns(self, t: int) -> dict[str, Any]:
         """With a candidate, every row is labelled as a forecast's, with the candidate's
