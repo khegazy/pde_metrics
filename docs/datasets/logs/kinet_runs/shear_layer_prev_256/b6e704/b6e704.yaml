@@ -1,0 +1,55 @@
+N_simulations: 1
+boundary_conditions:
+  Periodic:
+    dimensions:
+    - 0
+    - 1
+collision:
+  enforce_positive: false
+  type: !!python/object/apply:kinet.config.common.collision.CollisionType
+  - entropic_BGK
+dtype: float64
+lattice:
+  shifts:
+  - 0.0
+  - 0.0
+  type: !!python/object/apply:kinet.config.common.lattice.LatticeType
+  - D2Q9
+  use_static_weights: false
+neurde:
+  F:
+    type: entropic
+normalization: nondimensional
+pred_length: 10000
+solver:
+  output_variables:
+  - vorticity
+  system_parameters:
+    density_init: 1.0
+    epsilon: 0.05
+    lambda: 80
+    mach: 0.1
+    reynolds: 50000.0
+  type: weakly_compressible_isothermal_fluids
+spatiotemporal_grid:
+  spatial:
+    grid:
+    - 256
+    - 256
+    length:
+    - 256.0
+    - 256.0
+    resolution: 1.0
+    type: provided
+  temporal:
+    grid: 10000
+    length: 10000.0
+    resolution: 1.0
+    type: provided
+stability:
+  input_dists:
+  - F
+  - Feq
+  max_iterations: 50
+  type: entropic
+units: dimensionless

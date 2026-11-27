@@ -1,0 +1,29 @@
+launches:
+- started_at: '2026-11-08T03:58:59.165014+00:00'
+  run_dir: /global/u2/k/khegazy/projects/pde/kinet/outputs/hit_scaling/ensemble512_ledger/downsample/hydra/17940295416961021
+  case_path: hit_scaling/Re-50k_Ma-1en1_2d
+  case_id: Re-50k_Ma-1en1_2d
+  task: coarse_grain
+  hostname: nid001112
+  pid: 2232373
+  stamp: null
+  resume_from: null
+  git_sha: 6ccfafc73829fbde3be2dd628ca1835da2c1715a
+  slurm_job_id: '60987207'
+  slurm_job_name: hitds.Re-50k_Ma-1en1_2d.4
+  slurm_submit_dir: /global/u2/k/khegazy/projects/pde/kinet
+  slurm_stdout: /global/u2/k/khegazy/projects/pde/kinet/outputs/hit_scaling/ensemble512_ledger/downsample/hydra/17940295416961021/logs/60987207/slurm.out
+  slurm_stderr: /global/u2/k/khegazy/projects/pde/kinet/outputs/hit_scaling/ensemble512_ledger/downsample/hydra/17940295416961021/logs/60987207/slurm.err
+  hydra_overrides:
+  - case=hit_scaling/Re-50k_Ma-1en1_2d
+  - task=coarse_grain
+  - ++task.targets_spatial=[256,256]
+  - ++task.ignore_datasets=[mesoscopic/momentum_time_scale,mesoscopic/stability_scale]
+  - ++case.initial_conditions.random_seed=17940295416961021
+  - ++case.io.save_every_n=1
+  - ++case.io.record_distributions=false
+  - ++case.io.record_equilibria=false
+  - ++launch.device=cpu
+  - ++case.discretization.spatial.grid=[512,512]
+  - ++case.discretization.temporal.grid=20000
+  - ++paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets

@@ -1,0 +1,72 @@
+case:
+  N_simulations: 1
+  assets: {}
+  boundary_conditions:
+    Periodic:
+      axes:
+      - x
+      - y
+  collision:
+    type: entropic_BGK
+  discretization:
+    spatial:
+      grid:
+      - 256
+      - 256
+      length:
+      - 256.0
+      - 256.0
+      resolution: 1.0
+      type: provided
+    temporal:
+      grid: 10000
+      length: 10000.0
+      resolution: 1.0
+      type: provided
+  experiment: hit_scaling
+  features:
+  - turbulence
+  id: Re-25k_Ma-1en1_2d
+  initial_conditions:
+    density: 1.0
+    k0: 4
+    random_seed: 17940282181166400
+  lattice:
+    shifts:
+    - 0.0
+    - 0.0
+    type: D2Q9
+    use_static_weights: true
+  scheme:
+    output_variables:
+    - vorticity
+    parameters:
+      mach: 0.1
+      reference:
+        density: 1.0
+      reynolds: 25000.0
+    type: weakly_compressible_isothermal_fluids
+  simulate_closure:
+    F:
+      product: sequential
+      type: entropic
+  simulate_stability:
+    entropy: sequential
+    input_dists:
+    - F
+    - Feq
+    max_iterations: 50
+    type: entropic
+  simulation_subdir: hit_scaling/Re-25k_Ma-1en1_2d/e72a16
+  solver:
+    gather: sequential
+    interpolation:
+      degree: 1
+      family: lagrange
+    type: lbm
+  units: lattice
+case_path: hit_scaling/Re-25k_Ma-1en1_2d
+launch:
+  dtype: torch.float64
+normalization:
+  feature: none

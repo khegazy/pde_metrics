@@ -1,0 +1,26 @@
+launches:
+- started_at: '2026-11-07T23:38:11.442892+00:00'
+  run_dir: /global/u2/k/khegazy/projects/pde/kinet/outputs/hit_scaling/Re-12p5k_Ma-1en1_2d/simulate/ensemble/60974403_gpu0_0_seed17940946168385530
+  case_path: hit_scaling/Re-12p5k_Ma-1en1_2d
+  case_id: Re-12p5k_Ma-1en1_2d
+  task: simulate
+  hostname: nid008584
+  pid: 724586
+  stamp: null
+  resume_from: null
+  git_sha: 6ccfafc73829fbde3be2dd628ca1835da2c1715a
+  slurm_job_id: '60974403'
+  slurm_job_name: hitens.long_ledger.Re-12p5k_Ma-1en1_2d.1
+  slurm_submit_dir: /global/u2/k/khegazy/projects/pde/kinet
+  slurm_stdout: /global/u2/k/khegazy/projects/pde/kinet/outputs/hit_scaling/Re-12p5k_Ma-1en1_2d/simulate/ensemble/60974403_gpu0_0_seed17940946168385530/logs/60974403/slurm.out
+  slurm_stderr: /global/u2/k/khegazy/projects/pde/kinet/outputs/hit_scaling/Re-12p5k_Ma-1en1_2d/simulate/ensemble/60974403_gpu0_0_seed17940946168385530/logs/60974403/slurm.err
+  hydra_overrides:
+  - case=hit_scaling/Re-12p5k_Ma-1en1_2d
+  - task=simulate
+  - ++launch.device=cuda
+  - ++distributed.is_distributed=false
+  - ++case.initial_conditions.random_seed=17940946168385530
+  - ++case.io.save_every_n=10
+  - ++case.io.record_distributions=false
+  - ++case.io.record_equilibria=false
+  - ++case.discretization.temporal.grid=100000

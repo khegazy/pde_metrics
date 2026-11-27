@@ -1,0 +1,67 @@
+N_simulations: 1
+boundary_conditions:
+  Neuman:
+    boundaries:
+    - 0
+    - 1
+    dimensions:
+    - 0
+    - 0
+collision:
+  enforce_positive: false
+  type: !!python/object/apply:kinet.config.common.collision.CollisionType
+  - entropic_BGK
+dtype: float64
+lattice:
+  shifts:
+  - 0.057
+  - 0.0
+  type: !!python/object/apply:kinet.config.common.lattice.LatticeType
+  - D2Q9
+  use_static_weights: false
+neurde:
+  F:
+    type: extended
+  G:
+    type: levermore
+normalization: nondimensional
+pred_length: 1000
+scheme:
+  system_parameters:
+    prandtl: 0.71
+    specific_heat_ratio: 2.0
+    viscosity: 0.025
+  type: compressible_fluids
+solver:
+  type: lbm
+spatiotemporal_grid:
+  spatial:
+    grid:
+    - 3001
+    - 5
+    length:
+    - 3001.0
+    - 5.0
+    resolution: 1.0
+    type: provided
+    unit: '-'
+  temporal:
+    grid: 1000
+    length: 1000.0
+    resolution: 1.0
+    type: provided
+    unit: '-'
+stability:
+  input_dists:
+  - F
+  - Feq
+  scales:
+  - 2.0
+  - 1.905
+  - 1.851
+  tolerances:
+  - 0.01
+  - 0.1
+  - 1.0
+  type: piecewise
+units: dimensionless

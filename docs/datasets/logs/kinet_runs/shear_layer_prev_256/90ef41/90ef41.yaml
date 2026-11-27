@@ -1,0 +1,96 @@
+N_simulations: 1
+boundary_conditions:
+  Periodic:
+    dimensions:
+    - 0
+    - 1
+collision:
+  enforce_positive: false
+  type: !!python/object/apply:kinet.config.common.collision.CollisionType
+  - entropic_BGK
+domain_decomposition:
+  enabled: false
+  halo_width:
+  - 1
+  - 1
+  mesh_shape:
+  - 4
+  - 2
+  print_mesh_map: true
+  print_topology: true
+  print_topology_per_rank: true
+  print_topology_style: compact
+  topology_json_path: topology/dd_topology.json
+  use_device_mesh: true
+dtype: float64
+io:
+  adios2:
+    engine: BP5
+    parameters:
+      Profile: 'Off'
+    put_mode: deferred
+    use_gpu_put: true
+  async_put_timeout_s: 30
+  async_queue_depth: -1
+  async_queue_memory_basis: available
+  async_queue_memory_fraction: 0.8
+  async_writer: true
+  backend: hdf5
+  blosc2_clevel: 0
+  blosc2_cname: null
+  compression: null
+  compression_shuffle: true
+  dd_stage_sync_debug: false
+  parallel_hdf5: false
+  save_every_n: 1
+  slurm_drain_extra_s: 120
+  stitch_segments_on_full_complete: false
+  use_fill_value: true
+lattice:
+  shifts:
+  - 0.0
+  - 0.0
+  type: !!python/object/apply:kinet.config.common.lattice.LatticeType
+  - D2Q9
+  use_static_weights: false
+neurde:
+  F:
+    type: entropic
+normalization: nondimensional
+pred_length: 100000
+runtime_logging:
+  every_n: 500
+  sim_stats_enabled: true
+solver:
+  output_variables:
+  - vorticity
+  system_parameters:
+    initial_conditions:
+      density: 1.0
+      epsilon: 0.05
+      lambda: 80
+    mach: 0.1
+    reynolds: 50000.0
+  type: weakly_compressible_isothermal_fluids
+spatiotemporal_grid:
+  spatial:
+    grid:
+    - 256
+    - 256
+    length:
+    - 256.0
+    - 256.0
+    resolution: 1.0
+    type: provided
+  temporal:
+    grid: 100000
+    length: 100000.0
+    resolution: 1.0
+    type: provided
+stability:
+  input_dists:
+  - F
+  - Feq
+  max_iterations: 50
+  type: entropic
+units: dimensionless

@@ -1,0 +1,171 @@
+case:
+  id: Re-12p5k_Ma-1en1_2d
+  experiment: hit_scaling
+  units: lattice
+  N_simulations: 1
+  discretization:
+    spatial:
+      type: provided
+      grid:
+      - 256
+      - 256
+      length:
+      - 256.0
+      - 256.0
+      resolution: 1.0
+    temporal:
+      type: provided
+      grid: 10000
+      length: 10000.0
+      resolution: 1.0
+  simulation_subdir: hit_scaling/Re-12p5k_Ma-1en1_2d/f151b4
+  scheme:
+    output_variables:
+    - vorticity
+    type: weakly_compressible_isothermal_fluids
+    parameters:
+      reynolds: 12500.0
+      mach: 0.1
+      reference:
+        density: 1.0
+  collision:
+    type: entropic_BGK
+  lattice:
+    type: D2Q9
+    shifts:
+    - 0.0
+    - 0.0
+    use_static_weights: true
+  solver:
+    gather: sequential
+    interpolation:
+      family: lagrange
+      degree: 1
+    type: lbm
+  simulate_stability:
+    type: entropic
+    max_iterations: 50
+    input_dists:
+    - F
+    - Feq
+    entropy: sequential
+  simulate_closure:
+    F:
+      type: entropic
+      product: sequential
+  features:
+  - turbulence
+  boundary_conditions:
+    Periodic:
+      axes:
+      - x
+      - y
+  initial_conditions:
+    density: 1.0
+    k0: 4
+    random_seed: 17940257265977533
+  assets: {}
+normalization:
+  feature: none
+domain_decomposition:
+  enabled: false
+  mesh_shape:
+  - 4
+  - 2
+  halo_width:
+  - 1
+  - 1
+  use_device_mesh: true
+  print_topology: true
+  print_topology_style: compact
+  print_topology_per_rank: true
+  print_mesh_map: true
+  topology_json_path: topology/dd_topology.json
+distributed:
+  is_distributed: false
+  is_slurm: false
+io:
+  backend: hdf5
+  save_every_n: 10
+  save_burst: 1
+  save_results: true
+  record_equilibria: false
+  record_distributions: false
+  record_iter_maps: false
+  async_writer: true
+  parallel_hdf5: false
+  use_fill_value: true
+  async_queue_memory_fraction: 0.7
+  async_queue_memory_basis: available
+  async_queue_depth: -1
+  async_put_timeout_s: 30.0
+  staging_depth: 8
+  async_drain:
+    window: 64
+    rate_cap_mult: 4.0
+    estimate_cap_s: 1800.0
+    min_writes: 32
+    floor_s_per_item: 0.001
+    ewma_alpha: 0.2
+    walltime_preempt: true
+    margin_s: 120.0
+    extra_s: 120.0
+  dd_stage_sync_debug: false
+  adaptive_time_slots: true
+  trim_unused_time_slots: true
+  compact_after_trim: true
+  expandable_time_axis: true
+  blosc2_clevel: 0
+  compression_shuffle: true
+  adios2:
+    use_gpu_put: true
+    engine: BP5
+    put_mode: deferred
+    parameters:
+      Profile: 'Off'
+  viz:
+    vtkhdf_sidecar: true
+runtime_logging:
+  every_n: 100
+  store_iter_maps: false
+runtime_control:
+  tracks: {}
+  bindings: []
+  alarm_regions: {}
+  alarms: {}
+  signals: []
+task:
+  name: simulate
+data: []
+weights: {}
+paths:
+  data_root: datasets
+  run_dir: /global/u2/k/khegazy/projects/pde/kinet/outputs/hit_scaling/Re-12p5k_Ma-1en1_2d/simulate/ensemble/60946933_gpu3_3_seed17940257265977533
+launch:
+  device: cuda
+  seed: 2025
+  compile: true
+  num_data_workers: 1
+  num_prefetch: 2
+  save_model: true
+  eval_batch_scale: 1.25
+  memory_scale: 0.6
+  dtype: torch.float64
+  amp_enabled: true
+  amp_dtype: bf16
+  tracker:
+    enabled: true
+    backend: wandb
+    project: kinet
+    tags: []
+    interactive_plots: false
+    insecure_tls: false
+plots:
+  backend:
+    type: matplotlib
+  simulate:
+    iter_maps:
+      enabled: false
+      accumulate: mean
+      log_tracker: true
+      tracker_prefix: sim_stats/iter_maps

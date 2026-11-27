@@ -1,0 +1,35 @@
+defaults:
+  - /scheme: weakly_compressible_isothermal_fluids
+  - /collision: entropic_bgk
+  - /lattice: d2q9
+  - /closure/analytic@simulate_closure.F: entropic
+  - /stability/analytic@simulate_stability: entropic
+id: Re-25k_Ma-1en1_2d
+experiment: hit_scaling
+features: [turbulence]
+units: lattice
+N_simulations: 1
+discretization:
+  spatial:
+    grid:
+      - 256
+      - 256
+    resolution: 1
+  temporal:
+    grid: 10000
+    resolution: 1
+scheme:
+  parameters:
+    mach: 0.1
+    reynolds: 25000
+  output_variables:
+    - vorticity
+initial_conditions:
+  density: 1.0
+  k0: 4
+  random_seed: 42
+boundary_conditions:
+  Periodic:
+    axes:
+      - x
+      - y
