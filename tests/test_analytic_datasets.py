@@ -24,6 +24,10 @@ Sources cited below:
 * Saumier, Agueh & Khouider (2015), "An efficient numerical algorithm for the L2 optimal
   transport problem with periodic densities", IMA J. Appl. Math. 80(1), 135-157,
   https://doi.org/10.1093/imamat/hxt032 (arXiv:1009.6039).
+* Kamm & Timmes (2007), "On efficient generation of numerically robust Sedov solutions",
+  Los Alamos report LA-UR-07-2849, https://cococubed.com/papers/la-ur-07-2849.pdf.
+* Sutherland (2010), "A new computational fluid dynamics code I: Fyris Alpha", Astrophys. Space
+  Sci. 327, 173-206, arXiv:1003.0724 (the cylindrical Noh problem, Sect. 6.1.6, Tables 9, 10).
 
 The candidate tests check the closed-form error curves of
 ``dataset_specs/05_initial_conditions_and_degraded_solver_runs.md`` (Sects. 3.1 and 3.3; the
@@ -54,10 +58,13 @@ from fmeval.config import build_job, compose_config
 from fmeval.data.analytic import (
     AdvectingBlobs,
     ClosedFormTrajectory,
+    Noh,
     RandomField,
+    SedovTaylor,
     SodShockTube,
     TaylorGreen2D,
     biot_savart,
+    polar,
 )
 from fmeval.data.base import READERS
 from fmeval.data.readers import open_trajectory
@@ -68,6 +75,7 @@ from fmeval.ladder import build_ladder
 from fmeval.pipeline import DatasetInfo, parse_map_key, run
 from fmeval.wavenumbers import wavenumber_magnitude
 from metrics import registry as metric_registry
+from metrics.shock_set_distance.metric import shock_mask, surface_distances
 from metrics.vrmse.metric import EPSILON
 from tests.analytic_fields import circle_w2, gaussian_mean_square
 from tests.conftest import GRID
@@ -225,10 +233,54 @@ def test_sod_conserves_mass_and_energy_and_gains_momentum_from_the_pressure_diff
     ({"t_start": 0.0}, "positive"),
     ({"gamma": 1.0}, "gamma"),
     ({"left": (-1.0, 1.0)}, "positive"),
+    ({"time_offset": -0.1}, "positive"),
+    ({"time_offset": 0.09}, "reaches a boundary"),
+    ({"candidate": {"time_offset": 0.09}}, "reaches a boundary"),
+    ({"candidate": {"t_end": 0.15}}, "not parameters"),
 ])
 def test_sod_refuses_a_case_its_closed_form_does_not_cover(kwargs, match):
     with pytest.raises(ValueError, match=match):
-        SodShockTube(**kwargs)
+        SodShockTube(**kwargs).predictions()
+
+
+@pytest.mark.parametrize("dt", [0.001, 0.003, 0.01])
+def test_sod_at_a_shifted_time_moves_the_shock_by_its_speed_and_keeps_its_jumps(dt):
+    """The exact solution at t + dt against the one at t, scored through the pipeline at four
+    times on 2048 cells (``proposals/EXP-sod_evidence-sod-time-offset.md``; spec 03, Sect. 3.6).
+
+    The shock sits at x_s = 0.5 + S_R t (Toro (2009) eq. (4.59)); the detector flags the two cells
+    straddling it, i and i + 1 with i = floor(x_s / dx - 1/2), and nothing else (the contact has
+    no pressure jump, the fan no jump at all). The candidate's pair is s = i(t + dt) - i(t) cells
+    further right, so ``shock_set_distance`` is (s - 1/2) dx and ``shock_set_hausdorff`` s dx
+    exactly (the card's Eq. 3), and s dx is S_R dt to within one cell, S_R dt being 3.6, 10.8 and
+    35.9 cells here. The jumps keep their exact sizes, which ``max_error`` reads: between the two
+    shock positions the pressure differs by p* - p_R and the velocity by u*, while the fan, the
+    only other place the two differ, differs by less (at most 0.101 in pressure and 0.089 in
+    velocity, at dt = 0.01 and t = 0.1, measured; the fan widens as t, so its difference falls
+    with t) and the contact moves no pressure or velocity. So
+    ``max_error`` is the shock's jump at every offset, unchanged as the displacement grows: the
+    double penalty in its plainest form. Exact multiples of dx and differences of the exact
+    states; tolerance 1e-12."""
+    truth = SodShockTube(n_frames=4, candidate={"time_offset": dt})
+    rows = run(truth, [metric_registry.get(n) for n in
+                       ("shock_set_distance", "shock_set_hausdorff", "max_error")],
+               build_ladder({}), fields=["pressure", "velocity"],
+               dataset=DatasetInfo(name="sod_shock_tube"), prediction=truth.predictions()).rows
+    assert (rows.loc[rows["degradation"] == "identity", "value"] == 0).all()
+    forecast = rows[rows["degradation"] == "forecast"]
+    pressure = forecast[forecast["field"] == "pressure"].pivot(index="time", columns="metric",
+                                                               values="value")
+    dx, speed, t = truth.grid.spacing[0], truth.speeds["shock"], pressure.index.to_numpy()
+    cell = np.floor((0.5 + speed * np.stack([t, t + dt])) / dx - 0.5)
+    s = cell[1] - cell[0]
+    assert np.abs(s * dx - speed * dt).max() <= dx
+    assert pressure["shock_set_distance"].to_numpy() == pytest.approx((s - 0.5) * dx, rel=1e-12)
+    assert pressure["shock_set_hausdorff"].to_numpy() == pytest.approx(s * dx, rel=1e-12)
+    assert pressure["max_error"].to_numpy() == pytest.approx(
+        truth.star["pressure"] - truth.meta["right"][1], rel=1e-12)
+    velocity = forecast.loc[(forecast["field"] == "velocity")
+                            & (forecast["metric"] == "max_error"), "value"].to_numpy()
+    assert velocity == pytest.approx(truth.star["velocity"], rel=1e-12)
 
 
 def test_sod_runs_through_the_pipeline_without_its_periodic_only_metrics():
@@ -290,6 +342,195 @@ def test_evaluate_fails_when_no_metric_produced_a_row(tmp_path):
     assert done.returncode != 0, done.stderr[-2000:]
     assert "no metric produced a row" in done.stderr, done.stderr[-2000:]
     assert not [p for p in tmp_path.glob("crps_*")]
+
+
+# --- Cylindrical blast waves: Sedov-Taylor and Noh ------------------------------------
+
+
+def radial_profile(line: ClosedFormTrajectory, time: float) -> tuple[np.ndarray, ...]:
+    """``r`` and the density, radial velocity and pressure there, from a reader on a single row
+    of cells through the centre of its 2 x 2 domain: the one cell across sits at y = 1, so the
+    cells at x > 1 sample the solution at r = x - 1 along +x."""
+    x = line.centres[0][:, 0] - 1.0
+    frame = line.solution(time)
+    return (x[x > 0], *(frame[name][0][:, 0][x > 0] for name in ("density", "velocity",
+                                                                    "pressure")))
+
+
+@pytest.mark.parametrize("gamma", [1.4, 5.0 / 3.0])
+def test_sedov_solves_the_euler_equations_behind_the_front(gamma):
+    """The cylindrical Euler equations of an ideal gas (Kamm & Timmes 2007, Eqs. 1-3 at j = 2),
+    continuity ``rho_t + (rho u)_r + rho u / r = 0``, momentum ``u_t + u u_r + p_r / rho = 0``
+    and the entropy ``(d_t + u d_r) ln(p / rho^gamma) = 0``, hold between 0.2 r_2 and 0.95 r_2:
+    derivatives by second-order differences on 20000 cells of the radius (dr = 5e-5) and a
+    centred difference of the reader in time (h = 1e-5). Each residual is measured against the
+    largest term it balances: 3e-7 at most (gamma 1.4), the differencing error; tolerance 1e-5.
+    The axis, where the density vanishes as lambda^(2/(gamma - 1)), and the front are left out
+    of the differences, not of the solution."""
+    line = SedovTaylor(gamma=gamma, grid=(40000, 1), n_frames=2, t_start=0.5)
+    t, h = 0.8, 1e-5
+    r, rho, u, p = radial_profile(line, t)
+    _, rho_up, u_up, p_up = radial_profile(line, t + h)
+    _, rho_down, u_down, p_down = radial_profile(line, t - h)
+    keep = (r > 0.2 * line.front(t)) & (r < 0.95 * line.front(t))
+
+    def d(q):
+        return np.gradient(q, r[1] - r[0])
+
+    def entropy(rho_, p_):
+        return np.log(p_) - gamma * np.log(rho_)
+
+    residuals = {
+        "continuity": ((rho_up - rho_down) / (2 * h) + d(rho * u) + rho * u / r, d(rho * u)),
+        "momentum": ((u_up - u_down) / (2 * h) + u * d(u) + d(p) / rho, d(p) / rho),
+        "entropy": ((entropy(rho_up, p_up) - entropy(rho_down, p_down)) / (2 * h)
+                    + u * d(entropy(rho, p)), u * d(entropy(rho, p))),
+    }
+    for name, (residual, term) in residuals.items():
+        assert np.abs(residual[keep]).max() < 1e-5 * np.abs(term[keep]).max(), name
+
+
+@pytest.mark.parametrize("gamma", [1.4, 5.0 / 3.0])
+def test_sedov_conserves_mass_and_its_front_carries_the_strong_shock_jump(gamma):
+    """Three statements independent of the reader's formulas.
+
+    1. Mass: the gas swept up, ``rho_0 pi r_2^2``, is all behind the front. Integrated by the
+       midpoint rule on 20000 cells of the radius at a time that puts the front on a cell face,
+       so no cell straddles it: 3e-8 relative, the rule's error near the axis; tolerance 1e-6.
+    2. The jump: a cell 1e-9 behind the front holds the strong-shock state, which balances
+       the fluxes of mass, momentum and energy into the shock moving at ``u_s = dr_2/dt``
+       against cold gas at rest (Kamm & Timmes 2007, Sect. 2, "an infinitely strong shock";
+       u_s by a centred difference of the reader's front, h = 1e-6). The cell's own offset from
+       the front costs 1.1e-8 at most, measured; tolerance 1e-6.
+    3. At gamma = 1.4, Kamm & Timmes's standard cylindrical energy 0.311357 puts the front at
+       0.75 at t = 1 (their Sect. 4.1, as ``dataset_specs/03``, Sect. 3.1 reads it): 0.749994
+       here, the printed energy's six digits allowing 4e-7; tolerance 1e-5 (the reader's
+       docstring records the 8e-6 gap)."""
+    line = SedovTaylor(gamma=gamma, grid=(40000, 1), n_frames=2, t_start=0.5)
+    r = radial_profile(line, 1.0)[0]
+    dr, energy = r[1] - r[0], line.meta["energy"]
+    face = 15000 * dr  # cell centres sit at (m + 1/2) dr from the axis
+    t_face = face**2 * np.sqrt(line.alpha / energy)  # r_2(t) = (E t^2 / alpha)^(1/4), rho_0 = 1
+    assert line.front(t_face) == pytest.approx(face, rel=1e-14)
+    _, rho, _, _ = radial_profile(line, t_face)
+    mass = np.sum(rho[r < face] * 2 * np.pi * r[r < face]) * dr
+    assert mass == pytest.approx(np.pi * face**2, rel=1e-6)
+
+    cell = r[12000]
+    t_jump = (cell + 1e-9) ** 2 * np.sqrt(line.alpha / energy)
+    _, rho, u, p = (q[12000] for q in radial_profile(line, t_jump))
+    shock = (line.front(t_jump + 1e-6) - line.front(t_jump - 1e-6)) / 2e-6
+    w = shock - u  # the gas's speed relative to the shock, behind it
+    assert rho * w == pytest.approx(shock, rel=1e-6)
+    assert rho * w**2 + p == pytest.approx(shock**2, rel=1e-6)
+    assert 0.5 * w**2 + gamma * p / ((gamma - 1) * rho) == pytest.approx(0.5 * shock**2, rel=1e-6)
+    if gamma == 1.4:
+        assert line.front(1.0) == pytest.approx(0.75, rel=1e-5)
+
+
+def test_noh_has_sutherlands_exact_solution_and_its_jump_and_inflow_obey_the_euler_equations():
+    """Sutherland (2010), Table 9: at gamma = 5/3 the post-shock state is rho = 16, p = 16/3 at
+    rest, the shock moves at 1/3, and ahead of it rho = 1 + t/r, u_r = -1. For gamma = 1.4 the
+    reader's general construction (D = 0.2, rho_2 = 36, p_2 = 7.2) is checked the same way:
+    the fluxes of mass, momentum and energy across the shock balance in the lab frame,
+    ``F(W_2) - D W_2 = F(W_1) - D W_1`` (Toro (2009) eqs. (3.42)-(3.44), radially), with the
+    inflow's state read from a cell 1e-9 ahead of the front and the post-shock state from the
+    cell behind; ahead of the shock the continuity equation ``rho_t + (r rho u)_r / r = 0``
+    holds to differencing error (3e-11 of its terms, measured; tolerance 1e-6). The ambient
+    pressure is set to 1e-300, so the flux balance is exact to the cell's offset: 1.4e-9,
+    measured; tolerance 1e-7. At t = 0 there is no shock, and the detector flags nothing."""
+    sutherland = Noh()
+    assert sutherland.shock_speed == pytest.approx(1 / 3, rel=1e-15)
+    assert sutherland.post_shock == pytest.approx({"density": 16.0, "pressure": 16 / 3},
+                                                  rel=1e-15)
+    frame = sutherland.solution(1.5)
+    radius, direction = polar(sutherland.centres, 2.0)
+    outside = radius > sutherland.front(1.5)
+    assert frame["density"][0][outside] == pytest.approx(1 + 1.5 / radius[outside], rel=1e-15)
+    radial = np.einsum("cxy,cxy->xy", frame["velocity"], direction)
+    assert radial[outside] == pytest.approx(-1.0, rel=1e-15)
+    assert not shock_mask(Noh(t_start=0.0).solution(0.0)["pressure"][0]).any()
+
+    for gamma in (5.0 / 3.0, 1.4):
+        line = Noh(gamma=gamma, pressure=1e-300, grid=(40000, 1), n_frames=2)
+        r = radial_profile(line, 1.0)[0]
+        t = (r[12000] - 1e-9) / line.shock_speed
+        _, rho, u, p = radial_profile(line, t)
+
+        def flux_minus_shock(i):
+            energy = p[i] / (gamma - 1) + 0.5 * rho[i] * u[i] ** 2
+            return np.array([rho[i] * u[i], rho[i] * u[i] ** 2 + p[i], (energy + p[i]) * u[i]]
+                            ) - line.shock_speed * np.array([rho[i], rho[i] * u[i], energy])
+
+        assert flux_minus_shock(11999) == pytest.approx(flux_minus_shock(12000), rel=1e-7)
+        t, h = 1.5, 1e-5
+        r, rho, u, _ = radial_profile(line, t)
+        rho_t = (radial_profile(line, t + h)[1] - radial_profile(line, t - h)[1]) / (2 * h)
+        flux = np.gradient(r * rho * u, r[1] - r[0]) / r
+        ahead = r > line.front(t) + 0.01
+        assert np.abs(rho_t + flux)[ahead].max() < 1e-6 * np.abs(flux[ahead]).max()
+
+
+@pytest.mark.parametrize("grid", [(128, 96), (96, 160)])
+@pytest.mark.parametrize("reader, candidate", [
+    (SedovTaylor, {"time_offset": 0.2}),     # the front moves out by r_2(t + 0.2) - r_2(t)
+    (SedovTaylor, {"energy": 0.6}),          # a pure size error, (0.6 / 0.311357)^(1/4) r_2
+    (Noh, {"time_offset": 0.3}),             # the front moves out by 0.3 / 3 at every time
+], ids=["sedov_time", "sedov_energy", "noh_time"])
+def test_a_circular_front_displaced_radially_is_read_by_the_shock_metrics(reader, candidate,
+                                                                          grid):
+    """A candidate whose circular front lies a known Delta r = r_c(t) - r(t) outside the
+    reference's at every point, scored through the pipeline at four times (spec 03,
+    Sect. 3.8: for a circle enlarged from r to r', every distance is r' - r).
+
+    The detector flags a cell when its two neighbours along an axis straddle the front, so each
+    flagged cell lies within one spacing (the larger, dx) of its circle: measured 0.994 dx at
+    most. Every point of one set is then at least Delta r - 2 dx from the other set (measured
+    Delta r - 1.88 dx), and in the measurements at most Delta r + 0.46 dx; the flagged cells
+    cover every sixteenth of the circle. ``shock_set_distance`` and ``shock_set_hausdorff`` are
+    each within one dx of Delta r (measured: the average 0.44 to 0.60 dx below it, the maximum
+    0.18 to 0.46 dx above), the resolution of a front sampled on cells, as a straight front's
+    (s - 1/2) dx and s dx are (the card's Eq. 3). Delta r is 3.2 to 6.4 cells here, so the two
+    bands never touch. Two non-square grids, one taller than wide, catch a swapped axis."""
+    truth = reader(grid=grid, candidate=candidate)
+    other = truth.predictions()
+    rows = run(truth, [metric_registry.get(n) for n in ("shock_set_distance",
+                                                        "shock_set_hausdorff")],
+               build_ladder({}), fields=["pressure"], dataset=DatasetInfo(name=truth.FORMAT),
+               prediction=other).rows
+    scores = rows[rows["degradation"] == "forecast"].pivot(index="time", columns="metric",
+                                                           values="value")
+    dx = max(truth.grid.spacing)
+    delta = np.array([other.front(t) - truth.front(t) for t in scores.index])
+    assert delta.min() > 3 * dx, "the two bands must not touch for these bounds"
+    assert np.abs(scores["shock_set_distance"].to_numpy() - delta).max() < dx
+    assert np.abs(scores["shock_set_hausdorff"].to_numpy() - delta).max() < dx
+    for t, step in zip(scores.index, delta, strict=True):
+        masks = [shock_mask(side.solution(t)["pressure"][0]) for side in (truth, other)]
+        for side, mask in zip((truth, other), masks, strict=True):
+            assert np.abs(polar(side.centres, 2.0)[0][mask] - side.front(t)).max() < dx
+            x, y = (c[mask] - 1.0 for c in side.centres)
+            assert np.unique(np.floor((np.arctan2(y, x) + np.pi) / (np.pi / 8))).size == 16
+        distances = np.concatenate(surface_distances(*masks, truth.grid.spacing))
+        assert step - 2 * dx <= distances.min() and distances.max() <= step + dx
+
+
+@pytest.mark.parametrize("reader, kwargs, match", [
+    (SedovTaylor, {"gamma": 2.0}, "gamma"),
+    (SedovTaylor, {"energy": -1.0}, "positive"),
+    (SedovTaylor, {"pressure": 0.0}, "positive"),
+    (SedovTaylor, {"time_offset": -0.25}, "positive"),
+    (SedovTaylor, {"t_end": 2.0}, "edge"),
+    (SedovTaylor, {"candidate": {"energy": 1.0}}, "edge"),
+    (Noh, {"gamma": 1.0}, "gamma"),
+    (Noh, {"speed": 0.0}, "positive"),
+    (Noh, {"time_offset": -1.0}, "non-negative"),
+    (Noh, {"t_end": 3.0}, "edge"),
+    (Noh, {"candidate": {"grid": [64, 64]}}, "not parameters"),
+])
+def test_the_blast_waves_refuse_what_their_closed_forms_do_not_cover(reader, kwargs, match):
+    with pytest.raises(ValueError, match=match):
+        reader(**kwargs).predictions()
 
 
 # --- Taylor-Green vortex ---------------------------------------------------------------

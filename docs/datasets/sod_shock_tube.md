@@ -44,6 +44,27 @@ against it, frame by frame on the same nodes, is not built yet
 (`dataset_specs/02_grid_refinement_known_solution.md`, Sect. 5.2); today each simulation is a
 reference for the degradation ladder, as every simulated dataset is.
 
+### The exact solution at a shifted time
+
+The reader option `time_offset` evaluates every frame at $t + \delta t$, and as a candidate it
+scores the exact solution at $t + \delta t$ against the one at $t$:
+
+```bash
+python evaluate.py 'metrics=[max_error,shock_set_distance]' dataset=sod_shock_tube \
+    '+dataset.reader.candidate={time_offset:0.01}'
+```
+
+Because the solution depends on $(x - 0.5)/t$ only, each wave moves by its own speed times
+$\delta t$ and every jump keeps its exact size: the shock by $S_R\,\delta t$, the contact by
+$u_*\,\delta t$, the fan's head and tail by $S_{HL}\,\delta t$ and $S_{TL}\,\delta t$ (values
+below; `proposals/EXP-sod_evidence-sod-time-offset.md`). On 2048 cells, $\delta t = 0.01$ moves
+the shock 35.9 cells. `tests/test_analytic_datasets.py` asserts, at $\delta t = 0.001$, 0.003 and
+0.01 and four times each, that `shock_set_distance` is $(s - \tfrac12)\Delta x$ and
+`shock_set_hausdorff` is $s\Delta x$, with $s$ the whole-cell move of the flagged pair, within
+one cell of $S_R\,\delta t$; and that `max_error` is the shock's own jump, $p_* - p_R$ in pressure
+and $u_*$ in velocity, at every offset: a pointwise error saturates at the jump size however far
+the shock moves, which is the double penalty.
+
 ### The kinet simulations
 
 - **Conversion.** kinet wrote each run in its grouped layout. `python -m fmeval.data.convert_kinet`

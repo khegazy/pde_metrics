@@ -17,8 +17,8 @@ every step is known in advance.
 
 None is **evidence about a flow**. ``sod_shock_tube`` is in ``evidence_datasets`` as an
 analytic check, for the metrics that need a shock or pressure; ``taylor_green_2d`` and
-``advecting_blobs`` are fixtures for the harness only (``docs/decisions.md``); ``random_field``
-is not registered. Their pages are ``docs/datasets/``.
+``advecting_blobs`` are fixtures for the harness only (``docs/decisions.md``); ``random_field``,
+``sedov_taylor`` and ``noh`` are not registered. Their pages are ``docs/datasets/``.
 """
 
 from __future__ import annotations
@@ -211,6 +211,12 @@ class SodShockTube(ClosedFormTrajectory):
     the domain; the constructor refuses a ``t_end`` at or past that time. Both ends are
     Neumann (zero-gradient) boundaries: no wave reaches them in the window, so the boundary
     type does not change the solution, and Neumann is the condition the kinet Sod runs use.
+
+    ``time_offset`` evaluates every frame at ``t + time_offset``: the diaphragm burst at
+    ``-time_offset``. As a candidate (``candidate={"time_offset": dt}``) it is the exact solution
+    at a shifted time, so every jump keeps its exact size and each wave is displaced by its own
+    speed times ``dt`` (``proposals/EXP-sod_evidence-sod-time-offset.md``;
+    ``dataset_specs/03_two_dimensional_shocks.md``, Sect. 3.6).
     """
 
     FORMAT = "sod_shock_tube"
@@ -220,22 +226,27 @@ class SodShockTube(ClosedFormTrajectory):
 
     def __init__(self, path: str | None = None, *, gamma: float = 1.4,
                  left: Sequence[float] = (1.0, 1.0), right: Sequence[float] = (0.125, 0.1),
-                 grid: Sequence[int] = (2048,), n_frames: int = 10, t_start: float = 0.1,
-                 t_end: float = 0.2) -> None:
+                 time_offset: float = 0.0, grid: Sequence[int] = (2048,), n_frames: int = 10,
+                 t_start: float = 0.1, t_end: float = 0.2,
+                 candidate: Mapping[str, Any] | None = None) -> None:
         """Solve for the star state once and fix the time window.
 
         Args:
             path: Ignored; accepted so every reader is constructed the same way.
             gamma: Ratio of specific heats, above 1.
             left, right: ``(density, pressure)`` of each initial state; both at rest.
+            time_offset: Added to every frame's time before the solution is evaluated.
             grid: Cells along x.
             n_frames: Number of frames.
-            t_start, t_end: The window; ``t_start > 0`` because the solution is a function of
-                ``(x - x0) / t``.
+            t_start, t_end: The window; ``t_start + time_offset > 0`` because the solution is a
+                function of ``(x - x0) / t``.
+            candidate: Any of ``gamma``, ``left``, ``right``, ``time_offset``, changed for the
+                candidate (:meth:`predictions`), or None.
 
         Raises:
-            ValueError: On a non-physical state, ``p_left <= p_right``, ``t_start <= 0``, or a
-                ``t_end`` at or after the first wave reaches a boundary.
+            ValueError: On a non-physical state, ``p_left <= p_right``,
+                ``t_start + time_offset <= 0``, a ``t_end + time_offset`` at or after the first
+                wave reaches a boundary, or an invalid candidate.
         """
         rho_l, p_l = (float(v) for v in left)
         rho_r, p_r = (float(v) for v in right)
@@ -248,11 +259,14 @@ class SodShockTube(ClosedFormTrajectory):
         if p_l <= p_r:
             raise ValueError(f"the left pressure must exceed the right one for a left "
                              f"rarefaction and a right shock, got {p_l} <= {p_r}")
-        if float(t_start) <= 0:
-            raise ValueError(f"t_start must be positive, got {t_start}")
+        offset = float(time_offset)
+        if float(t_start) + offset <= 0:
+            raise ValueError(f"t_start + time_offset must be positive, got {t_start} + {offset}")
         super().__init__(grid=grid, length=(1.0,), boundary=("neumann",), n_frames=n_frames,
-                         t_start=t_start, t_end=t_end,
-                         params={"gamma": g, "left": [rho_l, p_l], "right": [rho_r, p_r]})
+                         t_start=t_start, t_end=t_end, candidate=candidate,
+                         params={"gamma": g, "left": [rho_l, p_l], "right": [rho_r, p_r],
+                                 "time_offset": offset})
+        self._offset = offset
 
         c_l, c_r = np.sqrt(g * p_l / rho_l), np.sqrt(g * p_r / rho_r)
         a_r, b_r = 2.0 / ((g + 1.0) * rho_r), (g - 1.0) / (g + 1.0) * p_r
@@ -292,15 +306,16 @@ class SodShockTube(ClosedFormTrajectory):
 
         reach = min(self.DIAPHRAGM, 1.0 - self.DIAPHRAGM)
         t_wall = reach / max(self.speeds["shock"], -self.speeds["head"])
-        if float(t_end) >= t_wall:
-            raise ValueError(f"t_end={t_end} is at or after t={t_wall:.6g}, when the first "
-                             "wave reaches a boundary and the solution is no longer exact")
+        if float(t_end) + offset >= t_wall:
+            raise ValueError(f"t_end + time_offset = {float(t_end) + offset} is at or after "
+                             f"t={t_wall:.6g}, when the first wave reaches a boundary and the "
+                             "solution is no longer exact")
 
     def solution(self, time: float) -> dict[str, np.ndarray]:
-        """Density, velocity and pressure at ``time`` on the cell centres."""
+        """Density, velocity and pressure at ``time + time_offset`` on the cell centres."""
         g, (rho_l, p_l), (rho_r, p_r), c_l = self._gamma, self._left, self._right, self._c_left
         s = self.speeds
-        xi = (self.centres[0] - self.DIAPHRAGM) / time
+        xi = (self.centres[0] - self.DIAPHRAGM) / (time + self._offset)
         # Inside the fan; clipped so the formula is evaluated only where it holds and never
         # raises a negative sound speed to a fractional power elsewhere.
         # Toro (2009) eq. (4.56): the state inside the left rarefaction fan.
@@ -316,6 +331,287 @@ class SodShockTube(ClosedFormTrajectory):
                              [p_l, p_l * (c / c_l) ** (2.0 * g / (g - 1.0)), self.star["pressure"]],
                              p_r)
         return {"density": density[None], "velocity": velocity[None], "pressure": pressure[None]}
+
+
+def polar(centres: Sequence[np.ndarray], length: float) -> tuple[np.ndarray, np.ndarray]:
+    """The distance ``r`` of every cell centre from the centre of the square ``[0, length)^2``,
+    and the radial unit vector ``(2, X, Y)``, zero where ``r = 0``: the geometry of a
+    cylindrical blast or implosion at the centre of the domain."""
+    offsets = np.stack([c - 0.5 * length for c in centres])
+    radius = np.hypot(*offsets)
+    return radius, offsets / np.where(radius > 0, radius, 1.0)
+
+
+@register_reader("sedov_taylor")
+class SedovTaylor(ClosedFormTrajectory):
+    """The cylindrical Sedov-Taylor blast wave: energy ``E`` per unit length released on an axis
+    in an ideal gas of density ``rho_0`` at rest, a self-similar solution of the 2D Euler
+    equations (Sedov 1959; Taylor 1950).
+
+    Formulas are those of Kamm & Timmes (2007), "On efficient generation of numerically robust
+    Sedov solutions", Los Alamos report LA-UR-07-2849, https://cococubed.com/papers/la-ur-07-2849.pdf,
+    as implemented in Timmes's public ``sedov_library_qp.f90`` (https://cococubed.com/codes/sedov/),
+    whose comments number them as Kamm's equations; the report's PDF could not be rendered here,
+    so the numbers are the code's. With geometry ``j = 2``, uniform ambient density
+    (``omega = 0``) and ``gamma`` in ``(1, 2)`` the solution is the "standard" case, nonzero from
+    the shock to the axis, where the pressure is finite. In the similarity variable ``V`` running
+    from ``V_0 = 1/(2 gamma)`` at the axis to ``V_2 = 1/(gamma + 1)`` at the shock (Eqs. 18, 28)
+    and ``s = 2 gamma V - 1``, the combinations of Eqs. 29-37 and exponents of Eqs. 42-47
+    specialise at ``j = 2, omega = 0`` to (our algebra, checked against the general expressions
+    to 2e-15 at gamma = 1.2, 1.4 and 5/3)::
+
+        x_1 = (gamma + 1) V,  x_2 = (gamma + 1) s / (gamma - 1),
+        x_3 = (gamma + 1)(1 - gamma V),  x_4 = (gamma + 1)(1 - 2 V) / (gamma - 1),
+        lambda = r / r_2 = x_1^(-1/2) x_2^((gamma - 1)/(2 gamma)) x_3^(-1/2)     (Eq. 38)
+        u / u_2 = x_1 lambda,   rho / rho_2 = x_2^(1/gamma) (x_3/x_4)^(2/(2 - gamma)),
+        p / p_2 = x_1 (x_3/x_4)^(gamma/(2 - gamma))                            (Eqs. 39-41)
+
+    ``lambda`` increases from 0 to 1 with ``s``; the reader inverts it by bisection in
+    ``log s``, which resolves the axis, where ``lambda ~ s^((gamma - 1)/(2 gamma))`` (s ~ 1e-21
+    at lambda = 1e-3 for gamma = 1.4), in double precision. The shock radius and the
+    strong-shock jump are Kamm & Timmes's Eqs. 12-16 at ``j = 2``::
+
+        r_2 = (E t^2 / (alpha rho_0))^(1/4),  u_s = r_2 / (2 t),
+        rho_2 = rho_0 (gamma + 1)/(gamma - 1),  u_2 = 2 u_s / (gamma + 1),
+        p_2 = 2 rho_0 u_s^2 / (gamma + 1),
+
+    and ``alpha`` makes the energy inside the front ``E``; equating ``E`` with
+    ``int (rho u^2 / 2 + p / (gamma - 1)) 2 pi r dr`` gives (our algebra; it equals the code's
+    ``(j - 1) pi (J_1 + 2 J_2 / (gamma - 1))``, Eq. 57)
+
+        alpha = pi / (gamma^2 - 1) int_0^1 (g f^2 + h) lambda d lambda,
+
+    with ``f, g, h`` the three profiles above, integrated by 128-point Gauss-Legendre in
+    ``lambda``. At gamma = 1.4, ``alpha = 0.9840740`` (``tests/test_analytic_datasets.py``; the
+    same integral at ``j = 3`` reproduces Kamm & Timmes's spherical 0.851072 to 7 digits). Their
+    standard cylindrical energy ``E = 0.311357`` (Sect. 4.1, as ``dataset_specs/03``, Sect. 3.1
+    reads it), the default, puts the front at ``r_2 = 0.749994`` at ``t = 1``, not their stated
+    0.75: the printed energy implies ``alpha = 0.98404``, 3.3e-5 below this integral.
+
+    The similarity solution is the limit of zero ambient pressure. The shock detector needs a
+    positive one (``dataset_specs/03``, Sect. 2), so ``pressure`` ``p_0`` fills the gas ahead of
+    the front; behind it the profile is the zero-pressure one. The mismatch is of order
+    ``p_0 / p_2`` (1e-5 at the defaults' last frame). The blast sits at the centre of the
+    square ``[0, length)^2``; both axes are Neumann, and the constructor refuses a window in
+    which the front reaches the edge, so the gas at the boundary is at rest and uniform.
+    ``time_offset`` evaluates every frame at ``t + time_offset``, so the candidate
+    ``{time_offset: dt}`` displaces every point of the front radially by
+    ``r_2(t + dt) - r_2(t)``, and ``{energy: E'}`` is a pure size error.
+    """
+
+    FORMAT = "sedov_taylor"
+    FIELDS = ("density", "velocity", "pressure")
+
+    def __init__(self, path: str | None = None, *, energy: float = 0.311357,
+                 density: float = 1.0, pressure: float = 1e-6, gamma: float = 1.4,
+                 time_offset: float = 0.0, length: float = 2.0,
+                 grid: Sequence[int] = (128, 128), n_frames: int = 4, t_start: float = 0.25,
+                 t_end: float = 1.0, candidate: Mapping[str, Any] | None = None) -> None:
+        """Integrate ``alpha`` once and fix the window.
+
+        Args:
+            path: Ignored; accepted so every reader is constructed the same way.
+            energy: ``E``, the energy per unit length, positive.
+            density: ``rho_0``, the ambient density, positive.
+            pressure: ``p_0``, the ambient pressure ahead of the front, positive.
+            gamma: Ratio of specific heats, in ``(1, 2)``; at 2 the ``x_3 / x_4`` exponents are
+                singular (Kamm & Timmes's removable case ``omega_3``), which is not coded.
+            time_offset: Added to every frame's time.
+            length: Side of the square domain; the blast is at its centre.
+            grid: Cells along ``(x, y)``.
+            n_frames: Number of frames.
+            t_start, t_end: The window; ``t_start + time_offset > 0``.
+            candidate: Any parameter above from ``energy`` to ``length``, changed for the
+                candidate (:meth:`predictions`), or None.
+
+        Raises:
+            ValueError: On ``gamma`` outside ``(1, 2)``, a non-positive energy, density,
+                pressure or length, ``t_start + time_offset <= 0``, a front that reaches the
+                edge of the domain by ``t_end``, or an invalid grid, window or candidate.
+        """
+        g, offset = float(gamma), float(time_offset)
+        if not 1.0 < g < 2.0:
+            raise ValueError(f"gamma must lie in (1, 2), got {gamma}")
+        if min(float(energy), float(density), float(pressure), float(length)) <= 0:
+            raise ValueError(f"energy, density, pressure and length must be positive, got "
+                             f"{energy}, {density}, {pressure}, {length}")
+        if float(t_start) + offset <= 0:
+            raise ValueError(f"t_start + time_offset must be positive, got {t_start} + {offset}")
+        super().__init__(grid=grid, length=(float(length),) * 2,
+                         boundary=("neumann", "neumann"), n_frames=n_frames, t_start=t_start,
+                         t_end=t_end, candidate=candidate,
+                         params={"energy": float(energy), "density": float(density),
+                                 "pressure": float(pressure), "gamma": g, "time_offset": offset,
+                                 "length": float(length)})
+        self._gamma, self._offset = g, offset
+        self._radius, self._direction = polar(self.centres, float(length))
+        nodes, weights = np.polynomial.legendre.leggauss(128)
+        lam = 0.5 * (nodes + 1.0)
+        f, rho, p = self.profile(lam)
+        #: The dimensionless energy integral: E = alpha rho_0 r_2^4 / t^2.
+        self.alpha = float(np.pi / (g**2 - 1.0) * 0.5 * np.sum(weights * (rho * f**2 + p) * lam))
+        if self.front(float(t_end)) >= 0.5 * float(length):
+            raise ValueError(f"the front reaches the edge of the domain by t_end={t_end} "
+                             f"(r_2 = {self.front(float(t_end)):.4g} >= {0.5 * float(length)})")
+
+    def front(self, time: float) -> float:
+        """The shock radius ``r_2`` at frame time ``time`` (Kamm & Timmes, Eq. 12, j = 2)."""
+        p = self._params
+        return float((p["energy"] * (time + self._offset) ** 2 / (self.alpha * p["density"]))
+                     ** 0.25)
+
+    def profile(self, lam: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """``u / u_2``, ``rho / rho_2`` and ``p / p_2`` at ``lambda = r / r_2`` in ``[0, 1]``.
+
+        Bisection in ``log s`` over ``[log 1e-300, log s_2]``, ``s_2 = (gamma - 1)/(gamma + 1)``
+        at the shock: 100 halvings of an interval of width 700 leave 6e-28 in ``log s``, so
+        ``lambda`` is matched to round-off. ``lambda = 0`` maps to ``s = 1e-300``, where
+        ``lambda`` is below 1e-42, so the axis takes the limit of the profiles.
+        """
+        g = self._gamma
+
+        def combinations(s: np.ndarray) -> tuple[np.ndarray, ...]:
+            v = (1.0 + s) / (2.0 * g)
+            x1, x2 = (g + 1.0) * v, (g + 1.0) / (g - 1.0) * s
+            x3, x4 = (g + 1.0) * (1.0 - g * v), (g + 1.0) / (g - 1.0) * (1.0 - 2.0 * v)
+            return x1, x2, x3, x4
+
+        def log_lambda(s: np.ndarray) -> np.ndarray:
+            x1, x2, x3, _ = combinations(s)
+            return -0.5 * np.log(x1) + (g - 1.0) / (2.0 * g) * np.log(x2) - 0.5 * np.log(x3)
+
+        target = np.log(np.maximum(lam, np.finfo(float).tiny))
+        low = np.full(np.shape(lam), np.log(1e-300))
+        high = np.full(np.shape(lam), np.log((g - 1.0) / (g + 1.0)))
+        for _ in range(100):
+            middle = 0.5 * (low + high)
+            below = log_lambda(np.exp(middle)) < target
+            low, high = np.where(below, middle, low), np.where(below, high, middle)
+        s = np.exp(0.5 * (low + high))
+        x1, x2, x3, x4 = combinations(s)
+        ratio = x3 / x4
+        return (x1 * np.exp(log_lambda(s)), x2 ** (1.0 / g) * ratio ** (2.0 / (2.0 - g)),
+                x1 * ratio ** (g / (2.0 - g)))
+
+    def solution(self, time: float) -> dict[str, np.ndarray]:
+        """Density, velocity and pressure at ``time + time_offset`` on the cell centres."""
+        g, p, t = self._gamma, self._params, time + self._offset
+        r_2 = self.front(time)
+        speed = r_2 / (2.0 * t)  # u_s = dr_2/dt, Kamm & Timmes Eq. 13 at j = 2
+        inside = self._radius < r_2
+        f, rho, pressure_ratio = self.profile(self._radius[inside] / r_2)
+        density = np.full_like(self._radius, p["density"])
+        density[inside] = p["density"] * (g + 1.0) / (g - 1.0) * rho
+        pressure = np.full_like(self._radius, p["pressure"])
+        pressure[inside] = 2.0 * p["density"] * speed**2 / (g + 1.0) * pressure_ratio
+        radial = np.zeros_like(self._radius)
+        radial[inside] = 2.0 * speed / (g + 1.0) * f
+        return {"density": density[None], "velocity": radial * self._direction,
+                "pressure": pressure[None]}
+
+
+@register_reader("noh")
+class Noh(ClosedFormTrajectory):
+    """The cylindrical Noh implosion: an ideal gas of density ``rho_0`` streaming radially
+    inward at speed ``u_0`` with zero pressure stagnates behind a circular shock moving out at
+    constant speed (Noh 1987, J. Comput. Phys. 72(1), 78-120,
+    https://doi.org/10.1016/0021-9991(87)90074-X, not opened).
+
+    At ``gamma = 5/3``, ``rho_0 = u_0 = 1``, Sutherland (2010), Astrophys. Space Sci. 327,
+    173-206, arXiv:1003.0724, Sect. 6.1.6, Table 9, prints the exact solution in the plane::
+
+        r < t/3:  rho = 16,          u = 0,     p = 16/3
+        r > t/3:  rho = 1 + t / r,   u_r = -1,  p = 0,      shock speed 1/3,
+
+    and his Table 10 sets the initial pressure to 1e-6 "as an approximation to zero pressure",
+    the reader's default ``pressure`` ahead of the shock (``dataset_specs/03``, Sect. 3.4; the
+    detector needs a positive pressure). For other ``gamma``, ``rho_0`` and ``u_0`` the same
+    construction (our derivation, which the tests check against the Rankine-Hugoniot conditions
+    and the continuity equation): the inflow keeps its speed, since it feels no pressure, so
+    mass conservation gives ``rho = rho_0 (1 + u_0 t / r)`` ahead of the shock; a shock at
+    ``r = D t`` bringing the gas to rest needs, by the jump in mass, momentum and energy,
+
+        D = (gamma - 1) u_0 / 2,  rho_2 = rho_0 ((gamma + 1)/(gamma - 1))^2,  p_2 = rho_2 D u_0,
+
+    which is 1/3, 16 and 16/3 at Sutherland's values. The post-shock state is the same at every
+    time, so the pressure jump the detector reads never changes. The implosion sits at the
+    centre of the square ``[0, length)^2``; both axes are Neumann, though the exact solution at
+    the edge is the inflow itself, which a solver imposes as a boundary condition (Sutherland's
+    Table 10). The constructor refuses a window in which the shock reaches the edge. At
+    ``t = 0`` there is no shock: a no-shock frame (spec 03, Sect. 2, need (d)). ``time_offset``
+    evaluates every frame at ``t + time_offset``, so the candidate ``{time_offset: dt}``
+    displaces every point of the front radially by ``D dt``.
+    """
+
+    FORMAT = "noh"
+    FIELDS = ("density", "velocity", "pressure")
+
+    def __init__(self, path: str | None = None, *, gamma: float = 5.0 / 3.0,
+                 density: float = 1.0, speed: float = 1.0, pressure: float = 1e-6,
+                 time_offset: float = 0.0, length: float = 2.0,
+                 grid: Sequence[int] = (128, 128), n_frames: int = 4, t_start: float = 0.5,
+                 t_end: float = 2.0, candidate: Mapping[str, Any] | None = None) -> None:
+        """Fix the shock speed and the post-shock state.
+
+        Args:
+            path: Ignored; accepted so every reader is constructed the same way.
+            gamma: Ratio of specific heats, above 1.
+            density: ``rho_0``, the inflow's density at ``t = 0``, positive.
+            speed: ``u_0``, the inflow speed, positive.
+            pressure: ``p_0``, the pressure ahead of the shock, positive.
+            time_offset: Added to every frame's time.
+            length: Side of the square domain; the implosion is at its centre.
+            grid: Cells along ``(x, y)``.
+            n_frames: Number of frames.
+            t_start, t_end: The window; ``t_start + time_offset >= 0``.
+            candidate: Any parameter above from ``gamma`` to ``length``, changed for the
+                candidate (:meth:`predictions`), or None.
+
+        Raises:
+            ValueError: On ``gamma <= 1``, a non-positive density, speed, pressure or length,
+                ``t_start + time_offset < 0``, a shock that reaches the edge of the domain by
+                ``t_end``, or an invalid grid, window or candidate.
+        """
+        g, offset = float(gamma), float(time_offset)
+        if g <= 1.0:
+            raise ValueError(f"gamma must exceed 1, got {gamma}")
+        if min(float(density), float(speed), float(pressure), float(length)) <= 0:
+            raise ValueError(f"density, speed, pressure and length must be positive, got "
+                             f"{density}, {speed}, {pressure}, {length}")
+        if float(t_start) + offset < 0:
+            raise ValueError(f"t_start + time_offset must be non-negative, got {t_start} + "
+                             f"{offset}")
+        super().__init__(grid=grid, length=(float(length),) * 2,
+                         boundary=("neumann", "neumann"), n_frames=n_frames, t_start=t_start,
+                         t_end=t_end, candidate=candidate,
+                         params={"gamma": g, "density": float(density), "speed": float(speed),
+                                 "pressure": float(pressure), "time_offset": offset,
+                                 "length": float(length)})
+        self._offset = offset
+        self._radius, self._direction = polar(self.centres, float(length))
+        #: The shock speed D.
+        self.shock_speed = (g - 1.0) / 2.0 * float(speed)
+        #: The state behind the shock, at rest.
+        self.post_shock = {"density": float(density) * ((g + 1.0) / (g - 1.0)) ** 2}
+        self.post_shock["pressure"] = self.post_shock["density"] * self.shock_speed * float(speed)
+        if self.front(float(t_end)) >= 0.5 * float(length):
+            raise ValueError(f"the shock reaches the edge of the domain by t_end={t_end}")
+
+    def front(self, time: float) -> float:
+        """The shock radius ``D (time + time_offset)`` at frame time ``time``."""
+        return self.shock_speed * (time + self._offset)
+
+    def solution(self, time: float) -> dict[str, np.ndarray]:
+        """Density, velocity and pressure at ``time + time_offset`` on the cell centres."""
+        p, t, r = self._params, time + self._offset, self._radius
+        inside = r < self.front(time)
+        inflow = p["density"] * (1.0 + np.divide(p["speed"] * t, r, out=np.zeros_like(r),
+                                                 where=r > 0))
+        density = np.where(inside, self.post_shock["density"], inflow)
+        pressure = np.where(inside, self.post_shock["pressure"], p["pressure"])
+        return {"density": density[None],
+                "velocity": np.where(inside, 0.0, -p["speed"]) * self._direction,
+                "pressure": pressure[None]}
 
 
 @register_reader("taylor_green_2d")

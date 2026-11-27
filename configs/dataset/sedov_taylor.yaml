@@ -1,0 +1,37 @@
+# The cylindrical Sedov-Taylor blast wave, computed on the fly by the sedov_taylor reader
+# (fmeval/data/analytic.py; docs/datasets/sedov_taylor.md; dataset_specs/03_two_dimensional_shocks.md,
+# Sect. 3.1). Kamm & Timmes's (2007) standard cylindrical case: gamma = 1.4, ambient density 1,
+# energy 0.311357 per unit length at the centre of [0, 2)^2, ambient pressure 1e-6 ahead of the
+# front. The front is the circle r_2 = 0.750 t^(1/2); behind it the exact similarity profile.
+# Not registered in evidence_datasets.
+#
+# WHAT PART IS EVALUATED: the reader's defaults, kept whole; the choice, its reasons and the
+# measured costs are in docs/datasets/logs/sedov_taylor.md. Four frames from t = 0.25 to 1 on
+# 128^2: the front grows from 24 to 48 cells in radius, so every frame holds a closed shock of
+# 268 to 540 flagged cells at every angle to the grid. The frames are deterministic, so they are
+# four known answers rather than samples. Measured on a Perlmutter login node, results under
+# /pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/blast_waves/:
+#   the panel without the persistence metrics, default ladder, 4 frames: 21 s wall;
+#   persistence_distance one frame 6.4 s; persistence_wasserstein one frame over 600 s (stopped, the stall of
+#   BUILD_ORDER framework limit 1; 0.15 s on the candidate pair);
+#   every deterministic metric against the time-offset candidate, 4 frames: 5.7 s.
+#
+# A candidate with a known answer is an override (the page lists them), for example the solution
+# at a later time, every point of the front displaced by r_2(t + 0.2) - r_2(t):
+#   '+dataset.reader.candidate={time_offset:0.2}'
+name: sedov_taylor
+format: sedov_taylor
+
+# Unused: the reader computes its frames. Declared because every dataset config carries one.
+path: ${paths.data}
+trajectory: sedov_taylor
+
+fields: [density, velocity, pressure]
+
+complexity:
+  family: sedov_taylor
+  rank: -1          # generated: below every physical dataset
+  label: "Sedov-Taylor blast wave, cylindrical (exact similarity solution)"
+
+notes: "Kamm and Timmes's standard cylindrical Sedov-Taylor blast wave, gamma = 1.4, computed on
+  the fly. See docs/datasets/sedov_taylor.md."

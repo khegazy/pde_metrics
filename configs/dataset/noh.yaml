@@ -1,0 +1,35 @@
+# The cylindrical Noh implosion, computed on the fly by the noh reader (fmeval/data/analytic.py;
+# docs/datasets/noh.md; dataset_specs/03_two_dimensional_shocks.md, Sect. 3.4). Sutherland's (2010,
+# Tables 9 and 10) case: gamma = 5/3, gas of density 1 streaming inward at speed 1 toward the
+# centre of [0, 2)^2, pressure 1e-6 ahead of the shock. The shock is the circle r = t/3, with
+# density 16 and pressure 16/3 at rest behind it.
+# Not registered in evidence_datasets.
+#
+# WHAT PART IS EVALUATED: the reader's defaults, kept whole; the choice, its reasons and the
+# measured costs are in docs/datasets/logs/noh.md. Four frames from t = 0.5 to 2 on 128^2: the
+# shock grows from 11 to 43 cells in radius. The frames are deterministic, four known answers.
+# Measured on a Perlmutter login node, results under
+# /pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/blast_waves/:
+#   the panel without the persistence metrics, default ladder, 4 frames: 31 s wall;
+#   persistence_distance one frame 5.0 s; persistence_wasserstein one frame 5.2 s;
+#   every deterministic metric against the time-offset candidate, 4 frames: 5.4 s.
+#
+# A candidate with a known answer is an override (the page lists them), for example the solution
+# at a later time, every point of the shock displaced by 0.3 / 3 = 0.1:
+#   '+dataset.reader.candidate={time_offset:0.3}'
+name: noh
+format: noh
+
+# Unused: the reader computes its frames. Declared because every dataset config carries one.
+path: ${paths.data}
+trajectory: noh
+
+fields: [density, velocity, pressure]
+
+complexity:
+  family: noh
+  rank: -1          # generated: below every physical dataset
+  label: "Noh implosion, cylindrical (exact solution)"
+
+notes: "Sutherland's cylindrical Noh implosion, gamma = 5/3, computed on the fly. See
+  docs/datasets/noh.md."

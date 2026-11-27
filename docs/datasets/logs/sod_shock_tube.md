@@ -278,3 +278,59 @@ where it is marked as arithmetic.
 - The $\gamma = 2$ run gives the shock metrics nothing to detect (decision 9).
 - Neither run has a developed-flow window confirmed for evidence, a dynamics figure, or a
   place in `evidence_datasets`.
+
+## `sod_shock_tube`: the exact solution at a shifted time (2026-11-27)
+
+### What it is for
+
+Spec 03, Sect. 3.6 and `proposals/EXP-sod_evidence-sod-time-offset.md` ask for the exact solution
+at $t + \delta t$ scored against the one at $t$: every jump keeps its exact size and each wave is
+displaced by its own speed times $\delta t$, so a metric that tracks the shock can be checked
+against $S_R\,\delta t$, and a pointwise metric's saturation at the jump size is exposed.
+Build-order step 7.
+
+### How it is treated
+
+- **One reader option, no new reader** (agent). The reader had no `candidate` and no time
+  parameter. It gained `time_offset`, which evaluates every frame at $t + \delta t$ (the
+  diaphragm bursts at $-\delta t$), and the generic `candidate` of `ClosedFormTrajectory`, so the
+  shifted solution is `candidate={time_offset: dt}` through the existing `predictions()` route and
+  `evaluate.py`'s existing hook. About ten changed lines. With the default offset of 0 every frame
+  is bitwise what it was. The proposal's alternative, a paired-time degradation operator, was not
+  needed.
+- **Refusals.** `t_start + time_offset` must be positive and `t_end + time_offset` before the
+  first wave reaches a wall; a candidate is validated by the same constructor.
+- **Configuration.** None added: the candidate is an override on the page,
+  `'+dataset.reader.candidate={time_offset:0.01}'`, and `configs/dataset/sod_shock_tube.yaml` is
+  unchanged.
+
+### What part is evaluated
+
+The configuration's own window and grid (10 frames, 2048 cells), unchanged. The candidate only
+replaces the ladder by one forecast row per frame, which costs one more exact evaluation per
+frame, 0.3 ms. Measured run: see the log entry below.
+
+### Log entries
+
+**2026-11-27, agent (build-order step 7).**
+
+- Code: `time_offset` and `candidate` on `SodShockTube` in `fmeval/data/analytic.py`; a section
+  "The exact solution at a shifted time" on the page.
+- Tests in `tests/test_analytic_datasets.py`: at $\delta t = 0.001$, 0.003 and 0.01 (3.6, 10.8 and
+  35.9 cells) and four times each, through `fmeval.pipeline.run`, `shock_set_distance` equals
+  $(s - \tfrac12)\Delta x$ and `shock_set_hausdorff` $s\Delta x$ to 1e-12, with $s$ the whole-cell
+  move of the flagged pair and $|s\Delta x - S_R\,\delta t| \le \Delta x$; `max_error` equals
+  $p_* - p_R$ in pressure and $u_*$ in velocity to 1e-12 at every offset (the fan differs by at
+  most 0.101 and 0.089, measured); four refusal cases.
+- Smoke run: `python evaluate.py dataset=sod_shock_tube 'metrics=[max_error,<the six shock
+  metrics>]' '+dataset.reader.candidate={time_offset:0.01}'`, 3.4 s wall, results under
+  `/pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/blast_waves/runs/comparison_1795772808`:
+  `shock_set_distance` 0.01685 to 0.01733 against $S_R\,\delta t = 0.01752$; `max_error` 0.20313
+  (pressure), 0.92745 (velocity) and 0.16075 (density, the contact's jump) in every frame.
+- Not verified: a Rankine–Hugoniot residual metric (issue 051) does not exist, so "the jumps are
+  unchanged" is read through `max_error`, not through a residual.
+
+### Open points
+
+- The proposal `proposals/EXP-sod_evidence-sod-time-offset.md` is now built as a reader option; it
+  is left in place for the coordinator to delete or narrow.
