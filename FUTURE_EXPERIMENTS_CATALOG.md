@@ -80,7 +80,7 @@ it. Cluster IDs are the ones used in Section 2.
 - Pin the three single-field bundles against `taylor_green_2d`, where dE/dt = −2νΩ holds
   exactly.
 - Fix the impostor's per-channel phase draw, which puts about a quarter of a solenoidal
-  velocity's energy into a divergent part; open an issue first.
+  velocity's energy into a divergent part (issue 148).
 
 ### Decisions only a person can take
 
@@ -569,10 +569,10 @@ reading, which is excluded from every rank correlation, into an ordinal axis wit
 2. **The impostor's phase draw it would reuse injects divergence.** `degradations/gaussian_impostor/degradation.py`
    draws an independent phase field per channel (the loop at line 57). On an exactly
    solenoidal two-channel velocity that puts 0.228 of the energy into the dilatational part
-   (expected 1/4). Nothing in the impostor's card, any issue or any judgement records this, so
+   (expected 1/4). Neither the impostor's card nor any judgement records this, so
    it is also in today's canary readings on velocity and vorticity. The fix for both is to
    rotate all components of a vector field by one phase per wavevector, which keeps k·û = 0;
-   an issue should be opened against `gaussian_impostor`.
+   issue 148 records it.
 *Cost:* one bundle; `preserves=("amplitude_spectrum", "spatial_mean")`; stochastic. No new
 data.
 

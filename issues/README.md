@@ -114,6 +114,7 @@ Designed, hooks in place, not built.
 | [137](137-log-spectral-distance-is-undefined-on-empty-shells.md) | A log-spectral distance has sources but is undefined on the shells a prediction or the anchor empties; not built | unset |
 | [138](138-relative-h1-has-two-implementations-in-its-field.md) | The neural-operator relative H1 error has two implementations in its field (the library's centred differences, the MNO authors' spectral weights), and the papers do not say which produced their tables | unset |
 | [139](139-multiplicative-noise-makes-density-negative.md) | `multiplicative_noise` at its harshest severity makes density negative in some cells, where `wasserstein` is undefined, so that level scores NaN | unset |
+| [148](148-gaussian-impostor-draws-phases-per-channel.md) | `gaussian_impostor` draws its phases per channel, so a divergence-free velocity comes out about a quarter divergent (measured 0.18 to 0.28 over ten seeds) | medium |
 
 ## Technical debt
 
