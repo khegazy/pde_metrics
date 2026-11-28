@@ -37,26 +37,42 @@ Kemm's default grid is $\Delta x = 1/480$, and the standard final time is $t = 0
 
 ## The run
 
-kinet's case `double_mach_reflection/default`, run on 2026-11-27 by its finite-volume PonD
-solver (16 discrete velocities, kinet's DUGKS transport with MP5 reconstruction, Courant number
-0.2, an adaptive time step) on $480 \times 120$ cells ($\Delta x = 1/120$), to
-$t = 0.2$ in 2967 steps, saved every 100 steps. Its boundaries are the set-up's: a fixed
-post-shock state on the left face, zero gradient on the right, on the bottom the fixed state for
-cells whose centre is at $x \le 1/6$ (cells 0 to 19) and a reflecting wall from cell 20, the face
-$x = 1/6$, and on the top the moving shock blended over two cells. The case's viscosity is
-$\mu = 0.01$ (Prandtl number 0.71); the inviscid benchmark has none. The run, its command and the
-job's checks are archived under `docs/datasets/logs/kinet_runs/shocks_2d/`.
+kinet's case `double_mach_reflection/default`, run by its finite-volume PonD solver (16 discrete
+velocities, kinet's DUGKS transport with MP5 reconstruction, Courant number 0.2, an adaptive time
+step) to $t = 0.2$. Its boundaries are the set-up's: a fixed post-shock state on the left face,
+zero gradient on the right, on the bottom the fixed state for $x \le 1/6$ and a reflecting wall
+beyond, and on the top the moving shock blended over two cells. The case's viscosity is
+$\mu = 0.01$ (Prandtl number 0.71); the inviscid benchmark has none.
 
-**What it is, and is not.** At $\mu = 0.01$ this is a viscous flow. The job's check measured the
-incident shock against Eq. (1): its density rise trails the exact straight shock by about 2 cells
-by $t = 0.2$ (1.9 to 2.2 cells on the rows $y = 0.6$ to $0.9$), with a 10%-to-90% width of about 2
-cells. In the job's density contour plot a thin feature stands above the reflected shock near $x = 1.3$ to $1.4$, $y = 0.5$ to $0.7$,
-whose cause is not known. The foot of the Mach stem moves along the wall at a steady rate, from
-$x = 0.171$ at $t = 0$ to $1.073$ at $t = 0.071$ and $2.754$ at $t = 0.2$ (the job's check), so the
-pattern grows about linearly in time. Finer grids, $960 \times 240$ and $1920 \times 480$, would take about
-1.8 and 32 hours of stepping (my arithmetic: the 2967 steps of this run doubled per refinement,
-times the job's measured 1.09 s and 9.73 s per step on those grids, `checks/timings.txt`), so
-regular-queue jobs; they were not run, and there is no resolution candidate and no grid sequence.
+**The stored field is a $960 \times 240$ run reduced to $480 \times 120$** (since 2026-11-28). The
+run took 5992 steps on cells of $1/240$; kinet's coarse graining reduced it to cells of $1/120$ by a
+mean over each block of $2 \times 2$ cells, with no averaging in time, and the frames saved nearest
+the three evaluated times were kept ($t = 0.0708$, 0.1367 and 0.2). The block mean is part of the
+dataset's definition. An earlier run on $480 \times 120$ cells, the coarser run of the same problem,
+is kept beside it. The runs, their commands and checks are archived under
+`docs/datasets/logs/kinet_runs/shocks_2d/`.
+
+**What it is, and is not.** At $\mu = 0.01$ this is a viscous flow, and the stored field is an
+improvement on the coarser run, not a clean one. At the stored resolution, at the three evaluated
+times (the dataset's log, decisions 6 and 7):
+
+- the incident shock trails the exact straight shock of Eq. (1) by 0.75 to 1.16 cells on the rows
+  $y = 0.6$ to $0.9$ (1.4 to 2.2 on the coarser run), and its density rises from 10 % to 90 % over
+  1.4 to 1.8 cells (1.7 to 2.8);
+- two bands of excess density lie in gas the exact solution holds uniform at the post-shock
+  state: one left where the initial shock stood, whose top end is the thin feature above the
+  reflected shock near $x = 1.3$, $y = 0.5$ to $0.7$ at $t = 0.2$ (3.3 % above the post-shock density
+  8, against 5.6 % on the coarser run), and one trailing the incident shock (4.8 %, against 8.5 %);
+- the stored field differs from the coarser run by 2.5 to 4.8 % (relative L2 in the window, over
+  density, pressure and velocity), so its own error is probably of that size;
+- the stored frames stay above the unshocked state (density 1.4, pressure 1); 12 of the run's 2997
+  saved frames do not (density down to 1.23), from undershoots at the foot of the incident shock.
+
+So a metric that locates shocks against the exact front reads about one cell of solver error, and
+a detector of features or a comparison of the uniform regions may respond to the two bands, which
+are the solver's and not the flow's. The foot of the Mach stem moves along the wall at a steady
+rate, from $x = 0.169$ at $t = 0$ to 1.079 at $t = 0.071$ and 2.761 at $t = 0.2$, so the pattern grows
+about linearly in time.
 
 ![Density at three times](_generated/kinet_double_mach_reflection_density.png)
 
@@ -74,15 +90,16 @@ the top, the Mach stem at the right end of the pattern and the jet along the wal
 |---|---|---|
 | `kinet_double_mach_reflection` | The run above, read in the window $x < 3.2$, at $t = 0.071$, 0.137 and 0.2 | Yes, converted (7.4 MB) |
 
-The file is `/global/cfs/cdirs/m4790/Data/kinet/double_mach_reflection/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en2/N120.h5`:
-the initial condition and steps 1000, 2000 and 2967, density, velocity and the absolute pressure
-the solver writes.
+The file is `/global/cfs/cdirs/m4790/Data/kinet/double_mach_reflection/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en2/N240_coarse-480-120.h5`:
+the initial condition and steps 2050, 4054 and 5992, density, velocity and the absolute pressure
+the solver writes. Beside it, `N120.h5` holds the coarser run at steps 1000, 2000 and 2967
+($t = 0.0708$, 0.1368, 0.2); no configuration reads it.
 
 ## The window, and what the faces are
 
 The dataset reads cells $x$ 0 to 383 ($x < 3.2$) and every $y$, by the `kinet_raw` option `window`.
 Beyond $x = 3.2$ the gas is the undisturbed pre-shock state at every kept frame (to
-$1.4 \times 10^{-8}$ at $t = 0.2$, exactly before), so the 96 columns left out would add only a
+$2 \times 10^{-16}$), so the 96 columns left out would add only a
 constant region to every statistic. The window's mirror extension, $768 \times 240$, divides by
 16, so every level of the default ladder's coarsening runs.
 
@@ -90,14 +107,14 @@ No face of the run is a zero-gradient face everywhere, but `neumann`, the mirror
 declaration that adds the least that is false, face by face:
 
 - *Left*, the fixed post-shock inflow: the first three columns hold that state to
-  $3 \times 10^{-14}$ in density and velocity and $5 \times 10^{-13}$ in pressure at every kept
+  $3 \times 10^{-14}$ in density and velocity and $4 \times 10^{-13}$ in pressure at every kept
   frame, so the mirror is the flow itself.
 - *Right*, the cut at $x = 3.2$: inside the still pre-shock gas, so the mirror is exact.
 - *Bottom*: for $x > 1/6$ a reflecting wall, where the mirror is exact for density, pressure and
   the tangential velocity, and extends the normal velocity with the wrong sign (a reflecting
   wall makes it odd). A degradation reads that only within its kernel width of the wall; in the
-  row of cells next to the wall the normal velocity is at most 0.51, a tenth of its largest value
-  (4.8). For $x < 1/6$, kinet holds the post-shock state there; the reflected shock meets the
+  row of cells next to the wall the normal velocity is at most 0.64, about a seventh of its largest
+  value in the window (4.7). For $x < 1/6$, kinet holds the post-shock state there; the reflected shock meets the
   bottom near $x = 0.15$, so a few cells near that corner are not the uniform state the mirror
   copies.
 - *Top*, the imposed moving incident shock: the mirror reflects the straight shock about $y = 1$,
@@ -111,11 +128,13 @@ normal velocity is the open question 1 of `dataset_specs/BUILD_ORDER.md`, whose 
 
 ## What the evaluation sees
 
-The shock detector of `shock_set_distance` flags 644, 785 and 941 cells of the reference at the
-three times: the incident, reflected and stem shocks together, growing with the pattern. The
-default ladder resolves its smoothing widths on characteristic scales of 210 to 240 cells
-(density 240, velocity 210, pressure 214; `data/calibration.csv` of the run below), and the
-mildest level of `highpass_ideal` leaves every field unchanged and is excluded, as the run reports.
+Measured on the coarser run, the stored field until 2026-11-28, and not yet remeasured on the
+present one: the shock detector of `shock_set_distance` flags 644, 785 and 941 cells of the
+reference at the three times, the incident, reflected and stem shocks together, growing with the
+pattern; the default ladder resolves its smoothing widths on characteristic scales of 210 to 240
+cells (density 240, velocity 210, pressure 214; `data/calibration.csv` of the run below), and the
+mildest level of `highpass_ideal` leaves every field unchanged and is excluded. The metric cards'
+runs on this dataset were made on that file too, and describe it until they are rerun.
 The window is not square, so the spectral degradations' cutoffs are anisotropic (issue 046).
 
 ```bash

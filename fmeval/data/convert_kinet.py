@@ -51,7 +51,8 @@ from .kinet_raw import FIELD_MAP, KinetRawTrajectory
 PRESSURE_CONVENTIONS = ("absolute", "fluctuation_referenced")
 
 
-def convert_kinet_grouped(source: str | Path, destination: str | Path, every: int = 1) -> Path:
+def convert_kinet_grouped(source: str | Path, destination: str | Path, every: int = 1,
+                          times: list[float] | None = None) -> Path:
     """Write the grouped rollout ``source`` to ``destination`` in the flat ``kinet_raw`` layout.
 
     Every root attribute is copied, so the identity key and its digests travel with the data.
@@ -71,6 +72,10 @@ def convert_kinet_grouped(source: str | Path, destination: str | Path, every: in
             before it, so that only the frames a dataset evaluates are stored. On a fixed-step
             run it must divide the number of frames after the initial condition, so the kept
             frames stay evenly spaced from the initial condition on.
+        times: In place of ``every``, on a run with an adaptive step only: keep the initial
+            condition and, for each of these times, the saved frame nearest it on the clock.
+            Such runs save at different times on different grids, so this is how a finer run
+            is stored at the times a coarser one holds.
 
     Returns:
         ``destination``.
@@ -113,7 +118,12 @@ def convert_kinet_grouped(source: str | Path, destination: str | Path, every: in
         if len(cadence) != 1 and not adaptive:
             raise ValueError(f"{source}: the saved steps {frame_step[:6].tolist()}... are not "
                              "evenly spaced, so no frame_stride or reduction would be uniform.")
-        if every < 1 or (len(saved) % every and not adaptive):
+        if times is not None:
+            if not adaptive or every != 1:
+                raise ValueError(f"{source}: times= selects frames of an adaptive-step run "
+                                 "only, and replaces every=.")
+            saved = np.unique([saved[np.abs(clock[saved] - t).argmin()] for t in times])
+        elif every < 1 or (len(saved) % every and not adaptive):
             raise ValueError(f"{source}: every={every} must be a positive divisor of the "
                              f"{len(saved)} saved frames after the initial condition.")
         saved = saved[::-1][::every][::-1]
@@ -170,5 +180,7 @@ if __name__ == "__main__":
     parser.add_argument("destination", type=Path, help="flat .h5 file to create")
     parser.add_argument("--every", type=int, default=1,
                         help="keep the initial condition and every Nth frame after it")
+    parser.add_argument("--times", type=float, nargs="+",
+                        help="adaptive-step runs: keep the saved frame nearest each time instead")
     args = parser.parse_args()
-    print(convert_kinet_grouped(args.source, args.destination, args.every))
+    print(convert_kinet_grouped(args.source, args.destination, args.every, args.times))

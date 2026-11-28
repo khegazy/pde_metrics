@@ -1,0 +1,95 @@
+reference /pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/double_mach_reflection/double_mach_reflection/default/a90f3f06/tiers/full/rollout.h5
+other     /pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/_debug_dmr_N240/double_mach_reflection/default/bcdfb0f5/tiers/480-120/rollout.h5
+t_ref=0.00010 t_other=0.00005 (dt=-5.19e-05) | relative L2 in x<3.2: density 0.0248, pressure 0.0323, velocity 0.0337
+    reference: dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock: no cells
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (835 cells): max|drho|/8=0.0000 at x=0.454 y=0.613, max|dp|/116.5=0.0000, fraction with |drho|/8>0.02: 0.0000, rms drho/8: 0.0000
+t_ref=0.00941 t_other=0.00956 (dt=+1.55e-04) | relative L2 in x<3.2: density 0.0527, pressure 0.0762, velocity 0.0537
+    reference: dips: 1 cells rho<1.3 (min 0.5668), 0 cells p<0.95 (min 0.9991) | above reflected shock (1678 cells): max|drho|/8=0.2173 at x=0.504 y=0.529, max|dp|/116.5=0.3192, fraction with |drho|/8>0.02: 0.1663, rms drho/8: 0.0664
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (1694 cells): max|drho|/8=0.1680 at x=0.454 y=0.438, max|dp|/116.5=0.2436, fraction with |drho|/8>0.02: 0.1246, rms drho/8: 0.0451
+t_ref=0.01691 t_other=0.01683 (dt=-8.38e-05) | relative L2 in x<3.2: density 0.0362, pressure 0.0541, velocity 0.0337
+    reference: dips: 0 cells rho<1.3 (min 1.397), 0 cells p<0.95 (min 0.9969) | above reflected shock (2563 cells): max|drho|/8=0.1952 at x=0.512 y=0.496, max|dp|/116.5=0.2845, fraction with |drho|/8>0.02: 0.2520, rms drho/8: 0.0599
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (2552 cells): max|drho|/8=0.1451 at x=0.713 y=0.838, max|dp|/116.5=0.2093, fraction with |drho|/8>0.02: 0.1634, rms drho/8: 0.0379
+t_ref=0.02377 t_other=0.02370 (dt=-7.05e-05) | relative L2 in x<3.2: density 0.0381, pressure 0.0542, velocity 0.0376
+    reference: dips: 0 cells rho<1.3 (min 1.396), 0 cells p<0.95 (min 0.9954) | above reflected shock (3531 cells): max|drho|/8=0.1813 at x=0.688 y=0.754, max|dp|/116.5=0.2634, fraction with |drho|/8>0.02: 0.2209, rms drho/8: 0.0508
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (3521 cells): max|drho|/8=0.1305 at x=0.729 y=0.821, max|dp|/116.5=0.1877, fraction with |drho|/8>0.02: 0.1392, rms drho/8: 0.0315
+t_ref=0.03062 t_other=0.03000 (dt=-6.17e-04) | relative L2 in x<3.2: density 0.0252, pressure 0.0366, velocity 0.0311
+    reference: dips: 0 cells rho<1.3 (min 1.397), 0 cells p<0.95 (min 0.9968) | above reflected shock (4508 cells): max|drho|/8=0.1708 at x=0.404 y=0.221, max|dp|/116.5=0.2478, fraction with |drho|/8>0.02: 0.2023, rms drho/8: 0.0449
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.03744 t_other=0.03000 (dt=-7.44e-03) | relative L2 in x<3.2: density 0.2506, pressure 0.3104, velocity 0.3060
+    reference: dips: 0 cells rho<1.3 (min 1.396), 0 cells p<0.95 (min 0.9969) | above reflected shock (5435 cells): max|drho|/8=0.1622 at x=0.421 y=0.204, max|dp|/116.5=0.2347, fraction with |drho|/8>0.02: 0.2066, rms drho/8: 0.0414
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.04417 t_other=0.03000 (dt=-1.42e-02) | relative L2 in x<3.2: density 0.3486, pressure 0.4359, velocity 0.4151
+    reference: dips: 0 cells rho<1.3 (min 1.396), 0 cells p<0.95 (min 0.9972) | above reflected shock (6309 cells): max|drho|/8=0.1546 at x=0.446 y=0.204, max|dp|/116.5=0.2235, fraction with |drho|/8>0.02: 0.2043, rms drho/8: 0.0381
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.05086 t_other=0.03000 (dt=-2.09e-02) | relative L2 in x<3.2: density 0.4166, pressure 0.5198, velocity 0.4881
+    reference: dips: 0 cells rho<1.3 (min 1.397), 0 cells p<0.95 (min 0.9957) | above reflected shock (7145 cells): max|drho|/8=0.1482 at x=0.462 y=0.188, max|dp|/116.5=0.2139, fraction with |drho|/8>0.02: 0.1959, rms drho/8: 0.0350
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.05753 t_other=0.03000 (dt=-2.75e-02) | relative L2 in x<3.2: density 0.4690, pressure 0.5824, velocity 0.5427
+    reference: dips: 0 cells rho<1.3 (min 1.396), 0 cells p<0.95 (min 0.9942) | above reflected shock (7937 cells): max|drho|/8=0.1426 at x=0.579 y=0.346, max|dp|/116.5=0.2056, fraction with |drho|/8>0.02: 0.1751, rms drho/8: 0.0323
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.06417 t_other=0.03000 (dt=-3.42e-02) | relative L2 in x<3.2: density 0.5114, pressure 0.6316, velocity 0.5858
+    reference: dips: 0 cells rho<1.3 (min 1.396), 0 cells p<0.95 (min 0.9958) | above reflected shock (8607 cells): max|drho|/8=0.1379 at x=1.363 y=0.904, max|dp|/116.5=0.1982, fraction with |drho|/8>0.02: 0.1588, rms drho/8: 0.0303
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.07080 t_other=0.03000 (dt=-4.08e-02) | relative L2 in x<3.2: density 0.5466, pressure 0.6714, velocity 0.6208
+    reference: dips: 0 cells rho<1.3 (min 1.396), 0 cells p<0.95 (min 0.9965) | above reflected shock (9418 cells): max|drho|/8=0.1409 at x=1.429 y=0.887, max|dp|/116.5=0.1914, fraction with |drho|/8>0.02: 0.1499, rms drho/8: 0.0284
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.07743 t_other=0.03000 (dt=-4.74e-02) | relative L2 in x<3.2: density 0.5770, pressure 0.7047, velocity 0.6499
+    reference: dips: 1 cells rho<1.3 (min 0.8752), 1 cells p<0.95 (min 0.7411) | above reflected shock (10110 cells): max|drho|/8=0.1529 at x=1.504 y=0.887, max|dp|/116.5=0.1855, fraction with |drho|/8>0.02: 0.1396, rms drho/8: 0.0269
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.08405 t_other=0.03000 (dt=-5.40e-02) | relative L2 in x<3.2: density 0.6035, pressure 0.7332, velocity 0.6744
+    reference: dips: 0 cells rho<1.3 (min 1.397), 0 cells p<0.95 (min 0.9962) | above reflected shock (10768 cells): max|drho|/8=0.1493 at x=1.579 y=0.887, max|dp|/116.5=0.1800, fraction with |drho|/8>0.02: 0.1320, rms drho/8: 0.0255
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.09066 t_other=0.03000 (dt=-6.07e-02) | relative L2 in x<3.2: density 0.6270, pressure 0.7579, velocity 0.6953
+    reference: dips: 0 cells rho<1.3 (min 1.396), 0 cells p<0.95 (min 0.9938) | above reflected shock (11388 cells): max|drho|/8=0.1656 at x=1.646 y=0.871, max|dp|/116.5=0.1745, fraction with |drho|/8>0.02: 0.1260, rms drho/8: 0.0244
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.09726 t_other=0.03000 (dt=-6.73e-02) | relative L2 in x<3.2: density 0.6474, pressure 0.7787, velocity 0.7137
+    reference: dips: 0 cells rho<1.3 (min 1.396), 0 cells p<0.95 (min 0.9948) | above reflected shock (11975 cells): max|drho|/8=0.1586 at x=1.721 y=0.862, max|dp|/116.5=0.1698, fraction with |drho|/8>0.02: 0.1206, rms drho/8: 0.0234
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.10387 t_other=0.03000 (dt=-7.39e-02) | relative L2 in x<3.2: density 0.6648, pressure 0.7961, velocity 0.7305
+    reference: dips: 0 cells rho<1.3 (min 1.395), 0 cells p<0.95 (min 0.9942) | above reflected shock (12526 cells): max|drho|/8=0.1612 at x=1.787 y=0.854, max|dp|/116.5=0.1655, fraction with |drho|/8>0.02: 0.1146, rms drho/8: 0.0225
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.11046 t_other=0.03000 (dt=-8.05e-02) | relative L2 in x<3.2: density 0.6803, pressure 0.8113, velocity 0.7454
+    reference: dips: 0 cells rho<1.3 (min 1.397), 0 cells p<0.95 (min 0.999) | above reflected shock (13050 cells): max|drho|/8=0.1359 at x=1.854 y=0.846, max|dp|/116.5=0.1615, fraction with |drho|/8>0.02: 0.1102, rms drho/8: 0.0216
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.11705 t_other=0.03000 (dt=-8.70e-02) | relative L2 in x<3.2: density 0.6943, pressure 0.8247, velocity 0.7588
+    reference: dips: 0 cells rho<1.3 (min 1.397), 0 cells p<0.95 (min 0.9985) | above reflected shock (13540 cells): max|drho|/8=0.1645 at x=1.929 y=0.846, max|dp|/116.5=0.1578, fraction with |drho|/8>0.02: 0.1081, rms drho/8: 0.0210
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.12363 t_other=0.03000 (dt=-9.36e-02) | relative L2 in x<3.2: density 0.7070, pressure 0.8365, velocity 0.7709
+    reference: dips: 0 cells rho<1.3 (min 1.398), 0 cells p<0.95 (min 0.9981) | above reflected shock (14004 cells): max|drho|/8=0.1445 at x=1.996 y=0.838, max|dp|/116.5=0.1542, fraction with |drho|/8>0.02: 0.1033, rms drho/8: 0.0202
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.13020 t_other=0.03000 (dt=-1.00e-01) | relative L2 in x<3.2: density 0.7184, pressure 0.8471, velocity 0.7818
+    reference: dips: 1 cells rho<1.3 (min 0.4548), 1 cells p<0.95 (min 0.5346) | above reflected shock (14432 cells): max|drho|/8=0.1409 at x=2.062 y=0.829, max|dp|/116.5=0.1510, fraction with |drho|/8>0.02: 0.1012, rms drho/8: 0.0197
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.13677 t_other=0.03000 (dt=-1.07e-01) | relative L2 in x<3.2: density 0.7289, pressure 0.8566, velocity 0.7918
+    reference: dips: 1 cells rho<1.3 (min 0.8373), 0 cells p<0.95 (min 0.9958) | above reflected shock (14826 cells): max|drho|/8=0.1388 at x=2.129 y=0.821, max|dp|/116.5=0.1479, fraction with |drho|/8>0.02: 0.0977, rms drho/8: 0.0191
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.14332 t_other=0.03000 (dt=-1.13e-01) | relative L2 in x<3.2: density 0.7385, pressure 0.8652, velocity 0.8009
+    reference: dips: 0 cells rho<1.3 (min 1.396), 0 cells p<0.95 (min 0.9942) | above reflected shock (15195 cells): max|drho|/8=0.1349 at x=2.196 y=0.812, max|dp|/116.5=0.1449, fraction with |drho|/8>0.02: 0.0976, rms drho/8: 0.0186
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.14987 t_other=0.03000 (dt=-1.20e-01) | relative L2 in x<3.2: density 0.7473, pressure 0.8729, velocity 0.8092
+    reference: dips: 0 cells rho<1.3 (min 1.396), 0 cells p<0.95 (min 0.9949) | above reflected shock (15528 cells): max|drho|/8=0.1375 at x=2.271 y=0.812, max|dp|/116.5=0.1420, fraction with |drho|/8>0.02: 0.0929, rms drho/8: 0.0181
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.15642 t_other=0.03000 (dt=-1.26e-01) | relative L2 in x<3.2: density 0.7555, pressure 0.8799, velocity 0.8169
+    reference: dips: 0 cells rho<1.3 (min 1.336), 0 cells p<0.95 (min 0.9967) | above reflected shock (15829 cells): max|drho|/8=0.1417 at x=2.329 y=0.796, max|dp|/116.5=0.1385, fraction with |drho|/8>0.02: 0.0897, rms drho/8: 0.0176
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.16297 t_other=0.03000 (dt=-1.33e-01) | relative L2 in x<3.2: density 0.7630, pressure 0.8863, velocity 0.8240
+    reference: dips: 0 cells rho<1.3 (min 1.395), 0 cells p<0.95 (min 0.9937) | above reflected shock (16100 cells): max|drho|/8=0.1263 at x=2.396 y=0.787, max|dp|/116.5=0.1345, fraction with |drho|/8>0.02: 0.0857, rms drho/8: 0.0169
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.16951 t_other=0.03000 (dt=-1.40e-01) | relative L2 in x<3.2: density 0.7700, pressure 0.8921, velocity 0.8306
+    reference: dips: 0 cells rho<1.3 (min 1.396), 0 cells p<0.95 (min 0.995) | above reflected shock (16341 cells): max|drho|/8=0.1329 at x=2.562 y=0.879, max|dp|/116.5=0.1274, fraction with |drho|/8>0.02: 0.0800, rms drho/8: 0.0164
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.17605 t_other=0.03000 (dt=-1.46e-01) | relative L2 in x<3.2: density 0.7765, pressure 0.8975, velocity 0.8367
+    reference: dips: 0 cells rho<1.3 (min 1.396), 0 cells p<0.95 (min 0.9965) | above reflected shock (16548 cells): max|drho|/8=0.1332 at x=2.629 y=0.862, max|dp|/116.5=0.1203, fraction with |drho|/8>0.02: 0.0758, rms drho/8: 0.0158
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.18258 t_other=0.03000 (dt=-1.53e-01) | relative L2 in x<3.2: density 0.7825, pressure 0.9024, velocity 0.8424
+    reference: dips: 0 cells rho<1.3 (min 1.396), 0 cells p<0.95 (min 0.9967) | above reflected shock (16729 cells): max|drho|/8=0.1258 at x=2.604 y=0.771, max|dp|/116.5=0.1127, fraction with |drho|/8>0.02: 0.0708, rms drho/8: 0.0153
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.18911 t_other=0.03000 (dt=-1.59e-01) | relative L2 in x<3.2: density 0.7882, pressure 0.9069, velocity 0.8478
+    reference: dips: 0 cells rho<1.3 (min 1.396), 0 cells p<0.95 (min 0.9976) | above reflected shock (16877 cells): max|drho|/8=0.1312 at x=2.679 y=0.762, max|dp|/116.5=0.1034, fraction with |drho|/8>0.02: 0.0664, rms drho/8: 0.0149
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.19564 t_other=0.03000 (dt=-1.66e-01) | relative L2 in x<3.2: density 0.7935, pressure 0.9111, velocity 0.8528
+    reference: dips: 0 cells rho<1.3 (min 1.397), 0 cells p<0.95 (min 0.9983) | above reflected shock (16996 cells): max|drho|/8=0.1253 at x=2.737 y=0.754, max|dp|/116.5=0.0957, fraction with |drho|/8>0.02: 0.0628, rms drho/8: 0.0145
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278
+t_ref=0.20000 t_other=0.03000 (dt=-1.70e-01) | relative L2 in x<3.2: density 0.7968, pressure 0.9138, velocity 0.8560
+    reference: dips: 0 cells rho<1.3 (min 1.398), 0 cells p<0.95 (min 0.9986) | above reflected shock (17071 cells): max|drho|/8=0.1229 at x=2.779 y=0.746, max|dp|/116.5=0.0911, fraction with |drho|/8>0.02: 0.0598, rms drho/8: 0.0142
+    other:     dips: 0 cells rho<1.3 (min 1.4), 0 cells p<0.95 (min 1) | above reflected shock (4421 cells): max|drho|/8=0.1203 at x=0.754 y=0.821, max|dp|/116.5=0.1725, fraction with |drho|/8>0.02: 0.1271, rms drho/8: 0.0278

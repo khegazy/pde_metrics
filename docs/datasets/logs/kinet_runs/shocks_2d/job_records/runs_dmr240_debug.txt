@@ -1,0 +1,1 @@
+dmr_N240_debug /pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/_debug_dmr_N240 case=double_mach_reflection/default case.discretization.spatial.grid=[960,240] case.discretization.temporal.length=0.03 io.save_every_n=10 io.record_populations=false io.record_equilibria=false io.compression=null runtime_logging.every_n=100

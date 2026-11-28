@@ -3,29 +3,38 @@
 # printed by Kemm (2014, arXiv:1404.6510): [0, 4] x [0, 1], pre-shock (rho, u, v, p) = (1.4, 0, 0,
 # 1), post-shock (8, 7.1447, -4.125, 116.5), the shock's foot at x = 1/6 at t = 0. kinet's case
 # double_mach_reflection/default, finite-volume PonD solver (D2Q16, DUGKS with MP5 reconstruction,
-# CFL 0.2, adaptive time step), viscosity mu = 0.01 and Prandtl number 0.71, on 480 x 120 cells,
-# run to t = 0.2. At this viscosity it is a viscous flow, not the inviscid benchmark picture:
-# a two-dimensional pattern of several interacting shocks (the incident shock, the curved
-# reflected shock, the Mach stem, the triple point) from this solver, with no exact answer.
-# Converted by `python -m fmeval.data.convert_kinet SRC DST --every 10`: the initial condition and
-# steps 1000, 2000 and 2967 (t = 0.0708, 0.1368, 0.2). The run's record is under
-# docs/datasets/logs/kinet_runs/shocks_2d/.
+# CFL 0.2, adaptive time step), viscosity mu = 0.01 and Prandtl number 0.71, run to t = 0.2. At
+# this viscosity it is a viscous flow, not the inviscid benchmark picture: a two-dimensional
+# pattern of several interacting shocks (the incident shock, the curved reflected shock, the Mach
+# stem, the triple point) from this solver, with no exact answer.
+#
+# THE FILE READ is a 960 x 240 run reduced to 480 x 120: kinet's coarse graining, a 2 x 2 block
+# mean with no time reduction (`python -m kinet.apps.coarse_grain task=coarse_grain <the run's
+# overrides> '++task.targets_spatial=[480,120]' task.temporal_factor=1 task.vorticity=none`), then
+# `python -m fmeval.data.convert_kinet SRC DST --times 0.07080358 0.13676752 0.2`, which keeps the
+# initial condition and the saved frames nearest those times: steps 2050, 4054 and 5992, t =
+# 0.070835, 0.136744, 0.2. It is an improvement on the native 480 x 120 run (N120.h5, the coarser
+# run of the same problem, beside it), not a clean field: at the stored resolution the incident
+# shock trails the exact one by 0.75 to 1.16 cells and is 1.4 to 1.8 cells wide, two bands of
+# excess density peak 3.3 % and 4.8 % above the post-shock state, and the field differs from the
+# native run by 2.5 to 4.8 % (docs/datasets/logs/double_mach_reflection.md, decisions 6 and 7;
+# issue 151). The runs' records are under docs/datasets/logs/kinet_runs/shocks_2d/.
 #
 # THE WINDOW. Cells x 0 to 383 (x < 3.2) and every y are read (`reader.window`). Beyond x = 3.2
-# the gas is the undisturbed pre-shock state at every kept frame (to 1.4e-8 at t = 0.2, exactly
-# before), so the 96 columns left out only add a constant region; the window's mirror extension,
+# the gas is the undisturbed pre-shock state at every kept frame (to 2e-16), so the 96 columns
+# left out only add a constant region; the window's mirror extension,
 # 768 x 240, divides by 16, so every level of the default ladder's coarsening runs.
 #
 # BOUNDARIES, both axes `neumann`, the mirror extension, though no face here is a zero-gradient
 # face everywhere (docs/datasets/double_mach_reflection.md says what each one is):
 #   low x, kinet's fixed post-shock inflow: the first three columns hold that state to 3e-14 in
-#     density and velocity and 5e-13 in pressure at every kept frame, so the mirror is the flow;
+#     density and velocity and 4e-13 in pressure at every kept frame, so the mirror is the flow;
 #   high x, the cut at x = 3.2: in the undisturbed pre-shock gas, so the mirror is exact;
 #   low y, a reflecting wall from x = 1/6 and the fixed post-shock state before it: the mirror
 #     is exact for density, pressure and the tangential velocity, and gives the normal velocity
 #     the wrong sign of extension (a reflecting wall makes it odd), which a degradation reads only
 #     within its kernel width of the wall; in the row of cells next to it that velocity is at most
-#     0.51, a tenth of its largest value anywhere (4.8);
+#     0.64, about a seventh of its largest value in the window (4.7);
 #   high y, the imposed moving incident shock: the mirror reflects the straight shock into a kink
 #     at the face, again within a kernel width.
 # `periodic` would join the post-shock inflow to the pre-shock gas and the wall to the top,
@@ -40,7 +49,7 @@ defaults:
 
 name: kinet_double_mach_reflection
 format: kinet_raw
-trajectory: N120
+trajectory: N240_coarse-480-120
 path: ${paths.data}/kinet/double_mach_reflection/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en2/${.trajectory}.h5
 
 # pressure is the absolute p = rho T the PonD solver writes, not the redundant density * c_s^2 the
@@ -59,8 +68,8 @@ complexity:
   family: double_mach_reflection
   rank: 0
   params: {mach: 10, viscosity: 0.01, dim: 2, resolution: 120}
-  label: "kinet double Mach reflection, viscous, 480 x 120"
+  label: "kinet double Mach reflection, viscous, 960 x 240 block-averaged to 480 x 120"
 
-notes: "kinet PonD double Mach reflection, Mach 10, gamma 1.4, mu = 0.01, 480 x 120 on [0, 4] x
-  [0, 1], read in the window x < 3.2; all faces Neumann. No exact solution. See
-  docs/datasets/double_mach_reflection.md."
+notes: "kinet PonD double Mach reflection, Mach 10, gamma 1.4, mu = 0.01, run on 960 x 240 and
+  block-averaged to 480 x 120 on [0, 4] x [0, 1], read in the window x < 3.2; all faces Neumann. No
+  exact solution; residual numerical artifacts listed on docs/datasets/double_mach_reflection.md."

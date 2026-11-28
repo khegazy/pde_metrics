@@ -1,0 +1,1 @@
+dmr_N240_t0p2 /pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/double_mach_reflection case=double_mach_reflection/default case.discretization.spatial.grid=[960,240] io.save_every_n=2 io.record_populations=false io.record_equilibria=false io.compression=null runtime_logging.every_n=100

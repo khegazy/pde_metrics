@@ -105,7 +105,9 @@
 #   window the zero-gradient faces have not disturbed; straight fronts oblique to the grid.
 # - `kinet_double_mach_reflection` has no exact solution: several interacting shocks from one
 #   solver at a large viscosity, scored through the degradation ladder; its label says it is not
-#   the inviscid benchmark picture.
+#   the inviscid benchmark picture. Since 2026-11-28 its file is a 960 x 240 run block-averaged to
+#   the same 480 x 120 grid, which still carries numerical artifacts (issue 151); the runs the
+#   cards cite were made on the native 480 x 120 file and describe it until they are rerun.
 # - `kinet_forced_re40k` is forced, statistically stationary two-dimensional turbulence with a
 #   linear drag, the first stationary flow here. Its label gives the measured slopes, so neither
 #   range is read as the textbook -5/3 or -3, and says that it is weakly compressible.

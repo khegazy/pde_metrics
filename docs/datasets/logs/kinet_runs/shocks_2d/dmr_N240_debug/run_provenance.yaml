@@ -1,0 +1,28 @@
+launches:
+- started_at: '2026-11-28T06:03:34.650470+00:00'
+  run_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/dmr_fine/dmr_N240_debug/outputs/double_mach_reflection/default/simulate/job_261127_220330_865665
+  case_path: double_mach_reflection/default
+  case_id: default
+  task: simulate
+  hostname: nid002713
+  pid: 2065471
+  stamp: null
+  resume_from: null
+  slurm_job_id: '62133981'
+  slurm_job_name: kinet-dmr240-dbg
+  slurm_submit_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/dmr_fine
+  slurm_stdout: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/dmr_fine/dmr_N240_debug/outputs/double_mach_reflection/default/simulate/job_261127_220330_865665/logs/62133981/slurm.out
+  slurm_stderr: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/dmr_fine/dmr_N240_debug/outputs/double_mach_reflection/default/simulate/job_261127_220330_865665/logs/62133981/slurm.err
+  hydra_overrides:
+  - task=simulate
+  - case=double_mach_reflection/default
+  - ++case.discretization.spatial.grid=[960,240]
+  - ++case.discretization.temporal.length=0.03
+  - ++case.io.save_every_n=10
+  - ++case.io.record_populations=false
+  - ++case.io.record_equilibria=false
+  - ++case.io.compression=null
+  - ++case.runtime_logging.every_n=100
+  - ++paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/_debug_dmr_N240
+  - ++distributed.is_distributed=false
+  - ++distributed.is_slurm=true

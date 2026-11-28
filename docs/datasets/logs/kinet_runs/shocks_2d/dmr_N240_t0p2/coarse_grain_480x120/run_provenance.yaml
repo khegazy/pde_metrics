@@ -1,0 +1,29 @@
+launches:
+- started_at: '2026-11-28T11:25:16.220947+00:00'
+  run_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/dmr_fine/dmr_N240_t0p2/outputs/double_mach_reflection/default/coarse_grain/job_261128_032515_683691
+  case_path: double_mach_reflection/default
+  case_id: default
+  task: coarse_grain
+  hostname: nid001824
+  pid: 1335066
+  stamp: null
+  resume_from: null
+  slurm_job_id: '62134603'
+  slurm_job_name: kinet-dmr240
+  slurm_submit_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/dmr_fine
+  slurm_stdout: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/dmr_fine/dmr_N240_t0p2/outputs/double_mach_reflection/default/coarse_grain/job_261128_032515_683691/logs/62134603/slurm.out
+  slurm_stderr: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/dmr_fine/dmr_N240_t0p2/outputs/double_mach_reflection/default/coarse_grain/job_261128_032515_683691/logs/62134603/slurm.err
+  hydra_overrides:
+  - task=coarse_grain
+  - case=double_mach_reflection/default
+  - ++case.discretization.spatial.grid=[960,240]
+  - ++case.io.save_every_n=2
+  - ++case.io.record_populations=false
+  - ++case.io.record_equilibria=false
+  - ++case.io.compression=null
+  - ++case.runtime_logging.every_n=100
+  - ++paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/double_mach_reflection
+  - ++task.targets_spatial=[480,120]
+  - ++task.temporal_factor=1
+  - ++task.vorticity=none
+  - ++task.ignore_datasets=[VTKHDF/CellData/density,VTKHDF/CellData/pressure,VTKHDF/CellData/specific_energy,VTKHDF/CellData/temperature,VTKHDF/CellData/velocity_x,VTKHDF/CellData/velocity_y,VTKHDF/Steps/CellDataOffsets/density,VTKHDF/Steps/CellDataOffsets/pressure,VTKHDF/Steps/CellDataOffsets/specific_energy,VTKHDF/Steps/CellDataOffsets/temperature,VTKHDF/Steps/CellDataOffsets/velocity_x,VTKHDF/Steps/CellDataOffsets/velocity_y,VTKHDF/Steps/Values,mesoscopic/thermal_time,mesoscopic/viscous_time_ft,mesoscopic/viscous_time_gt,observables/specific_energy,observables/temperature]

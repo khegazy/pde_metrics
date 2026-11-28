@@ -603,27 +603,28 @@ def test_the_cylinder_window_holds_the_bow_shock_and_none_of_the_body():
             assert outline.min() >= 30
 
 
-#: The incident shock's foot measured by the job's check (``check_dmr_N120.txt`` under
-#: docs/datasets/logs/kinet_runs/shocks_2d/checks/), by frame of the converted run and row index
-#: (rows 72, 84, 96, 108 are y = 0.6042, 0.7042, 0.8042, 0.9042).
-DMR_FRONT = {2: {72: 2.0820, 84: 2.1378, 96: 2.1918, 108: 2.2501},
-             3: {72: 2.8082, 84: 2.8649, 96: 2.9219, 108: 2.9815}}
+#: The incident shock's foot measured by ``check_dmr.py`` on the coarse-grained 960 x 240 run
+#: (``check_dmr_N240.txt`` under docs/datasets/logs/kinet_runs/shocks_2d/checks/), by frame of the
+#: converted file and row index (rows 72, 84, 96, 108 are y = 0.6042, 0.7042, 0.8042, 0.9042).
+DMR_FRONT = {2: {72: 2.0876, 84: 2.1441, 96: 2.2003, 108: 2.2582},
+             3: {72: 2.8169, 84: 2.8737, 96: 2.9314, 108: 2.9884}}
 
 
 @pytest.mark.data
 def test_the_double_mach_window_reproduces_the_incident_shock_and_leaves_out_still_gas():
-    """``kinet_double_mach_reflection`` reads the window x < 3.2 of the 480 x 120 run in the case's
-    units (cells 1/120, the clock the physical time). On each checked row the right-most crossing
-    of the density level 4.7, between the pre-shock 1.4 and the post-shock 8, interpolated between
-    cell centres as the job's check did, is the job's measured foot of the incident shock (given
-    to four decimals). The 96 columns left out hold the undisturbed pre-shock state (1.4, 0, 0, 1)
-    at every kept frame (measured within 1.4e-8 at t = 0.2, exactly before)."""
+    """``kinet_double_mach_reflection`` reads the window x < 3.2 of the 960 x 240 run block-averaged
+    to 480 x 120, in the case's units (cells 1/120, the clock the physical time), at the saved
+    frames nearest 0.0708 and 0.1368. On each checked row the right-most crossing of the density
+    level 4.7, between the pre-shock 1.4 and the post-shock 8, interpolated between cell centres as
+    ``check_dmr.py`` does, is its measured foot of the incident shock (given to four decimals). The
+    96 columns left out hold the undisturbed pre-shock state (1.4, 0, 0, 1) at every kept frame
+    (measured within 2.3e-16)."""
     job = build_job(compose_config("dataset=kinet_double_mach_reflection", "paths.data_url=null"))
     with open_trajectory(job.dataset, job.paths) as run, \
             KinetRawTrajectory(job.dataset.path, include_redundant=True) as whole:
         assert run.grid.shape == (384, 120) and run.grid.spacing == pytest.approx((1 / 120,) * 2)
         assert run.grid.boundary == ("neumann", "neumann")
-        assert run.times[1:] == pytest.approx([0.07080, 0.13677, 0.2], abs=5e-6)
+        assert run.times[1:] == pytest.approx([0.070835, 0.136744, 0.2], abs=5e-7)
         x = (np.arange(384) + 0.5) / 120
         for t, rows in DMR_FRONT.items():
             density = run.frame(t, ["density"])["density"][0]
@@ -837,7 +838,8 @@ def test_an_adaptive_rollout_keeps_its_physical_clock_and_its_last_step(tmp_path
     one step off the cadence, the physical time in ``time/time``) converts to the flat fixture's
     frames and clock, not ``time_convection``, at steps 0, 3, 6, 9, 11, with no temporal
     resolution; ``every=2`` keeps the last frame and every second before it, steps 0, 6, 11,
-    though 2 does not divide the four frames."""
+    though 2 does not divide the four frames. ``times`` keeps the frame nearest each time, a
+    frame two times select only once, and is refused on a fixed-step run."""
     grouped = write_kinet_grouped(tmp_path / "grouped.h5", save_every=3, adaptive=True)
     for every, frames, steps in ((1, [0, 1, 2, 3, 4], [0, 3, 6, 9, 11]), (2, [0, 2, 4], [0, 6, 11])):
         converted = convert_kinet_grouped(grouped, tmp_path / f"every{every}.h5", every=every)
@@ -852,6 +854,15 @@ def test_an_adaptive_rollout_keeps_its_physical_clock_and_its_last_step(tmp_path
         with h5py.File(converted, "r") as f:
             assert f["time_index"][:].tolist() == steps
             assert f["time"].attrs["source"] == "time"
+    with KinetRawTrajectory(tmp_path / "grouped_flat.h5") as want:
+        near = [want.times[2] * 1.01, want.times[3] * 0.99, want.times[3]]
+        expected = want.times[[0, 2, 3]]
+    with KinetRawTrajectory(convert_kinet_grouped(grouped, tmp_path / "times.h5",
+                                                  times=near)) as got:
+        assert np.array_equal(got.times, expected), "the frame nearest each time, once each"
+    with pytest.raises(ValueError, match="times="):
+        convert_kinet_grouped(write_kinet_grouped(tmp_path / "fixed.h5"), tmp_path / "no.h5",
+                              times=near)
 
 
 @pytest.mark.parametrize("change,match", [

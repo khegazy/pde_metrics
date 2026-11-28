@@ -716,6 +716,82 @@ and compared each byte for byte with its source (129 files, 327 kB).
   after about eight weeks. Every run is reproducible from this folder; whether a rerun is bitwise
   identical to these runs has not been checked.
 
+### The double Mach reflection on $960 \times 240$: `dmr_N240_debug/`, `dmr_N240_t0p2/` (2026-11-28)
+
+The dataset agent reran the double Mach reflection on a grid twice as fine, under Kareem's rule of
+2026-11-27 on resolution; why, and what it showed, are in
+`docs/datasets/logs/double_mach_reflection.md` (decision 6 and the entry of 2026-11-28).
+
+- **Code and environment.** kinet `origin/main` at `e67a1136e8a0`, the squash merge of
+  `perf/cleanup`, in a detached worktree `/pscratch/sd/k/khegazy/kinet_worktrees/dmr_fine` with no
+  uncommitted changes, run from kinet's own `.venv` with the worktree first on `PYTHONPATH`
+  (`_scripts/env_dmr_fine.sh`); torch `2.15.0+cu132`, one NVIDIA A100-SXM4-40GB. On this commit the
+  case's corrector key is `face_pc.max_iterations` and `io.record_distributions` is
+  `io.record_populations`; the composed configuration was checked equal to `dmr_N120_t0p2`'s apart
+  from the grid and the save cadence.
+- **The command**, run by `_scripts/run_kinet_job_dmr_fine.sh` (the batch script with its working
+  folder moved to `_work/shocks_2d/dmr_fine` and an optional second file of commands run after the
+  simulations, here the coarse graining) in `<work>/dmr_N240_t0p2`, with a fresh data root in place of
+  the one shown:
+
+  ```bash
+  sbatch --account=m4790 --constraint=gpu --qos=regular --nodes=1 --ntasks=1 --cpus-per-task=32 \
+      --gpus-per-node=1 --time=03:00:00 --job-name=kinet-dmr240 \
+      run_kinet_job_dmr_fine.sh job_records/runs_dmr240.txt job_records/post_dmr240.txt
+  # runs_dmr240.txt: python -m kinet.apps.simulate task=simulate case=double_mach_reflection/default \
+  #   case.discretization.spatial.grid=[960,240] io.save_every_n=2 io.record_populations=false \
+  #   io.record_equilibria=false io.compression=null runtime_logging.every_n=100 \
+  #   paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/double_mach_reflection \
+  #   distributed.is_distributed=false distributed.is_slurm=true
+  # post_dmr240.txt: python -m kinet.apps.coarse_grain task=coarse_grain <the same overrides> \
+  #   '++task.targets_spatial=[480,120]' (then [240,60]) task.temporal_factor=1 task.vorticity=none \
+  #   'task.ignore_datasets=[VTKHDF/..., mesoscopic/..., observables/specific_energy, observables/temperature]'
+  ```
+
+  The debug test `dmr_N240_debug` is the same command with `case.discretization.temporal.length=0.03`
+  and `io.save_every_n=10` on the debug queue (`job_records/runs_dmr240_debug.txt`).
+- **The runs.** Job 62133981 (debug, 826 steps to $t = 0.03$, 23 min) and job 62134603 (regular,
+  identity key `2d3f49f5`, 5992 steps to $t = 0.2$, 6555 s of stepping at 1.094 s per step, 1 h 57 min
+  of job time, both coarse grainings 187 s); job 62134431 was a duplicate submission cancelled before
+  it started. Each run folder holds `RUN.txt`, `config.yaml`, `manifest.yaml`, `resolved_config.yaml`
+  and `run_provenance.yaml`; `dmr_N240_t0p2/coarse_grain_480x120/` and `coarse_grain_240x60/` hold the
+  coarse-grain app's two files each. `job_records/` holds the run and command files, the submissions,
+  the per-run records (`job_<id>_runs.txt`, `post_62134603.txt`) and `sacct_dmr240.txt`.
+- **After the simulation.** `python -m fmeval.data.convert_kinet <data root>/double_mach_reflection/default/2d3f49f5/tiers/480-120/rollout.h5
+  /global/cfs/cdirs/m4790/Data/kinet/double_mach_reflection/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en2/N240_coarse-480-120.h5
+  --times 0.07080358 0.13676752 0.2` (7.4 MB; steps 2050, 4054, 5992), checked equal to its source.
+  The coarse graining that made the `480-120` tier, a mean over each $2 \times 2$ block with every
+  saved frame kept, was `python -m kinet.apps.coarse_grain task=coarse_grain case=double_mach_reflection/default
+  case.discretization.spatial.grid=[960,240] io.save_every_n=2 io.record_populations=false
+  io.record_equilibria=false io.compression=null runtime_logging.every_n=100 paths.data_root=<data root>
+  '++task.targets_spatial=[480,120]' task.temporal_factor=1 task.vorticity=none
+  'task.ignore_datasets=[...]'` (the full list in `job_records/post_dmr240.txt`). Since 2026-11-28
+  this file is the one `kinet_double_mach_reflection` reads, and `N120.h5` of `dmr_N120_t0p2` is the
+  coarser run of the same problem beside it (`docs/datasets/logs/double_mach_reflection.md`,
+  decision 7).
+  The native run was block-averaged to $240 \times 60$ for the comparison by the command in
+  `_scripts/coarse_grain_N120_to_240x60.txt`, into the work folder.
+- **Checks** (text, under `checks/`): `check_dmr_N240.txt` (`check_dmr.py` on the native
+  $960 \times 240$ field and on both coarse-grained tiers, thinned by `_scripts/thin_checks.py` to the
+  saved frame nearest each time of `check_dmr_N120.txt`, with the bounds over all 2997 frames),
+  `check_dmr_N240_debug_cg480x120.txt`, `check_dmr_N120_cg240x60.txt`, the comparisons
+  `compare_N120_vs_N240cg_480x120.txt`, `compare_N120cg_vs_N240cg_240x60.txt` and
+  `compare_N120_vs_N240_debug_cg480x120.txt` (`_scripts/compare_dmr.py`: relative L2 differences in the
+  window, dips, the departure from the uniform post-shock state and its bands),
+  `diagnostics_N240_full960x240_at_N120_times.txt` (the same on the native fine field) and
+  `dip_locations_N240_full960x240.txt` (`_scripts/dip_locations.py`).
+- **Left out, and where it remains.** The full 2997-frame check outputs (1.1 to 1.4 MB each), the
+  runs' `simulate.log`, the Slurm output and four density plots stay in
+  `/pscratch/sd/k/khegazy/kinet_datasets/_provenance/shocks_2d/` (`dmr_fine/`, `dmr_N240_*`) and
+  `_work/shocks_2d/dmr_fine/` until scratch is purged. Nothing copied here is an email address, a
+  token or a credential (searched with a regular expression).
+- **Raw output deleted** on Kareem's instruction of 2026-11-27 ("after you downsample you should
+  delete the fine grid simulation when you are finished with it"), on 2026-11-28: the
+  $960 \times 240$ rollout (49.7 GB) and the debug rollout (1.4 GB), with the debug run's trial
+  coarse-grained tiers; and, once the dataset read its file from CFS, the coarse-grained tiers of
+  `2d3f49f5` (11.0 GB and 2.8 GB) and the native run block-averaged to $240 \times 60$ (1.4 GB). The
+  commands above regenerate everything.
+
 ## Forced stationary two-dimensional turbulence: `forced_turbulence_2d/` (2026-11-27)
 
 Build-order step 22: one kinet run of forced two-dimensional turbulence with a linear drag on

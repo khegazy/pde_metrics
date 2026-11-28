@@ -1,0 +1,10 @@
+version: 1
+case_path: double_mach_reflection/default
+simulation_subdir: double_mach_reflection/default/bcdfb0f5
+identity_key: bcdfb0f5
+active:
+  full: tiers/full/rollout.h5
+  tiers:
+    480-120: tiers/480-120/rollout.h5
+    240-60: tiers/240-60/rollout.h5
+updated_at: '2026-11-28T06:28:53.029211+00:00'

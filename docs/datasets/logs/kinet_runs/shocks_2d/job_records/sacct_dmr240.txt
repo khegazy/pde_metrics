@@ -1,0 +1,4 @@
+JobID|JobName|Partition|QOS|Account|Submit|Start|End|Elapsed|State|ExitCode|NodeList
+62133981|kinet-dmr240-dbg|gpu_ss11|gpu_debug|m4790_g|2026-11-27T22:00:39|2026-11-27T22:02:51|2026-11-27T22:26:01|00:23:10|COMPLETED|0:0|nid002713
+62134431|kinet-dmr240|gpu_ss11|gpu_regular|m4790_g|2026-11-27T22:29:44|None|2026-11-27T22:29:50|00:00:00|CANCELLED by 102585|0:0|None assigned
+62134603|kinet-dmr240|gpu_ss11|gpu_regular|m4790_g|2026-11-27T22:36:06|2026-11-28T01:31:22|2026-11-28T03:27:55|01:56:33|COMPLETED|0:0|nid001824

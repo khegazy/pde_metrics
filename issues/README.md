@@ -25,6 +25,7 @@ These block criteria that are designed and implemented but cannot be exercised.
 | [002](002-shocklet-dataset.md) | No shocklet-populated compressible turbulence | accepted, scheduled |
 | [003](003-ensemble-data.md) | CRPS and spread-to-skill need ensembles — estimators built and validated on a synthetic ensemble; physical data is [004](004-independent-realizations.md) | low |
 | [004](004-independent-realizations.md) | Only one seed per configuration | medium |
+| [151](151-double-mach-reflection-not-free-of-artifacts.md) | The double Mach reflection's stored field, a run twice as fine block-averaged, still carries numerical artifacts (half the native run's) | medium |
 | [037](037-increment-flatness-has-no-damage-scale.md) | The increment flatness is zero over zero on the mean-field anchor, so it alone has no damage scale | low |
 | [005](005-3d-and-cost-extrapolation.md) | All data is two-dimensional | low |
 | [034](034-the-well-format-copy-is-not-published.md) | The Well-format copy is not published, so that reader's HTTP path is only covered by a fixture | low |
