@@ -381,8 +381,6 @@ Every number in this section comes from that run, except in the subsections head
 | `kinet_hit_re12p5k` | decaying two-dimensional isotropic turbulence at Re = 1.25e4, one realisation per run | not yet run |
 | `kinet_hit_re25k` | decaying two-dimensional isotropic turbulence at Re = 2.5e4, one realisation per run | not yet run |
 | `kinet_hit_re50k` | decaying two-dimensional isotropic turbulence at Re = 5e4, simulated on 512^2 cells and stored coarse-grained to 256^2, one realisation per run | not yet run |
-| `kinet_sod_gamma1p4` | a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
-| `kinet_sod_gamma2` | a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
 | `burgers` | an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence | not yet run |
 | `sedov_taylor` | an analytic check: the exact cylindrical Sedov-Taylor blast wave, a shock oblique to the grid at every angle, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |
 | `noh` | an analytic check: the exact cylindrical Noh implosion, a circular shock of constant strength, and nothing about turbulence | not applicable: needs a periodic domain, and this dataset is not periodic |

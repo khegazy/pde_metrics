@@ -2,7 +2,8 @@
 
 !!! note "`sod_shock_tube` is computed, not simulated: an analytic check"
     This configuration is the exact solution of a textbook problem, computed on the fly
-    whenever a frame is read; the two kinet configurations below are simulations of it. It
+    whenever a frame is read, and it is the only Sod reference here: the kinet configurations
+    below are simulations scored against it, never references of their own. It
     tests the evaluation harness, and the metrics that need a shock or pressure, against an
     answer known in advance. A metric's page may cite it as an
     **analytic check**: its evidence says the metric locates and scores a known shock
@@ -34,17 +35,19 @@ state.
 | Configuration | What it is | Readable here |
 |---|---|---|
 | `sod_shock_tube` | The exact solution below, with Sod's data: $\gamma = 1.4$, left $(\rho, p) = (1, 1)$, right $(0.125, 0.1)$, on 2048 cells, 10 frames from $t = 0.1$ to $t = 0.2$ | Yes, computed |
-| `kinet_sod_gamma1p4` | kinet's lattice-Boltzmann simulation (`kinet/sod/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en4/`) on 3001 × 5 nodes, $\gamma = 1.4$, viscosity $10^{-4}$, Prandtl number 0.71, left $(\rho, p) = (1, 0.2)$, right $(0.125, 0.02)$, 1001 frames to $t = 200$ | Yes, simulated |
-| `kinet_sod_gamma2` | The same solver with $\gamma = 2$, viscosity 0.025, left $(\rho, p) = (0.5, 0.1)$, right $(2, 0.05)$; two runs of it, `c76b17` (default) and `15aa6b`, equal to $10^{-13}$ | Yes, simulated |
 | `kinet_sod_refinement` | The $\gamma = 1.4$ case rerun on 751, 1501 and 3001 × 5 nodes (`kinet/sod/compressible_fluids/Pr-71en2_vuy-1.4_refinement/`), each run scored against the exact solution on its own nodes: a grid sequence, the grid chosen by `dataset.trajectory` (`N751`, `N1501`, `N3001`) | Yes, simulated against computed |
 | `kinet_oblique_riemann_30deg`, `kinet_oblique_riemann_45deg` | The tube rotated in the unit square, its interface's normal at 30 or 45 degrees to $x$, with both pressures multiplied by 0.15: kinet's finite-volume (PonD) solver on $200^2$ and $400^2$ cells (`kinet/oblique_riemann/compressible_fluids/`), each run scored against the exact solution along the normal at $t = 0.2$, in a window clear of the faces; the grid chosen by `dataset.trajectory` (`N200`, `N400`) | Yes, simulated against computed |
 
-The exact solution can be evaluated for either simulation by overriding the reader's options,
-for example `+dataset.reader.gamma=2 '+dataset.reader.left=[0.5,0.1]' '+dataset.reader.right=[2,0.05]'`.
-It covers any pair of states at rest with the higher pressure on the left. `kinet_sod_gamma1p4`
-and `kinet_sod_gamma2` are references for the degradation ladder, as every simulated dataset is;
-`kinet_sod_refinement` scores a simulation against the exact solution, frame by frame on the
-same nodes (below, "The kinet grid sequence against the exact solution").
+The exact solution takes other states and another $\gamma$ through the reader's options, for
+example the states of kinet's $\gamma = 2$ runs, whose denser gas is on the right:
+`+dataset.reader.gamma=2 '+dataset.reader.left=[0.5,0.1]' '+dataset.reader.right=[2,0.05]'`.
+It covers any pair of states at rest with the higher pressure on the left. A simulated tube
+enters only as a prediction scored against it: `kinet_sod_refinement` frame by frame on the same
+nodes (below, "The kinet grid sequence against the exact solution"), and the rotated tube along
+its normal. Two kinet runs once registered as references for the degradation ladder,
+`kinet_sod_gamma1p4` and `kinet_sod_gamma2`, were withdrawn on 2026-11-28, because a problem with
+an analytic solution takes that solution as its reference (Kareem); their files stay on CFS,
+unread, and their run configurations in `docs/datasets/logs/kinet_runs/`.
 
 ### The exact solution at a shifted time
 
@@ -66,50 +69,6 @@ the shock 35.9 cells. `tests/test_analytic_datasets.py` asserts, at $\delta t = 
 one cell of $S_R\,\delta t$; and that `max_error` is the shock's own jump, $p_* - p_R$ in pressure
 and $u_*$ in velocity, at every offset: a pointwise error saturates at the jump size however far
 the shock moves, which is the double penalty.
-
-### The kinet simulations
-
-- **Conversion.** kinet wrote each run in its grouped layout. `python -m fmeval.data.convert_kinet`
-  rewrote each into the flat layout the `kinet_raw` reader opens, as `<run>_flat.h5` beside
-  the original: density, velocity and the absolute pressure $p = \rho T$, with the initial
-  condition as frame 0. Every frame and the clock were read back and found equal to the
-  source. The populations, temperature and energy are not carried.
-- **Clock.** The time is kinet's own clock, 0.2 per solver step, so step 1000 is $t = 200$;
-  the solver step of every frame is in the file's `time_index`. The exact solution's window,
-  $t = 0.1$ to $0.2$ in tube units, is steps 671 to 1342 of the $\gamma = 1.4$ run (the
-  arithmetic of the specification above), of which steps 671 to 1000 exist.
-- **Read as two-dimensional.** The 5 transverse nodes are kept, so each frame is a 3001 × 5
-  field. Every field is uniform across them to $2 \times 10^{-14}$ and the transverse velocity
-  is below $10^{-15}$, so a mean over the grid is the mean along the tube, and no reader code
-  was needed to take one row. A degradation that adds noise does vary across them.
-- **Boundaries.** The tube's ends are Neumann, as kinet ran them. The transverse axis is
-  periodic: the run names no face on it, and the fields are uniform across it, so a Neumann
-  declaration would extend them identically.
-- **Window.** Steps 450 to 1000, every 50th step (12 frames), chosen to keep every wave
-  separated by more than ten times the ladder's largest translation in the $\gamma = 1.4$ run
-  and to hold its 6 to 7 independent samples; the reasons and measured costs are in the
-  dataset's log. The $\gamma = 2$ run's rarefaction never meets that rule (89 nodes wide at
-  step 1000).
-- **What the evaluation sees.** Measured with `python evaluate.py
-  'metrics=[mse,shock_set_distance,spectrum_l2]' dataset=<name> dataset.time.reduction=100
-  degradation.ladder.median_blur.enabled=false` on 2026-11-26:
-  - `spectrum_l2`, like every metric that needs a periodic domain, is not run.
-  - `coarsen`, `coarsen_bandlimited` and `subsample` are dropped at every level, because no
-    factor divides the 5 transverse nodes. `translate_y` leaves the fields unchanged and is
-    excluded.
-  - The median blur gives the right answer but is slow: its window is square, and a window
-    hundreds of nodes wide wraps the 5 transverse nodes many times. With it on, a run of 6
-    frames had not finished after four minutes; without it, it takes 36 s. It is degenerate on the
-    exact solution anyway, as the next section says. The configurations exclude it
-    (`exclude_degradations`), and every run records the exclusion with its reason.
-  - The shock detector of `shock_set_distance` flags one column of 5 nodes in the
-    $\gamma = 1.4$ run. It flags nothing in the $\gamma = 2$ run, whose viscous shock is spread
-    over enough nodes that no neighbouring pressure ratio exceeds 1.05, below the threshold of a
-    Mach 1.3 shock; every score there is the both-empty 0.
-- **Evidence, under their labels.** Both runs are in `evidence_datasets`
-  (`configs/cards/default.yaml`), labelled as a solver's shock rather than the exact one;
-  `kinet_sod_gamma2`'s label also says its shock-set metrics score 0 because no shock is
-  flagged.
 
 ### The kinet grid sequence against the exact solution
 
@@ -146,11 +105,11 @@ each row is that run's error.
   contact is the rate reported for second-order schemes on linearly degenerate waves (Banks,
   Aslam & Rider 2008, *J. Comput. Phys.* 227, 6985–7002; recalled, not checked against the
   paper here).
-- **Beside `kinet_sod_gamma1p4`, not in place of it.** That configuration is the solver's field
-  as a reference for the ladder; this one is the solver against the exact solution, with no
-  ladder. They are also not the same run: the older run's first right-state node is 1501, not
-  1500, and at step 1000 it differs from the new 3001-node run by up to 0.09 in density even
-  after a shift of one node.
+- **Read as two-dimensional.** Each run keeps its 5 transverse nodes, across which every field is
+  uniform; that axis is declared periodic (the run names no face on it) and the tube's ends
+  Neumann, as kinet ran them. No degradation is applied to these runs: the candidate replaces
+  the ladder but for its clean entry and the `mean_field` anchor, so each row is the solver's
+  error alone.
 - **Evaluated part.** Every grid at its native resolution, at frames 175, 200, 225 and 250
   (steps 700 to 1000 of the 3001-node run, the times spec 02 names). Costs are in the dataset's
   log.

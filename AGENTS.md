@@ -109,9 +109,10 @@ did not evaluate it the way that field does.
   Every dataset built under `dataset_specs/BUILD_ORDER.md` is an experiment too, registered in
   `evidence_datasets` with its claim label (Kareem, 2026-11-26): the decaying isotropic
   turbulence `kinet_hit_re12p5k`, `kinet_hit_re25k`, `kinet_hit_re50k`; the shear layer on
-  512^2, `kinet_re5e4_512`; the solver's Sod runs `kinet_sod_gamma1p4` and `kinet_sod_gamma2`;
-  the solver's Taylor–Green grid sequences `kinet_taylor_green_diffusive` and
-  `kinet_taylor_green_fixed_mach` and its Sod grid sequence `kinet_sod_refinement`, scored
+  512^2, `kinet_re5e4_512`; the solver's Taylor–Green grid sequences
+  `kinet_taylor_green_diffusive` and `kinet_taylor_green_fixed_mach` and its Sod grid sequence
+  `kinet_sod_refinement` (the only simulated Sod tube here, never a reference: Kareem,
+  2026-11-27), scored
   against the exact solution and read by `fmeval.analysis.observed_order`; the shear layer's
   coarser runs against its 512^2 run on nested cells, `kinet_shear_layer_refinement`; its physical ensemble of three cases, `kinet_shear_layer_ensemble`; the bow shock upstream of a supersonic cylinder, `kinet_supersonic_cylinder`; the finite-volume solver's isentropic vortex on two grid sequences against the exact solution, `kinet_isentropic_vortex_mu1em5` and `kinet_isentropic_vortex_mu1em7`; its Sod tube rotated to 30 and 45 degrees in a square against the exact solution, `kinet_oblique_riemann_30deg` and `kinet_oblique_riemann_45deg`; its double Mach reflection, several interacting shocks with no exact answer, `kinet_double_mach_reflection`; forced, statistically stationary two-dimensional turbulence with a linear drag and an inverse and a direct range, `kinet_forced_re40k`; kinet reruns of the isotropic realisations degraded on purpose (a coarser grid, a wrong viscosity, plain BGK), each scored against the realisation it started from, `kinet_hit_re12p5k_candidates`, `kinet_hit_re25k_candidates` and `kinet_hit_re50k_candidates`; and the analytic checks `burgers`, `sedov_taylor`, `noh`, `feature_population`,
   `transport_pairs`, `advecting_blobs`, `random_field` and `helmholtz_mixture_2d`. Each is run

@@ -1641,24 +1641,6 @@
           "state": "not applicable"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -2103,24 +2085,6 @@
         {
           "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4, simulated on 512^2 cells and stored coarse-grained to 256^2, one realisation per run",
           "dataset": "kinet_hit_re50k",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -3960,24 +3924,6 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
         },
         {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
@@ -6055,24 +6001,6 @@
           "state": "not applicable"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -6520,24 +6448,6 @@
         {
           "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4, simulated on 512^2 cells and stored coarse-grained to 256^2, one realisation per run",
           "dataset": "kinet_hit_re50k",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -7393,24 +7303,6 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs vorticity, which this dataset does not provide",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs vorticity, which this dataset does not provide",
-          "run": null,
-          "state": "not applicable"
         },
         {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
@@ -9773,24 +9665,6 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
         },
         {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
@@ -13333,24 +13207,6 @@
           "state": "not yet run"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -16791,24 +16647,6 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
         },
         {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
@@ -20307,24 +20145,6 @@
           "state": "not yet run"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -23785,24 +23605,6 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
         },
         {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
@@ -27290,24 +27092,6 @@
           "state": "not yet run"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -29779,24 +29563,6 @@
         {
           "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4, simulated on 512^2 cells and stored coarse-grained to 256^2, one realisation per run",
           "dataset": "kinet_hit_re50k",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
           "note": null,
           "primary": false,
           "reason": null,
@@ -32623,24 +32389,6 @@
         {
           "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4, simulated on 512^2 cells and stored coarse-grained to 256^2, one realisation per run",
           "dataset": "kinet_hit_re50k",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
           "note": null,
           "primary": false,
           "reason": null,
@@ -37515,24 +37263,6 @@
           "state": "not yet run"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -42368,24 +42098,6 @@
           "state": "not yet run"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -45810,24 +45522,6 @@
         {
           "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4, simulated on 512^2 cells and stored coarse-grained to 256^2, one realisation per run",
           "dataset": "kinet_hit_re50k",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
           "note": null,
           "primary": false,
           "reason": null,
@@ -50698,24 +50392,6 @@
           "state": "not yet run"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -54615,24 +54291,6 @@
           "state": "not yet run"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic; needs vorticity, which this dataset does not provide",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic; needs vorticity, which this dataset does not provide",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -56555,24 +56213,6 @@
           "state": "not yet run"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -58152,24 +57792,6 @@
           "state": "not yet run"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -58639,24 +58261,6 @@
           "state": "not applicable"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -59101,24 +58705,6 @@
         {
           "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4, simulated on 512^2 cells and stored coarse-grained to 256^2, one realisation per run",
           "dataset": "kinet_hit_re50k",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -60932,24 +60518,6 @@
         {
           "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4, simulated on 512^2 cells and stored coarse-grained to 256^2, one realisation per run",
           "dataset": "kinet_hit_re50k",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
           "note": null,
           "primary": false,
           "reason": null,
@@ -65808,24 +65376,6 @@
           "state": "not yet run"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -68270,24 +67820,6 @@
           "state": "not applicable"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -69120,24 +68652,6 @@
           "reason": "needs pressure, which this dataset does not provide",
           "run": null,
           "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
         },
         {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
@@ -69974,24 +69488,6 @@
           "state": "not applicable"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -70824,24 +70320,6 @@
           "reason": "needs pressure, which this dataset does not provide",
           "run": null,
           "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
         },
         {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
@@ -71678,24 +71156,6 @@
           "state": "not applicable"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -72528,24 +71988,6 @@
           "reason": "needs pressure, which this dataset does not provide",
           "run": null,
           "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
         },
         {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
@@ -73422,24 +72864,6 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
         },
         {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
@@ -75863,24 +75287,6 @@
           "state": "not yet run"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -77962,24 +77368,6 @@
           "state": "not applicable"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -79857,24 +79245,6 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
         },
         {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
@@ -83393,24 +82763,6 @@
           "state": "not yet run"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -85507,24 +84859,6 @@
           "state": "not applicable"
         },
         {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs an ensemble, and this dataset has one realisation per frame",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",
           "dataset": "burgers",
           "note": null,
@@ -87321,24 +86655,6 @@
         {
           "claim": "decaying two-dimensional isotropic turbulence at Re = 5e4, simulated on 512^2 cells and stored coarse-grained to 256^2, one realisation per run",
           "dataset": "kinet_hit_re50k",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": null,
-          "run": null,
-          "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
           "note": null,
           "primary": false,
           "reason": null,
@@ -91249,24 +90565,6 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence",
-          "dataset": "kinet_sod_gamma1p4",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
-        },
-        {
-          "claim": "a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence",
-          "dataset": "kinet_sod_gamma2",
-          "note": null,
-          "primary": false,
-          "reason": "needs a periodic domain, and this dataset is not periodic",
-          "run": null,
-          "state": "not applicable"
         },
         {
           "claim": "an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence",

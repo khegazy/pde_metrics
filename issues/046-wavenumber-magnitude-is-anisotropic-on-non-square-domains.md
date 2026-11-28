@@ -2,8 +2,10 @@
 
 **Category:** method
 **Priority:** low now, because every dataset is square and either fully periodic or 1D; it
-blocks any dataset with a non-square domain or with a wall on only some axes, such as the
-kinet Sod runs on 3001 × 5 cells
+blocks any dataset with a non-square domain or with a wall on only some axes that runs a ladder;
+kinet's Sod tubes on N × 5 cells no longer do (`kinet_sod_refinement` is scored against the
+exact solution with no degradation, and the two ladder datasets of the 3001 × 5 runs were
+withdrawn on 2026-11-28)
 **Status:** open, needs a decision on the definition of `|k|`. Since 2026-11-27 a ladder runs on
 two non-square evidence datasets: `kinet_supersonic_cylinder` (144 × 288) and
 `kinet_double_mach_reflection` (a 384 × 120 window, Neumann on both axes, so the spectral
@@ -55,4 +57,4 @@ characteristic scale restated in the same unit.
 ## Related
 
 `fmeval/wavenumbers.py`; `AGENTS.md` §9, "Two definitions of `|k|`"; `docs/datasets/sod_shock_tube.md`
-lists the 3001 × 5 kinet runs.
+lists kinet's N × 5 Sod runs.

@@ -1,8 +1,9 @@
 # kinet's Sod shock tube at gamma = 1.4 on 751, 1501 and 3001 nodes by 5 across, one run per
 # grid, scored against the exact Riemann solution on each run's own cells and clock: a grid
-# sequence, the solver's error falling with the cell size (dataset_specs/02, Sect. 5.2). Same
-# states, scheme and stabiliser as kinet_sod_gamma1p4, the viscosity rescaled per level so it is
-# the same in the tube's units (2.5e-5, 5e-5, 1e-4 in lattice units), run to 250, 500 and 1000
+# sequence, the solver's error falling with the cell size (dataset_specs/02, Sect. 5.2). kinet's
+# case sod/transonic: left (rho, p) = (1, 0.2), right (0.125, 0.02), entropic BGK with its
+# piecewise stabiliser, the viscosity rescaled per level so it is the same in the tube's units
+# (2.5e-5, 5e-5, 1e-4 in lattice units), run to 250, 500 and 1000
 # steps and saved every 1, 2 and 4 steps: 251 frames each, frame k at t = k / 750 on every grid.
 # Converted by `python -m fmeval.data.convert_kinet`; the runs' configurations and commands are
 # under docs/datasets/logs/kinet_runs/kinet_sod_refinement/.

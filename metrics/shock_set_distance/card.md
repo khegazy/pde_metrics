@@ -172,8 +172,7 @@ runs it has run only on `sod_shock_tube`, an analytic check. These shock experim
 answers exist and have not been run for this card yet: the exact Sod solution at a shifted time,
 which displaces each wave by its own speed and keeps every jump (`sod_shock_tube` with
 `'+dataset.reader.candidate={time_offset:dt}'`; `docs/datasets/sod_shock_tube.md`); kinet's Sod
-run (`kinet_sod_gamma1p4`) and its Sod grid sequence scored against the exact solution
-(`kinet_sod_refinement`); the Sedov–Taylor blast wave and Noh's problem, closed circular shocks
+grid sequence scored against the exact solution (`kinet_sod_refinement`); the Sedov–Taylor blast wave and Noh's problem, closed circular shocks
 oblique to the grid everywhere, each with a time-offset candidate (`sedov_taylor`, `noh`); the
 geometric fronts of `feature_population`; the bow shock of `kinet_supersonic_cylinder`; a
 solver's straight shocks oblique to the grid at 30 and 45 degrees against their exact solution
@@ -371,8 +370,6 @@ Every number in this section comes from that one run. Regenerate with `python -m
 | `kinet_hit_re12p5k` | decaying two-dimensional isotropic turbulence at Re = 1.25e4, one realisation per run | not applicable: needs pressure, which this dataset does not provide |
 | `kinet_hit_re25k` | decaying two-dimensional isotropic turbulence at Re = 2.5e4, one realisation per run | not applicable: needs pressure, which this dataset does not provide |
 | `kinet_hit_re50k` | decaying two-dimensional isotropic turbulence at Re = 5e4, simulated on 512^2 cells and stored coarse-grained to 256^2, one realisation per run | not applicable: needs pressure, which this dataset does not provide |
-| `kinet_sod_gamma1p4` | a lattice-Boltzmann solver's Sod shock tube at gamma = 1.4, a simulated shock rather than the exact one, and nothing about turbulence | not yet run |
-| `kinet_sod_gamma2` | a lattice-Boltzmann solver's Sod shock tube at gamma = 2, whose viscous shock is too spread for the shock detector to flag, so every shock-set metric scores 0 on it; nothing about turbulence | not yet run |
 | `burgers` | an analytic check: the exact Cole-Hopf solution of one-dimensional viscous Burgers' equation, a steepening front smoothed by viscosity, and nothing about turbulence | not applicable: needs pressure, which this dataset does not provide |
 | `sedov_taylor` | an analytic check: the exact cylindrical Sedov-Taylor blast wave, a shock oblique to the grid at every angle, and nothing about turbulence | not yet run |
 | `noh` | an analytic check: the exact cylindrical Noh implosion, a circular shock of constant strength, and nothing about turbulence | not yet run |

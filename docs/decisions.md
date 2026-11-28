@@ -179,8 +179,8 @@ evaluation experiments.
 Why: a closed form says what a metric does to an idealised feature, not to turbulence, and its
 numbers, once written into a page, would read exactly like numbers from a flow. Admitting it is
 safe only because the label travels with the numbers. Where a dataset's numbers would mislead
-on their own, its label says why: `kinet_sod_gamma2`'s states that its shock is too spread for
-the detector, so every shock-set metric scores 0 there.
+on their own, its label says why: `kinet_shear_layer_ensemble`'s states that one truth's
+calibration scatters, so a calibration score there is one case of that scatter.
 
 ## A page is validated at `get()`, not at import
 

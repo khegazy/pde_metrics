@@ -10,7 +10,10 @@ three places: `ANALYTIC_DATASETS_LOG.md` at the repository root (untracked), the
 in `docs/decisions.md`, and the git log of `fmeval/data/analytic.py`,
 `configs/dataset/sod_shock_tube.yaml` and `docs/datasets/sod_shock_tube.md`.
 
-## `kinet_sod_gamma1p4` and `kinet_sod_gamma2` (kinet simulations)
+## `kinet_sod_gamma1p4` and `kinet_sod_gamma2` (kinet simulations, withdrawn on 2026-11-28)
+
+These two configurations no longer exist; the entry of 2026-11-28 below says why and what was
+removed. The rest of this section is their history, kept so that no one re-adds them unaware.
 
 ### What they are for
 
@@ -326,15 +329,57 @@ where it is marked as arithmetic.
   at step 1000 the two differ by up to 0.09 in density even after a shift of one node, so the new
   run is not a copy of `d17baf`.
 
+#### 2026-11-28: both configurations withdrawn (dataset agent)
+
+- **Why.** Kareem, 2026-11-27, verbatim: "Why would you need to simulat Sod, it has an analytic
+  solution and you should use that. It is ok to rerun simulations when it might change numbers
+  on a metric's card". Read by the coordinating session, and told to him, as: the exact solution
+  is the only Sod *reference*; a kinet run scored against it as a prediction
+  (`kinet_sod_refinement`, `kinet_oblique_riemann_*`) is not what he objected to and stays. An
+  audit had also found numerical artifacts in these two runs (oscillations of 1 to 2% of the
+  total variation, velocity undershoots, the $\gamma = 2$ shock too spread to detect, decision
+  9), and the kinet commit that made them is not recorded.
+- **Removed.** `configs/dataset/kinet_sod_gamma1p4.yaml`, `kinet_sod_gamma2.yaml` and their
+  fragment `_kinet_sod.yaml`, which nothing else inherited; both entries of `evidence_datasets`
+  and `evidence_dataset_properties` in `configs/cards/default.yaml`, and the comments there that
+  described them; their rows on the Sod page and in `docs/datasets/README.md`, and the page's
+  section "The kinet simulations"; their mention in `AGENTS.md` §1, `docs/decisions.md`,
+  `docs/choosing-a-metric.md`, `shock_set_distance`'s card and `dataset_specs/BUILD_ORDER.md`
+  (decision 18 there); and their *not yet run* or *not applicable* row on every metric card and
+  in `docs/catalog.json`, regenerated with `python -m fmeval.cards catalog`.
+- **What the cards lose: no measurement.** No card had cited a run on either dataset: every one
+  of their 78 card rows read *not yet run* (17 metrics) or *not applicable* (22 metrics), no
+  `card.yaml` named them under `not_run`, and neither had a dynamics figure. So no recorded run
+  folder is cited for them, and none was moved or deleted.
+- **What each role becomes.**
+  - *A $\gamma = 1.4$ shock as a ladder's reference*: `sod_shock_tube`, the exact solution.
+  - *A $\gamma = 2$ tube*: no card or metric asked for one; it was here because the lattice
+    model had been run at $\gamma = 2$. The exact reader takes those states through its options
+    (`+dataset.reader.gamma=2 '+dataset.reader.left=[0.5,0.1]' '+dataset.reader.right=[2,0.05]'`,
+    checked to build on 2026-11-28), and `tests/test_analytic_datasets.py` already tests the
+    exact solution at them.
+  - *A smeared, viscous shock*: as a ladder's reference it has no replacement, on purpose, since
+    a reference is the truth. A smeared shock as a *prediction* is what `kinet_sod_refinement`
+    and the rotated tube score against the exact solution, and the smoothing degradations on
+    `sod_shock_tube` smear the candidate's shock by calibrated amounts. The null of the
+    $\gamma = 2$ run (no shock flagged, every shock-set score the both-empty 0) was a property
+    of the detector's fixed threshold, not of a metric.
+  - *A solver's shock as a ladder's reference, with pressure*: still given, in two dimensions, by
+    `kinet_supersonic_cylinder` and `kinet_double_mach_reflection`, which have no exact solution.
+- **Kept.** The converted and grouped files on CFS, unchanged and now unread; the run
+  configurations in `docs/datasets/logs/kinet_runs/kinet_sod_gamma1p4/` and `kinet_sod_gamma2/`,
+  under that folder's rule (decision 13 of `BUILD_ORDER.md`: every kinet run stays reproducible),
+  with a note in its README; the `data` test in `tests/test_loader_contract.py` that checks the
+  converter against `d17baf`, since it tests the converter's older-layout path on real data, not
+  the dataset; and the reader option `exclude_degradations`, which `_kinet_sod.yaml` was the only
+  configuration to use and which `tests/test_configs.py` still exercises.
+- **Supersedes** the entry "registered as evidence" of 2026-11-27, decision 11 of this section
+  (the configurations no longer exist), and decision 1 of the `kinet_sod_refinement` section.
+
 ### Open points
 
-- Scoring each run against the exact solution, frame by frame on the same nodes, is not
-  built (spec 02, Sect. 5.2). The repository's exact solver covers both runs' states through
-  its reader overrides.
-- The refinement sequence of spec 02, Sect. 5.2 (reruns at 1501 and 751 nodes) does not
-  exist.
-- The $\gamma = 2$ run gives the shock metrics nothing to detect (decision 9).
-- Neither run has a dynamics figure, and no metric has been run on either for a card.
+- None: the configurations are withdrawn. Re-adding a simulated Sod tube as a reference would
+  need Kareem's decision of 2026-11-27 to change first.
 
 ## `sod_shock_tube`: the exact solution at a shifted time (2026-11-27)
 
@@ -482,6 +527,12 @@ one, beside the smooth Taylor–Green sequences of order two.
 5. **Registered as a grid sequence** (agent), as the Taylor–Green sequences are
    (`docs/decisions.md`): its frames are not scalar multiples of one another, and its claim is
    the error's fall across grids. Label in `configs/cards/default.yaml`.
+6. **The only simulated Sod tube, and a prediction only** (Kareem, 2026-11-27; applied
+   2026-11-28). Supersedes decision 1: `kinet_sod_gamma1p4`, which this configuration stood
+   beside, is withdrawn (that section's entry of 2026-11-28). The fragment `_kinet_sod.yaml`
+   named under "Grid and boundaries" above is deleted with it; this configuration never
+   inherited it and states its own boundary through `SodKinet.BOUNDARY`, the same
+   `[neumann, periodic]`.
 
 ### Log entries
 

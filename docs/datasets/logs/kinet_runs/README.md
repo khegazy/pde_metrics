@@ -436,6 +436,10 @@ are the archive's `256_simulation` folder was not checked.
 
 ## `kinet_sod_gamma1p4`: `d17baf`
 
+- **Withdrawn as a dataset on 2026-11-28.** No configuration reads this run any more: Sod's
+  only reference is its exact solution (Kareem, 2026-11-27; `docs/datasets/logs/sod_shock_tube.md`,
+  the entry of that date). The record stays, because decision 13 of
+  `dataset_specs/BUILD_ORDER.md` keeps every kinet run reproducible, and the files stay on CFS.
 - **Data:** `/global/cfs/cdirs/m4790/Data/kinet/sod/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en4/D2Q9_shape-3001-5_T-1000_H-d17baf.h5`
   (dated 2026-05-21) and its conversion `..._flat.h5`.
 - **Copied:** `kinet_sod_gamma1p4/d17baf/d17baf.yaml` from `configs/` beside the data.
@@ -463,6 +467,8 @@ are the archive's `256_simulation` folder was not checked.
 
 ## `kinet_sod_gamma2`: `c76b17` (default) and `15aa6b`
 
+- **Withdrawn as a dataset on 2026-11-28**, for the reason and under the rule given for
+  `d17baf` above.
 - **Data:** `/global/cfs/cdirs/m4790/Data/kinet/sod/compressible_fluids/Pr-71en2_vuy-2_visc-25en3/D2Q9_shape-3001-5_T-1000_H-{c76b17,15aa6b}.h5`
   (dated 2026-05-29 and 2026-05-21) and their `_flat.h5` conversions.
 - **Copied:** `kinet_sod_gamma2/c76b17/c76b17.yaml` and `kinet_sod_gamma2/15aa6b/15aa6b.yaml`.

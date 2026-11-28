@@ -45,7 +45,7 @@ metric is evaluated"), and its page is read in the same order.
    `kinet_re1e6`, the real forecasts `forecast_re5e4`, the Sod shock tube `sod_shock_tube`,
    the synthetic ensemble `synthetic_ensemble`, and the datasets added for the evaluation plan:
    decaying isotropic turbulence at three Reynolds numbers, the shear layer on $512^2$, a
-   solver's Sod runs, and analytic checks with known answers
+   solver's Sod runs scored against the exact solution, and analytic checks with known answers
    ([datasets](datasets/README.md)).
 
 Full references, with equation, section and figure numbers, are on each metric's page; this
@@ -370,10 +370,10 @@ the two share. A shock smeared over more than a few cells is not detected. Withi
 **Experiments.** The group needs pressure. Of the measured runs it has run only on
 `sod_shock_tube`: an analytic check of how a metric scores one known shock, which says nothing
 about turbulence. These exist and have not been run for the pages yet: the exact Sod solution
-displaced by a physically consistent amount (its `time_offset` candidate), kinet's Sod runs,
-the Sedov–Taylor and Noh blast waves (`sedov_taylor`, `noh`), the segmentation field's
-geometric cases as pressure fronts (`feature_population`), a solver's two-dimensional bow
-shock (`kinet_supersonic_cylinder`), whose translations are the perturbed cases, a solver's
+displaced by a physically consistent amount (its `time_offset` candidate), kinet's Sod runs
+scored against the exact solution (`kinet_sod_refinement`), the Sedov–Taylor and Noh blast
+waves (`sedov_taylor`, `noh`), the segmentation field's geometric cases as pressure fronts
+(`feature_population`), a solver's two-dimensional bow shock (`kinet_supersonic_cylinder`), whose translations are the perturbed cases, a solver's
 straight oblique shocks against their exact solution (`kinet_oblique_riemann_30deg`,
 `kinet_oblique_riemann_45deg`), and a solver's pattern of several interacting shocks
 (`kinet_double_mach_reflection`). Missing: shocks in turbulence, many at once, the case this
