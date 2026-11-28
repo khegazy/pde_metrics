@@ -252,6 +252,115 @@ window.
 - Not verified: what each degradation does within a kernel width of the high-x cut, compared with
   the same degradation of the whole domain (decision 2 states it, no run measures it).
 
+**2026-11-27, dataset agent (the resolution rule and the full entropic solver: this dataset is
+exempt).**
+
+Kareem set two rules for every simulation on 2026-11-27: run fine enough that the run is stable and
+its artifacts are small to negligible, and use the full entropic solver (the `entropic` stabiliser,
+a Newton solve, rather than the `piecewise` lookup table). For this case he then decided, in two
+sentences quoted verbatim: "For the supersonic cylinder, use the config that currently exists. You
+can use the piecewise stabiliser here." and "For the supersonic cylinder, the 500×300 grid is
+sufficient". **So `kinet_supersonic_cylinder` keeps the 500 × 300 run `33f78849` with the `piecewise`
+stabiliser, its file, configuration, window and frames unchanged.** What was measured before the
+decision is recorded here so that nobody repeats it.
+
+*The full entropic stabiliser does not run this case.* Every run below used kinet `origin/main` at
+`e67a1136e` (the 500 × 300 run used `perf/cleanup` at `d1cd353b8`), the case's settings otherwise
+(Mach 1.8, Re 300, T 0.2), `collision/stabilizer@case.collision.stabilizer=entropic`, on one A100.
+Each stopped with `ERROR: rollout aborted: stop_reason='solver_stopped:nonfinite_observables'`:
+
+| Grid | Shift | Step at which values went non-finite | Job |
+|---|---|---|---|
+| 1000 × 600 | 0.4 (the run's value) | 31 | 62134009 |
+| 1000 × 600 | 0.2 | 20 | 62134336 |
+| 1000 × 600 | 0.3 | 53 | 62134336 |
+| 1000 × 600 | 0.55 (kinet's shipped value) | 34 | 62134182 |
+| 500 × 300 | 0.4 | 49 | 62134604 |
+| 500 × 300 | 0.55 | 32 | 62134604 |
+
+- **Why it falls back almost everywhere.** The shift is kinet's moving frame for the lattice. On it
+  the product-form equilibrium is non-negative only where $|v| \le T + v^2 \le 1$ along x, with
+  $v = u - s$ (kinet, `docs/notes/research/lattice_shift_dissipation.md`). Measured with the
+  populations recorded: at shift 0.4 on 1000 × 600, the equilibrium `Feq` has a negative entry in
+  100% of the inflow cells and in 89 to 100% of all cells over steps 1 to 600; at shift 0.55 on
+  500 × 300, 98 to 99% of the fluid cells over steps 1 to 40. In such a cell the stabiliser skips
+  its Newton solve and relaxes straight to `Feq`:
+  `kinet/solver/lbm/collisions/entropic/numeric/stabilizer.py` lines 145 and 146,
+  `failed = (F < -self.numeric.eps).any(...) | (Feq < -self.numeric.eps).any(...)`, and line 160,
+  `alpha = torch.where(failed, 2.0 * tau, root.alpha)`, which `entropic.py` line 120 turns into a
+  relaxation rate of 1.
+- **Why it still fails where the equilibrium is positive.** At shift 0.2 on 1000 × 600 only 146
+  cells beside the body had a negative entry at step 1 (0.02%), and the run stopped at step 20.
+  In the cells that do take the Newton root, the root is bounded below by 1 and above only by
+  population positivity: in a run saved at every step (500 × 300, shift 0.55, job 62135325) it
+  reached $\alpha = 13$ at step 2 and 86 at step 4, a relaxation rate $\alpha/(2\tau)$ of up to about
+  38 against 0.88 for plain BGK. kinet's own docstring (`entropic.py`, `state_equilibrium_inertia`)
+  says $\alpha = 2$ at $f = f^{eq}$ holds only where $f^{eq}$ is the maximum of the entropy at the
+  moments. *Inference:* the shifted product-form equilibrium is not that maximum for the entropy
+  the stabiliser evaluates, so the root is unconstrained.
+- **Other settings tried, before Kareem's decision ended the attempts.** Lattice temperatures that
+  keep the inflow, post-shock and stagnation equilibria non-negative (`_work/positivity_windows.py`:
+  shifts 0.20 to 0.77 at T 0.25, 0.33 to 0.71 at T 0.3, 0.41 to 0.67 at T 1/3, which overlap the
+  stable 0.5 to 0.6; 0.64 to 0.71 at T 0.15 and 0.68 to 0.82 at T 0.2, where the cross-stream
+  condition also fails in the shoulder flow), each on 500 × 300, stopped sooner: T 0.25 shift 0.5
+  at step 5, T 1/3 shift 0.55 at 5, T 0.3 shift 0.52 at 6, T 0.15 shift 0.67 at 8, T 0.2 shift
+  0.75 at 13, with 0.01 to 0.06% of fluid cells falling back at step 1. A ramped start is not
+  available without a code change: the cylinder's initial state is always the uniform stream
+  (`simulations/flow_around_objects/initialize.py`, `init_cylinder`), so an inlet ramp
+  (`boundary.x.low.velocity.x`) has nothing to ramp from.
+- **Cost.** `piecewise` steps 1000 × 600 at 0.024 s per step (4000 steps in 174 s of rollout, job
+  62134182). The entropic stabiliser took 0.6 to 1.6 s per step on 1000 × 600 and 0.7 to 0.9 s on
+  500 × 300 over the steps it ran, warm-up included, so these are not steady rates.
+
+*How far the 500 × 300 run is from a finer one.* The same problem was run on 1000 × 600 with
+`piecewise` (every length in cells doubled: radius 40, centre (333, 301); 4000 steps saved every
+20th, since the step scales with the cell; Re stays 300 because kinet takes it on the diameter;
+kinet run `38f0cc92`, job 62134182), coarse-grained by kinet to 500 × 300 (2 × 2 block mean,
+`temporal_factor=20` with `time_method=last`, so the stored frames are the old frames' physical
+times, verified on the convective clock, 0.019049 per frame), and compared with the old file at
+frames 120, 160 and 200:
+
+| Check | 500 × 300 run | 1000 × 600 run coarse-grained to 500 × 300 |
+|---|---|---|
+| Stand-off on the centre line | 37 cells, steady from step 1200 | 36, 36, 37 cells (74 fine cells), within one cell of final from frame 110 |
+| Density jump at the nose, $\rho_2/\rho_1$ against 2.3592 | 2.334, 2.332, 2.328 (−1.1 to −1.3%) | 2.348, 2.342, 2.342 (−0.5 to −0.7%) |
+| Shock width, steepest slope, stored cells | 3.91, 3.88, 3.82 | 2.73, 2.82, 2.90 |
+| Shock width, 10% to 90% of the jump, stored cells | 3.2, 3.7, 2.9 | 2.7, 2.4, 2.6 |
+| Overshoot behind the shock, over the jump | 0.0021 to 0.0025 | 0.0011 to 0.0015 |
+| Grid-scale ripple in the shock layer, x and y, over the jump | 5.8e-5, 1.3e-4 | 5.0e-5, 1.2e-4 |
+| Non-finite values, all frames | 0 | 0 |
+
+- The ratio 2.3592 is the normal-shock relation, from conserving mass, momentum and energy across
+  a stationary normal shock in a perfect gas:
+  $\rho_2/\rho_1 = (\gamma+1)M^2/((\gamma-1)M^2+2) = 2.4 \times 3.24/(0.4 \times 3.24 + 2) = 2.3592$
+  for $\gamma = 1.4$, $M = 1.8$. The post-shock density is the line fitted to the profile behind
+  the shock (where the subsonic flow keeps compressing toward the body), evaluated at the point of
+  steepest rise.
+- Relative L2 difference of the two in the window, at each of the three frames: density 2.6%,
+  pressure 3.7 to 3.8%, velocity 1.7% of the field's norm (7.1 to 7.3%, 6.7 to 6.8% and 7.9 to
+  8.1% of its departure from the inflow), of which 97 to 99% lies in the shock band. In the smooth
+  layer behind the shock (x 120 to 133, rows 135 to 165): density 0.06%, pressure 0.15%, velocity
+  1.9%.
+- On the 1000 × 600 grid itself the shock was 5.3 fine cells wide; block-averaged further to
+  250 × 150 it was 1.6 to 1.8 cells, against 2.1 to 2.3 for the 500 × 300 run averaged the same
+  way, and the smooth-layer velocity difference stayed 1.9%.
+- With `piecewise`, 2000 × 1200 does not run: shift 0.4 stopped at step 80, shift 0.55 at step 5
+  (also at T = 20/121).
+- *Inference:* the width shrank by a factor of 0.68 when the cell was halved, so it is mostly
+  numerical. One known source is the shift's interpolation viscosity, 0.12 in lattice units (kinet
+  note above), about as large as the physical viscosity on 500 × 300.
+
+*Disk.* On Kareem's instruction the fine-grid output was deleted once the checks were saved: the
+1000 × 600 rollout (12.6 GB; its `.vtkhdf` is a hard link to it), its 500 × 300 coarse-graining
+(3.1 GB), a scratch conversion (0.96 GB), the test rollouts of the 1000 × 600, 2000 × 1200 and
+entropic attempts (6.7 GB) and the compile cache (0.38 GB). The commands in `_work/runs_*.txt` regenerate them. The scripts, the
+resolved configurations and the text and JSON check outputs remain under
+`/pscratch/sd/k/khegazy/kinet_datasets/supersonic_cylinder_fine/` (`_work/` and `checks/`); scratch
+is purged after about eight weeks. Before the decision, the coarse-grained run was also converted
+to CFS, beside the file this dataset reads:
+`.../Pr-71en2_vuy-1.4_Re-3e2/D2Q9_shape-1000-600_T-4000_H-38f0cc92_cg-500-300.h5` (965 MB). No
+configuration reads it.
+
 ### Open points
 
 - No dynamics figure.
