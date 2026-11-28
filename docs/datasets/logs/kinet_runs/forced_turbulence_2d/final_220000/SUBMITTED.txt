@@ -1,0 +1,23 @@
+# Final run final_220000 (BUILD_ORDER step 22), submitted 2026-11-27T15:50:32-08:00
+slurm_job_id: 62116382 (gpu_regular, 1 A100, --time=01:00:00)
+sbatch_exact (from /pscratch/sd/k/khegazy/kinet_datasets/_work/forced_turbulence):
+  sbatch --account=m4790 --constraint=gpu --qos=regular --nodes=1 --ntasks=1 --cpus-per-task=32 --gpus-per-node=1 --time=01:00:00 --job-name=ft-final --output=/pscratch/sd/k/khegazy/kinet_datasets/_work/forced_turbulence/slurm_%j.out /pscratch/sd/k/khegazy/kinet_datasets/_provenance/forced_turbulence/run_forced_job.sh final_220000 /pscratch/sd/k/khegazy/kinet_datasets/forced_turbulence case=homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d io.save_every_n=500 io.record_distributions=false io.record_equilibria=false runtime_logging.every_n=5000
+kinet: worktree /pscratch/sd/k/khegazy/kinet_worktrees/forced_drag, branch datasets/forced-drag, commit 55e7edfdac19f669c2b745087f03914843882bdc, clean at submission
+case: homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d (1024^2, 220000 steps, Re 40000, Ma 0.1,
+  random_modes shell 31..33 variance 2.55e-11 correlation_time 10 seed 1729, linear drag rate -5e-5)
+tested by: debug job 62116112 (final_debug_20000), same case and overrides with temporal.grid=20000:
+  completed 20000 of 20000 steps, 41 frames, readable, bitwise equal to pilot 62114415 at steps 500, 10000, 20000
+data root: /pscratch/sd/k/khegazy/kinet_datasets/forced_turbulence
+rollout: <data root>/homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d/<identity key>/tiers/full/rollout.h5
+working directory and logs: /pscratch/sd/k/khegazy/kinet_datasets/_work/forced_turbulence/final_220000/
+  (job_62116382_header.txt, command_62116382.txt, log_62116382.txt), slurm_62116382.out one level up
+
+How to tell it completed (the walltime guard exits 0 when it stops early, so do not trust the exit code):
+  bash /pscratch/sd/k/khegazy/kinet_datasets/_provenance/forced_turbulence/collect_run.sh final_220000 62116382 "$(cat /pscratch/sd/k/khegazy/kinet_datasets/_work/forced_turbulence/sbatch_final.txt)"
+  and read last_step_check in final_220000/RUN.txt: it must say kinet_rollout_status=complete,
+  last_saved_step=220000, saved_frames=441, reached_last_step=True; log_62116382.txt must say stop_reason=completed.
+How to resume if it stopped early: a stopped run leaves sim_checkpoints/simulation_checkpoint_step-<N>.pt beside
+  tiers/; resubmit the identical sbatch line above (same case, overrides and data root). kinet finds the checkpoint,
+  prints "Resuming from simulation checkpoint", appends to the same rollout.h5 and deletes the checkpoint at the end.
+  Note the save cadence restarts at the resume step (00_how_to_use_kinet.md, Section 3).
+Then check the record: python -B check_forced.py <rollout.h5> --alpha 5e-5 --nu 0.001478016689125442 --out checks/final_220000 --t-start 50000 --every 2

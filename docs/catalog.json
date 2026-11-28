@@ -1855,6 +1855,15 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -2310,6 +2319,15 @@
         {
           "claim": "a finite-volume solver's double Mach reflection at a viscosity (0.01) large enough that it is a viscous flow, not the inviscid benchmark picture: an incident, a reflected and a Mach-stem shock meeting at a triple point, with no exact answer, on 480 x 120 cells read in the window x < 3.2 with every face declared Neumann; nothing about turbulence",
           "dataset": "kinet_double_mach_reflection",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -4158,6 +4176,15 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -6242,6 +6269,15 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -6700,6 +6736,15 @@
         {
           "claim": "a finite-volume solver's double Mach reflection at a viscosity (0.01) large enough that it is a viscous flow, not the inviscid benchmark picture: an incident, a reflected and a Mach-stem shock meeting at a triple point, with no exact answer, on 480 x 120 cells read in the window x < 3.2 with every face declared Neumann; nothing about turbulence",
           "dataset": "kinet_double_mach_reflection",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -7564,6 +7609,15 @@
           "reason": "needs vorticity, which this dataset does not provide",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -9935,6 +9989,15 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -13484,6 +13547,15 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -16935,6 +17007,15 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -20440,6 +20521,15 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -23911,6 +24001,15 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -27405,6 +27504,15 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -29887,6 +29995,15 @@
         {
           "claim": "a finite-volume solver's double Mach reflection at a viscosity (0.01) large enough that it is a viscous flow, not the inviscid benchmark picture: an incident, a reflected and a Mach-stem shock meeting at a triple point, with no exact answer, on 480 x 120 cells read in the window x < 3.2 with every face declared Neumann; nothing about turbulence",
           "dataset": "kinet_double_mach_reflection",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
           "note": null,
           "primary": false,
           "reason": null,
@@ -32722,6 +32839,15 @@
         {
           "claim": "a finite-volume solver's double Mach reflection at a viscosity (0.01) large enough that it is a viscous flow, not the inviscid benchmark picture: an incident, a reflected and a Mach-stem shock meeting at a triple point, with no exact answer, on 480 x 120 cells read in the window x < 3.2 with every face declared Neumann; nothing about turbulence",
           "dataset": "kinet_double_mach_reflection",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
           "note": null,
           "primary": false,
           "reason": null,
@@ -37603,6 +37729,15 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -42447,6 +42582,15 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -45882,6 +46026,15 @@
         {
           "claim": "a finite-volume solver's double Mach reflection at a viscosity (0.01) large enough that it is a viscous flow, not the inviscid benchmark picture: an incident, a reflected and a Mach-stem shock meeting at a triple point, with no exact answer, on 480 x 120 cells read in the window x < 3.2 with every face declared Neumann; nothing about turbulence",
           "dataset": "kinet_double_mach_reflection",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
           "note": null,
           "primary": false,
           "reason": null,
@@ -50759,6 +50912,15 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -54667,6 +54829,15 @@
           "reason": "needs a periodic domain, and this dataset is not periodic; needs vorticity, which this dataset does not provide",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -56598,6 +56769,15 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -58186,6 +58366,15 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -58664,6 +58853,15 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -59119,6 +59317,15 @@
         {
           "claim": "a finite-volume solver's double Mach reflection at a viscosity (0.01) large enough that it is a viscous flow, not the inviscid benchmark picture: an incident, a reflected and a Mach-stem shock meeting at a triple point, with no exact answer, on 480 x 120 cells read in the window x < 3.2 with every face declared Neumann; nothing about turbulence",
           "dataset": "kinet_double_mach_reflection",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
           "note": null,
           "primary": false,
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
@@ -60941,6 +61148,15 @@
         {
           "claim": "a finite-volume solver's double Mach reflection at a viscosity (0.01) large enough that it is a viscous flow, not the inviscid benchmark picture: an incident, a reflected and a Mach-stem shock meeting at a triple point, with no exact answer, on 480 x 120 cells read in the window x < 3.2 with every face declared Neumann; nothing about turbulence",
           "dataset": "kinet_double_mach_reflection",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
           "note": null,
           "primary": false,
           "reason": null,
@@ -65806,6 +66022,15 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -68259,6 +68484,15 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -69102,6 +69336,15 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -69945,6 +70188,15 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -70788,6 +71040,15 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -71631,6 +71892,15 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -72474,6 +72744,15 @@
           "reason": null,
           "run": null,
           "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": "needs pressure, which this dataset does not provide",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -73359,6 +73638,15 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -75789,6 +76077,15 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -77879,6 +78176,15 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -79767,6 +80073,15 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -83292,6 +83607,15 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",
@@ -85397,6 +85721,15 @@
           "reason": "needs an ensemble, and this dataset has one realisation per frame",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": "needs an ensemble, and this dataset has one realisation per frame",
+          "run": null,
+          "state": "not applicable"
         }
       ],
       "kind": "metric",
@@ -87204,6 +87537,15 @@
         {
           "claim": "a finite-volume solver's double Mach reflection at a viscosity (0.01) large enough that it is a viscous flow, not the inviscid benchmark picture: an incident, a reflected and a Mach-stem shock meeting at a triple point, with no exact answer, on 480 x 120 cells read in the window x < 3.2 with every face declared Neumann; nothing about turbulence",
           "dataset": "kinet_double_mach_reflection",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
           "note": null,
           "primary": false,
           "reason": null,
@@ -91123,6 +91465,15 @@
           "reason": "needs a periodic domain, and this dataset is not periodic",
           "run": null,
           "state": "not applicable"
+        },
+        {
+          "claim": "developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a 256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3",
+          "dataset": "kinet_forced_re40k",
+          "note": null,
+          "primary": false,
+          "reason": null,
+          "run": null,
+          "state": "not yet run"
         }
       ],
       "kind": "metric",

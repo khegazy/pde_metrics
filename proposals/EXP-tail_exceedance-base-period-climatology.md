@@ -54,6 +54,18 @@ or the forced isotropic cutouts of `EXP-increment_flatness-isotropic-3d-turbulen
 too short for a base period and a separate evaluation period; the agent's reasoning). Until one
 exists, the card can describe the field's protocol but not run it.
 
+**The record now exists; the harness path does not (2026-11-27).** `kinet_forced_re40k` is a
+forced, statistically stationary two-dimensional record whose converted file holds a base
+period (steps 52 000 to 128 000, 20 frames) and a disjoint evaluated period (steps 140 000 to
+220 000, 21 frames, the configuration's time selection), 4 000 steps apart, after a spin-up of
+50 000 steps (`docs/datasets/forced_turbulence_2d.md`). Each period holds about 37 independent
+samples of the velocity field but only about five of the total energy, whose correlation time
+is about 16 000 steps, and the two periods' mean energies differ by 1.5%, within that slow
+wander (`docs/datasets/logs/kinet_runs/forced_turbulence_2d/checks/final_220000.txt`). What
+remains is the procedure that computes a threshold once from the base period and hands it to
+the metric on other frames, recorded in issue 095; until it is built, the card can describe
+the protocol but not run it.
+
 ## Cost and requirements
 
 A stationary record long enough to hold a base period and a disjoint evaluation period of

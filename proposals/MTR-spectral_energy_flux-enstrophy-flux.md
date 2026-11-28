@@ -43,6 +43,11 @@ vorticity sits at higher wavenumbers than the velocity, so the axes bite at diff
 The graded phase randomisation proposed beside this (EXP-spectral_energy_flux-graded-phase-
 randomisation) would test it as a triple correlation.
 
+Since 2026-11-27 the forced flow its definition refers to exists: `kinet_forced_re40k`
+(`docs/datasets/forced_turbulence_2d.md`) has a direct range above its forcing shell, short and
+steep (slope $-4.48$ over shells 40 to 120), on which the reference's own curve could be read
+against the enstrophy dissipation rate once the metric is built.
+
 ## Why it is helpful
 
 All data here are two-dimensional, where the energy flux is weak at small scales and the

@@ -1,0 +1,10 @@
+job 62108011 on nid008460 start 2026-11-27T12:17:35-08:00
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-80GB, 81920 MiB, 580.196.07
+NVIDIA A100-SXM4-80GB, 81920 MiB, 580.196.07
+NVIDIA A100-SXM4-80GB, 81920 MiB, 580.196.07
+NVIDIA A100-SXM4-80GB, 81920 MiB, 580.196.07
+kinet worktree /pscratch/sd/k/khegazy/kinet_worktrees/forced_drag commit ef76ae40b7ebc485f0bc68974dc45a32cd2dcd0b branch datasets/forced-drag
+kinet worktree status (empty means clean):
+kinet.__file__ /pscratch/sd/k/khegazy/kinet_worktrees/forced_drag/kinet/__init__.py
+torch 2.15.0+cu132 cuda 13.2 h5py 3.16.0 numpy 2.5.4

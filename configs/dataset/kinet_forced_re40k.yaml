@@ -1,0 +1,55 @@
+# Forced, statistically stationary two-dimensional turbulence with a linear drag: one kinet run
+# (identity key 7a817df3), D2Q9 plain BGK, Ma = 0.1, Re = 4e4, doubly periodic 1024^2, forced by
+# random modes in the shell 31 <= |n| <= 33, drag rate 5e-5 per step, 220 000 steps saved every
+# 500th. It needs two additions to kinet on the unpushed branch datasets/forced-drag; the patches,
+# configurations and command are in docs/datasets/logs/kinet_runs/forced_turbulence_2d/.
+# Converted by `python -m fmeval.data.convert_kinet <rollout> <path> --every 8`: the initial
+# condition and steps 4000, 8000, ..., 220000 (56 frames, frame i is step 4000 i).
+format: kinet_raw
+name: kinet_forced_re40k
+trajectory: 7a817df3
+path: ${paths.data}/kinet/homogeneous_isotropic_turbulence/weakly_compressible_isoT_fluids/sys_Re-40k_Ma-1en1_forced_drag/${.trajectory}.h5
+
+# pressure is the weakly compressible gauge (rho - 1) c_s^2 and is not converted (issues/101).
+fields: [density, velocity, vorticity]
+
+# Cells and solver steps: the clock is each frame's solver step, the unit of the drag rate, the
+# forcing's correlation time and every number in the run's check; velocity, density and
+# vorticity keep their lattice values.
+reader:
+  cell: 1.0
+
+# What is evaluated (docs/recipes/add-a-dataset.md, step 3; measured 2026-11-27 on a shared
+# login node, one frame at step 140000, default ladder of 91 severity levels; details in
+# docs/datasets/logs/forced_turbulence_2d.md, section 3):
+# - Window: steps 140000 to 220000, frames 35 to 55, every stored frame (21). The spin-up ends by
+#   step 50000; steps 52000 to 128000 (frames 13 to 32) are a base period kept on disk for a
+#   threshold set from it (not built: issues/095) and are not evaluated. Frames are 4000 steps
+#   apart, about twice the velocity field's correlation time (2146 steps; autocorrelation 0.052
+#   at that lag), so they are close to independent samples of the velocity field; the total
+#   energy's correlation time is 15970 steps, so they hold only about five samples of it.
+# - Analysis grid 256: it keeps every shell to 128, so the inverse range (shells 6 to 28), the
+#   forcing shell (32, 95% of its energy) and the direct range to shell 128 (82% of the energy at
+#   shell 64, 57% at 120), 99% of the energy, 90% of the enstrophy, 52% of the palinstrophy; the
+#   direct-range slope over shells 40 to 120 reads -4.99 there against -4.48 native. The 512
+#   grid keeps 97% of the enstrophy and reads -4.59, at 4.3 times the cost.
+# - Cost per frame at 256: 121 s of metric time for the panel without persistence_wasserstein
+#   (persistence_distance 60 s, energy_distance 27 s, spectral_energy_flux 14 s,
+#   increment_w1_by_separation 6.5 s, wasserstein 6.1 s, every other metric under 2 s), so about
+#   45 minutes for the 21 frames in one process. At 512: 521 s per frame, about 3 hours.
+# - persistence_wasserstein is not run here: it did not finish one frame of the ladder in 900 s
+#   on the 64 grid, where the forcing shell is the grid's last shell, nor on the 128 grid
+#   (stopped; issues/144), so no `slow_metrics` grid or stride makes it affordable and none is set.
+# - Disk: 1.88 GB on CFS for all 56 frames; the 22.3 GB raw run stays on scratch until purged.
+analysis_resolution: 256
+
+time:
+  start: 35
+
+complexity:
+  family: forced_turbulence_2d
+  rank: 0
+  params: {mach: 0.1, dim: 2, reynolds: 4.0e4, resolution: 1024}
+  label: "Re = 4\\times10^{4}"
+
+notes: "Forced stationary 2D turbulence with a linear drag, Re=4e4, Ma=0.1, D2Q9 BGK, 1024^2, lattice units (cells, steps)."

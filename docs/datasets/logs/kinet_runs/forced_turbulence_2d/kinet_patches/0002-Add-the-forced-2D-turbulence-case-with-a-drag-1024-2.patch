@@ -1,0 +1,117 @@
+From ef76ae40b7ebc485f0bc68974dc45a32cd2dcd0b Mon Sep 17 00:00:00 2001
+From: khegazy <address removed>
+Date: Fri, 27 Nov 2026 12:07:03 -0800
+Subject: [PATCH 2/3] Add the forced 2D turbulence case with a drag: 1024^2,
+ forcing shell 31 <= |n| <= 33, linear drag
+
+The case of dataset 04, Option B, of the fluid-metrics project: random-mode forcing confined
+to a shell at the forcing scale of 32 cells and a linear drag that arrests the inverse
+cascade, plain BGK with the polynomial equilibrium, the HIT initial field seeded at
+equilibrium as the other forced cases are. Its drag rate and forcing variance are the design
+values, to be calibrated on a pilot run. The case smoke test lists it among the slow steps
+(a 1024^2 grid).
+
+Co-Authored-By: Claude Opus 5.5 <address removed>
+---
+ .../Re-2700_Ma-1en1_forced_drag_2d.yaml       | 60 +++++++++++++++++++
+ .../initialize.py                             |  4 +-
+ tests/simulations/test_case_smokes.py         |  1 +
+ 3 files changed, 64 insertions(+), 1 deletion(-)
+ create mode 100644 simulations/homogeneous_isotropic_turbulence/Re-2700_Ma-1en1_forced_drag_2d.yaml
+
+diff --git a/simulations/homogeneous_isotropic_turbulence/Re-2700_Ma-1en1_forced_drag_2d.yaml b/simulations/homogeneous_isotropic_turbulence/Re-2700_Ma-1en1_forced_drag_2d.yaml
+new file mode 100644
+index 000000000..8cf132f54
+--- /dev/null
++++ b/simulations/homogeneous_isotropic_turbulence/Re-2700_Ma-1en1_forced_drag_2d.yaml
+@@ -0,0 +1,60 @@
++# Statistically stationary forced 2D turbulence with a large-scale drag (double cascade).
++#
++# Random-mode forcing confined to the shell 31 <= |n| <= 33 (forcing scale 32 cells on
++# 1024^2) and a linear drag (a negative constant rate of the linear law) that removes the
++# energy the inverse cascade carries to large scales, so energy and enstrophy become
++# statistically steady (Boffetta and Ecke, Annu. Rev. Fluid Mech. 44, 427 (2012); Boffetta
++# and Musacchio, Phys. Rev. E 82, 016307 (2010), Eq. 1). Plain BGK with the polynomial
++# equilibrium, as the shipped forced cases: entropic BGK with a body force is much slower
++# and its stabilizer measures the force. The drag rate and the forcing variance were
++# calibrated on a pilot run for a stationary rms speed near Ma c_s and an arrest scale
++# u'/alpha well inside the box.
++defaults:
++  - /physics: weakly_compressible_isothermal_fluids
++  - /collision: bgk
++  - /lattice: d2q9
++  - /equilibrium_closure/numeric@simulate_equilibrium_closure.F: polynomial
++  - /forecast: very_long
++id: Re-2700_Ma-1en1_forced_drag_2d
++group: homogeneous_isotropic_turbulence
++features: [turbulence]
++units: lattice
++N_simulations: 1
++discretization:
++  spatial:
++    grid:
++      - 1024
++      - 1024
++    resolution: 1
++  temporal:
++    grid: 220000
++    resolution: 1
++physics:
++  parameters:
++    mach: 0.1
++    reynolds: 2700
++    reference:
++      density: 1.0
++  output_variables:
++    - vorticity
++  forcing_term:
++    type: sum
++    terms:
++      - type: random_modes
++        seed: 1729
++        correlation_time: 10.0
++        variance: 1.5e-10
++        minimum_mode: 31.0
++        maximum_mode: 33.0
++      - type: linear
++        rate: -2.26e-4
++        rate_policy: constant
++initial_conditions:
++  density: 1.0
++  k0: 4
++  random_seed: 42
++boundary_conditions:
++  Periodic:
++    axes:
++      - x
++      - y
+diff --git a/simulations/homogeneous_isotropic_turbulence/initialize.py b/simulations/homogeneous_isotropic_turbulence/initialize.py
+index 3a5edc380..94c26a5b9 100644
+--- a/simulations/homogeneous_isotropic_turbulence/initialize.py
++++ b/simulations/homogeneous_isotropic_turbulence/initialize.py
+@@ -986,7 +986,9 @@ def init_hit(solver: KineticSolver, ctx: InitializeContext, ic: HitIC) -> Fields
+ # This copy must stay above the corrector decorator, because ``for_cases`` copies the
+ # corrector it has at the moment it is called.
+ init_hit_forced = init_hit.for_cases(
+-    "Re-1k_Ma-1en1_linear_forced_3d", "Re-1k_Ma-1en1_random_modes_forced_3d"
++    "Re-1k_Ma-1en1_linear_forced_3d",
++    "Re-1k_Ma-1en1_random_modes_forced_3d",
++    "Re-2700_Ma-1en1_forced_drag_2d",
+ )
+ 
+ 
+diff --git a/tests/simulations/test_case_smokes.py b/tests/simulations/test_case_smokes.py
+index e4b13a275..ffb845ab2 100644
+--- a/tests/simulations/test_case_smokes.py
++++ b/tests/simulations/test_case_smokes.py
+@@ -40,6 +40,7 @@ _SLOW_STEP = {
+     "flow_around_objects/cylinder_dugks",
+     "homogeneous_isotropic_turbulence/Re-1k_Ma-1en1_linear_forced_3d",
+     "homogeneous_isotropic_turbulence/Re-1k_Ma-1en1_random_modes_forced_3d",
++    "homogeneous_isotropic_turbulence/Re-2700_Ma-1en1_forced_drag_2d",
+     "homogeneous_isotropic_turbulence/Re-50k_Ma-1en1_3d",
+     "ibm/cylinder_pond",
+     "ibm/cylinder_ma2",
+-- 
+2.51.0
+

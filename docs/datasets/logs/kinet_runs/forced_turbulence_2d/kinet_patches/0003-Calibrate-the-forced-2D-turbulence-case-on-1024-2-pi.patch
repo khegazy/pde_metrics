@@ -1,0 +1,118 @@
+From 55e7edfdac19f669c2b745087f03914843882bdc Mon Sep 17 00:00:00 2001
+From: khegazy <address removed>
+Date: Fri, 27 Nov 2026 15:41:41 -0800
+Subject: [PATCH 3/3] Calibrate the forced 2D turbulence case on 1024^2 pilots:
+ Re 40000, drag 5e-5, variance 2.55e-11
+
+The design values (Re 2700, drag 2.26e-4, variance 1.5e-10) gave no cascade: viscosity
+removed 77% of the injection at the forcing scale and the spectrum peaked at the forcing
+shell. At Re 40000 the run is stable and 74% of the injection reaches the drag. Weakening
+the drag moved the arrest of the inverse cascade from shell 12 (2.26e-4) to shells 4 to 6
+(5e-5), where the compensated spectrum is flat from shell 6 to 30 and the lowest shells do
+not grow over 150000 steps. The variance scales with the drag to hold the rms speed near
+Ma c_s. The case is renamed for its Reynolds number; its header records the pilots.
+
+Co-Authored-By: Claude Opus 5.5 <address removed>
+---
+ ...aml => Re-40k_Ma-1en1_forced_drag_2d.yaml} | 26 +++++++++++++------
+ .../initialize.py                             |  2 +-
+ tests/simulations/test_case_smokes.py         |  2 +-
+ 3 files changed, 20 insertions(+), 10 deletions(-)
+ rename simulations/homogeneous_isotropic_turbulence/{Re-2700_Ma-1en1_forced_drag_2d.yaml => Re-40k_Ma-1en1_forced_drag_2d.yaml} (58%)
+
+diff --git a/simulations/homogeneous_isotropic_turbulence/Re-2700_Ma-1en1_forced_drag_2d.yaml b/simulations/homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d.yaml
+similarity index 58%
+rename from simulations/homogeneous_isotropic_turbulence/Re-2700_Ma-1en1_forced_drag_2d.yaml
+rename to simulations/homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d.yaml
+index 8cf132f54..4498f7069 100644
+--- a/simulations/homogeneous_isotropic_turbulence/Re-2700_Ma-1en1_forced_drag_2d.yaml
++++ b/simulations/homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d.yaml
+@@ -1,21 +1,31 @@
+ # Statistically stationary forced 2D turbulence with a large-scale drag (double cascade).
+ #
+-# Random-mode forcing confined to the shell 31 <= |n| <= 33 (forcing scale 32 cells on
++# Random-mode forcing confined to the shell 31 <= |n| <= 33 (forcing wavelength 32 cells on
+ # 1024^2) and a linear drag (a negative constant rate of the linear law) that removes the
+ # energy the inverse cascade carries to large scales, so energy and enstrophy become
+ # statistically steady (Boffetta and Ecke, Annu. Rev. Fluid Mech. 44, 427 (2012); Boffetta
+ # and Musacchio, Phys. Rev. E 82, 016307 (2010), Eq. 1). Plain BGK with the polynomial
+ # equilibrium, as the shipped forced cases: entropic BGK with a body force is much slower
+-# and its stabilizer measures the force. The drag rate and the forcing variance were
+-# calibrated on a pilot run for a stationary rms speed near Ma c_s and an arrest scale
+-# u'/alpha well inside the box.
++# and its stabilizer measures the force.
++#
++# Calibrated on 1024^2 pilots (2026-11-27), from the design Re 2700, drag 2.26e-4,
++# variance 1.5e-10:
++#   - Re 2700 removed 77% of the injection by viscosity at the forcing scale; the spectrum
++#     peaked at the forcing shell, so there was neither an inverse nor a direct range.
++#     Re 40000 (tau - 1/2 = 4.4e-3) ran stably and passes 74% of the injection to the drag.
++#   - The drag sets the arrest wavenumber: 2.26e-4, 1e-4, 7e-5 and 5e-5 arrested the inverse
++#     cascade near shells 12, 9, 9 and 4 to 6. At 5e-5 the compensated spectrum is flat from
++#     shell 6 to 30 and the lowest shells do not grow over 150000 steps (no condensate).
++#   - The variance scales with the drag to hold the rms speed near Ma c_s: 2.55e-11 gives
++#     u' = 0.055 (rms Mach 0.096 on c_s).
++# Energy relaxes on 1/(2 alpha) = 10000 steps; the pilot settled within 30000 to 50000.
+ defaults:
+   - /physics: weakly_compressible_isothermal_fluids
+   - /collision: bgk
+   - /lattice: d2q9
+   - /equilibrium_closure/numeric@simulate_equilibrium_closure.F: polynomial
+   - /forecast: very_long
+-id: Re-2700_Ma-1en1_forced_drag_2d
++id: Re-40k_Ma-1en1_forced_drag_2d
+ group: homogeneous_isotropic_turbulence
+ features: [turbulence]
+ units: lattice
+@@ -32,7 +42,7 @@ discretization:
+ physics:
+   parameters:
+     mach: 0.1
+-    reynolds: 2700
++    reynolds: 40000
+     reference:
+       density: 1.0
+   output_variables:
+@@ -43,11 +53,11 @@ physics:
+       - type: random_modes
+         seed: 1729
+         correlation_time: 10.0
+-        variance: 1.5e-10
++        variance: 2.55e-11
+         minimum_mode: 31.0
+         maximum_mode: 33.0
+       - type: linear
+-        rate: -2.26e-4
++        rate: -5.0e-5
+         rate_policy: constant
+ initial_conditions:
+   density: 1.0
+diff --git a/simulations/homogeneous_isotropic_turbulence/initialize.py b/simulations/homogeneous_isotropic_turbulence/initialize.py
+index 94c26a5b9..56d80edc7 100644
+--- a/simulations/homogeneous_isotropic_turbulence/initialize.py
++++ b/simulations/homogeneous_isotropic_turbulence/initialize.py
+@@ -988,7 +988,7 @@ def init_hit(solver: KineticSolver, ctx: InitializeContext, ic: HitIC) -> Fields
+ init_hit_forced = init_hit.for_cases(
+     "Re-1k_Ma-1en1_linear_forced_3d",
+     "Re-1k_Ma-1en1_random_modes_forced_3d",
+-    "Re-2700_Ma-1en1_forced_drag_2d",
++    "Re-40k_Ma-1en1_forced_drag_2d",
+ )
+ 
+ 
+diff --git a/tests/simulations/test_case_smokes.py b/tests/simulations/test_case_smokes.py
+index ffb845ab2..a0617cf87 100644
+--- a/tests/simulations/test_case_smokes.py
++++ b/tests/simulations/test_case_smokes.py
+@@ -40,7 +40,7 @@ _SLOW_STEP = {
+     "flow_around_objects/cylinder_dugks",
+     "homogeneous_isotropic_turbulence/Re-1k_Ma-1en1_linear_forced_3d",
+     "homogeneous_isotropic_turbulence/Re-1k_Ma-1en1_random_modes_forced_3d",
+-    "homogeneous_isotropic_turbulence/Re-2700_Ma-1en1_forced_drag_2d",
++    "homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d",
+     "homogeneous_isotropic_turbulence/Re-50k_Ma-1en1_3d",
+     "ibm/cylinder_pond",
+     "ibm/cylinder_ma2",
+-- 
+2.51.0
+

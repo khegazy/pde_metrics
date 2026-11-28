@@ -1,0 +1,77 @@
+case:
+  N_simulations: 1
+  assets: {}
+  boundary_conditions:
+    Periodic:
+      axes:
+      - x
+      - y
+  collision:
+    type: BGK
+  discretization:
+    spatial:
+      grid:
+      - 1024
+      - 1024
+      length:
+      - 1024.0
+      - 1024.0
+      resolution: 1.0
+      type: provided
+    temporal:
+      grid: 60000
+      length: 60000.0
+      resolution: 1.0
+      type: provided
+  features:
+  - turbulence
+  group: homogeneous_isotropic_turbulence
+  id: Re-2700_Ma-1en1_forced_drag_2d
+  initial_conditions:
+    density: 1.0
+    k0: 4
+    random_seed: 42
+  lattice:
+    shifts:
+    - 0.0
+    - 0.0
+    type: D2Q9
+    use_static_weights: true
+  physics:
+    forcing_term:
+      terms:
+      - correlation_time: 10.0
+        maximum_mode: 33.0
+        minimum_mode: 31.0
+        seed: 1729
+        type: random_modes
+        variance: 1.1e-10
+      - rate: -0.000226
+        rate_policy: constant
+        type: linear
+      type: sum
+    output_variables:
+    - vorticity
+    parameters:
+      mach: 0.1
+      reference:
+        density: 1.0
+      reynolds: 20000.0
+    type: weakly_compressible_isothermal_fluids
+  simulate_equilibrium_closure:
+    F:
+      type: polynomial
+  simulation_subdir: homogeneous_isotropic_turbulence/Re-2700_Ma-1en1_forced_drag_2d/13b7a1eb
+  solver:
+    gather: sequential
+    interpolation:
+      degree: 1
+      family: lagrange
+    type: lbm
+  subgrid: {}
+  units: lattice
+case_path: homogeneous_isotropic_turbulence/Re-2700_Ma-1en1_forced_drag_2d
+normalization:
+  feature: none
+precision:
+  dtype: torch.float64

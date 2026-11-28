@@ -1,0 +1,121 @@
+Calibration of the forced 2D turbulence run (BUILD_ORDER step 22), 2026-11-27.
+All pilots: 1024^2, D2Q9 BGK with the polynomial equilibrium, Ma 0.1, random_modes in the shell
+31 <= |n| <= 33 with correlation_time 10 and seed 1729, linear drag at rate -alpha, HIT initial
+field (k0 4, seed 42, rms speed Ma c_s), saved every 500 steps, macroscopic observables only.
+Each block below is copied from checks/<pilot>.txt, made by check_forced.py (every 2nd saved
+frame; averages from the stated step to the end).
+
+pilot (run folder)       job       Re     alpha     variance   steps   average window
+pilot_1024               62108011  2700   2.26e-4   1.5e-10    60000   steps >= 20000
+pilot_1024_re2e4         62108136  20000  2.26e-4   1.1e-10    60000   steps >= 20000
+pilot_a1e-4_re20000      62108434  20000  1.0e-4    5.1e-11    100000  steps >= 40000
+pilot_a1e-4_re40000      62108433  40000  1.0e-4    5.1e-11    100000  steps >= 40000
+pilot_a7.0e-5_re40000    62114419  40000  7.0e-5    3.6e-11    150000  steps >= 50000
+pilot_a5.0e-5_re40000    62114415  40000  5.0e-5    2.55e-11   150000  steps >= 50000  <- chosen
+
+Slopes over the plateau of the compensated spectrum, fitted afterwards on the same averaged
+spectra (n in [9, 28] inverse, [40, 120] direct): Re 40000 alpha 1e-4: -1.483, -4.488;
+Re 20000 alpha 1e-4: -1.304, -4.921. The blocks' own fits use the ranges they state.
+
+== pilot_re2700
+alpha = 0.000226 per step, nu = 0.0218965 cells^2 per step
+averages over steps >= 20000 (41 frames, spectrum over 41):
+  E mean 6.22137e-04; first half 6.18979e-04, second half 6.25145e-04; std/mean 0.045
+  Z mean 2.11155e-05; first half 2.09815e-05, second half 2.12432e-05
+  u_rms 3.52743e-02 (Mach on c_s = 1/sqrt(3): 0.0611); max |u| seen 1.4273e-01
+  density range seen [0.95764, 1.02324]
+  eps_alpha mean 2.8121e-07; eps_nu mean 9.2471e-07; injection eps_I = eps_alpha + eps_nu (stationary) 1.2059e-06; eps_alpha/eps_I 0.233
+  energy in |n| < 3: mean fraction 0.0009; first half 5.0996e-07, second half 5.7296e-07
+  spectrum peak at shell n = 32
+  integral scale L = 39.6 cells; arrest scale u'/alpha = 156.1 cells
+  large-eddy time T_L = L/u' = 1123 steps; energy relaxation 1/(2 alpha) = 2212 steps
+  slope over inverse range n in [4, 20]: 1.498 (expected -5/3 = -1.667)
+  slope over direct range n in [45, 150]: -8.925 (expected -3, steeper with friction)
+  correlation time of E(t): 500 steps; of the velocity field: 767 steps (integral of the autocorrelation to its first zero crossing; inf if it does not cross)
+  velocity-field autocorrelation at lags of 1, 2, 4, 8, 16, 32 frames: 0.185, 0.029, 0.000, 0.008, 0.005, -0.003
+
+== pilot_re2e4
+alpha = 0.000226 per step, nu = 0.00295603 cells^2 per step
+averages over steps >= 20000 (41 frames, spectrum over 41):
+  E mean 1.48840e-03; first half 1.48688e-03, second half 1.48985e-03; std/mean 0.016
+  Z mean 3.59165e-05; first half 3.58602e-05, second half 3.59702e-05
+  u_rms 5.45601e-02 (Mach on c_s = 1/sqrt(3): 0.0945); max |u| seen 2.1211e-01
+  density range seen [0.91817, 1.03357]
+  eps_alpha mean 6.7276e-07; eps_nu mean 2.1234e-07; injection eps_I = eps_alpha + eps_nu (stationary) 8.8510e-07; eps_alpha/eps_I 0.760
+  energy in |n| < 3: mean fraction 0.0015; first half 2.5224e-06, second half 1.8669e-06
+  spectrum peak at shell n = 32
+  integral scale L = 62.3 cells; arrest scale u'/alpha = 241.4 cells
+  large-eddy time T_L = L/u' = 1142 steps; energy relaxation 1/(2 alpha) = 2212 steps
+  slope over inverse range n in [4, 20]: 1.031 (expected -5/3 = -1.667)
+  slope over direct range n in [45, 150]: -5.008 (expected -3, steeper with friction)
+  correlation time of E(t): 1108 steps; of the velocity field: 950 steps (integral of the autocorrelation to its first zero crossing; inf if it does not cross)
+  velocity-field autocorrelation at lags of 1, 2, 4, 8, 16, 32 frames: 0.248, 0.092, 0.025, 0.002, 0.000, 0.004
+
+== pilot_a1e-4_re20000
+alpha = 0.0001 per step, nu = 0.00295603 cells^2 per step
+averages over steps >= 40000 (61 frames, spectrum over 61):
+  E mean 1.37232e-03; first half 1.37353e-03, second half 1.37115e-03; std/mean 0.011
+  Z mean 2.37304e-05; first half 2.37533e-05, second half 2.37082e-05
+  u_rms 5.23893e-02 (Mach on c_s = 1/sqrt(3): 0.0907); max |u| seen 2.0020e-01
+  density range seen [0.93606, 1.02438]
+  eps_alpha mean 2.7446e-07; eps_nu mean 1.4030e-07; injection eps_I = eps_alpha + eps_nu (stationary) 4.1476e-07; eps_alpha/eps_I 0.662
+  energy in |n| < 3: mean fraction 0.0069; first half 9.6861e-06, second half 9.3547e-06
+  spectrum peak at shell n = 9
+  integral scale L = 88.7 cells; arrest scale u'/alpha = 523.9 cells
+  large-eddy time T_L = L/u' = 1693 steps; energy relaxation 1/(2 alpha) = 5000 steps
+  slope over inverse range n in [5, 25]: -0.554 (expected -5/3 = -1.667)
+  slope over direct range n in [40, 120]: -4.937 (expected -3, steeper with friction)
+  correlation time of E(t): 1264 steps; of the velocity field: 1433 steps (integral of the autocorrelation to its first zero crossing; inf if it does not cross)
+  velocity-field autocorrelation at lags of 1, 2, 4, 8, 16, 32 frames: 0.371, 0.185, 0.062, 0.017, 0.010, 0.004
+
+== pilot_a1e-4_re40000
+alpha = 0.0001 per step, nu = 0.00147802 cells^2 per step
+averages over steps >= 40000 (61 frames, spectrum over 61):
+  E mean 1.66371e-03; first half 1.65766e-03, second half 1.66956e-03; std/mean 0.013
+  Z mean 2.79899e-05; first half 2.78792e-05, second half 2.80970e-05
+  u_rms 5.76838e-02 (Mach on c_s = 1/sqrt(3): 0.0999); max |u| seen 2.1946e-01
+  density range seen [0.93279, 1.02859]
+  eps_alpha mean 3.3274e-07; eps_nu mean 8.2739e-08; injection eps_I = eps_alpha + eps_nu (stationary) 4.1548e-07; eps_alpha/eps_I 0.801
+  energy in |n| < 3: mean fraction 0.0070; first half 1.3202e-05, second half 1.0229e-05
+  spectrum peak at shell n = 9
+  integral scale L = 96.0 cells; arrest scale u'/alpha = 576.8 cells
+  large-eddy time T_L = L/u' = 1663 steps; energy relaxation 1/(2 alpha) = 5000 steps
+  slope over inverse range n in [5, 25]: -0.778 (expected -5/3 = -1.667)
+  slope over direct range n in [40, 120]: -4.474 (expected -3, steeper with friction)
+  correlation time of E(t): 2810 steps; of the velocity field: 1349 steps (integral of the autocorrelation to its first zero crossing; inf if it does not cross)
+  velocity-field autocorrelation at lags of 1, 2, 4, 8, 16, 32 frames: 0.376, 0.190, 0.067, 0.011, 0.008, 0.003
+
+== pilot_a7.0e-5_re40000
+alpha = 7e-05 per step, nu = 0.00147802 cells^2 per step
+averages over steps >= 50000 (101 frames, spectrum over 101):
+  E mean 1.61582e-03; first half 1.61490e-03, second half 1.61672e-03; std/mean 0.010
+  Z mean 2.28544e-05; first half 2.28567e-05, second half 2.28521e-05
+  u_rms 5.68475e-02 (Mach on c_s = 1/sqrt(3): 0.0985); max |u| seen 2.2494e-01
+  density range seen [0.91984, 1.03080]
+  eps_alpha mean 2.2621e-07; eps_nu mean 6.7558e-08; injection eps_I = eps_alpha + eps_nu (stationary) 2.9377e-07; eps_alpha/eps_I 0.770
+  energy in |n| < 3: mean fraction 0.0196; first half 3.3540e-05, second half 2.9888e-05
+  spectrum peak at shell n = 9
+  integral scale L = 119.0 cells; arrest scale u'/alpha = 812.1 cells
+  large-eddy time T_L = L/u' = 2094 steps; energy relaxation 1/(2 alpha) = 7143 steps
+  slope over inverse range n in [6, 28]: -1.366 (expected -5/3 = -1.667)
+  slope over direct range n in [40, 120]: -4.474 (expected -3, steeper with friction)
+  correlation time of E(t): 2332 steps; of the velocity field: 2032 steps (integral of the autocorrelation to its first zero crossing; inf if it does not cross)
+  velocity-field autocorrelation at lags of 1, 2, 4, 8, 16, 32 frames: 0.427, 0.240, 0.099, 0.031, 0.018, 0.012
+
+== pilot_a5.0e-5_re40000
+alpha = 5e-05 per step, nu = 0.00147802 cells^2 per step
+averages over steps >= 50000 (101 frames, spectrum over 101):
+  E mean 1.52601e-03; first half 1.53069e-03, second half 1.52142e-03; std/mean 0.010
+  Z mean 1.82164e-05; first half 1.82038e-05, second half 1.82287e-05
+  u_rms 5.52450e-02 (Mach on c_s = 1/sqrt(3): 0.0957); max |u| seen 2.1570e-01
+  density range seen [0.94027, 1.02780]
+  eps_alpha mean 1.5260e-07; eps_nu mean 5.3848e-08; injection eps_I = eps_alpha + eps_nu (stationary) 2.0645e-07; eps_alpha/eps_I 0.739
+  energy in |n| < 3: mean fraction 0.0346; first half 4.6202e-05, second half 5.9303e-05
+  spectrum peak at shell n = 4
+  integral scale L = 141.4 cells; arrest scale u'/alpha = 1104.9 cells
+  large-eddy time T_L = L/u' = 2560 steps; energy relaxation 1/(2 alpha) = 10000 steps
+  slope over inverse range n in [6, 28]: -1.526 (expected -5/3 = -1.667)
+  slope over direct range n in [40, 120]: -4.481 (expected -3, steeper with friction)
+  correlation time of E(t): 6010 steps; of the velocity field: 2227 steps (integral of the autocorrelation to its first zero crossing; inf if it does not cross)
+  velocity-field autocorrelation at lags of 1, 2, 4, 8, 16, 32 frames: 0.482, 0.292, 0.144, 0.056, 0.007, 0.001
+

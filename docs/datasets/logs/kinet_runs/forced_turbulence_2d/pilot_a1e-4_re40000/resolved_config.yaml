@@ -1,0 +1,172 @@
+case:
+  id: Re-2700_Ma-1en1_forced_drag_2d
+  group: homogeneous_isotropic_turbulence
+  units: lattice
+  N_simulations: 1
+  discretization:
+    spatial:
+      type: provided
+      grid:
+      - 1024
+      - 1024
+      length:
+      - 1024.0
+      - 1024.0
+      resolution: 1.0
+    temporal:
+      type: provided
+      grid: 100000
+      length: 100000.0
+      resolution: 1.0
+  simulation_subdir: homogeneous_isotropic_turbulence/Re-2700_Ma-1en1_forced_drag_2d/217d4310
+  physics:
+    type: weakly_compressible_isothermal_fluids
+    parameters:
+      reynolds: 40000.0
+      mach: 0.1
+      reference:
+        density: 1.0
+    output_variables:
+    - vorticity
+    forcing_term:
+      type: sum
+      terms:
+      - type: random_modes
+        seed: 1729
+        correlation_time: 10.0
+        variance: 5.1e-11
+        maximum_mode: 33.0
+        minimum_mode: 31.0
+      - type: linear
+        rate: -0.0001
+        rate_policy: constant
+  collision:
+    type: BGK
+  subgrid: {}
+  lattice:
+    type: D2Q9
+    shifts:
+    - 0.0
+    - 0.0
+    use_static_weights: true
+  solver:
+    type: lbm
+    gather: sequential
+    interpolation:
+      family: lagrange
+      degree: 1
+  simulate_equilibrium_closure:
+    F:
+      type: polynomial
+  features:
+  - turbulence
+  boundary_conditions:
+    Periodic:
+      axes:
+      - x
+      - y
+  initial_conditions:
+    density: 1.0
+    k0: 4
+    random_seed: 42
+  assets: {}
+precision:
+  dtype: torch.float64
+  amp_enabled: false
+  amp_dtype: bf16
+normalization:
+  feature: none
+domain_decomposition:
+  enabled: false
+  mesh_shape:
+  - 4
+  - 2
+  halo_width:
+  - 1
+  - 1
+  print_topology: false
+io:
+  backend: hdf5
+  save_every_n: 500
+  save_burst: 1
+  save_results: true
+  record_equilibria: false
+  record_distributions: false
+  record_iter_maps: false
+  async_writer: true
+  parallel_hdf5: false
+  use_fill_value: true
+  async_queue_memory_fraction: 0.7
+  async_queue_memory_basis: available
+  async_queue_depth: -1
+  async_put_timeout_s: 30.0
+  staging_depth: 8
+  async_drain:
+    window: 64
+    rate_cap_mult: 4.0
+    estimate_cap_s: 1800.0
+    min_writes: 32
+    floor_s_per_item: 0.001
+    ewma_alpha: 0.2
+    walltime_preempt: true
+    margin_s: 240.0
+  dd_stage_sync_debug: false
+  adaptive_time_slots: true
+  trim_unused_time_slots: true
+  compact_after_trim: true
+  expandable_time_axis: true
+  compression_shuffle: true
+  adios2:
+    use_gpu_put: true
+    engine: BP5
+    put_mode: deferred
+    parameters:
+      Profile: 'Off'
+  viz:
+    vtkhdf_sidecar: true
+runtime_logging:
+  every_n: 2000
+  store_iter_maps: false
+runtime_control:
+  tracks: {}
+  bindings: []
+  alarm_regions: {}
+  alarms: {}
+  signals: []
+weights: {}
+task:
+  name: simulate
+data: []
+distributed:
+  is_distributed: false
+  is_slurm: true
+paths:
+  data_root: /pscratch/sd/k/khegazy/kinet_datasets/forced_turbulence/_pilot/pilot_a1e-4_re40000
+  run_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/forced_turbulence/pilot_a1e-4_re40000/outputs/homogeneous_isotropic_turbulence/Re-2700_Ma-1en1_forced_drag_2d/simulate/job_261127_124055_870199
+launch:
+  device: cuda
+  seed: 2025
+  compile: true
+  num_data_workers: 1
+  num_prefetch: 2
+  resident_data_gib: 2.0
+  memory_scale: 0.6
+  tracker:
+    enabled: false
+    backend: wandb
+    project: kinet
+    tags: []
+    interactive_plots: false
+    insecure_tls: false
+plots:
+  backend:
+    type: matplotlib
+  output:
+    format: png
+    dpi: 150
+  error_log_scale: false
+  simulate:
+    iter_maps:
+      enabled: false
+      log_tracker: true
+      tracker_prefix: sim_stats/iter_maps

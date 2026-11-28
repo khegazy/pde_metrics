@@ -44,6 +44,18 @@ It is the nearest published setting to the north-star case that keeps two dimens
 moderately compressible, forced, with shocklets. It is what issue 085 asks for ("forced
 two-dimensional data for the cascade checks") with compressibility added.
 
+**What exists now (2026-11-27).** `kinet_forced_re40k` is forced, statistically stationary
+two-dimensional turbulence from kinet, with a linear drag and a force in the shell
+$31 \le |n| \le 33$ on $1024^2$ cells (`docs/datasets/forced_turbulence_2d.md`). It supplies
+the forcing scale and the two cascades this proposal names for `spectrum_l2` and the cascade
+checks of issue 085: an inverse range of slope $-1.53$ over shells 6 to 28 and a steep direct
+range of slope $-4.48$ over shells 40 to 120. It does **not** supply this experiment: it is
+weakly compressible at an rms Mach number of 0.096 (local Mach at most 0.37), not 0.33 to 0.54,
+has no shocklets and no acoustic flux loop, and stores only the solver's gauge pressure, which
+is not converted. kinet's compressible physics does not support a forced run with shocklets,
+and shocklets are set aside for now (`dataset_specs/BUILD_ORDER.md`, decision 7, steps 23 and
+26). This proposal stays for the compressible case.
+
 ## Cost and requirements
 
 A new simulation; kinet could run it if it supports forcing at that Mach number (not checked).

@@ -544,6 +544,40 @@ def test_the_isotropic_candidates_reproduce_the_jobs_distances(reynolds, kind, c
     assert (rows.loc[rows["lead_step"].notna(), "param_resolution"] == cells).all()
 
 
+#: The job's check of the forced run, one row per 1000 steps (``check_forced.py``).
+FORCED_CHECK = REPO / "docs/datasets/logs/kinet_runs/forced_turbulence_2d/checks/final_220000.txt"
+
+
+@pytest.mark.data
+def test_the_forced_run_reproduces_the_jobs_check_on_its_evaluated_frames():
+    """On every evaluated frame of ``kinet_forced_re40k`` (steps 140 000 to 220 000, 4000 apart,
+    read in solver steps), ``kinetic_energy`` and ``enstrophy`` through the pipeline on the native
+    grid, vorticity recomputed spectrally as ``evaluate.py`` does, and the density's extremes are
+    the job's E, Z, rho_min and rho_max at that step. The job printed six significant figures
+    and removed the mean velocity, which is 6e-6 here, so 1e-5 relative bounds both."""
+    job = build_job(compose_config("dataset=kinet_forced_re40k", "paths.data_url=null"))
+    check = {int(row[0]): row for row in (
+        [float(v) for v in line.split()] for line in FORCED_CHECK.read_text().splitlines()
+        if re.fullmatch(r"\d+( \S+){9}", line))}
+    trajectory = open_trajectory(job.dataset, job.paths)
+    frames = job.dataset.time.resolve(len(trajectory))
+    assert len(frames) == 21 and trajectory.grid.shape == (1024, 1024)
+    rows = run(RecomputingTrajectory(trajectory),
+               [metric_registry.get("kinetic_energy"), metric_registry.get("enstrophy")],
+               build_ladder({}), fields=["velocity", "vorticity"], selection=job.dataset.time,
+               dataset=DatasetInfo(name=job.dataset.name), analysis_resolution=None).rows
+    value = rows[rows["level"] == 0].set_index(["metric", "frame_index"])["value"]
+    for t in frames:
+        step = int(trajectory.times[t])
+        assert step == 4000 * t and 140_000 <= step <= 220_000
+        _, energy, enstrophy, *_, rho_min, rho_max = check[step][:7]
+        assert value["kinetic_energy", t] == pytest.approx(energy, rel=1e-5)
+        assert value["enstrophy", t] == pytest.approx(enstrophy, rel=1e-5)
+        density = trajectory.frame(int(t), ["density"])["density"]
+        assert (density.min(), density.max()) == (pytest.approx(rho_min, abs=6e-6),
+                                                  pytest.approx(rho_max, abs=6e-6))
+
+
 #: The cylinder of the supersonic run: centre and radius in nodes
 #: (docs/datasets/supersonic_cylinder.md, from the rollout's solid mask).
 CYLINDER_CENTRE, CYLINDER_RADIUS = (166.5, 150.5), 20.0

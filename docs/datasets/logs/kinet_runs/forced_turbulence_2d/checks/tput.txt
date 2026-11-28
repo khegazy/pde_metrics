@@ -1,0 +1,124 @@
+rollout: /pscratch/sd/k/khegazy/kinet_datasets/forced_turbulence/_pilot/tput/homogeneous_isotropic_turbulence/Re-2700_Ma-1en1_forced_drag_2d/df94489f/tiers/full/rollout.h5
+attributes: {"kinet_last_completed_step": 4000, "kinet_rollout_status": "complete", "kinet_rollout_total_pred_length": 4000}
+grid: 1024^2; frames read: 9 (every 1 saved frame)
+alpha = 0.000226 per step, nu = 0.0218965 cells^2 per step
+
+step E Z u_rms u_max rho_min rho_max E_low(|n|<3) eps_alpha eps_nu
+1 1.66557e-03 1.22017e-06 5.77160e-02 1.2667e-01 0.97322 1.01378 1.6269e-04 7.5284e-07 5.3435e-08
+500 1.66522e-03 1.44289e-05 5.77100e-02 1.6272e-01 0.97530 1.01586 1.3618e-04 7.5268e-07 6.3189e-07
+1000 1.50329e-03 1.78908e-05 5.48322e-02 1.6249e-01 0.97216 1.01758 1.1600e-04 6.7949e-07 7.8349e-07
+1500 1.36851e-03 2.02506e-05 5.23166e-02 1.6371e-01 0.97279 1.01596 9.9070e-05 6.1857e-07 8.8684e-07
+2000 1.25288e-03 2.17811e-05 5.00576e-02 1.8277e-01 0.96404 1.01523 8.3954e-05 5.6630e-07 9.5386e-07
+2500 1.09862e-03 2.06466e-05 4.68748e-02 1.5545e-01 0.97423 1.01834 6.8836e-05 4.9658e-07 9.0418e-07
+3000 9.83122e-04 2.01615e-05 4.43424e-02 1.4274e-01 0.97389 1.01462 5.6145e-05 4.4437e-07 8.8294e-07
+3500 9.42442e-04 2.16726e-05 4.34152e-02 1.3552e-01 0.97356 1.01557 4.5657e-05 4.2598e-07 9.4911e-07
+4000 8.56208e-04 2.06943e-05 4.13813e-02 1.3461e-01 0.97329 1.01653 3.6834e-05 3.8701e-07 9.0627e-07
+
+averages over steps >= 0 (9 frames, spectrum over 9):
+  E mean 1.25954e-03; first half 1.55065e-03, second half 1.02666e-03; std/mean 0.232
+  Z mean 1.76385e-05; first half 1.34476e-05, second half 2.09912e-05
+  u_rms 5.01905e-02 (Mach on c_s = 1/sqrt(3): 0.0869); max |u| seen 1.8277e-01
+  density range seen [0.96404, 1.01834]
+  eps_alpha mean 5.6931e-07; eps_nu mean 7.7244e-07; injection eps_I = eps_alpha + eps_nu (stationary) 1.3418e-06; eps_alpha/eps_I 0.424
+  energy in |n| < 3: mean fraction 0.0675; first half 1.2848e-04, second half 5.8285e-05
+  spectrum peak at shell n = 4
+  integral scale L = 191.2 cells; arrest scale u'/alpha = 222.1 cells
+  large-eddy time T_L = L/u' = 3809 steps; energy relaxation 1/(2 alpha) = 2212 steps
+  slope over inverse range n in [4, 20]: -1.904 (expected -5/3 = -1.667)
+  slope over direct range n in [45, 150]: -8.952 (expected -3, steeper with friction)
+  correlation time of E(t): inf steps; of the velocity field: inf steps (integral of the autocorrelation to its first zero crossing; inf if it does not cross)
+  velocity-field autocorrelation at lags of 1, 2, 4, 8, 16, 32 frames: 0.608, 0.511, 0.414, 0.262
+
+shell spectrum E(n), mean over the window (n E):
+  1 1.61144e-05
+  2 7.33695e-05
+  3 1.94181e-04
+  4 2.33771e-04
+  5 1.15338e-04
+  6 6.99388e-05
+  7 1.84749e-05
+  8 1.02979e-05
+  9 6.88973e-06
+  10 3.81688e-06
+  11 5.26234e-06
+  12 4.64691e-06
+  13 6.85689e-06
+  14 6.43568e-06
+  15 5.49565e-06
+  16 8.13952e-06
+  17 8.56206e-06
+  18 8.38472e-06
+  19 8.90644e-06
+  20 8.27689e-06
+  21 1.10630e-05
+  22 1.08717e-05
+  23 1.15605e-05
+  24 1.23192e-05
+  25 1.49832e-05
+  26 1.51369e-05
+  27 1.60943e-05
+  28 2.08203e-05
+  29 2.17552e-05
+  30 2.69374e-05
+  31 7.01543e-05
+  32 9.55109e-05
+  33 5.07002e-05
+  34 1.81942e-05
+  35 1.21093e-05
+  36 8.23378e-06
+  37 5.75122e-06
+  38 4.78238e-06
+  39 3.21558e-06
+  40 2.83200e-06
+  41 2.09513e-06
+  42 1.71361e-06
+  43 1.48023e-06
+  44 1.10170e-06
+  45 1.09436e-06
+  46 8.16980e-07
+  47 7.18403e-07
+  48 6.14736e-07
+  49 5.13955e-07
+  50 4.21063e-07
+  51 3.66013e-07
+  52 3.10223e-07
+  53 2.54029e-07
+  54 2.22698e-07
+  55 1.96951e-07
+  56 1.66080e-07
+  57 1.52839e-07
+  58 1.14966e-07
+  59 1.20230e-07
+  60 9.44569e-08
+  61 7.83249e-08
+  62 7.95736e-08
+  63 6.23500e-08
+  64 6.59465e-08
+  80 9.74328e-09
+  96 2.08715e-09
+  112 4.61124e-10
+  128 1.12693e-10
+  144 3.23613e-11
+  160 8.03058e-12
+  176 2.16334e-12
+  192 5.68258e-13
+  208 1.55007e-13
+  224 3.79746e-14
+  240 9.77682e-15
+  256 2.34389e-15
+  272 5.83879e-16
+  288 1.27834e-16
+  304 2.60799e-17
+  320 5.91449e-18
+  336 1.00881e-18
+  352 1.87892e-19
+  368 3.12617e-20
+  384 4.58830e-21
+  400 1.02242e-21
+  416 2.11494e-22
+  432 7.50049e-23
+  448 2.96294e-23
+  464 1.06369e-23
+  480 3.77551e-24
+  496 1.25342e-24
+  512 3.85928e-25

@@ -39,6 +39,16 @@ on the same frame took 9.3 s of metric time (21 s wall with the ladder). On the 
 `kinet_isentropic_vortex_mu1em7` (512^2) and `kinet_oblique_riemann_45deg` (the 264^2 window), with
 no ladder, it took 1.4 s and 0.4 s per frame.
 
+On `kinet_forced_re40k` (2026-11-27), one frame (step 140 000) of density and vorticity with the
+default ladder did not finish within 900 s on the 64 analysis grid nor within 900 s on the 128
+grid (both stopped by `timeout`;
+`/pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/forced_cost/logpw64.txt` and
+`logpw128.txt`; a second run at 64 stopped after 560 s, `logpw64b.txt`), which is at least 4.9 s per
+comparison; `persistence_distance` on the same frame took 60 s of metric time at 256 and 204 s at
+512. Whether one input stalls or every comparison is slow was not diagnosed. The 64 grid is the
+coarsest that keeps that dataset's forcing shell, so options 1 and 4 below do not help there,
+and its configuration sets no `slow_metrics`.
+
 ## Options
 
 1. Run it at a 128 x 128 analysis grid, which is roughly 8 to 30 times faster per comparison. The

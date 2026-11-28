@@ -1,0 +1,26 @@
+# Run final_debug_20000
+slurm_job_id: 62116112
+sacct: 62116112|ft-final-debug|gpu_ss11|gpu_debug|m4790_g|2026-11-27T15:41:49|2026-11-27T15:45:47|2026-11-27T15:48:52|00:03:05|COMPLETED|0:0|nid001360
+run_in_job: final_debug_20000 job=62116112 rc=0 wall_s=158.54
+job_header:
+  job 62116112 on nid001360 start 2026-11-27T15:45:55-08:00
+  name, memory.total [MiB], driver_version
+  NVIDIA A100-SXM4-40GB, 40960 MiB, 580.196.07
+  NVIDIA A100-SXM4-40GB, 40960 MiB, 580.196.07
+  NVIDIA A100-SXM4-40GB, 40960 MiB, 580.196.07
+  NVIDIA A100-SXM4-40GB, 40960 MiB, 580.196.07
+  kinet worktree /pscratch/sd/k/khegazy/kinet_worktrees/forced_drag commit 55e7edfdac19f669c2b745087f03914843882bdc branch datasets/forced-drag
+  kinet worktree status (empty means clean):
+  kinet.__file__ /pscratch/sd/k/khegazy/kinet_worktrees/forced_drag/kinet/__init__.py
+  torch 2.15.0+cu132 cuda 13.2 h5py 3.16.0 numpy 2.5.4
+rollout: /pscratch/sd/k/khegazy/kinet_datasets/forced_turbulence/_debug_final/homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d/2b880dc4/tiers/full/rollout.h5
+rollout_bytes: 2115780864
+sim_checkpoints: 
+last_step_check: kinet_rollout_status=complete kinet_last_completed_step=20000 total_pred_length=20000 last_saved_step=20000 saved_frames=41 reached_last_step=True
+rollout_timing: [2026-11-27 15:48:49] Rollout finished in 97.3 s (stop_reason=completed, accepted=20000, rejects=0)
+steady_ms_per_step: 3.37 ms/step
+working_directory: /pscratch/sd/k/khegazy/kinet_datasets/_work/forced_turbulence/final_debug_20000
+environment: source /pscratch/sd/k/khegazy/kinet_datasets/_provenance/forced_turbulence/env.sh
+command (run in the working directory by run_forced_job.sh):
+  python -m kinet.apps.simulate task=simulate case=homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d case.discretization.temporal.grid=20000 io.save_every_n=500 io.record_distributions=false io.record_equilibria=false runtime_logging.every_n=5000 paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/forced_turbulence/_debug_final distributed.is_distributed=false distributed.is_slurm=true 
+sbatch_exact (from /pscratch/sd/k/khegazy/kinet_datasets/_work/forced_turbulence): sbatch --account=m4790 --constraint=gpu --qos=debug --nodes=1 --ntasks=1 --cpus-per-task=32 --gpus-per-node=1 --time=00:30:00 --job-name=ft-final-debug --output=/pscratch/sd/k/khegazy/kinet_datasets/_work/forced_turbulence/slurm_%j.out /pscratch/sd/k/khegazy/kinet_datasets/_provenance/forced_turbulence/run_forced_job.sh final_debug_20000 /pscratch/sd/k/khegazy/kinet_datasets/forced_turbulence/_debug_final case=homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d case.discretization.temporal.grid=20000 io.save_every_n=500 io.record_distributions=false io.record_equilibria=false runtime_logging.every_n=5000

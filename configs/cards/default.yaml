@@ -106,6 +106,9 @@
 # - `kinet_double_mach_reflection` has no exact solution: several interacting shocks from one
 #   solver at a large viscosity, scored through the degradation ladder; its label says it is not
 #   the inviscid benchmark picture.
+# - `kinet_forced_re40k` is forced, statistically stationary two-dimensional turbulence with a
+#   linear drag, the first stationary flow here. Its label gives the measured slopes, so neither
+#   range is read as the textbook -5/3 or -3, and says that it is weakly compressible.
 evidence_datasets:
   kinet_re5e4: developed flow
   kinet_re1e6: >-
@@ -229,6 +232,11 @@ evidence_datasets:
     a viscous flow, not the inviscid benchmark picture: an incident, a reflected and a Mach-stem
     shock meeting at a triple point, with no exact answer, on 480 x 120 cells read in the window
     x < 3.2 with every face declared Neumann; nothing about turbulence
+  kinet_forced_re40k: >-
+    developed flow, statistically stationary: lattice-Boltzmann two-dimensional turbulence at
+    Mach 0.1 forced at wavenumbers 31 to 33 of a 1024^2 box with a linear drag, read on a
+    256^2 grid; an inverse range of under a decade (slope -1.53 over shells 6 to 28) and a short
+    steep direct range (slope -4.48 over shells 40 to 120), not the textbook -5/3 and -3
 
 # What each evidence dataset offers a metric, so every metric card's "Across the experiments"
 # table and the site's coverage page can say why a metric is not run on a dataset without
@@ -272,6 +280,7 @@ evidence_dataset_properties:
   kinet_oblique_riemann_30deg: {periodic: false, ensemble: false}  # Neumann; every face a cut
   kinet_oblique_riemann_45deg: {periodic: false, ensemble: false}  # Neumann; every face a cut
   kinet_double_mach_reflection: {periodic: false, ensemble: false}  # Neumann; no face is one
+  kinet_forced_re40k: {periodic: true, ensemble: false}
 
 # The window within kinet_re5e4 that counts as developed flow: the convention a run cited
 # as evidence follows (`dataset.time.start`, `dataset.time.reduction`). Nothing reads it to

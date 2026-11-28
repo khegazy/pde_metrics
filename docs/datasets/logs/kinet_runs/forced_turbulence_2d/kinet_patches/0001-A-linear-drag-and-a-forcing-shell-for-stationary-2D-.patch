@@ -1,0 +1,361 @@
+From af1c2f05234a16374891d3db2e40ee0aee427f9a Mon Sep 17 00:00:00 2001
+From: khegazy <address removed>
+Date: Fri, 27 Nov 2026 11:58:56 -0800
+Subject: [PATCH 1/3] A linear drag and a forcing shell for stationary 2D
+ turbulence: the linear law takes a negative constant rate, and random_modes
+ takes a minimum_mode
+
+The linear law's config accepted only a positive rate. Under the constant policy a negative
+rate is a linear drag on the velocity fluctuation, the large-scale friction that arrests the
+inverse cascade of forced two-dimensional turbulence; its half-step denominator 1 - dt rate / 2
+then exceeds one, so the existing half step and time-step check hold unchanged. The config
+now refuses only a zero rate, and a non-positive rate under the adaptive policies.
+
+random_modes forced every mode inside maximum_mode, a ball that includes the box scale. The
+optional minimum_mode confines the force to the shell between the two radii. It is None by
+default, so it stays out of the exclude_none physics hash and existing identities do not
+move; it enters the checkpoint settings, so a carry of the ball law does not resume a shell
+law.
+
+Tests: the config accepts a negative constant rate and refuses it under each adaptive
+policy, and takes or refuses a shell; the drag removes energy, adds no net momentum and
+splits its force at its rate; the shell law selects exactly the ball's modes at or beyond
+the inner radius, has no Fourier content inside it, refuses a ball carry and an empty shell.
+
+Co-Authored-By: Claude Opus 5.5 <address removed>
+---
+ docs/kinetic-theory/forcing-laws.qmd    |  3 ++-
+ kinet/config/components/forcing.py      | 34 ++++++++++++++++++++++---
+ kinet/forcing/laws/linear.py            |  5 +++-
+ kinet/forcing/laws/random_modes.py      | 23 +++++++++++------
+ tests/config/components/test_forcing.py | 24 ++++++++++++++++-
+ tests/forcing/laws/test_linear.py       | 26 +++++++++++++++++++
+ tests/forcing/laws/test_random_modes.py | 32 ++++++++++++++++++++---
+ 7 files changed, 129 insertions(+), 18 deletions(-)
+
+diff --git a/docs/kinetic-theory/forcing-laws.qmd b/docs/kinetic-theory/forcing-laws.qmd
+index 53c8941ce..b124556da 100644
+--- a/docs/kinetic-theory/forcing-laws.qmd
++++ b/docs/kinetic-theory/forcing-laws.qmd
+@@ -127,7 +127,7 @@ the spread of the rates.
+ 
+ | Knob | Meaning |
+ | --- | --- |
+-| `rate` | Baseline \(A\) in the active solver time frame. Must be \(>0\). For `constant` it is the applied rate. For feedback policies it scales the controller or serves as a reference. |
++| `rate` | Baseline \(A\) in the active solver time frame. Nonzero. For `constant` it is the applied rate, and a negative rate is a linear drag \(-\alpha\rho(\mathbf{u}-\langle\mathbf{u}\rangle)\) with \(\alpha=-A\), the large-scale friction that arrests the inverse cascade of forced 2D turbulence (G. Boffetta and R. E. Ecke, Annu. Rev. Fluid Mech. 44, 427-451 (2012), https://doi.org/10.1146/annurev-fluid-120710-101240). For feedback policies it must be \(>0\); it scales the controller or serves as a reference. |
+ | `rate_policy` | `constant` (default), `k_feedback` (Carroll–Blanquart), `bassenne`, or `component_bassenne` (Denev et al. per-component extension of Bassenne). |
+ | `target_kinetic_energy` | Target \(K_\infty = \tfrac12\langle u_i' u_i'\rangle\). Required for adaptive policies unless `target_u_rms` is set. |
+ | `target_u_rms` | Single-component rms target \(u'\). The law converts it to \(K_\infty = (D/2)\,u'^2\). |
+@@ -275,6 +275,7 @@ stationary coefficient variance for any step size.
+ | `correlation_time` | OU correlation time in the active solver time. |
+ | `variance` | Stationary variance of each **real, unprojected** coefficient. |
+ | `maximum_mode` | Cutoff **radius in integer Fourier-index space**. Must be strictly below every grid Nyquist. |
++| `minimum_mode` | Optional inner radius in the same space. When set, only modes with \(n_{\min}\le\lVert\boldsymbol{n}\rVert_2\le n_{\max}\) are forced: a shell at a forcing scale, as 2D double-cascade runs force, rather than the ball that includes the box scale. Must not exceed `maximum_mode`. |
+ 
+ ::: {.callout-warning}
+ ## `variance` is not a power target
+diff --git a/kinet/config/components/forcing.py b/kinet/config/components/forcing.py
+index 32f2441e5..9ebbf1938 100644
+--- a/kinet/config/components/forcing.py
++++ b/kinet/config/components/forcing.py
+@@ -74,8 +74,11 @@ class LinearForcingTermConfig(BaseModel):
+     # The union tag. ``linear`` selects this config.
+     type: Literal["linear"] = "linear"
+     # The rate ``r`` in the force ``carrier * r * (u - mean(u))``, in inverse time of
+-    # the active solver time frame. ``rate_policy`` sets how the law uses it.
+-    rate: float = Field(gt=0.0)
++    # the active solver time frame. ``rate_policy`` sets how the law uses it. A negative
++    # rate under the ``constant`` policy is a linear drag on the fluctuation, the
++    # large-scale friction of forced two-dimensional turbulence. The adaptive policies
++    # need a positive rate.
++    rate: float
+     # Optional so that omitting it stays out of the ``exclude_none`` physics
+     # hash and leaves existing dataset identities unchanged.
+     rate_policy: LinearForcingRatePolicy | None = None
+@@ -100,10 +103,17 @@ class LinearForcingTermConfig(BaseModel):
+     solenoidal: bool | None = None
+ 
+     @model_validator(mode="after")
+-    def _validate_adaptive_policy_targets(self) -> LinearForcingTermConfig:
++    def _validate_rate_and_adaptive_policy_targets(self) -> LinearForcingTermConfig:
+         policy = self.rate_policy or "constant"
+         if policy == "constant":
++            if self.rate == 0.0:
++                raise ValueError("linear forcing rate must be nonzero.")
+             return self
++        if self.rate <= 0.0:
++            raise ValueError(
++                f"linear forcing rate_policy={policy!r} requires a positive rate; "
++                "a negative rate is a drag, which only the constant policy applies."
++            )
+         if self.target_kinetic_energy is None and self.target_u_rms is None:
+             raise ValueError(
+                 f"linear forcing rate_policy={policy!r} requires "
+@@ -118,7 +128,8 @@ class RandomModesForcingTermConfig(BaseModel):
+ 
+     ``correlation_time`` is in the active solver time. ``variance`` is the stationary
+     acceleration-squared variance of each real, unprojected Fourier coefficient.
+-    ``maximum_mode`` is the cutoff radius in integer Fourier-index space.
++    ``maximum_mode`` is the cutoff radius in integer Fourier-index space, and the optional
++    ``minimum_mode`` the inner radius of a forced shell.
+ 
+     References:
+         G. E. Uhlenbeck and L. S. Ornstein, "On the Theory of the Brownian
+@@ -154,6 +165,21 @@ class RandomModesForcingTermConfig(BaseModel):
+     # The cutoff radius in integer Fourier-index space. The law raises when it reaches
+     # the Nyquist mode of any axis.
+     maximum_mode: float = Field(gt=0.0)
++    # The inner radius in integer Fourier-index space. When set, the law forces the
++    # shell ``minimum_mode <= |n| <= maximum_mode`` and not the whole ball, so a force
++    # at a small scale does not also drive the box scale. Optional so that omitting it
++    # stays out of the ``exclude_none`` physics hash and leaves existing dataset
++    # identities unchanged.
++    minimum_mode: float | None = Field(default=None, gt=0.0)
++
++    @model_validator(mode="after")
++    def _validate_shell(self) -> RandomModesForcingTermConfig:
++        if self.minimum_mode is not None and self.minimum_mode > self.maximum_mode:
++            raise ValueError(
++                f"random_modes minimum_mode={self.minimum_mode} exceeds "
++                f"maximum_mode={self.maximum_mode}."
++            )
++        return self
+ 
+ 
+ class UniformEnergyForcingTermConfig(BaseModel):
+diff --git a/kinet/forcing/laws/linear.py b/kinet/forcing/laws/linear.py
+index 1d0b4ae8e..3d7ae9426 100644
+--- a/kinet/forcing/laws/linear.py
++++ b/kinet/forcing/laws/linear.py
+@@ -49,7 +49,10 @@ class LinearForcingTerm(ForcingLaw[LinearForcingTermConfig]):
+     ``calculate_sources`` returns ``carrier * rate * (velocity - mean)``. The mean is
+     weighted by the carrier over the owned cells of every rank.
+ 
+-    The ``rate_policy`` sets the rate. ``constant`` uses ``rate``. ``k_feedback``
++    The ``rate_policy`` sets the rate. ``constant`` uses ``rate``, and a negative
++    ``rate`` there is a linear drag, ``-alpha * carrier * (u - mean)`` with
++    ``alpha = -rate``: the large-scale friction of forced two-dimensional turbulence. Its
++    half-step denominator ``1 - dt * rate / 2`` then exceeds one. ``k_feedback``
+     multiplies ``rate`` by the ratio of the target to the turbulent kinetic energy.
+     ``bassenne`` and ``component_bassenne`` set the rate from the dissipation rate and a
+     proportional correction toward the target kinetic energy. ``component_bassenne``
+diff --git a/kinet/forcing/laws/random_modes.py b/kinet/forcing/laws/random_modes.py
+index 3ed9fcd39..2eb02c794 100644
+--- a/kinet/forcing/laws/random_modes.py
++++ b/kinet/forcing/laws/random_modes.py
+@@ -42,7 +42,9 @@ class RandomModesForcingTerm(ForcingLaw[RandomModesForcingTermConfig]):
+     coefficient before that projection. ``correlation_time`` uses the active solver
+     time. The law does not rescale the coefficients to impose an exact instantaneous
+     power or RMS acceleration. ``maximum_mode`` is the radius in integer Fourier-mode
+-    space. It matches the convention of the HIT initial conditions of Kinet.
++    space. It matches the convention of the HIT initial conditions of Kinet. An optional
++    ``minimum_mode`` is the inner radius: the law then forces the shell between the two
++    radii, the band forcing of two-dimensional turbulence, and not the whole ball.
+ 
+     On a complete global periodic grid, before the carrier-weighted mean correction, the
+     expected spatial mean of the squared acceleration is
+@@ -135,7 +137,7 @@ class RandomModesForcingTerm(ForcingLaw[RandomModesForcingTermConfig]):
+ 
+         The method also drops the cached reconstruction and innovations. The mode
+         selection raises ``ValueError`` when ``maximum_mode`` is not below every grid
+-        Nyquist mode or selects no mode.
++        Nyquist mode or the shell from ``minimum_mode`` to it selects no mode.
+ 
+         Raises:
+             ValueError: If the grid is not two- or three-dimensional, or if the local
+@@ -154,7 +156,9 @@ class RandomModesForcingTerm(ForcingLaw[RandomModesForcingTermConfig]):
+         ):
+             raise ValueError("local_start + local_shape must fit inside global_shape.")
+ 
+-        mode_indices, wavevectors = self._make_modes(self.config.maximum_mode)
++        mode_indices, wavevectors = self._make_modes(
++            self.config.maximum_mode, self.config.minimum_mode or 0.0
++        )
+         self.replace_derived_buffer(
+             "mode_indices",
+             torch.tensor(mode_indices, dtype=torch.int64, device=host.numeric.device),
+@@ -191,7 +195,7 @@ class RandomModesForcingTerm(ForcingLaw[RandomModesForcingTermConfig]):
+         self._innovations = None
+ 
+     def _make_modes(
+-        self, maximum_mode: float
++        self, maximum_mode: float, minimum_mode: float
+     ) -> tuple[list[tuple[int, ...]], list[tuple[float, ...]]]:
+         dimension = self.host.context.grid.D
+         geometry = self.host.context.geometry
+@@ -208,9 +212,8 @@ class RandomModesForcingTerm(ForcingLaw[RandomModesForcingTermConfig]):
+             first_nonzero = next((value for value in mode if value), 0)
+             if first_nonzero <= 0:
+                 continue
+-            if math.sqrt(sum(value * value for value in mode)) > (
+-                maximum_mode + tolerance
+-            ):
++            radius = math.sqrt(sum(value * value for value in mode))
++            if not minimum_mode - tolerance <= radius <= maximum_mode + tolerance:
+                 continue
+             wavevector = tuple(
+                 2 * math.pi * index / length
+@@ -219,7 +222,10 @@ class RandomModesForcingTerm(ForcingLaw[RandomModesForcingTermConfig]):
+             indices.append(mode)
+             wavevectors.append(wavevector)
+         if not indices:
+-            raise ValueError("maximum_mode selects no nonzero, non-Nyquist modes.")
++            raise ValueError(
++                "maximum_mode selects no nonzero, non-Nyquist modes at or above "
++                "minimum_mode."
++            )
+         return indices, wavevectors
+ 
+     def _validate_layout(self, carrier: torch.Tensor, velocity: torch.Tensor) -> None:
+@@ -447,6 +453,7 @@ class RandomModesForcingTerm(ForcingLaw[RandomModesForcingTermConfig]):
+             "correlation_time": self.config.correlation_time,
+             "variance": self.config.variance,
+             "maximum_mode": self.config.maximum_mode,
++            "minimum_mode": self.config.minimum_mode,
+             "global_shape": geometry.global_shape,
+             "domain_lengths": geometry.domain_lengths,
+         }
+diff --git a/tests/config/components/test_forcing.py b/tests/config/components/test_forcing.py
+index ec94f817e..03472ee28 100644
+--- a/tests/config/components/test_forcing.py
++++ b/tests/config/components/test_forcing.py
+@@ -53,13 +53,35 @@ def test_forcing_union_discriminates_on_type() -> None:
+ 
+ 
+ @pytest.mark.parametrize(
+-    "rate", [-0.1, 0.0, math.inf, math.nan], ids=["negative", "zero", "inf", "nan"]
++    "rate", [0.0, math.inf, math.nan], ids=["zero", "inf", "nan"]
+ )
+ def test_linear_config_rejects_invalid_rates(rate: float) -> None:
+     with pytest.raises(ValidationError):
+         LinearForcingTermConfig(type="linear", rate=rate)
+ 
+ 
++def test_a_negative_constant_rate_is_a_drag_the_config_accepts() -> None:
++    assert LinearForcingTermConfig(type="linear", rate=-2.0e-4).rate == -2.0e-4
++
++
++@pytest.mark.parametrize("policy", ["k_feedback", "bassenne", "component_bassenne"])
++def test_an_adaptive_policy_refuses_a_negative_rate(policy: str) -> None:
++    with pytest.raises(ValidationError, match="requires a positive rate"):
++        LinearForcingTermConfig(
++            type="linear", rate=-0.1, rate_policy=policy, target_u_rms=0.03
++        )
++
++
++def test_random_modes_config_takes_a_shell_and_refuses_an_inverted_one() -> None:
++    shell = RandomModesForcingTermConfig.model_validate(
++        {**RANDOM_MODES, "minimum_mode": 1.5}
++    )
++    assert shell.minimum_mode == 1.5
++    assert RandomModesForcingTermConfig.model_validate(RANDOM_MODES).minimum_mode is None
++    with pytest.raises(ValidationError, match="exceeds maximum_mode"):
++        RandomModesForcingTermConfig.model_validate({**RANDOM_MODES, "minimum_mode": 3})
++
++
+ def test_linear_config_rejects_extra_fields() -> None:
+     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+         LinearForcingTermConfig.model_validate({**LINEAR, "acceleration": [1.0, 0.0]})
+diff --git a/tests/forcing/laws/test_linear.py b/tests/forcing/laws/test_linear.py
+index 0bb78c400..f7b1f5dc8 100644
+--- a/tests/forcing/laws/test_linear.py
++++ b/tests/forcing/laws/test_linear.py
+@@ -105,6 +105,32 @@ def test_linear_force_conserves_global_momentum_and_adds_energy(
+     assert torch.all(energy_input > 0.0)
+ 
+ 
++def test_a_negative_constant_rate_is_a_drag_on_the_fluctuation() -> None:
++    """A negative rate removes kinetic energy and adds no net momentum, its half step
++    solves ``F(u) = F0 + rho K u`` at that rate, and the LBM step accepts it."""
++    rate = -2.0e-3
++    law = forcing_law(
++        f"{{type: linear, rate: {rate!r}}}", grid=(4, 5), kind=LinearForcingTerm
++    )
++    fields = momentum_fields((4, 5))
++    density, velocity = fields["density"], fields["velocity"]
++
++    force = _force(law, fields)
++    source = law.half_step_source(fields, step=0)
++
++    torch.testing.assert_close(
++        force, rate * density * (velocity - favre_mean(density, velocity))
++    )
++    momentum_input = force.sum(dim=(2, 3))
++    torch.testing.assert_close(
++        momentum_input, torch.zeros_like(momentum_input), atol=2.0e-15, rtol=0.0
++    )
++    assert torch.all((velocity * force).sum(dim=(1, 2, 3)) < 0.0)
++    assert source is not None and source.force is not None
++    torch.testing.assert_close(source.force + density * rate * velocity, force)
++    law.validate_time_step(1.0)
++
++
+ def test_linear_shallow_water_force_uses_depth_as_momentum_carrier() -> None:
+     law = narrow(
+         simulator_for(
+diff --git a/tests/forcing/laws/test_random_modes.py b/tests/forcing/laws/test_random_modes.py
+index 9aa739427..7a96fd666 100644
+--- a/tests/forcing/laws/test_random_modes.py
++++ b/tests/forcing/laws/test_random_modes.py
+@@ -32,10 +32,13 @@ Law = RandomModesForcingTerm
+ State = dict[str, Any]
+ 
+ 
+-def _random_modes(seed: int = 1729, *, maximum_mode: float = 2.0) -> str:
++def _random_modes(
++    seed: int = 1729, *, maximum_mode: float = 2.0, minimum_mode: float | None = None
++) -> str:
++    shell = "" if minimum_mode is None else f", minimum_mode: {minimum_mode}"
+     return (
+         f"{{type: random_modes, seed: {seed}, correlation_time: 0.7, variance: 0.04, "
+-        f"maximum_mode: {maximum_mode}}}"
++        f"maximum_mode: {maximum_mode}{shell}}}"
+     )
+ 
+ 
+@@ -44,11 +47,12 @@ def _law(
+     *,
+     seed: int = 1729,
+     maximum_mode: float = 2.0,
++    minimum_mode: float | None = None,
+     precision: str = "float64",
+     fresh: bool = False,
+ ) -> Law:
+     law = forcing_law(
+-        _random_modes(seed, maximum_mode=maximum_mode),
++        _random_modes(seed, maximum_mode=maximum_mode, minimum_mode=minimum_mode),
+         grid=grid,
+         precision=precision,
+         fresh=fresh,
+@@ -155,6 +159,28 @@ def test_construction_refuses_a_cutoff_the_grid_cannot_carry(
+         _law(grid, maximum_mode=maximum_mode)
+ 
+ 
++def test_minimum_mode_confines_the_force_to_a_shell() -> None:
++    """With ``minimum_mode`` the forced modes are those of the ball at or beyond the inner
++    radius, the acceleration has no Fourier content inside it, a carry of the ball law
++    does not resume the shell law, and an empty shell is refused."""
++    ball = _law((16, 16), maximum_mode=3.0)
++    shell = _law((16, 16), maximum_mode=3.0, minimum_mode=2.0)
++    ball_radii = ball.mode_indices.square().sum(dim=1)
++
++    assert torch.equal(shell.mode_indices, ball.mode_indices[ball_radii >= 4])
++    fields = momentum_fields((16, 16), nonuniform=False)
++    sources, _ = _evaluate(shell, fields)
++    spectrum = torch.fft.fftn(sources["momentum"] / fields["density"], dim=(2, 3))
++    index = torch.fft.fftfreq(16, d=1.0 / 16, dtype=torch.float64)
++    inside = index[:, None] ** 2 + index[None, :] ** 2 < 4
++    assert spectrum[..., inside].abs().amax() < 2.0e-10
++    _, ball_state = _evaluate(ball, fields)
++    with pytest.raises(ValueError, match="settings do not match"):
++        shell.load_checkpoint_state({"carry": ball_state})
++    with pytest.raises(ValueError, match="selects no nonzero"):
++        _law((8, 8, 8), maximum_mode=1.3, minimum_mode=1.1)
++
++
+ def test_local_window_must_fit_inside_the_global_grid() -> None:
+     """A rank window past the global grid would reconstruct phantom cells."""
+     with single_rank_process_group():
+-- 
+2.51.0
+

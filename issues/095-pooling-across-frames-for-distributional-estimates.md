@@ -2,7 +2,7 @@
 
 **Category:** method
 **Priority:** unset
-**Status:** open, no customer yet
+**Status:** open; one proposed customer, the base-period protocol of `tail_exceedance`, whose data now exists (below)
 
 ## Context
 
@@ -33,6 +33,23 @@ no test (`AGENTS.md` §1, a helper needs two callers or a reason).
 
 A metric whose estimate is unusable on one frame, measured, with the frame count its estimate
 needs.
+
+## A candidate customer and its data (2026-11-27)
+
+`proposals/EXP-tail_exceedance-base-period-climatology.md` sets an exceedance threshold from
+the frames of a base period and counts exceedances on frames outside it, which is a threshold
+pooled across frames. Its data now exists: `kinet_forced_re40k` stores a statistically
+stationary record with a base period (steps 52 000 to 128 000, 20 frames) disjoint from the
+evaluated period (steps 140 000 to 220 000, 21 frames), both on disk at 4 000-step spacing
+(`docs/datasets/logs/forced_turbulence_2d.md`). What it lacks is this procedure in a slightly
+different form: a quantity computed once from the reference's base-period frames and handed to
+a per-frame metric on other frames, which neither the series-level contract above nor the
+per-frame `ctx.cache` provides. Its mean energies over the two periods are 1.525e-3 and
+1.548e-3 (1.5% apart), inside the slow wander of the total energy, whose correlation time,
+about 16 000 steps, leaves only about five independent samples of it per period
+(`checks/final_220000.txt` in `docs/datasets/logs/kinet_runs/forced_turbulence_2d/`); the
+velocity field decorrelates in about 2 150 steps, about 37 samples per period. Not built here
+(`dataset_specs/BUILD_ORDER.md`, "How code is written for this plan").
 
 ## Related
 

@@ -716,6 +716,111 @@ and compared each byte for byte with its source (129 files, 327 kB).
   after about eight weeks. Every run is reproducible from this folder; whether a rerun is bitwise
   identical to these runs has not been checked.
 
+## Forced stationary two-dimensional turbulence: `forced_turbulence_2d/` (2026-11-27)
+
+Build-order step 22: one kinet run of forced two-dimensional turbulence with a linear drag on
+$1024^2$ cells, 220 000 steps, and the pilots that calibrated it. The job agent ran them and
+collected each run's record; the dataset agent copied the files below on 2026-11-27 with
+`shutil.copyfile` from `/pscratch/sd/k/khegazy/kinet_datasets/_provenance/forced_turbulence/`
+and compared each byte for byte with its source (88 files, 288 kB).
+
+**This run cannot be reproduced on unmodified kinet.** It needs two additions that kinet's
+`perf/cleanup` branch refuses: a negative rate on the `linear` forcing law under
+`rate_policy: constant`, which is a linear drag, and a `minimum_mode` key on `random_modes`,
+which confines the force to a shell. They were made on the kinet branch `datasets/forced-drag`,
+three commits on top of `perf/cleanup` at `d1cd353b8` (`af1c2f052` the two additions and their
+tests, `ef76ae40b` the case file `Re-2700_Ma-1en1_forced_drag_2d.yaml` and its initialiser
+entry, `55e7edfda` the case recalibrated and renamed `Re-40k_Ma-1en1_forced_drag_2d.yaml`). The
+branch exists only in the local kinet checkout (`/global/u2/k/khegazy/projects/pde/kinet`); it
+is not pushed. The three commits are kept here as patches, `kinet_patches/0001-*.patch` to
+`0003-*.patch`, written by `git format-patch` with every email address replaced by
+`address removed`; on 2026-11-27 each was checked to equal its commit's `git format-patch -1`
+output apart from the series number in its subject line and that replacement. To rebuild the
+code: `git checkout -b datasets/forced-drag d1cd353b8 && git am kinet_patches/*.patch` in a kinet
+checkout (not executed).
+
+- **What is here.** One folder per run, each with `RUN.txt` (the exact command, the `sbatch`
+  line, the working directory, the environment script, the kinet worktree, branch and commit,
+  the GPU, the job's `sacct` line, the rollout's path and size, and the last-step check),
+  `config.yaml`, `resolved_config.yaml`, `run_provenance.yaml`, `manifest.yaml`, the command
+  file `command_<job>.txt` and the job header `job_<job>_header.txt` (which prints the commit,
+  that the worktree had no uncommitted changes, `kinet.__file__`, and the torch, CUDA, h5py and
+  NumPy versions); `final_220000/` also holds `SUBMITTED.txt`, the record written at submission.
+  At the top: the environment `env.sh` (kinet's own `.venv` with the worktree of the branch put
+  first on `PYTHONPATH`), the launch script `run_forced_job.sh`, the record writer
+  `collect_run.sh`, the two submissions `sbatch_final.txt` and `sbatch_final_debug.txt`, the
+  check script `check_forced.py`, the calibration summary `calibration_summary.txt`, the
+  functional check of the two additions `functional_check.py` with its output
+  `functional_check_128.txt`, and the record of kinet's own tests on the branch,
+  `kinet_tests_pytest.txt` (737 passed, at `ef76ae40b`). `checks/` holds the text output of
+  `check_forced.py` for every run (`final_220000.txt` is the check of the dataset's file), the
+  comparison of the debug test with the chosen pilot (`final_debug_vs_pilot_a5e-5.txt`: bitwise
+  equal at steps 500, 10 000 and 20 000) and the composition check of the final case.
+- **The runs.** All on one A100 with torch `2.15.0+cu132`, from the worktree
+  `/pscratch/sd/k/khegazy/kinet_worktrees/forced_drag` with no uncommitted changes, each with
+  `io.save_every_n=500 io.record_distributions=false io.record_equilibria=false`:
+
+| Folder | Job | Commit | Case and overrides | Steps | Rollout (bytes) |
+|---|---|---|---|---|---|
+| `tput_1024` | 62107806 (debug) | `ef76ae40b` | `Re-2700_Ma-1en1_forced_drag_2d`, the plan's settings (Re 2700, drag 2.26e-4, variance 1.5e-10): throughput | 4 000 | 503 721 098 |
+| `pilot_1024` | 62108011 (debug) | `ef76ae40b` | the same | 60 000 | 6 145 932 555 |
+| `pilot_1024_re2e4` | 62108136 (debug) | `ef76ae40b` | Re 20 000, variance 1.1e-10 | 60 000 | 6 145 932 555 |
+| `pilot_a1e-4_re20000` | 62108434 (debug) | `ef76ae40b` | Re 20 000, drag 1e-4, variance 5.1e-11 | 100 000 | 10 176 027 590 |
+| `pilot_a1e-4_re40000` | 62108433 (debug) | `ef76ae40b` | Re 40 000, drag 1e-4, variance 5.1e-11 | 100 000 | 10 176 027 590 |
+| `pilot_a7.0e-5_re40000` | 62114419 (debug) | `ef76ae40b` | Re 40 000, drag 7e-5, variance 3.6e-11 | 150 000 | 15 213 685 876 |
+| `pilot_a5.0e-5_re40000` | 62114415 (debug) | `ef76ae40b` | Re 40 000, drag 5e-5, variance 2.55e-11 (chosen) | 150 000 | 15 213 685 876 |
+| `final_debug_20000` | 62116112 (debug) | `55e7edfda` | `Re-40k_Ma-1en1_forced_drag_2d` with `case.discretization.temporal.grid=20000`: the debug test of the final configuration | 20 000 | 2 115 780 864 |
+| `final_220000` | 62116382 (regular) | `55e7edfda` | `Re-40k_Ma-1en1_forced_drag_2d` as committed: the dataset, identity key `7a817df3` | 220 000 | 22 266 408 068 |
+
+  The pilots override the forcing law on the command line; their exact overrides are in each
+  `command_<job>.txt`. The final run took 727.9 s of stepping, 3.17 ms per step, and 13 min 35 s
+  of job time (`final_220000/RUN.txt`).
+- **The command that reproduces the dataset**, from `sbatch_final.txt`, run from
+  `/pscratch/sd/k/khegazy/kinet_datasets/_work/forced_turbulence` with a fresh data root in place
+  of the last positional argument:
+
+  ```bash
+  sbatch --account=m4790 --constraint=gpu --qos=regular --nodes=1 --ntasks=1 --cpus-per-task=32 \
+      --gpus-per-node=1 --time=01:00:00 --job-name=ft-final \
+      --output=/pscratch/sd/k/khegazy/kinet_datasets/_work/forced_turbulence/slurm_%j.out \
+      /pscratch/sd/k/khegazy/kinet_datasets/_provenance/forced_turbulence/run_forced_job.sh \
+      final_220000 /pscratch/sd/k/khegazy/kinet_datasets/forced_turbulence \
+      case=homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d io.save_every_n=500 \
+      io.record_distributions=false io.record_equilibria=false runtime_logging.every_n=5000
+  ```
+
+  `run_forced_job.sh` sources `env.sh` and runs `python -m kinet.apps.simulate task=simulate
+  <overrides> paths.data_root=<data root> distributed.is_distributed=false
+  distributed.is_slurm=true` in `<work>/<run name>`. Both scripts name scratch paths: the
+  worktree in `env.sh` and the provenance folder in the `sbatch` line, which a reproduction
+  after the purge replaces with a fresh worktree of the rebuilt branch and the copies here.
+  Whether a rerun of the final run is bitwise identical has not been checked. The debug test
+  reproduced the chosen pilot bitwise at steps 500, 10 000 and 20 000, both on a 40 GB A100;
+  the final run ran on an 80 GB A100.
+- **After the simulation.** The dataset's file is `python -m fmeval.data.convert_kinet
+  <rollout> /global/cfs/cdirs/m4790/Data/kinet/homogeneous_isotropic_turbulence/weakly_compressible_isoT_fluids/sys_Re-40k_Ma-1en1_forced_drag/7a817df3.h5
+  --every 8`, run on 2026-11-27 from the repository's `.venv` on a login node (8.8 s): the
+  initial condition and steps 4 000, 8 000, ..., 220 000, 56 frames of density, velocity and
+  vorticity, 1 879 077 104 bytes. Every kept frame and field was checked equal to its slot of the
+  rollout, and the clock to `time/time_convection`. The dataset that reads it is
+  `kinet_forced_re40k` (`docs/datasets/logs/forced_turbulence_2d.md`).
+- **Left out, and where it remains.** Each run's `simulate.log` and `log_<job>.txt` (kinet's
+  log, 8 to 40 kB each) and `slurm_<job>.out` (the raw Slurm output, whose content is in
+  `RUN.txt`), and the 18 figures under `checks/` (the spectrum and time series of every check;
+  this folder keeps configurations and records, and the dataset page's figures are drawn by
+  `python -m fmeval.cards dynamics`). All of these stay in the provenance folder above until
+  scratch is purged. Nothing in the copied files is an email address, a token or a credential
+  (searched with regular expressions; the one match of an email pattern is `@pytest.mark` in a
+  patch). The one path into a home directory is kinet's `.venv` in `env.sh`, the same path this
+  README's environment block gives.
+- **Raw output.** The dataset's rollout
+  `/pscratch/sd/k/khegazy/kinet_datasets/forced_turbulence/homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d/7a817df3/tiers/full/rollout.h5`
+  (22.3 GB, every 500th step), the pilots under `.../forced_turbulence/_pilot/` (63.1 GB) and the
+  debug test under `.../forced_turbulence/_debug_final/` (2.1 GB). Scratch is purged after about
+  eight weeks; with it go every frame not converted (385 of the 441) and every pilot. The worktree
+  of the branch is on scratch too; the branch itself is in the kinet checkout on the home file
+  system, and the patches are here.
+
 ## Other kinet data on CFS that no dataset here reads
 
 Not copied, because no configuration of this repository reads them; listed so that nothing

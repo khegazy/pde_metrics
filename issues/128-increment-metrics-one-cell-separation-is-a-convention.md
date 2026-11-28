@@ -51,6 +51,16 @@ of a measured dissipation scale, once a dataset with an established one exists:
 `proposals/EXP-increment_flatness-isotropic-3d-turbulence-cutouts.md`). Either is a sibling
 bundle importing the same function, so no recorded number moves.
 
+## Physical scales one dataset now supplies
+
+`kinet_forced_re40k` (2026-11-27) is the first dataset with measured scales in cells: the
+forcing scale is $1024/32 = 32$ native cells, and its check measured an integral scale
+$L = 2\pi \sum_n E(n)/k_n / \sum_n E(n) = 141.3$ native cells
+(`docs/datasets/logs/kinet_runs/forced_turbulence_2d/checks/final_220000.txt`). On its
+$256^2$ analysis grid these are 8 and about 35 cells. Its viscous scale was not measured. This
+does not settle the issue: it gives a separation that could be stated physically on one
+dataset, not a convention for all of them.
+
 ## Related
 
 `issues/098` (the summary over separations), `issues/036` (the flatness curve), written with the

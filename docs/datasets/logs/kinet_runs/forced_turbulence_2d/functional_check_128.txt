@@ -1,0 +1,4 @@
+kinet /pscratch/sd/k/khegazy/kinet_worktrees/forced_drag/kinet/__init__.py | terms: RandomModesForcingTerm LinearForcingTerm
+shell: modes selected 54, expected 54; radii 7.0000..9.0000; power fraction outside 7.0 <= |n| <= 9.0: 2.389e-30
+drag: max |F - rate (u - <u>)| / max |rate (u - <u>)| = 1.783e-16; <u . F> = -2.5000e-06 (negative removes energy); net momentum 2.537e-17
+FUNCTIONAL CHECK PASSED

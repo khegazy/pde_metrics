@@ -1,0 +1,25 @@
+launches:
+- started_at: '2026-11-27T23:58:05.376091+00:00'
+  run_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/forced_turbulence/final_220000/outputs/homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d/simulate/job_261127_155803_787641
+  case_path: homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d
+  case_id: Re-40k_Ma-1en1_forced_drag_2d
+  task: simulate
+  hostname: nid008684
+  pid: 2306026
+  stamp: null
+  resume_from: null
+  slurm_job_id: '62116382'
+  slurm_job_name: ft-final
+  slurm_submit_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/forced_turbulence
+  slurm_stdout: /pscratch/sd/k/khegazy/kinet_datasets/_work/forced_turbulence/final_220000/outputs/homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d/simulate/job_261127_155803_787641/logs/62116382/slurm.out
+  slurm_stderr: /pscratch/sd/k/khegazy/kinet_datasets/_work/forced_turbulence/final_220000/outputs/homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d/simulate/job_261127_155803_787641/logs/62116382/slurm.err
+  hydra_overrides:
+  - task=simulate
+  - case=homogeneous_isotropic_turbulence/Re-40k_Ma-1en1_forced_drag_2d
+  - ++case.io.save_every_n=500
+  - ++case.io.record_distributions=false
+  - ++case.io.record_equilibria=false
+  - ++case.runtime_logging.every_n=5000
+  - ++paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/forced_turbulence
+  - ++distributed.is_distributed=false
+  - ++distributed.is_slurm=true
