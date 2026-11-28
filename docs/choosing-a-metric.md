@@ -372,9 +372,12 @@ the two share. A shock smeared over more than a few cells is not detected. Withi
 about turbulence. These exist and have not been run for the pages yet: the exact Sod solution
 displaced by a physically consistent amount (its `time_offset` candidate), kinet's Sod runs,
 the Sedov–Taylor and Noh blast waves (`sedov_taylor`, `noh`), the segmentation field's
-geometric cases as pressure fronts (`feature_population`), and a solver's two-dimensional bow
-shock (`kinet_supersonic_cylinder`), whose translations are the perturbed cases. Missing: a
-two-dimensional dataset with many shocks, the case this repository is aimed at
+geometric cases as pressure fronts (`feature_population`), a solver's two-dimensional bow
+shock (`kinet_supersonic_cylinder`), whose translations are the perturbed cases, a solver's
+straight oblique shocks against their exact solution (`kinet_oblique_riemann_30deg`,
+`kinet_oblique_riemann_45deg`), and a solver's pattern of several interacting shocks
+(`kinet_double_mach_reflection`). Missing: shocks in turbulence, many at once, the case this
+repository is aimed at
 ([issue 002](https://github.com/khegazy/pde_metrics/blob/main/issues/002-shocklet-dataset.md);
 [EXP-shock_set_distance-2d-shock-dataset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_set_distance-2d-shock-dataset.md)).
 

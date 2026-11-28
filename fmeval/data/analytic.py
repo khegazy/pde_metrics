@@ -7,9 +7,9 @@ Nothing is written to disk; a frame is recomputed whenever it is read, which is 
 cheap. Measured through ``Trajectory.frame``, validation included, on a NERSC login node:
 0.3 ms per frame for Sod on 2048 cells and 1.8 ms for Taylor-Green on 256^2, against about
 10 ms of I/O per kinet frame (``fmeval/pipeline.py``). Evaluating Taylor-Green's sines
-directly took 7.0 ms, which is why its spatial patterns are computed once. The two exceptions
-are ``taylor_green_kinet`` and ``sod_kinet``, which take their cells and clock from a kinet run of
-the problem and open that run as their candidate.
+directly took 7.0 ms, which is why its spatial patterns are computed once. The exceptions are
+``taylor_green_kinet``, ``sod_kinet`` and ``isentropic_vortex_kinet``, which take their cells and
+clock from a kinet run of the problem and open that run as their candidate.
 
 A reader may also supply a **candidate**: the same closed form with some of its parameters
 changed (``candidate={"nu": 0.02}``), returned by :meth:`ClosedFormTrajectory.predictions` and
@@ -22,8 +22,8 @@ None is **evidence about a flow**. ``sod_shock_tube``, ``burgers``, ``sedov_tayl
 ``helmholtz_mixture_2d`` configurations are in ``evidence_datasets``, each under a label saying
 it is an analytic check or a known-statistics null and nothing about turbulence;
 ``taylor_green_2d`` is a fixture for the harness only (``docs/decisions.md``). The
-``taylor_green_kinet`` and ``sod_kinet`` configurations are evidence of a solver's observed order
-on a grid sequence. Their pages are ``docs/datasets/``.
+``taylor_green_kinet``, ``sod_kinet`` and ``isentropic_vortex_kinet`` configurations are evidence of
+a solver's observed order on a grid sequence. Their pages are ``docs/datasets/``.
 """
 
 from __future__ import annotations
@@ -357,6 +357,21 @@ class SodKinet(SodShockTube):
 
     Frame 0 is the run's initial condition, where the solution is the bare jump: ``(x - 0.5) / 0``
     is infinite on every cell, since no cell centre is the face 0.5.
+
+    **The tube rotated in a square.** kinet's ``oblique_riemann`` case, run by its finite-volume
+    PonD solver, fills the unit square with the same two states at rest on either side of the
+    line through its centre with unit normal ``normal``, every face zero-gradient, the cells cut by
+    the line holding each state's share of the cell. The Euler equations are invariant under
+    rotation, so the solution is the tube's along the normal, at ``s = n . (x - (1/2, 1/2))``, with
+    the velocity ``u_n n`` (kinet's ``kinet/reference/riemann/euler_nd.py`` states the same), and
+    the run is read in its own units, the case's length and physical time. That solution holds only
+    where no disturbance from a face has arrived: where a tilted front meets a zero-gradient face
+    the face is not consistent with it. So the run is read through a window
+    (``KinetRawTrajectory(window=...)``) of the cells whose centres lie farther from every face than
+    the fastest signal of the exact solution, the largest of ``|u| + c`` over its states (the fan's
+    lie between theirs), travels by the run's last time; every face of the window is declared
+    ``neumann``, which inside the window is no boundary of the flow. Rows are labelled with the
+    run's whole grid, ``param_resolution`` N.
     """
 
     reads_from_disk = True
@@ -365,54 +380,89 @@ class SodKinet(SodShockTube):
     #: leave periodic, every field is uniform, so any extension is exact.
     BOUNDARY: ClassVar[tuple[str, str]] = ("neumann", "periodic")
 
-    def __init__(self, path: str | Path) -> None:
-        """Read the run's states, diaphragm, cells and clock, and the exact solution on them.
+    def __init__(self, path: str | Path, *, normal: Sequence[float] = (1.0, 0.0)) -> None:
+        """Read the run's states, interface, cells and clock, and the exact solution on them.
 
         Args:
-            path: A kinet ``sod`` run in the flat layout, converted by
+            path: A kinet ``sod`` or ``oblique_riemann`` run in the flat layout, converted by
                 ``fmeval.data.convert_kinet``, or its published URL.
+            normal: The normal of the interface, pointing from the left state to the right one;
+                ``(1, 0)`` for the tube. Normalised here.
 
         Raises:
-            ValueError: If the run is not kinet's two-dimensional Sod tube, its initial density
-                is not one jump at the face ``(N - 1) / 2``, or :class:`SodShockTube` refuses
-                its states or its last time.
+            ValueError: If ``normal`` is not two numbers not both zero, the run is neither kinet's
+                two-dimensional Sod tube with its initial density one jump at the face
+                ``(N - 1) / 2`` (and ``normal`` along x) nor an ``oblique_riemann`` run whose
+                uncut cells hold its two states on the sides of the line ``normal`` gives, or
+                :class:`SodShockTube` refuses its states or its last time.
         """
-        with KinetRawTrajectory(path, include_redundant=True) as lattice:
-            group, n = lattice.meta["source_attrs"].get("group"), lattice.grid.shape[0]
-            gamma = lattice.meta["source_attrs"].get("gamma")
+        unit = np.asarray(normal, dtype=float)
+        if unit.shape != (2,) or not unit.any():
+            raise ValueError(f"normal must be two numbers not both zero, got {normal}")
+        unit = unit / np.hypot(*unit)
+        with KinetRawTrajectory(path) as lattice:
+            group, gamma = (lattice.meta["source_attrs"].get(k) for k in ("group", "gamma"))
+            n = lattice.grid.shape[0]
+        tube = group == "sod"
+        self._cell = 1.0 / (n - 1) if tube else None
+        with KinetRawTrajectory(path, include_redundant=True, cell=self._cell) as lattice:
+            grid, times = lattice.grid, lattice.times
             start = lattice.frame(0, ["density", "pressure"]).fields
-        density, pressure = start["density"][0, :, 0], start["pressure"][0, :, 0]
-        right = np.flatnonzero(density != density[0])
-        if (group != "sod" or gamma is None or lattice.grid.n_spatial != 2 or n % 2 == 0
-                or not np.array_equal(right, np.arange((n - 1) // 2, n))):
+        density, pressure, spacing = start["density"][0], start["pressure"][0], grid.spacing
+        x, y = ((np.arange(k) + 0.5) * h for k, h in zip(grid.shape, spacing))
+        # The coordinate along the normal, the interface at DIAPHRAGM: x itself for the tube.
+        along = unit[0] * x[:, None] + unit[1] * y[None, :] + 0.5 * (1.0 - unit.sum())
+        lo, hi = np.unravel_index(along.argmin(), along.shape), np.unravel_index(along.argmax(),
+                                                                               along.shape)
+        # kinet paints whole cells on the tube, its diaphragm on a face; a PonD run's cut cells
+        # hold mixtures, so only the cells the line does not cut are compared.
+        cut = (np.zeros(along.shape, dtype=bool) if tube else np.abs(along - self.DIAPHRAGM)
+               <= (1 + 1e-9) * 0.5 * np.abs(unit) @ np.asarray(spacing))
+        side = along < self.DIAPHRAGM
+        if (gamma is None or grid.n_spatial != 2 or (tube and (n % 2 == 0 or unit[0] != 1.0))
+                or group not in ("sod", "oblique_riemann") or not all(
+                    np.array_equal(field[~cut], np.where(side, field[lo], field[hi])[~cut])
+                    for field in (density, pressure))):
             raise ValueError(f"{path}: a kinet sod run on an odd number of nodes with one jump "
-                             f"at the face (N - 1) / 2 is needed; this is {group!r} on "
-                             f"{lattice.grid.shape} with the right state from node "
-                             f"{right[:1].tolist()}")
-        self._path, self._cell = path, 1.0 / (n - 1)
+                             "at the face (N - 1) / 2, or an oblique_riemann run whose uncut cells "
+                             f"hold its two states on the sides of the line with normal {unit}, "
+                             f"is needed; this is {group!r} on {grid.shape}")
+        # t_start is the first time after the jump, for the parent's checks; the frames are the
+        # run's own, frame 0 included, because the pipeline pairs equal clocks only.
+        super().__init__(gamma=gamma, left=(density[lo], pressure[lo]),
+                         right=(density[hi], pressure[hi]), grid=(n,), n_frames=len(times),
+                         t_start=float(times[1]), t_end=float(times[-1]),
+                         candidate={})  # an empty candidate labels the rows as a candidate's
+        self._path, self._normal, self._resolution = path, unit, n
+        self._boundary, self._window = (self.BOUNDARY, None) if tube else (("neumann",) * 2, [])
+        if not tube:
+            star, (rho_r, p_r) = self.star, self._right
+            fastest = max(self._c_left, np.sqrt(self._gamma * p_r / rho_r),
+                          star["velocity"] + np.sqrt(self._gamma * star["pressure"] / min(
+                              star["density_left"], star["density_right"])))
+            for k, h in zip(grid.shape, spacing):
+                first = int(np.ceil(fastest * float(times[-1]) / h - 0.5))
+                self._window.append([first, k - first])
         with self.predictions() as run:
-            # t_start is the first time after the jump, for the parent's checks; the frames are
-            # the run's own, frame 0 included, because the pipeline pairs equal clocks only.
-            super().__init__(gamma=gamma, left=(density[0], pressure[0]),
-                             right=(density[-1], pressure[-1]), grid=(n,), n_frames=len(run),
-                             t_start=float(run.times[1]), t_end=float(run.times[-1]),
-                             candidate={})  # an empty candidate labels the rows as a candidate's
             self._grid, self._times = run.grid, run.times
-        self.centres = [np.broadcast_to(((np.arange(n) + 0.5) * self._cell)[:, None],
-                                        self._grid.shape)]
+        self.centres = [along if tube else along[tuple(slice(*cells) for cells in self._window)]]
         self._meta["path"] = str(path)
 
+    def frame_columns(self, t: int) -> dict[str, Any]:
+        """Every row is labelled as a candidate's, with the run's whole grid along x."""
+        return self._candidate_columns(t, self._resolution)
+
     def solution(self, time: float) -> dict[str, np.ndarray]:
-        """The tube's solution on every transverse node, with a zero transverse velocity."""
-        with np.errstate(divide="ignore"):  # at t = 0, the jump (class docstring)
+        """The solution along the normal on every cell, its velocity ``u_n n``."""
+        with np.errstate(divide="ignore", invalid="ignore"):  # at t = 0, the jump (above)
             fields = super().solution(time)
-        fields["velocity"] = np.concatenate([fields["velocity"], 0 * fields["velocity"]])
+        fields["velocity"] = self._normal[:, None, None] * fields["velocity"]
         return fields
 
     def predictions(self) -> KinetRawTrajectory:
         """The run, on this reader's cells and clock and in its units."""
-        return KinetRawTrajectory(self._path, include_redundant=True, boundary=self.BOUNDARY,
-                                  cell=self._cell)
+        return KinetRawTrajectory(self._path, include_redundant=True, boundary=self._boundary,
+                                  cell=self._cell, window=self._window)
 
 
 @register_reader("burgers")
@@ -1040,6 +1090,106 @@ class TaylorGreenKinet(TaylorGreen2D):
     def predictions(self) -> KinetRawTrajectory:
         """The run, on this reader's cells and clock and in its units."""
         return KinetRawTrajectory(self._path, box=self.BOX)
+
+
+@register_reader("isentropic_vortex_kinet")
+class IsentropicVortexKinet(ClosedFormTrajectory):
+    """Shu's isentropic vortex carried by a uniform flow, on the cells and clock of a kinet run of
+    it, the run its candidate.
+
+    The vortex is a steady solution of the Euler equations of an ideal gas in the frame of the
+    flow, with uniform entropy ``p / rho^gamma``. Spiegel, Huynh & DeBonis (2015), "A survey of the
+    isentropic Euler vortex problem using high-order methods", AIAA Paper 2015-2444,
+    https://ntrs.nasa.gov/citations/20150018403, define it by their Eqs. (20) to (23) and list
+    Shu's parameters in their Table 1. With ``r`` the distance from the vortex centre in core radii
+    ``R``, ``rho_inf = p_inf = 1``, and the strength ``beta`` in units of the isothermal sound speed
+    ``sqrt(p_inf / rho_inf)``, the convention of kinet's ``kinet/reference/vortex.py`` (which
+    attributes it to Shu, ICASE Report 98-32, Sect. 4.5, not opened here)::
+
+        theta = 1 - (gamma - 1) beta^2 / (8 gamma pi^2) exp(1 - r^2)
+        rho = theta^(1 / (gamma - 1)),   p = theta^(gamma / (gamma - 1))
+        u = U + beta / (2 pi) exp((1 - r^2) / 2) (-(y - y_c), x - x_c) / R
+
+    This is Spiegel's Eqs. (20) to (23) with ``sigma = 1``, in which the strength ``beta_S`` is in
+    units of the sound speed ``a_inf = sqrt(gamma p_inf / rho_inf)`` and multiplies ``exp(-r^2 / 2)``,
+    so ``beta_S = beta e^(1/2) / (2 pi sqrt(gamma))`` (our conversion); ``theta`` is their
+    ``1 + delta T``. Their Table 1 gives Shu's ``beta_S = M_inf 5 sqrt(2) e^(1/2) / (4 pi)`` with
+    ``M_inf = sqrt(2 / gamma)`` at 45 degrees, which is ``beta = 5`` and ``U = (1, 1)``, on the box
+    of half-side ``L = 5``. The exact solution at time ``t`` "is just the translation of the initial
+    conditions based on propagation speed and simulation time" (Spiegel et al. 2015, Sect.
+    IV.B.1): the centre moves to ``x_c + U t``, the displacement to the nearest periodic image.
+
+    kinet's case ``isentropic_vortex/default`` holds exactly these parameters (:attr:`VORTEX`) on
+    ``[0, 10]^2``, doubly periodic, the centre in the middle; its finite-volume PonD solver writes
+    the case's physical time and velocity (``fmeval.data.convert_kinet``), cell ``i`` centred at
+    ``(i + 1/2) L / N``. This reader's frames are the exact solution at the run's cell centres and
+    times with the run's ``gamma``; :meth:`predictions` is the run, scored against them as a
+    candidate is, its rows labelled with ``param_resolution`` N, so a grid sequence gives the
+    solver's observed order (``fmeval.analysis.observed_order``). The run's viscosity is not read:
+    the exact solution is inviscid, so a viscous run's error includes its physical decay.
+    """
+
+    reads_from_disk = True
+    FORMAT = "isentropic_vortex_kinet"
+    FIELDS = ("density", "velocity", "pressure")
+    #: kinet's ``isentropic_vortex/default``: Shu's parameters (Spiegel et al. 2015, Table 1),
+    #: the centre as a fraction of the box.
+    VORTEX: ClassVar[dict[str, Any]] = {"strength": 5.0, "radius": 1.0, "centre": [0.5, 0.5],
+                                        "boost": [1.0, 1.0]}
+
+    def __init__(self, path: str | Path) -> None:
+        """Read the run's grid, clock and ``gamma``, and check its initial condition.
+
+        Args:
+            path: A kinet ``isentropic_vortex`` run in the flat layout, converted by
+                ``fmeval.data.convert_kinet``, or its published URL.
+
+        Raises:
+            ValueError: If the run is not kinet's two-dimensional isentropic vortex, or its stored
+                initial condition differs from :attr:`VORTEX`'s exact solution at ``t = 0`` by
+                more than 1e-12 in any field (measured at most 4.4e-16 on the runs here).
+        """
+        with KinetRawTrajectory(path, include_redundant=True) as run:
+            group, gamma = (run.meta["source_attrs"].get(k) for k in ("group", "gamma"))
+            if group != "isentropic_vortex" or gamma is None or run.grid.n_spatial != 2:
+                raise ValueError(f"{path}: a two-dimensional kinet isentropic_vortex run is "
+                                 f"needed; this is {group!r} on {run.grid.shape}")
+            super().__init__(grid=run.grid.shape,
+                             length=[n * h for n, h in zip(run.grid.shape, run.grid.spacing)],
+                             boundary=("periodic", "periodic"), n_frames=len(run),
+                             t_start=float(run.times[0]), t_end=float(run.times[-1]),
+                             params={"gamma": float(gamma), **self.VORTEX},
+                             candidate={})  # an empty candidate labels the rows as a candidate's
+            # The run's clock itself: the pipeline pairs two trajectories only on equal times.
+            self._times = run.times
+            start = run.frame(0, list(self.FIELDS)).fields
+        self._path = path
+        self._meta["path"] = str(path)
+        exact = self.solution(0.0)
+        worst = max(float(np.abs(exact[name] - start[name]).max()) for name in self.FIELDS)
+        if worst > 1e-12:
+            raise ValueError(f"{path}: the stored initial condition differs from the vortex "
+                             f"{self.VORTEX} by {worst:.3g}; this reader holds kinet's default case")
+
+    def solution(self, time: float) -> dict[str, np.ndarray]:
+        """Density, velocity and pressure at ``time`` on the cell centres (class docstring)."""
+        vortex, gamma = self._params, self._params["gamma"]
+        lengths = [n * h for n, h in zip(self._grid.shape, self._grid.spacing)]
+        offsets = [c - f * length - u * time for c, f, length, u in zip(
+            self.centres, vortex["centre"], lengths, vortex["boost"], strict=True)]
+        dx, dy = (d - length * np.round(d / length) for d, length in zip(offsets, lengths))
+        r_squared = (dx**2 + dy**2) / vortex["radius"] ** 2
+        swirl = vortex["strength"] / (2 * np.pi * vortex["radius"]) * np.exp(0.5 * (1 - r_squared))
+        theta = 1 - (gamma - 1) * vortex["strength"] ** 2 / (8 * gamma * np.pi**2) * np.exp(
+            1 - r_squared)
+        return {"density": (theta ** (1 / (gamma - 1)))[None],
+                "velocity": np.stack([vortex["boost"][0] - swirl * dy,
+                                      vortex["boost"][1] + swirl * dx]),
+                "pressure": (theta ** (gamma / (gamma - 1)))[None]}
+
+    def predictions(self) -> KinetRawTrajectory:
+        """The run, in the case's own units, which are this reader's."""
+        return KinetRawTrajectory(self._path, include_redundant=True)
 
 
 @register_reader("advecting_blobs")

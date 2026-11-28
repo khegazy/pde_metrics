@@ -1,0 +1,22 @@
+# kinet's isentropic vortex with the case's own viscosity, mu = 1e-5, on 64^2, 128^2 and 256^2
+# cells, run to t = 10: one period of the box, when the exact vortex is back at its start. One run
+# per grid, chosen with dataset.trajectory (N64, N128, N256). The 512^2 run of the same case was
+# made only to t = 2.5 and is not converted: no other grid shares a saved time with it, and its
+# order against 256^2 (0.9 to 1.6) is set by the run's viscous decay, which the inviscid exact
+# solution does not have (docs/datasets/logs/isentropic_vortex.md). The fragment says how the
+# order is read.
+defaults:
+  - _kinet_isentropic_vortex
+  - _self_
+
+name: kinet_isentropic_vortex_mu1em5
+trajectory: N64
+path: ${paths.data}/kinet/isentropic_vortex/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en5/${.trajectory}.h5
+
+complexity:
+  params: {viscosity: 1.0e-5, t_end: 10}
+  label: "kinet isentropic vortex, one period, three grids"
+
+notes: "kinet PonD isentropic vortex (Shu's parameters), mu = 1e-5, on 64^2, 128^2 and 256^2 at
+  t = 10, scored against the exact solution on each run's cells. See
+  docs/datasets/isentropic_vortex.md."

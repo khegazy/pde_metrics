@@ -1,0 +1,50 @@
+Three facts about the shocks_2d rollout files, 2026-11-27. Measured values come from
+file_anatomy_part1.txt and file_anatomy_part2.txt (script scripts/file_anatomy.py); the boundary
+description is read from each file's boundary_conditions attribute and, for what each face type
+does, from kinet perf/cleanup d1cd353b8, kinet/solver/pond/boundaries/ghost_states.py and
+kinet/solver/pond/transport/ghosts.py.
+
+(a) The mesoscopic/ fields that the record flags cannot switch off
+  mesoscopic/thermal_time, mesoscopic/viscous_time_ft, mesoscopic/viscous_time_gt, each
+  (1, 1, T, Nx, Ny) float64, written at every saved slot. observables/ holds density, pressure,
+  specific_energy, temperature (one channel each) and velocity (two channels): six channels.
+  So mesoscopic is 3 of 9 stored channels. Measured share of each file's bytes (uncompressed):
+    vortex N64 0.323, N128 0.326, N256 0.328, N512 0.318
+    oblique 30 deg N200 0.325, N400 0.325; 45 deg N200 0.324, N400 0.324
+    double Mach reflection 480x120 0.326
+  observables/ is 0.637 to 0.656 of each file, initial_conditions/ 0.013 to 0.044, time/,
+  geometry/ and VTKHDF/ under 0.001.
+
+(b) The unit of time/time
+  In every file the last stored time/time equals the configured end time temporal.length
+  exactly (vortex 10.0 or 2.5, oblique 0.2, double Mach reflection 0.2), so time/time is the
+  case's physical time, in the units of the case's lengths and speeds (domain [0,10]^2 with
+  boost speed 1 for the vortex; [0,1]^2 for the oblique tube; [0,4]x[0,1] with shock speed 10
+  for the double Mach reflection). Its units attribute says "step"; that label is wrong for
+  these PonD runs, whose step is adaptive. time/time_convection / time/time is constant in each
+  file: 0.1183215957 (vortex, longest side 10), 1.183215957 (oblique, side 1), 0.2958039892
+  (double Mach reflection, longest side 4); that is sqrt(1.4) / (longest side) in all three
+  (the identification with sqrt(gamma R T_ref), T_ref = R = 1, is my reading, not checked in
+  kinet's code). velocity is labelled "cell/step" but is in the case's speed units (the vortex
+  initial condition matches the exact solution, boost 1 plus swirl, to 2e-16: check_vortex.txt,
+  t = 0 rows). The time axis of each dataset has more slots than saved frames; select the
+  slots where time/time is finite.
+
+(c) Boundaries, face by face (cell i centred at (i + 1/2) L/N on each axis)
+  Isentropic vortex: [0,10] x [0,10]; x periodic, y periodic ({"Periodic": {"axes": ["x","y"]}}).
+  Oblique Riemann (30 and 45 deg): [0,1] x [0,1]; x-low, x-high, y-low, y-high all "neuman"
+    (zero gradient: the ghost cell copies the adjacent cell). The waves stay inside the box to
+    t = 0.2, but each front meets the faces, where the zero-gradient faces disturb the corners.
+  Double Mach reflection: [0,4] x [0,1].
+    x-low: fixed_state, the post-shock state (rho, ux, uy, p) = (8.0, 7.144660940758388,
+      -4.125, 116.5).
+    x-high: neuman (zero gradient).
+    y-low: split at the tangential coordinate x = 1/6: ghost cells under cells whose centre
+      satisfies x <= 1/6 take the same fixed post-shock state; ghost cells under cells with
+      centre x > 1/6 are a reflective wall (the normal velocity component is flipped). On the
+      480 x 120 grid (dx = 1/120) the fixed state covers cells i = 0..19 (centres up to
+      0.1625) and the wall begins at cell i = 20 (centre 0.1708), i.e. at the face x = 20/120
+      = 1/6 exactly (my arithmetic from the threshold and the cell centres).
+    y-high: moving_mach_shock: post-shock state where the tangential coordinate x is at most
+      s(t) = front0 + 10 (t + dt/2) / sin(60 deg), front0 = 0.7440169358562926 = 1/6 + 1/sqrt(3),
+      pre-shock state (1.4, 0, 0, 1) beyond it, blended by a tanh layer two cells wide.

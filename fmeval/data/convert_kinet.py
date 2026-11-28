@@ -14,11 +14,16 @@ in four ways, each handled here:
   finite slots are kept. Step 1 is always saved, so such a run holds steps 1, N, 2N, ...; step 1
   is dropped when that makes the frames evenly spaced, which ``frame_stride`` and
   ``dataset.time.reduction`` assume. Any other uneven cadence (a resume that changed it) is
-  refused.
+  refused, except on a run with an adaptive time step (``discretization.temporal.type`` is
+  ``adaptive``: kinet's finite-volume PonD solver), whose frames are evenly spaced in neither
+  steps nor time and whose last frame is the step that lands on the end time, off the cadence.
 * The clock is ``time/time_convection``, in domain crossings L/(Ma c_s), the unit of the flat
   files' ``time``; ``time/time`` counts lattice steps. A rollout written before kinet recorded
   ``time_convection`` (the Sod and obstacle runs of 2026-05) has only ``time/time``, which there
-  is kinet's nondimensional clock (step / 5 on the 3001 x 5 Sod runs), and that is carried.
+  is kinet's nondimensional clock (step / 5 on the 3001 x 5 Sod runs), and that is carried. An
+  adaptive run's ``time/time`` is the case's own physical time (its last entry is the configured
+  end time, despite its ``step`` unit label), and that is carried, so the converted file is read
+  in the case's units: lengths from ``discretization.spatial.length``, velocity as stored.
 * ``pressure`` is carried only under ``pressure_convention == "absolute"`` (kinet's compressible
   physics). The weakly compressible physics stores the gauge ``(rho - 1) c_s^2``
   (kinet ``kinet/io/rollout/attrs.py``, ``PRESSURE_CONVENTION_ATTR``), which is not a pressure.
@@ -62,9 +67,10 @@ def convert_kinet_grouped(source: str | Path, destination: str | Path, every: in
         source: A grouped ``rollout.h5`` written by kinet. Read only.
         destination: The flat file to create. Its folders are created; the file is not
             overwritten.
-        every: Keep the initial condition and every ``every``-th evenly spaced frame after it,
-            so that only the frames a dataset evaluates are stored. It must divide the number
-            of frames after the initial condition, so the last saved step is kept.
+        every: Keep the initial condition, the last saved frame and every ``every``-th frame
+            before it, so that only the frames a dataset evaluates are stored. On a fixed-step
+            run it must divide the number of frames after the initial condition, so the kept
+            frames stay evenly spaced from the initial condition on.
 
     Returns:
         ``destination``.
@@ -88,8 +94,9 @@ def convert_kinet_grouped(source: str | Path, destination: str | Path, every: in
             raise ValueError(f"{source}: kinet_rollout_status is "
                              f"{attrs.get('kinet_rollout_status')!r}, not 'complete'.")
         disc = json.loads(attrs["discretization"])
+        adaptive = disc["temporal"].get("type") == "adaptive"
         step = src["time/time_index"][:]
-        clock_name = "time_convection" if "time/time_convection" in src else "time"
+        clock_name = "time_convection" if "time/time_convection" in src and not adaptive else "time"
         clock = src[f"time/{clock_name}"][:]
         saved = np.flatnonzero(np.isfinite(step))
         if (len(step) != int(disc["temporal"]["grid"])
@@ -103,13 +110,14 @@ def convert_kinet_grouped(source: str | Path, destination: str | Path, every: in
         if len(np.unique(np.diff(frame_step))) > 1 and frame_step[1] == 1:
             frame_step, saved = np.delete(frame_step, 1), saved[1:]
         cadence = np.unique(np.diff(frame_step))
-        if len(cadence) != 1:
+        if len(cadence) != 1 and not adaptive:
             raise ValueError(f"{source}: the saved steps {frame_step[:6].tolist()}... are not "
                              "evenly spaced, so no frame_stride or reduction would be uniform.")
-        if every < 1 or len(saved) % every:
+        if every < 1 or (len(saved) % every and not adaptive):
             raise ValueError(f"{source}: every={every} must be a positive divisor of the "
                              f"{len(saved)} saved frames after the initial condition.")
-        frame_step, saved, cadence = frame_step[::every], saved[every - 1::every], cadence * every
+        saved = saved[::-1][::every][::-1]
+        frame_step = np.concatenate([[0], saved + 1])
         times = np.concatenate([src[f"initial_conditions/time/{clock_name}"][:], clock[saved]])
         if not np.all(np.diff(times) > 0):
             raise ValueError(f"{source}: the clock time/{clock_name} does not increase.")
@@ -132,8 +140,10 @@ def convert_kinet_grouped(source: str | Path, destination: str | Path, every: in
                 raise ValueError(f"{source}: observables/{name} is {ds.dtype} {ds.shape}; "
                                  f"expected float64 (N, C, {len(step)}, *{grid}).")
 
-        disc["temporal"].update(grid=len(times) - 1,
-                                resolution=float(cadence[0]) * disc["temporal"]["resolution"])
+        disc["temporal"]["grid"] = len(times) - 1
+        if not adaptive:
+            disc["temporal"]["resolution"] = float(cadence[0] * every) * disc["temporal"][
+                "resolution"]
         destination.parent.mkdir(parents=True, exist_ok=True)
         with h5py.File(partial, "w-") as dst:
             dst.attrs.update(attrs)

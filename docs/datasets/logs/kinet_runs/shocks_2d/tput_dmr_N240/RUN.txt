@@ -1,0 +1,18 @@
+# Run tput_dmr_N240
+slurm_job_id: 62107345
+sacct: 62107345|kinet-s2d-tput-b|gpu_ss11|gpu_debug|m4790_g|2026-11-27T11:46:49|2026-11-27T11:52:19|Unknown|00:20:37|RUNNING|0:0|nid003389
+run_in_job: tput_dmr_N240 rc=0 wall_s=601.46 start=1795809676.633750518 end=1795810278.096495307
+kinet: d1cd353b83e994376d2c4476c968e82bca823f5f branch perf/cleanup
+kinet_uncommitted_paths: 0 (git status --short at collection; the job log records it at run time)
+device: cuda (launch.device), torch 2.15.0+cu132 cuda 13.2
+gpu: NVIDIA A100-SXM4-40GB, 40960 MiB, 580.196.07
+rollout: /pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/_throughput/double_mach_reflection/default/ad2aaf1a/tiers/full/rollout.h5
+rollout_bytes: 17300129
+output_dir_size_after_checkpoint_delete: 17M (/pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/_throughput/double_mach_reflection/default/ad2aaf1a)
+last_step_check: kinet_rollout_status=complete kinet_last_completed_step=181 total_pred_length=191 last_saved_time=np.float64(0.0078) last_saved_time_index=181 saved_frames=9 t_end=0.0078 reached_end=True
+working_directory: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/tput_dmr_N240
+environment: source /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/env.sh   # kinet .venv, KINET_PROJECT, caches on scratch
+command (run inside the working directory by run_kinet_job.sh):
+  python -m kinet.apps.simulate task=simulate case=double_mach_reflection/default case.discretization.spatial.grid=\[960\,240\] case.discretization.temporal.length=0.0078 io.record_distributions=false io.record_equilibria=false io.save_every_n=25 runtime_logging.every_n=25 paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/_throughput distributed.is_distributed=false distributed.is_slurm=true 
+sbatch_exact (from /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d): sbatch --account=m4790 --constraint=gpu --qos=debug --nodes=1 --ntasks=1 --cpus-per-task=32 --gpus-per-node=1 --time=00:30:00 --job-name=kinet-s2d-tput-b --output=/pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/slurm_%j.out run_kinet_job.sh /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/runs_tput_b.txt
+sbatch: sbatch --account=m4790 --constraint=gpu --qos=debug --nodes=1 --ntasks=1 --cpus-per-task=32 --gpus-per-node=1 --time=<limit> run_kinet_job.sh <runs file>

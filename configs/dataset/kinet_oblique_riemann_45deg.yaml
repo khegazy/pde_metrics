@@ -1,0 +1,21 @@
+# kinet's oblique Riemann run with the interface's normal along the diagonal, 45 degrees to x, on
+# 200^2 and 400^2 cells, scored against the exact solution along the normal. The fragment says how.
+defaults:
+  - _kinet_oblique_riemann
+  - _self_
+
+name: kinet_oblique_riemann_45deg
+trajectory: N200
+path: ${paths.data}/kinet/oblique_riemann/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en5_normal-45deg/${.trajectory}.h5
+
+reader:
+  # kinet's case states [1.0, 1.0]; the reader normalises it.
+  normal: [1.0, 1.0]
+
+complexity:
+  params: {normal_deg: 45}
+  label: "kinet Sod tube at 45 degrees against the exact solution, two grids"
+
+notes: "kinet PonD Sod tube (pressures x 0.15) rotated to 45 degrees in the unit square, on 200^2
+  and 400^2 at t = 0.2, scored against the exact solution in a window away from the faces. See
+  docs/datasets/sod_shock_tube.md."

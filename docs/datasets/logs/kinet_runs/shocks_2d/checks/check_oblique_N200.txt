@@ -1,0 +1,34 @@
+
+== /pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/oblique_riemann/oblique_riemann/default/5d9db066/tiers/full/rollout.h5
+   grid 200x200, length 1.0x1.0, normal at 45.00 deg to x, left=(1.0, 0.15), right=(0.125, 0.015), gamma=1.4, status=complete, saved_frames=20, last_time=np.float64(0.2), t_end=0.2, reached_end=True
+   non-finite values in density, velocity, pressure over all 20 frames: 0
+   exact star state: p*=0.0454695 u*=0.359201 rho*_L=0.426319 rho*_R=0.265574; speeds: head=-0.458258 tail=-0.0272165 contact=0.359201 shock=0.678607
+   t=0.05422 interior-box errors  density: rms=1.250e-02 max=7.109e-02; pressure: rms=1.876e-03 max=1.408e-02; velocity_n: rms=1.131e-02 max=9.810e-02; velocity_t: rms=1.832e-16 max=1.360e-15;
+   t=0.05422 cut (169 bins of 0.005): p* (tail..shock)=nan (exact 0.04547, rel +nan, 0 bins); u* (tail..shock)=nan (exact 0.3592, rel +nan, 0 bins); rho*_L (tail..contact)=nan (exact 0.42632, rel +nan, 0 bins); rho*_R (contact..shock)=nan (exact 0.26557, rel +nan, 0 bins)
+   t=0.05422 cut: shock at s=0.03711 (exact 0.03679, diff +0.06 cells); contact at s=0.01890 (exact 0.01948, diff -0.12 cells); max |tangential velocity| in interior 1.360e-15
+   t=0.09564 interior-box errors  density: rms=1.095e-02 max=6.198e-02; pressure: rms=1.500e-03 max=8.412e-03; velocity_n: rms=1.049e-02 max=9.589e-02; velocity_t: rms=2.416e-16 max=1.605e-15;
+   t=0.09564 cut (169 bins of 0.005): p* (tail..shock)=0.045425 (exact 0.04547, rel -9.78e-04, 5 bins); u* (tail..shock)=0.36018 (exact 0.3592, rel +2.73e-03, 5 bins); rho*_L (tail..contact)=nan (exact 0.42632, rel +nan, 0 bins); rho*_R (contact..shock)=nan (exact 0.26557, rel +nan, 0 bins)
+   t=0.09564 cut: shock at s=0.06484 (exact 0.06490, diff -0.01 cells); contact at s=0.03284 (exact 0.03435, diff -0.30 cells); max |tangential velocity| in interior 1.605e-15
+   t=0.14789 interior-box errors  density: rms=1.181e-02 max=9.197e-02; pressure: rms=1.333e-03 max=7.437e-03; velocity_n: rms=9.927e-03 max=9.965e-02; velocity_t: rms=3.249e-16 max=2.914e-15;
+   t=0.14789 cut (169 bins of 0.005): p* (tail..shock)=0.045458 (exact 0.04547, rel -2.60e-04, 13 bins); u* (tail..shock)=0.35934 (exact 0.3592, rel +3.88e-04, 13 bins); rho*_L (tail..contact)=0.42566 (exact 0.42632, rel -1.56e-03, 3 bins); rho*_R (contact..shock)=0.26518 (exact 0.26557, rel -1.50e-03, 2 bins)
+   t=0.14789 cut: shock at s=0.10211 (exact 0.10036, diff +0.35 cells); contact at s=0.05247 (exact 0.05312, diff -0.13 cells); max |tangential velocity| in interior 2.914e-15
+   t=0.20000 interior-box errors  density: rms=1.058e-02 max=7.901e-02; pressure: rms=1.198e-03 max=6.398e-03; velocity_n: rms=9.270e-03 max=9.981e-02; velocity_t: rms=2.272e-14 max=5.670e-13;
+   t=0.20000 cut (169 bins of 0.005): p* (tail..shock)=0.045464 (exact 0.04547, rel -1.16e-04, 21 bins); u* (tail..shock)=0.35919 (exact 0.3592, rel -3.56e-05, 21 bins); rho*_L (tail..contact)=0.42583 (exact 0.42632, rel -1.15e-03, 8 bins); rho*_R (contact..shock)=0.26576 (exact 0.26557, rel +7.08e-04, 5 bins)
+   t=0.20000 cut: shock at s=0.13710 (exact 0.13572, diff +0.28 cells); contact at s=0.07018 (exact 0.07184, diff -0.33 cells); max |tangential velocity| in interior 5.670e-13
+
+== /pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/oblique_riemann/oblique_riemann/default/b5150399/tiers/full/rollout.h5
+   grid 200x200, length 1.0x1.0, normal at 30.00 deg to x, left=(1.0, 0.15), right=(0.125, 0.015), gamma=1.4, status=complete, saved_frames=22, last_time=np.float64(0.2), t_end=0.2, reached_end=True
+   non-finite values in density, velocity, pressure over all 22 frames: 0
+   exact star state: p*=0.0454695 u*=0.359201 rho*_L=0.426319 rho*_R=0.265574; speeds: head=-0.458258 tail=-0.0272165 contact=0.359201 shock=0.678607
+   t=0.05112 interior-box errors  density: rms=1.206e-02 max=9.994e-02; pressure: rms=1.800e-03 max=1.620e-02; velocity_n: rms=1.389e-02 max=2.324e-01; velocity_t: rms=1.079e-03 max=1.228e-02;
+   t=0.05112 cut (149 bins of 0.005): p* (tail..shock)=nan (exact 0.04547, rel +nan, 0 bins); u* (tail..shock)=nan (exact 0.3592, rel +nan, 0 bins); rho*_L (tail..contact)=nan (exact 0.42632, rel +nan, 0 bins); rho*_R (contact..shock)=nan (exact 0.26557, rel +nan, 0 bins)
+   t=0.05112 cut: shock at s=0.03483 (exact 0.03469, diff +0.03 cells); contact at s=0.01708 (exact 0.01836, diff -0.26 cells); max |tangential velocity| in interior 1.228e-02
+   t=0.09908 interior-box errors  density: rms=1.141e-02 max=9.646e-02; pressure: rms=1.587e-03 max=1.721e-02; velocity_n: rms=1.441e-02 max=2.440e-01; velocity_t: rms=1.105e-03 max=1.153e-02;
+   t=0.09908 cut (149 bins of 0.005): p* (tail..shock)=0.045457 (exact 0.04547, rel -2.66e-04, 6 bins); u* (tail..shock)=0.36052 (exact 0.3592, rel +3.66e-03, 6 bins); rho*_L (tail..contact)=nan (exact 0.42632, rel +nan, 0 bins); rho*_R (contact..shock)=nan (exact 0.26557, rel +nan, 0 bins)
+   t=0.09908 cut: shock at s=0.06766 (exact 0.06724, diff +0.09 cells); contact at s=0.03425 (exact 0.03559, diff -0.27 cells); max |tangential velocity| in interior 1.153e-02
+   t=0.14704 interior-box errors  density: rms=1.113e-02 max=9.454e-02; pressure: rms=1.463e-03 max=1.686e-02; velocity_n: rms=1.396e-02 max=2.404e-01; velocity_t: rms=1.023e-03 max=1.117e-02;
+   t=0.14704 cut (149 bins of 0.005): p* (tail..shock)=0.04545 (exact 0.04547, rel -4.39e-04, 12 bins); u* (tail..shock)=0.35944 (exact 0.3592, rel +6.67e-04, 12 bins); rho*_L (tail..contact)=0.42557 (exact 0.42632, rel -1.75e-03, 3 bins); rho*_R (contact..shock)=0.26408 (exact 0.26557, rel -5.62e-03, 1 bins)
+   t=0.14704 cut: shock at s=0.10034 (exact 0.09978, diff +0.11 cells); contact at s=0.05167 (exact 0.05282, diff -0.23 cells); max |tangential velocity| in interior 1.117e-02
+   t=0.20000 interior-box errors  density: rms=1.090e-02 max=9.215e-02; pressure: rms=1.346e-03 max=1.665e-02; velocity_n: rms=1.312e-02 max=2.380e-01; velocity_t: rms=9.772e-04 max=1.124e-02;
+   t=0.20000 cut (149 bins of 0.005): p* (tail..shock)=0.045474 (exact 0.04547, rel +9.76e-05, 21 bins); u* (tail..shock)=0.35925 (exact 0.3592, rel +1.28e-04, 21 bins); rho*_L (tail..contact)=0.42572 (exact 0.42632, rel -1.40e-03, 8 bins); rho*_R (contact..shock)=0.26584 (exact 0.26557, rel +1.00e-03, 5 bins)
+   t=0.20000 cut: shock at s=0.13637 (exact 0.13572, diff +0.13 cells); contact at s=0.07072 (exact 0.07184, diff -0.22 cells); max |tangential velocity| in interior 1.124e-02

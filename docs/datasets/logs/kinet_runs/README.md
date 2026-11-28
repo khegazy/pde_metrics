@@ -645,6 +645,77 @@ for byte with its source under `/pscratch/sd/k/khegazy/kinet_datasets/_provenanc
 The datasets that read them are `kinet_hit_re12p5k_candidates`, `kinet_hit_re25k_candidates` and
 `kinet_hit_re50k_candidates` (`docs/datasets/logs/decaying_isotropic_2d.md`, section 7).
 
+## Two-dimensional shock cases of the PonD solver: `shocks_2d/` (2026-11-27)
+
+Build-order step 18: kinet's finite-volume (PonD) runs of the isentropic vortex, the oblique
+Riemann problem and the double Mach reflection, and the throughput runs that sized them. The job
+agent ran them and collected each run's record; the dataset agent copied the files below on
+2026-11-27 with `shutil.copyfile` from `/pscratch/sd/k/khegazy/kinet_datasets/_provenance/shocks_2d/`
+and compared each byte for byte with its source (129 files, 327 kB).
+
+- **What is here.** One folder per run, named by run, each with its `RUN.txt` (the exact command,
+  the `sbatch` line, the working directory `/pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/<run>`,
+  the environment script, kinet `perf/cleanup` at `d1cd353b83e9` with no uncommitted changes, torch
+  `2.15.0+cu132`, one NVIDIA A100-SXM4-40GB, the job's `sacct` line, the rollout's path and size,
+  and the last-step check), `config.yaml`, `resolved_config.yaml`, `run_provenance.yaml` and
+  `manifest.yaml`. `_scripts/` holds the launch script `run_kinet_job.sh`, the environment
+  `env.sh`, the record writer `collect_provenance.sh`, and the job's checks and measurements
+  (`check_vortex.py`, `check_oblique.py`, `check_dmr.py`, `file_anatomy.py`, `timings.py`,
+  `plot_dmr_density.py`). `checks/` holds their outputs as text: the field, clock and boundary facts
+  (`facts_fields_clock_boundaries.txt`), the file anatomy, the checks of every run against its
+  exact solution or the exact incident shock, and the throughput table (`timings.txt`).
+  `job_records/` holds the run lists each job was given, the submissions and the `sacct` table.
+- **The runs.** Jobs 62107344 and 62107345 (throughput, folders `tput_*`; `tput_dmr_N480` of job
+  62107345 was stopped by kinet's walltime guard after two steps and its rerun is `tput_dmr_N480b`),
+  62108080 (vortex $64^2$ to $256^2$ to $t = 10$), 62108197 (oblique $400^2$), 62114361 (vortex $512^2$
+  to $t = 2.5$, oblique $200^2$), 62114362 (double Mach reflection $480 \times 120$) and 62115657
+  (vortex $256^2$ and $512^2$ at viscosity $10^{-7}$), all on the GPU debug queue. Every run reached
+  its configured end time. Each is reproduced by the command in its `RUN.txt`, run with `env.sh`
+  sourced from a fresh working directory and a fresh `paths.data_root`.
+
+| Folder | Rollout under `/pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/` | Converted to, under `/global/cfs/cdirs/m4790/Data/kinet/` |
+|---|---|---|
+| `vortex_N64_t10` | `isentropic_vortex/isentropic_vortex/default/b88b17ce/tiers/full/rollout.h5` | `isentropic_vortex/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en5/N64.h5` (`--every 41`) |
+| `vortex_N128_t10` | `.../default/beb1465e/...` | `.../Pr-71en2_vuy-1.4_visc-1en5/N128.h5` (`--every 41`) |
+| `vortex_N256_t10` | `.../default/3ef597e9/...` | `.../Pr-71en2_vuy-1.4_visc-1en5/N256.h5` (`--every 41`) |
+| `vortex_N512_t2p5` | `.../default/51b8cbdc/...` | not converted: pairs with no other run (`docs/datasets/logs/isentropic_vortex.md`, decision 1) |
+| `vortex_N256_t2p5_mu1em7` | `.../default/cdbfed4c/...` | `.../Pr-71en2_vuy-1.4_visc-1en7/N256.h5` (`--every 11`) |
+| `vortex_N512_t2p5_mu1em7` | `.../default/67d186ad/...` | `.../Pr-71en2_vuy-1.4_visc-1en7/N512.h5` (`--every 11`) |
+| `obl30_N200` | `oblique_riemann/oblique_riemann/default/b5150399/tiers/full/rollout.h5` | `oblique_riemann/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en5_normal-30deg/N200.h5` (`--every 21`) |
+| `obl30_N400` | `.../default/024f7fdf/...` | `.../normal-30deg/N400.h5` (`--every 21`) |
+| `obl45_N200` | `.../default/5d9db066/...` | `.../normal-45deg/N200.h5` (`--every 19`) |
+| `obl45_N400` | `.../default/83a3bce9/...` | `.../normal-45deg/N400.h5` (`--every 19`) |
+| `dmr_N120_t0p2` | `double_mach_reflection/double_mach_reflection/default/a90f3f06/tiers/full/rollout.h5` | `double_mach_reflection/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en2/N120.h5` (`--every 10`) |
+| `tput_*` | `_throughput/<case>/...` | not converted: throughput runs, not datasets |
+
+- **After the simulation.** Each conversion is `python -m fmeval.data.convert_kinet <rollout>
+  <destination> --every N`, run on 2026-11-27 from the repository's `.venv` on a login node (ten
+  files, 59.7 MB, under a second each): the initial condition and the last frame for the vortex and
+  oblique runs, and steps 1000, 2000 and 2967 for the double Mach reflection; density, velocity and
+  the absolute pressure, the clock the case's `time/time` (an adaptive-step run's rule,
+  `fmeval/data/convert_kinet.py`). Each converted file was checked equal to its rollout's slot in
+  every field and on the clock. The datasets that read them: `kinet_isentropic_vortex_mu1em5` and
+  `_mu1em7` (`docs/datasets/logs/isentropic_vortex.md`), `kinet_oblique_riemann_30deg` and `_45deg`
+  (`docs/datasets/logs/sod_shock_tube.md`), `kinet_double_mach_reflection`
+  (`docs/datasets/logs/double_mach_reflection.md`).
+- **Left out, and where it remains.** Each run's `simulate.log` (kinet's log, 9 to 51 kB each),
+  its `sim_checkpoints_listing_before_delete.txt` (the listing of the checkpoint folder deleted
+  when the run finished), and its own copies of `env.sh` and `run_kinet_job.sh`, identical to the
+  ones in `_scripts/`; the job's density plot `checks/dmr_N120_density_t0p2.png` (84 kB; this
+  folder's rule keeps configurations and records, not figures, and the page's figures are drawn by
+  `python -m fmeval.cards dynamics`); and `_preempted/tput_dmr_N480_job62107345/` (the stopped
+  run's command, configuration and log). All of these stay in
+  `/pscratch/sd/k/khegazy/kinet_datasets/_provenance/shocks_2d/`, and the raw Slurm output in
+  `/pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/`, until scratch is purged. Nothing in the
+  copied files is an email address, a token or a credential (searched with regular expressions);
+  the paths into a home directory are the kinet checkout and this repository, as in this README's
+  environment block.
+- **Raw output.** The rollouts above, uncompressed (`io.compression=null`, since the repository's
+  `.venv` has no `hdf5plugin`), 13 MB to 260 MB each; a third of each is the `mesoscopic/`
+  relaxation-time fields, which no setting switches off and the conversion drops. Scratch is purged
+  after about eight weeks. Every run is reproducible from this folder; whether a rerun is bitwise
+  identical to these runs has not been checked.
+
 ## Other kinet data on CFS that no dataset here reads
 
 Not copied, because no configuration of this repository reads them; listed so that nothing

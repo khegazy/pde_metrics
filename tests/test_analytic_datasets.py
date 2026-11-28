@@ -31,6 +31,9 @@ Sources cited below:
 * Roy (2005), "Review of code and solution verification procedures for computational
   simulation", J. Comput. Phys. 205(1), 131-156, https://doi.org/10.1016/j.jcp.2004.10.036
   (the observed order, Eqs. 5, 7 and 8, as read for ``dataset_specs/02``).
+* Spiegel, Huynh & DeBonis (2015), "A survey of the isentropic Euler vortex problem using
+  high-order methods", AIAA Paper 2015-2444, https://ntrs.nasa.gov/citations/20150018403
+  (the isentropic vortex, Eqs. 20 to 23, Table 1 and Sect. IV.B.1).
 
 The candidate tests check the closed-form error curves of
 ``dataset_specs/05_initial_conditions_and_degraded_solver_runs.md`` (Sects. 3.1 and 3.3; the
@@ -64,6 +67,7 @@ from fmeval.data.analytic import (
     AdvectingBlobs,
     Burgers,
     ClosedFormTrajectory,
+    IsentropicVortexKinet,
     Noh,
     RandomField,
     SedovTaylor,
@@ -87,7 +91,12 @@ from metrics.shock_set_distance.metric import shock_mask, surface_distances
 from metrics.vrmse.metric import EPSILON
 from tests.analytic_fields import circle_w2, gaussian_mean_square
 from tests.conftest import GRID
-from tests.fixtures_h5 import write_kinet_sod, write_kinet_taylor_green
+from tests.fixtures_h5 import (
+    write_kinet_isentropic_vortex,
+    write_kinet_oblique_riemann,
+    write_kinet_sod,
+    write_kinet_taylor_green,
+)
 
 #: Every dataset config whose reader computes its frames rather than reading a file.
 GENERATED = [name for name in sorted(p.stem for p in (CONFIGS / "dataset").glob("*.yaml"))
@@ -846,13 +855,14 @@ def test_taylor_green_grid_is_periodic_and_frames_decay_together():
 # --- kinet's Taylor-Green vortex scored against the exact solution ----------------------------
 
 
-def _grid_sequence_rows(truths: Sequence[TaylorGreenKinet], selection=None) -> pd.DataFrame:
+def _grid_sequence_rows(truths: Sequence[ClosedFormTrajectory], selection=None,
+                        fields: Sequence[str] = ("velocity", "vorticity")) -> pd.DataFrame:
     """``rmse`` and ``max_error`` of each run against its exact solution, through the pipeline's
     prediction path with derived fields recomputed as ``evaluate.py`` does, every run's rows
     together for ``observed_order``."""
     return pd.concat([run(RecomputingTrajectory(truth), [metric_registry.get(n) for n in
                                                          ("rmse", "max_error")],
-                          build_ladder({}), fields=["velocity", "vorticity"], selection=selection,
+                          build_ladder({}), fields=list(fields), selection=selection,
                           dataset=DatasetInfo(name="kinet_taylor_green"),
                           prediction=RecomputingTrajectory(truth.predictions())).rows
                       for truth in truths], ignore_index=True)
@@ -1072,6 +1082,199 @@ def test_the_kinet_sod_refinement_reproduces_the_jobs_errors_and_orders():
     for (metric, field), (low, high) in measured.items():
         got = order.loc[(order["metric"] == metric) & (order["field"] == field), "order"]
         assert got.between(low - 0.02, high + 0.02).all(), (metric, field, got.tolist())
+
+
+# --- kinet's Sod tube rotated in a square, scored against the exact solution --------------------
+
+
+#: Toro (2009) Table 4.3, the star state of Sod's test. The Euler equations are invariant under
+#: p -> k p, u -> sqrt(k) u, t -> t / sqrt(k), so kinet's oblique case, whose pressures are Sod's
+#: times k = 0.15, has the star pressure k p*, velocity sqrt(k) u* and Sod's star densities.
+OBLIQUE_STAR = {"pressure": 0.15 * 0.30313, "velocity": np.sqrt(0.15) * 0.92745,
+                "density_left": 0.42632, "density_right": 0.26557}
+
+
+def test_a_kinet_oblique_run_is_read_along_its_normal_in_a_window_clear_of_the_faces(tmp_path):
+    """A frozen oblique run at 30 degrees on 40 x 24 cells of the unit square
+    (``tests.fixtures_h5.write_kinet_oblique_riemann``): the reader's window is the largest set of
+    cells whose centres lie at least the fastest signal's distance, (u* + c*_R) t_end, from every
+    face, with c = sqrt(gamma p / rho) from Toro's scaled star state; the run is read on it. At
+    t = 0.2 every cell whose similarity variable s / t lies inside a star region holds Toro's
+    scaled state, the velocity u* along the normal, where s = n . (x - (1/2, 1/2)) and the shock
+    moves at S = rho*_R u* / (rho*_R - rho_R), the mass balance across it."""
+    normal = (np.cos(np.pi / 6), np.sin(np.pi / 6))
+    truth = SodKinet(write_kinet_oblique_riemann(tmp_path / "oblique.h5", normal), normal=normal)
+    candidate, fields = truth.predictions(), ["density", "velocity", "pressure"]
+    assert candidate.grid == truth.grid and np.array_equal(candidate.times, truth.times)
+    assert truth.grid.boundary == ("neumann", "neumann")
+    assert truth.frame_columns(4) == {"param_resolution": 40, "lead_step": 4,
+                                      "lead_time": truth.times[4]}
+    star = OBLIQUE_STAR
+    reach = 0.2 * (star["velocity"] + np.sqrt(1.4 * star["pressure"] / star["density_right"]))
+    centres = [origin + (np.arange(n) + 0.5) * h for origin, n, h in
+               zip(truth.grid.origin, truth.grid.shape, truth.grid.spacing)]
+    for c, h in zip(centres, (1 / 40, 1 / 24)):
+        assert min(c.min(), 1 - c.max()) >= reach > c.min() - h, "the window is not the largest"
+    frame = truth.frame(4, fields)
+    x, y = np.meshgrid(*centres, indexing="ij")
+    xi = (normal[0] * (x - 0.5) + normal[1] * (y - 0.5)) / 0.2
+    tail = star["velocity"] - np.sqrt(1.4 * star["pressure"] / star["density_left"])
+    shock = star["density_right"] * star["velocity"] / (star["density_right"] - 0.125)
+    behind_contact = (xi > tail + 0.02) & (xi < star["velocity"] - 0.02)
+    behind_shock = (xi > star["velocity"] + 0.02) & (xi < shock - 0.02)
+    assert behind_contact.sum() >= 5 and behind_shock.sum() >= 5
+    for region, density in ((behind_contact, star["density_left"]),
+                            (behind_shock, star["density_right"])):
+        assert frame["density"][0][region] == pytest.approx(density, rel=2e-5)
+        assert frame["pressure"][0][region] == pytest.approx(star["pressure"], rel=2e-5)
+        for axis in (0, 1):
+            assert frame["velocity"][axis][region] == pytest.approx(
+                star["velocity"] * normal[axis], rel=2e-5)
+
+
+def test_a_kinet_oblique_pairing_refuses_another_run(tmp_path):
+    """A normal that is not the run's, a normal of zero length, an uncut cell off its state, and a
+    tube read along anything but x are refused."""
+    normal = (np.cos(np.pi / 6), np.sin(np.pi / 6))
+    path = write_kinet_oblique_riemann(tmp_path / "oblique.h5", normal)
+    with pytest.raises(ValueError, match="uncut cells"):
+        SodKinet(path, normal=(1.0, 1.0))
+    with pytest.raises(ValueError, match="not both zero"):
+        SodKinet(path, normal=(0.0, 0.0))
+    with h5py.File(path, "r+") as f:
+        f["density"][0, 0, 0, 0, 0] = 0.9
+    with pytest.raises(ValueError, match="uncut cells"):
+        SodKinet(path, normal=normal)
+    with pytest.raises(ValueError, match="one jump at the face"):
+        SodKinet(write_kinet_sod(tmp_path / "tube.h5", 41), normal=(1.0, 1.0))
+
+
+# --- kinet's isentropic vortex scored against the exact solution ------------------------------
+
+
+def test_a_kinet_isentropic_vortex_run_is_read_on_its_cells_and_clock_in_the_case_units(tmp_path):
+    """A run written in Spiegel et al.'s form, the strength in units of the sound speed
+    (``tests.fixtures_h5.write_kinet_isentropic_vortex``), equals the reader's exact solution,
+    written with the strength in units of sqrt(p / rho), in every cell of every frame on a 48 x 32
+    grid of a 10 x 6.67 box; so the conversion beta_S = beta e^(1/2) / (2 pi sqrt(gamma)), the
+    cells, the clock and the nearest-image translation agree (measured at most 1.3e-15)."""
+    truth = IsentropicVortexKinet(write_kinet_isentropic_vortex(tmp_path / "vortex.h5"))
+    candidate, fields = truth.predictions(), list(truth.fields)
+    assert candidate.grid == truth.grid and np.array_equal(candidate.times, truth.times)
+    assert truth.grid.spacing == pytest.approx((10 / 48, 10 / 48), rel=1e-15)
+    assert truth.grid.boundary == ("periodic", "periodic")
+    assert truth.frame_columns(3) == {"param_resolution": 48, "lead_step": 3,
+                                      "lead_time": truth.times[3]}
+    for i in range(len(truth)):
+        want, got = truth.frame(i, fields), candidate.frame(i, fields)
+        for name in fields:
+            assert got[name] == pytest.approx(want[name], rel=0, abs=1e-13), (name, i)
+
+
+def test_the_isentropic_vortex_solves_the_euler_equations(tmp_path):
+    """The reader's solution satisfies the compressible Euler equations of an ideal gas: its
+    entropy p / rho^gamma is 1 everywhere (to 1e-12), and the residuals of continuity and of both
+    momentum equations, d_t rho + div(rho u) and d_t u + (u . grad) u + grad p / rho, from
+    centred differences in time (step 1e-4) and space, within two core radii of the moving centre,
+    fall by a factor 4 (measured 3.96 to 3.97, asserted 3.6 to 4.4) when the cells halve: the
+    second-order truncation of an exact solution, not a residual of the formula."""
+    residuals = []
+    for shape in ((96, 64), (192, 128)):
+        truth = IsentropicVortexKinet(write_kinet_isentropic_vortex(tmp_path / f"{shape}.h5",
+                                                                    shape))
+        t, dt, (hx, hy) = 0.3, 1e-4, truth.grid.spacing
+        now, before, after = (truth.solution(t + s) for s in (0.0, -dt, dt))
+        rho, (u, v), p = now["density"][0], now["velocity"], now["pressure"][0]
+        assert p == pytest.approx(rho**1.4, rel=1e-12)
+        d_dt = {name: (after[name] - before[name]) / (2 * dt) for name in now}
+        dx, dy = (lambda f: np.gradient(f, hx, axis=0)), (lambda f: np.gradient(f, hy, axis=1))
+        x, y = truth.centres
+        inner = np.hypot(x - 5 - t, y - 10 * shape[1] / shape[0] / 2 - t) < 2
+        terms = [d_dt["density"][0] + dx(rho * u) + dy(rho * v),
+                 d_dt["velocity"][0] + u * dx(u) + v * dy(u) + dx(p) / rho,
+                 d_dt["velocity"][1] + u * dx(v) + v * dy(v) + dy(p) / rho]
+        residuals.append([np.abs(term[inner]).max() for term in terms])
+    ratio = np.array(residuals[0]) / np.array(residuals[1])
+    assert ratio == pytest.approx(4.0, abs=0.4), ratio
+
+
+def test_a_kinet_isentropic_vortex_pairing_refuses_another_run(tmp_path):
+    """Another case, and an initial condition 1e-9 off the default vortex, are refused."""
+    for spoil, match in ((lambda f: f.attrs.__setitem__("group", "taylor_green_vortex"),
+                          "isentropic_vortex run"),
+                         (lambda f: f["velocity"].__setitem__((0, 0, 0), f["velocity"][0, 0, 0]
+                                                              * (1 + 1e-9)), "differs")):
+        path = write_kinet_isentropic_vortex(tmp_path / f"{match}.h5")
+        with h5py.File(path, "r+") as f:
+            spoil(f)
+        with pytest.raises(ValueError, match=match):
+            IsentropicVortexKinet(path)
+
+
+#: The check of the job that ran the vortex (``check_vortex.txt`` and ``check_vortex_mu1em7.txt``
+#: under docs/datasets/logs/kinet_runs/shocks_2d/checks/): the rms density error at the end time
+#: of each run and the observed orders of the rms density and pressure errors there.
+VORTEX_CHECK = {
+    "kinet_isentropic_vortex_mu1em5": ({"N64": 7.6375e-04, "N128": 1.9090e-04,
+                                        "N256": 5.1156e-05},
+                                       {("density", 64): 2.000, ("density", 128): 1.900,
+                                        ("pressure", 64): 1.964, ("pressure", 128): 1.774}),
+    "kinet_isentropic_vortex_mu1em7": ({"N256": 1.8977e-05, "N512": 4.8856e-06},
+                                       {("density", 256): 1.958, ("pressure", 256): 1.937}),
+}
+
+
+@pytest.mark.data
+@pytest.mark.parametrize("dataset", sorted(VORTEX_CHECK))
+def test_the_kinet_isentropic_vortex_reproduces_the_jobs_errors_and_orders(dataset):
+    """Each run's evaluated frame (its end time) through the pipeline: ``rmse`` on density is the
+    job's rms error, given to five digits (asserted 1e-4 relative), and ``observed_order`` reads
+    the job's orders, given to three decimals (asserted 6e-4)."""
+    errors, orders = VORTEX_CHECK[dataset]
+    jobs = [build_job(compose_config(f"dataset={dataset}", f"dataset.trajectory={label}",
+                                     "paths.data_url=null")) for label in errors]
+    rows = _grid_sequence_rows([open_trajectory(job.dataset, job.paths) for job in jobs],
+                               jobs[0].dataset.time, ["density", "velocity", "pressure"])
+    candidate = rows[rows["lead_step"].notna() & (rows["level"] > 0)
+                     & rows["degradation"].ne(MEAN_FIELD_LABEL)]
+    density = candidate[(candidate["metric"] == "rmse") & (candidate["field"] == "density")]
+    assert density.set_index("param_resolution")["value"].to_dict() == pytest.approx(
+        {int(label[1:]): value for label, value in errors.items()}, rel=1e-4)
+    order = observed_order(rows, anchor_label=MEAN_FIELD_LABEL)
+    rms = order[order["metric"] == "rmse"].set_index(["field", "resolution_coarse"])["order"]
+    for key, value in orders.items():
+        assert rms[key] == pytest.approx(value, abs=6e-4), key
+
+
+#: The job's check of the oblique runs (``check_oblique_N200.txt``, ``check_oblique_N400.txt``):
+#: rms and max errors of density and pressure at t = 0.2 over its interior box [0.2, 0.8]^2.
+OBLIQUE_CHECK = {
+    ("kinet_oblique_riemann_30deg", "N200"): (1.090e-02, 9.215e-02, 1.346e-03, 1.665e-02),
+    ("kinet_oblique_riemann_30deg", "N400"): (8.779e-03, 9.113e-02, 9.228e-04, 1.609e-02),
+    ("kinet_oblique_riemann_45deg", "N200"): (1.058e-02, 7.901e-02, 1.198e-03, 6.398e-03),
+    ("kinet_oblique_riemann_45deg", "N400"): (8.682e-03, 7.459e-02, 9.325e-04, 1.259e-02),
+}
+
+
+@pytest.mark.data
+@pytest.mark.parametrize("dataset, label", sorted(OBLIQUE_CHECK))
+def test_the_kinet_oblique_pairing_reproduces_the_jobs_interior_errors(dataset, label):
+    """On the cells of the job's interior box, which lie inside the reader's window, the run minus
+    the reader's exact solution at t = 0.2 has the job's rms and max errors of density and
+    pressure, given to four digits (asserted 1e-3 relative)."""
+    job = build_job(compose_config(f"dataset={dataset}", f"dataset.trajectory={label}",
+                                   "paths.data_url=null"))
+    truth = open_trajectory(job.dataset, job.paths)
+    candidate, last = truth.predictions(), len(truth) - 1
+    x = [origin + (np.arange(n) + 0.5) * h for origin, n, h in
+         zip(truth.grid.origin, truth.grid.shape, truth.grid.spacing)]
+    box = np.ix_(*[(c > 0.2) & (c < 0.8) for c in x])
+    assert truth.times[last] == 0.2
+    got = []
+    for name in ("density", "pressure"):
+        error = (candidate.frame(last, [name])[name] - truth.frame(last, [name])[name])[0][box]
+        got += [np.sqrt(np.mean(error**2)), np.abs(error).max()]
+    assert got == pytest.approx(OBLIQUE_CHECK[(dataset, label)], rel=1e-3)
 
 
 # --- Taylor-Green with an acoustic part (dataset_specs/10, Sect. 3) ---------------------------

@@ -1,0 +1,20 @@
+# kinet's isentropic vortex with the viscosity lowered a hundredfold, mu = 1e-7, on 256^2 and
+# 512^2 cells, run to t = 2.5, a quarter period. At the case's own mu = 1e-5 the order between
+# 256^2 and 512^2 falls to 0.9 to 1.6, because the exact solution is inviscid and the run is not;
+# at mu = 1e-7 it is 1.94 to 2.00 (checks of the job, docs/datasets/logs/kinet_runs/shocks_2d/).
+# One run per grid, chosen with dataset.trajectory (N256, N512). The fragment says how the order
+# is read.
+defaults:
+  - _kinet_isentropic_vortex
+  - _self_
+
+name: kinet_isentropic_vortex_mu1em7
+trajectory: N256
+path: ${paths.data}/kinet/isentropic_vortex/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en7/${.trajectory}.h5
+
+complexity:
+  params: {viscosity: 1.0e-7, t_end: 2.5}
+  label: "kinet isentropic vortex, nearly inviscid, two fine grids"
+
+notes: "kinet PonD isentropic vortex (Shu's parameters), mu = 1e-7, on 256^2 and 512^2 at t = 2.5,
+  scored against the exact solution on each run's cells. See docs/datasets/isentropic_vortex.md."

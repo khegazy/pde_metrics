@@ -1,0 +1,18 @@
+# Run obl45_N400
+slurm_job_id: 62108197
+sacct: 62108197|kinet-s2d-obl400|gpu_ss11|gpu_debug|m4790_g|2026-11-27T12:17:38|2026-11-27T12:28:38|2026-11-27T12:51:24|00:22:46|COMPLETED|0:0|nid001237
+run_in_job: obl45_N400 rc=0 wall_s=472.37 start=1795811812.218552352 end=1795812284.589005296
+kinet: d1cd353b83e994376d2c4476c968e82bca823f5f branch perf/cleanup
+kinet_uncommitted_paths: 0 (git status --short at collection; the job log records it at run time)
+device: cuda (launch.device), torch 2.15.0+cu132 cuda 13.2
+gpu: NVIDIA A100-SXM4-40GB, 40960 MiB, 580.196.07
+rollout: /pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/oblique_riemann/oblique_riemann/default/83a3bce9/tiers/full/rollout.h5
+rollout_bytes: 236909203
+output_dir_size_after_checkpoint_delete: 226M (/pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/oblique_riemann/oblique_riemann/default/83a3bce9)
+last_step_check: kinet_rollout_status=complete kinet_last_completed_step=493 total_pred_length=2025 last_saved_time=np.float64(0.2) last_saved_time_index=493 saved_frames=20 t_end=0.2 reached_end=True
+working_directory: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/obl45_N400
+environment: source /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/env.sh   # kinet .venv, KINET_PROJECT, caches on scratch
+command (run inside the working directory by run_kinet_job.sh):
+  python -m kinet.apps.simulate task=simulate case=oblique_riemann/default case.discretization.spatial.grid=\[400\,400\] case.initial_conditions.normal=\[1.0\,1.0\] io.save_every_n=26 io.record_distributions=false io.record_equilibria=false io.compression=null runtime_logging.every_n=100 paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/oblique_riemann distributed.is_distributed=false distributed.is_slurm=true 
+sbatch_exact (from /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d): sbatch --account=m4790 --constraint=gpu --qos=debug --nodes=1 --ntasks=1 --cpus-per-task=32 --gpus-per-node=1 --time=00:30:00 --job-name=kinet-s2d-obl400 --output=/pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/slurm_%j.out run_kinet_job.sh /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/runs_obl400.txt
+sbatch: sbatch --account=m4790 --constraint=gpu --qos=debug --nodes=1 --ntasks=1 --cpus-per-task=32 --gpus-per-node=1 --time=<limit> run_kinet_job.sh <runs file>

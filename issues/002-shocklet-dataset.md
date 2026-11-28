@@ -2,7 +2,12 @@
 
 **Category:** data generation
 **Priority:** high
-**Status:** open — accepted, scheduled (2026-08-07)
+**Status:** open — accepted, scheduled (2026-08-07). Still missing: shocklets in turbulence,
+skipped for now by Kareem (2026-11-26, `dataset_specs/BUILD_ORDER.md`, steps 23 and 26). Since
+2026-11-27 solver shocks in two dimensions exist, none in turbulence: straight oblique fronts
+against their exact solution (`kinet_oblique_riemann_30deg`, `_45deg`) and a pattern of several
+interacting shocks with no exact answer (`kinet_double_mach_reflection`, where the detector flags
+644 to 941 cells per frame), beside the bow shock of `kinet_supersonic_cylinder`.
 
 ## Context
 

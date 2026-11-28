@@ -1,0 +1,37 @@
+# Shared by kinet's oblique Riemann runs: the case oblique_riemann/default, Sod's tube with both
+# pressures multiplied by 0.15, left (rho, p) = (1, 0.15) and right (0.125, 0.015), both at rest,
+# gamma = 1.4, on either side of a line through the centre of the unit square, every face
+# zero-gradient; kinet's finite-volume PonD solver (D2Q16, DUGKS with MP5 reconstruction, CFL 0.2,
+# adaptive time step, viscosity 1e-5, Prandtl number 0.71), run to t = 0.2 on 200^2 and 400^2
+# cells. Each run was converted by `python -m fmeval.data.convert_kinet SRC DST --every N`,
+# keeping the initial condition and the last frame; the runs' configurations and commands are
+# under docs/datasets/logs/kinet_runs/shocks_2d/.
+#
+# The reader `sod_kinet` (fmeval/data/analytic.py) with the option `normal` evaluates the exact
+# Sod solution (Toro 2009, ch. 4) of the run's own states along the normal, s = n . (x - (1/2,
+# 1/2)), and scores the run against it as a candidate. It reads the run through a window of the
+# cells whose centres lie farther from every face than the fastest signal of the exact solution
+# (|u| + c = 0.849) travels by t = 0.2: cells 34 to 165 of 200 and 68 to 331 of 400 on both
+# axes. Outside it the zero-gradient faces, which are not consistent with a tilted front, have
+# disturbed the run. Every face of the window is declared `neumann`; no ladder runs on it, since
+# the run is a candidate. The grid is chosen by dataset.trajectory (N200, N400), and the two runs
+# give the observed order:
+#   python evaluate.py -m dataset=kinet_oblique_riemann_30deg dataset.trajectory=N200,N400 \
+#       'metrics=[mae,rmse,max_error,shock_set_distance]'
+#   fmeval.analysis.observed_order(fmeval.io.load_runs(<two folders>), anchor_label="mean_field")
+#
+# WHAT PART IS EVALUATED (2026-11-27; reasons and measured costs in
+# docs/datasets/logs/sod_shock_tube.md). The last frame, t = 0.2, of each run at its native
+# resolution in the window: the waves are widest apart then, and it is the only saved time the
+# two grids share after the start, since the solver's step is adaptive.
+format: sod_kinet
+
+fields: [density, velocity, pressure]
+
+time:
+  start: 1
+
+complexity:
+  family: sod_shock_tube
+  rank: 3
+  params: {dim: 2, gamma: 1.4, scored_against: exact}

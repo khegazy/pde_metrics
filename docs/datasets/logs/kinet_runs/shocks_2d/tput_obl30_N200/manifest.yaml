@@ -1,0 +1,8 @@
+version: 1
+case_path: oblique_riemann/default
+simulation_subdir: oblique_riemann/default/fc5153ce
+identity_key: fc5153ce
+active:
+  full: tiers/full/rollout.h5
+  tiers: {}
+updated_at: '2026-11-27T20:06:47.321762+00:00'

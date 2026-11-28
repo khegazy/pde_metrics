@@ -1,0 +1,8 @@
+version: 1
+case_path: double_mach_reflection/default
+simulation_subdir: double_mach_reflection/default/ad2aaf1a
+identity_key: ad2aaf1a
+active:
+  full: tiers/full/rollout.h5
+  tiers: {}
+updated_at: '2026-11-27T20:11:13.845156+00:00'

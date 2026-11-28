@@ -1,0 +1,8 @@
+version: 1
+case_path: isentropic_vortex/default
+simulation_subdir: isentropic_vortex/default/67d186ad
+identity_key: 67d186ad
+active:
+  full: tiers/full/rollout.h5
+  tiers: {}
+updated_at: '2026-11-27T23:54:30.907026+00:00'

@@ -1,0 +1,103 @@
+case:
+  N_simulations: 1
+  assets: {}
+  boundary_conditions:
+    x:
+      high:
+        type: neuman
+      low:
+        state:
+        - 8.0
+        - 7.144660940758388
+        - -4.125
+        - 116.5
+        type: fixed_state
+    y:
+      high:
+        front0: 0.7440169358562926
+        postshock:
+        - 8.0
+        - 7.144660940758388
+        - -4.125
+        - 116.5
+        preshock:
+        - 1.4
+        - 0.0
+        - 0.0
+        - 1.0
+        shock_angle_deg: 60.0
+        shock_normal_speed: 10.0
+        time_offset_fraction: 0.5
+        transition_cells: 2.0
+        type: moving_mach_shock
+      low:
+        above:
+          type: reflective
+        below_or_equal:
+          state:
+          - 8.0
+          - 7.144660940758388
+          - -4.125
+          - 116.5
+          type: fixed_state
+        threshold: 0.16666666666666666
+        type: split
+  discretization:
+    spatial:
+      grid:
+      - 1920
+      - 480
+      length:
+      - 4.0
+      - 1.0
+      resolution: 0.0020833333333333333
+      type: provided
+      unit: '-'
+    temporal:
+      grid: 200000
+      length: 0.0008
+      type: adaptive
+      unit: '-'
+  group: double_mach_reflection
+  id: default
+  lattice:
+    shifts:
+    - 0.0
+    - 0.0
+    type: D2Q16
+    use_static_weights: true
+  physics:
+    parameters:
+      dynamic_viscosity: 0.01
+      freestream_hold: reynolds
+      prandtl: 0.71
+      reference:
+        density: 1.0
+      specific_heat_ratio: 1.4
+    type: compressible_fluids
+  simulation_subdir: double_mach_reflection/default/84e29457
+  solver:
+    cfl: 0.2
+    diagnostics:
+      stabilizer_telemetry: true
+    transport:
+      face_pc:
+        iters: 16
+        preserve_macro_corrected_f_residual: false
+        preserve_macro_corrected_g_residual: false
+        seed: average
+        temperature_average: linear
+        tol: 1.0e-10
+      reconstruction:
+        limiter: van_leer
+        muscl: true
+        scheme: mp5
+      type: dugks
+    type: pond
+  subgrid: {}
+  units: lattice
+case_path: double_mach_reflection/default
+normalization:
+  feature: none
+precision:
+  dtype: torch.float64

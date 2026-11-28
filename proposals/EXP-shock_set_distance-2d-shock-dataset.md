@@ -9,36 +9,40 @@ found_by: "shock_set_distance, 2026-10-30"
 
 # EXP: A two-dimensional shock dataset for the shock-set distance
 
+Narrowed on 2026-11-27, when part of what it asked for was built. Built: the Sedov–Taylor blast
+wave it listed third (`sedov_taylor`, the exact cylindrical solution, with time-offset candidates);
+straight shocks oblique to the grid in a solver run scored against their exact solution
+(`kinet_oblique_riemann_30deg` and `kinet_oblique_riemann_45deg`, Sod's tube rotated in a square
+on 200^2 and 400^2 cells); and several interacting shocks at once, curved and straight, from one
+solver with no exact answer (`kinet_double_mach_reflection`, 480 x 120 cells). What remains is
+below: the four-quadrant configurations of Lax and Liu, with a high-resolution reference run and a
+coarser candidate, and the shocklets of issue 002.
+
 ## What the experiment is
 
-Add one dataset whose pressure holds shocks in two dimensions, so that the surface-distance
-machinery of `shock_set_distance` (an exact Euclidean distance transform between two sets of
-flagged cells) is exercised on curved and oblique fronts and on several shocks at once. Two
-candidates, in order of cost:
+Add the datasets whose pressure holds the shocks two-dimensional data still lacks, so that the
+surface-distance machinery of `shock_set_distance` (an exact Euclidean distance transform between
+two sets of flagged cells) is exercised on curved fronts that interact and on many shocks at once,
+each with a candidate of known or measured displacement. Two candidates, in order of cost:
 
 1. **Two-dimensional Riemann problems** of gas dynamics, the configurations computed by Lax and
    Liu (1998): four constant states in the quadrants of a square, whose interacting shocks,
    contacts and rarefactions form curved fronts. They have no closed form, but are standard
    benchmarks computed by many schemes, so a reference run at high resolution is the
    reference and the same run at lower resolution or with another scheme is the candidate.
+   The double Mach reflection now in the repository has no such candidate: its finer grids,
+   which would take regular-queue jobs, were not run.
 2. **Decaying compressible turbulence with eddy shocklets**, the case of issue 002, at the
    turbulent Mach number of Lee, Lele and Moin (1991, Phys. Fluids A 3(4), 657): many small
-   shocks embedded in turbulence, the case the metric is meant for.
-3. **A Sedov-Taylor blast wave**, the known-answer test with which shock detection in
-   computational fluid dynamics validates a finder (Schaal & Springel 2015, MNRAS 446, 3992,
-   Sect. 3.1, Fig. 1: a point explosion on 25^3 to 100^3 cells, the detected shock zone and
-   surface on a cross-section against the analytic radius, and the detected surface area against
-   time beside 4 pi R(t)^2). Its shock is a closed curve or surface at a known radius, so a
-   candidate at a shifted time, or the same explosion at another resolution, displaces every
-   point of it by a known amount in every direction, which tests the axis-by-axis detector on a
-   front oblique to the grid everywhere. Added 2026-11-04 by the `metrics-topology-shocks` task
-   (arXiv HTML of Schaal & Springel, 1407.4117v2, read).
+   shocks embedded in turbulence, the case the metric is meant for. Skipped for now
+   (`dataset_specs/BUILD_ORDER.md`, steps 23 and 26).
 
 ## What it tests
 
-On a Riemann configuration, `translate_x` moves every front by a known number of cells, so the
-metric must give back Equation (3) of its card on each front, now with the flagged band oblique
-to the grid; a test the one-dimensional tube cannot make. On shocklets, the metric's two open
+On a four-quadrant configuration, `translate_x` moves every front of an interacting pattern by a
+known number of cells, so the metric must give back Equation (3) of its card on each front, and a
+coarser run gives a measured displacement of a pattern whose fronts curve and meet. (On a single
+oblique front the same test is now possible on the oblique Riemann runs.) On shocklets, the metric's two open
 weaknesses become measurable: the nearest-cell matching of many shocks without object matching,
 and the pooled average's weighting toward the larger set (the card's Limitations).
 
@@ -53,17 +57,19 @@ equitable threat score, become measurable here.
 
 ## Why it is helpful
 
-The card of `shock_set_distance` can only say that the one-dimensional case is evidenced. Its
-detector takes the jump along each grid axis rather than along the shock normal (a choice made
-for want of a temperature gradient); whether that misses oblique shocks is untested until a
-dataset has one.
+The detector of `shock_set_distance` takes the jump along each grid axis rather than along the
+shock normal (a choice made for want of a temperature gradient). On the oblique Riemann runs it
+flags the shock at 30 and 45 degrees (187 to 503 cells at t = 0.2, measured 2026-11-27); whether
+it separates interacting fronts and many small shocks remains untested.
 
 ## Cost and requirements
 
-A two-dimensional Euler solver run (the kinet solver, which already runs the Sod configurations,
-or any finite-volume code), a reader for its output, boundary types declared per axis
-(Riemann configurations are usually run with outflow boundaries), and a dataset page. Storage is
-small: a few hundred frames at 512^2. No licence issue for solver output.
+A two-dimensional Euler solver run and a dataset page. kinet's finite-volume PonD solver runs such
+cases, and its output is read through the existing converter and `kinet_raw` reader, outflow faces
+declared `neumann` (as on the oblique Riemann and double Mach reflection runs,
+`docs/datasets/logs/kinet_runs/shocks_2d/`; a 400^2 oblique run took 487 s on one GPU there).
+Whether kinet ships a four-quadrant case was not checked; if not, one is added as a case. Storage
+is small: a few hundred frames at 512^2. No licence issue for solver output.
 
 ## References
 

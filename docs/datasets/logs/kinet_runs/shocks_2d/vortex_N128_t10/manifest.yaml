@@ -1,0 +1,8 @@
+version: 1
+case_path: isentropic_vortex/default
+simulation_subdir: isentropic_vortex/default/beb1465e
+identity_key: beb1465e
+active:
+  full: tiers/full/rollout.h5
+  tiers: {}
+updated_at: '2026-11-27T20:29:58.364600+00:00'

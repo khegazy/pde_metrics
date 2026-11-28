@@ -507,3 +507,96 @@ one, beside the smooth Taylor–Green sequences of order two.
 
 - The L2 order of velocity scatters (0.08 to 0.91 at the kept times); not diagnosed.
 - No dynamics figure.
+
+## `kinet_oblique_riemann_30deg` and `kinet_oblique_riemann_45deg` (the tube rotated in a square, 2026-11-27)
+
+### What they are for
+
+Straight shocks, contacts and rarefactions oblique to the grid, run by a solver and scored against
+their exact solution, so that the shock-set metrics, whose detector takes jumps along each grid
+axis, meet an oblique front with a known answer (`dataset_specs/03_two_dimensional_shocks.md`,
+Sect. 4.1; `proposals/EXP-shock_set_distance-2d-shock-dataset.md`, which this narrowed; build-order
+step 18). Two grids give an observed order.
+
+### How they are treated
+
+- **Source.** kinet's case `oblique_riemann/default`, run on 2026-11-27 by the job agent with its
+  finite-volume PonD solver (kinet `perf/cleanup` at `d1cd353b83e9`, one A100), normal
+  $(\cos 30°, \sin 30°)$ (the case's default) and $(1, 1)$, on $200^2$ (job 62114361) and $400^2$
+  (job 62108197), to $t = 0.2$. Records and the job's checks: `docs/datasets/logs/kinet_runs/shocks_2d/`.
+- **Conversion.** `convert_kinet_grouped(<rollout>, <dest>, every)` to
+  `/global/cfs/cdirs/m4790/Data/kinet/oblique_riemann/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en5_normal-30deg/N200.h5`
+  (`b5150399`, 2.6 MB), `N400.h5` (`024f7fdf`, 10.3 MB), with `every=21`, and
+  `.../normal-45deg/N200.h5` (`5d9db066`, 2.6 MB), `N400.h5` (`83a3bce9`, 10.3 MB), with `every=19`:
+  the initial condition and $t = 0.2$ (25.8 MB). Clock `time/time`, the case's time (the converter's
+  adaptive-run rule, `docs/datasets/logs/isentropic_vortex.md`). Each checked equal to its source.
+- **Reader.** `sod_kinet` with a new option `normal` (about 25 changed lines in `SodKinet`): the
+  states are read from the run's two extreme cells along the normal, the uncut cells of the
+  initial condition must hold them on the right sides of the line (kinet paints the cut cells with
+  each state's share), the solution is the tube's at $s = \boldsymbol n \cdot (\boldsymbol x -
+  (\tfrac12, \tfrac12))$ with velocity $u\,\boldsymbol n$, and the run is read through a window
+  computed from the solution's fastest signal (below). The tube's path is unchanged: its
+  coordinate along $(1, 0)$ is $x$ itself, bitwise, and its `data` test still reproduces the job's
+  errors to 1e-9. These are Sod's states with both pressures times 0.15, an exact rescaling of
+  Sod's problem, and a rotation of it, so they belong on the Sod page and need no second solver.
+- **Window and boundaries.** Cells farther than $(u^* + c^*_R)\,t_\text{end} = 0.849 \times 0.2$
+  from every face: 34 to 165 of 200, 68 to 331 of 400, on both axes; every face `neumann`, which
+  in the window is no boundary of the flow.
+
+### What part is evaluated
+
+- **Kept:** $t = 0.2$, the last frame, of each run at its native resolution in the window.
+- **Why.** The waves are widest apart then, so the most cells lie in the star regions and the
+  fronts are longest in the window; and with the adaptive step it is the only time after the start
+  the two grids share (issue 149). The rows are a deterministic error.
+- **Measured cost** (login node, 2026-11-27): `rmse`, `mae`, `max_error`, `shock_set_distance`
+  3.0 to 3.1 s wall per run; every deterministic metric but `persistence_wasserstein`, 16 of which
+  run on these fields on this non-periodic grid, 5.0 s ($200^2$) and 5.5 s ($400^2$) wall, 0.5 s of it metric time
+  (`persistence_distance` 0.45 s); `persistence_wasserstein` 0.4 s of metric time (2.7 s wall) on
+  $400^2$. Disk 25.8 MB, all read.
+
+### Decisions and why
+
+1. **On the Sod page, through the Sod reader** (agent): the same problem rotated and rescaled
+   (above). Alternative: a page of its own for two-dimensional Riemann problems, for when the
+   four-quadrant configurations exist. To reverse: move the section and the configs' family.
+2. **The window from the domain of dependence, computed by the reader** (agent). A margin in the
+   config would be a number to keep in step with the states and the end time, and in cells it
+   would differ between the two grids of one configuration. Measured on the $45°$, $200^2$ run, the
+   rms pressure error rises only within 0.05 of the faces ($1.4 \times 10^{-3}$, against 0.8 to
+   $1.0 \times 10^{-3}$ elsewhere outside the waves' band), so the margin of 0.17 is conservative.
+   The job's interior box, margin 0.2, lies inside it. To reverse: pass `window` to `SodKinet`.
+3. **`param_resolution` is the run's whole grid**, 200 or 400, not the window's 132 or 264, so the
+   rows name the run; the ratio is 2 either way.
+4. **One time per run** (agent; issue 149), as for the vortex sequences.
+5. **No ladder dataset of these runs** (agent). The shock-set metrics' known answer here is the
+   exact front; a ladder on the run would repeat what `kinet_supersonic_cylinder` and
+   `kinet_double_mach_reflection` already give on solver shocks. To add one: a `kinet_raw` config
+   of a converted file with `window` and `boundary: [neumann, neumann]`.
+
+### Log entries
+
+**2026-11-27, dataset agent (build-order step 18).**
+
+- Converted the four runs, checked each against its source.
+- Code: `normal` on `SodKinet`, with `frame_columns`; fixture `write_kinet_oblique_riemann`; tests
+  `test_a_kinet_oblique_run_is_read_along_its_normal_in_a_window_clear_of_the_faces`,
+  `test_a_kinet_oblique_pairing_refuses_another_run` and the `data` test
+  `test_the_kinet_oblique_pairing_reproduces_the_jobs_interior_errors`.
+- Verified: on the job's interior box the run minus the reader's solution has the job's rms and
+  maximum errors of density and pressure at $t = 0.2$ on all four runs to four digits (45°,
+  $200^2$: density rms $1.058 \times 10^{-2}$, max $7.901 \times 10^{-2}$; pressure $1.198 \times
+  10^{-3}$, $6.398 \times 10^{-3}$); the reader's star state is the job's ($p^* = 0.0454695$,
+  $u^* = 0.359201$). Through `evaluate.py` and `observed_order` (runs under
+  `/pscratch/sd/k/khegazy/fluid_metrics_results/build_datasets/shocks2d_oblique_*`), 30°: `mae`
+  density 0.61, pressure 0.78, velocity 0.84, `rmse` 0.32, 0.54, 0.46, `shock_set_distance` 0.96;
+  45°: `mae` 0.59, 0.74, 0.66, `rmse` 0.28, 0.36, −0.22, `shock_set_distance` undefined (0 on
+  $200^2$, the detector flagging the same 187 cells in both); `max_error` does not fall.
+- Not verified: why the 45° velocity `rmse` rises from $200^2$ to $400^2$ ($6.4 \times 10^{-3}$ to
+  $7.4 \times 10^{-3}$) while its `mae` falls.
+
+### Open points
+
+- Only $t = 0.2$ is evaluated (issue 149); the raw runs are on scratch until it is purged, about
+  eight weeks after 2026-11-27, and are reproducible from the archived configurations.
+- No dynamics figure: each configuration evaluates one frame per run.

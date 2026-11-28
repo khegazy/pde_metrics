@@ -1,0 +1,28 @@
+launches:
+- started_at: '2026-11-27T20:24:38.832723+00:00'
+  run_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/vortex_N128_t10/outputs/isentropic_vortex/default/simulate/job_261127_122435_790322
+  case_path: isentropic_vortex/default
+  case_id: default
+  task: simulate
+  hostname: nid002480
+  pid: 406370
+  stamp: null
+  resume_from: null
+  slurm_job_id: '62108080'
+  slurm_job_name: kinet-s2d-vortex-a
+  slurm_submit_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d
+  slurm_stdout: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/vortex_N128_t10/outputs/isentropic_vortex/default/simulate/job_261127_122435_790322/logs/62108080/slurm.out
+  slurm_stderr: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/vortex_N128_t10/outputs/isentropic_vortex/default/simulate/job_261127_122435_790322/logs/62108080/slurm.err
+  hydra_overrides:
+  - task=simulate
+  - case=isentropic_vortex/default
+  - ++case.discretization.spatial.grid=[128,128]
+  - ++case.discretization.temporal.length=10.0
+  - ++case.io.save_every_n=64
+  - ++case.io.record_distributions=false
+  - ++case.io.record_equilibria=false
+  - ++case.io.compression=null
+  - ++case.runtime_logging.every_n=100
+  - ++paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/isentropic_vortex
+  - ++distributed.is_distributed=false
+  - ++distributed.is_slurm=true

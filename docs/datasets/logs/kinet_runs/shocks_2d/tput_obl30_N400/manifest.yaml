@@ -1,0 +1,8 @@
+version: 1
+case_path: oblique_riemann/default
+simulation_subdir: oblique_riemann/default/d155531c
+identity_key: d155531c
+active:
+  full: tiers/full/rollout.h5
+  tiers: {}
+updated_at: '2026-11-27T20:10:44.618699+00:00'

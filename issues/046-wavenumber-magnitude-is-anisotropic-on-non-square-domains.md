@@ -4,7 +4,11 @@
 **Priority:** low now, because every dataset is square and either fully periodic or 1D; it
 blocks any dataset with a non-square domain or with a wall on only some axes, such as the
 kinet Sod runs on 3001 × 5 cells
-**Status:** open, needs a decision on the definition of `|k|`
+**Status:** open, needs a decision on the definition of `|k|`. Since 2026-11-27 a ladder runs on
+two non-square evidence datasets: `kinet_supersonic_cylinder` (144 × 288) and
+`kinet_double_mach_reflection` (a 384 × 120 window, Neumann on both axes, so the spectral
+operators see a 768 × 240 extension in which one cycle along x is 3.2 times as long as one along
+y; arithmetic from the grid).
 
 ## Context
 

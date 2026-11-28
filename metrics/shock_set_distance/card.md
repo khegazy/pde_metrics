@@ -123,8 +123,7 @@ Three fields meet in this metric, and each reports it differently.
   distance between two detected sets. `sod_shock_tube` is its shock-tube test; the card's first
   figure, the pressure line-out of each degraded field with its detected shock cells over the
   reference's, is the one-dimensional form of their cross-section (my reading). The Sedov-Taylor
-  test needs two or three dimensions and is added to
-  [EXP-shock_set_distance-2d-shock-dataset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_set_distance-2d-shock-dataset.md);
+  test needs two or three dimensions and is the dataset `sedov_taylor`;
   the Mach-number histogram needs the temperature or the velocity beside the pressure
   ([issue 096](https://github.com/khegazy/pde_metrics/blob/main/issues/096-several-fields-handed-to-one-metric.md);
   [MTR-shock_set_distance-full-shock-zone-detector](https://github.com/khegazy/pde_metrics/blob/main/proposals/MTR-shock_set_distance-full-shock-zone-detector.md)).
@@ -176,7 +175,10 @@ which displaces each wave by its own speed and keeps every jump (`sod_shock_tube
 run (`kinet_sod_gamma1p4`) and its Sod grid sequence scored against the exact solution
 (`kinet_sod_refinement`); the Sedov–Taylor blast wave and Noh's problem, closed circular shocks
 oblique to the grid everywhere, each with a time-offset candidate (`sedov_taylor`, `noh`); the
-geometric fronts of `feature_population`; and the bow shock of `kinet_supersonic_cylinder`.
+geometric fronts of `feature_population`; the bow shock of `kinet_supersonic_cylinder`; a
+solver's straight shocks oblique to the grid at 30 and 45 degrees against their exact solution
+(`kinet_oblique_riemann_30deg`, `kinet_oblique_riemann_45deg`); and a solver's pattern of several
+interacting shocks with no exact answer (`kinet_double_mach_reflection`).
 
 ## Performance
 
@@ -388,6 +390,11 @@ Every number in this section comes from that one run. Regenerate with `python -m
 | `kinet_hit_re12p5k_candidates` | decaying two-dimensional isotropic turbulence at Re = 1.25e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off | not applicable: needs pressure, which this dataset does not provide |
 | `kinet_hit_re25k_candidates` | decaying two-dimensional isotropic turbulence at Re = 2.5e4: one lattice-Boltzmann rerun degraded on purpose (a coarser grid, a wrong viscosity or plain BGK collision, named by the run's candidate file) scored against the realisation it started from, whose undegraded rerun matches it to round-off | not applicable: needs pressure, which this dataset does not provide |
 | `kinet_hit_re50k_candidates` | decaying two-dimensional isotropic turbulence at Re = 5e4: one lattice-Boltzmann rerun on 256^2 cells or coarser, or with plain BGK collision, scored against the 512^2 realisation it started from; there is no control, since even the rerun with the realisation's own settings departs from it by its coarser grid (velocity distance 0.011 at the first evaluated frame) | not applicable: needs pressure, which this dataset does not provide |
+| `kinet_isentropic_vortex_mu1em5` | a grid sequence: a finite-volume solver's isentropic vortex (viscosity 1e-5) scored against the inviscid exact solution on its own 64^2, 128^2 and 256^2 cells after one period, where the error falls at order about 2 (1.7 to 2.4 over metrics, fields and pairs); one time per run, and nothing about turbulence | not yet run |
+| `kinet_isentropic_vortex_mu1em7` | a grid sequence: a finite-volume solver's isentropic vortex at viscosity 1e-7, nearly the inviscid exact solution it is scored against, on its own 256^2 and 512^2 cells after a quarter period, where the error falls at order 1.94 to 2.00; one time and one pair of grids, and nothing about turbulence | not yet run |
+| `kinet_oblique_riemann_30deg` | a finite-volume solver's Sod tube rotated to 30 degrees in a square, on 200^2 and 400^2 cells, scored against the exact solution along the normal in a window clear of the faces: straight shock, contact and rarefaction oblique to the grid, one time per run; nothing about turbulence | not yet run |
+| `kinet_oblique_riemann_45deg` | a finite-volume solver's Sod tube rotated to 45 degrees in a square, on 200^2 and 400^2 cells, scored against the exact solution along the normal in a window clear of the faces: straight shock, contact and rarefaction along the grid's diagonal, one time per run; nothing about turbulence | not yet run |
+| `kinet_double_mach_reflection` | a finite-volume solver's double Mach reflection at a viscosity (0.01) large enough that it is a viscous flow, not the inviscid benchmark picture: an incident, a reflected and a Mach-stem shock meeting at a triple point, with no exact answer, on 480 x 120 cells read in the window x < 3.2 with every face declared Neumann; nothing about turbulence | not yet run |
 
 One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* names the run the card cites: the main results are `## Performance` and the subsections below, and every other run has its own subsection headed with its dataset. *Not applicable* gives the reason: one that follows from what the metric declares and what the dataset offers, or one a person wrote on the card (`not_run` in `card.yaml`) because the result would carry no information. *Not yet run* means the metric can run there and the card cites no run on it yet.
 

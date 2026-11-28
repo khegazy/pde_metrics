@@ -179,7 +179,7 @@ def write_kinet_sod(path: Path, nodes: int, steps_per_frame: int = 1) -> Path:
 
 
 def write_kinet_grouped(path: Path, save_every: int = 3,
-                        pressure_convention: str = "absolute") -> Path:
+                        pressure_convention: str = "absolute", adaptive: bool = False) -> Path:
     """Write the frames of :func:`write_kinet_raw` in the grouped layout of the current kinet.
 
     Frame 0 goes under ``initial_conditions/`` and frame ``k`` to solver step ``k *
@@ -188,10 +188,16 @@ def write_kinet_grouped(path: Path, save_every: int = 3,
     frame holds, so a conversion that keeps it fails; pressure labelled by
     ``pressure_convention``; the degenerate ``temperature``. A correct conversion of this file
     is therefore the flat fixture itself, value for value. The flat file is left beside it.
+
+    ``adaptive`` writes a run of kinet's PonD solver instead: ``discretization.temporal`` of type
+    ``adaptive`` with no ``resolution``, the last frame one step short of the cadence (the step
+    that lands on the end time), and the flat fixture's clock in ``time/time``, with a
+    ``time_convection`` three times it, which a conversion must not carry.
     """
     flat = write_kinet_raw(path.with_name(path.stem + "_flat.h5"))
-    n_steps = (N_FRAMES - 1) * save_every
+    n_steps = (N_FRAMES - 1) * save_every - int(adaptive)
     slots = np.arange(1, N_FRAMES) * save_every - 1
+    slots[-1] = n_steps - 1
     step = np.full(n_steps, np.nan)
     step[slots] = slots + 1
     step[0] = 1.0
@@ -199,6 +205,9 @@ def write_kinet_grouped(path: Path, save_every: int = 3,
         f.attrs.update(src.attrs)
         disc = json.loads(src.attrs["discretization"])
         disc["temporal"].update(grid=n_steps, length=float(n_steps))
+        if adaptive:
+            disc["temporal"]["type"] = "adaptive"
+            del disc["temporal"]["resolution"]
         f.attrs["discretization"] = json.dumps(disc)
         f.attrs["pressure_convention"] = pressure_convention
         f.attrs["identity_key"] = "0f1x7e"
@@ -212,10 +221,78 @@ def write_kinet_grouped(path: Path, save_every: int = 3,
             f.create_dataset(f"initial_conditions/observables/{name}", data=data[:, :, :1])
         # The flat clock is 0.25 per frame; step / save_every is exact for every saved step.
         f.create_dataset("time/time_index", data=step, chunks=(1,))
-        f.create_dataset("time/time", data=step, chunks=(1,))
-        f.create_dataset("time/time_convection", data=step / save_every * 0.25, chunks=(1,))
+        clock = step / save_every * 0.25
+        if adaptive:
+            clock[slots] = src["time"][1:]
+        f.create_dataset("time/time", data=clock if adaptive else step, chunks=(1,))
+        f.create_dataset("time/time_convection", data=3 * clock if adaptive else clock,
+                         chunks=(1,))
         for name in ("time_index", "time", "time_convection"):
             f.create_dataset(f"initial_conditions/time/{name}", data=np.zeros(1))
+    return path
+
+
+def write_kinet_isentropic_vortex(path: Path, shape: tuple[int, int] = (48, 32)) -> Path:
+    """A converted kinet ``isentropic_vortex`` run whose every frame is the exact solution.
+
+    Shu's vortex in the form of Spiegel, Huynh & DeBonis (2015, AIAA 2015-2444), written
+    independently of the reader's form: their Eqs. (20) to (23) with ``sigma = R = 1``, the
+    velocity in units of the sound speed ``a = sqrt(gamma)`` (``p = rho = 1`` far away) and the
+    strength ``beta_S = M 5 sqrt(2) e^(1/2) / (4 pi)``, ``M = sqrt(2 / gamma)``, at 45 degrees
+    (their Table 1, Shu's row), converted to the case's units by multiplying velocity by ``a`` and
+    pressure by ``a^2``. The vortex starts at the centre of a box of side 10 along x and
+    ``10 Ly / Lx`` along y, cell ``i`` centred at ``(i + 1/2) L / N``, and frame ``k`` is it carried
+    by the flow (1, 1) for ``0.25 k`` (Sect. IV.B.1), the nearest periodic image taken. Non-square,
+    and the flow is not symmetric in x and y once the centre is off the diagonal of the box.
+    """
+    write_kinet_raw(path, shape=shape)
+    gamma, lengths = 1.4, (10.0, 10.0 * shape[1] / shape[0])
+    sound, mach = np.sqrt(gamma), np.sqrt(2 / gamma)
+    strength = mach * 5 * np.sqrt(2) * np.exp(0.5) / (4 * np.pi)
+    x, y = np.meshgrid(*[(np.arange(n) + 0.5) * length / n for n, length in zip(shape, lengths)],
+                       indexing="ij")
+    with h5py.File(path, "r+") as f:
+        f.attrs["group"], f.attrs["gamma"] = "isentropic_vortex", gamma
+        f.attrs["discretization"] = json.dumps(
+            {"spatial": {"grid": list(shape), "length": list(lengths)},
+             "temporal": {"grid": N_FRAMES - 1}})
+        for t, clock in enumerate(f["time"][:]):
+            bar = [(c - length / 2 - clock + length / 2) % length - length / 2
+                   for c, length in ((x, lengths[0]), (y, lengths[1]))]
+            omega = strength * np.exp(-0.5 * (bar[0] ** 2 + bar[1] ** 2))      # Eqs. (20), (21)
+            temperature = 1 - (gamma - 1) * omega**2 / 2                        # Eq. (22)
+            f["density"][0, 0, t] = temperature ** (1 / (gamma - 1))            # Eq. (23)
+            f["velocity"][0, :, t] = sound * np.stack([mach / np.sqrt(2) - bar[1] * omega,
+                                                       mach / np.sqrt(2) + bar[0] * omega])
+            f["pressure"][0, 0, t] = sound**2 / gamma * temperature ** (gamma / (gamma - 1))
+    return path
+
+
+def write_kinet_oblique_riemann(path: Path, normal: tuple[float, float],
+                                shape: tuple[int, int] = (40, 24)) -> Path:
+    """A converted kinet ``oblique_riemann`` run that never moves, on the unit square.
+
+    Sod's states with both pressures multiplied by 0.15, left ``(rho, p) = (1, 0.15)`` and right
+    ``(0.125, 0.015)``, at rest, ``gamma`` 1.4, on either side of the line through ``(1/2, 1/2)``
+    with unit normal ``normal``; a cell the line cuts holds an even mixture, as kinet's painter
+    leaves each state's share there. Cells are ``1/40`` by ``1/24``. Frame ``k`` is at ``0.05 k``
+    (to 0.2, kinet's end time), every frame the initial condition: a reader's exact solution is
+    checked against Toro's numbers, not against these frozen frames.
+    """
+    write_kinet_raw(path, shape=shape, times=0.05 * np.arange(N_FRAMES))
+    spacing = [1.0 / n for n in shape]
+    x, y = np.meshgrid(*[(np.arange(n) + 0.5) * h for n, h in zip(shape, spacing)], indexing="ij")
+    along = normal[0] * (x - 0.5) + normal[1] * (y - 0.5)
+    half = 0.5 * (abs(normal[0]) * spacing[0] + abs(normal[1]) * spacing[1])
+    share = np.where(along < -half, 1.0, np.where(along > half, 0.0, 0.5))
+    with h5py.File(path, "r+") as f:
+        f.attrs["group"], f.attrs["gamma"] = "oblique_riemann", 1.4
+        f.attrs["discretization"] = json.dumps(
+            {"spatial": {"grid": list(shape), "length": [1.0, 1.0]},
+             "temporal": {"grid": N_FRAMES - 1}})
+        f["density"][0, 0] = np.broadcast_to(0.125 + 0.875 * share, (N_FRAMES, *shape))
+        f["pressure"][0, 0] = np.broadcast_to(0.015 + 0.135 * share, (N_FRAMES, *shape))
+        f["velocity"][0] = 0.0
     return path
 
 def write_well(path: Path, shape: tuple[int, int] = SHAPE,

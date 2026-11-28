@@ -1,0 +1,84 @@
+case:
+  N_simulations: 1
+  assets: {}
+  boundary_conditions:
+    x:
+      high:
+        type: neuman
+      low:
+        type: neuman
+    y:
+      high:
+        type: neuman
+      low:
+        type: neuman
+  discretization:
+    spatial:
+      grid:
+      - 400
+      - 400
+      length:
+      - 1.0
+      - 1.0
+      resolution: 0.0025
+      type: provided
+      unit: '-'
+    temporal:
+      grid: 200000
+      length: 0.2
+      type: adaptive
+      unit: '-'
+  group: oblique_riemann
+  id: default
+  initial_conditions:
+    interface: 0.5
+    left:
+      density: 1.0
+      pressure: 0.15
+    normal:
+    - 1.0
+    - 1.0
+    right:
+      density: 0.125
+      pressure: 0.015
+  lattice:
+    shifts:
+    - 0.0
+    - 0.0
+    type: D2Q16
+    use_static_weights: true
+  physics:
+    parameters:
+      dimension: 2
+      dynamic_viscosity: 1.0e-05
+      freestream_hold: reynolds
+      prandtl: 0.71
+      reference:
+        density: 1.0
+      specific_heat_ratio: 1.4
+    type: compressible_fluids
+  simulation_subdir: oblique_riemann/default/83a3bce9
+  solver:
+    cfl: 0.2
+    diagnostics:
+      stabilizer_telemetry: false
+    transport:
+      face_pc:
+        iters: 20
+        preserve_macro_corrected_f_residual: false
+        preserve_macro_corrected_g_residual: false
+        temperature_average: sqrt
+        tol: 1.0e-10
+      reconstruction:
+        limiter: van_leer
+        muscl: true
+        scheme: mp5
+      type: dugks
+    type: pond
+  subgrid: {}
+  units: lattice
+case_path: oblique_riemann/default
+normalization:
+  feature: none
+precision:
+  dtype: torch.float64

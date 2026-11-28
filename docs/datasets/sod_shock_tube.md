@@ -37,6 +37,7 @@ state.
 | `kinet_sod_gamma1p4` | kinet's lattice-Boltzmann simulation (`kinet/sod/compressible_fluids/Pr-71en2_vuy-1.4_visc-1en4/`) on 3001 × 5 nodes, $\gamma = 1.4$, viscosity $10^{-4}$, Prandtl number 0.71, left $(\rho, p) = (1, 0.2)$, right $(0.125, 0.02)$, 1001 frames to $t = 200$ | Yes, simulated |
 | `kinet_sod_gamma2` | The same solver with $\gamma = 2$, viscosity 0.025, left $(\rho, p) = (0.5, 0.1)$, right $(2, 0.05)$; two runs of it, `c76b17` (default) and `15aa6b`, equal to $10^{-13}$ | Yes, simulated |
 | `kinet_sod_refinement` | The $\gamma = 1.4$ case rerun on 751, 1501 and 3001 × 5 nodes (`kinet/sod/compressible_fluids/Pr-71en2_vuy-1.4_refinement/`), each run scored against the exact solution on its own nodes: a grid sequence, the grid chosen by `dataset.trajectory` (`N751`, `N1501`, `N3001`) | Yes, simulated against computed |
+| `kinet_oblique_riemann_30deg`, `kinet_oblique_riemann_45deg` | The tube rotated in the unit square, its interface's normal at 30 or 45 degrees to $x$, with both pressures multiplied by 0.15: kinet's finite-volume (PonD) solver on $200^2$ and $400^2$ cells (`kinet/oblique_riemann/compressible_fluids/`), each run scored against the exact solution along the normal at $t = 0.2$, in a window clear of the faces; the grid chosen by `dataset.trajectory` (`N200`, `N400`) | Yes, simulated against computed |
 
 The exact solution can be evaluated for either simulation by overriding the reader's options,
 for example `+dataset.reader.gamma=2 '+dataset.reader.left=[0.5,0.1]' '+dataset.reader.right=[2,0.05]'`.
@@ -157,6 +158,61 @@ each row is that run's error.
 ```bash
 python evaluate.py -m dataset=kinet_sod_refinement dataset.trajectory=N751,N1501,N3001 \
     'metrics=[mae,rmse,max_error,shock_set_distance]'
+```
+
+### The tube rotated in a square
+
+`kinet_oblique_riemann_30deg` and `kinet_oblique_riemann_45deg` hold kinet's case
+`oblique_riemann/default`, run on 2026-11-27 by its finite-volume PonD solver (16 discrete
+velocities, kinet's DUGKS transport with MP5 reconstruction, Courant number 0.2, an
+adaptive time step, viscosity $10^{-5}$, Prandtl number 0.71) on the unit square, every face
+zero-gradient. Two states at rest, left $(\rho, p) = (1, 0.15)$ and right $(0.125, 0.015)$,
+$\gamma = 1.4$, sit on either side of the line through $(\tfrac12, \tfrac12)$ with unit normal
+$\boldsymbol n$ at 30 or 45 degrees to $x$; a cell the line cuts holds each state's share of it.
+
+- **Why it is this page's problem.** These are Sod's states with both pressures multiplied by
+  $k = 0.15$. The Euler equations are unchanged by $p \to kp$, $u \to \sqrt k\, u$,
+  $t \to t/\sqrt k$, so the solution is Sod's at the time $\sqrt k\, t$, its velocities $\sqrt k$
+  times Sod's and its pressures $k$ times (my derivation; the star state of the reader, $p^* =
+  0.04547$, $u^* = 0.3592$, $\rho^*_L = 0.42632$, $\rho^*_R = 0.26557$, is Toro's Table 4.3 scaled
+  so). And the equations are invariant under rotation, so until a wave reaches a face the field is
+  the tube's along the normal: the solution of Eqs. (3) to (7) below at $\xi = s/t$,
+  $s = \boldsymbol n \cdot (\boldsymbol x - (\tfrac12, \tfrac12))$, with the velocity $u(s, t)\,\boldsymbol n$ (kinet's
+  `kinet/reference/riemann/euler_nd.py` states the same). So the reader is `sod_kinet` with the
+  option `normal`; no second Riemann solver is written.
+- **The window.** Where a tilted front meets a zero-gradient face, the face is not consistent with
+  the front, and the run departs from the exact solution there. A disturbance travels no faster
+  than the fastest signal of the solution, the largest of $|u| + c$ over its states, here
+  $u^* + c^*_R = 0.849$ ($c = \sqrt{\gamma p/\rho}$; the fan's values lie between its edges'). So
+  the reader keeps only the cells whose centres lie farther than $0.849\, t$ from every face at
+  the run's last time $t = 0.2$: cells 34 to 165 of 200 and 68 to 331 of 400 on both axes, a
+  margin of 0.17. Measured on the $45°$, $200^2$ run, the rms pressure error is larger only within
+  0.05 of the faces ($1.4 \times 10^{-3}$ against 0.8 to $1.0 \times 10^{-3}$ elsewhere outside the
+  central band of the waves), so the margin is safe. Every face of the window is declared
+  `neumann`; inside the window it is no boundary of the flow, and no ladder runs on these runs.
+- **Reproduced.** On the job's interior box $[0.2, 0.8]^2$, inside the window, the run minus the
+  reader's exact solution has the job's rms and maximum errors of density and pressure at
+  $t = 0.2$ to their four printed digits, on all four runs (a `data` test pins them).
+- **What it measures.** At $t = 0.2$, the only time after the start that the two grids share
+  (the solver's step is adaptive; issue 149), through `observed_order` from $200^2$ to $400^2$:
+
+  | Normal | `mae` density | `mae` pressure | `mae` velocity | `rmse` density | `rmse` pressure | `rmse` velocity | `max_error` density | `shock_set_distance` |
+  |---|---|---|---|---|---|---|---|---|
+  | 30° | 0.61 | 0.78 | 0.84 | 0.32 | 0.54 | 0.46 | 0.02 | 0.96 |
+  | 45° | 0.59 | 0.74 | 0.66 | 0.28 | 0.36 | −0.22 | 0.08 | not defined |
+
+  The density L1 order, 0.59 and 0.61, is a little below that of the tube's grid sequence above
+  (0.66 to 0.68, a different solver),
+  the density L2 order about half its L1 order, and the maximum error does not fall, since a
+  captured shock leaves an error of the jump's size in its cell on any grid. The shock detector of
+  `shock_set_distance` flags 187 to 503 cells of the shock in the run and the exact solution. At $45°$ on $200^2$ it
+  flags the same 187 cells in both, so the distance is 0 and its order undefined; at $30°$ it is
+  0.00066 and 0.00034, a fall of about one half per halving of the cell, the order of a front
+  placed to within a cell.
+
+```bash
+python evaluate.py -m dataset=kinet_oblique_riemann_30deg dataset.trajectory=N200,N400 \
+    'metrics=[mae,rmse,max_error,shock_set_distance]' paths.results=<results root>
 ```
 
 ## Equations

@@ -1,0 +1,78 @@
+case:
+  N_simulations: 1
+  assets: {}
+  boundary_conditions:
+    Periodic:
+      axes:
+      - x
+      - y
+  discretization:
+    spatial:
+      grid:
+      - 512
+      - 512
+      length:
+      - 10.0
+      - 10.0
+      resolution: 0.01953125
+      type: provided
+      unit: '-'
+    temporal:
+      grid: 200000
+      length: 2.5
+      type: adaptive
+      unit: '-'
+  group: isentropic_vortex
+  id: default
+  initial_conditions:
+    boost:
+    - 1.0
+    - 1.0
+    center:
+    - 0.5
+    - 0.5
+    density: 1.0
+    pressure: 1.0
+    radius: 1.0
+    strength: 5.0
+  lattice:
+    shifts:
+    - 0.0
+    - 0.0
+    type: D2Q16
+    use_static_weights: true
+  physics:
+    parameters:
+      dimension: 2
+      dynamic_viscosity: 1.0e-07
+      freestream_hold: reynolds
+      prandtl: 0.71
+      reference:
+        density: 1.0
+      specific_heat_ratio: 1.4
+    type: compressible_fluids
+  simulation_subdir: isentropic_vortex/default/67d186ad
+  solver:
+    cfl: 0.2
+    diagnostics:
+      stabilizer_telemetry: false
+    transport:
+      face_pc:
+        iters: 20
+        preserve_macro_corrected_f_residual: false
+        preserve_macro_corrected_g_residual: false
+        temperature_average: sqrt
+        tol: 1.0e-10
+      reconstruction:
+        limiter: van_leer
+        muscl: true
+        scheme: mp5
+      type: dugks
+    type: pond
+  subgrid: {}
+  units: lattice
+case_path: isentropic_vortex/default
+normalization:
+  feature: none
+precision:
+  dtype: torch.float64

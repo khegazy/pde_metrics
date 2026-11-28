@@ -569,6 +569,41 @@ def test_the_cylinder_window_holds_the_bow_shock_and_none_of_the_body():
             assert outline.min() >= 30
 
 
+#: The incident shock's foot measured by the job's check (``check_dmr_N120.txt`` under
+#: docs/datasets/logs/kinet_runs/shocks_2d/checks/), by frame of the converted run and row index
+#: (rows 72, 84, 96, 108 are y = 0.6042, 0.7042, 0.8042, 0.9042).
+DMR_FRONT = {2: {72: 2.0820, 84: 2.1378, 96: 2.1918, 108: 2.2501},
+             3: {72: 2.8082, 84: 2.8649, 96: 2.9219, 108: 2.9815}}
+
+
+@pytest.mark.data
+def test_the_double_mach_window_reproduces_the_incident_shock_and_leaves_out_still_gas():
+    """``kinet_double_mach_reflection`` reads the window x < 3.2 of the 480 x 120 run in the case's
+    units (cells 1/120, the clock the physical time). On each checked row the right-most crossing
+    of the density level 4.7, between the pre-shock 1.4 and the post-shock 8, interpolated between
+    cell centres as the job's check did, is the job's measured foot of the incident shock (given
+    to four decimals). The 96 columns left out hold the undisturbed pre-shock state (1.4, 0, 0, 1)
+    at every kept frame (measured within 1.4e-8 at t = 0.2, exactly before)."""
+    job = build_job(compose_config("dataset=kinet_double_mach_reflection", "paths.data_url=null"))
+    with open_trajectory(job.dataset, job.paths) as run, \
+            KinetRawTrajectory(job.dataset.path, include_redundant=True) as whole:
+        assert run.grid.shape == (384, 120) and run.grid.spacing == pytest.approx((1 / 120,) * 2)
+        assert run.grid.boundary == ("neumann", "neumann")
+        assert run.times[1:] == pytest.approx([0.07080, 0.13677, 0.2], abs=5e-6)
+        x = (np.arange(384) + 0.5) / 120
+        for t, rows in DMR_FRONT.items():
+            density = run.frame(t, ["density"])["density"][0]
+            for j, expected in rows.items():
+                above = density[:, j] >= 4.7
+                i = np.flatnonzero(above[:-1] & ~above[1:])[-1]
+                foot = x[i] + (density[i, j] - 4.7) / (density[i, j] - density[i + 1, j]) / 120
+                assert foot == pytest.approx(expected, abs=6e-5), (t, j)
+        for t in range(1, len(whole)):
+            beyond = whole.frame(t, ["density", "velocity", "pressure"])
+            for name, state in (("density", 1.4), ("velocity", 0.0), ("pressure", 1.0)):
+                assert np.abs(beyond[name][:, 384:] - state).max() < 1e-7, (t, name)
+
+
 def test_iter_frames_is_ascending(traj):
     idx = [f.index for f in traj.iter_frames(["density"], TimeSelection(start=1))]
     assert idx == sorted(idx) == [1, 2, 3, 4]
@@ -761,6 +796,28 @@ def test_every_keeps_the_initial_condition_and_every_nth_frame_after_it(tmp_path
         with pytest.raises(ValueError, match="every="):
             convert_kinet_grouped(grouped, tmp_path / f"bad{bad}.h5", every=bad)
         assert not list(tmp_path.glob(f"bad{bad}.h5*"))
+
+
+def test_an_adaptive_rollout_keeps_its_physical_clock_and_its_last_step(tmp_path):
+    """A PonD rollout (``write_kinet_grouped(adaptive=True)``: an adaptive step, the last frame
+    one step off the cadence, the physical time in ``time/time``) converts to the flat fixture's
+    frames and clock, not ``time_convection``, at steps 0, 3, 6, 9, 11, with no temporal
+    resolution; ``every=2`` keeps the last frame and every second before it, steps 0, 6, 11,
+    though 2 does not divide the four frames."""
+    grouped = write_kinet_grouped(tmp_path / "grouped.h5", save_every=3, adaptive=True)
+    for every, frames, steps in ((1, [0, 1, 2, 3, 4], [0, 3, 6, 9, 11]), (2, [0, 2, 4], [0, 6, 11])):
+        converted = convert_kinet_grouped(grouped, tmp_path / f"every{every}.h5", every=every)
+        with KinetRawTrajectory(tmp_path / "grouped_flat.h5") as want, \
+                KinetRawTrajectory(converted) as got:
+            assert np.array_equal(got.times, want.times[frames])
+            for t, source in enumerate(frames):
+                a, b = want.frame(source, got.fields), got.frame(t, got.fields)
+                assert all(np.array_equal(a[name], b[name]) for name in got.fields), t
+            temporal = got.meta["source_attrs"]["discretization"]["temporal"]
+            assert temporal["grid"] == len(frames) - 1 and "resolution" not in temporal
+        with h5py.File(converted, "r") as f:
+            assert f["time_index"][:].tolist() == steps
+            assert f["time"].attrs["source"] == "time"
 
 
 @pytest.mark.parametrize("change,match", [

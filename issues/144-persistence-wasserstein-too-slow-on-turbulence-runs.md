@@ -33,6 +33,12 @@ cap of 32 cores per user (`cpu.max` 3200000/100000). None had finished after abo
 (launched 09:04, stopped 18:50), and they were stopped. Every other metric's shard on the same
 runs finished within about 3 hours.
 
+On `kinet_double_mach_reflection` (2026-11-27), one frame (t = 0.071) of density on its 384 x 120
+window with the default ladder did not finish within 900 s and was stopped; `persistence_distance`
+on the same frame took 9.3 s of metric time (21 s wall with the ladder). On the candidate runs of
+`kinet_isentropic_vortex_mu1em7` (512^2) and `kinet_oblique_riemann_45deg` (the 264^2 window), with
+no ladder, it took 1.4 s and 0.4 s per frame.
+
 ## Options
 
 1. Run it at a 128 x 128 analysis grid, which is roughly 8 to 30 times faster per comparison. The

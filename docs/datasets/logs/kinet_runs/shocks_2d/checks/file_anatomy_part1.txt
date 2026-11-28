@@ -1,0 +1,185 @@
+
+== /pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/oblique_riemann/oblique_riemann/default/83a3bce9/tiers/full/rollout.h5
+   file bytes 236909203 (225.9 MiB)
+   geometry/masks/blanked                           (400, 400)                 uint8    compression=gzip units=None stored=528
+   geometry/masks/fluid                             (400, 400)                 uint8    compression=gzip units=None stored=528
+   geometry/masks/solid                             (400, 400)                 uint8    compression=gzip units=None stored=528
+   geometry/overlays/overlay_0/mask                 (400, 400)                 uint8    compression=gzip units=None stored=532
+   geometry/overlays/overlay_1/mask                 (400, 400)                 uint8    compression=gzip units=None stored=536
+   geometry/overlays/overlay_2/mask                 (400, 400)                 uint8    compression=gzip units=None stored=756
+   geometry/overlays/overlay_3/mask                 (400, 400)                 uint8    compression=gzip units=None stored=756
+   initial_conditions/observables/density           (1, 1, 1, 400, 400)        float64  compression=None units=m0/cell^2 stored=1280000
+   initial_conditions/observables/pressure          (1, 1, 1, 400, 400)        float64  compression=None units=p0 stored=1280000
+   initial_conditions/observables/temperature       (1, 1, 1, 400, 400)        float64  compression=None units=T0 stored=1280000
+   initial_conditions/observables/velocity          (1, 2, 1, 400, 400)        float64  compression=None units=cell/step stored=2560000
+   initial_conditions/time/time                     (1,)                       float64  compression=None units=step stored=8
+   initial_conditions/time/time_convection          (1,)                       float64  compression=None units=- stored=8
+   initial_conditions/time/time_index               (1,)                       float64  compression=None units=- stored=8
+   mesoscopic/thermal_time                          (1, 1, 493, 400, 400)      float64  compression=None units=step stored=25600000
+   mesoscopic/viscous_time_ft                       (1, 1, 493, 400, 400)      float64  compression=None units=step stored=25600000
+   mesoscopic/viscous_time_gt                       (1, 1, 493, 400, 400)      float64  compression=None units=step stored=25600000
+   observables/density                              (1, 1, 493, 400, 400)      float64  compression=None units=m0/cell^2 stored=25600000
+   observables/pressure                             (1, 1, 493, 400, 400)      float64  compression=None units=p0 stored=25600000
+   observables/specific_energy                      (1, 1, 493, 400, 400)      float64  compression=None units=E0/m0 stored=25600000
+   observables/temperature                          (1, 1, 493, 400, 400)      float64  compression=None units=T0 stored=25600000
+   observables/velocity                             (1, 2, 493, 400, 400)      float64  compression=None units=cell/step stored=51200000
+   time/time                                        (493,)                     float64  compression=None units=step stored=160
+   time/time_convection                             (493,)                     float64  compression=None units=- stored=160
+   time/time_index                                  (493,)                     float64  compression=None units=- stored=160
+   group VTKHDF               stored         1120 bytes = 0.000 of the file
+   group geometry             stored         4164 bytes = 0.000 of the file
+   group initial_conditions   stored      6400024 bytes = 0.027 of the file
+   group mesoscopic           stored     76800000 bytes = 0.324 of the file
+   group observables          stored    153600000 bytes = 0.648 of the file
+   group time                 stored          480 bytes = 0.000 of the file
+   clock: last time/time=np.float64(0.2) (units attribute 'step'), configured end time temporal.length=0.2, equal=True; time_convection/time min=1.183215957 max=1.183215957 (1/ratio=0.8451542547)
+   boundary_conditions attribute: {"x": {"low": {"type": "neuman"}, "high": {"type": "neuman"}}, "y": {"low": {"type": "neuman"}, "high": {"type": "neuman"}}}
+   discretization attribute: {'spatial': {'type': 'provided', 'grid': [400, 400], 'length': [1.0, 1.0], 'resolution': 0.0025, 'unit': '-'}, 'temporal': {'type': 'adaptive', 'grid': 493, 'length': 0.2, 'unit': '-'}}
+
+== /pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/oblique_riemann/oblique_riemann/default/024f7fdf/tiers/full/rollout.h5
+   file bytes 259961727 (247.9 MiB)
+   geometry/masks/blanked                           (400, 400)                 uint8    compression=gzip units=None stored=528
+   geometry/masks/fluid                             (400, 400)                 uint8    compression=gzip units=None stored=528
+   geometry/masks/solid                             (400, 400)                 uint8    compression=gzip units=None stored=528
+   geometry/overlays/overlay_0/mask                 (400, 400)                 uint8    compression=gzip units=None stored=532
+   geometry/overlays/overlay_1/mask                 (400, 400)                 uint8    compression=gzip units=None stored=536
+   geometry/overlays/overlay_2/mask                 (400, 400)                 uint8    compression=gzip units=None stored=756
+   geometry/overlays/overlay_3/mask                 (400, 400)                 uint8    compression=gzip units=None stored=756
+   initial_conditions/observables/density           (1, 1, 1, 400, 400)        float64  compression=None units=m0/cell^2 stored=1280000
+   initial_conditions/observables/pressure          (1, 1, 1, 400, 400)        float64  compression=None units=p0 stored=1280000
+   initial_conditions/observables/temperature       (1, 1, 1, 400, 400)        float64  compression=None units=T0 stored=1280000
+   initial_conditions/observables/velocity          (1, 2, 1, 400, 400)        float64  compression=None units=cell/step stored=2560000
+   initial_conditions/time/time                     (1,)                       float64  compression=None units=step stored=8
+   initial_conditions/time/time_convection          (1,)                       float64  compression=None units=- stored=8
+   initial_conditions/time/time_index               (1,)                       float64  compression=None units=- stored=8
+   mesoscopic/thermal_time                          (1, 1, 544, 400, 400)      float64  compression=None units=step stored=28160000
+   mesoscopic/viscous_time_ft                       (1, 1, 544, 400, 400)      float64  compression=None units=step stored=28160000
+   mesoscopic/viscous_time_gt                       (1, 1, 544, 400, 400)      float64  compression=None units=step stored=28160000
+   observables/density                              (1, 1, 544, 400, 400)      float64  compression=None units=m0/cell^2 stored=28160000
+   observables/pressure                             (1, 1, 544, 400, 400)      float64  compression=None units=p0 stored=28160000
+   observables/specific_energy                      (1, 1, 544, 400, 400)      float64  compression=None units=E0/m0 stored=28160000
+   observables/temperature                          (1, 1, 544, 400, 400)      float64  compression=None units=T0 stored=28160000
+   observables/velocity                             (1, 2, 544, 400, 400)      float64  compression=None units=cell/step stored=56320000
+   time/time                                        (544,)                     float64  compression=None units=step stored=176
+   time/time_convection                             (544,)                     float64  compression=None units=- stored=176
+   time/time_index                                  (544,)                     float64  compression=None units=- stored=176
+   group VTKHDF               stored         1232 bytes = 0.000 of the file
+   group geometry             stored         4164 bytes = 0.000 of the file
+   group initial_conditions   stored      6400024 bytes = 0.025 of the file
+   group mesoscopic           stored     84480000 bytes = 0.325 of the file
+   group observables          stored    168960000 bytes = 0.650 of the file
+   group time                 stored          528 bytes = 0.000 of the file
+   clock: last time/time=np.float64(0.2) (units attribute 'step'), configured end time temporal.length=0.2, equal=True; time_convection/time min=1.183215957 max=1.183215957 (1/ratio=0.8451542547)
+   boundary_conditions attribute: {"x": {"low": {"type": "neuman"}, "high": {"type": "neuman"}}, "y": {"low": {"type": "neuman"}, "high": {"type": "neuman"}}}
+   discretization attribute: {'spatial': {'type': 'provided', 'grid': [400, 400], 'length': [1.0, 1.0], 'resolution': 0.0025, 'unit': '-'}, 'temporal': {'type': 'adaptive', 'grid': 544, 'length': 0.2, 'unit': '-'}}
+
+== /pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/isentropic_vortex/isentropic_vortex/default/3ef597e9/tiers/full/rollout.h5
+   file bytes 201414763 (192.1 MiB)
+   geometry/masks/blanked                           (256, 256)                 uint8    compression=gzip units=None stored=248
+   geometry/masks/fluid                             (256, 256)                 uint8    compression=gzip units=None stored=248
+   geometry/masks/solid                             (256, 256)                 uint8    compression=gzip units=None stored=248
+   geometry/overlays/overlay_0/mask                 (256, 256)                 uint8    compression=gzip units=None stored=254
+   geometry/overlays/overlay_1/mask                 (256, 256)                 uint8    compression=gzip units=None stored=254
+   geometry/overlays/overlay_2/mask                 (256, 256)                 uint8    compression=gzip units=None stored=404
+   geometry/overlays/overlay_3/mask                 (256, 256)                 uint8    compression=gzip units=None stored=404
+   initial_conditions/observables/density           (1, 1, 1, 256, 256)        float64  compression=None units=m0/cell^2 stored=524288
+   initial_conditions/observables/pressure          (1, 1, 1, 256, 256)        float64  compression=None units=p0 stored=524288
+   initial_conditions/observables/temperature       (1, 1, 1, 256, 256)        float64  compression=None units=T0 stored=524288
+   initial_conditions/observables/velocity          (1, 2, 1, 256, 256)        float64  compression=None units=cell/step stored=1048576
+   initial_conditions/time/time                     (1,)                       float64  compression=None units=step stored=8
+   initial_conditions/time/time_convection          (1,)                       float64  compression=None units=- stored=8
+   initial_conditions/time/time_index               (1,)                       float64  compression=None units=- stored=8
+   mesoscopic/thermal_time                          (1, 1, 5166, 256, 256)     float64  compression=None units=step stored=22020096
+   mesoscopic/viscous_time_ft                       (1, 1, 5166, 256, 256)     float64  compression=None units=step stored=22020096
+   mesoscopic/viscous_time_gt                       (1, 1, 5166, 256, 256)     float64  compression=None units=step stored=22020096
+   observables/density                              (1, 1, 5166, 256, 256)     float64  compression=None units=m0/cell^2 stored=22020096
+   observables/pressure                             (1, 1, 5166, 256, 256)     float64  compression=None units=p0 stored=22020096
+   observables/specific_energy                      (1, 1, 5166, 256, 256)     float64  compression=None units=E0/m0 stored=22020096
+   observables/temperature                          (1, 1, 5166, 256, 256)     float64  compression=None units=T0 stored=22020096
+   observables/velocity                             (1, 2, 5166, 256, 256)     float64  compression=None units=cell/step stored=44040192
+   time/time                                        (5166,)                    float64  compression=None units=step stored=336
+   time/time_convection                             (5166,)                    float64  compression=None units=- stored=336
+   time/time_index                                  (5166,)                    float64  compression=None units=- stored=336
+   group VTKHDF               stored         2352 bytes = 0.000 of the file
+   group geometry             stored         2060 bytes = 0.000 of the file
+   group initial_conditions   stored      2621464 bytes = 0.013 of the file
+   group mesoscopic           stored     66060288 bytes = 0.328 of the file
+   group observables          stored    132120576 bytes = 0.656 of the file
+   group time                 stored         1008 bytes = 0.000 of the file
+   clock: last time/time=np.float64(10.0) (units attribute 'step'), configured end time temporal.length=10.0, equal=True; time_convection/time min=0.1183215957 max=0.1183215957 (1/ratio=8.451542547)
+   boundary_conditions attribute: {"Periodic": {"axes": ["x", "y"]}}
+   discretization attribute: {'spatial': {'type': 'provided', 'grid': [256, 256], 'length': [10.0, 10.0], 'resolution': 0.0390625, 'unit': '-'}, 'temporal': {'type': 'adaptive', 'grid': 5166, 'length': 10.0, 'unit': '-'}}
+
+== /pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/isentropic_vortex/isentropic_vortex/default/beb1465e/tiers/full/rollout.h5
+   file bytes 50584957 (48.2 MiB)
+   geometry/masks/blanked                           (128, 128)                 uint8    compression=gzip units=None stored=62
+   geometry/masks/fluid                             (128, 128)                 uint8    compression=gzip units=None stored=62
+   geometry/masks/solid                             (128, 128)                 uint8    compression=gzip units=None stored=62
+   geometry/overlays/overlay_0/mask                 (128, 128)                 uint8    compression=gzip units=None stored=65
+   geometry/overlays/overlay_1/mask                 (128, 128)                 uint8    compression=gzip units=None stored=65
+   geometry/overlays/overlay_2/mask                 (128, 128)                 uint8    compression=gzip units=None stored=140
+   geometry/overlays/overlay_3/mask                 (128, 128)                 uint8    compression=gzip units=None stored=140
+   initial_conditions/observables/density           (1, 1, 1, 128, 128)        float64  compression=None units=m0/cell^2 stored=131072
+   initial_conditions/observables/pressure          (1, 1, 1, 128, 128)        float64  compression=None units=p0 stored=131072
+   initial_conditions/observables/temperature       (1, 1, 1, 128, 128)        float64  compression=None units=T0 stored=131072
+   initial_conditions/observables/velocity          (1, 2, 1, 128, 128)        float64  compression=None units=cell/step stored=262144
+   initial_conditions/time/time                     (1,)                       float64  compression=None units=step stored=8
+   initial_conditions/time/time_convection          (1,)                       float64  compression=None units=- stored=8
+   initial_conditions/time/time_index               (1,)                       float64  compression=None units=- stored=8
+   mesoscopic/thermal_time                          (1, 1, 2583, 128, 128)     float64  compression=None units=step stored=5505024
+   mesoscopic/viscous_time_ft                       (1, 1, 2583, 128, 128)     float64  compression=None units=step stored=5505024
+   mesoscopic/viscous_time_gt                       (1, 1, 2583, 128, 128)     float64  compression=None units=step stored=5505024
+   observables/density                              (1, 1, 2583, 128, 128)     float64  compression=None units=m0/cell^2 stored=5505024
+   observables/pressure                             (1, 1, 2583, 128, 128)     float64  compression=None units=p0 stored=5505024
+   observables/specific_energy                      (1, 1, 2583, 128, 128)     float64  compression=None units=E0/m0 stored=5505024
+   observables/temperature                          (1, 1, 2583, 128, 128)     float64  compression=None units=T0 stored=5505024
+   observables/velocity                             (1, 2, 2583, 128, 128)     float64  compression=None units=cell/step stored=11010048
+   time/time                                        (2583,)                    float64  compression=None units=step stored=336
+   time/time_convection                             (2583,)                    float64  compression=None units=- stored=336
+   time/time_index                                  (2583,)                    float64  compression=None units=- stored=336
+   group VTKHDF               stored         2352 bytes = 0.000 of the file
+   group geometry             stored          596 bytes = 0.000 of the file
+   group initial_conditions   stored       655384 bytes = 0.013 of the file
+   group mesoscopic           stored     16515072 bytes = 0.326 of the file
+   group observables          stored     33030144 bytes = 0.653 of the file
+   group time                 stored         1008 bytes = 0.000 of the file
+   clock: last time/time=np.float64(10.0) (units attribute 'step'), configured end time temporal.length=10.0, equal=True; time_convection/time min=0.1183215957 max=0.1183215957 (1/ratio=8.451542547)
+   boundary_conditions attribute: {"Periodic": {"axes": ["x", "y"]}}
+   discretization attribute: {'spatial': {'type': 'provided', 'grid': [128, 128], 'length': [10.0, 10.0], 'resolution': 0.078125, 'unit': '-'}, 'temporal': {'type': 'adaptive', 'grid': 2583, 'length': 10.0, 'unit': '-'}}
+
+== /pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/isentropic_vortex/isentropic_vortex/default/b88b17ce/tiers/full/rollout.h5
+   file bytes 12771385 (12.2 MiB)
+   geometry/masks/blanked                           (64, 64)                   uint8    compression=gzip units=None stored=26
+   geometry/masks/fluid                             (64, 64)                   uint8    compression=gzip units=None stored=27
+   geometry/masks/solid                             (64, 64)                   uint8    compression=gzip units=None stored=26
+   geometry/overlays/overlay_0/mask                 (64, 64)                   uint8    compression=gzip units=None stored=30
+   geometry/overlays/overlay_1/mask                 (64, 64)                   uint8    compression=gzip units=None stored=30
+   geometry/overlays/overlay_2/mask                 (64, 64)                   uint8    compression=gzip units=None stored=53
+   geometry/overlays/overlay_3/mask                 (64, 64)                   uint8    compression=gzip units=None stored=53
+   initial_conditions/observables/density           (1, 1, 1, 64, 64)          float64  compression=None units=m0/cell^2 stored=32768
+   initial_conditions/observables/pressure          (1, 1, 1, 64, 64)          float64  compression=None units=p0 stored=32768
+   initial_conditions/observables/temperature       (1, 1, 1, 64, 64)          float64  compression=None units=T0 stored=32768
+   initial_conditions/observables/velocity          (1, 2, 1, 64, 64)          float64  compression=None units=cell/step stored=65536
+   initial_conditions/time/time                     (1,)                       float64  compression=None units=step stored=8
+   initial_conditions/time/time_convection          (1,)                       float64  compression=None units=- stored=8
+   initial_conditions/time/time_index               (1,)                       float64  compression=None units=- stored=8
+   mesoscopic/thermal_time                          (1, 1, 1290, 64, 64)       float64  compression=None units=step stored=1376256
+   mesoscopic/viscous_time_ft                       (1, 1, 1290, 64, 64)       float64  compression=None units=step stored=1376256
+   mesoscopic/viscous_time_gt                       (1, 1, 1290, 64, 64)       float64  compression=None units=step stored=1376256
+   observables/density                              (1, 1, 1290, 64, 64)       float64  compression=None units=m0/cell^2 stored=1376256
+   observables/pressure                             (1, 1, 1290, 64, 64)       float64  compression=None units=p0 stored=1376256
+   observables/specific_energy                      (1, 1, 1290, 64, 64)       float64  compression=None units=E0/m0 stored=1376256
+   observables/temperature                          (1, 1, 1290, 64, 64)       float64  compression=None units=T0 stored=1376256
+   observables/velocity                             (1, 2, 1290, 64, 64)       float64  compression=None units=cell/step stored=2752512
+   time/time                                        (1290,)                    float64  compression=None units=step stored=336
+   time/time_convection                             (1290,)                    float64  compression=None units=- stored=336
+   time/time_index                                  (1290,)                    float64  compression=None units=- stored=336
+   group VTKHDF               stored         2352 bytes = 0.000 of the file
+   group geometry             stored          245 bytes = 0.000 of the file
+   group initial_conditions   stored       163864 bytes = 0.013 of the file
+   group mesoscopic           stored      4128768 bytes = 0.323 of the file
+   group observables          stored      8257536 bytes = 0.647 of the file
+   group time                 stored         1008 bytes = 0.000 of the file
+   clock: last time/time=np.float64(10.0) (units attribute 'step'), configured end time temporal.length=10.0, equal=True; time_convection/time min=0.1183215957 max=0.1183215957 (1/ratio=8.451542547)
+   boundary_conditions attribute: {"Periodic": {"axes": ["x", "y"]}}
+   discretization attribute: {'spatial': {'type': 'provided', 'grid': [64, 64], 'length': [10.0, 10.0], 'resolution': 0.15625, 'unit': '-'}, 'temporal': {'type': 'adaptive', 'grid': 1290, 'length': 10.0, 'unit': '-'}}

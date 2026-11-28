@@ -1,0 +1,28 @@
+launches:
+- started_at: '2026-11-27T20:37:28.209668+00:00'
+  run_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/obl45_N400/outputs/oblique_riemann/default/simulate/job_261127_123725_157165
+  case_path: oblique_riemann/default
+  case_id: default
+  task: simulate
+  hostname: nid001237
+  pid: 2320414
+  stamp: null
+  resume_from: null
+  slurm_job_id: '62108197'
+  slurm_job_name: kinet-s2d-obl400
+  slurm_submit_dir: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d
+  slurm_stdout: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/obl45_N400/outputs/oblique_riemann/default/simulate/job_261127_123725_157165/logs/62108197/slurm.out
+  slurm_stderr: /pscratch/sd/k/khegazy/kinet_datasets/_work/shocks_2d/obl45_N400/outputs/oblique_riemann/default/simulate/job_261127_123725_157165/logs/62108197/slurm.err
+  hydra_overrides:
+  - task=simulate
+  - case=oblique_riemann/default
+  - ++case.discretization.spatial.grid=[400,400]
+  - ++case.initial_conditions.normal=[1.0,1.0]
+  - ++case.io.save_every_n=26
+  - ++case.io.record_distributions=false
+  - ++case.io.record_equilibria=false
+  - ++case.io.compression=null
+  - ++case.runtime_logging.every_n=100
+  - ++paths.data_root=/pscratch/sd/k/khegazy/kinet_datasets/shocks_2d/oblique_riemann
+  - ++distributed.is_distributed=false
+  - ++distributed.is_slurm=true

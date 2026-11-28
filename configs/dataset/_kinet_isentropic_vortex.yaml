@@ -1,0 +1,34 @@
+# Shared by kinet's runs of Shu's isentropic vortex: the case isentropic_vortex/default (strength
+# 5, core radius 1, carried by the uniform flow (1, 1), rho = p = 1 far from it, gamma = 1.4) on
+# [0, 10]^2, doubly periodic, run by kinet's finite-volume PonD solver (D2Q16, DUGKS with MP5
+# reconstruction, CFL 0.2, adaptive time step, Prandtl number 0.71). Each run was converted from
+# its grouped rollout by `python -m fmeval.data.convert_kinet SRC DST --every N`, keeping the
+# initial condition and the last frame only; the runs' configurations and commands are under
+# docs/datasets/logs/kinet_runs/shocks_2d/.
+#
+# The reader `isentropic_vortex_kinet` (fmeval/data/analytic.py) evaluates the exact solution, the
+# initial vortex translated by (1, 1) t (Spiegel, Huynh & DeBonis 2015, Eqs. 20 to 23 and Sect.
+# IV.B.1), at the run's own cell centres and time, and scores the run against it as a candidate.
+# So every row is the solver's error on its own grid, labelled with param_resolution, and the
+# runs of one configuration give the observed order:
+#   python evaluate.py -m dataset=kinet_isentropic_vortex_mu1em5 \
+#       dataset.trajectory=N64,N128,N256 'metrics=[rmse,max_error]'
+#   fmeval.analysis.observed_order(fmeval.io.load_runs(<three folders>), anchor_label="mean_field")
+#
+# WHAT PART IS EVALUATED (2026-11-27; reasons and measured costs in
+# docs/datasets/logs/isentropic_vortex.md). The last frame of every run, each at its native
+# resolution (the order needs every run scored on its own cells). The solver's time step is
+# adaptive, so the grids share no saved time except the start and the end time, and
+# observed_order pairs grids at equal times only; frame 0 is the initial condition, equal to the
+# exact solution to 4e-16. A run carries a candidate, so the degradation ladder is not run.
+format: isentropic_vortex_kinet
+
+fields: [density, velocity, pressure]
+
+time:
+  start: 1
+
+complexity:
+  family: isentropic_vortex
+  rank: 0
+  params: {strength: 5, gamma: 1.4, scored_against: exact}
