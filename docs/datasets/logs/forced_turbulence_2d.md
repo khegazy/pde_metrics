@@ -40,8 +40,16 @@ turbulence with a scaling range (spec 04, Sect. 1). It serves:
   says what was left out).
 - **Not reproducible on unmodified kinet.** The run needs a negative rate on the `linear` law
   and the `minimum_mode` key on `random_modes`, both refused by kinet's `perf/cleanup`. They are
-  three commits on the local, unpushed branch `datasets/forced-drag`, saved as patches in the
-  archive. Without the patches the case file does not even exist on `perf/cleanup`.
+  three commits on the branch `datasets/forced-drag`, saved as patches in the archive. Without
+  the patches the case file does not even exist on `perf/cleanup`.
+- **The pull request (2026-11-27).** On Kareem's instruction the branch was pushed and opened
+  as pull request 289 of `khegazy/kinet`. Because `perf/cleanup` had been merged into `main`
+  as one squashed commit (`e67a1136e`), the three commits were replayed onto `main` first and
+  have new hashes there (`bdca26fe6`, `7e7cb7ee3`, `6126d8d4b`). One conflict, in the knob
+  table of kinet's forcing page, was resolved by keeping `main`'s citation keys and the
+  branch's `rate` row. The same kinet test files as before passed on the replayed branch
+  (789 passed, exit code 0); the simulation was not rerun on it, so the dataset is still the
+  run made at `55e7edfda`, which the patches reproduce.
 - **Reproducing it.** Rebuild the branch (`git checkout -b datasets/forced-drag d1cd353b8 && git am
   docs/datasets/logs/kinet_runs/forced_turbulence_2d/kinet_patches/*.patch` in a kinet checkout),
   make a worktree of it, point `env.sh` at the worktree, and submit the `sbatch` line of

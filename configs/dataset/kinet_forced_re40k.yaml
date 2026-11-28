@@ -1,7 +1,7 @@
 # Forced, statistically stationary two-dimensional turbulence with a linear drag: one kinet run
 # (identity key 7a817df3), D2Q9 plain BGK, Ma = 0.1, Re = 4e4, doubly periodic 1024^2, forced by
 # random modes in the shell 31 <= |n| <= 33, drag rate 5e-5 per step, 220 000 steps saved every
-# 500th. It needs two additions to kinet on the unpushed branch datasets/forced-drag; the patches,
+# 500th. It needs two additions to kinet, open as pull request khegazy/kinet#289; the patches,
 # configurations and command are in docs/datasets/logs/kinet_runs/forced_turbulence_2d/.
 # Converted by `python -m fmeval.data.convert_kinet <rollout> <path> --every 8`: the initial
 # condition and steps 4000, 8000, ..., 220000 (56 frames, frame i is step 4000 i).

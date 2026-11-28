@@ -31,9 +31,9 @@ kinet's `linear` law with the constant rate $-5 \times 10^{-5}$ per step. The ru
 steps, saved every 500th.
 
 **Two additions to kinet were needed**, a negative rate on the `linear` law (a drag) and the
-`minimum_mode` key that turns the ball of forced modes into a shell. They live on the kinet
-branch `datasets/forced-drag`, which is not pushed; a run of unmodified kinet cannot reproduce
-this dataset. The patches, every configuration and the command are in
+`minimum_mode` key that turns the ball of forced modes into a shell. They are open as pull
+request 289 of `khegazy/kinet` (branch `datasets/forced-drag`); until it is merged, a run of
+kinet's `main` cannot reproduce this dataset. The patches, every configuration and the command are in
 `docs/datasets/logs/kinet_runs/forced_turbulence_2d/`.
 
 **The settings differ from the specification's plan** (Re 2700, drag $2.26 \times 10^{-4}$).

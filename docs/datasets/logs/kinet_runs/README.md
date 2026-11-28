@@ -730,9 +730,10 @@ and compared each byte for byte with its source (88 files, 288 kB).
 which confines the force to a shell. They were made on the kinet branch `datasets/forced-drag`,
 three commits on top of `perf/cleanup` at `d1cd353b8` (`af1c2f052` the two additions and their
 tests, `ef76ae40b` the case file `Re-2700_Ma-1en1_forced_drag_2d.yaml` and its initialiser
-entry, `55e7edfda` the case recalibrated and renamed `Re-40k_Ma-1en1_forced_drag_2d.yaml`). The
-branch exists only in the local kinet checkout (`/global/u2/k/khegazy/projects/pde/kinet`); it
-is not pushed. The three commits are kept here as patches, `kinet_patches/0001-*.patch` to
+entry, `55e7edfda` the case recalibrated and renamed `Re-40k_Ma-1en1_forced_drag_2d.yaml`). Those
+three commits are the ones every run below records. The branch was later replayed onto kinet's
+`main` and opened as pull request 289 of `khegazy/kinet`, where the commits have other hashes
+(`docs/datasets/logs/forced_turbulence_2d.md` records the replay). The three original commits are kept here as patches, `kinet_patches/0001-*.patch` to
 `0003-*.patch`, written by `git format-patch` with every email address replaced by
 `address removed`; on 2026-11-27 each was checked to equal its commit's `git format-patch -1`
 output apart from the series number in its subject line and that replacement. To rebuild the
