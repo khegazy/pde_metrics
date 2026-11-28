@@ -87,16 +87,15 @@ called the Talagrand diagram.
   makes a calibrated ensemble look U-shaped (Section 3c) [@hamill2001].
 - **The experiment.** Histograms over many forecasts at many grid points, by lead time
   (Anderson), and synthetic ensembles of known miscalibration, including flat histograms from
-  unreliable ensembles (Hamill, Section 3, Figures 2 to 4). Here only the calibrated null of
-  `synthetic_ensemble` and its miscalibration ladder exist; real ensembles wait on
-  [issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md).
-  The missing experiments are
-  [EXP-spread_skill-heteroscedastic-synthetic-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-heteroscedastic-synthetic-ensemble.md)
-  (Hamill's flat-but-unreliable mixture),
-  [EXP-crps-gneiting-forecaster-suite](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-crps-gneiting-forecaster-suite.md)
-  (calibrated forecasters of different sharpness, whose histograms are all flat) and
-  [EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md)
-  (forecasts against lead time).
+  unreliable ensembles (Hamill, Section 3, Figures 2 to 4). Here the calibrated null of
+  `synthetic_ensemble` and its miscalibration ladder are measured. Three further experiments
+  exist and have not been run yet: an ensemble whose spread follows its true uncertainty wrongly
+  ([flow_dependence](../../degradations/flow_dependence/card.md), on the `synthetic_ensemble`
+  option `sigma_ratio`), calibrated forecasters of different sharpness, whose histograms are
+  all flat ([gneiting_forecaster](../../degradations/gneiting_forecaster/card.md)), and the
+  solver's ensemble `kinet_shear_layer_ensemble`, with lead times. No figure against lead time
+  is drawn for an ensemble yet
+  ([EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md)).
 
 ## Performance
 

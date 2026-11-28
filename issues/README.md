@@ -31,7 +31,6 @@ These block criteria that are designed and implemented but cannot be exercised.
 | [011](011-cross-dataset-comparison.md) | Four members of the Reynolds ladder cannot be read; the ladder runs on Re = 5e4 and 1e6 | medium |
 | [084](084-weak-residual-needs-consecutive-states.md) | Residual of the equations in weak form needs states one solver step apart | high |
 | [085](085-inviscid-invariants-need-other-data.md) | Helicity, potential vorticity and information transfer need data the repository does not have | unset |
-| [086](086-winding-angle-is-untestable.md) | Winding angle and Poincaré index: no experiment changes the vortices in a known way | high |
 | [087](087-velocity-channel-analysis-needs-a-projected-reference.md) | Velocity channel analysis needs a projected reference | unset |
 | [088](088-log-density-width-needs-supersonic-data.md) | Width of the log-density distribution needs supersonic isothermal turbulence and the sound speed | unset |
 | [089](089-wall-bounded-diagnostics-need-wall-data.md) | Wall-bounded flow diagnostics need a dataset with walls | unset |

@@ -83,14 +83,13 @@ The field is probabilistic forecast verification.
   named here as practice rather than as a cited standard. It cannot be drawn on the data that
   exists: `synthetic_ensemble` has no lead time.
 - **The experiment.** As for `crps`: many forecast cases against observations, at each lead
-  time, and forecasters of known calibration and sharpness. Only the calibrated null of
-  `synthetic_ensemble` exists here; real ensembles wait on
-  [issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md).
-  The missing experiments are
-  [EXP-crps-gneiting-forecaster-suite](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-crps-gneiting-forecaster-suite.md),
-  whose climatological forecaster is the reference of Equation (2) by construction, and
-  [EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md),
-  which has lead times.
+  time, and forecasters of known calibration and sharpness. Both exist as datasets and neither
+  has been run yet: the Gneiting forecaster ladder on `synthetic_ensemble`
+  ([gneiting_forecaster](../../degradations/gneiting_forecaster/card.md)), whose climatological
+  forecaster is the reference of Equation (2) by construction, and the solver's ensemble
+  `kinet_shear_layer_ensemble`, which has lead times. No figure against lead time is drawn for
+  an ensemble yet
+  ([EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md)).
 
 ## Performance
 

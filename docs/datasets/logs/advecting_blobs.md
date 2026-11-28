@@ -576,8 +576,9 @@ also written as comments in `configs/dataset/feature_population.yaml`. Nothing i
 Build-order step 13 and `dataset_specs/07_transport_known_answer_pairs.md`: density pairs whose
 quadratic Wasserstein distance is known exactly, so that `wasserstein` (and later the planned
 sliced and Sinkhorn transport metrics, issues 048 and 067) can be checked against the true
-distance rather than another approximation, and its reach in contrast measured. It serves
-`EXP-wasserstein-known-answer-transport`. Decisions 18 to 24 above cover how it is built.
+distance rather than another approximation, and its reach in contrast measured. It builds the
+known-answer transport proposal in full, which was therefore deleted on 2026-11-27. Decisions 18
+to 24 above cover how it is built.
 
 ### How it is treated
 

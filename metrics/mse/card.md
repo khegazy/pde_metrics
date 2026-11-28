@@ -63,10 +63,13 @@ itself is a per-field number of The Well's library and the loss its baselines we
 
 **The experiments here.** The rollouts and refinement studies these fields evaluate on are as
 described on `rmse`'s card: `forecast_re5e4` gives one model's error against lead time from two
-starting times, and the missing experiments are
-[EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md)
-and
-[EXP-max_error-grid-convergence-with-a-known-solution](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-max_error-grid-convergence-with-a-known-solution.md).
+starting times; rollouts over many initial conditions are missing
+([EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md)), and the
+grid sequences against a known solution exist, each read by
+`fmeval.analysis.observed_order`, and have not been run for this card yet: kinet's
+Taylor–Green vortex on 64² to 512² (`kinet_taylor_green_diffusive`), its Sod tube on three
+grids (`kinet_sod_refinement`) and the Burgers equation with a second-order candidate
+(`burgers`).
 The metric also runs on the degradation ladder on `kinet_re5e4`, on `sod_shock_tube`, on the
 member mean of `synthetic_ensemble` and on the Reynolds ladder: it needs nothing but two fields
 on one grid.

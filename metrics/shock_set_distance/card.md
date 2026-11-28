@@ -149,9 +149,12 @@ Three fields meet in this metric, and each reports it differently.
   errors and on real fields shifted by known amounts [@ahijevych2009]. For two binary fields the
   matching measure is a distance between binary images, Baddeley's Delta, "a mathematical
   displacement metric" [@gilleland2011], built as
-  [shock_set_baddeley_delta](../../metrics/shock_set_baddeley_delta/card.md). The geometric and
-  perturbed cases are written up for shock sets in
-  [EXP-shock_mask_overlap-geometric-and-perturbed-cases](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_mask_overlap-geometric-and-perturbed-cases.md).
+  [shock_set_baddeley_delta](../../metrics/shock_set_baddeley_delta/card.md). The geometric
+  cases exist for shock sets as pressure fronts of `advecting_blobs` (a straight stripe, a
+  circle or an ellipse) and candidates that move, enlarge, stretch or rotate one front
+  (`feature_population`; `docs/datasets/advecting_blobs.md`); the perturbed cases are the
+  ladder's translations of a real two-dimensional shock, the bow shock of
+  `kinet_supersonic_cylinder`.
   The field's other scores of thresholded fields, the fractions skill score over neighbourhood
   width (a neighbourhood method, [@roberts2008]) and the older categorical scores, the critical
   success index and the equitable threat score, are not built: on one one-dimensional shock in
@@ -164,11 +167,16 @@ Three fields meet in this metric, and each reports it differently.
   [EXP-shock_set_distance-2d-shock-dataset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_set_distance-2d-shock-dataset.md);
   [MTR-shock_mask_overlap-fractions-skill-score](https://github.com/khegazy/pde_metrics/blob/main/proposals/MTR-shock_mask_overlap-fractions-skill-score.md)).
 
-**The experiments here.** The metric needs pressure, so of the repository's experiments it runs
-only on `sod_shock_tube`, an analytic check; `kinet_re5e4`, `kinet_re1e6`, `forecast_re5e4` and
-`synthetic_ensemble` hold no pressure, a skip derived from the data. A shock displaced by a
-physically consistent amount, the exact solution at a shifted time, is written up in
-[EXP-sod_evidence-sod-time-offset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-sod_evidence-sod-time-offset.md).
+**The experiments here.** The metric needs pressure; `kinet_re5e4`, `kinet_re1e6`,
+`forecast_re5e4` and `synthetic_ensemble` hold none, a skip derived from the data. Of the measured
+runs it has run only on `sod_shock_tube`, an analytic check. These shock experiments with known
+answers exist and have not been run for this card yet: the exact Sod solution at a shifted time,
+which displaces each wave by its own speed and keeps every jump (`sod_shock_tube` with
+`'+dataset.reader.candidate={time_offset:dt}'`; `docs/datasets/sod_shock_tube.md`); kinet's Sod
+run (`kinet_sod_gamma1p4`) and its Sod grid sequence scored against the exact solution
+(`kinet_sod_refinement`); the Sedov–Taylor blast wave and Noh's problem, closed circular shocks
+oblique to the grid everywhere, each with a time-offset candidate (`sedov_taylor`, `noh`); the
+geometric fronts of `feature_population`; and the bow shock of `kinet_supersonic_cylinder`.
 
 ## Performance
 

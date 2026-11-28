@@ -35,7 +35,7 @@ how displacements smaller than a cell are rounded to whole cells.
 
 ## How it could be tested
 
-Against the known-answer pairs of EXP-wasserstein-known-answer-transport, at several grid
+Against the known-answer pairs of the `advecting_blobs` option `potential` (`transport_pairs`), at several grid
 sizes. The discrete value should approach the exact one only once displacements exceed a cell.
 
 ## Why it is helpful

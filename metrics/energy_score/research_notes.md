@@ -222,9 +222,10 @@ and 16 skipped, and the card checker gave 0 errors for both bundles.
 
 ## Open questions and follow-ups
 
-- **An experiment that changes spatial correlation.** No existing experiment changes an
-  ensemble's spatial correlation (Evidence runs). The proposal is
-  [EXP-energy_score-correlated-synthetic-ensemble](../../proposals/EXP-energy_score-correlated-synthetic-ensemble.md).
+- **An experiment that changes spatial correlation.** Built as `synthetic_ensemble` options
+  (`noise_length`, `member_noise_length` and their covariance models;
+  [docs/datasets/synthetic_ensemble.md](../../docs/datasets/synthetic_ensemble.md)); not yet run
+  for this card.
 - **The patched energy score.** It sums the energy score over overlapping patches (Pacchiardi et
   al. 2024, App. B.2.3 Eq. 35). It is proper but not strictly so, and it becomes strictly proper
   when the whole-field energy score is added (Sect. 3.2.2-3.2.3, Lemma 4). Pacchiardi et al. used

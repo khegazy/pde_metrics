@@ -47,11 +47,12 @@ mean".
   [spread_skill](../../metrics/spread_skill/card.md), which imports this function. Neither figure can be
   drawn honestly on `synthetic_ensemble`, whose dispersion is the same everywhere and whose
   frames are not lead times (the `spread_skill` card gives the reasons).
-- **The experiment.** An ensemble verified over many cases at each lead time. Only the
-  calibrated null of `synthetic_ensemble` exists here; real ensembles wait on
-  [issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md). The missing experiments are
-  [EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md)
-  and [EXP-crps-gneiting-forecaster-suite](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-crps-gneiting-forecaster-suite.md).
+- **The experiment.** An ensemble verified over many cases at each lead time. The solver's
+  ensemble `kinet_shear_layer_ensemble` (16 members and one truth from each of three starts, at
+  ten lead times) and the Gneiting forecaster ladder on `synthetic_ensemble`
+  ([gneiting_forecaster](../../degradations/gneiting_forecaster/card.md)) exist as datasets and
+  have not been run yet; the figures against lead time and binned by spread are not drawn
+  ([EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md)).
 
 **On the data that exists this metric equals [rmse](../../metrics/rmse/card.md) exactly.** On an
 ensemble dataset the harness scores every pairwise metric on the member mean (the prediction

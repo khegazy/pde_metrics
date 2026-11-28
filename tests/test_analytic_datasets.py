@@ -255,7 +255,7 @@ def test_sod_refuses_a_case_its_closed_form_does_not_cover(kwargs, match):
 @pytest.mark.parametrize("dt", [0.001, 0.003, 0.01])
 def test_sod_at_a_shifted_time_moves_the_shock_by_its_speed_and_keeps_its_jumps(dt):
     """The exact solution at t + dt against the one at t, scored through the pipeline at four
-    times on 2048 cells (``proposals/EXP-sod_evidence-sod-time-offset.md``; spec 03, Sect. 3.6).
+    times on 2048 cells (spec 03, Sect. 3.6).
 
     The shock sits at x_s = 0.5 + S_R t (Toro (2009) eq. (4.59)); the detector flags the two cells
     straddling it, i and i + 1 with i = floor(x_s / dx - 1/2), and nothing else (the contact has

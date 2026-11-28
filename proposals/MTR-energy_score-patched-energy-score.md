@@ -37,7 +37,7 @@ docs/ideas.
 ## How it could be tested
 
 `synthetic_ensemble` with `ensemble_miscalibration`, as for `energy_score`; and the correlated
-synthetic ensemble proposed in EXP-energy_score-correlated-synthetic-ensemble, where it should
+synthetic ensemble (`noise_length`, `member_noise_length`; `docs/datasets/synthetic_ensemble.md`), where it should
 respond to a wrong correlation length more than the whole-field score does. Patch size is a
 choice that must be fixed once; Pacchiardi et al. use patches of 8 and 16 grid points on
 WeatherBench and give the summation weights in App. E.4.2.

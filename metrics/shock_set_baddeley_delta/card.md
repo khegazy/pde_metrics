@@ -62,23 +62,22 @@ does not declare `requires_periodic` and runs on the bounded `sod_shock_tube`.
   threshold, beside the Hausdorff distance and the mean error distances that the same package
   computes ([@spatialvx], `locmeasures2d`). The full text of [@gilleland2011] could not be read
   here, so the constant $c$ and exponent $p$ it used are not known; this bundle takes the
-  package's defaults. The test cases are written up for shock sets in
-  [EXP-shock_mask_overlap-geometric-and-perturbed-cases](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_mask_overlap-geometric-and-perturbed-cases.md);
-  the field's neighbourhood and categorical scores are not built, for the reason on
-  `shock_set_distance`'s card.
+  package's defaults. Shock-set versions of the test cases exist (the geometric fronts of
+  `feature_population` and translations of the bow shock of `kinet_supersonic_cylinder`;
+  `shock_set_distance`'s card) and have not been run for this card yet; the field's
+  neighbourhood and categorical scores are not built, for the reason on `shock_set_distance`'s
+  card.
 - **Image analysis**, where [@baddeley1992] introduced it as an error metric for binary images,
   topologically equivalent to the Hausdorff metric but more stable in practice
   ([@spatstatdelta], Details).
 - **Shock detection in computational fluid dynamics** compares the detector with the exact shock
   rather than two detected sets ([@schaal2015], Sect. 3); see `shock_set_distance`'s card.
 
-The metric needs pressure, so it runs only on `sod_shock_tube`, an analytic check; the skip on
-every other dataset is derived from the data. The missing experiments are those of
-`shock_set_distance`:
-[EXP-shock_set_distance-2d-shock-dataset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_set_distance-2d-shock-dataset.md),
-[EXP-shock_mask_overlap-geometric-and-perturbed-cases](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_mask_overlap-geometric-and-perturbed-cases.md)
-and
-[EXP-sod_evidence-sod-time-offset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-sod_evidence-sod-time-offset.md).
+The metric needs pressure; the skip on a dataset without it is derived from the data. Of the
+measured runs it has run only on `sod_shock_tube`, an analytic check. The shock experiments
+with known answers listed on `shock_set_distance`'s card exist and have not been run for this
+card yet; the one still missing is physical shocks in two dimensions with many fronts,
+[EXP-shock_set_distance-2d-shock-dataset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_set_distance-2d-shock-dataset.md).
 
 ## Performance
 

@@ -164,9 +164,11 @@ Three communities use this distance, and each evaluates it differently.
   [@saumier2015] (Sect. 5.1, Fig. 1) choose the potential and one density, compute the other
   from Equation (3), and report the error of the computed potential against Newton iterations
   on grids of $16^2$ to $256^2$, with the observed order of accuracy in the text.
-  `test_metric.py` checks the solve against the exact transport on the circle (Definition); the
-  manufactured two-dimensional problem is written up in
-  [EXP-wasserstein-known-answer-transport](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-wasserstein-known-answer-transport.md).
+  `test_metric.py` checks the solve against the exact transport on the circle (Definition).
+  The manufactured two-dimensional problem is the `advecting_blobs` option `potential`, with the
+  pair `transport_pairs` as its configuration (`docs/datasets/advecting_blobs.md`); the tests in
+  `tests/test_analytic_datasets.py` check the solve against its exact $W_2$, and no evidence run
+  has been made on it for this card yet.
 - **Optimal-transport analysis** relates $W_2$ to the $\dot H^{-1}$ norm (Equation (5),
   [@peyre2018]); the check is the comparison with [h_minus_one](../../metrics/h_minus_one/card.md),
   computed on density in the same runs. A density whose fluctuation is not small against its

@@ -93,15 +93,18 @@ The field is ensemble forecast verification, in weather and hydrological forecas
   [rank_histogram_chi2](../../metrics/rank_histogram_chi2/card.md); the error of the mean on its own is
   [ensemble_mean_rmse](../../metrics/ensemble_mean_rmse/card.md).
 - **The experiment.** An operational ensemble verified over a season, at each lead time
-  (Fortin and colleagues, Section 3; Leutbecher and Palmer, Section 2.2). Here only the
-  calibrated null of `synthetic_ensemble` exists; real ensembles wait on
-  [issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md).
-  The experiments that would let both figures be drawn are
+  (Fortin and colleagues, Section 3; Leutbecher and Palmer, Section 2.2). Here the calibrated
+  null of `synthetic_ensemble` is measured. The data both figures need now exists and has not
+  been run yet: dispersion that varies from cell to cell, for the binned diagram (the
+  `synthetic_ensemble` option `sigma_ratio`, with
+  [flow_dependence](../../degradations/flow_dependence/card.md) to spoil it), a real lead time
+  (`kinet_shear_layer_ensemble`), and calibrated forecasters of different sharpness
+  ([gneiting_forecaster](../../degradations/gneiting_forecaster/card.md)). The figures
+  themselves are not drawn yet:
   [EXP-spread_skill-heteroscedastic-synthetic-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-heteroscedastic-synthetic-ensemble.md)
-  (dispersion that varies from cell to cell, for the binned diagram),
+  (the binned diagram) and
   [EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md)
-  (a real lead time) and
-  [EXP-crps-gneiting-forecaster-suite](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-crps-gneiting-forecaster-suite.md).
+  (against lead time).
 
 ## Performance
 

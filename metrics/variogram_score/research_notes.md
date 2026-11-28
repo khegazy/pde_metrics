@@ -213,8 +213,10 @@ weights, the variable-type remark, and the cancellations in Sects. 3a and 3d.
   [issues/113](../../issues/113-not-monotone-declaration-passes-on-round-off.md).
 - **The profile row on ensemble axes**, shared with energy_score:
   [issues/111](../../issues/111-damage-per-change-divides-by-round-off-on-ensemble-axes.md).
-- **Detecting a wrong spatial correlation** needs the experiment proposed in
-  [EXP-energy_score-correlated-synthetic-ensemble](../../proposals/EXP-energy_score-correlated-synthetic-ensemble.md).
+- **Detecting a wrong spatial correlation** is tested by the `synthetic_ensemble` options
+  `noise_length` and `member_noise_length`
+  ([docs/datasets/synthetic_ensemble.md](../../docs/datasets/synthetic_ensemble.md)); not yet run
+  for this card.
 
 ## For the next agent
 

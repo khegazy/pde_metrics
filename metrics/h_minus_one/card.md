@@ -121,8 +121,9 @@ and is not built here.
 
 **The experiments.** Misfit against shift: the translation axes of the degradation ladder on
 `kinet_re5e4` (`translate_x`, `translate_subpixel`). Known-answer transport, where the distance
-between two densities is known in closed form:
-[EXP-wasserstein-known-answer-transport](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-wasserstein-known-answer-transport.md).
+between two densities is known in closed form: `transport_pairs`, and the other pairs of
+the `advecting_blobs` option `potential` (`docs/datasets/advecting_blobs.md`), which exist and
+have not been run for this card yet.
 A density whose fluctuation is not small against its mean, where the linearisation and the
 bounds separate:
 [EXP-wasserstein-background-ratio-sweep](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-wasserstein-background-ratio-sweep.md).

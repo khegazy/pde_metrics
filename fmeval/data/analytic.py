@@ -219,8 +219,7 @@ class SodShockTube(ClosedFormTrajectory):
     ``time_offset`` evaluates every frame at ``t + time_offset``: the diaphragm burst at
     ``-time_offset``. As a candidate (``candidate={"time_offset": dt}``) it is the exact solution
     at a shifted time, so every jump keeps its exact size and each wave is displaced by its own
-    speed times ``dt`` (``proposals/EXP-sod_evidence-sod-time-offset.md``;
-    ``dataset_specs/03_two_dimensional_shocks.md``, Sect. 3.6).
+    speed times ``dt`` (``dataset_specs/03_two_dimensional_shocks.md``, Sect. 3.6).
     """
 
     FORMAT = "sod_shock_tube"

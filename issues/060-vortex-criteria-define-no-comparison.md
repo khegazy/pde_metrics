@@ -14,7 +14,7 @@ In planar incompressible flow the four criteria coincide: the page states $W = -
 
 ## Why it is not built
 
-The rule this follows: an open question with no obvious answer and no clear published standard is decided by a person, not settled by whoever implements the metric. Possible comparisons (overlap of the vortex masks, vortex area fraction, a distance between Q distributions, a vortex count) measure different things, and the page records no standard. Whether any of them is testable also depends on the choice: a count or area fraction is not changed in a controlled way by any degradation (see [the known-vortex proposal](../proposals/EXP-orchestrator-20261023-known-vortex-field.md)).
+The rule this follows: an open question with no obvious answer and no clear published standard is decided by a person, not settled by whoever implements the metric. Possible comparisons (overlap of the vortex masks, vortex area fraction, a distance between Q distributions, a vortex count) measure different things, and the page records no standard. Whether any of them is testable also depends on the choice: a count or area fraction is not changed in a controlled way by any degradation, but the closed-form vortex population `feature_population` ([docs/datasets/advecting_blobs.md](../docs/datasets/advecting_blobs.md)) changes them by known amounts through its candidates, which move, rescale, add or remove one vortex.
 
 ## What would unblock it
 

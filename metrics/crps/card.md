@@ -94,16 +94,16 @@ learning weather models.
   and it has no decomposition.
 - **The experiment.** Many forecast cases scored against what happened, at each lead time; and,
   to check that the score ranks forecasters correctly, forecasters of known calibration and
-  sharpness whose CRPS is published (Table 5) [@gneitingbalabdaoui2007]. Neither
-  exists here. The only ensemble experiment is the calibrated null of `synthetic_ensemble`,
-  which validates the estimator; real ensembles wait on
-  [issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md).
-  The missing experiments are written up as
-  [EXP-crps-gneiting-forecaster-suite](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-crps-gneiting-forecaster-suite.md),
-  [EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md)
-  (forecasts against lead time) and
-  [EXP-spread_skill-heteroscedastic-synthetic-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-heteroscedastic-synthetic-ensemble.md)
-  (dispersion that varies from case to case, which a decomposition needs).
+  sharpness whose CRPS is published (Table 5) [@gneitingbalabdaoui2007]. Both now
+  exist as datasets, and neither has been run yet. The four forecasters of that table are the
+  ladder `degradation=gneiting_forecasters` on `synthetic_ensemble` with
+  `+dataset.reader.base=case_means +dataset.reader.sigma=1`
+  ([gneiting_forecaster](../../degradations/gneiting_forecaster/card.md)), and
+  `kinet_shear_layer_ensemble` holds 16 solver members and one truth from each of three
+  starts at ten lead times (`docs/datasets/reynolds_ladder_2d.md`). The `synthetic_ensemble`
+  option `sigma_ratio` gives the dispersion that varies from case to case which a decomposition
+  needs. The figure of spread and error against lead time is not drawn for an ensemble yet
+  ([EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md)).
 
 ## Performance
 
@@ -296,13 +296,12 @@ One row per dataset a card may cite (`configs/cards/default.yaml`). *Measured* n
 
 <!-- END GENERATED experiments -->
 
-CRPS scores an ensemble, so the synthetic ensemble is the one experiment in this repository it
-can run on; every other experiment holds one realisation per frame. The experiments its field relies
-on, many forecast cases scored against what happened, and forecasters of known calibration and
-sharpness, do not exist here. The second is written up in
-[EXP-crps-gneiting-forecaster-suite](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-crps-gneiting-forecaster-suite.md),
-and the first waits on an ensemble of independent realisations
-([issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md)).
+CRPS scores an ensemble, so it runs only on the ensemble datasets: `synthetic_ensemble`, the
+one measured here, and `kinet_shear_layer_ensemble`. The experiments its field relies on, many
+forecast cases scored against what happened, and forecasters of known calibration and
+sharpness, are the solver's ensemble and the Gneiting forecaster ladder
+([gneiting_forecaster](../../degradations/gneiting_forecaster/card.md)); neither has been run
+for this card yet.
 
 ### Ensemble dispersion
 

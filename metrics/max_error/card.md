@@ -95,12 +95,13 @@ benchmarks is [max_error_channel_mean](../../metrics/max_error_channel_mean/card
   [max_error_channel_mean](../../metrics/max_error_channel_mean/card.md). The Well's $L^\infty$ error is
   one value per field (App. E.3).
 
-**The experiments here.** A refinement study against a known solution does not exist: the three
-runs of `forecast_re5e4` are not a refinement sequence as they stand
-(`docs/datasets/reynolds_ladder_2d.md`, "Can the three runs be read as a grid-refinement
-sequence?"), and `sod_shock_tube` has the exact solution but no solver run at several
-resolutions to set against it. The study is written up in
-[EXP-max_error-grid-convergence-with-a-known-solution](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-max_error-grid-convergence-with-a-known-solution.md).
+**The experiments here.** The three runs of `forecast_re5e4` are not a refinement sequence as
+they stand (`docs/datasets/reynolds_ladder_2d.md`, "Can the three runs be read as a
+grid-refinement sequence?"). Grid sequences against a known solution exist, each read by
+`fmeval.analysis.observed_order`, and have not been run for this card yet: kinet's
+Taylor–Green vortex on 64² to 512² (`kinet_taylor_green_diffusive`), its Sod tube on three
+grids (`kinet_sod_refinement`) and the Burgers equation with a second-order candidate
+(`burgers`); the card does not yet draw the error against grid spacing.
 `forecast_re5e4` gives one model's error against lead time from two starting times; a test set of
 many initial conditions is
 [EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md).

@@ -5,8 +5,9 @@ family that builds it). **Metrics served:** the eight ensemble metrics (`crps`,
 `crps_skill_score`, `energy_score`, `ensemble_mean_rmse`, `rank_histogram`,
 `rank_histogram_chi2`, `spread_skill`, `variogram_score`), and `wasserstein` and `h_minus_one`
 on an ensemble's member mean. **Proposals and issues served:**
-`EXP-crps-gneiting-forecaster-suite`, `EXP-spread_skill-heteroscedastic-synthetic-ensemble`,
-`EXP-energy_score-correlated-synthetic-ensemble`, the test half of
+the Gneiting-forecaster proposal, `EXP-spread_skill-heteroscedastic-synthetic-ensemble`, the
+correlated-ensemble proposal (the first and third deleted once built, step 11 of
+`BUILD_ORDER.md`), the test half of
 `MTR-energy_score-patched-energy-score`; issues 127 and 083 (only their need for
 dispersion that varies between cells), and 111 (which two of the new operators also trigger).
 **Date:** 2026-11-26. **Author:** research sub-agent (branch `build_datasets`). Nothing here is

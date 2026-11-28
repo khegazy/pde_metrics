@@ -100,9 +100,12 @@ energy forecasting.
   here draws independent noise at every cell for the reference and every member, so its
   ensembles never differ in correlation: on it this score moves with the spread factor as the
   mean CRPS does, and nothing in its evidence can show what the energy score adds over `crps`.
-  That experiment is
-  [EXP-energy_score-correlated-synthetic-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-energy_score-correlated-synthetic-ensemble.md);
-  real ensembles wait on [issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md).
+  That experiment exists and has not been run yet: the `synthetic_ensemble` options
+  `noise_length` and `noise_covariance` give the reference and members a known spatial
+  correlation, and `member_noise_length` and `member_noise_covariance` give the members a wrong
+  one (`docs/datasets/synthetic_ensemble.md`; `dataset_specs/08_synthetic_ensemble_extensions.md`,
+  Sect. 3.3). The solver's ensemble `kinet_shear_layer_ensemble`, whose members have a physical
+  spatial correlation, also exists and has not been run yet.
 
 ## Performance
 

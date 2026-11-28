@@ -6,8 +6,8 @@
 `rmse_channel_mean`, `nrmse`, `vrmse`, `max_error`, `max_error_channel_mean`, `h1_seminorm`,
 `h1_relative`) directly; `shock_set_distance` on the Sod form; every metric through the
 reference's own discretisation error. **Ideas served:**
-`docs/ideas/infrastructure/grid_convergence.md`; issue 126; the proposal
-`proposals/EXP-max_error-grid-convergence-with-a-known-solution.md`.
+`docs/ideas/infrastructure/grid_convergence.md`; issue 126; the grid-convergence experiment proposal, deleted on 2026-11-27 once
+built (`BUILD_ORDER.md`, steps 5, 16, 17 and 32).
 **Date:** 2026-11-05. **Author:** research sub-agent (branch `update_metric_eval_principles`).
 
 ## 1. Purpose
@@ -690,7 +690,7 @@ registered in `fmeval/data/readers.py`, grouped by a dataset family whose config
   incompressible flow simulations. *Journal of Computational Physics* 122, 165–183. **Not
   opened**; cited by kinet's `shear_layer.py` docstring.
 - Repository and solver sources read in full: `FUTURE_EXPERIMENTS_CATALOG.md` (At a glance,
-  Sects. 1.3, 2.1 D5, 2.3 H3, 3.1); `proposals/EXP-max_error-grid-convergence-with-a-known-solution.md`;
+  Sects. 1.3, 2.1 D5, 2.3 H3, 3.1); the grid-convergence proposal (since deleted);
   `issues/126`; `docs/ideas/infrastructure/grid_convergence.md`; `docs/datasets/sod_shock_tube.md`;
   `docs/datasets/taylor_green_vortex.md`; `docs/datasets/reynolds_ladder_2d.md` (the
   refinement section); `fmeval/data/analytic.py` (docstrings); `docs/recipes/add-a-dataset.md`;

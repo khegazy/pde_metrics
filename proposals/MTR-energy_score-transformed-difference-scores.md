@@ -34,7 +34,7 @@ O(M N^2) cost and its blindness to a common offset.
 
 ## How it could be tested
 
-The correlated synthetic ensemble of EXP-energy_score-correlated-synthetic-ensemble, against
+The correlated synthetic ensemble (`noise_length`, `member_noise_length`; `docs/datasets/synthetic_ensemble.md`), against
 `variogram_score`, and `ensemble_miscalibration` on `synthetic_ensemble` for dispersion.
 
 ## Why it is helpful

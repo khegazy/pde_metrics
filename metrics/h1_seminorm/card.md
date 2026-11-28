@@ -79,15 +79,17 @@ Two fields report an H^1 error, differently, and each is its own bundle.
   observed convergence rate between successive meshes,
   $r = \ln(E_i/E_{i-1}) / \ln(h_i/h_{i-1})$, in a table against the mesh size
   ([@langtangen2016], Sect. 5.5.4). The experiment is a sequence of refined meshes on a problem
-  with a known exact or manufactured solution. The repository does not have it:
-  [EXP-max_error-grid-convergence-with-a-known-solution](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-max_error-grid-convergence-with-a-known-solution.md)
-  writes it up. `forecast_re5e4` has three resolutions, but no exact solution and no record of
+  with a known exact or manufactured solution. Such sequences exist here and have not been
+  run for this card yet: kinet's Taylor–Green vortex on 64² to 512²
+  (`kinet_taylor_green_diffusive`), its Sod tube on three grids (`kinet_sod_refinement`) and
+  the Burgers equation with a second-order candidate (`burgers`), each read by
+  `fmeval.analysis.observed_order`. `forecast_re5e4` has three resolutions, but no exact solution and no record of
   how the predictions were produced, so it is not a convergence study (`issues/126`).
 - **Neural-operator learning** reports a *relative, inhomogeneous* H^1 error, with the
   zeroth-order term included and the reference's norm as the denominator:
   [h1_relative](../../metrics/h1_relative/card.md).
 
-The figure the field draws, error against mesh size, needs that experiment. The card's first
+The figure the field draws, error against mesh size, is not drawn by the card yet. The card's first
 figure is instead the damage against an applied shift beside the pointwise errors, the
 comparison by which a Sobolev norm's weighting of displaced error is read, and on a forecast run
 the error against lead time. The metric runs on the degradation ladder on `kinet_re5e4`, on the

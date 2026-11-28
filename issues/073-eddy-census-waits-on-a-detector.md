@@ -16,7 +16,7 @@ The rule this follows: an idea that builds on a metric not yet on `main` is not 
 
 ## What would unblock it
 
-A vortex detector merged, and an experiment that changes vortex number or size in a known way (see [the known-vortex proposal](../proposals/EXP-orchestrator-20261023-known-vortex-field.md)).
+A vortex detector merged. The experiment that changes vortex number or size in a known way exists: `feature_population` ([docs/datasets/advecting_blobs.md](../docs/datasets/advecting_blobs.md)), whose candidates add, remove or rescale one vortex.
 
 ## Related
 

@@ -961,7 +961,7 @@ def test_the_site_builds_without_the_dataset(tmp_path):
     assert "not applicable (needs an ensemble, and this dataset has one realisation" in coverage
     assert "measured (<code>crps_" in coverage and "not yet run" in coverage
     assert ("https://github.com/khegazy/pde_metrics/blob/main/proposals/"
-            "EXP-crps-gneiting-forecaster-suite.md") in coverage
+            "EXP-spread_skill-perturbed-initial-condition-ensemble.md") in coverage
     assert 'href="coverage/"' in (tmp_path / "index.html").read_text(), "not in the navigation"
 
 

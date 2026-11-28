@@ -64,11 +64,13 @@ machine-learning benchmarks is [rmse_channel_mean](../../metrics/rmse_channel_me
   object, one value per step. The Well keeps one RMSE per field (App. E.3) and averages over
   fields.
 
-**The experiments here.** A refinement study against a known solution does not exist: the three
-runs of `forecast_re5e4` are not a refinement sequence as they stand
-(`docs/datasets/reynolds_ladder_2d.md`, "Can the three runs be read as a grid-refinement
-sequence?"), and the study is written up in
-[EXP-max_error-grid-convergence-with-a-known-solution](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-max_error-grid-convergence-with-a-known-solution.md).
+**The experiments here.** The three runs of `forecast_re5e4` are not a refinement sequence as
+they stand (`docs/datasets/reynolds_ladder_2d.md`, "Can the three runs be read as a
+grid-refinement sequence?"). Grid sequences against a known solution exist, each read by
+`fmeval.analysis.observed_order`, and have not been run for this card yet: kinet's
+Taylor–Green vortex on 64² to 512² (`kinet_taylor_green_diffusive`), its Sod tube on three
+grids (`kinet_sod_refinement`) and the Burgers equation with a second-order candidate
+(`burgers`); the card does not yet draw the error against grid spacing.
 The error against lead time is drawn on `forecast_re5e4` (same page, "Forecast pairs"): one
 model's predictions at ten prediction steps from two starting times, not the many
 initialisations a verification year or a test set averages over, which

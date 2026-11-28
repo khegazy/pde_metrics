@@ -340,7 +340,7 @@ where it is marked as arithmetic.
 
 ### What it is for
 
-Spec 03, Sect. 3.6 and `proposals/EXP-sod_evidence-sod-time-offset.md` ask for the exact solution
+Spec 03, Sect. 3.6 asks for the exact solution
 at $t + \delta t$ scored against the one at $t$: every jump keeps its exact size and each wave is
 displaced by its own speed times $\delta t$, so a metric that tracks the shock can be checked
 against $S_R\,\delta t$, and a pointwise metric's saturation at the jump size is exposed.
@@ -389,8 +389,8 @@ frame, 0.3 ms. Measured run: see the log entry below.
 
 ### Open points
 
-- The proposal `proposals/EXP-sod_evidence-sod-time-offset.md` is now built as a reader option; it
-  is left in place for the coordinator to delete or narrow.
+- No evidence run with the shifted-time candidate has been made for the shock cards yet. The
+  experiment proposal it came from was deleted on 2026-11-27, since this option builds all of it.
 
 ## `kinet_sod_refinement` (kinet's tube on three grids against the exact solution, 2026-11-27)
 

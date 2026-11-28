@@ -312,11 +312,11 @@ interpolation and asymmetry measurements) were not rerun.
   solve the linearised operator of Saumier et al. Eq. (5) by GMRES preconditioned with the
   averaged operator, as in their Sect. 4.2; it would give the same $W_2$ wherever the present solver
   converges and extend it to the densities behind strong shocks.
-- **Known-answer transport problems.**
-  [proposals/EXP-wasserstein-known-answer-transport.md](../../proposals/EXP-wasserstein-known-answer-transport.md):
-  a manufactured map (Saumier et al. Sect. 5.1) and one-dimensional circle profiles (Delon et al.
-  Sect. 2), for validating any transport metric; issues 048 and 067 both need such a reference.
-  `test_metric.py` already uses the second family.
+- **Known-answer transport problems.** Built: a manufactured map (Saumier et al. Sect. 5.1)
+  as the `advecting_blobs` option `potential` (`transport_pairs`), and the exact circle
+  distance (Delon et al. Sect. 2) as `circle_w2` in `tests/analytic_fields.py`, which
+  `test_metric.py` uses (`docs/datasets/advecting_blobs.md`). Issues 048 and 067 can validate
+  against them.
 - **A fifth family of signed-field formulations.**
   [proposals/MTR-wasserstein-softplus-normalisation.md](../../proposals/MTR-wasserstein-softplus-normalisation.md):
   Engquist & Yang's exponential, softplus and general $(\sigma(f) + c)/\int$ normalisations

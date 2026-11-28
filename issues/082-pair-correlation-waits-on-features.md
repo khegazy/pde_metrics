@@ -16,7 +16,7 @@ The rule this follows: an idea that builds on a metric not yet on `main` is not 
 
 ## What would unblock it
 
-A feature extractor merged, and an experiment that changes feature positions in a known way (see [the known-vortex proposal](../proposals/EXP-orchestrator-20261023-known-vortex-field.md)).
+A feature extractor merged. The experiment that changes feature positions in a known way exists: `feature_population` ([docs/datasets/advecting_blobs.md](../docs/datasets/advecting_blobs.md)), whose candidates move one feature by a known amount.
 
 ## Related
 

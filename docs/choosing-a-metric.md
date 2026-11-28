@@ -118,11 +118,12 @@ false alarm. They differ in how they weigh an error.
   against lead time; `rmse`'s page sets out how its vector form differs.
 
 **Experiments.** The research fields test these on rollouts from many initial conditions and on
-grid refinement against a known solution. Neither exists here:
-[EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md)
-and
-[EXP-max_error-grid-convergence-with-a-known-solution](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-max_error-grid-convergence-with-a-known-solution.md)
-write them up. The nearest is `forecast_re5e4`, one model's error against lead time from two
+grid refinement against a known solution. Grid sequences against a known solution exist and have
+not been run for the pages yet: kinet's Taylor–Green vortex on 64² to 512²
+(`kinet_taylor_green_diffusive`), its Sod tube on three grids (`kinet_sod_refinement`) and the
+analytic Burgers equation with a second-order candidate (`burgers`), each read by
+`fmeval.analysis.observed_order`. Model rollouts from many initial conditions do not exist
+([EXP-nrmse-rollouts-over-many-initial-conditions](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-nrmse-rollouts-over-many-initial-conditions.md)). The nearest is `forecast_re5e4`, one model's error against lead time from two
 starting times; its three runs at different resolutions are not a refinement sequence
 ([issue 126](https://github.com/khegazy/pde_metrics/blob/main/issues/126-forecast-runs-as-a-refinement-sequence.md)).
 These metrics need nothing but two fields on one grid, so they also run on the degradation
@@ -162,12 +163,11 @@ values stay close to their mean the two transport metrics are close to each othe
   ([Saumier et al. 2015](https://doi.org/10.1093/imamat/hxt032)).
 
 **Experiments.** The misfit against shift is drawn from the translation axes of the
-degradation ladder, the one research-field experiment of this group that exists here. Missing:
-refinement against a known solution for the H1 norms (the proposal above), a transport with a
-closed-form answer
-([EXP-wasserstein-known-answer-transport](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-wasserstein-known-answer-transport.md)),
-and a density whose fluctuation is not small against its mean, where the two transport metrics
-separate
+degradation ladder, the one research-field experiment of this group measured here. Refinement
+against a known solution for the H1 norms (the grid sequences above) and transports with a
+closed-form answer (`transport_pairs`, `docs/datasets/advecting_blobs.md`) exist and have not
+been run for the pages yet. Missing: a density whose fluctuation is not small against its mean,
+where the two transport metrics separate
 ([EXP-wasserstein-background-ratio-sweep](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-wasserstein-background-ratio-sweep.md)).
 All four also run on the forecasts and the Reynolds ladder; none runs on Sod, whose walls rule
 out a periodic domain.
@@ -317,10 +317,11 @@ smoothing axes of the degradation ladder. `persistence_distance` runs on that la
 forecasts and the Reynolds ladder. `persistence_wasserstein` runs only on the forecasts, on a 64
 by 64 grid: it is held back from both turbulence ladders because it is too slow there for now
 ([issue 144](https://github.com/khegazy/pde_metrics/blob/main/issues/144-persistence-wasserstein-too-slow-on-turbulence-runs.md)).
-Missing: fields with a known population of features, and features added or
-removed by a known amount
-([EXP-orchestrator-20261023-known-vortex-field](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-orchestrator-20261023-known-vortex-field.md),
-[EXP-persistence_distance-spurious-feature-injection](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-persistence_distance-spurious-feature-injection.md),
+Fields with a known population of vortices and bumps, with one feature added, removed,
+moved or rescaled by a known amount, exist and have not been run for the pages yet
+(`feature_population`, `docs/datasets/advecting_blobs.md`). Missing: those operations as
+degradations of a real field
+([EXP-persistence_distance-spurious-feature-injection](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-persistence_distance-spurious-feature-injection.md),
 [EXP-persistence_distance-topological-simplification](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-persistence_distance-topological-simplification.md)).
 
 ## Shocks
@@ -366,15 +367,16 @@ the two share. A shock smeared over more than a few cells is not detected. Withi
   measurement)
   ([MTR-shock_mask_overlap-fractions-skill-score](https://github.com/khegazy/pde_metrics/blob/main/proposals/MTR-shock_mask_overlap-fractions-skill-score.md)).
 
-**Experiments.** The group needs pressure, so it runs only on `sod_shock_tube`: an analytic
-check of how a metric scores one known shock, which says nothing about turbulence. Missing: a
+**Experiments.** The group needs pressure. Of the measured runs it has run only on
+`sod_shock_tube`: an analytic check of how a metric scores one known shock, which says nothing
+about turbulence. These exist and have not been run for the pages yet: the exact Sod solution
+displaced by a physically consistent amount (its `time_offset` candidate), kinet's Sod runs,
+the Sedov–Taylor and Noh blast waves (`sedov_taylor`, `noh`), the segmentation field's
+geometric cases as pressure fronts (`feature_population`), and a solver's two-dimensional bow
+shock (`kinet_supersonic_cylinder`), whose translations are the perturbed cases. Missing: a
 two-dimensional dataset with many shocks, the case this repository is aimed at
 ([issue 002](https://github.com/khegazy/pde_metrics/blob/main/issues/002-shocklet-dataset.md);
-[EXP-shock_set_distance-2d-shock-dataset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_set_distance-2d-shock-dataset.md)),
-the segmentation field's geometric and perturbed test cases
-([EXP-shock_mask_overlap-geometric-and-perturbed-cases](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_mask_overlap-geometric-and-perturbed-cases.md)),
-and a shock displaced by a physically consistent amount
-([EXP-sod_evidence-sod-time-offset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-sod_evidence-sod-time-offset.md)).
+[EXP-shock_set_distance-2d-shock-dataset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_set_distance-2d-shock-dataset.md)).
 
 ## Ensemble verification
 
@@ -419,17 +421,19 @@ verification**.
   the spread against the error of the ensemble mean, `spread_skill` and `ensemble_mean_rmse`
   ([Fortin et al. 2014](https://doi.org/10.1175/JHM-D-14-0008.1)).
 
-**Experiments.** The only ensemble here is `synthetic_ensemble`: a calibrated null with a
-miscalibration ladder, whose dispersion is the same at every cell, whose cells are independent,
-and whose frames are not lead times. So the field's standard figures, a score against lead time
-and the binned spread-error diagram, cannot be drawn honestly, and no difference in spatial
-correlation exists for the whole-field scores to detect. Missing: real ensembles
-([issue 004](https://github.com/khegazy/pde_metrics/blob/main/issues/004-independent-realizations.md)),
-[EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md),
-[EXP-spread_skill-heteroscedastic-synthetic-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-heteroscedastic-synthetic-ensemble.md),
-[EXP-crps-gneiting-forecaster-suite](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-crps-gneiting-forecaster-suite.md)
-and
-[EXP-energy_score-correlated-synthetic-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-energy_score-correlated-synthetic-ensemble.md).
+**Experiments.** The measured ensemble is `synthetic_ensemble` in its default form: a
+calibrated null with a miscalibration ladder, whose dispersion is the same at every cell, whose
+cells are independent, and whose frames are not lead times. These exist and have not been run
+for the pages yet: a physical ensemble of the solver at ten lead times
+(`kinet_shear_layer_ensemble`), and options and operators of the synthetic ensemble with known
+answers: the Gneiting forecasters (`degradation=gneiting_forecasters`), a true spread that varies
+across the domain (`sigma_ratio`, spoiled by `flow_dependence`), spatially correlated members and
+truth with a wrong member correlation (`noise_length`, `member_noise_length`), and skewed or
+heavy-tailed members (`member_shape`); `docs/datasets/synthetic_ensemble.md` lists them. The
+field's standard figures, a score against lead time and the binned spread-error diagram, are
+not drawn for an ensemble yet
+([EXP-spread_skill-perturbed-initial-condition-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-perturbed-initial-condition-ensemble.md),
+[EXP-spread_skill-heteroscedastic-synthetic-ensemble](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-spread_skill-heteroscedastic-synthetic-ensemble.md)).
 On the synthetic ensemble every two-field metric of the other groups scores the members' mean.
 
 ## Using several metrics together

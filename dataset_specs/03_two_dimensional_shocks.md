@@ -22,7 +22,8 @@ Definition, Eq. 1; the pressure half of criterion (iii) of Schaal and Springel 2
 Sect. 2.3.2, with their M_min = 1.3). Their only evidence is `sod_shock_tube`, the exact
 one-dimensional Riemann solution, where a shock set is one or two cells on a line, so a
 displacement, a size change and a rotation cannot be told apart, and the field's own
-scores for thresholded fields are degenerate (`proposals/EXP-shock_mask_overlap-geometric-and-perturbed-cases.md`;
+scores for thresholded fields are degenerate (the geometric and perturbed shock-case proposal,
+deleted once built;
 `FUTURE_EXPERIMENTS_CATALOG.md`, D3 and D8). Issue 002 accepted on 2026-08-07 that the
 north-star case, many small shocks embedded in turbulence, has no dataset at all. The
 detector's two untested choices are the ones a two-dimensional field exposes: it takes the
@@ -255,9 +256,9 @@ angle. Nothing new to prepare beyond a paired-time reader (catalog B6).
 ### 3.7 Geometric cases with known displacement, size and orientation errors
 
 The spatial-verification intercomparison scored every method on idealised cases
-(Ahijevych et al. 2009, Sect. 2a, Table 1, as read in full for
-`proposals/EXP-shock_mask_overlap-geometric-and-perturbed-cases.md`; the AMS copy returned
-403 to me and the table numbers are the proposal's): an ellipse on a 601 × 501 grid and
+(Ahijevych et al. 2009, Sect. 2a, Table 1, as read in full by the agent that wrote the
+geometric and perturbed shock-case proposal, deleted on 2026-11-27 once built; the AMS copy
+returned 403 to me and the table numbers are that proposal's): an ellipse on a 601 × 501 grid and
 forecasts that are the same ellipse displaced by 50 or 200 points (geom001, geom002),
 displaced by 125 points and enlarged (geom003), displaced with its aspect ratio changed
 (geom004), and displaced and much larger so that it overlaps (geom005); the perturbed cases
@@ -596,8 +597,8 @@ Each entry says what was read.
 - Ahijevych, D., Gilleland, E., Brown, B. G. and Ebert, E. E. (2009). Application of spatial
   verification methods to idealized and NWP-gridded precipitation forecasts. *Weather and
   Forecasting* 24(6), 1485–1497, https://doi.org/10.1175/2009WAF2222298.1. **Not opened by me
-  (AMS returned 403); the case definitions are taken from
-  `proposals/EXP-shock_mask_overlap-geometric-and-perturbed-cases.md`, which read it in full.**
+  (AMS returned 403); the case definitions are taken from the geometric and perturbed
+  shock-case proposal, whose author read it in full (deleted once built; in git history).**
 - Falkovich, G. and Kritsuk, A. G. (2017). How vortices and shocks provide for a flux loop in
   two-dimensional compressible turbulence. *Physical Review Fluids* 2, 092603(R),
   https://doi.org/10.1103/PhysRevFluids.2.092603; arXiv:1709.00814. **Read in full (ar5iv);

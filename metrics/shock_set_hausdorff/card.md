@@ -65,13 +65,11 @@ is exact on bounded domains and approximate on periodic ones. It does not declar
   between two detected sets; `shock_set_distance`'s card says how this repository's Sod run
   stands in for it and which tests are missing.
 
-The metric needs pressure, so it runs only on `sod_shock_tube`, an analytic check; the skip on
-every other dataset is derived from the data. The missing experiments are those of
-`shock_set_distance`:
-[EXP-shock_set_distance-2d-shock-dataset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_set_distance-2d-shock-dataset.md),
-[EXP-shock_mask_overlap-geometric-and-perturbed-cases](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_mask_overlap-geometric-and-perturbed-cases.md)
-and
-[EXP-sod_evidence-sod-time-offset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-sod_evidence-sod-time-offset.md).
+The metric needs pressure; the skip on a dataset without it is derived from the data. Of the
+measured runs it has run only on `sod_shock_tube`, an analytic check. The shock experiments
+with known answers listed on `shock_set_distance`'s card exist and have not been run for this
+card yet; the one still missing is physical shocks in two dimensions with many fronts,
+[EXP-shock_set_distance-2d-shock-dataset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_set_distance-2d-shock-dataset.md).
 
 ## Performance
 

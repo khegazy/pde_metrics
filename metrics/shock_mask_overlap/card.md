@@ -92,15 +92,16 @@ periodic grid is missed. The metric takes no Fourier transform, does not declare
   distance (reasoning, not a measurement): both say no more there than this metric and
   `shock_set_distance` do. They wait for two-dimensional data with many shocks
   ([issue 002](https://github.com/khegazy/pde_metrics/blob/main/issues/002-shocklet-dataset.md);
-  [EXP-shock_set_distance-2d-shock-dataset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_set_distance-2d-shock-dataset.md)),
-  and the field's geometric and perturbed test cases are written up in
-  [EXP-shock_mask_overlap-geometric-and-perturbed-cases](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_mask_overlap-geometric-and-perturbed-cases.md).
+  [EXP-shock_set_distance-2d-shock-dataset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-shock_set_distance-2d-shock-dataset.md)).
+  Shock-set versions of the field's geometric and perturbed test cases exist and have not been
+  run for this card yet: the geometric fronts of `feature_population` and translations of the
+  bow shock of `kinet_supersonic_cylinder` (`shock_set_distance`'s card).
 - **Shock detection in computational fluid dynamics** validates a detector against the exact
   shock position rather than by an overlap score; that field's practice, and the experiments
   this detector is run on, are on `shock_set_distance`'s card. As there, the metric needs
-  pressure, so it runs only on `sod_shock_tube`, and
-  [EXP-sod_evidence-sod-time-offset](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-sod_evidence-sod-time-offset.md)
-  is the missing physically consistent displacement.
+  pressure, and of the measured runs it has run only on `sod_shock_tube`. The physically
+  consistent displacement, the exact Sod solution at a shifted time, exists as a candidate of
+  that reader (`time_offset`) and has not been run for this card yet.
 
 ## Performance
 

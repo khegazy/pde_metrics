@@ -1,7 +1,7 @@
 ---
 type: EXP
 kind: degradation
-related: ["metrics/persistence_distance", "metrics/persistence_wasserstein", "proposals/EXP-orchestrator-20261023-known-vortex-field.md", "issues/073", "issues/086"]
+related: ["metrics/persistence_distance", "metrics/persistence_wasserstein", "docs/datasets/advecting_blobs.md", "issues/073"]
 seen_in: "Edelsbrunner, Morozov & Pascucci 2006, Proc. 22nd Annu. Symp. Comput. Geom., 127-134"
 doi: "10.1145/1137856.1137878"
 found_by: "persistence_distance, 2026-10-31"
@@ -23,9 +23,10 @@ simplification simplified" gives a simpler one.
 
 It removes the weakest features (the shallowest vortices, the smallest eddies) and nothing else,
 by a controlled and known amount: the diagram after simplification is known exactly from the
-diagram before, and the field moves by at most epsilon. It is the second form of the
-known-vortex-field proposal (`proposals/EXP-orchestrator-20261023-known-vortex-field.md`, "removes
-or weakens a known fraction of the vortices"), with a published algorithm and a known effect.
+diagram before, and the field moves by at most epsilon. It is the degradation form of a known
+vortex population, one that "removes or weakens a known fraction of the vortices" of a real
+field, with a published algorithm and a known effect; the closed-form population exists as
+`feature_population` (`docs/datasets/advecting_blobs.md`).
 No current degradation changes the vortex population without also changing the strong vortices:
 smoothing lowers every peak, and noise adds features.
 

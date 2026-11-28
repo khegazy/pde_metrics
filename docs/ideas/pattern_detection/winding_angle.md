@@ -57,6 +57,16 @@ rather than speculative. Its specific strength, detecting weak vortices independ
 local velocity magnitude, is precisely what an over-smoothed surrogate model would erase. Work
 should start in two dimensions.
 
+## The experiment to test it on
+
+*Added by the agent that built the datasets, 2026-11-27.* The property this idea detects is the
+presence and number of vortices, so it is tested on a flow whose vortices are known. The
+dataset `feature_population` ([its page](../../datasets/advecting_blobs.md)) is a closed-form
+periodic field of Gaussian (Lamb–Oseen) vortices with stated positions, widths and
+circulations, and its candidates move, rescale, add or remove one vortex. A count from the
+winding angle can be checked there against the number of vortices the dataset was built with.
+No degradation of the ladder changes individual vortices in a known way.
+
 ## Keywords
 
 vector field topology, winding angle.

@@ -110,9 +110,11 @@ standard way to compare two functions.
   noise and smoothing axes of the degradation ladder on `kinet_re5e4` and the Reynolds ladder.
   Both are held back because the metric is too slow on them for now
   ([issue 144](https://github.com/khegazy/pde_metrics/blob/main/issues/144-persistence-wasserstein-too-slow-on-turbulence-runs.md)),
-  so the real forecasts of `forecast_re5e4`, on a 64 by 64 grid, are its evidence. Fields with a known feature population,
-  features injected at a known depth, and features removed by a known amount do not exist here:
-  [EXP-orchestrator-20261023-known-vortex-field](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-orchestrator-20261023-known-vortex-field.md),
+  so the real forecasts of `forecast_re5e4`, on a 64 by 64 grid, are its evidence. Fields with a
+  known feature population, with one feature added, removed, moved or rescaled by a known amount,
+  exist and have not been run for this card yet (`feature_population`,
+  `docs/datasets/advecting_blobs.md`). Features injected at a known depth into a real field, and
+  features removed from one by a known amount, do not exist here:
   [EXP-persistence_distance-spurious-feature-injection](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-persistence_distance-spurious-feature-injection.md)
   and
   [EXP-persistence_distance-topological-simplification](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-persistence_distance-topological-simplification.md)

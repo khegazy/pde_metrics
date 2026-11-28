@@ -140,9 +140,11 @@ two functions by the features of their sublevel sets.
   decomposition is standard.
 - **The experiment.** The theorems concern perturbed functions, which are the noise and smoothing
   axes of the degradation ladder on `kinet_re5e4`, with the real forecasts of `forecast_re5e4` and
-  the Reynolds ladder beside them. Fields whose features are known, features injected at a known
-  depth, and features removed by a known amount are not experiments here; they are written up in
-  [EXP-orchestrator-20261023-known-vortex-field](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-orchestrator-20261023-known-vortex-field.md),
+  the Reynolds ladder beside them. Fields whose features are known, with one feature added,
+  removed, moved or rescaled by a known amount, exist and have not been run for this card yet
+  (`feature_population`, `docs/datasets/advecting_blobs.md`). Features injected at a known depth
+  into a real field, and features removed from one by a known amount, are not experiments here;
+  they are written up in
   [EXP-persistence_distance-spurious-feature-injection](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-persistence_distance-spurious-feature-injection.md)
   and
   [EXP-persistence_distance-topological-simplification](https://github.com/khegazy/pde_metrics/blob/main/proposals/EXP-persistence_distance-topological-simplification.md).

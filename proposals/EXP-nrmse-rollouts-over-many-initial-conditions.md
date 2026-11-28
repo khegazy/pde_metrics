@@ -35,6 +35,11 @@ The kinet solver could produce the test set: the doubly periodic shear configura
 `kinet_re5e4` with randomised initial perturbations, several tens of trajectories, each a few
 hundred stored steps.
 
+*Noted 2026-11-27:* solver-made candidates over many initial conditions now exist, though not
+model rollouts: kinet reruns of the decaying isotropic realisations degraded on purpose, each
+scored against the realisation it started from (`kinet_hit_re12p5k_candidates`,
+`kinet_hit_re25k_candidates`, `kinet_hit_re50k_candidates`; `docs/datasets/decaying_isotropic_2d.md`).
+
 ## What it tests
 
 It tests the metrics on the failures a trained surrogate actually makes, which accumulate

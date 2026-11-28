@@ -58,7 +58,7 @@ python evaluate.py 'metrics=[max_error,shock_set_distance]' dataset=sod_shock_tu
 Because the solution depends on $(x - 0.5)/t$ only, each wave moves by its own speed times
 $\delta t$ and every jump keeps its exact size: the shock by $S_R\,\delta t$, the contact by
 $u_*\,\delta t$, the fan's head and tail by $S_{HL}\,\delta t$ and $S_{TL}\,\delta t$ (values
-below; `proposals/EXP-sod_evidence-sod-time-offset.md`). On 2048 cells, $\delta t = 0.01$ moves
+below). On 2048 cells, $\delta t = 0.01$ moves
 the shock 35.9 cells. `tests/test_analytic_datasets.py` asserts, at $\delta t = 0.001$, 0.003 and
 0.01 and four times each, that `shock_set_distance` is $(s - \tfrac12)\Delta x$ and
 `shock_set_hausdorff` is $s\Delta x$, with $s$ the whole-cell move of the flagged pair, within

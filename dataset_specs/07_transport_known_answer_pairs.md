@@ -16,7 +16,8 @@ counterpart of D9(b) (the background-ratio sweep), as merged into build B6 item 
 `h_minus_one` (built); the planned sliced Wasserstein distance (issue 048), Sinkhorn
 divergences (issue 067), and transport between signed fields (issues 047 and 066), clearly
 marked as planned wherever they appear. **Proposals served:**
-`EXP-wasserstein-known-answer-transport`, `EXP-wasserstein-background-ratio-sweep`, and the
+the known-answer transport proposal (deleted once built, step 13 of `BUILD_ORDER.md`),
+`EXP-wasserstein-background-ratio-sweep`, and the
 "How it could be tested" sections of `MTR-wasserstein-full-newton-gmres`,
 `MTR-wasserstein-largest-displacement`, `MTR-wasserstein-softplus-normalisation` and
 `MTR-wasserstein-discrete-coarsened`. **Date:** 2026-11-26. **Author:** research sub-agent for

@@ -1,71 +1,69 @@
 ---
 type: "EXP"
-kind: "benchmark suite or dataset"
-related: ["spread_skill", "crps", "rank_histogram", "ensemble_mean_rmse", "energy_score", "variogram_score", "issues/003", "issues/004", "issues/083", "proposals/EXP-spread_skill-heteroscedastic-synthetic-ensemble.md"]
+kind: "protocol"
+related: ["spread_skill", "crps", "rank_histogram", "ensemble_mean_rmse", "energy_score", "variogram_score", "issues/003", "issues/004", "issues/083", "proposals/EXP-spread_skill-heteroscedastic-synthetic-ensemble.md", "docs/datasets/reynolds_ladder_2d.md"]
 seen_in: "Leutbecher & Palmer 2008, J. Comput. Phys. 227(7), 3515-3539, Sect. 2.2, Eqs. 5-7, Fig. 4 (numbering of ECMWF Tech. Memo. 514)"
 doi: "10.1016/j.jcp.2007.02.014"
 found_by: "update_metric_eval_principles, 2026-11-03"
 ---
 
-# EXP: A perfect-model ensemble of the solver from perturbed initial conditions, over lead times
+# EXP: Spread and error against lead time, and the binned spread-error diagram, on the solver's ensemble
+
+*Built 2026-11-27: the ensemble.* `kinet_shear_layer_ensemble` reads 17 kinet runs of the
+Re 5e4 shear layer from each of three start states, every run started from an independent small
+perturbation, with one fixed truth (`member_00`) and the other 16 runs as members, at leads of
+500 to 5 000 solver steps; its rows carry `lead_time`, and the ensemble ladder
+(`degradation=ensemble_miscalibration`) applies to its members
+(`configs/dataset/kinet_shear_layer_ensemble.yaml`; `docs/datasets/reynolds_ladder_2d.md`;
+`dataset_specs/BUILD_ORDER.md`, step 21). Taking each run as the truth in turn and pooling tests
+nothing: the pooled ratio of the ensemble mean's squared error to the members' variance is
+(N + 1)/N for any data (`dataset_specs/01_physical_ensemble.md`, Section 3, correction). What
+remains is the analysis this file now asks for: the two figures the field draws first, which no
+code here draws on an ensemble yet.
 
 ## What the experiment is
 
-The physical counterpart of `synthetic_ensemble`. Start N + 1 runs of the kinet solver from
-one initial state plus N + 1 independent small perturbations, at several start times; call one
-run the truth and the other N the ensemble; score the ensemble against the truth at every
-stored lead time. Because truth and members are draws from the same distribution, this is a
-*perfect ensemble* in the sense of Leutbecher and Palmer (2008, Sect. 2.2), and their Eqs. 5-7
-give the expected answer at every lead time: averaged over cases, the squared error of the
-ensemble mean is (N+1)/N times the true variance, and matches the ensemble spread up to a
-factor that depends only on N. Repeating with each run in turn as the truth multiplies the
-cases at no extra cost.
+The standard analyses of an operational ensemble (Leutbecher & Palmer 2008, Sect. 2.2), drawn
+on `kinet_shear_layer_ensemble`:
 
-*Corrected 2026-11-27:* it does not. Pooled over every choice of truth, the error-to-variance
-ratio is (N + 1)/N identically, for any data, and the pooled rank histogram exactly flat
-(`dataset_specs/01_physical_ensemble.md`, Section 3, correction). The runs exist now
-(`kinet_shear_layer_ensemble`, one fixed truth per start, three starts); the figures this
-proposal asks for are not built.
+1. **Spread and error against lead time.** The root-mean-square spread of the members and the
+   root-mean-square error of the ensemble mean, each against lead time, per start and pooled
+   over the three starts. The card figures here draw a curve against prediction step only for
+   rows that carry a `lead_step` (`fmeval/cards/metric_figures.py`, `_forecasts`); the ensemble's
+   rows carry `lead_time` alone.
+2. **The binned spread-error diagram.** Cases binned by predicted spread into equally populated
+   bins, the error of the ensemble mean plotted against the spread in each bin (their Fig. 4,
+   at lead times of 2, 5 and 10 days). A per-bin companion of `spread_skill` would store it;
+   `EXP-spread_skill-heteroscedastic-synthetic-ensemble.md` asks for the same figure on the
+   synthetic ensemble, where the true spread of each bin is known.
 
-The field's standard analyses then apply as they are drawn for operational ensembles:
-spread and error of the ensemble mean against lead time, and the spread-error diagram, with
-cases binned by predicted spread (their Fig. 4, at lead times of 2, 5 and 10 days).
+For a perfect ensemble of N members scored against one truth drawn from the same distribution,
+the expected squared error of the ensemble mean is (N + 1)/N times the true variance (their
+Eqs. 5-7), so both figures have a known answer at every lead time and in every bin.
 
 ## What it tests
 
 Real chaotic error growth: the spread grows with lead time at a rate set by the flow, and
-differs from region to region and from start time to start time, so the ensemble's spread is
-flow-dependent in a way no synthetic construction reproduces. Its answer is still known (a
-perfect ensemble, calibrated at every lead time and in every spread bin), so a metric that
-reports miscalibration on it is wrong. Applying the ensemble degradations (`spread_inflate`,
-`spread_deflate`, `bias`) to its members gives the same ladder as today on physical members.
+differs from region to region and from start time to start time. A single truth's calibration
+scatters about the perfect-ensemble answer (`configs/dataset/kinet_shear_layer_ensemble.yaml`
+gives the measured range over the 51 possible truths), so the figures must show that scatter
+across the three starts rather than one pooled number.
 
 ## Metrics it would test
 
-Every ensemble metric: `spread_skill` (against lead time and binned), `crps`,
-`rank_histogram`, `ensemble_mean_rmse`, `energy_score` and `variogram_score`, the last two now
-on members whose spatial correlation is physical. A generative surrogate's ensemble could later
-be scored on the same cases, which is issue 083's need.
+`spread_skill` (against lead time and binned), `crps`, `rank_histogram`, `ensemble_mean_rmse`,
+`energy_score` and `variogram_score`, each against lead time.
 
 ## Why it is helpful
 
-The ensemble metrics are evaluated here only on generated, independent-cell noise with one
-sigma (`docs/datasets/synthetic_ensemble.md`), with no lead time, so their cards cannot draw
-the figures their field draws first; the evaluation plan withholds them as degenerate. Issue
-003 records that physical ensemble data is open, and issue 004 asks for runs from different
-seeds to serve as independent realisations; this experiment uses a related set of runs, a
-small perturbation instead of a new seed, for a different purpose. Weather ensembles are
-evaluated this way across many cases and lead times, and a card that shows its metric only on
-synthetic noise gives a user from that field no reading they recognise.
+Weather ensembles are evaluated across many cases and lead times, and a card that shows its
+metric without the lead-time axis gives a user from that field no reading they recognise. The
+data now exists; only the figures are missing.
 
 ## Cost and requirements
 
-(N + 1) solver runs per start time; with 16 members and three start times, 51 runs of the
-rollout horizon at 256^2 (the agent's arithmetic). A perturbation amplitude small against the
-flow's fluctuation and a check that the members have decorrelated from one another by the
-lead times scored; a reader that assembles members from separate runs into the existing
-`Frame.members` slot; a lead-time axis in the analysis, which the forecast-pair reader of issue
-010 introduces for the deterministic case.
+A lead-time figure that reads `lead_time` on ensemble rows, and a per-bin companion of
+`spread_skill`. No new data.
 
 ## References
 

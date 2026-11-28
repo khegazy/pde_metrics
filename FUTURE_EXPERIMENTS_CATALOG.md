@@ -190,7 +190,7 @@ exists under `datasets/` without a reader.
 
 | On disk | What it is | What it bears on |
 |---|---|---|
-| `kinet/doubly_periodic/weakly_compressible_isoT_fluids/sys_Re-5e4_Ma-1en1/D2Q9_shape-512-512_T-20000_H-56d32e.h5` (1.43 TB, readable) | **The reference shear layer at 512².** Its config `56d32e.yaml` has the same deterministic initial condition as `kinet_re5e4` (`lambda: 80`, `epsilon: 0.05`, Re 5e4, Ma 0.1; no random seed, so the initial field is resolution-independent). Step 2n is at the physical time of step n of the 256² run. The reviewer measured the 2 by 2 block average of its velocity against `kinet_re5e4`: relative L2 of 7e-3 at steps 0, 500 and 2000, 2.4e-2 at 5000, 3.9e-2 at 10000. Block-averaged copies at 128, 64, 32 and 16 sit beside it. Issue 011 and judgement 009 call the 512² Re 5e4 runs unreadable, but they mean the ones under `old/`; this one is not under `old/` | A two-level solver refinement comparison of the reference flow itself (issue 126, `EXP-max_error-grid-convergence-with-a-known-solution.md`). The 7e-3 difference at step 0 is the remap of a pointwise initial condition onto cell averages, so an observed order must be read at a time where the difference has grown past it, and on each grid's own cells. A third level needs one 128² rerun from t = 0 |
+| `kinet/doubly_periodic/weakly_compressible_isoT_fluids/sys_Re-5e4_Ma-1en1/D2Q9_shape-512-512_T-20000_H-56d32e.h5` (1.43 TB, readable) | **The reference shear layer at 512².** Its config `56d32e.yaml` has the same deterministic initial condition as `kinet_re5e4` (`lambda: 80`, `epsilon: 0.05`, Re 5e4, Ma 0.1; no random seed, so the initial field is resolution-independent). Step 2n is at the physical time of step n of the 256² run. The reviewer measured the 2 by 2 block average of its velocity against `kinet_re5e4`: relative L2 of 7e-3 at steps 0, 500 and 2000, 2.4e-2 at 5000, 3.9e-2 at 10000. Block-averaged copies at 128, 64, 32 and 16 sit beside it. Issue 011 and judgement 009 call the 512² Re 5e4 runs unreadable, but they mean the ones under `old/`; this one is not under `old/` | A two-level solver refinement comparison of the reference flow itself (issue 126, the grid-convergence proposal (built in `dataset_specs/BUILD_ORDER.md`, steps 5, 16, 17 and 32)). The 7e-3 difference at step 0 is the remap of a pointwise initial condition onto cell averages, so an observed order must be read at a time where the difference has grown past it, and on each grid's own cells. A third level needs one 128² rerun from t = 0 |
 | `.../sys_Re-5e4_Ma-1en1/prev_256/D2Q9_shape-256-256_T-20000_H-131010.h5` (readable) | The same flow at 256² for 20 000 steps, to physical time 4.51, twice the horizon of `kinet_re5e4` | A longer record of the reference; later frames are further decayed |
 | `kinet/homogeneous_isotropic_turbulence/weakly_compressible_isoT_fluids/sys_Re-5e4_Ma-1en1/` (1.6 TB) | Despite the folder name, a **two-dimensional** D2Q9 run: random-mode initial condition (`k0: 4`, `random_seed: 42`), Re 5e4, Ma 0.1, unforced and decaying, periodic, stored at 128², 256² and 512² for 5 000, 10 000 and 20 000 steps (the same physical end time, 2.2553, as `kinet_re5e4`), with pressure stored as density / 3. **Not** one flow at three resolutions: the seeded generator draws per cell, so the three runs start from different fields. The reviewer measured the initial x-velocity correlation after block-averaging onto 128² at 0.12 (256² against 128²) and 0.005 (512² against 128²), and the overlap of the modes with |k| ≤ 8 at 0.03 to 0.16. The downsampled copies of the 512² run are also averaged over 4 time steps, and the stored vorticity is in lattice units and must be recomputed from velocity | Three statistically equivalent, mutually independent realisations of an isotropic flow, each at a different resolution: the nearest thing on disk to the independent realisations of issue 004 (cluster D1), and an isotropic reference for the isotropy half of issue 001 (not its Reynolds number). Not a refinement sequence |
 | `kinet/flow_around_objects/compressible_fluids/Pr-71en2_vuy-1.4_Re-3e2/` (12 GB) | A compressible (γ = 1.4) obstacle flow at inlet Mach 1.8 (`a92b16.yaml`), inlet plus Neumann boundaries, 500 by 300 cells, 1 000 frames | Issue 002 names it as shocked data that exists elsewhere. Not periodic and not a shocklet field, but a two-dimensional supersonic pressure field with curved fronts for the shock-set metrics (cluster D3). It also shows kinet's compressible solver runs supersonic flow, which bears on the feasibility of B2 |
@@ -356,7 +356,7 @@ one eddy turnover, which may be too short for a base period plus a disjoint eval
 A problem with an exact or manufactured solution solved at 64², 128², 256², 512², with the
 observed order of accuracy read from successive grids (Roy 2005, *J. Comput. Phys.* 205(1),
 131–156, Eq. 8).
-*Sources:* `EXP-max_error-grid-convergence-with-a-known-solution.md`; issue 126; the "Can the
+*Sources:* the grid-convergence proposal (built in `dataset_specs/BUILD_ORDER.md`, steps 5, 16, 17 and 32); issue 126; the "Can the
 three runs be read as a grid-refinement sequence?" section of `docs/datasets/reynolds_ladder_2d.md`;
 `docs/ideas/evaluation_design.md` (the grid-convergence index of the reference);
 `docs/ideas/infrastructure/grid_convergence.md`; `proposals/MTR-max_error-high-quantile-error.md`
@@ -383,9 +383,9 @@ remove, exaggerate or invert the flow-dependence; a correlated variant whose noi
 Gaussian random field of known correlation length with one operator that redraws it at the
 wrong length. Plus a positive-density variant, since `wasserstein` is `not_run` there because
 the current signed pattern makes every value NaN (`metrics/wasserstein/card.yaml`).
-*Sources:* `EXP-crps-gneiting-forecaster-suite.md`;
+*Sources:* the Gneiting-forecaster proposal (built in `dataset_specs/BUILD_ORDER.md`, step 11);
 `EXP-spread_skill-heteroscedastic-synthetic-ensemble.md`;
-`EXP-energy_score-correlated-synthetic-ensemble.md`; issues 083, 127;
+the correlated-ensemble proposal (built in `dataset_specs/BUILD_ORDER.md`, step 11); issues 083, 127;
 `STANDARD_EVALUATION_PLAN_CRITIQUE.md` (the binned spread-error diagram of a calibrated
 uniform-σ ensemble is flat, not diagonal, so the figure is withheld as degenerate);
 `degradations/spread_inflate/card.md` lines 86 to 93 (a skewed or heavy-tailed member
@@ -406,7 +406,7 @@ cheapest item in this catalog with a published answer.
 A periodic superposition of a known number of vortices of known radii, circulations and
 positions (profile to be chosen and cited; the proposal leaves a TODO). The proposal to
 `MTR-persistence_distance-signed-vortex-census.md` adds a one-sign weakening (lines 42–43).
-*Sources:* `EXP-orchestrator-20261023-known-vortex-field.md`; issues 060, 073, 082, 086;
+*Sources:* the known-vortex-field proposal (its dataset form built in `dataset_specs/BUILD_ORDER.md`, step 12); issues 060, 073, 082, 086;
 `DECISIONS_OVERVIEW.md` §4.2.
 *Cards naming it:* `persistence_distance`, `persistence_wasserstein`.
 *Serves:* the two persistence metrics (a known number of persistent points); the winding
@@ -423,8 +423,8 @@ the table numbers in the proposal could not be rechecked behind the paywall; Rob
 2008, *Mon. Weather Rev.* 136(1), 78–97, Fig. 4, a one-cell band displaced by 1, 3, 11 and 21
 cells). (b) The exact Sod solution at time t scored against the exact solution at t + dt, so
 each wave moves by its own speed times dt with every jump exact.
-*Sources:* `EXP-shock_mask_overlap-geometric-and-perturbed-cases.md`;
-`EXP-sod_evidence-sod-time-offset.md`; issue 051; `DECISIONS_OVERVIEW.md` §4.4.
+*Sources:* the geometric and perturbed shock-case proposal (built in `dataset_specs/BUILD_ORDER.md`, steps 12 and 28);
+the Sod time-offset proposal (built in `dataset_specs/BUILD_ORDER.md`, step 7); issue 051; `DECISIONS_OVERVIEW.md` §4.4.
 *Cards naming it:* the 6 shock cards name both.
 *Serves:* the 6 shock metrics with one known answer per kind of error (the distance summary
 has a closed form for a pure shift; an overlap score drops to its floor once thin sets stop
@@ -449,7 +449,7 @@ blobs is an extrapolation. Also wanted: high-contrast and near-empty densities f
 Monge–Ampère solver (`metrics/wasserstein/code_notes.md` lines 276 and 280;
 `MTR-wasserstein-full-newton-gmres.md` lines 37–38), and a varying background for `max_error`
 (`metrics/max_error/code_notes.md` line 62).
-*Sources:* `EXP-wasserstein-known-answer-transport.md`;
+*Sources:* the known-answer transport proposal (built in `dataset_specs/BUILD_ORDER.md`, step 13);
 `EXP-wasserstein-background-ratio-sweep.md`; issues 047, 048, 066, 067.
 *Cards naming it:* `wasserstein`, `h_minus_one`.
 *Serves:* every transport metric, built or planned (sliced Wasserstein and Sinkhorn both need
@@ -587,7 +587,7 @@ paper). (c) The degradation form of D7: attenuate the vorticity inside chosen cl
 optionally of one sign only.
 *Sources:* `EXP-persistence_distance-spurious-feature-injection.md`;
 `EXP-persistence_distance-topological-simplification.md`;
-`EXP-orchestrator-20261023-known-vortex-field.md` (form 2); issues 013 (the single-cell spike
+the known-vortex-field proposal's degradation form (its second form, not built; the proposal is deleted); issues 013 (the single-cell spike
 probe), 073, 086; `MTR-persistence_distance-signed-vortex-census.md`.
 *Cards naming it:* `persistence_distance`, `persistence_wasserstein`.
 *Serves:* the two persistence metrics with known answers; `max_error` and the pointwise
@@ -767,23 +767,23 @@ experiments.
 
 | Logged source | Cluster |
 |---|---|
-| EXP-crps-gneiting-forecaster-suite | D6 |
+| Gneiting-forecaster proposal (built, deleted) | D6 |
 | EXP-energy_distance-tail-only-degradation | G2 |
-| EXP-energy_score-correlated-synthetic-ensemble | D6 |
+| Correlated-ensemble proposal (built, deleted) | D6 |
 | EXP-enstrophy-budget-closure-from-consecutive-states | G1 (data side also D1, D2) |
 | EXP-increment_flatness-isotropic-3d-turbulence-cutouts | D4 |
-| EXP-max_error-grid-convergence-with-a-known-solution | D5 |
+| Grid-convergence proposal (built, deleted) | D5 |
 | EXP-nrmse-rollouts-over-many-initial-conditions | D2 |
 | EXP-orchestrator-20261023-anisotropic-blur | G5 |
 | EXP-orchestrator-20261023-constraint-violation | G7 |
 | EXP-orchestrator-20261023-dilatational-scaling | G6 |
-| EXP-orchestrator-20261023-known-vortex-field | D7 (dataset form), G4 (degradation form) |
+| Known-vortex-field proposal (dataset form built, deleted) | D7 (dataset form), G4 (degradation form) |
 | EXP-orchestrator-20261023-temporal-ladder | G1, needs H1 |
 | EXP-persistence_distance-spurious-feature-injection | G4 |
 | EXP-persistence_distance-topological-simplification | G4 |
-| EXP-shock_mask_overlap-geometric-and-perturbed-cases | D8 |
+| Geometric and perturbed shock-case proposal (built, deleted) | D8 |
 | EXP-shock_set_distance-2d-shock-dataset | D3 |
-| EXP-sod_evidence-sod-time-offset | D8 |
+| Sod time-offset proposal (built, deleted) | D8 |
 | EXP-spectral_energy_flux-forced-2d-compressible-flux-loop | D4 (also D3's shocklet tier) |
 | EXP-spectral_energy_flux-graded-phase-randomisation | G3 |
 | EXP-spread_skill-heteroscedastic-synthetic-ensemble | D6 |
@@ -791,7 +791,7 @@ experiments.
 | EXP-tail_exceedance-base-period-climatology | D4 (data), H1 (harness) |
 | EXP-tail_index-pareto-spike-injection | G2 |
 | EXP-wasserstein-background-ratio-sweep | D9 |
-| EXP-wasserstein-known-answer-transport | D9 |
+| Known-answer transport proposal (built, deleted) | D9 |
 | MTR-* "How it could be tested" sections (27 files) | D5, D7, D9, G4, G8, regime list, as cited above; the rest test the proposed metric on existing experiments |
 | Degradation cards' Limitations (`additive_noise`, `gaussian_blur`, `translate`, `bias`, `spread_inflate`) | G10, D6 |
 | Issue 001; `degradation_ladder_reference.md` | regime list (Re ≈ 500); ladder housekeeping (artificial viscosity) |

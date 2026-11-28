@@ -20,10 +20,11 @@ in the session scratchpad, not in the repository.
 
 Four groups of proposals ask for one thing: a field whose features are listed in advance, so that
 a metric's answer is known before it runs. The persistence cards and four blocked ideas need a
-known vortex population (catalog D7; `proposals/EXP-orchestrator-20261023-known-vortex-field.md`;
+known vortex population (catalog D7; the known-vortex-field proposal, deleted once built;
 issues 060, 073, 082, 086, each of which says no current degradation "adds, removes or weakens
 individual vortices by design"). The six shock metrics need fronts with a known displacement,
-size and orientation error (D8(a); `proposals/EXP-shock_mask_overlap-geometric-and-perturbed-cases.md`).
+size and orientation error (D8(a); the geometric and perturbed shock-case proposal, deleted once
+built).
 `wasserstein` needs a translated bump on backgrounds of increasing size
 (D9(b); `proposals/EXP-wasserstein-background-ratio-sweep.md`). The persistence cards need a
 feature added or removed at a known depth (G4; `proposals/EXP-persistence_distance-spurious-feature-injection.md`,

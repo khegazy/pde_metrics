@@ -40,8 +40,8 @@ that idea.
 ## How it could be tested
 
 The `persistence_distance` ladder for the smoothing axes; a degradation that weakens only the
-vortices of one sign does not exist, and the known-vortex-field proposal
-(`proposals/EXP-orchestrator-20261023-known-vortex-field.md`) would supply it.
+vortices of one sign does not exist; the `feature_population` candidates, which rescale or
+flip the sign of one vortex by a known amount (`docs/datasets/advecting_blobs.md`), supply it.
 
 ## Why it is helpful
 
